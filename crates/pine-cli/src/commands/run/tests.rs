@@ -1733,12 +1733,14 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[34,35,36,37,38]"));
     assert!(output.contains("\"values\":[null,41,43,45,47]"));
     assert!(output.contains("\"values\":[20.01,21.01,22.01,23.01,24.01]"));
-    assert!(output.contains("\"values\":[null,100,100,100,100]"));
+    assert!(output.contains("\"values\":[null,null,null,100,100]"));
     assert!(output.contains("\"values\":[2,10,10,10,10]"));
     assert!(output.contains("\"values\":[null,10,10,10,10]"));
-    assert!(output.contains(
-        "\"values\":[2,4.666666666666667,6.4444444444444455,7.629629629629631,8.419753086419753]"
-    ));
+    assert!(
+        output.contains(
+            "\"values\":[null,null,7.333333333333333,8.222222222222221,8.814814814814815]"
+        )
+    );
     assert!(output.contains("\"values\":[null,null,13,14,15]"));
     assert!(output.contains("\"values\":[null,null,9,10,11]"));
     assert!(output.contains("\"values\":[null,1,1,1,1]"));
@@ -1861,7 +1863,7 @@ fn runs_request_bars_integration_fixture() {
             "\"values\":[0.017453292519943295,0.019198621771937627,0.020943951023931952,0.022689280275926284,0.024434609527920613]"
         ));
     assert!(output.contains("\"values\":[2,10,10,10,10]"));
-    assert!(output.contains("\"values\":[2,6,8,9,9.5]"));
+    assert!(output.contains("\"values\":[null,6,8,9,9.5]"));
     assert!(output.contains("\"values\":[null,12,13,14,15]"));
     assert!(output.contains("\"values\":[null,9,10,11,12]"));
     assert!(output.matches("\"values\":[null,1,1,1,1]").count() >= 2);
@@ -1917,13 +1919,11 @@ fn runs_request_bars_integration_fixture() {
     );
     assert!(output.matches("\"values\":[null,null,22,23,24]").count() >= 2);
     assert!(
-            output
-                .matches(
-                    "\"values\":[20,20.333333333333332,20.88888888888889,21.59259259259259,22.395061728395063]"
-                )
-                .count()
-                >= 2
-        );
+        output
+            .matches("\"values\":[null,null,21,21.666666666666668,22.444444444444446]")
+            .count()
+            >= 2
+    );
     assert!(
         output
             .matches("\"values\":[20,20.75,21.75,22.8125,23.875]")
@@ -1941,9 +1941,9 @@ fn runs_request_bars_integration_fixture() {
         output
             .matches("\"values\":[null,null,null,100,100]")
             .count()
-            >= 2
+            >= 4
     );
-    assert!(output.matches("\"values\":[null,null,100,100,100]").count() >= 3);
+    assert!(output.matches("\"values\":[null,null,100,100,100]").count() >= 2);
     assert!(output.contains(
         "\"values\":[null,null,0.15552315827194782,0.1484539238050411,0.14199940537873496]"
     ));
@@ -1954,9 +1954,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[null,null,21,22,23]"));
     assert!(output.contains("\"values\":[null,null,20,21,22]"));
     assert!(output.matches("\"values\":[null,null,100,100,100]").count() >= 2);
-    assert!(output.contains(
-        "\"values\":[20,20.333333333333332,20.88888888888889,21.59259259259259,22.395061728395063]"
-    ));
+    assert!(output.contains("\"values\":[null,null,21,21.666666666666668,22.444444444444446]"));
     assert!(output.contains("\"values\":[20,20.75,21.75,22.8125,23.875]"));
     assert!(output.contains("\"values\":[20,20.875,21.9375,23,24.03125]"));
     assert!(output.contains("\"values\":[null,1,1,1,1]"));
@@ -2029,7 +2027,7 @@ fn runs_request_bars_integration_fixture() {
         )
     );
     assert!(output.matches("\"values\":[20,20.5,21,21.5,22]").count() >= 2);
-    assert!(output.contains("\"values\":[null,null,100,100,133.33333333333334]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
     assert!(output.contains("\"values\":[null,null,100,100,175]"));
     assert!(output.contains("\"values\":[null,null,100,100,187.5]"));
     assert!(output.matches("\"values\":[null,null,null,null,1]").count() >= 2);
@@ -2050,7 +2048,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[null,null,1.2,1.2,2]"));
     assert!(output.matches("\"values\":[null,null,100,100,150]").count() >= 2);
     assert!(output.contains("\"values\":[null,null,30,30,110]"));
-    assert!(output.contains("\"values\":[null,null,30,30,70]"));
+    assert!(output.contains("\"values\":[null,null,null,null,70]"));
     assert!(output.contains("\"values\":[null,null,null,null,210]"));
     assert!(output.contains("\"values\":[null,null,null,null,80]"));
     assert!(
@@ -2111,12 +2109,13 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[20,20.5,21.25,22.125,23.0625]"));
     assert!(output.contains("\"values\":[24,32.5,37.25,40.125,42.0625]"));
     assert!(output.contains("\"values\":[16,8.5,5.25,4.125,4.0625]"));
-    assert!(output.contains("\"values\":[14,6,6,6,6]"));
-    assert!(output.contains("\"values\":[1,-1,-1,-1,-1]"));
     assert!(output.contains(
-        "\"values\":[0,7.1428571428571415,8.620689655172411,9.223300970873785,9.530791788856305]"
+        "\"values\":[null,null,26.666666666666664,26.666666666666664,26.666666666666664]"
     ));
-    assert!(output.contains("\"values\":[0,50,75,87.5,93.75]"));
+    assert!(output.contains("\"values\":[null,null,1,1,1]"));
+    assert!(output.contains("\"values\":[null,null,null,10,10]"));
+    assert!(output.contains("\"values\":[null,null,null,0,0]"));
+    assert!(output.contains("\"values\":[null,null,null,null,100]"));
     assert!(output.contains("\"values\":[20,20.5,21,21.5,22]"));
     assert!(
         output.contains(
@@ -2140,10 +2139,10 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[null,null,100,100,150]"));
     assert!(output.contains("\"values\":[null,null,100,100,250]"));
     assert!(output.contains("\"values\":[null,null,100,100,50]"));
-    assert!(output.contains("\"values\":[null,null,155,155,81.66666666666667]"));
-    assert!(output.contains("\"values\":[null,null,1,1,-1]"));
-    assert!(output.contains("\"values\":[null,null,0,0,71.42857142857143]"));
-    assert!(output.contains("\"values\":[null,null,0,0,50]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
+    assert!(output.contains("\"values\":[null,null,null,null,50]"));
     assert!(output.contains("\"values\":[null,20,21,22,23]"));
     assert!(output.contains("\"values\":[10,20,21,22,23]"));
     assert!(output.contains("\"values\":[0,1,1,1,1]"));
@@ -2216,7 +2215,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains(
         "\"values\":[20,20.666666666666668,21.555555555555557,22.51851851851852,23.506172839506174]"
     ));
-    assert!(output.matches("\"values\":[null,100,100,100,100]").count() >= 2);
+    assert!(output.matches("\"values\":[null,100,100,100,100]").count() >= 1);
     assert!(output.contains(
             "\"values\":[null,0.0975609756097561,0.09302325581395349,0.08888888888888889,0.0851063829787234]"
         ));

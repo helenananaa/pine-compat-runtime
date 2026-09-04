@@ -422,51 +422,59 @@ impl BrokerState {
             qty.min(matching_position_size)
         });
         let allocations = self.allocate_close_rule_exit_for_direction(direction, Some(&id), qty);
-        let entry_fill = AllocatedEntryFill::from_allocations(
-            &allocations,
-            self.avg_price,
-            self.entry_bar_index.unwrap_or(bar_index),
-            self.entry_time.unwrap_or(time),
-            self.entry_commission_for_closed_quantity(qty),
-        );
+        if allocations.is_empty() {
+            return;
+        }
         let exit_commission = self.exit_commission_for_fill(qty, price);
-        let commission = entry_fill.entry_commission + exit_commission;
-        let signed_qty = direction.signed_quantity(qty);
-        let profit = (price - entry_fill.entry_price) * signed_qty - commission;
-        let closed_entry_commission = entry_fill.entry_commission;
         let metadata = self.take_next_close_metadata();
-        self.record_closed_trade_fill(ClosedTradeFill {
-            entry_id: id.clone(),
-            exit_id: id.clone(),
-            entry_fill,
-            exit_bar_index: bar_index,
-            exit_time: time,
-            exit_price: price,
-            qty: signed_qty,
-            profit,
-            commission,
-            close_metadata: metadata.clone(),
-        });
-        self.record_order_fill_alert_from_order_metadata(
-            &metadata,
-            StrategyOrderFillAlertEvent {
-                id: id.clone(),
-                bar_index,
-                time,
-                direction: "strategy.close".to_owned(),
-                qty,
-                price,
-                entry_id: Some(id.clone()),
-                exit_id: Some(id.clone()),
-                message: String::new(),
-            },
-        );
+        let mut closed_entry_commission = 0.0;
+        for allocation in &allocations {
+            let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
+            let commission = allocation.entry_commission + allocated_exit_commission;
+            let signed_qty = direction.signed_quantity(allocation.quantity);
+            let profit = (price - allocation.entry_price) * signed_qty - commission;
+            closed_entry_commission += allocation.entry_commission;
+            self.record_closed_trade_fill(ClosedTradeFill {
+                entry_id: allocation.entry_id.clone(),
+                exit_id: id.clone(),
+                entry_fill: AllocatedEntryFill {
+                    entry_price: allocation.entry_price,
+                    entry_bar_index: allocation.entry_bar_index,
+                    entry_time: allocation.entry_time,
+                    entry_commission: allocation.entry_commission,
+                    entry_metadata: allocation.entry_metadata.clone(),
+                },
+                exit_bar_index: bar_index,
+                exit_time: time,
+                exit_price: price,
+                qty: signed_qty,
+                profit,
+                commission,
+                close_metadata: metadata.clone(),
+            });
+            self.record_order_fill_alert_from_order_metadata(
+                &metadata,
+                StrategyOrderFillAlertEvent {
+                    id: id.clone(),
+                    bar_index,
+                    time,
+                    direction: "strategy.close".to_owned(),
+                    qty: allocation.quantity,
+                    price,
+                    entry_id: Some(allocation.entry_id.clone()),
+                    exit_id: Some(id.clone()),
+                    message: String::new(),
+                },
+            );
+        }
 
         if qty >= self.position_size.abs() {
             self.cancel_exit_for_entry(&id);
+        } else {
+            self.drop_exits_for_closed_trade_keys(&allocations);
         }
         self.apply_reduction_cash_and_position(
-            signed_qty * price - exit_commission,
+            direction.signed_quantity(qty) * price - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,

@@ -307,6 +307,18 @@ pub enum ExprKind {
         expr: Box<Expr>,
         offset: Box<Expr>,
     },
+    Group(Box<Expr>),
+}
+
+impl Expr {
+    #[must_use]
+    pub fn without_groups(&self) -> &Expr {
+        let mut current = self;
+        while let ExprKind::Group(inner) = &current.kind {
+            current = inner;
+        }
+        current
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

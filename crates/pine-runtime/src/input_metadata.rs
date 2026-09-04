@@ -284,7 +284,12 @@ fn constant_value(expr: &HirExpr) -> Option<PineValue> {
                 (HirUnaryOp::Plus, value @ (PineValue::Int(_) | PineValue::Float(_))) => {
                     Some(value)
                 }
-                (HirUnaryOp::Minus, PineValue::Int(value)) => Some(PineValue::Int(-value)),
+                (HirUnaryOp::Minus, PineValue::Int(value)) => Some(
+                    value
+                        .checked_neg()
+                        .map(PineValue::Int)
+                        .unwrap_or_else(|| PineValue::Float(-(value as f64))),
+                ),
                 (HirUnaryOp::Minus, PineValue::Float(value)) => Some(PineValue::Float(-value)),
                 (HirUnaryOp::Not, PineValue::Bool(value)) => Some(PineValue::Bool(!value)),
                 _ => None,

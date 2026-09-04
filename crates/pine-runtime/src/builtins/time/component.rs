@@ -53,7 +53,7 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Na => return Ok(PineValue::Na),
             _ => return Ok(PineValue::Na),
         };
-        let timezone = if let Some(arg) = args.get(1) {
+        let timezone = if let Some(arg) = crate::builtins::args::positional_arg(args, 1) {
             match self.eval_expr(&arg.value)? {
                 PineValue::String(timezone) => timezone,
                 PineValue::Na => "UTC".to_owned(),

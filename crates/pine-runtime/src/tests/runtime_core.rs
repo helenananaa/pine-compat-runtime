@@ -2037,3 +2037,135 @@ plot(barstate.islast ? 1 : 0)
 
     assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
 }
+
+#[test]
+fn v5_comparisons_preserve_bool_na_while_logical_ops_treat_it_as_false() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=5
+indicator("na cmp")
+comparison = close > close[1]
+plot(na(1 == int(na)) ? 1 : 0)
+plot(na(comparison) ? 1 : 0)
+plot((close > close[1]) and false ? 1 : 0)
+plot((close > close[1]) or true ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("runtime result");
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(1), PineValue::Int(0)]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Int(0), PineValue::Int(0)]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Int(1), PineValue::Int(1)]
+    );
+}
+
+#[test]
+fn v6_comparisons_with_na_are_false() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("v6 na cmp")
+plot(close > close[1] ? 1 : 0)
+plot((close > close[1]) and false ? 1 : 0)
+plot((close > close[1]) or true ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("runtime result");
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(0), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(0), PineValue::Int(0)]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Int(1), PineValue::Int(1)]
+    );
+}
+
+#[test]
+fn skipped_branch_history_commits_na() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("skip hist")
+v = bar_index % 2 == 0 ? (close + 1)[1] : na
+plot(v)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(10.0), bar(11.0), bar(12.0), bar(13.0), bar(14.0)],
+    )
+    .expect("runtime result");
+    assert_eq!(result.plots[0].values, vec![PineValue::Na; 5]);
+}
+
+#[test]
+fn int_cast_of_huge_float_is_na() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("int range")
+plot(int(1e20))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+    assert_eq!(result.plots[0].values, vec![PineValue::Na]);
+}
+
+#[test]
+fn unary_minus_of_i64_min_does_not_panic() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("umin")
+x = int(-9223372036854775808.0)
+plot(-x)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+    assert!(result.plots[0].values[0].as_f64().is_some());
+}

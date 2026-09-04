@@ -292,11 +292,16 @@ impl BrokerState {
         time: i64,
         fill_price: f64,
     ) {
-        let pending_entry = self
-            .order_book
-            .entries_mut()
-            .take_first_eligible_market_long(bar_index);
-        self.fill_pending_market_entries_from(pending_entry, bar_index, time, fill_price);
+        loop {
+            let pending_entry = self
+                .order_book
+                .entries_mut()
+                .take_first_eligible_market_long(bar_index);
+            let Some(pending_entry) = pending_entry else {
+                break;
+            };
+            self.fill_one_pending_market_entry(pending_entry, bar_index, time, fill_price);
+        }
     }
 
     pub(crate) fn fill_same_bar_market_entries(
@@ -305,23 +310,25 @@ impl BrokerState {
         time: i64,
         fill_price: f64,
     ) {
-        let pending_entry = self
-            .order_book
-            .entries_mut()
-            .take_first_same_bar_market(bar_index);
-        self.fill_pending_market_entries_from(pending_entry, bar_index, time, fill_price);
+        loop {
+            let pending_entry = self
+                .order_book
+                .entries_mut()
+                .take_first_same_bar_market(bar_index);
+            let Some(pending_entry) = pending_entry else {
+                break;
+            };
+            self.fill_one_pending_market_entry(pending_entry, bar_index, time, fill_price);
+        }
     }
 
-    fn fill_pending_market_entries_from(
+    fn fill_one_pending_market_entry(
         &mut self,
-        pending_entry: Option<super::pending_entries::PendingEntry>,
+        pending_entry: super::pending_entries::PendingEntry,
         bar_index: usize,
         time: i64,
         fill_price: f64,
     ) {
-        let Some(pending_entry) = pending_entry else {
-            return;
-        };
         if !pending_entry.enforce_pyramiding {
             let signed_quantity = match pending_entry.direction {
                 PendingEntryDirection::Long => pending_entry.quantity,
@@ -339,7 +346,6 @@ impl BrokerState {
             ) {
                 self.order_book.apply_oca_after_fill(filled_key, filled_qty);
             }
-            self.order_book.entries_mut().clear_all();
             return;
         }
         if pending_entry.direction == PendingEntryDirection::Short {
@@ -358,7 +364,6 @@ impl BrokerState {
             if !filled {
                 self.order_book.exits_mut().clear_for_entry(&entry_id);
             }
-            self.order_book.entries_mut().clear_all();
             return;
         }
 
@@ -380,7 +385,6 @@ impl BrokerState {
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
-        self.order_book.entries_mut().clear_all();
     }
 
     pub(crate) fn fill_pending_limit_long_entries(

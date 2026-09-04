@@ -1013,7 +1013,8 @@ impl<'a> HistoryRequirementCollector<'a> {
         } else {
             (
                 default_source.and_then(|name| self.builtin_series.get(name).copied()),
-                call_arg(args, source_arg, "length"),
+                call_arg(args, length_arg, "length")
+                    .or_else(|| call_arg(args, source_arg, "length")),
             )
         };
 

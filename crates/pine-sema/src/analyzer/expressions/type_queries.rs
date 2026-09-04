@@ -22,6 +22,7 @@ impl Analyzer {
             return Some(*pine_type);
         }
         match &expr.kind {
+            ExprKind::Group(inner) => self.type_of_expr_with_params(inner, param_types),
             ExprKind::Literal(literal) => Some(literal_type(literal)),
             ExprKind::Identifier(name) => param_types
                 .get(name)

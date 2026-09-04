@@ -235,6 +235,7 @@ impl Analyzer {
                 }
                 pine_type
             }
+            ExprKind::Group(inner) => self.analyze_expr(inner),
             ExprKind::History {
                 expr: value_expr,
                 offset,

@@ -112,11 +112,12 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
         let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
-        let initial_value = if let Some(initial_value) = args.get(2) {
-            eval_matrix_float_value(self.eval_expr(&initial_value.value)?)
-        } else {
-            PineValue::Na
-        };
+        let initial_value =
+            if let Some(initial_value) = crate::builtins::args::positional_arg(args, 2) {
+                eval_matrix_float_value(self.eval_expr(&initial_value.value)?)
+            } else {
+                PineValue::Na
+            };
         self.new_matrix(MatrixElementKind::Float, rows, columns, initial_value)
     }
 
@@ -126,11 +127,12 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
         let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
-        let initial_value = if let Some(initial_value) = args.get(2) {
-            eval_matrix_int_value(self.eval_expr(&initial_value.value)?)
-        } else {
-            PineValue::Na
-        };
+        let initial_value =
+            if let Some(initial_value) = crate::builtins::args::positional_arg(args, 2) {
+                eval_matrix_int_value(self.eval_expr(&initial_value.value)?)
+            } else {
+                PineValue::Na
+            };
         self.new_matrix(MatrixElementKind::Int, rows, columns, initial_value)
     }
 
@@ -140,11 +142,12 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
         let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
-        let initial_value = if let Some(initial_value) = args.get(2) {
-            eval_matrix_bool_value(self.eval_expr(&initial_value.value)?)
-        } else {
-            PineValue::Na
-        };
+        let initial_value =
+            if let Some(initial_value) = crate::builtins::args::positional_arg(args, 2) {
+                eval_matrix_bool_value(self.eval_expr(&initial_value.value)?)
+            } else {
+                PineValue::Na
+            };
         self.new_matrix(MatrixElementKind::Bool, rows, columns, initial_value)
     }
 
@@ -154,11 +157,12 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
         let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
-        let initial_value = if let Some(initial_value) = args.get(2) {
-            eval_matrix_string_value(self.eval_expr(&initial_value.value)?)
-        } else {
-            PineValue::Na
-        };
+        let initial_value =
+            if let Some(initial_value) = crate::builtins::args::positional_arg(args, 2) {
+                eval_matrix_string_value(self.eval_expr(&initial_value.value)?)
+            } else {
+                PineValue::Na
+            };
         self.new_matrix(MatrixElementKind::String, rows, columns, initial_value)
     }
 
@@ -168,11 +172,12 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
         let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
-        let initial_value = if let Some(initial_value) = args.get(2) {
-            eval_matrix_color_value(self.eval_expr(&initial_value.value)?)
-        } else {
-            PineValue::Na
-        };
+        let initial_value =
+            if let Some(initial_value) = crate::builtins::args::positional_arg(args, 2) {
+                eval_matrix_color_value(self.eval_expr(&initial_value.value)?)
+            } else {
+                PineValue::Na
+            };
         self.new_matrix(MatrixElementKind::Color, rows, columns, initial_value)
     }
 

@@ -180,9 +180,15 @@ fn bar_f64(
     let value = object.get(field).ok_or_else(|| {
         format!("request bar for key `{key}` at index {index} is missing `{field}`")
     })?;
-    value.as_f64().ok_or_else(|| {
+    let parsed = value.as_f64().ok_or_else(|| {
         format!("request bar field `{field}` for key `{key}` at index {index} must be a number")
-    })
+    })?;
+    if !parsed.is_finite() {
+        return Err(format!(
+            "request bar field `{field}` for key `{key}` at index {index} must be finite"
+        ));
+    }
+    Ok(parsed)
 }
 
 #[cfg(test)]
@@ -342,6 +348,19 @@ mod tests {
         assert_eq!(
             message,
             "request bar for key `NYSE:IBM:1` at index 0 is missing `close`"
+        );
+    }
+
+    #[test]
+    fn request_bars_rejects_non_finite_bar_fields() {
+        let message = request_bars_error(&request_bars_json(
+            "NYSE:IBM:1",
+            r#"[{"time":0,"open":1e309,"high":11,"low":9,"close":30,"volume":100}]"#,
+        ));
+
+        assert!(
+            message.contains("number out of range"),
+            "unexpected error: {message}"
         );
     }
 

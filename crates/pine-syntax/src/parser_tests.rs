@@ -2303,9 +2303,16 @@ fn parses_default_statement_block_switch_arm() {
 
 #[test]
 fn rejects_expression_nesting_past_depth_limit() {
-    let depth = 257;
-    let source = format!("x = {}close{}\n", "(".repeat(depth), ")".repeat(depth));
-    let parsed = parse(&source);
+    let parsed = std::thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            let depth = 257;
+            let source = format!("x = {}close{}\n", "(".repeat(depth), ")".repeat(depth));
+            parse(&source)
+        })
+        .expect("spawn depth-limit parser thread")
+        .join()
+        .expect("depth-limit parser thread");
 
     assert!(
         parsed
@@ -2330,4 +2337,34 @@ fn parses_loop_control_statements() {
     };
     assert!(matches!(then_branch[0].kind, StmtKind::Break));
     assert!(matches!(body[1].kind, StmtKind::Continue));
+}
+
+#[test]
+fn parses_parenthesized_if_as_infix_operand() {
+    let parsed = parse("x = (if true\n    1\nelse\n    2) + 3\n");
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 1);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    assert!(matches!(
+        value.kind,
+        ExprKind::Binary {
+            op: BinaryOp::Add,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn parses_method_call_on_parenthesized_identifier() {
+    let parsed = parse("n = (values).size()\n");
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, .. } = &value.kind else {
+        panic!("expected call, got {:?}", value.kind);
+    };
+    assert!(matches!(callee.kind, ExprKind::QualifiedName(_)));
 }

@@ -74,7 +74,7 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                 .iter()
                 .any(|arg| contains_output_or_declaration_call(&arg.value))
         }
-        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
+        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } | ExprKind::Group(expr) => {
             contains_output_or_declaration_call(expr)
         }
         ExprKind::Binary { left, right, .. } => {

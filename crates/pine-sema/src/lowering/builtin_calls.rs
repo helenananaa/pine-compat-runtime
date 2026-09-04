@@ -16,6 +16,42 @@ fn ascending_sort_order_expr() -> HirExpr {
     }
 }
 
+fn omitted_builtin_arg() -> HirCallArg {
+    HirCallArg {
+        name: Some(pine_ir::OMITTED_BUILTIN_ARG.to_owned()),
+        value: HirExpr {
+            kind: HirExprKind::Builtin("na".to_owned()),
+            pine_type: PineType::new(Qualifier::Const, ValueKind::Na),
+            series_id: None,
+        },
+    }
+}
+
+fn signature_accepts_lowered_args(signature: &BuiltinSignature, args: &[HirCallArg]) -> bool {
+    let mut positional_index = 0;
+    args.iter().all(|arg| {
+        if arg.name.as_deref() == Some(pine_ir::LEGACY_TRANSPARENCY_ARG) {
+            return true;
+        }
+        let parameter_index = match arg.name.as_deref() {
+            Some(name) => signature
+                .params
+                .iter()
+                .position(|parameter| parameter.name == name),
+            None => {
+                let index = positional_index;
+                positional_index += 1;
+                (index < signature.params.len())
+                    .then_some(index)
+                    .or_else(|| signature.variadic.then_some(signature.params.len() - 1))
+            }
+        };
+        parameter_index.is_some_and(|index| {
+            crate::types::accepts_type(signature.params[index].accepts, arg.value.pine_type)
+        })
+    })
+}
+
 impl Analyzer {
     pub(super) fn lower_builtin_call_args(
         &mut self,
@@ -51,13 +87,93 @@ impl Analyzer {
             ]);
         }
 
-        args.iter()
+        let lowered_args: Vec<_> = args
+            .iter()
             .map(|arg| {
                 Some(HirCallArg {
                     name: arg.name.clone(),
                     value: self.lower_expr_with_params(&arg.value, param_exprs, param_types)?,
                 })
             })
-            .collect()
+            .collect::<Option<_>>()?;
+
+        if !args.iter().any(|arg| arg.name.is_some())
+            || matches!(builtin_name, "array.min" | "array.max")
+        {
+            return Some(lowered_args);
+        }
+
+        if builtin_name == "timestamp"
+            && lowered_args.len() == 1
+            && lowered_args[0].name.as_deref() == Some("dateString")
+        {
+            let mut arg = lowered_args.into_iter().next()?;
+            arg.name = None;
+            return Some(vec![arg]);
+        }
+
+        let Some(signature) = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .filter(|signature| signature.name == builtin_name)
+            .find(|signature| signature_accepts_lowered_args(signature, &lowered_args))
+        else {
+            // Synthetic legacy calls have already had their arguments rewritten to
+            // canonical names, but they are intentionally absent from the public
+            // builtin registry.
+            return Some(lowered_args);
+        };
+        let mut slots: Vec<Option<HirCallArg>> = vec![None; signature.params.len()];
+        let point_overload_discriminator = match (builtin_name, signature.params.first()) {
+            ("label.new", Some(parameter)) if parameter.name == "point" => Some("point"),
+            ("line.new", Some(parameter)) if parameter.name == "first_point" => Some("first_point"),
+            ("box.new", Some(parameter)) if parameter.name == "top_left" => Some("top_left"),
+            _ => None,
+        };
+        let mut internal_args = Vec::new();
+        let mut positional_index = 0;
+        for mut arg in lowered_args {
+            if arg.name.as_deref() == Some(pine_ir::LEGACY_TRANSPARENCY_ARG) {
+                internal_args.push(arg);
+                continue;
+            }
+            let parameter_index = match arg.name.as_deref() {
+                Some(name) => signature
+                    .params
+                    .iter()
+                    .position(|parameter| parameter.name == name)?,
+                None => {
+                    let index = positional_index;
+                    positional_index += 1;
+                    index
+                }
+            };
+            if parameter_index >= slots.len() {
+                if !signature.variadic {
+                    return None;
+                }
+                slots.resize(parameter_index + 1, None);
+            }
+            arg.name = None;
+            slots[parameter_index] = Some(arg);
+        }
+
+        let mut normalized = slots
+            .iter()
+            .rposition(Option::is_some)
+            .map(|last_bound| {
+                slots
+                    .into_iter()
+                    .take(last_bound + 1)
+                    .map(|arg| arg.unwrap_or_else(omitted_builtin_arg))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        if let (Some(name), Some(first)) = (point_overload_discriminator, normalized.first_mut()) {
+            // Drawing point overloads need an explicit discriminator when the
+            // point expression itself is `na`, whose HIR kind carries no object type.
+            first.name = Some(name.to_owned());
+        }
+        normalized.extend(internal_args);
+        Some(normalized)
     }
 }

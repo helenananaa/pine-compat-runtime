@@ -1,18 +1,17 @@
 //! Host-independent intermediate representation scaffolding.
 
+mod internal;
 mod strategy;
 mod types;
 mod user_types;
 
+pub use internal::{LEGACY_TRANSPARENCY_ARG, OMITTED_BUILTIN_ARG};
 pub use strategy::{
     DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCloseEntriesRule, StrategyCommission,
     StrategyDefaultQuantity, StrategyMarginSetting, StrategySettings,
 };
 pub use types::{PineType, Qualifier, ValueKind};
 
-/// Internal HIR argument used to carry pre-v5 output transparency without
-/// exposing it as a modern source-language parameter.
-pub const LEGACY_TRANSPARENCY_ARG: &str = "$legacy_transp";
 pub use user_types::{HirUserTypeField, HirUserTypeIdentity, HirUserTypeInfo};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -66,6 +65,9 @@ pub struct HirProgram {
     pub series_max_bars_back: Vec<HirSeriesMaxBarsBack>,
     pub history: HirHistoryRequirements,
     pub series_history: Vec<HirSeriesHistoryRequirement>,
+    /// Series created while inlining a UDF/method. Their history advances only
+    /// when that inline body executes, not once per chart bar.
+    pub execution_scoped_series: Vec<SeriesId>,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

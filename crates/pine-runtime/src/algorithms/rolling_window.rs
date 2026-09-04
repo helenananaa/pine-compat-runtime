@@ -34,6 +34,7 @@ pub(crate) enum RollingWindowKey {
     HmaHalf(CallSiteId),
     HmaFull(CallSiteId),
     HmaSmooth(CallSiteId),
+    Rma { call_site: CallSiteId, channel: u8 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

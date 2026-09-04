@@ -282,7 +282,9 @@ impl Analyzer {
             ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()
                 .is_none_or(|name| !is_strategy_state_variable(name)),
-            ExprKind::Unary { expr, .. } => self.request_expression_is_pure_scalar(expr),
+            ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => {
+                self.request_expression_is_pure_scalar(expr)
+            }
             ExprKind::Binary { left, right, .. } => {
                 self.request_expression_is_pure_scalar(left)
                     && self.request_expression_is_pure_scalar(right)
@@ -458,7 +460,7 @@ impl Analyzer {
             ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()
                 .is_some_and(is_request_provider_scalar_name),
-            ExprKind::Unary { expr, .. } => self
+            ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => self
                 .request_expression_is_legacy_provider_scalar_inner(
                     expr,
                     visiting,
@@ -774,7 +776,9 @@ impl Analyzer {
             ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()
                 .is_some_and(is_request_provider_scalar_name),
-            ExprKind::Unary { expr, .. } => self.request_expression_is_provider_scalar(expr),
+            ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => {
+                self.request_expression_is_provider_scalar(expr)
+            }
             ExprKind::Binary { left, right, .. } => {
                 self.request_expression_is_provider_scalar(left)
                     && self.request_expression_is_provider_scalar(right)

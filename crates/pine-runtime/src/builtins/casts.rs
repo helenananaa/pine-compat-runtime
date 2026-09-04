@@ -28,7 +28,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_int_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         Ok(match self.eval_expr(&args[0].value)? {
             PineValue::Int(value) => PineValue::Int(value),
-            PineValue::Float(value) if value.is_finite() => PineValue::Int(value.trunc() as i64),
+            PineValue::Float(value) => crate::builtins::math::float_to_int_or_na(value.trunc()),
             PineValue::Bool(value) => PineValue::Int(i64::from(value)),
             PineValue::Na => PineValue::Na,
             _ => PineValue::Na,

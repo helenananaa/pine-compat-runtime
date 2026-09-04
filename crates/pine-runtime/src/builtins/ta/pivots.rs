@@ -50,13 +50,21 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: WindowExtreme,
     ) -> Result<(PineValue, i64, i64), RuntimeError> {
-        if args.len() == 2 {
-            let leftbars = ta_arg(args, 0, "leftbars")
+        let positional_default_source =
+            args.len() == 2 && args.iter().all(|arg| arg.name.is_none());
+        let has_explicit_source = !positional_default_source && ta_arg(args, 0, "source").is_some();
+        if !has_explicit_source {
+            let (left_index, right_index) = if positional_default_source {
+                (0, 1)
+            } else {
+                (1, 2)
+            };
+            let leftbars = ta_arg(args, left_index, "leftbars")
                 .map(|arg| self.eval_expr(arg))
                 .transpose()?
                 .and_then(|value| value.as_i64())
                 .unwrap_or(-1);
-            let rightbars = ta_arg(args, 1, "rightbars")
+            let rightbars = ta_arg(args, right_index, "rightbars")
                 .map(|arg| self.eval_expr(arg))
                 .transpose()?
                 .and_then(|value| value.as_i64())

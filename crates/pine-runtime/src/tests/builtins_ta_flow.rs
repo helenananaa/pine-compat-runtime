@@ -460,10 +460,8 @@ plot(atr)
     ];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_values_close(
-        &result.plots[0].values,
-        &[2.0, 2.3333333333333335, 3.2222222222222223],
-    );
+    assert_na_prefix(&result.plots[0].values, 2);
+    assert_values_close(&result.plots[0].values[2..], &[10.0 / 3.0]);
 }
 
 #[test]
@@ -498,18 +496,10 @@ plot(na(bad_line) and na(bad_direction) ? 1 : 0)
     ];
     let result = run_historical(&hir, &bars).expect("runtime result");
 
-    assert_values_close(
-        &result.plots[0].values,
-        &[
-            14.0,
-            14.0,
-            14.0,
-            8.666666666666668,
-            9.944444444444445,
-            20.037037037037038,
-        ],
-    );
-    assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
+    assert_na_prefix(&result.plots[0].values, 2);
+    assert_values_close(&result.plots[0].values[2..], &[16.0, 16.0, 16.0, 16.0]);
+    assert_na_prefix(&result.plots[1].values, 2);
+    assert_values_close(&result.plots[1].values[2..], &[1.0, 1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
 }
 
@@ -548,25 +538,15 @@ plot(na(bad_plus) and na(bad_minus) and na(bad_adx) ? 1 : 0)
     ];
     let result = run_historical(&hir, &bars).expect("runtime result");
 
+    assert_na_prefix(&result.plots[0].values, 3);
     assert_values_close(
-        &result.plots[0].values,
-        &[
-            0.0,
-            16.666666666666664,
-            27.777777777777775,
-            51.38888888888888,
-            44.88888888888889,
-            18.397085610200364,
-        ],
+        &result.plots[0].values[3..],
+        &[62.5, 52.0, 21.311475409836065],
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[0.0, 0.0, 0.0, 0.0, 0.0, 44.26229508196722],
-    );
-    assert_values_close(
-        &result.plots[2].values,
-        &[0.0, 50.0, 75.0, 87.5, 93.75, 67.51453488372093],
-    );
+    assert_na_prefix(&result.plots[1].values, 3);
+    assert_values_close(&result.plots[1].values[3..], &[0.0, 0.0, 44.26229508196721]);
+    assert_na_prefix(&result.plots[2].values, 4);
+    assert_values_close(&result.plots[2].values[4..], &[100.0, 67.5]);
     assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
 }
 
@@ -884,16 +864,10 @@ plot(na(invalid) ? 1 : 0)
     ];
     let result = run_historical(&hir, &bars).expect("runtime result");
 
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_na_prefix(&result.plots[0].values, 3);
     assert_values_close(
-        &result.plots[0].values[2..],
-        &[
-            100.0,
-            59.183673469387756,
-            71.63120567375887,
-            36.72316384180791,
-        ],
+        &result.plots[0].values[3..],
+        &[59.183673469387756, 71.63120567375887, 36.72316384180791],
     );
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);

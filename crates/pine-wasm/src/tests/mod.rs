@@ -8513,7 +8513,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][6]["values"],
-        serde_json::json!([null, 100, 100, 100, 100])
+        serde_json::json!([null, null, null, 100, 100])
     );
     assert_eq!(
         parsed["plots"][7]["values"],
@@ -8526,11 +8526,11 @@ fn request_host_data_runs_through_direct_wasm_api() {
     assert_eq!(
         parsed["plots"][9]["values"],
         serde_json::json!([
-            2,
-            4.666666666666667,
-            6.4444444444444455,
-            7.629629629629631,
-            8.419753086419753
+            null,
+            null,
+            7.333333333333333,
+            8.222222222222221,
+            8.814814814814815
         ])
     );
     assert_eq!(
@@ -8701,13 +8701,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][41]["values"],
-        serde_json::json!([
-            20,
-            20.333333333333332,
-            20.88888888888889,
-            21.59259259259259,
-            22.395061728395063
-        ])
+        serde_json::json!([null, null, 21, 21.666666666666668, 22.444444444444446])
     );
     assert_eq!(
         parsed["plots"][42]["values"],
@@ -8727,7 +8721,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][46]["values"],
-        serde_json::json!([null, null, 100, 100, 100])
+        serde_json::json!([null, null, null, 100, 100])
     );
     assert_eq!(
         parsed["plots"][47]["values"],
@@ -8911,29 +8905,29 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][80]["values"],
-        serde_json::json!([14, 6, 6, 6, 6])
-    );
-    assert_eq!(
-        parsed["plots"][81]["values"],
-        serde_json::json!([1, -1, -1, -1, -1])
-    );
-    assert_eq!(
-        parsed["plots"][82]["values"],
         serde_json::json!([
-            0,
-            7.1428571428571415,
-            8.620689655172411,
-            9.223300970873783,
-            9.530791788856304
+            null,
+            null,
+            26.666666666666664,
+            26.666666666666664,
+            26.666666666666664
         ])
     );
     assert_eq!(
+        parsed["plots"][81]["values"],
+        serde_json::json!([null, null, 1, 1, 1])
+    );
+    assert_eq!(
+        parsed["plots"][82]["values"],
+        serde_json::json!([null, null, null, 10, 10])
+    );
+    assert_eq!(
         parsed["plots"][83]["values"],
-        serde_json::json!([0, 0, 0, 0, 0])
+        serde_json::json!([null, null, null, 0, 0])
     );
     assert_eq!(
         parsed["plots"][84]["values"],
-        serde_json::json!([0, 50, 75, 87.5, 93.75])
+        serde_json::json!([null, null, null, null, 100])
     );
     assert_eq!(
         parsed["plots"][85]["values"],
@@ -9033,23 +9027,23 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][106]["values"],
-        serde_json::json!([null, null, 155, 155, 81.66666666666667])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][107]["values"],
-        serde_json::json!([null, null, 1, 1, -1])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][108]["values"],
-        serde_json::json!([null, null, 0, 0, 71.42857142857143])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][109]["values"],
-        serde_json::json!([null, null, 0, 0, 0])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][110]["values"],
-        serde_json::json!([null, null, 0, 0, 50])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][111]["values"],
@@ -9369,13 +9363,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][183]["values"],
-        serde_json::json!([
-            20,
-            20.333333333333332,
-            20.88888888888889,
-            21.59259259259259,
-            22.395061728395063
-        ])
+        serde_json::json!([null, null, 21, 21.666666666666668, 22.444444444444446])
     );
     assert_eq!(
         parsed["plots"][184]["values"],
@@ -9395,7 +9383,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][188]["values"],
-        serde_json::json!([null, null, 100, 100, 100])
+        serde_json::json!([null, null, null, 100, 100])
     );
     assert_eq!(
         parsed["plots"][189]["values"],
@@ -9563,7 +9551,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][221]["values"],
-        serde_json::json!([null, null, 100, 100, 133.33333333333334])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][222]["values"],
@@ -9583,7 +9571,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][226]["values"],
-        serde_json::json!([null, null, null, null, 100])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][227]["values"],
@@ -9629,7 +9617,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][236]["values"],
-        serde_json::json!([null, null, 30, 30, 70])
+        serde_json::json!([null, null, null, null, 70])
     );
     assert_eq!(
         parsed["plots"][237]["values"],
@@ -10032,10 +10020,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         292,
         &[Some(2.0), Some(10.0), Some(10.0), Some(10.0), Some(10.0)],
     );
-    assert_plot_values_close(
-        293,
-        &[Some(2.0), Some(6.0), Some(8.0), Some(9.0), Some(9.5)],
-    );
+    assert_plot_values_close(293, &[None, Some(6.0), Some(8.0), Some(9.0), Some(9.5)]);
     assert_plot_values_close(294, &[None, Some(12.0), Some(13.0), Some(14.0), Some(15.0)]);
     assert_plot_values_close(295, &[None, Some(9.0), Some(10.0), Some(11.0), Some(12.0)]);
     assert_plot_values_close(296, &[None, Some(1.0), Some(1.0), Some(1.0), Some(1.0)]);

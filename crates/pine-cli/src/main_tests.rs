@@ -982,8 +982,10 @@ fn runtime_fixture_json(fixture: &str) -> String {
         analysis.diagnostics
     );
     let bars = parse_bars_csv(runtime_fixture_bars_csv(fixture)).expect("bars fixture");
-    let result =
-        run_historical(&analysis.hir.expect("fixture HIR"), &bars).expect("runtime result");
+    let hir = analysis
+        .hir
+        .unwrap_or_else(|| panic!("{fixture} fixture HIR"));
+    let result = run_historical(&hir, &bars).expect("runtime result");
     public_runtime_result_json(&result)
 }
 

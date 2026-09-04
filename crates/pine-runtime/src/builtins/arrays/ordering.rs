@@ -101,7 +101,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         callee: &str,
     ) -> Result<bool, RuntimeError> {
-        match args.get(1) {
+        match crate::builtins::args::positional_arg(args, 1) {
             Some(order) => match self.eval_expr(&order.value)? {
                 PineValue::String(order) if order == "order.descending" => Ok(true),
                 PineValue::String(order) if order == "order.ascending" => Ok(false),
@@ -118,7 +118,7 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<Option<usize>, RuntimeError> {
-        match args.get(2) {
+        match crate::builtins::args::positional_arg(args, 2) {
             Some(arg) => match self.eval_expr(&arg.value)? {
                 PineValue::Int(index) if index >= 0 => Ok(Some(index as usize)),
                 _ => Ok(None),

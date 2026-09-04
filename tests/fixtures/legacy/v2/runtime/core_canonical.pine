@@ -10,7 +10,8 @@ laterCurrent = close * 2
 currentForward = laterCurrent + 1
 up = close >= open
 previousUp = close[1] >= open[1]
-boolSum = float(up) + float(previousUp)
+previousUpFloat = bar_index == 0 ? na : float(previousUp)
+boolSum = float(up) + previousUpFloat
 boolProduct = float(up) * 2
 zeroCondition = bool(0) ? 10 : 20
 nonzeroCondition = bool(-2) ? 30 : 40

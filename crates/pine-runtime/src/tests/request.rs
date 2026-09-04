@@ -340,18 +340,10 @@ fn request_security_same_context_returns_supertrend_tuple_expression() {
     .expect("same-context ta.supertrend tuple request.security expression should run");
 
     assert_eq!(result.plots.len(), 2);
-    assert_values_close(
-        &result.plots[0].values,
-        &[
-            14.0,
-            14.0,
-            14.0,
-            8.666666666666668,
-            9.944444444444445,
-            20.037037037037038,
-        ],
-    );
-    assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
+    assert_na_prefix(&result.plots[0].values, 2);
+    assert_values_close(&result.plots[0].values[2..], &[16.0, 16.0, 16.0, 16.0]);
+    assert_na_prefix(&result.plots[1].values, 2);
+    assert_values_close(&result.plots[1].values[2..], &[1.0, 1.0, 1.0, 1.0]);
 }
 
 #[test]
@@ -373,25 +365,15 @@ fn request_security_same_context_returns_dmi_tuple_expression() {
     .expect("same-context ta.dmi tuple request.security expression should run");
 
     assert_eq!(result.plots.len(), 3);
+    assert_na_prefix(&result.plots[0].values, 3);
     assert_values_close(
-        &result.plots[0].values,
-        &[
-            0.0,
-            16.666666666666664,
-            27.777777777777775,
-            51.38888888888888,
-            44.88888888888889,
-            18.397085610200364,
-        ],
+        &result.plots[0].values[3..],
+        &[62.5, 52.0, 21.311475409836065],
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[0.0, 0.0, 0.0, 0.0, 0.0, 44.26229508196722],
-    );
-    assert_values_close(
-        &result.plots[2].values,
-        &[0.0, 50.0, 75.0, 87.5, 93.75, 67.51453488372093],
-    );
+    assert_na_prefix(&result.plots[1].values, 3);
+    assert_values_close(&result.plots[1].values[3..], &[0.0, 0.0, 44.26229508196721]);
+    assert_na_prefix(&result.plots[2].values, 4);
+    assert_values_close(&result.plots[2].values[4..], &[100.0, 67.5]);
 }
 
 #[test]
@@ -1139,18 +1121,10 @@ fn request_security_evaluates_provider_supertrend_tuple_in_requested_context() {
         .expect("provider ta.supertrend tuple expression should run");
 
     assert_eq!(result.plots.len(), 2);
-    assert_values_close(
-        &result.plots[0].values,
-        &[
-            14.0,
-            14.0,
-            14.0,
-            8.666666666666668,
-            9.944444444444445,
-            20.037037037037038,
-        ],
-    );
-    assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
+    assert_na_prefix(&result.plots[0].values, 2);
+    assert_values_close(&result.plots[0].values[2..], &[16.0, 16.0, 16.0, 16.0]);
+    assert_na_prefix(&result.plots[1].values, 2);
+    assert_values_close(&result.plots[1].values[2..], &[1.0, 1.0, 1.0, 1.0]);
 }
 
 #[test]
@@ -1177,15 +1151,8 @@ fn request_security_aligns_provider_higher_timeframe_supertrend_tuple() {
         .expect("higher timeframe provider ta.supertrend tuple request should run");
 
     assert_eq!(result.plots.len(), 2);
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[0].values[2..],
-        &[155.0, 155.0, 81.66666666666667],
-    );
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(&result.plots[1].values[2..], &[1.0, 1.0, -1.0]);
+    assert_na_prefix(&result.plots[0].values, 5);
+    assert_na_prefix(&result.plots[1].values, 5);
 }
 
 #[test]
@@ -1216,25 +1183,15 @@ fn request_security_evaluates_provider_dmi_tuple_in_requested_context() {
         .expect("provider ta.dmi tuple expression should run");
 
     assert_eq!(result.plots.len(), 3);
+    assert_na_prefix(&result.plots[0].values, 3);
     assert_values_close(
-        &result.plots[0].values,
-        &[
-            0.0,
-            16.666666666666664,
-            27.777777777777775,
-            51.38888888888888,
-            44.88888888888889,
-            18.397085610200364,
-        ],
+        &result.plots[0].values[3..],
+        &[62.5, 52.0, 21.311475409836065],
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[0.0, 0.0, 0.0, 0.0, 0.0, 44.26229508196722],
-    );
-    assert_values_close(
-        &result.plots[2].values,
-        &[0.0, 50.0, 75.0, 87.5, 93.75, 67.51453488372093],
-    );
+    assert_na_prefix(&result.plots[1].values, 3);
+    assert_values_close(&result.plots[1].values[3..], &[0.0, 0.0, 44.26229508196721]);
+    assert_na_prefix(&result.plots[2].values, 4);
+    assert_values_close(&result.plots[2].values[4..], &[100.0, 67.5]);
 }
 
 #[test]
@@ -1261,15 +1218,9 @@ fn request_security_aligns_provider_higher_timeframe_dmi_tuple() {
         .expect("higher timeframe provider ta.dmi tuple request should run");
 
     assert_eq!(result.plots.len(), 3);
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(&result.plots[0].values[2..], &[0.0, 0.0, 71.42857142857143]);
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(&result.plots[1].values[2..], &[0.0, 0.0, 0.0]);
-    assert_eq!(result.plots[2].values[0], PineValue::Na);
-    assert_eq!(result.plots[2].values[1], PineValue::Na);
-    assert_values_close(&result.plots[2].values[2..], &[0.0, 0.0, 50.0]);
+    assert_na_prefix(&result.plots[0].values, 5);
+    assert_na_prefix(&result.plots[1].values, 5);
+    assert_na_prefix(&result.plots[2].values, 5);
 }
 
 #[test]
@@ -1727,7 +1678,8 @@ fn request_security_evaluates_provider_tuple_literal_ta_range_in_requested_conte
 
     assert_eq!(result.plots.len(), 2);
     assert_values_close(&result.plots[0].values, &[2.0, 10.0, 10.0]);
-    assert_values_close(&result.plots[1].values, &[2.0, 6.0, 8.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[6.0, 8.0]);
 }
 
 #[test]
@@ -2413,15 +2365,10 @@ fn request_security_evaluates_provider_tuple_literal_ta_recursive_averages_in_re
         );
 
     assert_eq!(result.plots.len(), 2);
+    assert_na_prefix(&result.plots[0].values, 2);
     assert_values_close(
-        &result.plots[0].values,
-        &[
-            20.0,
-            20.333_333_333_333_332,
-            20.888_888_888_888_89,
-            21.592_592_592_592_59,
-            22.395_061_728_395_063,
-        ],
+        &result.plots[0].values[2..],
+        &[21.0, 65.0 / 3.0, 202.0 / 9.0],
     );
     assert_values_close(
         &result.plots[1].values,
@@ -2495,10 +2442,8 @@ fn request_security_evaluates_provider_tuple_literal_ta_momentum_flow_in_request
         assert_eq!(*value, PineValue::Na);
     }
     assert_values_close(&result.plots[0].values[3..], &[100.0, 100.0]);
-    for value in &result.plots[1].values[..2] {
-        assert_eq!(*value, PineValue::Na);
-    }
-    assert_values_close(&result.plots[1].values[2..], &[100.0, 100.0, 100.0]);
+    assert_na_prefix(&result.plots[1].values, 3);
+    assert_values_close(&result.plots[1].values[3..], &[100.0, 100.0]);
 }
 
 #[test]
@@ -3092,12 +3037,7 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_recursive_
         .expect("higher timeframe provider tuple literal ta recursive average request should run");
 
     assert_eq!(result.plots.len(), 2);
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[0].values[2..],
-        &[100.0, 100.0, 133.333_333_333_333_34],
-    );
+    assert_na_prefix(&result.plots[0].values, 5);
     assert_eq!(result.plots[1].values[0], PineValue::Na);
     assert_eq!(result.plots[1].values[1], PineValue::Na);
     assert_values_close(&result.plots[1].values[2..], &[100.0, 100.0, 175.0]);
@@ -3171,10 +3111,7 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_momentum_f
         assert_eq!(*value, PineValue::Na);
     }
     assert_values_close(&result.plots[0].values[4..], &[100.0]);
-    for value in &result.plots[1].values[..4] {
-        assert_eq!(*value, PineValue::Na);
-    }
-    assert_values_close(&result.plots[1].values[4..], &[100.0]);
+    assert_na_prefix(&result.plots[1].values, 5);
 }
 
 #[test]
@@ -3344,7 +3281,9 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_range() {
         assert_eq!(plot.values[1], PineValue::Na);
     }
     assert_values_close(&result.plots[0].values[2..], &[30.0, 30.0, 110.0]);
-    assert_values_close(&result.plots[1].values[2..], &[30.0, 30.0, 70.0]);
+    assert_eq!(result.plots[1].values[2], PineValue::Na);
+    assert_eq!(result.plots[1].values[3], PineValue::Na);
+    assert_values_close(&result.plots[1].values[4..], &[70.0]);
 }
 
 #[test]
@@ -4412,13 +4351,13 @@ fn request_security_isolates_provider_rsi_state_from_chart_state() {
         ])
         .expect("provider ta.rsi expression should run");
 
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_na_prefix(&result.plots[0].values, 3);
     assert_values_close(
-        &result.plots[0].values[1..],
-        &[100.0, 100.0, 66.66666666666666, 83.33333333333333],
+        &result.plots[0].values[3..],
+        &[66.66666666666666, 83.33333333333333],
     );
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_values_close(&result.plots[1].values[1..], &[100.0, 100.0, 100.0, 100.0]);
+    assert_na_prefix(&result.plots[1].values, 3);
+    assert_values_close(&result.plots[1].values[3..], &[100.0, 100.0]);
 }
 
 #[test]
@@ -4442,14 +4381,10 @@ fn request_security_isolates_provider_atr_state_from_chart_state() {
         ])
         .expect("provider ta.atr expression should run");
 
-    assert_values_close(
-        &result.plots[0].values,
-        &[2.0, 2.3333333333333335, 3.2222222222222223],
-    );
-    assert_values_close(
-        &result.plots[1].values,
-        &[1.0, 1.1666666666666667, 1.277777777777778],
-    );
+    assert_na_prefix(&result.plots[0].values, 2);
+    assert_values_close(&result.plots[0].values[2..], &[10.0 / 3.0]);
+    assert_na_prefix(&result.plots[1].values, 2);
+    assert_values_close(&result.plots[1].values[2..], &[4.0 / 3.0]);
 }
 
 #[test]
@@ -5686,25 +5621,12 @@ fn request_security_evaluates_provider_rma_in_requested_context() {
         ])
         .expect("provider ta.rma expression should run");
 
+    assert_na_prefix(&result.plots[0].values, 2);
+    assert_values_close(&result.plots[0].values[2..], &[21.0, 22.0, 71.0 / 3.0]);
+    assert_na_prefix(&result.plots[1].values, 2);
     assert_values_close(
-        &result.plots[0].values,
-        &[
-            20.0,
-            20.333333333333332,
-            20.88888888888889,
-            21.925925925925927,
-            23.617283950617285,
-        ],
-    );
-    assert_values_close(
-        &result.plots[1].values,
-        &[
-            5.0,
-            5.666666666666667,
-            7.444444444444445,
-            10.62962962962963,
-            15.419753086419753,
-        ],
+        &result.plots[1].values[2..],
+        &[23.0 / 3.0, 97.0 / 9.0, 419.0 / 27.0],
     );
 }
 
@@ -6092,20 +6014,13 @@ fn request_security_evaluates_provider_mfi_in_requested_context() {
         ])
         .expect("provider ta.mfi expression should run");
 
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_na_prefix(&result.plots[0].values, 3);
     assert_values_close(
-        &result.plots[0].values[2..],
-        &[
-            100.0,
-            59.183673469387756,
-            71.63120567375887,
-            36.72316384180791,
-        ],
+        &result.plots[0].values[3..],
+        &[59.183673469387756, 71.63120567375887, 36.72316384180791],
     );
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(&result.plots[1].values[2..], &[100.0, 100.0, 100.0, 100.0]);
+    assert_na_prefix(&result.plots[1].values, 3);
+    assert_values_close(&result.plots[1].values[3..], &[100.0, 100.0, 100.0]);
 }
 
 #[test]

@@ -99,11 +99,6 @@ impl TradeLedger {
         self.rebuild_net_position();
     }
 
-    pub(super) fn clear_open_trade(&mut self) {
-        self.open_trades.clear();
-        self.net_position = NetPosition::default();
-    }
-
     pub(super) fn update_extremes(&mut self, high: f64, low: f64) {
         for open_trade in &mut self.open_trades {
             if high.is_finite() {

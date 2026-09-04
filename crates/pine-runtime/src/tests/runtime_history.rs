@@ -63,6 +63,54 @@ plot(source()[maybe_offset])
 }
 
 #[test]
+fn udf_body_types_and_bindings_are_isolated_per_callsite() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("UDF callsite history isolation")
+f(x) =>
+    y = x
+    y[5]
+plot(f(close))
+plot(f(1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0].map(bar);
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(1.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Int(1),
+            PineValue::Int(1),
+        ]
+    );
+}
+
+#[test]
 fn udf_and_method_local_reassignments_keep_history_sources_distinct() {
     let source = SourceFile::new(
         "test.pine",

@@ -108,24 +108,45 @@ fn dict_optional_string(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<Option
     })
 }
 
+fn reject_py_bool(value: &Bound<'_, PyAny>, message: &str) -> PyResult<()> {
+    if value.is_instance_of::<pyo3::types::PyBool>() {
+        return Err(PyValueError::new_err(message.to_owned()));
+    }
+    Ok(())
+}
+
 fn dict_i64(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<i64> {
-    dict.get_item(name)?
-        .ok_or_else(|| PyValueError::new_err(format!("strategy alert is missing `{name}`")))?
+    let value = dict
+        .get_item(name)?
+        .ok_or_else(|| PyValueError::new_err(format!("strategy alert is missing `{name}`")))?;
+    reject_py_bool(
+        &value,
+        &format!("strategy alert `{name}` must be an integer"),
+    )?;
+    value
         .extract()
         .map_err(|_| PyValueError::new_err(format!("strategy alert `{name}` must be an integer")))
 }
 
 fn dict_usize(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<usize> {
-    dict.get_item(name)?
-        .ok_or_else(|| PyValueError::new_err(format!("strategy alert is missing `{name}`")))?
+    let value = dict
+        .get_item(name)?
+        .ok_or_else(|| PyValueError::new_err(format!("strategy alert is missing `{name}`")))?;
+    reject_py_bool(
+        &value,
+        &format!("strategy alert `{name}` must be an integer"),
+    )?;
+    value
         .extract()
         .map_err(|_| PyValueError::new_err(format!("strategy alert `{name}` must be an integer")))
 }
 
 fn dict_finite_f64(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<f64> {
-    let value: f64 = dict
+    let value = dict
         .get_item(name)?
-        .ok_or_else(|| PyValueError::new_err(format!("strategy alert is missing `{name}`")))?
+        .ok_or_else(|| PyValueError::new_err(format!("strategy alert is missing `{name}`")))?;
+    reject_py_bool(&value, &format!("strategy alert `{name}` must be numeric"))?;
+    let value: f64 = value
         .extract()
         .map_err(|_| PyValueError::new_err(format!("strategy alert `{name}` must be numeric")))?;
     if value.is_finite() {

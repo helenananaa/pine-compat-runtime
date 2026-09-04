@@ -26,16 +26,17 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let true_range = self.true_range(true);
-        let Some(true_range) = true_range.as_f64() else {
-            return Ok(PineValue::Na);
-        };
-        let value = rma_next(
+        let Some(value) = self.wilder_rma(
+            call_site_id,
+            0,
             self.call_state
                 .get(&call_site_id)
                 .and_then(PineValue::as_f64),
-            true_range,
+            true_range.as_f64(),
             length,
-        );
+        ) else {
+            return Ok(PineValue::Na);
+        };
         let value = PineValue::Float(value);
         self.call_state.insert(call_site_id, value.clone());
         Ok(value)
@@ -74,7 +75,15 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         let previous = supertrend_state(self.call_state.get(&call_site_id));
-        let atr = rma_next(previous.map(|state| state.0), true_range, atr_period);
+        let Some(atr) = self.wilder_rma(
+            call_site_id,
+            0,
+            previous.map(|state| state.0),
+            Some(true_range),
+            atr_period,
+        ) else {
+            return Ok(two_na_tuple());
+        };
         let hl2 = (high + low) / 2.0;
         let basic_upper = hl2 + factor * atr;
         let basic_lower = hl2 - factor * atr;
@@ -159,33 +168,62 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(three_na_tuple());
         };
 
-        let (plus_dm, minus_dm) = match (
+        let (Some(previous_high), Some(previous_low)) = (
             self.previous_builtin_f64("high"),
             self.previous_builtin_f64("low"),
-        ) {
-            (Some(previous_high), Some(previous_low)) => {
-                let up_move = high - previous_high;
-                let down_move = previous_low - low;
-                (
-                    if up_move > down_move && up_move > 0.0 {
-                        up_move
-                    } else {
-                        0.0
-                    },
-                    if down_move > up_move && down_move > 0.0 {
-                        down_move
-                    } else {
-                        0.0
-                    },
-                )
-            }
-            _ => (0.0, 0.0),
+        ) else {
+            return Ok(three_na_tuple());
+        };
+        let up_move = high - previous_high;
+        let down_move = previous_low - low;
+        let plus_dm = if up_move > down_move && up_move > 0.0 {
+            up_move
+        } else {
+            0.0
+        };
+        let minus_dm = if down_move > up_move && down_move > 0.0 {
+            down_move
+        } else {
+            0.0
         };
 
-        let previous = dmi_state(self.call_state.get(&call_site_id));
-        let smoothed_tr = rma_next(previous.map(|state| state.0), true_range, di_length);
-        let smoothed_plus_dm = rma_next(previous.map(|state| state.1), plus_dm, di_length);
-        let smoothed_minus_dm = rma_next(previous.map(|state| state.2), minus_dm, di_length);
+        let previous = match self.call_state.get(&call_site_id) {
+            Some(PineValue::Tuple(values)) if values.len() == 4 => Some((
+                values[0].as_f64(),
+                values[1].as_f64(),
+                values[2].as_f64(),
+                values[3].as_f64(),
+            )),
+            _ => None,
+        };
+        // Advance TR / +DM / −DM together. Returning after only one RMA is
+        // ready desyncs the SMA seed windows and leaves DMI all-na.
+        let smoothed_tr = self.wilder_rma(
+            call_site_id,
+            0,
+            previous.and_then(|values| values.0),
+            Some(true_range),
+            di_length,
+        );
+        let smoothed_plus_dm = self.wilder_rma(
+            call_site_id,
+            1,
+            previous.and_then(|values| values.1),
+            Some(plus_dm),
+            di_length,
+        );
+        let smoothed_minus_dm = self.wilder_rma(
+            call_site_id,
+            2,
+            previous.and_then(|values| values.2),
+            Some(minus_dm),
+            di_length,
+        );
+        let (Some(smoothed_tr), Some(smoothed_plus_dm), Some(smoothed_minus_dm)) =
+            (smoothed_tr, smoothed_plus_dm, smoothed_minus_dm)
+        else {
+            return Ok(three_na_tuple());
+        };
         let (plus_di, minus_di) = if smoothed_tr.is_finite() && smoothed_tr != 0.0 {
             (
                 100.0 * smoothed_plus_dm / smoothed_tr,
@@ -200,22 +238,26 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             0.0
         };
-        let adx = rma_next(previous.map(|state| state.3), dx, adx_smoothing);
-
+        let adx = self.wilder_rma(
+            call_site_id,
+            3,
+            previous.and_then(|values| values.3),
+            Some(dx),
+            adx_smoothing,
+        );
         self.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(smoothed_tr),
                 PineValue::Float(smoothed_plus_dm),
                 PineValue::Float(smoothed_minus_dm),
-                PineValue::Float(adx),
+                adx.map_or(PineValue::Na, PineValue::Float),
             ]),
         );
-
         Ok(PineValue::Tuple(vec![
             finite_float_or_na(plus_di),
             finite_float_or_na(minus_di),
-            finite_float_or_na(adx),
+            adx.map_or(PineValue::Na, finite_float_or_na),
         ]))
     }
 

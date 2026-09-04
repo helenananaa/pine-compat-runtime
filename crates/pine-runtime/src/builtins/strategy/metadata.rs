@@ -1,18 +1,8 @@
-use pine_ir::{HirCallArg, HirExpr};
+use pine_ir::HirCallArg;
 
+use crate::builtins::args::call_arg_expr;
 use crate::strategy::{StrategyExitMetadata, StrategyOrderMetadata};
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
-
-fn optional_strategy_arg_expr<'a>(
-    args: &'a [HirCallArg],
-    index: usize,
-    name: &str,
-) -> Option<&'a HirExpr> {
-    args.iter()
-        .find(|arg| arg.name.as_deref() == Some(name))
-        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
-        .map(|arg| &arg.value)
-}
 
 impl<'a> HistoricalRuntime<'a> {
     pub(super) fn eval_strategy_order_metadata(
@@ -54,15 +44,15 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<StrategyExitMetadata, RuntimeError> {
         Ok(StrategyExitMetadata {
-            comment: self.eval_optional_string_arg(args, 11, "comment")?,
-            comment_profit: self.eval_optional_string_arg(args, 12, "comment_profit")?,
-            comment_loss: self.eval_optional_string_arg(args, 13, "comment_loss")?,
-            comment_trailing: self.eval_optional_string_arg(args, 14, "comment_trailing")?,
-            alert_message: self.eval_optional_string_arg(args, 15, "alert_message")?,
-            alert_profit: self.eval_optional_string_arg(args, 16, "alert_profit")?,
-            alert_loss: self.eval_optional_string_arg(args, 17, "alert_loss")?,
-            alert_trailing: self.eval_optional_string_arg(args, 18, "alert_trailing")?,
-            disable_alert: self.eval_optional_bool_arg(args, 19, "disable_alert")?,
+            comment: self.eval_optional_string_arg(args, 12, "comment")?,
+            comment_profit: self.eval_optional_string_arg(args, 13, "comment_profit")?,
+            comment_loss: self.eval_optional_string_arg(args, 14, "comment_loss")?,
+            comment_trailing: self.eval_optional_string_arg(args, 15, "comment_trailing")?,
+            alert_message: self.eval_optional_string_arg(args, 16, "alert_message")?,
+            alert_profit: self.eval_optional_string_arg(args, 17, "alert_profit")?,
+            alert_loss: self.eval_optional_string_arg(args, 18, "alert_loss")?,
+            alert_trailing: self.eval_optional_string_arg(args, 19, "alert_trailing")?,
+            disable_alert: self.eval_optional_bool_arg(args, 20, "disable_alert")?,
         })
     }
 
@@ -72,7 +62,7 @@ impl<'a> HistoricalRuntime<'a> {
         index: usize,
         name: &str,
     ) -> Result<Option<String>, RuntimeError> {
-        let Some(expr) = optional_strategy_arg_expr(args, index, name) else {
+        let Some(expr) = call_arg_expr(args, index, name) else {
             return Ok(None);
         };
         Ok(match self.eval_expr(expr)? {
@@ -95,7 +85,7 @@ impl<'a> HistoricalRuntime<'a> {
         index: usize,
         name: &str,
     ) -> Result<bool, RuntimeError> {
-        let Some(expr) = optional_strategy_arg_expr(args, index, name) else {
+        let Some(expr) = call_arg_expr(args, index, name) else {
             return Ok(false);
         };
         Ok(matches!(self.eval_expr(expr)?, PineValue::Bool(true)))

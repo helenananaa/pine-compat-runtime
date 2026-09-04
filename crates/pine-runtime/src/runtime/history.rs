@@ -36,6 +36,14 @@ impl<'a> HistoricalRuntime<'a> {
                 );
             }
             let value = self.series_store.read(series_id, offset);
+            let value = if self.uses_v6_semantics()
+                && expr.pine_type.kind == pine_ir::ValueKind::Bool
+                && value.is_na()
+            {
+                PineValue::Bool(false)
+            } else {
+                value
+            };
             self.clone_collection_history_value(value)
         } else {
             Ok(PineValue::Na)

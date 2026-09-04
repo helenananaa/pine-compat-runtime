@@ -4,8 +4,6 @@ use crate::builtins::matrices::matrix_array_element_kind;
 use crate::error::RuntimeLoopControl;
 use crate::*;
 
-use super::expressions::eval_binary;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum StmtControl {
     None,
@@ -133,11 +131,20 @@ impl<'a> HistoricalRuntime<'a> {
             }
             HirStmtKind::TupleDecl { symbols, value } => {
                 let value = self.eval_expr(value)?;
-                let PineValue::Tuple(values) = value else {
-                    return Ok(StmtControl::None);
-                };
-                for (symbol, value) in symbols.iter().zip(values) {
-                    self.set_symbol_value(*symbol, value);
+                match value {
+                    PineValue::Tuple(values) => {
+                        for (index, symbol) in symbols.iter().enumerate() {
+                            self.set_symbol_value(
+                                *symbol,
+                                values.get(index).cloned().unwrap_or(PineValue::Na),
+                            );
+                        }
+                    }
+                    _ => {
+                        for symbol in symbols {
+                            self.set_symbol_value(*symbol, PineValue::Na);
+                        }
+                    }
                 }
             }
         }
@@ -160,7 +167,12 @@ impl<'a> HistoricalRuntime<'a> {
                 (Some(selector_value), Some(case_expr)) => {
                     let case_value = self.eval_expr(case_expr)?;
                     matches!(
-                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value)?,
+                        crate::runtime::expressions::eval_binary_with_semantics(
+                            HirBinaryOp::Eq,
+                            selector_value.clone(),
+                            case_value,
+                            self.uses_v6_semantics(),
+                        )?,
                         PineValue::Bool(true)
                     )
                 }

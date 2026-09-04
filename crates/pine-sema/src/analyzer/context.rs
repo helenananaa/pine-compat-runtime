@@ -88,6 +88,7 @@ pub(crate) struct Analyzer {
     pub(crate) user_method_call_results: HashSet<ExprKey>,
     pub(crate) expr_types: HashMap<ExprKey, PineType>,
     pub(crate) pure_expr_series_ids: HashMap<String, SeriesId>,
+    pub(crate) execution_scoped_series_ids: HashSet<SeriesId>,
     pub(crate) script_declaration: Option<(ScriptMode, Span)>,
     pub(crate) timenow_symbol: Option<SymbolId>,
     pub(crate) strategy_settings: StrategySettings,

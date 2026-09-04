@@ -13,10 +13,6 @@ impl<'args> RuntimeArgs<'args> {
         Self { raw }
     }
 
-    pub(crate) fn len(self) -> usize {
-        self.raw.len()
-    }
-
     pub(crate) fn exprs(self) -> impl Iterator<Item = &'args HirExpr> {
         self.raw.iter().map(|arg| &arg.value)
     }
@@ -25,18 +21,22 @@ impl<'args> RuntimeArgs<'args> {
         self,
         context: &mut RuntimeCallContext<'_, '_>,
         index: usize,
+        name: &str,
     ) -> Result<PineValue, RuntimeError> {
-        context.eval_expr(&self.raw[index].value)
+        match call_arg_expr(self.raw, index, name) {
+            Some(expr) => context.eval_expr(expr),
+            None => Ok(PineValue::Na),
+        }
     }
 
     pub(crate) fn optional_value(
         self,
         context: &mut RuntimeCallContext<'_, '_>,
         index: usize,
+        name: &str,
     ) -> Result<Option<PineValue>, RuntimeError> {
-        self.raw
-            .get(index)
-            .map(|arg| context.eval_expr(&arg.value))
+        call_arg_expr(self.raw, index, name)
+            .map(|expr| context.eval_expr(expr))
             .transpose()
     }
 }
@@ -55,6 +55,11 @@ pub(crate) fn call_arg_expr<'a>(
 ) -> Option<&'a HirExpr> {
     args.iter()
         .find(|arg| arg.name.as_deref() == Some(name))
-        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+        .or_else(|| positional_arg(args, index).filter(|arg| arg.name.is_none()))
         .map(|arg| &arg.value)
+}
+
+pub(crate) fn positional_arg(args: &[HirCallArg], index: usize) -> Option<&HirCallArg> {
+    args.get(index)
+        .filter(|arg| arg.name.as_deref() != Some(pine_ir::OMITTED_BUILTIN_ARG))
 }

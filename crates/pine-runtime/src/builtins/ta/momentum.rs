@@ -7,7 +7,10 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let current = self.eval_expr(source_arg)?;
         let length = if let Some(length_arg) = ta_arg(args, 1, "length") {
-            self.eval_expr(length_arg)?.as_i64().unwrap_or(1)
+            match self.eval_expr(length_arg)?.as_i64() {
+                Some(length) => length,
+                None => return Ok(PineValue::Na),
+            }
         } else {
             1
         };
@@ -66,7 +69,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(None);
         };
         let current = self.eval_expr(source_arg)?;
-        let length = self.eval_expr(length_arg)?.as_i64().unwrap_or(0);
+        let Some(length) = self.eval_expr(length_arg)?.as_i64() else {
+            return Ok(None);
+        };
         if length <= 0 {
             return Ok(None);
         }

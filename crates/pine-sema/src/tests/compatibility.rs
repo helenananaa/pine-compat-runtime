@@ -3673,6 +3673,28 @@ fn import_accepts_exported_constant_and_pure_function_subset() {
 }
 
 #[test]
+fn import_rewrites_aliases_inside_root_method_bodies() {
+    let analysis = analyze_with_libraries(
+        r#"import user/lib/1 as lib
+indicator("root method import rewrite")
+type Box
+    int seed
+method importedOffset(Box this) => lib.offset
+box = Box.new(0)
+plot(box.importedOffset())
+"#,
+        vec![("user/lib/1", "library(\"lib\")\nexport offset = 2\n")],
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn import_reports_missing_alias_for_executable_subset() {
     let analysis = analyze_with_libraries(
         "import user/lib/1\nplot(close)\n",

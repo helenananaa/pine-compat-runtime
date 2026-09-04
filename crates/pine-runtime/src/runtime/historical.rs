@@ -69,6 +69,7 @@ struct StrategyEvalCheckpoint {
     random_state: HashMap<CallSiteId, u64>,
     current_symbols: HashMap<SymbolId, PineValue>,
     current_series: HashMap<SeriesId, PineValue>,
+    active_series: HashSet<SeriesId>,
 }
 
 #[derive(Clone)]
@@ -99,6 +100,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) history_dynamic_retention_max_missed_offset: Option<usize>,
     pub(crate) current_symbols: HashMap<SymbolId, PineValue>,
     pub(crate) current_series: HashMap<SeriesId, PineValue>,
+    pub(crate) active_series: HashSet<SeriesId>,
     pub(crate) var_store: HashMap<VarSlotId, PineValue>,
     pub(crate) array_store: HashMap<u32, Vec<PineValue>>,
     pub(crate) array_kinds: HashMap<u32, ArrayElementKind>,
@@ -347,6 +349,7 @@ impl<'a> HistoricalRuntime<'a> {
             history_dynamic_retention_max_missed_offset: None,
             current_symbols: HashMap::new(),
             current_series: HashMap::new(),
+            active_series: HashSet::new(),
             var_store: HashMap::new(),
             array_store: HashMap::new(),
             array_kinds: HashMap::new(),
@@ -1149,6 +1152,7 @@ impl<'a> HistoricalRuntime<'a> {
             random_state: self.random_state.clone(),
             current_symbols: self.current_symbols.clone(),
             current_series: self.current_series.clone(),
+            active_series: self.active_series.clone(),
         });
     }
 
@@ -1167,6 +1171,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.random_state.clone_from(&checkpoint.random_state);
         self.current_symbols.clone_from(&checkpoint.current_symbols);
         self.current_series.clone_from(&checkpoint.current_series);
+        self.active_series.clone_from(&checkpoint.active_series);
     }
 
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {

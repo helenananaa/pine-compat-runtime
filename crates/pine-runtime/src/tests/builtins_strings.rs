@@ -6,6 +6,27 @@ use crate::builtins::strings::normalize_pine_regex;
 use super::*;
 
 #[test]
+fn reordered_named_string_args_use_signature_order() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("named strings")
+value = str.replace_all(replacement="x", target="a", source="abc")
+plot(str.length(value))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("named string call should run");
+    assert_eq!(result.plots[0].values, vec![PineValue::Int(3)]);
+}
+
+#[test]
 fn normalizes_pine_regex_unicode_class_modes() {
     assert_eq!(
         normalize_pine_regex(r"\d(?U)\w(?-U)\s"),

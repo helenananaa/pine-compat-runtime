@@ -504,14 +504,8 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) => value,
             _ => return Ok(PineValue::Void),
         };
-        let qty_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("qty"))
-            .map(|arg| &arg.value);
-        let qty_percent_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("qty_percent"))
-            .map(|arg| &arg.value);
+        let qty_expr = call_arg_expr(args, 1, "qty");
+        let qty_percent_expr = call_arg_expr(args, 2, "qty_percent");
         let metadata = self.eval_strategy_close_metadata(args, 3)?;
 
         let quantity = if let Some(qty_expr) = qty_expr {
@@ -624,54 +618,18 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id_expr) = call_arg_expr(args, 0, "id") else {
             return Ok(PineValue::Void);
         };
-        let from_entry_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("from_entry"))
-            .or_else(|| args.get(1).filter(|arg| arg.name.is_none()))
-            .map(|arg| &arg.value);
-        let stop_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("stop"))
-            .or_else(|| args.get(2).filter(|arg| arg.name.is_none()))
-            .map(|arg| &arg.value);
-        let limit_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("limit"))
-            .or_else(|| args.get(3).filter(|arg| arg.name.is_none()))
-            .map(|arg| &arg.value);
-        let profit_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("profit"))
-            .map(|arg| &arg.value);
-        let loss_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("loss"))
-            .map(|arg| &arg.value);
-        let trail_price_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("trail_price"))
-            .map(|arg| &arg.value);
-        let trail_points_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("trail_points"))
-            .map(|arg| &arg.value);
-        let trail_offset_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("trail_offset"))
-            .map(|arg| &arg.value);
-        let qty_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("qty"))
-            .map(|arg| &arg.value);
-        let qty_percent_expr = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("qty_percent"))
-            .map(|arg| &arg.value);
+        let from_entry_expr = call_arg_expr(args, 1, "from_entry");
+        let stop_expr = call_arg_expr(args, 2, "stop");
+        let limit_expr = call_arg_expr(args, 3, "limit");
+        let profit_expr = call_arg_expr(args, 4, "profit");
+        let loss_expr = call_arg_expr(args, 5, "loss");
+        let trail_price_expr = call_arg_expr(args, 6, "trail_price");
+        let trail_points_expr = call_arg_expr(args, 7, "trail_points");
+        let trail_offset_expr = call_arg_expr(args, 8, "trail_offset");
+        let qty_expr = call_arg_expr(args, 9, "qty");
+        let qty_percent_expr = call_arg_expr(args, 10, "qty_percent");
         let metadata = self.eval_strategy_exit_metadata(args)?;
-        let oca_name = args
-            .iter()
-            .find(|arg| arg.name.as_deref() == Some("oca_name"))
-            .map(|arg| &arg.value);
+        let oca_name = call_arg_expr(args, 11, "oca_name");
         let oca_name = match oca_name {
             Some(expr) => match self.eval_expr(expr)? {
                 PineValue::String(value) if !value.is_empty() => Some(value),

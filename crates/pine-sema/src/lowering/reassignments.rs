@@ -120,7 +120,9 @@ impl Analyzer {
         symbols: &mut HashSet<SymbolId>,
     ) {
         match &expr.kind {
-            ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
+            ExprKind::Unary { expr, .. }
+            | ExprKind::History { expr, .. }
+            | ExprKind::Group(expr) => {
                 self.collect_lower_reassigned_symbols_from_expr(expr, symbols);
             }
             ExprKind::Binary { left, right, .. } => {

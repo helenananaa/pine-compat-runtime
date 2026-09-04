@@ -109,6 +109,7 @@ fn analyzer() -> Analyzer {
         user_method_call_results: HashSet::new(),
         expr_types: HashMap::new(),
         pure_expr_series_ids: HashMap::new(),
+        execution_scoped_series_ids: HashSet::new(),
         script_declaration: None,
         timenow_symbol: None,
         strategy_settings: Default::default(),

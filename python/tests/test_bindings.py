@@ -655,6 +655,23 @@ def test_run_script_rejects_non_finite_bar_values():
         raise AssertionError("non-finite bar value should fail")
 
 
+def test_run_script_rejects_bool_bar_values():
+    invalid_bars = [
+        [{"time": True, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0}],
+        [{"time": 0, "open": True, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0}],
+        [[True, 1.0, 1.0, 1.0, 1.0, 1.0]],
+        [[0, True, 1.0, 1.0, 1.0, 1.0]],
+    ]
+
+    for bars in invalid_bars:
+        try:
+            pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
+        except ValueError as error:
+            assert "must be" in str(error)
+        else:
+            raise AssertionError(f"bool bar value should fail: {bars!r}")
+
+
 def test_run_script_rejects_duplicate_bar_times():
     bars = [
         {"time": 0, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0},
@@ -10698,16 +10715,10 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][3]["values"] == [34.0, 35.0, 36.0, 37.0, 38.0]
     assert result["plots"][4]["values"] == [None, 41.0, 43.0, 45.0, 47.0]
     assert result["plots"][5]["values"] == [20.01, 21.01, 22.01, 23.01, 24.01]
-    assert result["plots"][6]["values"] == [None, 100.0, 100.0, 100.0, 100.0]
+    assert result["plots"][6]["values"] == [None, None, None, 100.0, 100.0]
     assert result["plots"][7]["values"] == [2.0, 10.0, 10.0, 10.0, 10.0]
     assert result["plots"][8]["values"] == [None, 10.0, 10.0, 10.0, 10.0]
-    assert result["plots"][9]["values"] == [
-        2.0,
-        4.666666666666667,
-        6.4444444444444455,
-        7.629629629629631,
-        8.419753086419753,
-    ]
+    assert result["plots"][9]["values"] == [None, None, 7.333333333333333, 8.222222222222221, 8.814814814814815]
     assert result["plots"][10]["values"] == [None, None, 13.0, 14.0, 15.0]
     assert result["plots"][11]["values"] == [None, None, 9.0, 10.0, 11.0]
     assert result["plots"][12]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
@@ -10793,18 +10804,12 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][38]["values"] == [None, None, 21.0, 22.0, 23.0]
     assert result["plots"][39]["values"] == [None, None, 21.0, 22.0, 23.0]
     assert result["plots"][40]["values"] == [None, None, 100.0, 100.0, 100.0]
-    assert result["plots"][41]["values"] == [
-        20.0,
-        20.333333333333332,
-        20.88888888888889,
-        21.59259259259259,
-        22.395061728395063,
-    ]
+    assert result["plots"][41]["values"] == [None, None, 21.0, 21.666666666666668, 22.444444444444446]
     assert result["plots"][42]["values"] == [20.0, 20.75, 21.75, 22.8125, 23.875]
     assert result["plots"][43]["values"] == [20.0, 20.875, 21.9375, 23.0, 24.03125]
     assert result["plots"][44]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
     assert result["plots"][45]["values"] == [None, None, None, 100.0, 100.0]
-    assert result["plots"][46]["values"] == [None, None, 100.0, 100.0, 100.0]
+    assert result["plots"][46]["values"] == [None, None, None, 100.0, 100.0]
     assert result["plots"][47]["values"] == [None, None, 325.0, 325.0, 325.0]
     assert result["plots"][48]["values"] == [None, None, 225.0, 225.0, 225.0]
     assert result["plots"][49]["values"] == [None, 9.0, 9.0, 9.16, 9.4504]
@@ -10892,17 +10897,11 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][77]["values"] == [20.0, 20.5, 21.25, 22.125, 23.0625]
     assert result["plots"][78]["values"] == [24.0, 32.5, 37.25, 40.125, 42.0625]
     assert result["plots"][79]["values"] == [16.0, 8.5, 5.25, 4.125, 4.0625]
-    assert result["plots"][80]["values"] == [14.0, 6.0, 6.0, 6.0, 6.0]
-    assert result["plots"][81]["values"] == [1.0, -1.0, -1.0, -1.0, -1.0]
-    assert result["plots"][82]["values"] == [
-        0.0,
-        7.1428571428571415,
-        8.620689655172411,
-        9.223300970873785,
-        9.530791788856305,
-    ]
-    assert result["plots"][83]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][84]["values"] == [0.0, 50.0, 75.0, 87.5, 93.75]
+    assert result["plots"][80]["values"] == [None, None, 26.666666666666664, 26.666666666666664, 26.666666666666664]
+    assert result["plots"][81]["values"] == [None, None, 1.0, 1.0, 1.0]
+    assert result["plots"][82]["values"] == [None, None, None, 10.0, 10.0]
+    assert result["plots"][83]["values"] == [None, None, None, 0.0, 0.0]
+    assert result["plots"][84]["values"] == [None, None, None, None, 100.0]
     assert result["plots"][85]["values"] == [20.0, 20.5, 21.0, 21.5, 22.0]
     assert result["plots"][86]["values"] == [
         20.0,
@@ -10966,23 +10965,11 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][103]["values"] == [None, None, 100.0, 100.0, 150.0]
     assert result["plots"][104]["values"] == [None, None, 100.0, 100.0, 250.0]
     assert result["plots"][105]["values"] == [None, None, 100.0, 100.0, 50.0]
-    assert result["plots"][106]["values"] == [
-        None,
-        None,
-        155.0,
-        155.0,
-        81.66666666666667,
-    ]
-    assert result["plots"][107]["values"] == [None, None, 1.0, 1.0, -1.0]
-    assert result["plots"][108]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        71.42857142857143,
-    ]
-    assert result["plots"][109]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][110]["values"] == [None, None, 0.0, 0.0, 50.0]
+    assert result["plots"][106]["values"] == [None, None, None, None, None]
+    assert result["plots"][107]["values"] == [None, None, None, None, None]
+    assert result["plots"][108]["values"] == [None, None, None, None, None]
+    assert result["plots"][109]["values"] == [None, None, None, None, None]
+    assert result["plots"][110]["values"] == [None, None, None, None, None]
     assert result["plots"][111]["values"] == [None, 20.0, 21.0, 22.0, 23.0]
     assert result["plots"][112]["values"] == [10.0, 20.0, 21.0, 22.0, 23.0]
     assert result["plots"][113]["values"] == [0.0, 1.0, 1.0, 1.0, 1.0]
@@ -11101,18 +11088,12 @@ def test_run_script_request_fixture_matches_cli_contract():
         23.462027683060324,
     ]
     assert result["plots"][182]["values"] == [None, None, 22.0, 23.0, 24.0]
-    assert result["plots"][183]["values"] == [
-        20.0,
-        20.333333333333332,
-        20.88888888888889,
-        21.59259259259259,
-        22.395061728395063,
-    ]
+    assert result["plots"][183]["values"] == [None, None, 21.0, 21.666666666666668, 22.444444444444446]
     assert result["plots"][184]["values"] == [20.0, 20.75, 21.75, 22.8125, 23.875]
     assert result["plots"][185]["values"] == [20.0, 20.875, 21.9375, 23.0, 24.03125]
     assert result["plots"][186]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
     assert result["plots"][187]["values"] == [None, None, None, 100.0, 100.0]
-    assert result["plots"][188]["values"] == [None, None, 100.0, 100.0, 100.0]
+    assert result["plots"][188]["values"] == [None, None, None, 100.0, 100.0]
     assert result["plots"][189]["values"] == [None, None, 325.0, 325.0, 325.0]
     assert result["plots"][190]["values"] == [None, None, 225.0, 225.0, 225.0]
     assert result["plots"][191]["values"] == [None, 9.0, 9.0, 9.16, 9.4504]
@@ -11193,12 +11174,12 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][218]["values"] == [None, None, None, None, None]
     assert result["plots"][219]["values"] == [None, None, None, None, None]
     assert result["plots"][220]["values"] == [None, None, None, None, None]
-    assert result["plots"][221]["values"] == [None, None, 100.0, 100.0, 133.33333333333334]
+    assert result["plots"][221]["values"] == [None, None, None, None, None]
     assert result["plots"][222]["values"] == [None, None, 100.0, 100.0, 175.0]
     assert result["plots"][223]["values"] == [None, None, 100.0, 100.0, 187.5]
     assert result["plots"][224]["values"] == [None, None, None, None, 1.0]
     assert result["plots"][225]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][226]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][226]["values"] == [None, None, None, None, None]
     assert result["plots"][227]["values"] == [
         None,
         None,
@@ -11238,7 +11219,7 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][233]["values"] == [None, None, 1.2, 1.2, 2.0]
     assert result["plots"][234]["values"] == [None, None, 100.0, 100.0, 150.0]
     assert result["plots"][235]["values"] == [None, None, 30.0, 30.0, 110.0]
-    assert result["plots"][236]["values"] == [None, None, 30.0, 30.0, 70.0]
+    assert result["plots"][236]["values"] == [None, None, None, None, 70.0]
     assert result["plots"][237]["values"] == [None, None, None, None, 210.0]
     assert result["plots"][238]["values"] == [None, None, None, None, 80.0]
     assert result["plots"][239]["values"] == [None, None, None, None, 100.0]
@@ -11483,7 +11464,7 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.024434609527920613,
     ]
     assert result["plots"][292]["values"] == [2.0, 10.0, 10.0, 10.0, 10.0]
-    assert result["plots"][293]["values"] == [2.0, 6.0, 8.0, 9.0, 9.5]
+    assert result["plots"][293]["values"] == [None, 6.0, 8.0, 9.0, 9.5]
     assert result["plots"][294]["values"] == [None, 12.0, 13.0, 14.0, 15.0]
     assert result["plots"][295]["values"] == [None, 9.0, 10.0, 11.0, 12.0]
     assert result["plots"][296]["values"] == [None, 1.0, 1.0, 1.0, 1.0]

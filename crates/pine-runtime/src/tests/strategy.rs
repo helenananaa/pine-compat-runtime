@@ -7988,10 +7988,7 @@ strategy.exit("XT", "L", stop=95)
     );
     let mut hir = analysis.hir.expect("HIR");
     let args = strategy_exit_args_mut(&mut hir);
-    let stop_arg = args
-        .iter_mut()
-        .find(|arg| arg.name.as_deref() == Some("stop"))
-        .expect("stop arg");
+    let stop_arg = args.get_mut(2).expect("stop arg");
     stop_arg.name = Some("trail_price".to_owned());
     args.push(const_float_arg("trail_offset", 50.0));
 

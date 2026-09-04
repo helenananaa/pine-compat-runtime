@@ -1154,7 +1154,9 @@ fn collect_request_reassigned_names_from_expr(
     names: &mut std::collections::HashSet<String>,
 ) {
     match &expr.kind {
-        ExprKind::Unary { expr, .. } => collect_request_reassigned_names_from_expr(expr, names),
+        ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => {
+            collect_request_reassigned_names_from_expr(expr, names)
+        }
         ExprKind::History { expr, offset } => {
             collect_request_reassigned_names_from_expr(expr, names);
             collect_request_reassigned_names_from_expr(offset, names);

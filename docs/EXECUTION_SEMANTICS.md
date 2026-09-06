@@ -457,9 +457,20 @@ UTC keys with per-bar `windowId` for intraday loss/filled-order rules and
 `tradingDayId` for consecutive-loss-day rules. Missing input keeps the UTC
 subset and does not claim session-accurate support. This runtime does not
 maintain an exchange calendar. A new window
+is determined by a changed window id, not by the mere presence of a calendar gap.
+Session coverage is checked before execution: batch calls preflight their appended
+range, while single-bar calls check only the next index. Missing coverage does not
+partially execute that batch/bar. Rust runtimes and Python `RealtimeSession` accept
+`extend_session_windows` with the same v1 payload, merging supplied rows without
+dropping earlier rows. Identical executed rows are idempotent; conflicting confirmed
+or executed forming rows fail atomically with `E_SESSION_HISTORY_CHANGED`. Future
+unexecuted rows may be supplied or corrected. A runtime already executed with UTC
+fallback cannot switch to host ids without replay in a new runtime.
+Rust `with_session_windows` validates full replacement and returns a `Result`;
+Python/WASM output and RealtimeSession schema versions remain unchanged. A new window
 zeros the filled-order count, seeds a finite equity baseline, and clears
 window-scoped trips while permanent `max_drawdown` stops remain. Same-window
-bars keep the baseline and counters; a missing-bar gap starts a new window.
+bars keep the baseline and counters; calendar gaps reset only if the selected window key changes.
 `strategy.risk.allow_entry_in` accepts documented `strategy.direction.*`
 constants and rewrites later `strategy.entry` admission: allowed directions
 keep current open, add, and reversal behavior; a disallowed opposite entry

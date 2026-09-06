@@ -5,6 +5,83 @@ import pytest
 import pine_compat
 
 
+def _session_windows(indices: list[int], name: str = "day") -> dict:
+    return {
+        "schemaVersion": 1,
+        "bars": [
+            {"barIndex": index, "windowId": name, "tradingDayId": name}
+            for index in indices
+        ],
+    }
+
+
+def test_realtime_session_extends_windows_and_retries_missing_coverage() -> None:
+    source = '''//@version=6
+strategy("Session extension", calc_on_every_tick=true)
+strategy.risk.max_intraday_filled_orders(2)
+strategy.entry("L", strategy.long)
+plot(strategy.position_size)
+'''
+    session = pine_compat.create_realtime_session(
+        source, session_windows=_session_windows([0])
+    )
+    control = pine_compat.create_realtime_session(
+        source, session_windows=_session_windows([0, 1, 2])
+    )
+    session.seed([_bar(60_000, 10.0)])
+    control.seed([_bar(60_000, 10.0)])
+    before = session.result()
+    with pytest.raises(ValueError, match="E_SESSION_COVERAGE"):
+        session.update_confirmed(_bar(120_000, 10.0))
+    assert session.result() == before
+    assert session.confirmed_bars == 1
+    session.extend_session_windows(_session_windows([1]))
+    session.update_forming(_bar(120_000, 10.0))
+    control.update_forming(_bar(120_000, 10.0))
+    forming = session.result()
+    with pytest.raises(ValueError, match="E_SESSION_HISTORY_CHANGED"):
+        session.extend_session_windows(_session_windows([1, 2], "changed"))
+    assert session.result() == forming
+    assert session.forming_time == 120_000
+    session.extend_session_windows(_session_windows([0, 1, 2]))
+    for target in (session, control):
+        target.update_forming(_bar(120_000, 10.0))
+        target.update_confirmed(_bar(120_000, 10.0))
+        target.update_confirmed(_bar(180_000, 10.0))
+    assert session.result() == control.result()
+
+
+def test_realtime_session_extension_validation_is_atomic() -> None:
+    session = pine_compat.create_realtime_session(
+        '//@version=6\nstrategy("Session")\nplot(close)\n',
+        session_windows=_session_windows([0]),
+    )
+    session.seed([_bar(60_000, 10.0)])
+    for payload, code in [
+        (_session_windows([0, 1], "changed"), "E_SESSION_HISTORY_CHANGED"),
+        (_session_windows([1, 1]), "E_SESSION_DUPLICATE_BAR"),
+        ({"schemaVersion": 2, "bars": []}, "E_SESSION_SCHEMA_VERSION"),
+    ]:
+        with pytest.raises(ValueError, match=code):
+            session.extend_session_windows(payload)
+        with pytest.raises(ValueError, match="E_SESSION_COVERAGE"):
+            session.update_confirmed(_bar(120_000, 10.0))
+    session.extend_session_windows(
+        '{"schemaVersion":1,"bars":[{"barIndex":1,"windowId":"day","tradingDayId":"day"}]}'
+    )
+    session.update_confirmed(_bar(120_000, 10.0))
+    assert session.confirmed_bars == 2
+
+
+def test_realtime_session_cannot_switch_executed_utc_history_to_host_windows() -> None:
+    session = pine_compat.create_realtime_session(
+        '//@version=6\nstrategy("Session")\nplot(close)\n'
+    )
+    session.seed([_bar(60_000, 10.0)])
+    with pytest.raises(ValueError, match="E_SESSION_HISTORY_CHANGED"):
+        session.extend_session_windows(_session_windows([1]))
+
+
 def _bar(time: int, close: float) -> dict[str, float | int]:
     return {
         "time": time,

@@ -71,7 +71,9 @@ impl PyProgram {
             runtime = runtime.with_magnifier_input(magnifier);
         }
         if let Some(session_windows) = session_windows {
-            runtime = runtime.with_session_windows(session_windows);
+            runtime = runtime
+                .with_session_windows(session_windows)
+                .map_err(|err| PyValueError::new_err(err.message))?;
         }
         match execution_times.as_deref() {
             Some(execution_times) => {
@@ -107,13 +109,13 @@ impl PyProgram {
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
         let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
         let session_windows = parse_session_windows(py, session_windows)?;
-        Ok(PyRealtimeSession::new(
+        PyRealtimeSession::new(
             self.hir.clone(),
             request_environment,
             input_overrides,
             magnifier,
             session_windows,
-        ))
+        )
     }
 }
 

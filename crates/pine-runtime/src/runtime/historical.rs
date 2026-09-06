@@ -460,10 +460,26 @@ impl<'a> HistoricalRuntime<'a> {
         &self.magnifier_input
     }
 
-    #[must_use]
-    pub fn with_session_windows(mut self, input: crate::SessionWindowInput) -> Self {
+    pub fn with_session_windows(
+        mut self,
+        input: crate::SessionWindowInput,
+    ) -> Result<Self, RuntimeError> {
+        self.session_windows
+            .validate_replacement(&input, self.bars)
+            .map_err(crate::SessionWindowInputError::runtime_error)?;
         self.session_windows = input;
-        self
+        Ok(self)
+    }
+
+    pub fn extend_session_windows(
+        &mut self,
+        input: crate::SessionWindowInput,
+    ) -> Result<(), RuntimeError> {
+        self.session_windows
+            .validate_extension(&input, self.bars)
+            .map_err(crate::SessionWindowInputError::runtime_error)?;
+        self.session_windows.extend_validated(input);
+        Ok(())
     }
 
     #[must_use]
@@ -574,6 +590,11 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.session_windows
+                .validate_range(self.bars, self.bars + bars.len())
+                .map_err(crate::SessionWindowInputError::runtime_error)?;
+        }
         if self.bars == 0 && self.magnifier_chart_bar_count.is_none() {
             self.prepare_magnifier_chart_bar_count(bars.len())?;
         }
@@ -634,6 +655,11 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.session_windows
+                .validate_range(bar_index, bar_index + 1)
+                .map_err(crate::SessionWindowInputError::runtime_error)?;
+        }
         if update_kind == BarUpdateKind::Historical
             && bar_index == 0
             && !self.magnifier_input.is_empty()

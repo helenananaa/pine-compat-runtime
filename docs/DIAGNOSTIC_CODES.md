@@ -260,4 +260,5 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_SESSION_DUPLICATE_BAR`: session window input repeats a barIndex.
 - `E_SESSION_EMPTY_ID`: session window input has an empty windowId or tradingDayId.
 - `E_SESSION_COVERAGE`: session window input is missing a required chart barIndex.
+- `E_SESSION_HISTORY_CHANGED`: session window replacement/extension changes an executed confirmed or forming bar's ids, or enables host-window mode after UTC execution.
   uses that bar's standard OHLC path.

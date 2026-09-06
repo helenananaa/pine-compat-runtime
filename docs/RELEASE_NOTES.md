@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Corrected session-window validation to avoid repeated full-history scans and
+  reject missing batch coverage before execution. Added atomic Rust/Python
+  realtime `extend_session_windows` for ongoing host input. Executed confirmed
+  and forming ids cannot be rewritten (`E_SESSION_HISTORY_CHANGED`). Rust
+  `with_session_windows` now returns a `Result`; existing Rust callers must
+  handle it. Public JSON and Python RealtimeSession schema versions are unchanged.
 - Closed ordinary-chart inter-bar gaps on the shared host-gap entry. A
   previous host close that differs from the next host open is a point at
   that open, including chart-to-chart bars and the last Magnifier lower bar

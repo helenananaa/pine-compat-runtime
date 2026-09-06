@@ -188,7 +188,9 @@ fn run_profiled_json_with_options_in_mode(
         runtime = runtime.with_magnifier_input(magnifier);
     }
     if let Some(session_windows) = session_windows {
-        runtime = runtime.with_session_windows(session_windows);
+        runtime = runtime
+            .with_session_windows(session_windows)
+            .map_err(|err| err.message)?;
     }
     match execution_times.as_deref() {
         Some(execution_times) => runtime.append_bars_with_execution_times(&bars, execution_times),
@@ -251,7 +253,9 @@ fn run_result_with_options_in_mode(
         runtime = runtime.with_magnifier_input(magnifier);
     }
     if let Some(session_windows) = session_windows {
-        runtime = runtime.with_session_windows(session_windows);
+        runtime = runtime
+            .with_session_windows(session_windows)
+            .map_err(|err| err.message)?;
     }
     match execution_times.as_deref() {
         Some(execution_times) => runtime.append_bars_with_execution_times(&bars, execution_times),
@@ -323,7 +327,9 @@ fn run_non_batch_with_options(
                 runtime = runtime.with_magnifier_input(magnifier);
             }
             if let Some(session_windows) = session_windows.clone() {
-                runtime = runtime.with_session_windows(session_windows);
+                runtime = runtime
+                    .with_session_windows(session_windows)
+                    .map_err(|err| err.message)?;
             }
             match execution_times.as_deref() {
                 Some(execution_times) => {
@@ -344,7 +350,9 @@ fn run_non_batch_with_options(
                 runtime = runtime.with_magnifier_input(magnifier);
             }
             if let Some(session_windows) = session_windows.clone() {
-                runtime = runtime.with_session_windows(session_windows);
+                runtime = runtime
+                    .with_session_windows(session_windows)
+                    .map_err(|err| err.message)?;
             }
             runtime
                 .prepare_magnifier_chart_bar_count(bars.len())
@@ -372,7 +380,9 @@ fn run_non_batch_with_options(
                 runtime = runtime.with_magnifier_input(magnifier);
             }
             if let Some(session_windows) = session_windows.clone() {
-                runtime = runtime.with_session_windows(session_windows);
+                runtime = runtime
+                    .with_session_windows(session_windows)
+                    .map_err(|err| err.message)?;
             }
             runtime
                 .prepare_magnifier_chart_bar_count(history.len())

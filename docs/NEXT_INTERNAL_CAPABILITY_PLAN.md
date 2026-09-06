@@ -2,8 +2,10 @@
 
 Status: active planning document, refreshed on 2026-09-06 after mixed-family
 OCA, host-neutral session window, and ordinary-chart inter-bar gap closeout.
-Stage D inventoried original strategy fixtures and stopped: no independent
-Tester-backed accepted-but-wrong slice is available.
+Stage D has only a preliminary fixture inventory: the per-sample manifest,
+deduplication report and measured stage outcomes remain unfinished. New
+accepted-but-wrong behavior work lacks independent reference outputs, but that
+does not block completing the inventory and measurements.
 Strategy broker accuracy remains the selected direction while further
 source-version expansion is paused.
 
@@ -71,8 +73,9 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice: an authorized v5/v6 strategy with frozen bars and
-independent Tester output, then one accepted-but-wrong root cause. The Stage D
+Recommended next slice: complete the frozen v5/v6 manifest, deduplication and
+stage measurements; then select an authorized strategy with frozen bars and
+independent expected output for one accepted-but-wrong root cause. The Stage D
 blocker record is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`. The closed
 ordinary-chart gap record is
 `docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`.

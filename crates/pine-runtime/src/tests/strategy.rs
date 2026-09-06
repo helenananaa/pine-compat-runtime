@@ -2224,6 +2224,7 @@ plot(strategy.position_size)
     .expect("windows");
     let session = HistoricalRuntime::new(&hir)
         .with_session_windows(windows)
+        .expect("session input")
         .run(&bars)
         .expect("session")
         .strategy
@@ -2238,7 +2239,7 @@ plot(strategy.position_size)
             r#"{"schemaVersion":1,"bars":[{"barIndex":0,"windowId":"eth","tradingDayId":"d1"},{"barIndex":1,"windowId":"eth","tradingDayId":"d1"},{"barIndex":2,"windowId":"eth","tradingDayId":"d1"}]}"#,
         )
         .expect("windows"),
-    );
+    ).expect("session input");
     for bar in bars {
         incremental.append_bar(bar).expect("append");
     }

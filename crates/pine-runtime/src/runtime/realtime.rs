@@ -58,10 +58,36 @@ impl<'a> RealtimeRuntime<'a> {
         self.confirmed.magnifier_input()
     }
 
-    #[must_use]
-    pub fn with_session_windows(mut self, input: crate::SessionWindowInput) -> Self {
-        self.confirmed = self.confirmed.with_session_windows(input);
-        self
+    pub fn with_session_windows(
+        mut self,
+        input: crate::SessionWindowInput,
+    ) -> Result<Self, RuntimeError> {
+        let current = self.forming.as_ref().unwrap_or(&self.confirmed);
+        current
+            .session_windows
+            .validate_replacement(&input, current.bars)
+            .map_err(crate::SessionWindowInputError::runtime_error)?;
+        if let Some(forming) = &mut self.forming {
+            forming.session_windows = input.clone();
+        }
+        self.confirmed.session_windows = input;
+        Ok(self)
+    }
+
+    pub fn extend_session_windows(
+        &mut self,
+        input: crate::SessionWindowInput,
+    ) -> Result<(), RuntimeError> {
+        let current = self.forming.as_ref().unwrap_or(&self.confirmed);
+        current
+            .session_windows
+            .validate_extension(&input, current.bars)
+            .map_err(crate::SessionWindowInputError::runtime_error)?;
+        if let Some(forming) = &mut self.forming {
+            forming.session_windows.extend_validated(input.clone());
+        }
+        self.confirmed.session_windows.extend_validated(input);
+        Ok(())
     }
 
     /// Validate the complete historical range before streaming bar-zero input.

@@ -307,11 +307,6 @@ impl HistoricalRuntime<'_> {
         let timeframe_seconds =
             crate::builtins::time::timeframe_seconds(crate::DEFAULT_CHART_TIMEFRAME).unwrap_or(0);
         let equity = self.strategy_broker.equity_value(open_price);
-        if !self.session_windows.is_empty() {
-            self.session_windows
-                .validate_coverage(bar_index.saturating_add(1))
-                .map_err(crate::SessionWindowInputError::runtime_error)?;
-        }
         self.strategy_broker.reset_risk_windows(
             bar_index,
             bar.time,

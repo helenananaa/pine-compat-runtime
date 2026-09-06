@@ -401,7 +401,9 @@ impl WasmProgram {
             runtime = runtime.with_magnifier_input(magnifier);
         }
         if let Some(session_windows) = session_windows {
-            runtime = runtime.with_session_windows(session_windows);
+            runtime = runtime
+                .with_session_windows(session_windows)
+                .map_err(|err| err.message)?;
         }
         match execution_times {
             Some(execution_times) => {

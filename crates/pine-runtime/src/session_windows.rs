@@ -33,15 +33,65 @@ impl SessionWindowInput {
     }
 
     pub fn validate_coverage(&self, chart_bar_count: usize) -> Result<(), SessionWindowInputError> {
+        self.validate_range(0, chart_bar_count)
+    }
+
+    pub(crate) fn validate_range(
+        &self,
+        start: usize,
+        end: usize,
+    ) -> Result<(), SessionWindowInputError> {
         if self.is_empty() {
             return Ok(());
         }
-        for bar_index in 0..chart_bar_count {
-            if !self.bars.contains_key(&bar_index) {
-                return Err(SessionWindowInputError::MissingBar { bar_index });
+        let mut expected = start;
+        for (&bar_index, _) in self.bars.range(start..end) {
+            if bar_index != expected {
+                return Err(SessionWindowInputError::MissingBar {
+                    bar_index: expected,
+                });
+            }
+            expected += 1;
+        }
+        if expected != end {
+            return Err(SessionWindowInputError::MissingBar {
+                bar_index: expected,
+            });
+        }
+        Ok(())
+    }
+
+    pub(crate) fn validate_replacement(
+        &self,
+        input: &Self,
+        processed_bars: usize,
+    ) -> Result<(), SessionWindowInputError> {
+        for bar_index in 0..processed_bars {
+            if self.ids_for(bar_index) != input.ids_for(bar_index) {
+                return Err(SessionWindowInputError::HistoryChanged { bar_index });
+            }
+        }
+        self.validate_extension(input, processed_bars)
+    }
+
+    pub(crate) fn validate_extension(
+        &self,
+        input: &Self,
+        processed_bars: usize,
+    ) -> Result<(), SessionWindowInputError> {
+        if processed_bars > 0 && self.is_empty() && !input.is_empty() {
+            return Err(SessionWindowInputError::HistoryChanged { bar_index: 0 });
+        }
+        for (&bar_index, ids) in input.bars.range(..processed_bars) {
+            if self.ids_for(bar_index) != Some(ids) {
+                return Err(SessionWindowInputError::HistoryChanged { bar_index });
             }
         }
         Ok(())
+    }
+
+    pub(crate) fn extend_validated(&mut self, input: Self) {
+        self.bars.extend(input.bars);
     }
 }
 
@@ -51,6 +101,7 @@ pub enum SessionWindowInputError {
     DuplicateBar { bar_index: usize },
     EmptyId { bar_index: usize },
     MissingBar { bar_index: usize },
+    HistoryChanged { bar_index: usize },
 }
 
 impl SessionWindowInputError {
@@ -79,6 +130,10 @@ impl fmt::Display for SessionWindowInputError {
             Self::MissingBar { bar_index } => write!(
                 f,
                 "E_SESSION_COVERAGE: session window input is missing barIndex {bar_index}"
+            ),
+            Self::HistoryChanged { bar_index } => write!(
+                f,
+                "E_SESSION_HISTORY_CHANGED: session window input changes the executed context at barIndex {bar_index}"
             ),
         }
     }
@@ -221,6 +276,25 @@ mod tests {
             SessionWindowInputError::MissingBar { bar_index: 1 }
         ));
         input.validate_coverage(1).expect("complete");
+    }
+
+    #[test]
+    fn coverage_range_only_requires_the_new_interval() {
+        let input = session_window_input_from_bars(vec![(
+            100_000,
+            SessionWindowIds {
+                window_id: "day".into(),
+                trading_day_id: "day".into(),
+            },
+        )])
+        .expect("input");
+        input
+            .validate_range(100_000, 100_001)
+            .expect("new interval");
+        assert_eq!(
+            input.validate_range(100_000, 100_002),
+            Err(SessionWindowInputError::MissingBar { bar_index: 100_001 })
+        );
     }
 
     #[test]

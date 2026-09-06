@@ -10312,6 +10312,46 @@ fn run_csv_with_request_bars_accepts_reserved_session_windows_envelope() {
 }
 
 #[test]
+fn run_csv_with_session_windows_keeps_filled_orders_across_utc_midnight_and_resets_on_window_switch()
+ {
+    let source = include_str!(
+        "../../../../tests/fixtures/runtime/strategy_session_overnight_filled_orders.pine"
+    );
+    let bars = include_str!(
+        "../../../../tests/fixtures/runtime/strategy_session_overnight_filled_orders_bars.csv"
+    );
+    let overnight = format!(
+        r#"{{"$sessionWindows":{}}}"#,
+        include_str!("../../../../tests/fixtures/runtime/strategy_session_overnight_windows.json")
+    );
+    let switch = format!(
+        r#"{{"$sessionWindows":{}}}"#,
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_session_window_switch_windows.json"
+        )
+    );
+    let utc = run_script_csv(source, bars).expect("utc wasm");
+    let overnight_output =
+        run_script_csv_with_request_bars(source, bars, &overnight).expect("overnight wasm");
+    let switch_output =
+        run_script_csv_with_request_bars(source, bars, &switch).expect("window-switch wasm");
+    let last_size = |output: &str| {
+        let parsed: serde_json::Value = serde_json::from_str(output).expect("json");
+        parsed["strategy"]["position"]
+            .as_array()
+            .and_then(|rows| rows.last())
+            .and_then(|row| row["size"].as_f64())
+    };
+    assert_eq!(last_size(&utc), Some(2.0));
+    assert_ne!(
+        last_size(&overnight_output),
+        Some(2.0),
+        "{overnight_output}"
+    );
+    assert_eq!(last_size(&switch_output), Some(2.0), "{switch_output}");
+}
+
+#[test]
 fn timenow_uses_reserved_execution_times_in_direct_and_compiled_wasm_apis() {
     let source = "//@version=4\nstudy(\"clock\")\nplot(timenow)\nplot(timenow - time)\n";
     let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n2,1,1,1,1,1\n3,1,1,1,1,1\n";

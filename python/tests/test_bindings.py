@@ -3932,6 +3932,32 @@ plot(strategy.position_size)
     assert with_windows["strategy"]["orders"][0]["id"] == "A"
 
 
+def test_run_script_session_windows_keep_filled_orders_across_utc_midnight_and_reset_on_window_switch() -> None:
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_session_overnight_filled_orders.pine"
+    ).read_text()
+    bars = fixture_bars(
+        "tests/fixtures/runtime/strategy_session_overnight_filled_orders_bars.csv"
+    )
+    overnight = json.loads(
+        (ROOT / "tests/fixtures/runtime/strategy_session_overnight_windows.json").read_text()
+    )
+    switch = json.loads(
+        (ROOT / "tests/fixtures/runtime/strategy_session_window_switch_windows.json").read_text()
+    )
+
+    def last_size(result):
+        position = result["strategy"]["position"]
+        return position[-1]["size"] if position else None
+
+    utc = pine_compat.run_script(source, bars)
+    overnight_result = pine_compat.run_script(source, bars, session_windows=overnight)
+    switch_result = pine_compat.run_script(source, bars, session_windows=switch)
+    assert last_size(utc) == 2.0
+    assert last_size(overnight_result) != 2.0
+    assert last_size(switch_result) == 2.0
+
+
 def test_run_script_returns_strategy_mixed_oca_none_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_mixed_oca_none.pine").read_text()
     expected = json.loads(

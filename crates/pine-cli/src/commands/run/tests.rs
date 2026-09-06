@@ -67,6 +67,103 @@ fn parses_run_options_with_magnifier_bars() {
 }
 
 #[test]
+fn parses_run_options_with_session_windows() {
+    let options = parse_options(&[
+        "script.pine".to_owned(),
+        "--bars".to_owned(),
+        "bars.csv".to_owned(),
+        "--session-windows".to_owned(),
+        "session.json".to_owned(),
+    ])
+    .expect("run options");
+    assert_eq!(
+        options.session_windows_path.as_deref(),
+        Some("session.json")
+    );
+}
+
+#[test]
+fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_reset_on_window_switch()
+{
+    let script_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_overnight_filled_orders.pine");
+    let bars_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_overnight_filled_orders_bars.csv");
+    let overnight_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_overnight_windows.json");
+    let switch_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_window_switch_windows.json");
+    let utc_options = RunOptions {
+        path: script_path.clone(),
+        bars_path: bars_path.clone(),
+        magnifier_bars_path: None,
+        session_windows_path: None,
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+    let overnight_options = RunOptions {
+        path: script_path.clone(),
+        bars_path: bars_path.clone(),
+        magnifier_bars_path: None,
+        session_windows_path: Some(overnight_path),
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+    let switch_options = RunOptions {
+        path: script_path,
+        bars_path,
+        magnifier_bars_path: None,
+        session_windows_path: Some(switch_path),
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let utc = run_json_with_options(&utc_options).expect("utc CLI output");
+    let overnight = run_json_with_options(&overnight_options).expect("overnight CLI output");
+    let switch = run_json_with_options(&switch_options).expect("window-switch CLI output");
+    let utc_parsed: serde_json::Value = serde_json::from_str(&utc).expect("utc JSON");
+    let overnight_parsed: serde_json::Value =
+        serde_json::from_str(&overnight).expect("overnight JSON");
+    let switch_parsed: serde_json::Value = serde_json::from_str(&switch).expect("switch JSON");
+
+    let last_size = |value: &serde_json::Value| {
+        value["strategy"]["position"]
+            .as_array()
+            .and_then(|rows| rows.last())
+            .and_then(|row| row["size"].as_f64())
+    };
+    assert_eq!(last_size(&utc_parsed), Some(2.0));
+    assert_ne!(
+        last_size(&overnight_parsed),
+        Some(2.0),
+        "same overnight windowId across UTC midnight must keep the filled-order count: {overnight}"
+    );
+    assert_eq!(
+        last_size(&switch_parsed),
+        Some(2.0),
+        "a windowId change must reset the filled-order count once: {switch}"
+    );
+}
+
+#[test]
 fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
     let script_path = workspace_path("tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine");
     let bars_path =

@@ -4,7 +4,7 @@
 
 基线 HEAD：`ff84b09aa492e81a442bb8f35c92d12bd4cf2aab`
 
-本次完成步骤：C1–C3。
+本次完成步骤：C1–C3。预修复失败记录：在 `8120777b6^` 的 scheduler 上保留当前 17 个 `strategy_ordinary_chart` 用例，得到 12 个断言失败、5 个通过（无跳空、恰在触发价、stop-limit 不成交、limit verification、incremental）。
 
 行为锁定证据及日期：2026-09-06
 https://www.tradingview.com/pine-script-docs/concepts/strategies/

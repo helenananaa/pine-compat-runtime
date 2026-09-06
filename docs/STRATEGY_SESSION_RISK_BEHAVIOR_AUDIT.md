@@ -61,6 +61,10 @@
 `SessionWindowInput` is a host-owned optional map of `barIndex -> (windowId, tradingDayId)`.
 `reset_risk_windows` splits intraday reset from trading-day cons-loss finalization.
 CLI `--session-windows`, Python `session_windows=`, and WASM `$sessionWindows` share the same JSON parser. RealtimeSession ABI version stays 1; the argument is additive.
+CLI `parses_run_options_with_session_windows` plus CLI/Python/WASM runs of
+`strategy_session_overnight_filled_orders.pine` observe that the same
+`windowId` across UTC midnight keeps the filled-order count, and that a
+`windowId` change resets that count once.
 
 ## Commands
 

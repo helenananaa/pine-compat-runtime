@@ -2,7 +2,8 @@
 
 Status: active planning document, refreshed on 2026-09-06 after mixed-family
 OCA, host-neutral session window, and ordinary-chart inter-bar gap closeout.
-Legal corpus-driven follow-up is the next strategy target.
+Stage D inventoried original strategy fixtures and stopped: no independent
+Tester-backed accepted-but-wrong slice is available.
 Strategy broker accuracy remains the selected direction while further
 source-version expansion is paused.
 
@@ -70,8 +71,9 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice: legal corpus inventory and one evidenced
-accepted-but-wrong root cause, or an explicit open-ended blocker. The closed
+Recommended next slice: an authorized v5/v6 strategy with frozen bars and
+independent Tester output, then one accepted-but-wrong root cause. The Stage D
+blocker record is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`. The closed
 ordinary-chart gap record is
 `docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`.
 Omitted `from_entry` allocation remains FIFO and `strategy.close_all()`

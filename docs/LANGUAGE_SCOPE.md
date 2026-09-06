@@ -474,7 +474,7 @@ Global values:
 
 Input namespace:
 
-- `input`
+- `input`, including series-float source defvals such as `input(close)`
 - `input.int`
 - `input.float`
 - `input.bool`

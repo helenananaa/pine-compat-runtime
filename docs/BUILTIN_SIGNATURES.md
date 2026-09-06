@@ -1246,7 +1246,7 @@ unsupported. Other open-trade namespace functions outside `entry_price`,
 ## Inputs
 
 ```text
-input(defval: const int/float/bool/string/color, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input defval kind
+input(defval: const int/float/bool/string/color or series float, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input defval kind, or series float when defval is a source
 input.int(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
 input.float(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
 input.bool(defval: const bool, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input bool
@@ -1278,6 +1278,10 @@ Rules:
 - `input.source` returns the selected source series. Phase 1 may restrict this
   to known OHLCV-derived series. Host-side `input.source` overrides remain
   unsupported.
+- Generic `input(close)` (or another series float defval) infers the same
+  source-input return as `input.source`. Const scalar defvals still promote to
+  the `input` qualifier. Series int/bool/string/color defvals stay rejected.
+  Host-side source overrides remain unsupported.
 
 ## Plotting
 

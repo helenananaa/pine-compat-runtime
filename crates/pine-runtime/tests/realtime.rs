@@ -41,6 +41,32 @@ fn forming_close_fixture_rolls_back_repeated_updates() {
 }
 
 #[test]
+fn generic_source_input_fixture_rolls_back_forming_close() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/generic_input_source.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit");
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+}
+
+#[test]
 fn alertcondition_fixture_rolls_back_forming_events() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/alertcondition_rollback.pine");
 

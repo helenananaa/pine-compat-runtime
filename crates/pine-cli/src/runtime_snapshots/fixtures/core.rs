@@ -91,6 +91,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/generic_input.pine",
     ),
     (
+        "runtime_generic_input_source.json",
+        "tests/fixtures/runtime/generic_input_source.pine",
+    ),
+    (
         "runtime_global_series.json",
         "tests/fixtures/runtime/global_series.pine",
     ),

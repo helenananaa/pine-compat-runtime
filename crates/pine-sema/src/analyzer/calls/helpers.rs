@@ -403,7 +403,9 @@ fn accepts_expected_label(accepts: Accepts) -> Option<String> {
         Accepts::FloatMatrix => Some("matrix<float>".to_owned()),
         Accepts::QualifierBoundScalar(bound) => Some(bound.expected_label()),
         Accepts::Tuple => Some("tuple".to_owned()),
-        Accepts::InputDefval => Some("const int/float/bool/string/color".to_owned()),
+        Accepts::InputDefval => {
+            Some("const int/float/bool/string/color or series float".to_owned())
+        }
         _ => None,
     }
 }

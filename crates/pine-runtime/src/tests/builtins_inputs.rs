@@ -361,3 +361,26 @@ plot(enabled and mode == "SMA" ? math.max(src, length) * scale : close, color=sh
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[3.0, 3.0, 4.5]);
 }
+
+#[test]
+fn runs_generic_input_series_float_source_defval() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("generic source")
+src = input(close, "Source")
+plot(src)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+}

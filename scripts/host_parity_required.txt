@@ -98,6 +98,7 @@ runtime_for_in_string.json
 runtime_for_in_zero_iteration.json
 runtime_for_stateful.json
 runtime_generic_input.json
+runtime_generic_input_source.json
 runtime_global_series.json
 runtime_history_edges.json
 runtime_hline_fill.json
@@ -397,6 +398,7 @@ runtime_strategy_fill_path_high_first_long.json
 runtime_strategy_fill_path_limit_stop_collision.json
 runtime_strategy_fill_path_low_first_short.json
 runtime_strategy_fill_path_stop_limit_long.json
+runtime_strategy_generic_input_source.json
 runtime_strategy_limit_verification_entry.json
 runtime_strategy_limit_verification_exit.json
 runtime_strategy_margin_call_long.json

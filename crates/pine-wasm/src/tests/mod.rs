@@ -3195,6 +3195,17 @@ fn run_script_csv_returns_generic_input_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_generic_input_source_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/generic_input_source.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("generic source input fixture should run");
+
+    assert_snapshot("runtime_generic_input_source.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_timeframe_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/timeframe.pine"),
@@ -3771,6 +3782,17 @@ fn runs_strategy_entry_from_csv_to_strategy_json() {
     .expect("strategy entry script should run");
 
     assert_snapshot("runtime_strategy_entry.json", &output);
+}
+
+#[test]
+fn runs_strategy_generic_input_source_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_generic_input_source.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("generic source input strategy fixture should run");
+
+    assert_snapshot("runtime_strategy_generic_input_source.json", &output);
 }
 
 #[test]

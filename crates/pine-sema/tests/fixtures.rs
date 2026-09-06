@@ -918,8 +918,15 @@ fn accepts_supported_indicator_named_const_metadata_fixture() {
 fn reports_unsupported_input_defval_series_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_input_defval_series.pine",
-        &["`input` argument `defval` expects const int/float/bool/string/color, got series float"],
+        &[
+            "`input` argument `defval` expects const int/float/bool/string/color or series float, got series int",
+        ],
     );
+}
+
+#[test]
+fn accepts_supported_input_defval_source_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_input_defval_source.pine");
 }
 
 #[test]

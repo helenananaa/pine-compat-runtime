@@ -26,6 +26,7 @@ strategy.order("L", strategy.long, qty=1, limit=close)
 strategy.order("S", strategy.long, qty=1, stop=close)
 strategy.order("SL", strategy.long, qty=1, stop=close, limit=close)
 strategy.order("R", strategy.short, qty=1)
+strategy.order("DS", strategy.short)
 strategy.order("M", strategy.long, qty=1, comment="order", alert_message="fill")
 ```
 
@@ -33,18 +34,18 @@ The supported generic forms are market-long add/increase with explicit quantity
 or the configured default quantity, limit-long add/increase through the
 supported long limit timing model, stop-long add/increase through the supported
 long stop timing model, stop-limit-long add/increase through the supported long
-stop-limit timing model, and explicit-quantity reduce-only market-short long
-reduction. Unsupported variants still include omitted quantity for
-`strategy.short`, short exposure, reversal, short price-based orders, and OCA.
+stop-limit timing model, explicit-quantity market-short signed netting, and
+omitted-quantity market-short orders that use the same configured default
+quantity as long. Unsupported variants still include unknown direction values
+and unknown `oca_type` values.
 
 Unsupported examples include:
 
 ```pine
 //@version=5
 strategy("Unsupported strategy order")
-strategy.order("MissingShortQty", strategy.short)
-strategy.order("ShortStopLimit", strategy.short, qty=1, limit=close, stop=close)
-strategy.order("ShortLimit", strategy.short, qty=1, limit=close)
+strategy.order("BadDirection", "sideways", qty=1)
+strategy.order("Oca", strategy.long, qty=1, oca_name="grp", oca_type="strategy.oca.unknown")
 ```
 
 Current evidence:
@@ -53,8 +54,9 @@ Current evidence:
   strategy broker/account work, but the support matrix now splits out the first
   positive subset.
 - `tests/fixtures/conformance.tsv` records the market-long, limit-long,
-  stop-long, stop-limit-long, long default-quantity, and explicit-quantity
-  reduce-only market-short generic order subset under `strategy.order`.
+  stop-long, stop-limit-long, long default-quantity, explicit-quantity
+  market-short, and omitted-quantity market-short generic order subset under
+  `strategy.order`.
 - `tests/snapshots/matrix.json` mirrors that partial `strategy.order` matrix
   row.
 - `tests/fixtures/sema/unsupported_strategy_orders.pine` and

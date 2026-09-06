@@ -910,7 +910,9 @@ does not add runtime JSON fields.
 Both positional declaration slots remain outside the current subset.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
-use the configured or default fixed quantity.
+use the configured or default fixed quantity. `strategy.order(..., strategy.short)`
+may also omit `qty`; the same default-quantity resolution applies as for
+`strategy.long` market/limit/stop/stop-limit orders.
 `strategy(..., calc_on_order_fills=true)` accepts const bool and re-executes
 strategy statements after historical fills so later Stage 18 price ticks on
 the same bar can fill orders placed on that extra pass. Series or non-bool
@@ -975,11 +977,13 @@ placement time. Fixture-backed limit-short
 `strategy.order(id, strategy.short, qty=..., limit=price)` fills through the
 supported short limit timing model and also bypasses the `strategy.entry()`
 pyramiding limit and applies signed netting after later-bar trigger selection;
-explicit positive `qty` is required. Fixture-backed stop-short
+omitted `qty` uses the configured default quantity at placement time.
+Fixture-backed stop-short
 `strategy.order(id, strategy.short, qty=..., stop=price)` fills through the
 supported short stop timing model and also bypasses the `strategy.entry()`
 pyramiding limit while flat or already short and applies signed netting after
-stop trigger selection; explicit positive `qty` is required. Fixture-backed stop-long
+stop trigger selection; omitted `qty` uses the configured default quantity at
+placement time. Fixture-backed stop-long
 `strategy.order(id, strategy.long, qty=..., stop=price)` fills through the
 supported long stop timing model and also bypasses the `strategy.entry()`
 pyramiding limit; omitted long `qty` uses the configured default quantity at
@@ -991,8 +995,8 @@ configured default quantity at placement time. Fixture-backed stop-limit-short
 `strategy.order(id, strategy.short, qty=..., stop=stop_price, limit=limit_price)`
 uses the supported short stop-limit activation and fill timing model and also
 bypasses the `strategy.entry()` pyramiding limit while flat or already short; it
-applies signed netting after stop activation and a later limit fill, and
-explicit positive `qty` is required.
+applies signed netting after stop activation and a later limit fill; omitted
+`qty` uses the configured default quantity at placement time.
 Fixture-backed market
 `strategy.order(id, strategy.long, qty=...)` and
 `strategy.order(id, strategy.short, qty=...)` apply signed netting on the next
@@ -1001,8 +1005,8 @@ Filled signed quantity `D` against position `P` yields target `P+D`. Public
 order quantity is `|D|`. Limit generic orders reuse that signed netting after
 limit trigger selection. Stop and stop-limit generic orders reuse that signed
 netting after trigger selection or activation plus later limit fill.
-Price-based `strategy.entry()` reversal remains unsupported. Omitted
-`qty` remains unsupported for `strategy.short`. OCA behavior, same-tick
+Omitted market `strategy.short` `qty` uses the same default-quantity resolution
+as long. Price-based `strategy.entry()` reversal remains unsupported. OCA behavior, same-tick
 price-based entry exceptions, and broader multi-entry exit/reporting
 semantics remain unsupported unless fixture-backed.
 The supported `strategy.order()` subset accepts `comment`, `alert_message`,

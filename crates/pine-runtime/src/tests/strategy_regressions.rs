@@ -17,6 +17,36 @@ fn run_strategy(source_name: &str, source: &str, bars: &[Bar]) -> StrategyResult
 }
 
 #[test]
+fn market_short_order_uses_default_qty_when_omitted() {
+    let strategy = run_strategy(
+        "strategy_order_default_quantity_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_default_quantity_short.pine"
+        ),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    );
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.position.last().map(|row| row.size), Some(-1.0));
+}
+
+#[test]
+fn market_short_order_default_qty_reduces_long() {
+    let strategy = run_strategy(
+        "strategy_order_default_quantity_short_reduce_long.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_default_quantity_short_reduce_long.pine"
+        ),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    );
+
+    assert!(strategy.orders.len() >= 2);
+    assert_eq!(strategy.position.last().map(|row| row.size), Some(0.0));
+}
+
+#[test]
 fn stale_trade_key_exit_does_not_create_a_ghost_close() {
     let strategy = run_strategy(
         "strategy_stale_trade_key_exit.pine",

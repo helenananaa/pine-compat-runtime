@@ -4348,6 +4348,45 @@ def test_run_script_returns_strategy_order_short_flat_noop_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_order_default_quantity_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_default_quantity_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_order_default_quantity_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_default_quantity_short_reduce_long_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_order_default_quantity_short_reduce_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_order_default_quantity_short_reduce_long.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_order_market_short_increase_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_order_market_short_increase.pine"

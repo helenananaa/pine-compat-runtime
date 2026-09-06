@@ -1,5 +1,4 @@
 //@version=5
 strategy("Unsupported strategy orders")
-strategy.order("MissingShortQty", strategy.short)
 strategy.order("BadDirection", "sideways", qty=1)
 strategy.order("Oca", strategy.long, qty=1, oca_name="grp", oca_type="strategy.oca.unknown")

@@ -422,7 +422,11 @@ impl<'a> HistoricalRuntime<'a> {
         let direction = self.eval_expr(direction_expr)?;
         let qty = if let Some(qty_expr) = qty_expr {
             self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
-        } else if direction == PineValue::String("strategy.long".to_owned()) {
+        } else if matches!(
+            &direction,
+            PineValue::String(value)
+                if value == "strategy.long" || value == "strategy.short"
+        ) {
             let equity = self.strategy_broker.equity_value(bar.close);
             self.program
                 .strategy_settings

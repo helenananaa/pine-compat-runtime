@@ -268,6 +268,9 @@ Phase 1 executable subset:
 - `strategy.entry(id, strategy.long)` in strategy-mode scripts only when the
   declaration configures the supported fixed default quantity subset; explicit
   `qty` continues to override the declaration default
+- `strategy.order(id, strategy.short)` in strategy-mode scripts only, using the
+  same configured default quantity as omitted-qty long `strategy.order` when
+  `qty` is omitted; explicit `qty` continues to override the declaration default
 - same-id `strategy.order` replacement of pending market, limit, stop, and
   stop-limit generic orders in the same direction; opposite-direction same-id
   replacement cancels the old intent then places the new one;

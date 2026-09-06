@@ -71,7 +71,8 @@ The closed Stage 23 record is
 Keep out of scope until separately designed and fixture-backed:
 
 - Series `oca_name`.
-- Omitted `qty` for unsupported `strategy.short` order forms.
+- Omitted `qty` for remaining unsupported `strategy.short` order forms outside
+  the fixture-backed market `strategy.order` default-quantity subset.
 - Currency conversion, symbol precision, and richer account constraints.
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.

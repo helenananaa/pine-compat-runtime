@@ -4700,12 +4700,7 @@ fn reports_unsupported_strategy_order_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
-        &[
-            "explicit positive qty",
-            "strategy.long",
-            "oca_type",
-            "strategy.oca.cancel",
-        ],
+        &["strategy.long", "oca_type", "strategy.oca.cancel"],
     );
 }
 
@@ -4991,6 +4986,7 @@ fn accepts_supported_strategy_order_fixture() {
         "tests/fixtures/sema/supported_strategy_order_oca_none.pine",
         "tests/fixtures/sema/supported_strategy_order_oca_cancel.pine",
         "tests/fixtures/sema/supported_strategy_order_oca_reduce.pine",
+        "tests/fixtures/sema/supported_strategy_order_default_qty_short.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");

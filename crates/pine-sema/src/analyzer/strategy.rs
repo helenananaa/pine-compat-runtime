@@ -569,28 +569,6 @@ impl Analyzer {
                 .copied()
             })
         }
-        let direction = args.iter().enumerate().find_map(|(index, arg)| {
-            let name = strategy_order_arg_name(index, arg)?;
-            (name == "direction")
-                .then(|| self.known_const_string_value(&arg.value))
-                .flatten()
-        });
-        let has_qty = args
-            .iter()
-            .enumerate()
-            .any(|(index, arg)| strategy_order_arg_name(index, arg) == Some("qty"));
-        if direction.as_deref() == Some("strategy.short")
-            && !has_qty
-            && let Some(direction_arg) = args.iter().enumerate().find_map(|(index, arg)| {
-                (strategy_order_arg_name(index, arg) == Some("direction")).then_some(arg)
-            })
-        {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_VALUE",
-                "`strategy.order` reduce-only strategy.short requires an explicit positive qty",
-                direction_arg.span,
-            ));
-        }
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = strategy_order_arg_name(index, arg) else {
                 continue;

@@ -110,6 +110,14 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_order_default_quantity.pine",
     ),
     (
+        "runtime_strategy_order_default_quantity_short.json",
+        "tests/fixtures/runtime/strategy_order_default_quantity_short.pine",
+    ),
+    (
+        "runtime_strategy_order_default_quantity_short_reduce_long.json",
+        "tests/fixtures/runtime/strategy_order_default_quantity_short_reduce_long.pine",
+    ),
+    (
         "runtime_strategy_order_limit_default_quantity.json",
         "tests/fixtures/runtime/strategy_order_limit_default_quantity.pine",
     ),

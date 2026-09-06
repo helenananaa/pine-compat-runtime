@@ -4427,6 +4427,38 @@ fn runs_strategy_order_short_flat_noop_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_order_default_quantity_short_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_default_quantity_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("default-qty market short order should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_default_quantity_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_default_quantity_short_reduce_long_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_default_quantity_short_reduce_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("default-qty market short reduce-long should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_default_quantity_short_reduce_long.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_order_market_short_increase_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!(

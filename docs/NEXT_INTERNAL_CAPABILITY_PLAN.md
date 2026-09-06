@@ -1,8 +1,8 @@
 # Next Internal Capability Plan
 
 Status: active planning document, refreshed on 2026-09-06 after mixed-family
-OCA and host-neutral session window closeout. Ordinary-chart inter-bar gaps
-are the next strategy target.
+OCA, host-neutral session window, and ordinary-chart inter-bar gap closeout.
+Legal corpus-driven follow-up is the next strategy target.
 Strategy broker accuracy remains the selected direction while further
 source-version expansion is paused.
 
@@ -44,15 +44,16 @@ Current Stage 17-22 baseline:
 Stage 18g and Stage 23 are closed. Historical price entries, generic orders,
 exits, and margin calls share one OHLC-path event loop. Named const bool
 `use_bar_magnifier=true` walks host-owned lower-timeframe bars through that
-same path. Mixed-family OCA and host-neutral session window input are closed.
-Remaining strategy work is the deferred general inter-bar gap rewrite.
+same path. Mixed-family OCA, host-neutral session window input, and
+ordinary-chart inter-bar gaps are closed. Remaining strategy work is
+corpus-driven follow-up from legal v5/v6 samples.
 
 Active stage order:
 
-1. Keep the general chart-to-chart inter-bar gap rewrite separate from the
-   magnifier-local lower-bar-open rule.
-2. Select later reporting, account, or order-family work from real fixture
-   gaps.
+1. Inventory a legal, authorized, de-duplicated v5/v6 corpus and classify
+   failures by root cause.
+2. Close at most one evidenced accepted-but-wrong slice, or stop with an
+   explicit blocker.
 
 The closed Stage 23 record is
 `docs/STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_AUDIT.md`.
@@ -69,14 +70,16 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice: ordinary-chart inter-bar gap handling on the shared
-path. The closed session-window record is
-`docs/STRATEGY_SESSION_RISK_BEHAVIOR_AUDIT.md`.
+Recommended next slice: legal corpus inventory and one evidenced
+accepted-but-wrong root cause, or an explicit open-ended blocker. The closed
+ordinary-chart gap record is
+`docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`.
 Omitted `from_entry` allocation remains FIFO and `strategy.close_all()`
 remains independent of `close_entries_rule`. Do not add public pending-order
 fields or widen conformance without runtime behavior and host-parity evidence
 in the same slice. The closed mixed-family OCA record is
-`docs/STRATEGY_MIXED_OCA_BEHAVIOR_AUDIT.md`.
+`docs/STRATEGY_MIXED_OCA_BEHAVIOR_AUDIT.md`. The closed session-window record
+is `docs/STRATEGY_SESSION_RISK_BEHAVIOR_AUDIT.md`.
 
 The step-by-step implementation sequence, acceptance gates, and later session,
 gap, and corpus work are in

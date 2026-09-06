@@ -58,6 +58,7 @@ pub(crate) struct StrategyPathTraceEntry {
 pub(crate) struct StrategySchedulerState {
     pub(crate) identity: StrategyExecutionIdentity,
     pub(crate) path_cursor: Option<StrategyPathCursor>,
+    last_host_bar: Option<Bar>,
     max_recalculation_passes: u32,
     script_passes: usize,
     recalculation_passes: usize,
@@ -80,6 +81,7 @@ impl StrategySchedulerState {
         Self {
             identity: StrategyExecutionIdentity::default(),
             path_cursor: None,
+            last_host_bar: None,
             max_recalculation_passes,
             script_passes: 0,
             recalculation_passes: 0,
@@ -399,6 +401,12 @@ impl HistoricalRuntime<'_> {
         chart_time: i64,
         hosts: &[MagnifierHostBar],
     ) -> Result<(), RuntimeError> {
+        if let (Some(previous), Some(first)) =
+            (self.strategy_scheduler.last_host_bar, hosts.first())
+            && let Some(gap) = MagnifierHostGap::between(&previous, &first.bar)
+        {
+            self.observe_host_open_gap(chart_bar_index, chart_time, first, gap)?;
+        }
         for (index, host) in hosts.iter().enumerate() {
             if index > 0
                 && let Some(gap) = MagnifierHostGap::between(&hosts[index - 1].bar, &host.bar)
@@ -406,6 +414,9 @@ impl HistoricalRuntime<'_> {
                 self.observe_host_open_gap(chart_bar_index, chart_time, host, gap)?;
             }
             self.walk_one_host_bar(chart_bar_index, chart_time, host)?;
+        }
+        if let Some(last) = hosts.last() {
+            self.strategy_scheduler.last_host_bar = Some(last.bar);
         }
         self.strategy_scheduler.clear_path_cursor();
         Ok(())

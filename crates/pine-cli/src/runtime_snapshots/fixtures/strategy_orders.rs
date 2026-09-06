@@ -266,6 +266,22 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
     ),
     (
+        "runtime_strategy_ordinary_chart_up_gap_stop.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_up_gap_stop.pine",
+    ),
+    (
+        "runtime_strategy_ordinary_chart_down_gap_limit.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_down_gap_limit.pine",
+    ),
+    (
+        "runtime_strategy_ordinary_chart_no_gap_stop.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_no_gap_stop.pine",
+    ),
+    (
+        "runtime_strategy_ordinary_chart_gap_stop_limit.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_gap_stop_limit.pine",
+    ),
+    (
         "runtime_strategy_constants.json",
         "tests/fixtures/runtime/strategy_constants.pine",
     ),

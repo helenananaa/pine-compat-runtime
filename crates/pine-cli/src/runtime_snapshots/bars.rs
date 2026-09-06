@@ -225,6 +225,18 @@ pub(crate) fn runtime_fixture_bars_csv(fixture: &str) -> Option<&'static str> {
                 "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv"
             ))
         }
+        "tests/fixtures/runtime/strategy_ordinary_chart_up_gap_stop.pine"
+        | "tests/fixtures/runtime/strategy_ordinary_chart_gap_stop_limit.pine" => {
+            Some(include_str!(
+                "../../../../tests/fixtures/runtime/strategy_ordinary_chart_up_gap_bars.csv"
+            ))
+        }
+        "tests/fixtures/runtime/strategy_ordinary_chart_down_gap_limit.pine" => Some(include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_down_gap_bars.csv"
+        )),
+        "tests/fixtures/runtime/strategy_ordinary_chart_no_gap_stop.pine" => Some(include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_no_gap_bars.csv"
+        )),
         _ => None,
     }
 }

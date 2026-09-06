@@ -1642,6 +1642,544 @@ plot(strategy.position_size)
 }
 
 #[test]
+fn strategy_ordinary_chart_up_gap_fills_stop_at_next_open() {
+    let source = SourceFile::new(
+        "strategy_ordinary_chart_up_gap_stop.pine",
+        r#"
+strategy("ordinary up gap")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.5),
+        ],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "STP");
+    assert_eq!(strategy.orders[0].price, 12.0);
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+}
+
+#[test]
+fn strategy_ordinary_chart_down_gap_fills_limit_at_next_open() {
+    let source = SourceFile::new(
+        "strategy_ordinary_chart_down_gap_limit.pine",
+        r#"
+strategy("ordinary down gap")
+if bar_index == 0
+    strategy.entry("LIM", strategy.long, qty=1, limit=11)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(12.0, 12.0, 12.0, 12.0),
+            bar_ohlc(10.0, 10.0, 9.0, 9.5),
+        ],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "LIM");
+    assert_eq!(strategy.orders[0].price, 10.0);
+}
+
+#[test]
+fn strategy_ordinary_chart_no_gap_stop_still_fills_at_trigger() {
+    let source = SourceFile::new(
+        "strategy_ordinary_chart_no_gap_stop.pine",
+        r#"
+strategy("ordinary no gap")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 12.0, 10.0, 11.0),
+        ],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].price, 11.0);
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_stop_limit_activates_without_preactivation_fill() {
+    let source = SourceFile::new(
+        "strategy_ordinary_chart_gap_stop_limit.pine",
+        r#"
+strategy("ordinary gap stop-limit")
+if bar_index == 0
+    strategy.entry("SL", strategy.long, qty=1, stop=11, limit=10.5)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.5),
+        ],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert!(
+        strategy.orders.is_empty(),
+        "stop-limit must not fill from prices that existed only before activation: {:?}",
+        strategy.orders
+    );
+}
+
+#[test]
+fn strategy_ordinary_chart_short_down_gap_fills_stop_at_next_open() {
+    let source = SourceFile::new(
+        "strategy_ordinary_chart_short_down_gap.pine",
+        r#"
+strategy("ordinary short down gap")
+if bar_index == 0
+    strategy.entry("STP", strategy.short, qty=1, stop=9)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(8.0, 8.0, 7.0, 7.5),
+        ],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "STP");
+    assert_eq!(strategy.orders[0].price, 8.0);
+}
+
+fn run_ordinary_chart_strategy(name: &str, source: &str, bars: &[Bar]) -> crate::StrategyResult {
+    let source = SourceFile::new(name, source);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{name} diagnostics: {:?}",
+        analysis.diagnostics
+    );
+    run_historical(&analysis.hir.expect("HIR"), bars)
+        .expect(name)
+        .strategy
+        .expect("strategy")
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_at_trigger_fills_stop_at_open() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_at_trigger.pine",
+        r#"
+strategy("ordinary at trigger")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(11.0, 12.0, 11.0, 11.5),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].price, 11.0);
+}
+
+#[test]
+fn strategy_ordinary_chart_flat_bar_gap_fills_stop_at_next_open() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_flat_bar_gap.pine",
+        r#"
+strategy("ordinary flat gap")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 12.0, 12.0, 12.0),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].price, 12.0);
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_bracket_fills_limit_at_next_open() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_bracket.pine",
+        r#"
+strategy("ordinary gap bracket")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+    strategy.exit("XR", "L", stop=9, limit=11)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 12.0, 12.0, 12.0),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XR");
+    assert_eq!(strategy.orders[1].price, 12.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_price, 12.0);
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_trailing_fills_at_next_open_not_trigger() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_trailing.pine",
+        r#"
+strategy("ordinary gap trailing")
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1)
+    strategy.exit("TR", "EN", trail_price=10.5, trail_offset=50)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 11.0, 10.0, 11.0),
+            bar_ohlc(9.0, 9.0, 8.0, 8.5),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "TR");
+    assert_eq!(strategy.orders[1].price, 9.0);
+    assert_eq!(strategy.trades[0].exit_price, 9.0);
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_stop_applies_slippage_to_next_open() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_slippage.pine",
+        r#"
+strategy("ordinary gap slippage", slippage=100)
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.5),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].price, 13.0);
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_limit_verification_requires_tick_beyond_open() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_limit_verification.pine",
+        r#"
+strategy("ordinary gap verify", backtest_fill_limits_assumption=100)
+if bar_index == 0
+    strategy.entry("LIM", strategy.long, qty=1, limit=11)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(12.0, 12.0, 12.0, 12.0),
+            bar_ohlc(10.5, 10.5, 10.5, 10.5),
+        ],
+    );
+    assert!(
+        strategy.orders.is_empty(),
+        "limit verification must reject a gap open that does not trade a tick beyond the limit: {:?}",
+        strategy.orders
+    );
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_calc_on_order_fills_does_not_backfill_gap_prices() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_calc_on_order_fills.pine",
+        r#"
+strategy("ordinary gap recalc", calc_on_order_fills=true, pyramiding=2)
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+if strategy.position_size > 0
+    strategy.entry("LIM", strategy.long, qty=1, limit=10.5)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.5),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "STP");
+    assert_eq!(strategy.orders[0].price, 12.0);
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_oca_cancel_fills_one_peer() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_oca.pine",
+        r#"
+strategy("ordinary gap oca", pyramiding=2)
+if bar_index == 0
+    strategy.entry("E", strategy.long, qty=1, stop=11, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("O", strategy.long, qty=1, stop=11, oca_name="g", oca_type=strategy.oca.cancel)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.5),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_max_intraday_filled_orders_trips_after_first_open_fill() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_risk.pine",
+        r#"
+strategy("ordinary gap risk", pyramiding=2)
+strategy.risk.max_intraday_filled_orders(1)
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1, stop=11)
+    strategy.entry("B", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.5),
+        ],
+    );
+    assert_eq!(strategy.orders[0].id, "A");
+    assert_eq!(strategy.orders[0].price, 12.0);
+    assert!(
+        strategy.orders.iter().all(|order| order.id != "B"),
+        "the second stop must be cancelled after the filled-order cap trips: {:?}",
+        strategy.orders
+    );
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(0.0),
+        "max_intraday_filled_orders flattens after the first gap fill: {:?}",
+        strategy.position
+    );
+    assert_eq!(strategy.trades.len(), 1);
+}
+
+#[test]
+fn strategy_ordinary_chart_pending_market_and_stop_each_fill_once_at_open() {
+    let strategy = run_ordinary_chart_strategy(
+        "strategy_ordinary_chart_gap_market_and_stop.pine",
+        r#"
+strategy("ordinary gap market and stop", pyramiding=2)
+if bar_index == 0
+    strategy.entry("M", strategy.long, qty=1)
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.5),
+        ],
+    );
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "M");
+    assert_eq!(strategy.orders[0].price, 12.0);
+    assert_eq!(strategy.orders[1].id, "STP");
+    assert_eq!(strategy.orders[1].price, 12.0);
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(2.0)
+    );
+}
+
+#[test]
+fn strategy_ordinary_chart_gap_incremental_append_matches_batch() {
+    let source = SourceFile::new(
+        "strategy_ordinary_chart_gap_incremental.pine",
+        r#"
+strategy("ordinary gap incremental")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bars = [
+        bar_ohlc(10.0, 10.0, 10.0, 10.0),
+        bar_ohlc(12.0, 13.0, 12.0, 12.5),
+    ];
+    let batch = run_historical(&hir, &bars)
+        .expect("batch")
+        .strategy
+        .expect("strategy");
+    let mut incremental = HistoricalRuntime::new(&hir);
+    for bar in bars {
+        incremental.append_bar(bar).expect("append");
+    }
+    assert_eq!(
+        incremental.result().strategy.expect("strategy").orders,
+        batch.orders
+    );
+    assert_eq!(
+        incremental.result().strategy.expect("strategy").position,
+        batch.position
+    );
+}
+
+#[test]
+fn strategy_ordinary_chart_and_magnifier_share_next_open_gap_fill() {
+    let ordinary_source = SourceFile::new(
+        "strategy_ordinary_chart_gap_shared.pine",
+        r#"
+strategy("ordinary shared gap")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+    );
+    let magnifier_source = SourceFile::new(
+        "strategy_ordinary_chart_gap_shared_magnifier.pine",
+        r#"
+strategy("magnifier shared gap", use_bar_magnifier=true)
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11)
+plot(strategy.position_size)
+"#,
+    );
+    let ordinary = analyze_source(&ordinary_source);
+    let magnifier = analyze_source(&magnifier_source);
+    assert!(
+        ordinary.diagnostics.is_empty(),
+        "{:?}",
+        ordinary.diagnostics
+    );
+    assert!(
+        magnifier.diagnostics.is_empty(),
+        "{:?}",
+        magnifier.diagnostics
+    );
+    let bars = [
+        Bar {
+            time: 1,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 2,
+            open: 12.0,
+            high: 13.0,
+            low: 12.0,
+            close: 12.5,
+            volume: 1.0,
+        },
+    ];
+    let ordinary_fill = run_historical(&ordinary.hir.expect("HIR"), &bars)
+        .expect("ordinary")
+        .strategy
+        .expect("strategy")
+        .orders
+        .into_iter()
+        .find(|order| order.id == "STP")
+        .expect("ordinary stop");
+    let input = crate::magnifier_input_from_groups(vec![
+        crate::MagnifierChartBarInput {
+            chart_bar_index: 0,
+            bars: vec![bars[0]],
+        },
+        crate::MagnifierChartBarInput {
+            chart_bar_index: 1,
+            bars: vec![bars[1]],
+        },
+    ])
+    .expect("magnifier");
+    let magnifier_fill = HistoricalRuntime::new(&magnifier.hir.expect("HIR"))
+        .with_magnifier_input(input)
+        .run(&bars)
+        .expect("magnifier")
+        .strategy
+        .expect("strategy")
+        .orders
+        .into_iter()
+        .find(|order| order.id == "STP")
+        .expect("magnifier stop");
+    assert_eq!(ordinary_fill.price, 12.0);
+    assert_eq!(magnifier_fill.price, ordinary_fill.price);
+    assert_eq!(magnifier_fill.bar_index, ordinary_fill.bar_index);
+}
+
+#[test]
 fn strategy_session_window_overnight_does_not_false_reset_filled_orders() {
     let source = SourceFile::new(
         "strategy_session_overnight.pine",
@@ -1783,7 +2321,7 @@ fn strategy_entry_price_based_reverses_both_directions() {
     assert_eq!(stop_limit_short.trades.len(), 1);
     assert_eq!(
         stop_limit_short.orders.last().map(|order| order.price),
-        Some(4.0)
+        Some(3.0)
     );
 
     let stop_limit_long = run_named_strategy_fixture(
@@ -1948,7 +2486,7 @@ fn strategy_order_stop_limit_nets_after_activation_and_limit() {
         Some(1.0)
     );
     assert_eq!(cover.trades.len(), 1);
-    assert_eq!(cover.orders.last().map(|order| order.price), Some(4.0));
+    assert_eq!(cover.orders.last().map(|order| order.price), Some(3.0));
 
     let reverse = run_named_strategy_fixture(
         "strategy_order_stop_limit_short_against_long.pine",
@@ -3744,16 +4282,16 @@ plot(strategy.closedtrades)
     assert_eq!(strategy.orders[2].direction, "strategy.exit");
     assert_eq!(strategy.orders[2].bar_index, 3);
     assert_eq!(strategy.orders[2].qty, 1.0);
-    assert_eq!(strategy.orders[2].price, 5.0);
+    assert_eq!(strategy.orders[2].price, 6.0);
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L1");
     assert_eq!(strategy.trades[0].exit_id, "XL1");
     assert_eq!(strategy.trades[0].entry_bar_index, 1);
     assert_eq!(strategy.trades[0].exit_bar_index, 3);
     assert_eq!(strategy.trades[0].entry_price, 2.0);
-    assert_eq!(strategy.trades[0].exit_price, 5.0);
+    assert_eq!(strategy.trades[0].exit_price, 6.0);
     assert_eq!(strategy.trades[0].qty, 1.0);
-    assert_eq!(strategy.trades[0].profit, 3.0);
+    assert_eq!(strategy.trades[0].profit, 4.0);
     assert_eq!(strategy.position.len(), 3);
     assert_eq!(strategy.position[1].size, 4.0);
     assert_eq!(strategy.position[1].avg_price, Some(3.5));
@@ -3829,25 +4367,25 @@ plot(strategy.closedtrades)
     assert_eq!(strategy.orders[2].direction, "strategy.exit");
     assert_eq!(strategy.orders[2].bar_index, 3);
     assert_eq!(strategy.orders[2].qty, 1.0);
-    assert_eq!(strategy.orders[2].price, 5.0);
+    assert_eq!(strategy.orders[2].price, 6.0);
     assert_eq!(strategy.orders[3].id, "XL");
     assert_eq!(strategy.orders[3].direction, "strategy.exit");
     assert_eq!(strategy.orders[3].bar_index, 3);
     assert_eq!(strategy.orders[3].qty, 3.0);
-    assert_eq!(strategy.orders[3].price, 5.0);
+    assert_eq!(strategy.orders[3].price, 6.0);
     assert_eq!(strategy.trades.len(), 2);
     assert_eq!(strategy.trades[0].id, "L");
     assert_eq!(strategy.trades[0].exit_id, "XL");
     assert_eq!(strategy.trades[0].entry_price, 2.0);
-    assert_eq!(strategy.trades[0].exit_price, 5.0);
+    assert_eq!(strategy.trades[0].exit_price, 6.0);
     assert_eq!(strategy.trades[0].qty, 1.0);
-    assert_eq!(strategy.trades[0].profit, 3.0);
+    assert_eq!(strategy.trades[0].profit, 4.0);
     assert_eq!(strategy.trades[1].id, "L");
     assert_eq!(strategy.trades[1].exit_id, "XL");
     assert_eq!(strategy.trades[1].entry_price, 4.0);
-    assert_eq!(strategy.trades[1].exit_price, 5.0);
+    assert_eq!(strategy.trades[1].exit_price, 6.0);
     assert_eq!(strategy.trades[1].qty, 3.0);
-    assert_eq!(strategy.trades[1].profit, 3.0);
+    assert_eq!(strategy.trades[1].profit, 6.0);
     assert_eq!(strategy.position.len(), 3);
     assert_eq!(strategy.position[2].size, 0.0);
     assert_eq!(strategy.position[2].avg_price, None);

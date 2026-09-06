@@ -1,6 +1,6 @@
 # 策略准确性后续开发执行计划
 
-状态：阶段 A、B 已关闭；阶段 C–D 待执行。本文只定义开发顺序和验收门槛，不新增兼容性声明。
+状态：阶段 A、B、C 已关闭；阶段 D 待执行。本文只定义开发顺序和验收门槛，不新增兼容性声明。
 
 编写日期：2026-09-06。
 
@@ -260,28 +260,28 @@ git diff --check
 
 ### C1：行为锁定与差异表
 
-- [ ] 新增 `docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`。
-- [ ] 对照普通图表开盘、Magnifier 首个 lower open、lower-bar 间跳空三条现有路径。
-- [ ] 按方向和订单类型记录跨越触发价后的成交价、激活顺序及限价验证行为。
-- [ ] 对照官方文档和最小输出样本，锁定 stop-limit 先激活后成交及 trailing 激活/跟踪规则。
+- [x] 新增 `docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`。
+- [x] 对照普通图表开盘、Magnifier 首个 lower open、lower-bar 间跳空三条现有路径。
+- [x] 按方向和订单类型记录跨越触发价后的成交价、激活顺序及限价验证行为。
+- [x] 对照官方文档和最小输出样本，锁定 stop-limit 先激活后成交及 trailing 激活/跟踪规则。
 
 门槛：明确跳空不是连续可交易价格段；无法验证的排序或边界单列为未确认，不猜测价格。
 
 ### C2：最小实现
 
-- [ ] 先增加普通图表跳空失败用例，再修改开盘候选收集或路径入口。
-- [ ] 复用统一候选和成交入口，避免普通路径与 Magnifier 各维护一套订单逻辑。
-- [ ] 验证价格订单和待成交 market 单只参与一次开盘处理。
-- [ ] 验证 stop-limit 不使用激活前价格回填；trailing 不消费不存在的中间价格。
-- [ ] 验证风险平仓、margin、OCA 与开盘成交竞争时的既有确定性规则。
+- [x] 先增加普通图表跳空失败用例，再修改开盘候选收集或路径入口。
+- [x] 复用统一候选和成交入口，避免普通路径与 Magnifier 各维护一套订单逻辑。
+- [x] 验证价格订单和待成交 market 单只参与一次开盘处理。
+- [x] 验证 stop-limit 不使用激活前价格回填；trailing 不消费不存在的中间价格。
+- [x] 验证风险平仓、margin、OCA 与开盘成交竞争时的既有确定性规则。
 
 ### C3：矩阵和验收
 
-- [ ] 上跳、下跳、恰在触发价、无跳空、平坦 bar、多空各有代表用例。
-- [ ] limit、stop、stop-limit、bracket、trailing、slippage 和 limit verification 有交互覆盖。
-- [ ] 覆盖跨 bar 创建订单、成交后重算和标准路径/Magnifier 切换。
-- [ ] 无跳空样本结果不变；普通跳空变化逐个说明，不借此修复无关会计行为。
-- [ ] 完成跨宿主和执行模式 goldens、文档及 `scripts/verify.sh` 后收口。
+- [x] 上跳、下跳、恰在触发价、无跳空、平坦 bar、多空各有代表用例。
+- [x] limit、stop、stop-limit、bracket、trailing、slippage 和 limit verification 有交互覆盖。
+- [x] 覆盖跨 bar 创建订单、成交后重算和标准路径/Magnifier 切换。
+- [x] 无跳空样本结果不变；普通跳空变化逐个说明，不借此修复无关会计行为。
+- [x] 完成跨宿主和执行模式 goldens、文档及 `scripts/verify.sh` 后收口。
 
 ## 8. 阶段 D：真实现代策略语料驱动补缺
 

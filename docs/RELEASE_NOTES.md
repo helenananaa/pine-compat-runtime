@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Closed ordinary-chart inter-bar gaps on the shared host-gap entry. A
+  previous host close that differs from the next host open is a point at
+  that open, including chart-to-chart bars and the last Magnifier lower bar
+  of one chart bar to the first of the next. Gapped-through price orders
+  fill at the next open, not at the trigger and not along a close-to-open
+  segment. Stop-limit activation does not reuse pre-activation gap prices.
+  Trailing uses the open mark only. No-gap samples still fill at the
+  trigger on the inferred path. Public `StrategyResult` schema is unchanged.
 - Added host-neutral session window input `schemaVersion` 1. Optional
   per-bar `windowId` and `tradingDayId` drive intraday loss/filled-order
   resets and consecutive-loss-day windows. Missing input keeps the documented
@@ -23,8 +31,8 @@
   stop-limit fills stay fail-closed until a later bar. Same-price user exit
   versus margin is sample-locked user-then-margin. `calc_on_order_fills`
   resumes from the current path mark. Public `StrategyResult` schema versions
-  are unchanged. Bar Magnifier fill wiring and inter-bar gap rewrite remain
-  deferred.
+  are unchanged. Bar Magnifier fill wiring is closed. Ordinary-chart inter-bar
+  gaps are closed on the same host-gap entry.
 - Added the versioned Python `RealtimeSession` ABI. A compiled program can now
   own a persistent native realtime runtime without leaking its HIR, seed a
   complete historical batch with correct dataset-end semantics, replace a

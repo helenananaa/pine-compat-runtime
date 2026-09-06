@@ -765,10 +765,10 @@ fn strategy_exit_qty_fixture_has_partial_order_trade_and_remaining_position() {
         1
     );
     assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XQ","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.75,"price":2.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XQ","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.75,"price":2}]"#
         ));
     assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":0.75,"profit":0.375}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2,"qty":0.75,"profit":0}]"#
         ));
     assert!(output.contains(
             r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1.25,"avgPrice":2}]"#
@@ -793,10 +793,10 @@ fn strategy_exit_qty_percent_fixture_has_absolute_qty_and_existing_shape() {
         1
     );
     assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XP","barIndex":1,"time":2,"direction":"strategy.exit","qty":1,"price":2.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XP","barIndex":1,"time":2,"direction":"strategy.exit","qty":1,"price":2}]"#
         ));
     assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":1,"profit":0.5}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2,"qty":1,"profit":0}]"#
         ));
     assert!(output.contains(
         r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1,"avgPrice":2}]"#
@@ -825,10 +825,10 @@ fn strategy_exit_reservation_fixture_has_host_stable_shape() {
         2
     );
     assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XS","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2.5},{"id":"XL","barIndex":1,"time":2,"direction":"strategy.exit","qty":1.5,"price":1.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XS","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2},{"id":"XL","barIndex":1,"time":2,"direction":"strategy.exit","qty":1.5,"price":2}]"#
         ));
     assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":0.5,"profit":0.25},{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":1.5,"qty":1.5,"profit":-0.75}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2,"qty":0.5,"profit":0},{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2,"qty":1.5,"profit":0}]"#
         ));
     assert!(output.contains(
             r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1.5,"avgPrice":2},{"barIndex":1,"size":0,"avgPrice":null}]"#
@@ -859,10 +859,10 @@ fn strategy_exit_omitted_replaces_reservations_fixture_has_host_stable_shape() {
         1
     );
     assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XFULL","barIndex":2,"time":3,"direction":"strategy.exit","qty":2,"price":2.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XFULL","barIndex":2,"time":3,"direction":"strategy.exit","qty":2,"price":3}]"#
         ));
     assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":2,"entryTime":2,"exitTime":3,"entryPrice":2,"exitPrice":2.5,"qty":2,"profit":1}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":2,"entryTime":2,"exitTime":3,"entryPrice":2,"exitPrice":3,"qty":2,"profit":2}]"#
         ));
     assert!(output.contains(
             r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":2,"size":0,"avgPrice":null}]"#

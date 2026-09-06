@@ -192,7 +192,10 @@ Phase 1 executable subset:
   host-owned bar-magnifier lower-timeframe input is keyed by chart bar with
   explicit standard-OHLC fallback; named const bool `use_bar_magnifier` is
   accepted for v5/v6 historical fill wiring with host-owned lower-timeframe
-  bars, chart-scoped public fill identity, and standard-OHLC fallback
+  bars, chart-scoped public fill identity, and standard-OHLC fallback;
+  ordinary-chart and magnifier host sequences share one gap point event at
+  the next open when the previous host close differs from that open, so
+  gapped-through price orders fill at the open rather than at the trigger
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled through the supported historical broker model for long market entries
   up to the configured `pyramiding` limit

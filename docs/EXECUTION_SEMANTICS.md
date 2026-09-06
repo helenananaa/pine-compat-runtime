@@ -417,12 +417,16 @@ When coverage exists, each lower-timeframe bar walks the existing Stage 18g
 OHLC or OLHC path through the unified broker candidate selector. Public fill,
 order, trade, and alert `bar_index` and `time` stay chart-bar scoped; the
 public event timestamp is the chart-bar time. The first tradable open of a
-covered chart bar is that group's first lower-bar open. A gap between one
-lower bar's close and the next lower bar's open is a point event at the next
-open, not a tradable close-to-open segment. Price orders are therefore tested
-for direction-aware marketability at that open; a stop-limit cannot reuse a
-pre-activation gap price, and trailing activation/ratchet transitions occur
-before any later stop fill. `calc_on_order_fills` extra passes resume from the
+covered chart bar is that group's first lower-bar open. A previous host close
+that differs from the next host open — including ordinary chart-to-chart bars
+and the last lower bar of one chart bar to the first lower bar of the next —
+is a point event at that next open, not a tradable close-to-open segment.
+Price orders are therefore tested for direction-aware marketability at that
+open; a stop-limit cannot reuse a pre-activation gap price, and trailing
+activation/ratchet transitions occur before any later stop fill. Pending
+market orders still fill once on the pre-script open path. When previous
+close equals next open, the inferred OHLC/OLHC path still fills at the
+trigger. `calc_on_order_fills` extra passes resume from the
 unconsumed lower-bar/path cursor and do not replay consumed marks. Missing
 groups emit `W_MAGNIFIER_FALLBACK` and empty groups emit `W_MAGNIFIER_GAP`, both
 falling back to that chart bar's standard OHLC path. Invalid host input fails

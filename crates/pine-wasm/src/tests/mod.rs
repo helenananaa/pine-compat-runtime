@@ -4277,6 +4277,58 @@ fn runs_strategy_mixed_oca_none_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_ordinary_chart_up_gap_stop_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_up_gap_stop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_up_gap_bars.csv"),
+    )
+    .expect("strategy ordinary chart up gap stop should run");
+    assert_snapshot("runtime_strategy_ordinary_chart_up_gap_stop.json", &output);
+}
+
+#[test]
+fn runs_strategy_ordinary_chart_down_gap_limit_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_down_gap_limit.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_down_gap_bars.csv"
+        ),
+    )
+    .expect("strategy ordinary chart down gap limit should run");
+    assert_snapshot(
+        "runtime_strategy_ordinary_chart_down_gap_limit.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_ordinary_chart_no_gap_stop_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_no_gap_stop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_no_gap_bars.csv"),
+    )
+    .expect("strategy ordinary chart no gap stop should run");
+    assert_snapshot("runtime_strategy_ordinary_chart_no_gap_stop.json", &output);
+}
+
+#[test]
+fn runs_strategy_ordinary_chart_gap_stop_limit_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_gap_stop_limit.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_up_gap_bars.csv"),
+    )
+    .expect("strategy ordinary chart gap stop-limit should run");
+    assert_snapshot(
+        "runtime_strategy_ordinary_chart_gap_stop_limit.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_order_replace_limit_with_stop_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!(

@@ -10243,6 +10243,23 @@ fn run_csv_with_request_bars_accepts_reserved_magnifier_envelope() {
 }
 
 #[test]
+fn run_csv_with_request_bars_accepts_reserved_session_windows_envelope() {
+    let source = "//@version=5\nstrategy(\"session host\")\nplot(close)\n";
+    let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n";
+    let host_input = r#"{"$sessionWindows":{"schemaVersion":1,"bars":[{"barIndex":0,"windowId":"eth","tradingDayId":"d1"}]}}"#;
+    let output = run_script_csv_with_request_bars(source, bars, host_input)
+        .expect("session window envelope is valid");
+    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    let invalid = run_script_csv_with_request_bars_internal(
+        source,
+        bars,
+        r#"{"$sessionWindows":{"schemaVersion":2,"bars":[]}}"#,
+    )
+    .expect_err("unsupported schema");
+    assert!(invalid.contains("E_SESSION_SCHEMA_VERSION"), "{invalid}");
+}
+
+#[test]
 fn timenow_uses_reserved_execution_times_in_direct_and_compiled_wasm_apis() {
     let source = "//@version=4\nstudy(\"clock\")\nplot(timenow)\nplot(timenow - time)\n";
     let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n2,1,1,1,1,1\n3,1,1,1,1,1\n";

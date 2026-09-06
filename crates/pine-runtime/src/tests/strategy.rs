@@ -1642,6 +1642,75 @@ plot(strategy.position_size)
 }
 
 #[test]
+fn strategy_session_window_overnight_does_not_false_reset_filled_orders() {
+    let source = SourceFile::new(
+        "strategy_session_overnight.pine",
+        r#"
+strategy("session overnight", pyramiding=2)
+strategy.risk.max_intraday_filled_orders(2)
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("B", strategy.long, qty=1)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bar = |time: i64| crate::Bar {
+        time,
+        open: 10.0,
+        high: 10.0,
+        low: 10.0,
+        close: 10.0,
+        volume: 1.0,
+    };
+    let bars = [
+        bar(86_400_000 - 1_000),
+        bar(86_400_000 + 1_000),
+        bar(2 * 86_400_000 + 1_000),
+    ];
+    let utc = run_historical(&hir, &bars)
+        .expect("utc")
+        .strategy
+        .expect("strategy");
+    assert_eq!(utc.position.last().map(|snapshot| snapshot.size), Some(2.0));
+    let windows = crate::session_window_input_from_json(
+        r#"{"schemaVersion":1,"bars":[{"barIndex":0,"windowId":"eth","tradingDayId":"d1"},{"barIndex":1,"windowId":"eth","tradingDayId":"d1"},{"barIndex":2,"windowId":"eth","tradingDayId":"d1"}]}"#,
+    )
+    .expect("windows");
+    let session = HistoricalRuntime::new(&hir)
+        .with_session_windows(windows)
+        .run(&bars)
+        .expect("session")
+        .strategy
+        .expect("strategy");
+    assert!(
+        session.position.last().map(|snapshot| snapshot.size) != Some(2.0),
+        "same overnight window must count both fills toward max_intraday_filled_orders: {:?}",
+        session.position.last()
+    );
+    let mut incremental = HistoricalRuntime::new(&hir).with_session_windows(
+        crate::session_window_input_from_json(
+            r#"{"schemaVersion":1,"bars":[{"barIndex":0,"windowId":"eth","tradingDayId":"d1"},{"barIndex":1,"windowId":"eth","tradingDayId":"d1"},{"barIndex":2,"windowId":"eth","tradingDayId":"d1"}]}"#,
+        )
+        .expect("windows"),
+    );
+    for bar in bars {
+        incremental.append_bar(bar).expect("append");
+    }
+    assert_eq!(
+        incremental.result().strategy.expect("strategy").position,
+        session.position
+    );
+}
+
+#[test]
 fn strategy_entry_limit_reverses_short_after_trigger() {
     let strategy = run_named_strategy_fixture(
         "strategy_entry_limit_reverses_short.pine",

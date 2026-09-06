@@ -3888,6 +3888,50 @@ def test_run_script_returns_strategy_mixed_oca_order_exit_reduce_fixture_contrac
     assert result == expected
 
 
+def test_run_script_rejects_unknown_session_window_schema_version() -> None:
+    source = """//@version=5
+strategy("session")
+strategy.risk.max_intraday_filled_orders(2)
+plot(strategy.position_size)
+"""
+    try:
+        pine_compat.run_script(
+            source,
+            BARS,
+            session_windows={"schemaVersion": 2, "bars": []},
+        )
+        raise AssertionError("expected schema version error")
+    except ValueError as exc:
+        assert "E_SESSION_SCHEMA_VERSION" in str(exc)
+
+
+def test_run_script_accepts_session_windows_and_keeps_utc_subset_without_input() -> None:
+    source = """//@version=5
+strategy("session utc subset", pyramiding=2)
+strategy.risk.max_intraday_filled_orders(8)
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+plot(strategy.position_size)
+"""
+    without = pine_compat.run_script(source, BARS)
+    with_windows = pine_compat.run_script(
+        source,
+        BARS,
+        session_windows={
+            "schemaVersion": 1,
+            "bars": [
+                {"barIndex": 0, "windowId": "eth", "tradingDayId": "d1"},
+                {"barIndex": 1, "windowId": "eth", "tradingDayId": "d1"},
+                {"barIndex": 2, "windowId": "rth", "tradingDayId": "d1"},
+            ],
+        },
+    )
+    assert without["diagnostics"] == []
+    assert with_windows["diagnostics"] == []
+    assert without["strategy"]["orders"][0]["id"] == "A"
+    assert with_windows["strategy"]["orders"][0]["id"] == "A"
+
+
 def test_run_script_returns_strategy_mixed_oca_none_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_mixed_oca_none.pine").read_text()
     expected = json.loads(

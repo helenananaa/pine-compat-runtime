@@ -243,7 +243,9 @@ Phase 1 executable subset:
 - host-neutral intraday risk windows keyed by UTC day from bar time when the
   chart timeframe is at or below 1D, and by bar time when the timeframe is
   higher than 1D; missing bars start a new window; non-positive timeframes fail
-  closed to the UTC-day key; this runtime has no session calendar
+  closed to the UTC-day key; optional host session window input may replace
+  those UTC keys with per-bar `windowId` and `tradingDayId`; missing input
+  keeps the UTC subset; this runtime does not maintain an exchange calendar
 - `strategy.risk.max_intraday_loss(value, type)` in strategy-mode scripts only
   with simple positive finite numeric value and `strategy.cash` or
   `strategy.percent_of_equity`; loss is measured from maximum window equity

@@ -305,12 +305,18 @@ impl HistoricalRuntime<'_> {
         let timeframe_seconds =
             crate::builtins::time::timeframe_seconds(crate::DEFAULT_CHART_TIMEFRAME).unwrap_or(0);
         let equity = self.strategy_broker.equity_value(open_price);
-        self.strategy_broker.reset_intraday_window(
+        if !self.session_windows.is_empty() {
+            self.session_windows
+                .validate_coverage(bar_index.saturating_add(1))
+                .map_err(crate::SessionWindowInputError::runtime_error)?;
+        }
+        self.strategy_broker.reset_risk_windows(
             bar_index,
             bar.time,
             timeframe_seconds,
             equity,
             open_price,
+            self.session_windows.ids_for(bar_index),
         );
         self.trace_strategy_phase(StrategyBarPhase::EligibleEntryFills);
         let mut steps: Vec<_> = HistoricalFillStep::pre_script_path().to_vec();

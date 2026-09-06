@@ -90,9 +90,16 @@ pub(crate) struct StrategyRiskState {
     pub intraday_filled_orders: u32,
     #[allow(dead_code)]
     pub intraday_equity_baseline: Option<f64>,
-    pub trading_day_key: Option<i64>,
+    pub window_key: Option<RiskWindowKey>,
+    pub trading_day_key: Option<RiskWindowKey>,
     pub window_realized_pnl: f64,
     pub consecutive_loss_days: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum RiskWindowKey {
+    Utc(i64),
+    Host(String),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -615,6 +622,7 @@ impl super::BrokerState {
         self.reset_intraday_window(bar_index, time_ms, timeframe_seconds, equity, equity);
     }
 
+    #[cfg(test)]
     pub(crate) fn reset_intraday_window(
         &mut self,
         bar_index: usize,
@@ -623,27 +631,57 @@ impl super::BrokerState {
         equity: f64,
         mark: f64,
     ) {
-        let key = intraday_window_key(time_ms, timeframe_seconds);
-        if self.risk_state.trading_day_key == Some(key) {
+        self.reset_risk_windows(bar_index, time_ms, timeframe_seconds, equity, mark, None);
+    }
+
+    pub(crate) fn reset_risk_windows(
+        &mut self,
+        bar_index: usize,
+        time_ms: i64,
+        timeframe_seconds: i64,
+        equity: f64,
+        mark: f64,
+        host: Option<&crate::SessionWindowIds>,
+    ) {
+        let (window, trading_day) = match host {
+            Some(ids) => (
+                RiskWindowKey::Host(ids.window_id.clone()),
+                RiskWindowKey::Host(ids.trading_day_id.clone()),
+            ),
+            None => {
+                let utc = RiskWindowKey::Utc(intraday_window_key(time_ms, timeframe_seconds));
+                (utc.clone(), utc)
+            }
+        };
+        let window_changed = self.risk_state.window_key.as_ref() != Some(&window);
+        let day_changed = self.risk_state.trading_day_key.as_ref() != Some(&trading_day);
+        if !window_changed && !day_changed {
             return;
         }
-        let had_window = self.risk_state.trading_day_key.is_some();
-        if had_window {
-            self.finalize_completed_loss_window();
+        if day_changed {
+            if self.risk_state.trading_day_key.is_some() {
+                self.finalize_completed_loss_window();
+            }
+            self.risk_state.trading_day_key = Some(trading_day);
+            self.risk_state.window_realized_pnl = 0.0;
         }
-        self.risk_state.trading_day_key = Some(key);
-        self.risk_state.intraday_filled_orders = 0;
-        self.risk_state.window_realized_pnl = 0.0;
-        self.risk_state.intraday_equity_baseline = if equity.is_finite() {
-            Some(equity)
-        } else {
-            None
-        };
-        self.risk_state
-            .tripped_rules
-            .retain(|kind| !kind.is_window_scoped());
-        self.risk_state.blocked_order_placement = !self.risk_state.tripped_rules.is_empty();
+        if window_changed {
+            self.risk_state.window_key = Some(window);
+            self.risk_state.intraday_filled_orders = 0;
+            self.risk_state.intraday_equity_baseline = if equity.is_finite() {
+                Some(equity)
+            } else {
+                None
+            };
+            self.risk_state
+                .tripped_rules
+                .retain(|kind| !kind.is_window_scoped());
+            self.risk_state.blocked_order_placement = !self.risk_state.tripped_rules.is_empty();
+        }
         if self.risk_state.blocked_order_placement {
+            return;
+        }
+        if !day_changed {
             return;
         }
         let Some(limit) = self.risk_rules.max_cons_loss_days else {

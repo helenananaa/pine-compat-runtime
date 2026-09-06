@@ -1,7 +1,8 @@
 # Next Internal Capability Plan
 
 Status: active planning document, refreshed on 2026-09-06 after mixed-family
-OCA closeout. Host-neutral session risk windows are the next strategy target.
+OCA and host-neutral session window closeout. Ordinary-chart inter-bar gaps
+are the next strategy target.
 Strategy broker accuracy remains the selected direction while further
 source-version expansion is paused.
 
@@ -43,16 +44,14 @@ Current Stage 17-22 baseline:
 Stage 18g and Stage 23 are closed. Historical price entries, generic orders,
 exits, and margin calls share one OHLC-path event loop. Named const bool
 `use_bar_magnifier=true` walks host-owned lower-timeframe bars through that
-same path. Mixed-family OCA is closed. Remaining strategy work is session
-calendars and the deferred general inter-bar gap rewrite.
+same path. Mixed-family OCA and host-neutral session window input are closed.
+Remaining strategy work is the deferred general inter-bar gap rewrite.
 
 Active stage order:
 
-1. Add an instrument-session calendar before claiming exchange-session risk
-   parity.
-2. Keep the general chart-to-chart inter-bar gap rewrite separate from the
+1. Keep the general chart-to-chart inter-bar gap rewrite separate from the
    magnifier-local lower-bar-open rule.
-3. Select later reporting, account, or order-family work from real fixture
+2. Select later reporting, account, or order-family work from real fixture
    gaps.
 
 The closed Stage 23 record is
@@ -70,7 +69,9 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice: host-neutral session/window input for risk rules.
+Recommended next slice: ordinary-chart inter-bar gap handling on the shared
+path. The closed session-window record is
+`docs/STRATEGY_SESSION_RISK_BEHAVIOR_AUDIT.md`.
 Omitted `from_entry` allocation remains FIFO and `strategy.close_all()`
 remains independent of `close_entries_rule`. Do not add public pending-order
 fields or widen conformance without runtime behavior and host-parity evidence

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added host-neutral session window input `schemaVersion` 1. Optional
+  per-bar `windowId` and `tradingDayId` drive intraday loss/filled-order
+  resets and consecutive-loss-day windows. Missing input keeps the documented
+  UTC subset. Overnight sessions that keep the same `windowId` across UTC
+  midnight do not false-reset. Public `StrategyResult` and RealtimeSession
+  schema versions are unchanged.
 - Closed mixed-family OCA. Const/simple `strategy.entry` `oca_name` with
   `strategy.oca.none`, `strategy.oca.cancel`, or `strategy.oca.reduce` joins
   the same `(name, type)` groups as `strategy.order`. Same-group entry and

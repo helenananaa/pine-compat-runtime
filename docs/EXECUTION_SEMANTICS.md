@@ -448,7 +448,11 @@ Intraday windows are keyed from host-neutral bar timestamps and the chart
 timeframe already available to the runtime: UTC day of `time` when the chart
 timeframe is at or below 1D, and the bar timestamp itself when the timeframe
 is higher than 1D so one chart bar is one window. Non-positive timeframes fail
-closed to the UTC-day key. This runtime has no session calendar. A new window
+closed to the UTC-day key. Optional host session window input replaces those
+UTC keys with per-bar `windowId` for intraday loss/filled-order rules and
+`tradingDayId` for consecutive-loss-day rules. Missing input keeps the UTC
+subset and does not claim session-accurate support. This runtime does not
+maintain an exchange calendar. A new window
 zeros the filled-order count, seeds a finite equity baseline, and clears
 window-scoped trips while permanent `max_drawdown` stops remain. Same-window
 bars keep the baseline and counters; a missing-bar gap starts a new window.

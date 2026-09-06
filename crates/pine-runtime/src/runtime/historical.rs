@@ -78,6 +78,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) input_overrides: InputOverrides,
     pub(crate) magnifier_input: MagnifierInput,
     pub(crate) magnifier_chart_bar_count: Option<usize>,
+    pub(crate) session_windows: crate::SessionWindowInput,
     pub(crate) bars: usize,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
@@ -327,6 +328,7 @@ impl<'a> HistoricalRuntime<'a> {
             input_overrides: InputOverrides::new(),
             magnifier_input: MagnifierInput::new(),
             magnifier_chart_bar_count: None,
+            session_windows: crate::SessionWindowInput::new(),
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
@@ -456,6 +458,17 @@ impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn magnifier_input(&self) -> &MagnifierInput {
         &self.magnifier_input
+    }
+
+    #[must_use]
+    pub fn with_session_windows(mut self, input: crate::SessionWindowInput) -> Self {
+        self.session_windows = input;
+        self
+    }
+
+    #[must_use]
+    pub fn session_windows(&self) -> &crate::SessionWindowInput {
+        &self.session_windows
     }
 
     /// Validate the complete chart range before using the one-bar streaming API.

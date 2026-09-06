@@ -24,6 +24,7 @@ impl PyRealtimeSession {
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
         magnifier: Option<pine_runtime::MagnifierInput>,
+        session_windows: Option<pine_runtime::SessionWindowInput>,
     ) -> Self {
         let mut runtime =
             RealtimeRuntime::from_program_with_request_environment_and_input_overrides(
@@ -33,6 +34,9 @@ impl PyRealtimeSession {
             );
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
+        }
+        if let Some(session_windows) = session_windows {
+            runtime = runtime.with_session_windows(session_windows);
         }
         Self {
             runtime,
@@ -161,7 +165,8 @@ impl PyRealtimeSession {
     input_overrides=None,
     chart_symbol=None,
     chart_timeframe=None,
-    magnifier_bars=None
+    magnifier_bars=None,
+    session_windows=None
 ))]
 #[allow(clippy::too_many_arguments)]
 fn create_realtime_session(
@@ -173,6 +178,7 @@ fn create_realtime_session(
     chart_symbol: Option<&str>,
     chart_timeframe: Option<&str>,
     magnifier_bars: Option<&Bound<'_, PyAny>>,
+    session_windows: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<PyRealtimeSession> {
     compile_script(source, library_sources)?.realtime_session(
         py,
@@ -181,6 +187,7 @@ fn create_realtime_session(
         chart_symbol,
         chart_timeframe,
         magnifier_bars,
+        session_windows,
     )
 }
 

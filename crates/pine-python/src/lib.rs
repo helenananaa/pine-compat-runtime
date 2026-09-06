@@ -5,7 +5,7 @@ use pine_runtime::{
     Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, InputCall, InputOverrides,
     MagnifierInput, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue,
     RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal, input_calls,
-    is_valid_public_color, magnifier_input_from_json,
+    is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -39,7 +39,8 @@ impl PyProgram {
         chart_symbol=None,
         chart_timeframe=None,
         execution_times=None,
-        magnifier_bars=None
+        magnifier_bars=None,
+        session_windows=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn run(
@@ -52,6 +53,7 @@ impl PyProgram {
         chart_timeframe: Option<&str>,
         execution_times: Option<&Bound<'_, PyAny>>,
         magnifier_bars: Option<&Bound<'_, PyAny>>,
+        session_windows: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         let bars = parse_bars(bars)?;
         let request_environment =
@@ -59,6 +61,7 @@ impl PyProgram {
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
         let execution_times = parse_execution_times(execution_times)?;
         let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
+        let session_windows = parse_session_windows(py, session_windows)?;
         let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
             &self.hir,
             request_environment,
@@ -66,6 +69,9 @@ impl PyProgram {
         );
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
+        }
+        if let Some(session_windows) = session_windows {
+            runtime = runtime.with_session_windows(session_windows);
         }
         match execution_times.as_deref() {
             Some(execution_times) => {
@@ -82,8 +88,10 @@ impl PyProgram {
         input_overrides=None,
         chart_symbol=None,
         chart_timeframe=None,
-        magnifier_bars=None
+        magnifier_bars=None,
+        session_windows=None
     ))]
+    #[allow(clippy::too_many_arguments)]
     fn realtime_session(
         &self,
         py: Python<'_>,
@@ -92,16 +100,19 @@ impl PyProgram {
         chart_symbol: Option<&str>,
         chart_timeframe: Option<&str>,
         magnifier_bars: Option<&Bound<'_, PyAny>>,
+        session_windows: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<PyRealtimeSession> {
         let request_environment =
             parse_request_environment(request_bars, chart_symbol, chart_timeframe)?;
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
         let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
+        let session_windows = parse_session_windows(py, session_windows)?;
         Ok(PyRealtimeSession::new(
             self.hir.clone(),
             request_environment,
             input_overrides,
             magnifier,
+            session_windows,
         ))
     }
 }
@@ -144,7 +155,8 @@ fn analyze_script(
     chart_symbol=None,
     chart_timeframe=None,
     execution_times=None,
-    magnifier_bars=None
+    magnifier_bars=None,
+    session_windows=None
 ))]
 #[allow(clippy::too_many_arguments)]
 fn run_script(
@@ -158,6 +170,7 @@ fn run_script(
     chart_timeframe: Option<&str>,
     execution_times: Option<&Bound<'_, PyAny>>,
     magnifier_bars: Option<&Bound<'_, PyAny>>,
+    session_windows: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     let program = compile_script(source, library_sources)?;
     program.run(
@@ -169,6 +182,7 @@ fn run_script(
         chart_timeframe,
         execution_times,
         magnifier_bars,
+        session_windows,
     )
 }
 
@@ -244,6 +258,25 @@ fn parse_magnifier_bars(
             .extract::<String>()?
     };
     magnifier_input_from_json(&json)
+        .map(Some)
+        .map_err(PyValueError::new_err)
+}
+
+fn parse_session_windows(
+    py: Python<'_>,
+    session_windows: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Option<pine_runtime::SessionWindowInput>> {
+    let Some(session_windows) = session_windows else {
+        return Ok(None);
+    };
+    let json = if let Ok(text) = session_windows.extract::<String>() {
+        text
+    } else {
+        py.import("json")?
+            .call_method1("dumps", (session_windows,))?
+            .extract::<String>()?
+    };
+    session_window_input_from_json(&json)
         .map(Some)
         .map_err(PyValueError::new_err)
 }

@@ -58,6 +58,12 @@ impl<'a> RealtimeRuntime<'a> {
         self.confirmed.magnifier_input()
     }
 
+    #[must_use]
+    pub fn with_session_windows(mut self, input: crate::SessionWindowInput) -> Self {
+        self.confirmed = self.confirmed.with_session_windows(input);
+        self
+    }
+
     /// Validate the complete historical range before streaming bar-zero input.
     pub fn prepare_magnifier_chart_bar_count(
         &mut self,

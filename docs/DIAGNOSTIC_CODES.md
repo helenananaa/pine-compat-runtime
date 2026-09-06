@@ -255,4 +255,9 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `W_MAGNIFIER_FALLBACK`: magnifier data is absent for a chart bar, so the
   runtime uses that bar's standard OHLC path.
 - `W_MAGNIFIER_GAP`: magnifier data has a gap at a chart bar, so the runtime
+- `E_SESSION_SCHEMA_VERSION`: session window host input schemaVersion is not 1.
+- `E_SESSION_MALFORMED`: session window host JSON cannot be decoded.
+- `E_SESSION_DUPLICATE_BAR`: session window input repeats a barIndex.
+- `E_SESSION_EMPTY_ID`: session window input has an empty windowId or tradingDayId.
+- `E_SESSION_COVERAGE`: session window input is missing a required chart barIndex.
   uses that bar's standard OHLC path.

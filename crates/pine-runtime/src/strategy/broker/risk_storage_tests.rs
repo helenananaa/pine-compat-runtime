@@ -1,6 +1,6 @@
 use super::risk::{
-    RiskAdmission, RiskDrawdownType, RiskEntryDirection, RiskRuleKind, intraday_window_key,
-    trading_day_key,
+    RiskAdmission, RiskDrawdownType, RiskEntryDirection, RiskRuleKind, RiskWindowKey,
+    intraday_window_key, trading_day_key,
 };
 use super::*;
 
@@ -126,7 +126,7 @@ fn intraday_reset_clears_window_counters_but_keeps_permanent_trip() {
     broker.reset_intraday_risk_state(0, UTC_DAY_MS, INTRADAY_TF_SECONDS, 90_000.0);
     assert_eq!(
         broker.risk_state().trading_day_key,
-        Some(trading_day_key(UTC_DAY_MS))
+        Some(RiskWindowKey::Utc(trading_day_key(UTC_DAY_MS)))
     );
     assert_eq!(broker.risk_state().intraday_filled_orders, 0);
     assert_eq!(broker.risk_state().intraday_equity_baseline, Some(90_000.0));
@@ -199,7 +199,7 @@ fn same_intraday_window_keeps_counters_and_equity_baseline() {
     );
     assert_eq!(
         broker.risk_state().trading_day_key,
-        Some(trading_day_key(0))
+        Some(RiskWindowKey::Utc(trading_day_key(0)))
     );
 }
 
@@ -217,7 +217,7 @@ fn ordinary_session_reset_seeds_baseline_and_clears_counters() {
     assert_eq!(broker.risk_state().intraday_equity_baseline, Some(98_000.0));
     assert_eq!(
         broker.risk_state().trading_day_key,
-        Some(trading_day_key(UTC_DAY_MS + 10))
+        Some(RiskWindowKey::Utc(trading_day_key(UTC_DAY_MS + 10)))
     );
 }
 
@@ -232,7 +232,7 @@ fn missing_bar_gap_resets_intraday_window() {
     assert_eq!(broker.risk_state().intraday_equity_baseline, Some(97_000.0));
     assert_eq!(
         broker.risk_state().trading_day_key,
-        Some(trading_day_key(2 * UTC_DAY_MS))
+        Some(RiskWindowKey::Utc(trading_day_key(2 * UTC_DAY_MS)))
     );
 }
 
@@ -242,11 +242,17 @@ fn higher_than_daily_timeframe_resets_each_bar_on_same_utc_day() {
     broker.reset_intraday_risk_state(0, 10, WEEKLY_TF_SECONDS, 100_000.0);
     broker.check_risk_after_fill(0, 10, 100.0);
     assert_eq!(broker.risk_state().intraday_filled_orders, 1);
-    assert_eq!(broker.risk_state().trading_day_key, Some(10));
+    assert_eq!(
+        broker.risk_state().trading_day_key,
+        Some(RiskWindowKey::Utc(10))
+    );
     broker.reset_intraday_risk_state(0, 20, WEEKLY_TF_SECONDS, 99_000.0);
     assert_eq!(broker.risk_state().intraday_filled_orders, 0);
     assert_eq!(broker.risk_state().intraday_equity_baseline, Some(99_000.0));
-    assert_eq!(broker.risk_state().trading_day_key, Some(20));
+    assert_eq!(
+        broker.risk_state().trading_day_key,
+        Some(RiskWindowKey::Utc(20))
+    );
 }
 
 #[test]
@@ -327,7 +333,7 @@ fn intraday_window_snapshot_restores_key_baseline_and_counters() {
     );
     assert_eq!(
         restored.risk_state().trading_day_key,
-        Some(trading_day_key(0))
+        Some(RiskWindowKey::Utc(trading_day_key(0)))
     );
 }
 
@@ -961,4 +967,128 @@ fn max_cons_loss_days_rejects_non_positive_or_non_integer_count() {
     broker.set_max_cons_loss_days(1.5, None);
     broker.set_max_cons_loss_days(f64::NAN, None);
     assert!(broker.risk_rules().max_cons_loss_days.is_none());
+}
+
+fn host_ids(window: &str, day: &str) -> crate::SessionWindowIds {
+    crate::SessionWindowIds {
+        window_id: window.to_owned(),
+        trading_day_id: day.to_owned(),
+    }
+}
+
+#[test]
+fn host_overnight_window_does_not_false_reset_across_utc_midnight() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.set_max_intraday_filled_orders(2.0, None);
+    let eth = host_ids("eth", "d1");
+    broker.reset_risk_windows(
+        0,
+        UTC_DAY_MS - 1_000,
+        INTRADAY_TF_SECONDS,
+        100_000.0,
+        100.0,
+        Some(&eth),
+    );
+    broker.check_risk_after_fill(0, UTC_DAY_MS - 1_000, 100.0);
+    assert_eq!(broker.risk_state().intraday_filled_orders, 1);
+    broker.reset_risk_windows(
+        1,
+        UTC_DAY_MS + 1_000,
+        INTRADAY_TF_SECONDS,
+        100_000.0,
+        100.0,
+        Some(&eth),
+    );
+    assert_eq!(broker.risk_state().intraday_filled_orders, 1);
+    assert_eq!(
+        broker.risk_state().window_key,
+        Some(RiskWindowKey::Host("eth".into()))
+    );
+}
+
+#[test]
+fn utc_midnight_still_resets_when_no_host_window_is_supplied() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.reset_risk_windows(
+        0,
+        UTC_DAY_MS - 1_000,
+        INTRADAY_TF_SECONDS,
+        100_000.0,
+        100.0,
+        None,
+    );
+    broker.check_risk_after_fill(0, UTC_DAY_MS - 1_000, 100.0);
+    broker.reset_risk_windows(
+        1,
+        UTC_DAY_MS + 1_000,
+        INTRADAY_TF_SECONDS,
+        100_000.0,
+        100.0,
+        None,
+    );
+    assert_eq!(broker.risk_state().intraday_filled_orders, 0);
+}
+
+#[test]
+fn host_session_switch_resets_intraday_once_without_finalizing_trading_day() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.reset_risk_windows(
+        0,
+        10,
+        INTRADAY_TF_SECONDS,
+        100_000.0,
+        100.0,
+        Some(&host_ids("eth", "d1")),
+    );
+    broker.check_risk_after_fill(0, 10, 100.0);
+    broker.record_window_realized_pnl(-5.0);
+    broker.reset_risk_windows(
+        1,
+        20,
+        INTRADAY_TF_SECONDS,
+        99_000.0,
+        99.0,
+        Some(&host_ids("rth", "d1")),
+    );
+    assert_eq!(broker.risk_state().intraday_filled_orders, 0);
+    assert_eq!(broker.risk_state().consecutive_loss_days, 0);
+    assert_eq!(broker.risk_state().window_realized_pnl, -5.0);
+    assert_eq!(
+        broker.risk_state().window_key,
+        Some(RiskWindowKey::Host("rth".into()))
+    );
+    assert_eq!(
+        broker.risk_state().trading_day_key,
+        Some(RiskWindowKey::Host("d1".into()))
+    );
+}
+
+#[test]
+fn host_trading_day_switch_finalizes_consecutive_loss_once() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.set_max_cons_loss_days(1.0, None);
+    broker.reset_risk_windows(
+        0,
+        10,
+        INTRADAY_TF_SECONDS,
+        100_000.0,
+        100.0,
+        Some(&host_ids("rth", "d1")),
+    );
+    broker.record_window_realized_pnl(-5.0);
+    broker.reset_risk_windows(
+        1,
+        UTC_DAY_MS + 10,
+        INTRADAY_TF_SECONDS,
+        90_000.0,
+        90.0,
+        Some(&host_ids("rth", "d2")),
+    );
+    assert_eq!(broker.risk_state().consecutive_loss_days, 1);
+    assert!(
+        broker
+            .risk_state()
+            .tripped_rules
+            .contains(&RiskRuleKind::MaxConsLossDays)
+    );
 }

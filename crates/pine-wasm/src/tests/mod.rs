@@ -3823,6 +3823,17 @@ fn runs_strategy_generic_input_source_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_format_precision_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_format_precision.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy format precision fixture should run");
+
+    assert_snapshot("runtime_strategy_format_precision.json", &output);
+}
+
+#[test]
 fn runs_strategy_entry_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_entry.pine"),

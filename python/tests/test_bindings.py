@@ -3685,6 +3685,20 @@ def test_run_script_returns_strategy_generic_input_source_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_format_precision_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_format_precision.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_format_precision.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_entry_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_entry.pine").read_text()
     expected = json.loads(

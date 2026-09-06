@@ -3663,6 +3663,27 @@ fn accepts_supported_strategy_declaration_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_format_precision_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_strategy_format_precision.pine");
+}
+
+#[test]
+fn reports_unsupported_strategy_format_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_format.pine",
+        &["format.inherit, format.price, format.percent, format.volume"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_precision_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_precision.pine",
+        &["`strategy` argument `precision` must be between 0 and 16"],
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_pyramiding_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_pyramiding.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

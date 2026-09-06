@@ -10,6 +10,10 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_generic_input_source.pine",
     ),
     (
+        "runtime_strategy_format_precision.json",
+        "tests/fixtures/runtime/strategy_format_precision.pine",
+    ),
+    (
         "runtime_strategy_entry.json",
         "tests/fixtures/runtime/strategy_entry.pine",
     ),

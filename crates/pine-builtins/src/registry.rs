@@ -171,6 +171,18 @@ mod tests {
         assert_eq!(signature.params[23].name, "use_bar_magnifier");
         assert_eq!(signature.params[23].accepts, crate::Accepts::ConstBool);
         assert!(signature.params[23].optional);
+        assert_eq!(signature.params[24].name, "format");
+        assert_eq!(signature.params[24].accepts, crate::Accepts::ConstString);
+        assert!(signature.params[24].optional);
+        assert_eq!(signature.params[25].name, "precision");
+        assert_eq!(
+            signature.params[25].accepts,
+            crate::Accepts::Exact(pine_ir::PineType::new(
+                pine_ir::Qualifier::Const,
+                pine_ir::ValueKind::Int
+            ))
+        );
+        assert!(signature.params[25].optional);
         assert!(!signature.variadic);
     }
 

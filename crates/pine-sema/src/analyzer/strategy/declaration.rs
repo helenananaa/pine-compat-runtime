@@ -45,6 +45,8 @@ impl Analyzer {
                     "calc_on_order_fills",
                     "calc_on_every_tick",
                     "use_bar_magnifier",
+                    "format",
+                    "precision",
                 ]
                 .get(index)
                 .copied()
@@ -304,6 +306,35 @@ impl Analyzer {
                     }
                     if let Some(value) = self.known_const_bool_value(&arg.value) {
                         self.strategy_settings.use_bar_magnifier = value;
+                    }
+                }
+                "format" => {
+                    let Some(value) = self.known_const_string_value(&arg.value) else {
+                        continue;
+                    };
+                    if !matches!(
+                        value.as_str(),
+                        "format.inherit" | "format.price" | "format.percent" | "format.volume"
+                    ) {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `format` only supports format.inherit, format.price, format.percent, format.volume",
+                            arg.span,
+                        ));
+                    }
+                }
+                "precision" => {
+                    if let Some(value) = self.known_const_int_for_validation(&arg.value)
+                        && match value {
+                            Ok(value) => !(0..=16).contains(&value),
+                            Err(()) => true,
+                        }
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `precision` must be between 0 and 16",
+                            arg.span,
+                        ));
                     }
                 }
                 _ => {}

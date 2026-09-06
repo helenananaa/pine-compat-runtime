@@ -1,0 +1,5 @@
+//@version=6
+strategy("Strategy format precision", overlay=true, format=format.price, precision=8)
+plot(close)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)

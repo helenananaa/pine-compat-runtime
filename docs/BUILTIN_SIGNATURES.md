@@ -769,7 +769,7 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, currency?: const string, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, process_orders_on_close?: const bool, calc_on_order_fills?: const bool, calc_on_every_tick?: const bool, use_bar_magnifier?: const bool named-only gated subset)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, currency?: const string, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, process_orders_on_close?: const bool, calc_on_order_fills?: const bool, calc_on_every_tick?: const bool, use_bar_magnifier?: const bool named-only gated subset, format?: const string named subset, precision?: const int named subset)
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
@@ -910,7 +910,12 @@ does not add runtime JSON fields.
 Both positional declaration slots remain outside the current subset.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
-use the configured or default fixed quantity. `strategy.order(..., strategy.short)`
+use the configured or default fixed quantity.
+`strategy(..., format=..., precision=...)` accepts the same const
+`format.inherit` / `format.price` / `format.percent` / `format.volume` values
+and const integer precision 0 through 16 as `indicator`; unknown format
+constants and out-of-range precision stay rejected. These arguments do not add
+public runtime JSON fields. `strategy.order(..., strategy.short)`
 may also omit `qty`; the same default-quantity resolution applies as for
 `strategy.long` market/limit/stop/stop-limit orders.
 `strategy(..., calc_on_order_fills=true)` accepts const bool and re-executes

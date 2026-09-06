@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy format", format=format.mintick)
+plot(close)

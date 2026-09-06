@@ -1548,16 +1548,21 @@ Good next slice:
 
 While strategy completion is the selected direction:
 
-1. Integrate and review the current Stage 17-22 worktree.
-2. Stage 18g true OHLC-path and cross-family candidate ordering.
-3. Bar Magnifier fill wiring on the shared scheduler path is closed.
-4. Mixed-family OCA is the next strategy target; session calendars and the
-   general chart-to-chart inter-bar gap rewrite stay later, separate slices.
-5. Strategy reporting/account gaps selected from executable fixtures.
-6. Other pure-internal work only when it is a prerequisite or regression fix
-   for the active strategy slice.
-7. Runtime guardrails whenever a new semantic family would otherwise grow
-   state or execution cost without visibility.
+1. Freeze and measure the authorized modern-strategy corpus.
+2. Implement its highest-priority evidenced language and built-in blockers.
+3. Fix independently demonstrated strategy-result differences.
+4. Add account, precision, and reporting capabilities selected from samples.
+5. Measure and optimize stable workloads, preserving runtime guardrails.
+
+Use the [Modern Strategy Five-Stage Execution Plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md)
+for executable steps, dependencies, and acceptance gates. Stage 18g, Stage 23,
+mixed-family OCA, host-neutral session windows, and ordinary-chart gaps are
+closed subsets to retain as regression baselines. Historical direction sections
+above do not override current conformance and the latest closeout audits.
+
+Other pure-internal work should be a prerequisite or regression fix for a
+selected slice. Add resource guards with new semantics rather than waiting
+for the final performance stage.
 
 Avoid opening request, drawing, alert delivery, or host-integration work from this
 roadmap. Those belong in the broader platform plans unless the change is purely a

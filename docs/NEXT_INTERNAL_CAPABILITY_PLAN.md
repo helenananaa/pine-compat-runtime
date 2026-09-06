@@ -53,10 +53,17 @@ corpus-driven follow-up from legal v5/v6 samples.
 
 Active stage order:
 
-1. Inventory a legal, authorized, de-duplicated v5/v6 corpus and classify
-   failures by root cause.
-2. Close at most one evidenced accepted-but-wrong slice, or stop with an
-   explicit blocker.
+1. Freeze a legal, authorized, de-duplicated v5/v6 corpus and measure failures.
+2. Close corpus-ranked language and built-in blockers one slice at a time.
+3. Validate independently comparable strategy outputs and fix execution errors.
+4. Add account, precision, or reporting capabilities justified by sample needs.
+5. Measure and optimize stable workloads while preserving semantics and guards.
+
+The [Modern Strategy Five-Stage Execution Plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md)
+defines dependencies, individual steps, artifacts, and acceptance gates.
+An independently evidenced execution bug takes priority over new language
+admission. Missing reference outputs block the affected comparison, not corpus
+measurement or independently specified language work.
 
 The closed Stage 23 record is
 `docs/STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_AUDIT.md`.
@@ -74,8 +81,9 @@ Keep out of scope until separately designed and fixture-backed:
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
 Recommended next slice: complete the frozen v5/v6 manifest, deduplication and
-stage measurements; then select an authorized strategy with frozen bars and
-independent expected output for one accepted-but-wrong root cause. The Stage D
+stage measurements; then select one evidenced root cause. Language blockers
+have a separate implementation path; accepted-but-wrong fill fixes require
+frozen bars and independent expected behavior. The Stage D
 blocker record is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`. The closed
 ordinary-chart gap record is
 `docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`.
@@ -86,10 +94,10 @@ in the same slice. The closed mixed-family OCA record is
 `docs/STRATEGY_MIXED_OCA_BEHAVIOR_AUDIT.md`. The closed session-window record
 is `docs/STRATEGY_SESSION_RISK_BEHAVIOR_AUDIT.md`.
 
-The step-by-step implementation sequence, acceptance gates, and later session,
-gap, and corpus work are in
+The completed OCA/session/gap sequence and original Stage D scope are in
 [Strategy Accuracy Next Execution Plan](STRATEGY_ACCURACY_NEXT_EXECUTION_PLAN.md).
-That plan does not change current compatibility claims.
+The five-stage plan continues the unfinished corpus work and defines later
+development. Neither plan changes current compatibility claims.
 
 Closed maintenance slice:
 
@@ -282,13 +290,17 @@ does not require external delivery or host scheduling.
 
 ## Recommended Order
 
-1. Integrate and review the current Stage 17-22 worktree.
-2. Strategy Stage 18g true OHLC-path ordering.
-3. Bar Magnifier fill wiring on the shared scheduler path.
-4. Mixed-family OCA and instrument-session semantics through separate slices.
-5. Strategy reporting/account gaps selected from executable fixtures.
-6. Built-in, collection, UDT, request, drawing, and alert maintenance only when
-   it is a prerequisite for the active strategy slice or fixes a regression.
+Follow the [five-stage execution plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md):
+
+1. Frozen modern-strategy corpus and measured failure roots.
+2. Corpus-driven language and built-in blockers.
+3. Independently validated strategy execution corrections.
+4. Sample-backed account, precision, and reporting contracts.
+5. Measured performance and resource improvements on stable workloads.
+
+Stage 17-23, mixed-family OCA, host-neutral session windows, and ordinary-chart
+gaps are existing regression baselines. Other maintenance enters this order
+only when it is a prerequisite for a selected slice or fixes a regression.
 
 This order applies while strategy completion is the selected project direction.
 It does not make later stages supported early: each stage still closes only

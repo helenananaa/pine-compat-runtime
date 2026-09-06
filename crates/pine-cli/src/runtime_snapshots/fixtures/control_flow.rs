@@ -209,6 +209,14 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/dynamic_history_integer_result_offsets.pine",
     ),
     (
+        "runtime_dynamic_history_input_float_offset.json",
+        "tests/fixtures/runtime/dynamic_history_input_float_offset.pine",
+    ),
+    (
+        "runtime_strategy_dynamic_history_input_float_offset.json",
+        "tests/fixtures/runtime/strategy_dynamic_history_input_float_offset.pine",
+    ),
+    (
         "runtime_series_history_offset.json",
         "tests/fixtures/runtime/series_history_offset.pine",
     ),

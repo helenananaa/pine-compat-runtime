@@ -2089,6 +2089,33 @@ fn run_script_csv_returns_dynamic_history_scopes_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_dynamic_history_input_float_offset_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/dynamic_history_input_float_offset.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("dynamic history input float offset fixture should run");
+
+    assert_snapshot("runtime_dynamic_history_input_float_offset.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_strategy_dynamic_history_input_float_offset_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_dynamic_history_input_float_offset.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy dynamic history input float offset fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_dynamic_history_input_float_offset.json",
+        &output,
+    );
+}
+
+#[test]
 fn run_script_csv_returns_series_history_offset_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/series_history_offset.pine"),

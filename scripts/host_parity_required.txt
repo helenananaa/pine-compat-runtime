@@ -83,6 +83,7 @@ runtime_dmi.json
 runtime_drawing_methods.json
 runtime_drawing_typed_declarations.json
 runtime_dynamic_history.json
+runtime_dynamic_history_input_float_offset.json
 runtime_dynamic_history_scopes.json
 runtime_extreme_bars.json
 runtime_extremes.json
@@ -244,6 +245,7 @@ runtime_strategy_commission_cash_per_order.json
 runtime_strategy_commission_percent.json
 runtime_strategy_default_quantity.json
 runtime_strategy_default_quantity_override.json
+runtime_strategy_dynamic_history_input_float_offset.json
 runtime_strategy_empty.json
 runtime_strategy_entry.json
 runtime_strategy_entry_limit.json

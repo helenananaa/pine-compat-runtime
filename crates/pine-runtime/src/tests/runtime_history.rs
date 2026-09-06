@@ -357,6 +357,29 @@ plot(close[offset])
 }
 
 #[test]
+fn runs_input_float_history_offset() {
+    let source = SourceFile::new(
+        "dynamic_history_input_float_offset.pine",
+        include_str!("../../../../tests/fixtures/runtime/dynamic_history_input_float_offset.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_values_close(&plot.values[1..], &[1.0, 2.0, 3.0]);
+    }
+    assert!(result.diagnostics.is_empty(), "{result:?}");
+}
+
+#[test]
 fn runs_input_history_offset() {
     let source = SourceFile::new(
         "test.pine",

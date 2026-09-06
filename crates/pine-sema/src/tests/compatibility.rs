@@ -316,6 +316,25 @@ fn reports_unsupported_drawing_method_without_unknown_method_noise() {
 }
 
 #[test]
+fn accepts_input_float_history_offset() {
+    let analysis = analyze("length = input.int(2)\nplot(close[length / 2])\n");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .all(|feature| feature.feature != "dynamic_history_offset"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+}
+
+#[test]
 fn reports_dynamic_history_offset_actual_float_type() {
     let analysis = analyze("plot(close[close])\n");
 

@@ -1,0 +1,7 @@
+//@version=6
+strategy("Strategy dynamic history input float offset")
+length = input.int(2, "Length")
+lag = length / 2
+plot(close[lag])
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)

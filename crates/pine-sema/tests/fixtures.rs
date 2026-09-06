@@ -20856,6 +20856,11 @@ fn accepts_supported_dynamic_history_integer_result_offsets_fixture() {
 }
 
 #[test]
+fn accepts_supported_dynamic_history_input_float_offset_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_dynamic_history_input_float_offset.pine");
+}
+
+#[test]
 fn reports_unsupported_dynamic_history_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history.pine",

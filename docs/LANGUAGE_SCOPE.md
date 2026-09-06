@@ -172,7 +172,9 @@ Phase 1 executable subset:
   `docs/PHASE_I_AUDIT.md`
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
-- constant history offsets and guarded dynamic integer history offsets
+- constant history offsets, guarded dynamic integer history offsets, and
+  input/simple float history offsets that evaluate to a whole non-negative
+  number at runtime
 - `indicator`
 - `strategy(...)` as a Phase G declaration subset with strategy-mode runtime
   output, positive const numeric `initial_capital`, and Phase L fixed default

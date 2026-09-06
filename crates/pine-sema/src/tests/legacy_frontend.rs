@@ -3707,9 +3707,10 @@ fn v5_integer_division_depends_on_const_qualifiers() {
     let input_history = analyze_production(
         "//@version=5\nindicator(\"v5 input history division\")\ndivisor = input.int(2)\nplot(close[5 / divisor])\n",
     );
-    assert_eq!(
-        diagnostic_codes(&input_history),
-        vec!["E_UNSUPPORTED_FEATURE"]
+    assert!(
+        input_history.diagnostics.is_empty(),
+        "{:?}",
+        input_history.diagnostics
     );
     assert!(
         input_history

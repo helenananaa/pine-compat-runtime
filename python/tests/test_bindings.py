@@ -2215,6 +2215,44 @@ def test_run_script_returns_dynamic_history_scopes_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_dynamic_history_input_float_offset_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/dynamic_history_input_float_offset.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_dynamic_history_input_float_offset.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_dynamic_history_input_float_offset_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_dynamic_history_input_float_offset.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_dynamic_history_input_float_offset.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_series_history_offset_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/series_history_offset.pine").read_text()
     expected = json.loads(

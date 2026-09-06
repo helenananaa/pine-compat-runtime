@@ -787,6 +787,17 @@ fn run_script_csv_returns_hline_fill_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_fill_transp_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/fill_transp.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("fill transp fixture should run");
+
+    assert_snapshot("runtime_fill_transp.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_legacy_v4_output_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/legacy/v4/runtime/outputs_legacy.pine"),
@@ -3842,6 +3853,17 @@ fn runs_strategy_entry_fixture_contract() {
     .expect("strategy entry fixture should run");
 
     assert_snapshot("runtime_strategy_entry.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_when_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_when.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy entry when fixture should run");
+
+    assert_snapshot("runtime_strategy_entry_when.json", &output);
 }
 
 #[test]

@@ -17,6 +17,20 @@ fn run_strategy(source_name: &str, source: &str, bars: &[Bar]) -> StrategyResult
 }
 
 #[test]
+fn entry_when_false_skips_order() {
+    let strategy = run_strategy(
+        "strategy_entry_when.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_when.pine"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    );
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "Take");
+    assert_eq!(strategy.orders[0].direction, "strategy.long");
+    assert_eq!(strategy.position.last().map(|row| row.size), Some(1.0));
+}
+
+#[test]
 fn market_short_order_uses_default_qty_when_omitted() {
     let strategy = run_strategy(
         "strategy_order_default_quantity_short.pine",

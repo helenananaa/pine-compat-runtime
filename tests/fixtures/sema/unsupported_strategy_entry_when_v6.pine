@@ -1,0 +1,5 @@
+//@version=6
+strategy("Unsupported strategy entry when v6")
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1, when=true)
+plot(close)

@@ -1,0 +1,6 @@
+//@version=5
+indicator("Fill transp")
+p1 = plot(high)
+p2 = plot(low)
+fill(p1, p2, color=color.green, transp=90)
+fill(p1, p2, color=color.new(color.green, 90))

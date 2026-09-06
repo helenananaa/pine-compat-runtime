@@ -274,6 +274,7 @@ impl Analyzer {
                     "comment",
                     "alert_message",
                     "disable_alert",
+                    "when",
                 ]
                 .get(index)
                 .copied()
@@ -346,6 +347,14 @@ impl Analyzer {
                     }
                 },
                 "comment" | "alert_message" | "disable_alert" => {}
+                "when" if self.legacy.dialect().version() >= 6 => {
+                    self.unsupported(
+                        "strategy.entry.when",
+                        "`strategy.entry` argument `when` was removed in Pine v6",
+                        arg.span,
+                    );
+                }
+                "when" => {}
                 _ => {}
             }
         }

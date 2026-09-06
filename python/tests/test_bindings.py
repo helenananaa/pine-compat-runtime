@@ -844,6 +844,18 @@ def test_run_script_returns_hline_fill_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_fill_transp_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/fill_transp.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_fill_transp.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_legacy_v4_output_contract():
     source = (
         ROOT / "tests/fixtures/legacy/v4/runtime/outputs_legacy.pine"
@@ -3703,6 +3715,20 @@ def test_run_script_returns_strategy_entry_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_entry.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_strategy_entry.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_when_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_when.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_when.json").read_text()
     )
 
     result = pine_compat.run_script(

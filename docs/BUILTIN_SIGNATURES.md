@@ -773,7 +773,7 @@ strategy(title: const string, shorttitle?: const string, overlay?: const bool, m
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, when?: bool-compatible v5 hidden)
 -> void
 strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
@@ -1322,12 +1322,17 @@ plotcandle(open: series/simple numeric, high: series/simple numeric, low: series
 hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const string)
   -> hline
 
-fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string)
+fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string, transp?: simple integer-compatible v5 hidden)
   -> void
 
 bgcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
 barcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
 ```
+
+v5 `fill(..., transp=N)` applies simple-int transparency after the base color
+unless the color already carries alpha; omitted `transp` keeps the supplied
+color. Pine v6 rejects `transp`. v5 `strategy.entry(..., when=cond)` places
+the entry only when `cond` is true; Pine v6 rejects `when`.
 
 `alertcondition` emits a runtime alert event when its reached condition
 evaluates to `true`. `title` is serialized as event `source`; `message` is

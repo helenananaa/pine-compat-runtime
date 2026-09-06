@@ -1617,6 +1617,19 @@ fn accepts_supported_fill_input_show_last_fixture() {
 }
 
 #[test]
+fn accepts_supported_fill_transp_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_fill_transp.pine");
+}
+
+#[test]
+fn reports_unsupported_fill_transp_v6_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_fill_transp_v6.pine",
+        &["`fill.transp` is not supported: `fill` argument `transp` was removed in Pine v6"],
+    );
+}
+
+#[test]
 fn reports_unsupported_fill_simple_show_last_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_fill_simple_show_last.pine",
@@ -3665,6 +3678,21 @@ fn accepts_supported_strategy_declaration_fixture() {
 #[test]
 fn accepts_supported_strategy_format_precision_fixture() {
     assert_valid_fixture("tests/fixtures/sema/supported_strategy_format_precision.pine");
+}
+
+#[test]
+fn accepts_supported_strategy_entry_when_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_strategy_entry_when.pine");
+}
+
+#[test]
+fn reports_unsupported_strategy_entry_when_v6_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_entry_when_v6.pine",
+        &[
+            "`strategy.entry.when` is not supported: `strategy.entry` argument `when` was removed in Pine v6",
+        ],
+    );
 }
 
 #[test]

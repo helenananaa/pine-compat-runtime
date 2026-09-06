@@ -279,6 +279,12 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "`strategy.entry` requires an active bar".to_owned(),
             });
         };
+        if let Some(when_expr) = call_arg_expr(args, 10, "when") {
+            match self.eval_expr(when_expr)? {
+                PineValue::Bool(true) => {}
+                _ => return Ok(PineValue::Void),
+            }
+        }
         let Some(id_expr) = call_arg_expr(args, 0, "id") else {
             return Ok(PineValue::Void);
         };

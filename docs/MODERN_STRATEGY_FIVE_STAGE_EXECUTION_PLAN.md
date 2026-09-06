@@ -1,9 +1,9 @@
 # 现代策略驱动的解释器五阶段执行计划
 
 状态：in-progress。步骤 0、阶段 1、阶段 2 切片 `generic_input_source`、
-`default_qty_short_order`、`input_float_history_offset` 与
-`strategy_format_precision`、阶段 4 deferred 与阶段 5 基线已关闭；
-阶段 3 比较器已交付但独立成交验收 blocked。本文不代表全 Pine 兼容。
+`default_qty_short_order`、`input_float_history_offset`、
+`strategy_format_precision` 与 `v5_fill_transp_entry_when`、阶段 4 deferred 与
+阶段 5 基线已关闭；阶段 3 比较器已交付但独立成交验收 blocked。本文不代表全 Pine 兼容。
 
 编写日期：2026-09-06。规划基线：`9a68e4f02cf2186e1cc880df43ce1cd9743552c4`。
 步骤 0 实际 HEAD 与规划基线相同。每次开始实现前重新记录实际 HEAD、工作区状态

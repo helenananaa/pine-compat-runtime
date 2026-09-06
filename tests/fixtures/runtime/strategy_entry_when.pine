@@ -1,0 +1,7 @@
+//@version=5
+strategy("Strategy entry when")
+plot(strategy.position_size)
+if bar_index == 1
+    strategy.entry("Skip", strategy.long, qty=1, when=false)
+if bar_index == 2
+    strategy.entry("Take", strategy.long, qty=1, when=true)

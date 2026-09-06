@@ -87,6 +87,7 @@ runtime_dynamic_history_input_float_offset.json
 runtime_dynamic_history_scopes.json
 runtime_extreme_bars.json
 runtime_extremes.json
+runtime_fill_transp.json
 runtime_for_edges.json
 runtime_for_in.json
 runtime_for_in_bool.json
@@ -264,6 +265,7 @@ runtime_strategy_entry_stop_limit_short.json
 runtime_strategy_entry_stop_reverses_long.json
 runtime_strategy_entry_stop_reverses_short.json
 runtime_strategy_entry_stop_short.json
+runtime_strategy_entry_when.json
 runtime_strategy_equity.json
 runtime_strategy_exit_active_entry_attachment.json
 runtime_strategy_exit_active_entry_loss_attachment.json

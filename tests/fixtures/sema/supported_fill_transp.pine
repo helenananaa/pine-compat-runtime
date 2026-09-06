@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported fill transp")
+p1 = plot(close)
+p2 = plot(open)
+fill(p1, p2, color=color.green, transp=90)

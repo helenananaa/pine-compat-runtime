@@ -298,6 +298,9 @@ mod tests {
         assert_eq!(signature.params[9].name, "disable_alert");
         assert_eq!(signature.params[9].accepts, crate::Accepts::BoolCompatible);
         assert!(signature.params[9].optional);
+        assert_eq!(signature.params[10].name, "when");
+        assert_eq!(signature.params[10].accepts, crate::Accepts::BoolCompatible);
+        assert!(signature.params[10].optional);
         assert!(!signature.variadic);
     }
 

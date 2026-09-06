@@ -53,6 +53,11 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::BoolCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "when",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
 ];
 
 const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[

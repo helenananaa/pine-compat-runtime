@@ -202,7 +202,11 @@ Phase 1 executable subset:
   gapped-through price orders fill at the open rather than at the trigger
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled through the supported historical broker model for long market entries
-  up to the configured `pyramiding` limit
+  up to the configured `pyramiding` limit; v5 hidden `when` places the entry
+  only when the bool-compatible condition is true and is rejected in v6
+- v5 hidden `fill(..., transp=...)` applies simple-int transparency to the fill
+  color unless the color already carries alpha; omitted `transp` keeps the
+  supplied color; v6 rejects `transp`
 - `strategy.entry(id, strategy.short, qty=...)` in strategy-mode scripts only,
   filled as a next-bar-open market short while flat or already short, or as a
   reversal that first flattens an opposite long at the reverse fill price then

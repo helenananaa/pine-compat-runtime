@@ -711,6 +711,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     ),
     ("runtime_hline_fill.json", "tests/fixtures/runtime/io.pine"),
     (
+        "runtime_fill_transp.json",
+        "tests/fixtures/runtime/fill_transp.pine",
+    ),
+    (
         "runtime_label_new.json",
         "tests/fixtures/runtime/label_new.pine",
     ),

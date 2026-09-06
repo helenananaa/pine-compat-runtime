@@ -487,6 +487,11 @@ const FILL_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstString,
         optional: true,
     },
+    BuiltinParam {
+        name: "transp",
+        accepts: Accepts::SimpleIntCompatible,
+        optional: true,
+    },
 ];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[

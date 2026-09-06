@@ -271,10 +271,11 @@ Phase 1 executable subset:
   families share a public id; generic-order reductions allocate FIFO, or id-specific ANY when
   `close_entries_rule` is ANY and the order id matches an open entry;
   const/simple `oca_name` with explicit `strategy.oca.none` keeps grouped
-  `strategy.order` intents independent; `strategy.oca.cancel` cancels
-  still-pending same-group generic-order peers after a fill;
+  `strategy.entry` and `strategy.order` intents independent; `strategy.oca.cancel`
+  cancels still-pending same-group entry and generic-order peers after a fill;
   `strategy.oca.reduce` reduces same-group peer remaining quantity by the
-  filled quantity and removes peers reduced to zero; const/simple
+  filled quantity and removes peers reduced to zero, including mixed
+  entry/order/exit members that share the same name and reduce type; const/simple
   `strategy.exit` `oca_name` maps onto that implicit reduce reservation model
 - `strategy.close(id)`, `strategy.close(id, qty=...)`, and
   `strategy.close(id, qty_percent=...)` in strategy-mode scripts only, closing
@@ -604,7 +605,8 @@ The analyzer should reject these with clear diagnostics:
 - strategy order functions and reporting helpers outside the narrow
   `strategy.entry`, `strategy.order`, `strategy.close`, `strategy.close_all`,
   `strategy.cancel`, `strategy.cancel_all`, and `strategy.exit` subsets,
-  including series `oca_name`,
+  including series `oca_name` on `strategy.entry`, `strategy.order`, and
+  `strategy.exit`,
   same-side or 3+ trigger exits, invalid trailing combinations, partial
   `strategy.close_all()`, pyramiding behavior beyond the fixture-backed
   long-only subset, broker settings beyond the supported declaration subset,

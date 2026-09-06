@@ -1,0 +1,6 @@
+//@version=5
+strategy("Supported strategy entry oca reduce")
+grp = "g"
+reduce_type = strategy.oca.reduce
+strategy.entry("A", strategy.long, qty=1, oca_name="g", oca_type=strategy.oca.reduce)
+strategy.entry("B", strategy.long, qty=1, limit=close, oca_name=grp, oca_type=reduce_type)

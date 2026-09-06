@@ -1,0 +1,10 @@
+//@version=5
+strategy("Mixed OCA order fill reduces exit peer")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
+    strategy.order("TP", strategy.short, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.reduce)
+    strategy.exit("SL", "L", stop=1, oca_name="g")
+plot(strategy.position_size)
+plot(strategy.opentrades)
+plot(strategy.closedtrades)

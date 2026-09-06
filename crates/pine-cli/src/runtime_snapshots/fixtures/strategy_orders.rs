@@ -250,6 +250,22 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine",
     ),
     (
+        "runtime_strategy_mixed_oca_entry_order_cancel.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine",
+    ),
+    (
+        "runtime_strategy_mixed_oca_entry_order_reduce.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine",
+    ),
+    (
+        "runtime_strategy_mixed_oca_order_exit_reduce.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine",
+    ),
+    (
+        "runtime_strategy_mixed_oca_none.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
+    ),
+    (
         "runtime_strategy_constants.json",
         "tests/fixtures/runtime/strategy_constants.pine",
     ),

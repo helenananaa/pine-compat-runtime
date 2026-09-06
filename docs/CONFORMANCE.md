@@ -1014,13 +1014,16 @@ orders, pending exits, deferred relative exits, and pending closes, including
 when those families share a public id. Generic-order reductions allocate FIFO, or
 id-specific ANY when `close_entries_rule` is ANY and the order id matches an
 open entry; unmatched ANY stays FIFO. Const/simple `oca_name` with explicit
-`strategy.oca.none` keeps grouped `strategy.order` intents independent.
-`strategy.oca.cancel` cancels still-pending same-group generic-order peers
-after a fill, in internal creation order, and leaves unrelated groups in
-place. `strategy.oca.reduce` reduces same-group peer remaining quantity by
-the filled quantity and removes peers reduced to zero. Const/simple
-`strategy.exit` `oca_name` maps onto that implicit reduce reservation model:
-grouped exits share overlapping quantity, and a fill reduces same-group peers.
+`strategy.oca.none` keeps grouped `strategy.entry` and `strategy.order`
+intents independent. `strategy.oca.cancel` cancels still-pending same-group
+entry and generic-order peers after a fill, in internal creation order, and
+leaves unrelated groups in place. `strategy.oca.reduce` reduces same-group
+peer remaining quantity by the filled quantity and removes peers reduced to
+zero, including mixed entry, generic-order, and exit members that share the
+same name and reduce type. Const/simple `strategy.exit` `oca_name` maps onto
+that implicit reduce reservation model: grouped exits share overlapping
+quantity, and a fill reduces same-group peers. Same name with different OCA
+types remains two groups. Empty `oca_name` does not join a group.
 Omitted `qty` remains unsupported for `strategy.short`.
 The supported `strategy.order()` subset accepts `comment`, `alert_message`, and
 `disable_alert` metadata; supported long order fills retain entry comments,
@@ -1223,7 +1226,7 @@ single-trigger/bracket/trailing subset, omitted-quantity multiple
 pending exits, `strategy.order` behavior beyond the fixture-backed
 market and limit signed-netting, long-market/price-based, and short
 stop/stop-limit add-or-increase subset,
-custom OCA, realtime strategy handoff, and still-unbacked strategy reporting
+series `oca_name`, realtime strategy handoff, and still-unbacked strategy reporting
 variables remain outside the supported matrix.
 
 Phase L adds the first read-only strategy state variables for historical

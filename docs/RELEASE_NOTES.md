@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Closed mixed-family OCA. Const/simple `strategy.entry` `oca_name` with
+  `strategy.oca.none`, `strategy.oca.cancel`, or `strategy.oca.reduce` joins
+  the same `(name, type)` groups as `strategy.order`. Same-group entry and
+  order peers cancel or reduce together; `strategy.oca.reduce` also reduces
+  same-name `strategy.exit` peers and the reverse. Same name with different
+  types stays two groups. Empty names do not join a group. Series `oca_name`
+  stays rejected. Public `StrategyResult` schema is unchanged.
 - Closed Stage 18g true historical OHLC path execution. Supported price
   entries, generic orders, exits, and margin calls walk open-high-low-close or
   open-low-high-close instead of a long-then-short family rank. Equal-distance

@@ -198,43 +198,7 @@ impl OrderBook {
         if group.oca_type != OcaType::Reduce {
             return;
         }
-        let peers = self.oca_members_in_group(&group);
-        for peer in peers {
-            let OcaMember::Exit {
-                id: peer_id,
-                from_entry: peer_from,
-                target_trade_key: peer_key,
-            } = peer
-            else {
-                continue;
-            };
-            if peer_id == id && peer_from == from_entry && peer_key == target_trade_key {
-                continue;
-            }
-            if let Some(pending) = self
-                .exits
-                .find_mut_by_identity_and_key(&peer_id, &peer_from, peer_key)
-            {
-                let remaining = (pending.reserved_quantity - filled_qty).max(0.0);
-                if remaining <= 0.0 {
-                    self.exits
-                        .remove_by_identity_and_key(&peer_id, &peer_from, peer_key);
-                    self.oca_membership.remove(&OcaMember::Exit {
-                        id: peer_id,
-                        from_entry: peer_from,
-                        target_trade_key: peer_key,
-                    });
-                } else {
-                    pending.reserved_quantity = remaining;
-                }
-            } else {
-                self.oca_membership.remove(&OcaMember::Exit {
-                    id: peer_id,
-                    from_entry: peer_from,
-                    target_trade_key: peer_key,
-                });
-            }
-        }
+        let _ = self.apply_group_peer_effects(&filled, &group, Some(filled_qty));
     }
 
     pub(super) fn apply_oca_after_fill(
@@ -249,48 +213,80 @@ impl OrderBook {
         self.oca_membership.remove(&filled);
         match group.oca_type {
             OcaType::None => OcaPeerEffects::default(),
-            OcaType::Cancel => self.reduce_or_cancel_oca_peers(filled_key, &group, None),
-            OcaType::Reduce => {
-                self.reduce_or_cancel_oca_peers(filled_key, &group, Some(filled_qty))
-            }
+            OcaType::Cancel => self.apply_group_peer_effects(&filled, &group, None),
+            OcaType::Reduce => self.apply_group_peer_effects(&filled, &group, Some(filled_qty)),
         }
     }
 
-    fn reduce_or_cancel_oca_peers(
+    fn apply_group_peer_effects(
         &mut self,
-        filled_key: InternalOrderKey,
+        filled: &OcaMember,
         group: &OcaGroupKey,
         reduce_by: Option<f64>,
     ) -> OcaPeerEffects {
         let peers = self.oca_members_in_group(group);
         let mut effects = OcaPeerEffects::default();
         for peer in peers {
-            let OcaMember::Order(key) = peer else {
-                continue;
-            };
-            if key == filled_key {
+            if &peer == filled {
                 continue;
             }
-            match reduce_by {
-                None => {
-                    self.entries.remove_by_key(key);
-                    self.oca_membership.remove(&OcaMember::Order(key));
-                    effects.cancelled.push(key);
-                }
-                Some(filled_qty) => {
-                    if let Some(pending) = self.entries.find_mut_by_key(key) {
-                        let remaining = (pending.quantity - filled_qty).max(0.0);
-                        if remaining <= 0.0 {
-                            self.entries.remove_by_key(key);
-                            self.oca_membership.remove(&OcaMember::Order(key));
-                            effects.cancelled.push(key);
-                            effects.reduced.insert(key, 0.0);
+            match peer {
+                OcaMember::Order(key) => match reduce_by {
+                    None => {
+                        self.entries.remove_by_key(key);
+                        self.oca_membership.remove(&OcaMember::Order(key));
+                        effects.cancelled.push(key);
+                    }
+                    Some(filled_qty) => {
+                        if let Some(pending) = self.entries.find_mut_by_key(key) {
+                            let remaining = (pending.quantity - filled_qty).max(0.0);
+                            if remaining <= 0.0 {
+                                self.entries.remove_by_key(key);
+                                self.oca_membership.remove(&OcaMember::Order(key));
+                                effects.cancelled.push(key);
+                                effects.reduced.insert(key, 0.0);
+                            } else {
+                                pending.quantity = remaining;
+                                effects.reduced.insert(key, remaining);
+                            }
                         } else {
-                            pending.quantity = remaining;
-                            effects.reduced.insert(key, remaining);
+                            effects.reduce_taken.push(key);
                         }
-                    } else {
-                        effects.reduce_taken.push(key);
+                    }
+                },
+                OcaMember::Exit {
+                    id: peer_id,
+                    from_entry: peer_from,
+                    target_trade_key: peer_key,
+                } => {
+                    let member = OcaMember::Exit {
+                        id: peer_id.clone(),
+                        from_entry: peer_from.clone(),
+                        target_trade_key: peer_key,
+                    };
+                    match reduce_by {
+                        None => {
+                            self.exits
+                                .remove_by_identity_and_key(&peer_id, &peer_from, peer_key);
+                            self.oca_membership.remove(&member);
+                        }
+                        Some(filled_qty) => {
+                            if let Some(pending) = self
+                                .exits
+                                .find_mut_by_identity_and_key(&peer_id, &peer_from, peer_key)
+                            {
+                                let remaining = (pending.reserved_quantity - filled_qty).max(0.0);
+                                if remaining <= 0.0 {
+                                    self.exits
+                                        .remove_by_identity_and_key(&peer_id, &peer_from, peer_key);
+                                    self.oca_membership.remove(&member);
+                                } else {
+                                    pending.reserved_quantity = remaining;
+                                }
+                            } else {
+                                self.oca_membership.remove(&member);
+                            }
+                        }
                     }
                 }
             }

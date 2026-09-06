@@ -4225,6 +4225,58 @@ fn runs_strategy_order_oca_none_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_mixed_oca_entry_order_cancel_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca entry order cancel should run");
+    assert_snapshot(
+        "runtime_strategy_mixed_oca_entry_order_cancel.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_mixed_oca_entry_order_reduce_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca entry order reduce should run");
+    assert_snapshot(
+        "runtime_strategy_mixed_oca_entry_order_reduce.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_mixed_oca_order_exit_reduce_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca order exit reduce should run");
+    assert_snapshot("runtime_strategy_mixed_oca_order_exit_reduce.json", &output);
+}
+
+#[test]
+fn runs_strategy_mixed_oca_none_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_mixed_oca_none.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca none should run");
+    assert_snapshot("runtime_strategy_mixed_oca_none.json", &output);
+}
+
+#[test]
 fn runs_strategy_order_replace_limit_with_stop_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!(

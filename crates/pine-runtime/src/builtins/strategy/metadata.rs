@@ -17,9 +17,9 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<StrategyOrderMetadata, RuntimeError> {
         Ok(StrategyOrderMetadata {
-            comment: self.eval_optional_string_arg(args, 5, "comment")?,
-            alert_message: self.eval_optional_string_arg(args, 6, "alert_message")?,
-            disable_alert: self.eval_optional_bool_arg(args, 7, "disable_alert")?,
+            comment: self.eval_optional_string_arg(args, 7, "comment")?,
+            alert_message: self.eval_optional_string_arg(args, 8, "alert_message")?,
+            disable_alert: self.eval_optional_bool_arg(args, 9, "disable_alert")?,
         })
     }
 

@@ -2,6 +2,7 @@ const STRATEGY_OCA_UNSUPPORTED_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_strategy_orders.pine",
     "tests/fixtures/sema/unsupported_strategy_exit_oca_name_series.pine",
     "tests/fixtures/sema/unsupported_strategy_order_oca_series_name.pine",
+    "tests/fixtures/sema/unsupported_strategy_entry_oca_series_name.pine",
 ];
 
 const STRATEGY_ORDER_OCA_BOUNDARY_FIXTURES: &[&str] = &[
@@ -9,11 +10,25 @@ const STRATEGY_ORDER_OCA_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_order_oca_cancel.pine",
     "tests/fixtures/runtime/strategy_order_oca_reduce.pine",
     "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
     "tests/fixtures/sema/supported_strategy_order_oca_none.pine",
     "tests/fixtures/sema/supported_strategy_order_oca_cancel.pine",
     "tests/fixtures/sema/supported_strategy_order_oca_reduce.pine",
     "tests/fixtures/sema/unsupported_strategy_orders.pine",
     "tests/fixtures/sema/unsupported_strategy_order_oca_series_name.pine",
+];
+
+const STRATEGY_ENTRY_OCA_BOUNDARY_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
+    "tests/fixtures/sema/supported_strategy_entry_oca_none.pine",
+    "tests/fixtures/sema/supported_strategy_entry_oca_cancel.pine",
+    "tests/fixtures/sema/supported_strategy_entry_oca_reduce.pine",
+    "tests/fixtures/sema/unsupported_strategy_entry_oca_series_name.pine",
 ];
 
 const STRATEGY_EXECUTION_TIMING_BOUNDARY_FIXTURES: &[&str] =
@@ -203,6 +218,10 @@ const STRATEGY_ORDER_SHORT_REVERSAL_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_order_oca_cancel.pine",
     "tests/fixtures/runtime/strategy_order_oca_reduce.pine",
     "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
     "tests/fixtures/sema/unsupported_strategy_orders.pine",
 ];
 
@@ -245,6 +264,10 @@ const STRATEGY_ORDER_SUPPORTED_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_order_oca_cancel.pine",
     "tests/fixtures/runtime/strategy_order_oca_reduce.pine",
     "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine",
+    "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
     "tests/fixtures/sema/supported_strategy_order_oca_none.pine",
     "tests/fixtures/sema/supported_strategy_order_oca_cancel.pine",
     "tests/fixtures/sema/supported_strategy_order_oca_reduce.pine",
@@ -406,9 +429,11 @@ fn validate_strategy_oca_boundary_fixture_paths(
             "tests/fixtures/sema/unsupported_strategy_exit_oca_name_series.pine",
         ],
         "strategy.order" => STRATEGY_ORDER_OCA_BOUNDARY_FIXTURES.to_vec(),
+        "strategy.entry" => STRATEGY_ENTRY_OCA_BOUNDARY_FIXTURES.to_vec(),
         "strategy.exit" => vec![
             "tests/fixtures/runtime/strategy_exit_oca_reduce.pine",
             "tests/fixtures/runtime/strategy_exit_oca_reduce_bracket.pine",
+            "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine",
             "tests/fixtures/sema/supported_strategy_exit_oca_name.pine",
             "tests/fixtures/sema/unsupported_strategy_exit_oca_name_series.pine",
         ],
@@ -419,7 +444,7 @@ fn validate_strategy_oca_boundary_fixture_paths(
     for fixture in required {
         if !fixtures.contains(&fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` while strategy.order oca none/cancel/reduce and strategy.exit oca_name reduce are fixture-backed and series oca_name remains unsupported"
+                "line {line_number}: `{feature}` must reference `{fixture}` while strategy.order oca none/cancel/reduce, strategy.entry oca none/cancel/reduce, mixed-family OCA, and strategy.exit oca_name reduce are fixture-backed and series oca_name remains unsupported"
             ));
         }
     }
@@ -1301,6 +1326,7 @@ mod tests {
             "tests/fixtures/runtime/strategy_entry.pine",
             "tests/fixtures/sema/unsupported_strategy_entry_qty.pine",
         ];
+        fixtures.extend(STRATEGY_ENTRY_OCA_BOUNDARY_FIXTURES.iter().copied());
         fixtures.extend(
             STRATEGY_ENTRY_SHORT_POSITIVE_FIXTURES
                 .iter()
@@ -1325,6 +1351,7 @@ mod tests {
             "tests/fixtures/runtime/strategy_entry.pine",
             "tests/fixtures/sema/unsupported_strategy_entry_qty.pine",
         ];
+        fixtures.extend(STRATEGY_ENTRY_OCA_BOUNDARY_FIXTURES.iter().copied());
         fixtures.extend(
             STRATEGY_ENTRY_SHORT_POSITIVE_FIXTURES
                 .iter()

@@ -312,6 +312,26 @@ impl<'a> HistoricalRuntime<'a> {
             .or_else(|| args.get(4).filter(|arg| arg.name.is_none()))
             .map(|arg| &arg.value);
         let metadata = self.eval_strategy_entry_metadata(args)?;
+        let optional_entry_arg_expr = |index: usize, name: &str| {
+            args.iter()
+                .find(|arg| arg.name.as_deref() == Some(name))
+                .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+                .map(|arg| &arg.value)
+        };
+        let oca_name = match optional_entry_arg_expr(5, "oca_name") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(value) => Some(value),
+                _ => None,
+            },
+            None => None,
+        };
+        let oca_type = match optional_entry_arg_expr(6, "oca_type") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(value) => Some(value),
+                _ => None,
+            },
+            None => None,
+        };
 
         let qty = if let Some(qty_expr) = qty_expr {
             self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
@@ -322,6 +342,7 @@ impl<'a> HistoricalRuntime<'a> {
                 .default_entry_qty(equity, bar.close)
                 .unwrap_or(f64::NAN)
         };
+        let oca_id = id.clone();
         if is_short {
             if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
                 let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
@@ -330,52 +351,45 @@ impl<'a> HistoricalRuntime<'a> {
                     .place_pending_stop_limit_short_entry_with_metadata(
                         id, qty, stop, limit, self.bars, metadata,
                     );
-                return Ok(PineValue::Void);
-            }
-            if let Some(stop_expr) = stop_expr {
+            } else if let Some(stop_expr) = stop_expr {
                 let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
                 self.strategy_broker
                     .place_pending_stop_short_entry_with_metadata(
                         id, qty, stop, self.bars, metadata,
                     );
-                return Ok(PineValue::Void);
-            }
-            if let Some(limit_expr) = limit_expr {
+            } else if let Some(limit_expr) = limit_expr {
                 let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
                 self.strategy_broker
                     .place_pending_limit_short_entry_with_metadata(
                         id, qty, limit, self.bars, metadata,
                     );
-                return Ok(PineValue::Void);
+            } else {
+                self.strategy_broker
+                    .place_pending_market_short_entry_with_metadata(id, qty, self.bars, metadata);
             }
-            self.strategy_broker
-                .place_pending_market_short_entry_with_metadata(id, qty, self.bars, metadata);
-            return Ok(PineValue::Void);
-        }
-        if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
+        } else if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
             let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
                 .place_pending_stop_limit_long_entry_with_metadata(
                     id, qty, stop, limit, self.bars, metadata,
                 );
-            return Ok(PineValue::Void);
-        }
-        if let Some(limit_expr) = limit_expr {
+        } else if let Some(limit_expr) = limit_expr {
             let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
                 .place_pending_limit_long_entry_with_metadata(id, qty, limit, self.bars, metadata);
-            return Ok(PineValue::Void);
-        }
-        if let Some(stop_expr) = stop_expr {
+        } else if let Some(stop_expr) = stop_expr {
             let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
                 .place_pending_stop_long_entry_with_metadata(id, qty, stop, self.bars, metadata);
-            return Ok(PineValue::Void);
+        } else {
+            self.strategy_broker
+                .place_pending_market_long_entry_with_metadata(id, qty, self.bars, metadata);
         }
-
-        self.strategy_broker
-            .place_pending_market_long_entry_with_metadata(id, qty, self.bars, metadata);
+        if let Some(name) = oca_name {
+            self.strategy_broker
+                .assign_pending_order_oca_named(&oca_id, name, oca_type.as_deref());
+        }
         Ok(PineValue::Void)
     }
 

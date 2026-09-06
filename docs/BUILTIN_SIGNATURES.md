@@ -773,9 +773,9 @@ strategy(title: const string, shorttitle?: const string, overlay?: const bool, m
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
-strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none or strategy.oca.cancel subset, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
 strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool)
 -> void
@@ -1420,9 +1420,10 @@ string values. `strategy.entry` execution supports `strategy.long`, market
 `strategy.short`, including
 market reversals that flatten opposite exposure then open the requested
 quantity unless `strategy.risk.allow_entry_in` forbids the new side;
-`strategy.order` accepts const/simple `oca_name` with
+`strategy.entry` and `strategy.order` accept const/simple `oca_name` with
 `strategy.oca.none`, `strategy.oca.cancel`, or `strategy.oca.reduce`.
-`strategy.exit` accepts const/simple `oca_name` as implicit
+Same-name same-type mixed entry/order/exit reduce peers cancel or reduce
+together. `strategy.exit` accepts const/simple `oca_name` as implicit
 `strategy.oca.reduce` grouping. Series `oca_name` remains unsupported.
 `strategy.risk.allow_entry_in` accepts const/simple
 `strategy.direction.all`, `strategy.direction.long`, or

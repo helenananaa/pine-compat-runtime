@@ -1,8 +1,8 @@
 # Next Internal Capability Plan
 
-Status: active planning document, refreshed on 2026-09-04 after the Stage 23
-Bar Magnifier fill-wiring closeout. Mixed-family OCA is the next strategy
-target. Strategy broker accuracy remains the selected direction while further
+Status: active planning document, refreshed on 2026-09-06 after mixed-family
+OCA closeout. Host-neutral session risk windows are the next strategy target.
+Strategy broker accuracy remains the selected direction while further
 source-version expansion is paused.
 
 This document groups the next interpreter-internal work into seven large task
@@ -33,7 +33,8 @@ Current Stage 17-22 baseline:
 - next-tick market closes, close-command `immediately`, and historical
   `process_orders_on_close`;
 - long/short generic-order signed netting and price-based entry reversal;
-- fixture-backed OCA none/cancel/reduce subsets and unified cancellation;
+- fixture-backed OCA none/cancel/reduce subsets, mixed entry/order/exit
+  groups, and unified cancellation;
 - bounded `calc_on_order_fills`, realtime rollback, and
   `calc_on_every_tick`;
 - fixture-backed entry-direction, position-size, drawdown, intraday, and
@@ -42,17 +43,16 @@ Current Stage 17-22 baseline:
 Stage 18g and Stage 23 are closed. Historical price entries, generic orders,
 exits, and margin calls share one OHLC-path event loop. Named const bool
 `use_bar_magnifier=true` walks host-owned lower-timeframe bars through that
-same path. Remaining strategy work is mixed-family OCA, session calendars,
-and the deferred general inter-bar gap rewrite.
+same path. Mixed-family OCA is closed. Remaining strategy work is session
+calendars and the deferred general inter-bar gap rewrite.
 
 Active stage order:
 
-1. Expand mixed entry/order/exit OCA groups only through a dedicated slice.
-2. Add an instrument-session calendar before claiming exchange-session risk
+1. Add an instrument-session calendar before claiming exchange-session risk
    parity.
-3. Keep the general chart-to-chart inter-bar gap rewrite separate from the
+2. Keep the general chart-to-chart inter-bar gap rewrite separate from the
    magnifier-local lower-bar-open rule.
-4. Select later reporting, account, or order-family work from real fixture
+3. Select later reporting, account, or order-family work from real fixture
    gaps.
 
 The closed Stage 23 record is
@@ -60,7 +60,7 @@ The closed Stage 23 record is
 
 Keep out of scope until separately designed and fixture-backed:
 
-- Mixed entry/order/exit OCA groups and series `oca_name`.
+- Series `oca_name`.
 - Omitted `qty` for unsupported `strategy.short` order forms.
 - Currency conversion, symbol precision, and richer account constraints.
 - Arbitrary future binding for unmatched `from_entry` ids.
@@ -70,11 +70,17 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice: mixed-family OCA behavior on the shared broker
-selector. Omitted `from_entry` allocation remains FIFO and
-`strategy.close_all()` remains independent of `close_entries_rule`. Do not add
-public pending-order fields or widen conformance without runtime behavior and
-host-parity evidence in the same slice.
+Recommended next slice: host-neutral session/window input for risk rules.
+Omitted `from_entry` allocation remains FIFO and `strategy.close_all()`
+remains independent of `close_entries_rule`. Do not add public pending-order
+fields or widen conformance without runtime behavior and host-parity evidence
+in the same slice. The closed mixed-family OCA record is
+`docs/STRATEGY_MIXED_OCA_BEHAVIOR_AUDIT.md`.
+
+The step-by-step implementation sequence, acceptance gates, and later session,
+gap, and corpus work are in
+[Strategy Accuracy Next Execution Plan](STRATEGY_ACCURACY_NEXT_EXECUTION_PLAN.md).
+That plan does not change current compatibility claims.
 
 Closed maintenance slice:
 

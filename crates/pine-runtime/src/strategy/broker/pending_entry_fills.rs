@@ -349,6 +349,8 @@ impl BrokerState {
             return;
         }
         if pending_entry.direction == PendingEntryDirection::Short {
+            let filled_key = pending_entry.key;
+            let filled_qty = pending_entry.quantity;
             let entry_id = pending_entry.id;
             let filled = self.entry_short_internal(
                 EntryFill {
@@ -356,17 +358,21 @@ impl BrokerState {
                     bar_index,
                     time,
                     price: fill_price,
-                    qty: pending_entry.quantity,
+                    qty: filled_qty,
                     metadata: pending_entry.metadata,
                 },
                 EntryPyramidingMode::EnforceLimit,
             );
-            if !filled {
+            if filled {
+                self.order_book.apply_oca_after_fill(filled_key, filled_qty);
+            } else {
                 self.order_book.exits_mut().clear_for_entry(&entry_id);
             }
             return;
         }
 
+        let filled_key = pending_entry.key;
+        let filled_qty = pending_entry.quantity;
         let entry_id = pending_entry.id;
         let filled = self.entry_long_internal(
             EntryFill {
@@ -374,12 +380,13 @@ impl BrokerState {
                 bar_index,
                 time,
                 price: fill_price,
-                qty: pending_entry.quantity,
+                qty: filled_qty,
                 metadata: pending_entry.metadata,
             },
             EntryPyramidingMode::EnforceLimit,
         );
         if filled {
+            self.order_book.apply_oca_after_fill(filled_key, filled_qty);
             self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
             self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
@@ -625,6 +632,8 @@ impl BrokerState {
             return OcaPeerEffects::default();
         }
 
+        let filled_key = pending_entry.key;
+        let filled_qty = pending_entry.quantity;
         let entry_id = pending_entry.id;
         let opposite = match pending_entry.direction {
             PendingEntryDirection::Long => self.position_size < 0.0,
@@ -642,7 +651,7 @@ impl BrokerState {
                     bar_index,
                     time,
                     price,
-                    qty: pending_entry.quantity,
+                    qty: filled_qty,
                     metadata: pending_entry.metadata,
                 },
                 pyramiding_mode,
@@ -653,19 +662,21 @@ impl BrokerState {
                     bar_index,
                     time,
                     price,
-                    qty: pending_entry.quantity,
+                    qty: filled_qty,
                     metadata: pending_entry.metadata,
                 },
                 pyramiding_mode,
             ),
         };
         if filled {
+            let effects = self.order_book.apply_oca_after_fill(filled_key, filled_qty);
             self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
             self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
+            effects
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
+            OcaPeerEffects::default()
         }
-        OcaPeerEffects::default()
     }
 
     pub(crate) fn fill_pending_stop_short_entries(

@@ -55,6 +55,10 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Status And Roadmap Documents
 
+- [Strategy Accuracy Next Execution Plan](STRATEGY_ACCURACY_NEXT_EXECUTION_PLAN.md):
+  step-by-step Chinese plan for mixed-family OCA, host-neutral session risk
+  windows, standard inter-bar gaps, and corpus-driven follow-up, with explicit
+  evidence gates and stop conditions. Planning only; no new support claim.
 - [Task Breakdown](TASK_BREAKDOWN.md): high-level baseline and ongoing work
   status.
 - [Next Internal Capability Plan](NEXT_INTERNAL_CAPABILITY_PLAN.md): recommended

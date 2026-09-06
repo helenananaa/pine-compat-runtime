@@ -3846,6 +3846,60 @@ def test_run_script_returns_strategy_order_oca_none_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_mixed_oca_entry_order_cancel_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_entry_order_cancel.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_mixed_oca_entry_order_reduce_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_entry_order_reduce.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_mixed_oca_order_exit_reduce_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_order_exit_reduce.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_mixed_oca_none_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_mixed_oca_none.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_none.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
 def test_run_script_returns_strategy_order_reduce_any_matching_id_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_order_reduce_any_matching_id.pine"

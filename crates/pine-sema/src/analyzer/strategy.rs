@@ -263,9 +263,20 @@ impl Analyzer {
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
         fn strategy_entry_arg_name(index: usize, arg: &CallArg) -> Option<&str> {
             arg.name.as_deref().or_else(|| {
-                ["id", "direction", "qty", "limit", "stop"]
-                    .get(index)
-                    .copied()
+                [
+                    "id",
+                    "direction",
+                    "qty",
+                    "limit",
+                    "stop",
+                    "oca_name",
+                    "oca_type",
+                    "comment",
+                    "alert_message",
+                    "disable_alert",
+                ]
+                .get(index)
+                .copied()
             })
         }
         let direction = args.iter().enumerate().find_map(|(index, arg)| {
@@ -323,6 +334,18 @@ impl Analyzer {
                         ));
                     }
                 }
+                "oca_name" => {}
+                "oca_type" => match self.known_const_string_value(&arg.value).as_deref() {
+                    Some("strategy.oca.none" | "strategy.oca.cancel" | "strategy.oca.reduce") => {}
+                    _ => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.entry` argument `oca_type` only supports strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce",
+                            arg.span,
+                        ));
+                    }
+                },
+                "comment" | "alert_message" | "disable_alert" => {}
                 _ => {}
             }
         }

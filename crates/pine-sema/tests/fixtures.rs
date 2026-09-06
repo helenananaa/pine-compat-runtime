@@ -4711,6 +4711,14 @@ fn reports_unsupported_strategy_order_oca_series_name_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_entry_oca_series_name_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_entry_oca_series_name.pine",
+        &["oca_name"],
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_order_named_const_direction_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_named_const_direction.pine",
@@ -4940,6 +4948,9 @@ fn accepts_supported_strategy_entry_fixture() {
         "tests/fixtures/sema/supported_strategy_entry_limit_short.pine",
         "tests/fixtures/sema/supported_strategy_entry_stop_short.pine",
         "tests/fixtures/sema/supported_strategy_entry_stop_limit_short.pine",
+        "tests/fixtures/sema/supported_strategy_entry_oca_none.pine",
+        "tests/fixtures/sema/supported_strategy_entry_oca_cancel.pine",
+        "tests/fixtures/sema/supported_strategy_entry_oca_reduce.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");

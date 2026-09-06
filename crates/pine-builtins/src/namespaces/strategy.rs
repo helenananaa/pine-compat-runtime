@@ -29,6 +29,16 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "oca_name",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "oca_type",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
         name: "comment",
         accepts: Accepts::StringCompatible,
         optional: true,

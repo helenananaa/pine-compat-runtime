@@ -1462,6 +1462,186 @@ fn strategy_order_oca_none_fills_grouped_orders_independently() {
 }
 
 #[test]
+fn strategy_mixed_oca_entry_order_cancel_cancels_peer() {
+    let strategy = run_named_strategy_fixture(
+        "strategy_mixed_oca_entry_order_cancel.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine"
+        ),
+    );
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "E");
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert!(!strategy.orders.iter().any(|order| order.id == "O"));
+}
+
+#[test]
+fn strategy_mixed_oca_entry_order_reduce_cuts_peer_quantity() {
+    let strategy = run_named_strategy_fixture(
+        "strategy_mixed_oca_entry_order_reduce.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine"
+        ),
+    );
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(2.0)
+    );
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "E");
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[1].id, "O");
+    assert_eq!(strategy.orders[1].qty, 1.0);
+}
+
+#[test]
+fn strategy_mixed_oca_none_fills_entry_and_order_independently() {
+    let strategy = run_named_strategy_fixture(
+        "strategy_mixed_oca_none.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_mixed_oca_none.pine"),
+    );
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(2.0)
+    );
+    assert_eq!(strategy.orders.len(), 2);
+}
+
+#[test]
+fn strategy_mixed_oca_order_exit_reduce_cuts_stop_reservation() {
+    let strategy = run_named_strategy_fixture(
+        "strategy_mixed_oca_order_exit_reduce.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine"
+        ),
+    );
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+    assert!(strategy.orders.iter().any(|order| order.id == "L"));
+    assert!(strategy.orders.iter().any(|order| order.id == "TP"));
+    assert!(!strategy.orders.iter().any(|order| order.id == "SL"));
+    assert_eq!(
+        strategy
+            .orders
+            .iter()
+            .find(|order| order.id == "TP")
+            .map(|order| order.qty),
+        Some(1.0)
+    );
+}
+
+#[test]
+fn strategy_mixed_oca_high_first_stop_cancels_limit_peer() {
+    let source = SourceFile::new(
+        "strategy_mixed_oca_high_first.pine",
+        r#"
+strategy("mixed oca high first")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11.5, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("LIM", strategy.long, qty=1, limit=8.5, oca_name="g", oca_type=strategy.oca.cancel)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(11.0, 12.0, 8.0, 9.0),
+        ],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "STP");
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+}
+
+#[test]
+fn strategy_mixed_oca_low_first_limit_cancels_stop_peer() {
+    let source = SourceFile::new(
+        "strategy_mixed_oca_low_first.pine",
+        r#"
+strategy("mixed oca low first")
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=11.5, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("LIM", strategy.long, qty=1, limit=8.5, oca_name="g", oca_type=strategy.oca.cancel)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 12.0, 8.0, 11.0),
+        ],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "LIM");
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+}
+
+#[test]
+fn strategy_mixed_oca_calc_on_order_fills_does_not_resurrect_cancelled_peer() {
+    let source = SourceFile::new(
+        "strategy_mixed_oca_calc_on_order_fills.pine",
+        r#"
+strategy("mixed oca recalc", calc_on_order_fills=true)
+if bar_index == 1
+    strategy.entry("E", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("O", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.cancel)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let strategy = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("run")
+    .strategy
+    .expect("strategy");
+    assert_eq!(
+        strategy.position.last().map(|snapshot| snapshot.size),
+        Some(1.0)
+    );
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "E");
+}
+
+#[test]
 fn strategy_entry_limit_reverses_short_after_trigger() {
     let strategy = run_named_strategy_fixture(
         "strategy_entry_limit_reverses_short.pine",

@@ -702,13 +702,18 @@ orders, pending exits, deferred relative exits, and pending closes, including
 when those families share a public id. Generic-order reductions allocate FIFO, or
 id-specific ANY when `close_entries_rule` is ANY and the order id matches an
 open entry; unmatched ANY stays FIFO. Const/simple `oca_name` with explicit
-`strategy.oca.none` keeps grouped `strategy.order` intents independent.
-`strategy.oca.cancel` cancels still-pending same-group generic-order peers
-after a fill, in internal creation order, and leaves unrelated groups in
-place. `strategy.oca.reduce` reduces same-group peer remaining quantity by
-the filled quantity and removes peers reduced to zero. Const/simple
-`strategy.exit` `oca_name` maps onto that implicit reduce reservation model:
-grouped exits share overlapping quantity, and a fill reduces same-group peers.
+`strategy.oca.none` keeps grouped `strategy.entry` and `strategy.order`
+intents independent. `strategy.oca.cancel` cancels still-pending same-group
+entry and generic-order peers after a fill, in internal creation order, and
+leaves unrelated groups in place. `strategy.oca.reduce` reduces same-group
+peer remaining quantity by the filled quantity and removes peers reduced to
+zero, including mixed entry, generic-order, and exit members that share the
+same name and reduce type. Const/simple `strategy.exit` `oca_name` maps onto
+that implicit reduce reservation model: grouped exits share overlapping
+quantity, and a fill reduces same-group peers. Same name with different OCA
+types remains two groups. Empty `oca_name` does not join a group. OCA peer
+effects from an entry fill apply before deferred relative exits for that
+entry are resolved.
 Omitted `qty` remains unsupported for `strategy.short`.
 The supported `strategy.order()` subset accepts
 `comment`, `alert_message`, and `disable_alert` metadata. Supported long order
@@ -719,7 +724,7 @@ exit comments, and supported order-fill alert payloads are exposed under
 supported single-trigger, one-downside/one-upside bracket, trailing-stop,
 fixed-quantity, percent-quantity, explicit single-trigger or bracket/trailing
 reservation subset, `strategy.cancel(id)`, and `strategy.cancel_all()`,
-series `oca_name` `strategy.order` and `strategy.exit` forms,
+series `oca_name` `strategy.entry`, `strategy.order`, and `strategy.exit` forms,
 rich order families, strategy reporting helpers beyond the supported
 position/profit/equity/count/run-up/drawdown/buy-and-hold return variables,
 requested-context strategy state, strategy state mutation, and realtime

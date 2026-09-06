@@ -1,0 +1,4027 @@
+[
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_builtin_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_buy_and_hold_return_percent.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_calc_on_every_tick.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_calc_on_order_fills.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_calc_on_order_fills_exit_avg.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_calc_on_order_fills_false.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_all_entry_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_all_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_all_families.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_all_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_shared_id_close_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cancel_shared_id_entry_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cash_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cash_default_quantity_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_cash_default_quantity_override.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_all.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_all_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_all_immediately.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_all_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_any_close.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_fifo.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_entries_rule_fifo_close_all.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_immediately.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_immediately_false.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_immediately_qty.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_immediately_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_metadata.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_qty_full_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_qty_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_qty_percent_precedence.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_close_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_closedtrades_fields.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_closedtrades_fields_pyramiding.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_commission_cash_per_contract.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_commission_cash_per_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_commission_percent.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_constants.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_default_quantity_override.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_limit_reverses_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_limit_reverses_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_limit_reverses_short_qty.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_long_reverses_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_metadata.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_short_reverses_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop_limit_reverses_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop_limit_reverses_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop_reverses_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop_reverses_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_entry_stop_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_equity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_active_entry_attachment.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_active_entry_loss_attachment.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_active_entry_loss_limit_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_active_entry_loss_profit_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_active_entry_profit_attachment.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_active_entry_stop_profit_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_active_entry_trail_points_attachment.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_creation_bar.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_invalid_leg.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_profit_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_repeated.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_limit_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_limit_fill_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_bracket_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_limit_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_limit_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss_limit_bracket_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss_limit_bracket_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss_profit_bracket_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss_profit_bracket_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_loss_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_metadata.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_oca_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_oca_reduce_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_omitted_bracket_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_omitted_replaces_reservations.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_omitted_single_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_omitted_trailing_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_profit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_profit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_profit_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_profit_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_bracket_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_full_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_limit_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_bracket_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_full.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_full_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_limit_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_repeated.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_percent_trailing_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_precedence_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_precedence_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_precedence_trailing.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_repeated.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_stop_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_bracket_host_parity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_bracket_single_downside_precedence.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_bracket_single_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_bracket_single_upside_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_bracket_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_mixed_side_precedence.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_stop_limit_downside_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_limit_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_bracket_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_stop_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_trailing_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_bracket_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_bracket_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_bracket_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_stop_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_stop_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_clamp.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_points_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_price_multi.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_activation_mixed_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_bracket_downside_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_side_precedence.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_replacement_mixed.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_single_downside_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_reservation_trailing_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_slippage.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_stop_profit_bracket_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_stop_profit_bracket_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_stop_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trade_counts.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trail_points_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trail_points_fill_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trail_price_fill_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_activation_bar.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_close_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_invalid.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_ratchet.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_repeated.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_replacement.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_trailing_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_exit_while_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_bracket_high_first.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_bracket_low_first.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_bracket_short_high_first.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_bracket_short_low_first.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_calc_on_order_fills_guard.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_calc_on_order_fills_resume.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_drawdown_intrabar_ordering.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_exit_oca_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_exit_then_entry_same_bar.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_high_first_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_high_first_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_limit_stop_collision.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_low_first_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_low_first_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_margin_before_exit_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_margin_before_exit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_margin_invalidates_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_order_oca_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_partial_exit_reservation.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_realtime_margin_rollback.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_realtime_stop_limit_rollback.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_realtime_trailing_rollback.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_same_price_creation_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_stop_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_trailing_activation_then_fill.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_fill_path_trailing_no_future_extreme.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_limit_verification_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_limit_verification_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_margin_call_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_margin_call_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_margin_capital_held_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_margin_entry_affordability_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_no_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_opentrades_fields.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_opentrades_fields_pyramiding.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_cancel_all_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_cancel_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_cancel_shared_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_cancel_stop_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_long_against_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_long_flatten_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_long_reduce_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_short_against_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_short_flatten_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_limit_short_reduce_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_long_against_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_long_flatten_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_long_reduce_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_market_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_market_short_increase.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_metadata.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_oca_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_oca_none.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_oca_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_reduce_any_matching_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_reduce_fifo.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_reduce_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_replace_limit_with_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_replace_long_with_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_short_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_short_flatten_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_short_oversized_against_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_limit_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_limit_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_limit_long_against_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_limit_long_flatten_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_limit_short_against_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_limit_short_reduce_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_long_against_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_long_flatten_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_short_against_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_order_stop_short_reduce_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_ordinary_chart_down_gap_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_ordinary_chart_gap_stop_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_ordinary_chart_no_gap_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_ordinary_chart_up_gap_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_percent_of_equity_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_position_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_process_orders_on_close.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_process_orders_on_close_close.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_process_orders_on_close_immediately.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_profit_percent_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_profit_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_close.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_close_all.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_bracket_from_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_from_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_current.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_persistent.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_profit_bracket_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_profit_bracket_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_profit_bracket_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_profit_bracket_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_persistent_from_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_persistent_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_profit_from_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_exit_trail_points_from_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_limit_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_allow_entry_in_long.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_allow_entry_in_long_flat_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_allow_entry_in_order_unaffected.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_allow_entry_in_repeated.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_allow_entry_in_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_cons_loss_days.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_cons_loss_days_no_trade.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_drawdown_blocks_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_drawdown_cash.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_drawdown_percent.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders_reset.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_intraday_loss_cash.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_intraday_loss_percent.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_position_size_full_noop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_position_size_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_position_size_order_unaffected.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_position_size_pyramiding.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_position_size_reduces.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_risk_max_position_size_reversal.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_session_overnight_filled_orders.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_slippage.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_trade_counts.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_trade_outcome_counts.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/runtime/strategy_variable_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_imported_strategy_max_bars_back_declaration_udf_length.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_account_currency.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_calc_on_every_tick.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_calc_on_order_fills.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_cancel_all.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_cash_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_all.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_entries_rule_any.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_entries_rule_fifo.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_immediately.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_named_const_numeric.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_qty.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_qty_percent.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_close_qty_precedence.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_closedtrades_fields.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_commission_cash_per_contract.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_commission_cash_per_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_commission_percent.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_currency_conversion.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_declaration.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_named_const_direction.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_named_const_numeric.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_named_const_short_direction.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_oca_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_oca_none.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_oca_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_stop_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_stop_limit_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_entry_stop_short.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_loss.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_loss_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_loss_profit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_oca_name.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_omitted_from_entry.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_profit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_trailing.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_percent_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_percent_loss.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_percent_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_percent_trailing.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_qty_trailing.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_stop.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_stop_limit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_stop_profit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_trail_points.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_exit_trail_price.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_initial_capital.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_limit_verification.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_margin_declaration.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_max_bars_back_declaration_alias_named_const.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_max_bars_back_declaration_udf_length.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_max_boxes_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_max_labels_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_max_lines_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_max_polylines_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_named_const_close_entries_rule.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_named_const_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_named_const_max_polylines_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_named_const_numeric_metadata.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_opentrades_fields.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_order.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_order_metadata.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_order_named_const_direction.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_order_named_const_numeric.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_order_oca_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_order_oca_none.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_order_oca_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_percent_of_equity_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_position_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_process_orders_on_close.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_profit_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_pyramiding.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_risk_allow_entry_in.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_risk_max_cons_loss_days.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_risk_max_drawdown.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_risk_max_intraday_filled_orders.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_risk_max_intraday_loss.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_risk_max_position_size.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_slippage.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_trade_count_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_trade_counts.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_trade_outcome_counts.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_use_bar_magnifier.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_use_bar_magnifier_false.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_use_bar_magnifier_false_const.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_use_bar_magnifier_false_v6.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_use_bar_magnifier_v6.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/supported_strategy_variable_interactions.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_request_strategy_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_request_strategy_state.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_request_strategy_trailing_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_account_currency_const.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_calc_on_every_tick_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_calc_on_order_fills_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_cancel_all_function_side_effect.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_cancel_function_side_effect.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_close_all_function_side_effect.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_close_entries_rule_unknown.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_close_function_side_effect.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_close_immediately.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_close_immediately_type.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_close_named_const_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_close_partial_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_commission_unknown.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_currency.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_currency_conversion.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_default_entry_qty.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_default_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_entry_named_const_qty.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_entry_oca_series_name.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_entry_qty.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_four_triggers.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_limit_profit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_missing_id.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_missing_trigger.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_named_missing_trigger.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_oca_name.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_oca_name_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_profit_trailing.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_qty_percent_same_side.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_qty_same_side.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_stop_loss.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_three_triggers.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_trail_offset_only.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_trail_points_only.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_trail_price_only.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_trail_price_points.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_trailing.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_trailing_bracket.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_exit_trailing_function_side_effect.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_initial_capital.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_limit_verification.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_margin_declaration.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_max_boxes_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_max_labels_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_max_lines_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_max_polylines_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_named_const_close_entries_rule.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_named_const_max_polylines_count.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_named_const_slippage.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_function_side_effect.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_metadata_types.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_named_const_direction.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_oca_cancel.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_oca_reduce.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_oca_series_name.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_order_series_simple_string_ids.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_orders.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_process_orders_on_close_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_process_orders_on_close_with_recalc.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_pyramiding.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_allow_entry_in_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_allow_entry_in_unknown.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_cons_loss_days_fraction.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_cons_loss_days_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_cons_loss_days_zero.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_percent_over.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_unknown_type.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_zero.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_filled_orders_fraction.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_filled_orders_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_filled_orders_zero.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_percent_over.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_unknown_type.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_zero.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_position_size_negative.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_position_size_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_risk_max_position_size_zero.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_slippage.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_state_mutation.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_unknown_variable.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_numeric.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_positional.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_series.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "negative_control",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_string.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "excluded",
+    "licenseClass": "original",
+    "path": "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_v4.pine",
+    "publishAllowed": true,
+    "reason": "version or scope excluded from modern v5/v6 denominators"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/regressions/strategy_close_same_id_allocations.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/regressions/strategy_multiple_market_entries.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/regressions/strategy_stale_trade_key_exit.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "original_regression",
+    "licenseClass": "original",
+    "path": "tests/fixtures/profile/strategy_variable_history.pine",
+    "publishAllowed": true,
+    "reason": "in-repo original fixture"
+  },
+  {
+    "category": "excluded",
+    "licenseClass": "original",
+    "path": "tests/fixtures/legacy/excluded_strategy_v4.pine",
+    "publishAllowed": true,
+    "reason": "version or scope excluded from modern v5/v6 denominators"
+  }
+]

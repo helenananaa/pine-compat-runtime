@@ -179,7 +179,9 @@ Phase 1 executable subset:
 - `strategy(...)` as a Phase G declaration subset with strategy-mode runtime
   output, named const `format`/`precision` using the same `format.inherit` /
   `format.price` / `format.percent` / `format.volume` and 0–16 precision rules
-  as `indicator`, positive const numeric `initial_capital`, and Phase L fixed default
+  as `indicator`, positive const numeric `initial_capital`, same-currency
+  `currency=currency.NONE` or `currency=currency.USD` matching the fixed
+  `syminfo.currency`, and Phase L fixed default
   quantity settings through `default_qty_type=strategy.fixed` plus positive
   const numeric `default_qty_value`, plus positive integer const `pyramiding`
   for the accepted same-direction long market-entry subset; const bool

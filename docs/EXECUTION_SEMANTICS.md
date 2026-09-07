@@ -142,10 +142,12 @@ Strategy-mode runtime results include a `strategy` object with `orders`,
 runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
 cash value; when omitted, the runtime uses 100000.
-With the currently supported default account-currency path (`currency.NONE`),
+With the currently supported default account-currency path (`currency.NONE` or
+same-symbol `currency.USD`),
 `strategy.account_currency` inherits the fixed `syminfo.currency` value,
-currently `"USD"`. Explicit `strategy(..., currency=currency.NONE)` selects
-the same no-conversion path. In that path,
+currently `"USD"`. Explicit `strategy(..., currency=currency.NONE)` or
+`strategy(..., currency=currency.USD)` selects the same no-conversion path.
+In that path,
 `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`
 return the numeric input as a series float, coercing integers and preserving
 typed `na`. Direct, named, UDF, and history calls are supported; indicator and
@@ -319,12 +321,13 @@ Strategy-mode scripts can read `strategy.position_size`,
 `strategy.opentrades` as historical series ints in the current count-only
 reporting subset. `strategy.position_entry_name` is a historical series string.
 `strategy.account_currency` is a read-only simple string that inherits the
-current fixed symbol currency under the default `currency.NONE` path. Direct,
-UDF, and history reads are supported without expanding public strategy JSON;
-indicator use, requested-context use, and mutation remain unsupported. An
-explicit `currency.NONE` declaration is accepted; other currency settings and
-cross-currency conversion remain unsupported. The same-currency conversion
-helpers follow the identity behavior described above.
+current fixed symbol currency under the default `currency.NONE` path and
+explicit same-symbol `currency.USD`. Direct, UDF, and history reads are
+supported without expanding public strategy JSON; indicator use,
+requested-context use, and mutation remain unsupported. Explicit
+`currency.NONE` and `currency.USD` declarations are accepted; other currency
+settings and cross-currency conversion remain unsupported. The same-currency
+conversion helpers follow the identity behavior described above.
 `strategy.position_size` is `0` when flat, positive while long, and negative
 while short.
 `strategy.position_avg_price` is `na` when flat and the current average entry

@@ -1068,11 +1068,13 @@ returns the positive configured `strategy(..., initial_capital=...)` value, or
 the existing default starting capital when omitted, on every bar. It follows
 ordinary series history and does not add a public runtime schema field.
 `strategy.account_currency` is a read-only strategy-mode simple string. In the
-current default-only `currency.NONE` declaration subset, it inherits the fixed
+current no-conversion declaration subset, it inherits the fixed
 `syminfo.currency` value, currently `"USD"`. Direct, UDF, and history reads are
-supported without adding a public runtime schema field. The explicit
-`strategy(..., currency=currency.NONE)` no-conversion declaration is accepted;
-other currency values and settings overrides remain outside the current subset.
+supported without adding a public runtime schema field. Explicit
+`strategy(..., currency=currency.NONE)` and
+`strategy(..., currency=currency.USD)` select the same-currency identity path
+because `currency.USD` matches the current symbol currency; other currency
+values and settings overrides remain outside the current subset.
 `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`
 support the resulting same-currency boundary as strategy-mode `series float`
 identities. They accept series/simple numeric values, coerce integers to floats,
@@ -1421,11 +1423,11 @@ non-default merge behavior remains unsupported.
 Supported direct currency constants include the official `currency.*`
 currency-code set from `currency.AUD` through `currency.ZAR`, including
 `currency.NONE`, `currency.BTC`, `currency.ETH`, `currency.USD`, and
-`currency.USDT`, as string values such as `"USD"`. Request currency conversion,
-non-`NONE` strategy account-currency configuration, and cross-currency strategy
-conversion are not implemented; the default and explicit `currency.NONE`
-`strategy.account_currency` reads and same-currency strategy conversions are
-supported as described above.
+`currency.USDT`, as string values such as `"USD"`. Request currency conversion
+and cross-currency strategy conversion are not implemented; the default
+`currency.NONE` path, explicit `currency.USD` when it matches the current
+symbol currency, `strategy.account_currency` reads, and same-currency strategy
+conversions are supported as described above.
 Supported direct strategy constants include `strategy.long`, `strategy.short`,
 `strategy.direction.all`, `strategy.direction.long`,
 `strategy.direction.short`,

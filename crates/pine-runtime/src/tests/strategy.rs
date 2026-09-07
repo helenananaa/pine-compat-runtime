@@ -8066,6 +8066,63 @@ plot(strategy.default_entry_qty(close)[1])
 }
 
 #[test]
+fn strategy_currency_conversions_are_identity_for_explicit_symbol_currency() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("currency conversion usd", currency=currency.USD)
+identity(value) => value
+plot(strategy.account_currency == "USD" ? 1 : 0)
+plot(identity(strategy.account_currency) == "USD" ? 1 : 0)
+plot(strategy.convert_to_account(close))
+plot(identity(strategy.convert_to_symbol(value=close * 2)))
+plot(strategy.convert_to_account(7))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Float(1.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0)
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Float(2.0),
+            PineValue::Float(4.0),
+            PineValue::Float(6.0)
+        ]
+    );
+    assert_eq!(
+        result.plots[4].values,
+        vec![
+            PineValue::Float(7.0),
+            PineValue::Float(7.0),
+            PineValue::Float(7.0)
+        ]
+    );
+}
+
+#[test]
 fn strategy_currency_conversions_are_identity_in_default_currency() {
     let source = SourceFile::new(
         "strategy.pine",

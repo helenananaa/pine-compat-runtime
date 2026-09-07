@@ -4330,7 +4330,7 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
-        &["currency", "risk_free_rate", "fill_orders_on_standard_ohlc"],
+        &["risk_free_rate", "fill_orders_on_standard_ohlc"],
     );
 }
 
@@ -4562,8 +4562,15 @@ fn reports_strategy_calc_on_order_fills_series_rejected() {
 fn reports_unsupported_strategy_currency_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_currency.pine",
-        &["`strategy` argument `currency` only supports currency.NONE"],
+        &[
+            "`strategy` argument `currency` only supports currency.NONE or the current symbol currency",
+        ],
     );
+}
+
+#[test]
+fn accepts_supported_strategy_currency_usd_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_strategy_currency_usd.pine");
 }
 
 #[test]

@@ -100,7 +100,7 @@ A script may have at most one top-level declaration call. `indicator(...)`
 selects indicator mode and `strategy(...)` selects strategy mode. Phase G
 accepts `strategy(...)` with the common declaration metadata subset plus
 positive const numeric `initial_capital` and the explicit no-conversion
-`currency=currency.NONE` subset. Phase L adds the fixed default
+`currency=currency.NONE` or same-symbol `currency=currency.USD` subset. Phase L adds the fixed default
 quantity declaration subset:
 `default_qty_type=strategy.fixed, default_qty_value=N` with positive const
 numeric `N`. Stage 7 Slice 31 adds
@@ -118,7 +118,8 @@ non-positive or non-finite supported equity. Indicator and requested-context
 use remain rejected, and no public result field is added. Currency conversion,
 symbol point value, precision, and lot-step handling remain outside the current
 default-quantity contract.
-Under the default or explicit `currency.NONE` account-currency path,
+Under the default or explicit `currency.NONE` account-currency path, and under
+explicit `currency.USD` when it matches the current symbol currency,
 `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)` are
 pure strategy-mode `series float` identities. Both accept a series/simple
 numeric value, coerce integers to floats, preserve typed `na`, and support
@@ -270,14 +271,15 @@ available through ordinary series expressions, UDF arguments, and history
 references, while indicator use, requested-context use, and mutation remain
 rejected.
 `strategy.account_currency` is a read-only strategy-mode `simple string`. In
-the current default-only `currency.NONE` subset it inherits the fixed
+the current no-conversion subset it inherits the fixed
 `syminfo.currency` value, currently `"USD"`. Simple-string consumers plus
 direct, UDF, and history reads are supported; const-string consumers,
 indicator use, requested-context use, and mutation remain rejected. Explicit
-`strategy(..., currency=currency.NONE)` is accepted as the same no-conversion
-path; other currency values, settings overrides, and cross-currency conversion
-remain unsupported. The default same-currency conversion helpers are described
-above, and no public result field is added.
+`strategy(..., currency=currency.NONE)` and
+`strategy(..., currency=currency.USD)` are accepted as the same-currency
+identity path; other currency values, settings overrides, and cross-currency
+conversion remain unsupported. The default same-currency conversion helpers are
+described above, and no public result field is added.
 `strategy.position_entry_name` is a read-only strategy-mode `series string`
 that is `na` while flat and otherwise returns the entry order ID that initially
 opened the current continuous net long position. A pyramiding addition or a

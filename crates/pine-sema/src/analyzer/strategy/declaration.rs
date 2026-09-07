@@ -6,6 +6,8 @@ const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.ca
 const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
 const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
 const STRATEGY_NONE_ACCOUNT_CURRENCY: &str = "NONE";
+// Matches the registered `syminfo.currency` value used by the no-conversion path.
+const STRATEGY_SYMBOL_ACCOUNT_CURRENCY: &str = "USD";
 
 impl Analyzer {
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
@@ -76,10 +78,12 @@ impl Analyzer {
                     let Some(currency) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
-                    if currency != STRATEGY_NONE_ACCOUNT_CURRENCY {
+                    if currency != STRATEGY_NONE_ACCOUNT_CURRENCY
+                        && currency != STRATEGY_SYMBOL_ACCOUNT_CURRENCY
+                    {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy` argument `currency` only supports currency.NONE in the current no-conversion subset",
+                            "`strategy` argument `currency` only supports currency.NONE or the current symbol currency in the current no-conversion subset",
                             arg.span,
                         ));
                     }

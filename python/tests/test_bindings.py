@@ -1741,6 +1741,32 @@ def test_run_script_returns_polyline_lifecycle_fixture_contract():
     assert result["plots"][0]["values"][-1] == 0
 
 
+def test_run_script_returns_udf_box_new_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/udf_box_new.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_udf_box_new.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_udf_box_new_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_udf_box_new.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_udf_box_new.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_box_new_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/box_new.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_box_new.json").read_text())

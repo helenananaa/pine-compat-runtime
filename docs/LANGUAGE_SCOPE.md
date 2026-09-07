@@ -462,7 +462,8 @@ reassignment, conditional, or loop can supply the return. A final conditional
 without `else` yields `na` when its condition is false; final loops may produce
 `void` when their body is side-effect-only. Pine v4 additionally admits the
 exact namespace-call subset `array.set/pop/unshift/clear`,
-`label.new/delete`, and `line.new/delete` inside UDF bodies. Recursive
+`label.new/delete`, and `line.new/delete` inside UDF bodies. Pine v5/v6 admit
+`box.new` constructors inside UDF bodies. Recursive
 functions, all other collection/drawing side effects, output/alert side
 effects, global reassignment inside functions, and side-effecting calls as UDF
 arguments are rejected in the current executable subset. UDF arguments are

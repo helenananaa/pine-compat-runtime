@@ -317,6 +317,10 @@ polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
 ```
 
+Pine v5/v6 user-defined function bodies may call `box.new`. Pine v4 UDF
+`box.new`, `label.new`, `array.unshift`, plot/strategy/input, and other drawing
+mutations inside UDFs remain rejected.
+
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
 and `second` currently expose UTC calendar components derived from each bar's
 `time`. Full exchange-timezone calendar semantics are not claimed until symbol

@@ -22,6 +22,10 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_currency_usd.pine",
     ),
     (
+        "runtime_strategy_udf_box_new.json",
+        "tests/fixtures/runtime/strategy_udf_box_new.pine",
+    ),
+    (
         "runtime_strategy_entry.json",
         "tests/fixtures/runtime/strategy_entry.pine",
     ),

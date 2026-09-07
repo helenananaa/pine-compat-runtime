@@ -344,6 +344,35 @@ plot(close)
 }
 
 #[test]
+fn udf_box_new_creates_boxes_on_each_historical_bar() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("udf boxes")
+draw(top, bottom) =>
+    box.new(bar_index, top, bar_index, bottom)
+    top
+plot(draw(high, low))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.boxes.len(), 3);
+    assert_eq!(result.plots[0].values.len(), 3);
+    for (index, drawing) in result.boxes.iter().enumerate() {
+        assert_eq!(drawing.snapshots.len(), 1);
+        assert_eq!(drawing.snapshots[0].bar_index, index);
+    }
+}
+
+#[test]
 fn collects_box_new_snapshots() {
     let source = SourceFile::new(
         "test.pine",

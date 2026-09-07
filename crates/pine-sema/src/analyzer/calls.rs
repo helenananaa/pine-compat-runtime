@@ -391,7 +391,7 @@ impl Analyzer {
         self.validate_strategy_value_function_call(name, callee_span);
         if self.function_depth > 0
             && is_output_or_declaration_builtin(name)
-            && !self.allows_legacy_v4_udf_reference_side_effect(name)
+            && !self.allows_udf_output_or_declaration_side_effect(name)
         {
             self.unsupported(
                 "function_side_effect",

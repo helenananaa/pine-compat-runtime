@@ -41,6 +41,35 @@ fn forming_close_fixture_rolls_back_repeated_updates() {
 }
 
 #[test]
+fn udf_box_new_fixture_rolls_back_forming_boxes() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/udf_box_new.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.boxes.len(), 1);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back the UDF box");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit the UDF box");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 2);
+}
+
+#[test]
 fn generic_source_input_fixture_rolls_back_forming_close() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/generic_input_source.pine");
 

@@ -20854,6 +20854,20 @@ fn reports_unsupported_drawing_function_side_effect_fixture() {
 }
 
 #[test]
+fn accepts_supported_udf_box_new_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_udf_box_new.pine");
+}
+
+#[test]
+fn reports_unsupported_udf_box_new_v4_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_udf_box_new_v4.pine",
+        "function_side_effect",
+        "inside user-defined functions",
+    );
+}
+
+#[test]
 fn reports_unsupported_alert_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alert_function_side_effect.pine",

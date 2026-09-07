@@ -35,6 +35,7 @@ fn strategy_next_tick_close_bars(fixture: &str) -> Option<&'static str> {
             | "tests/fixtures/runtime/strategy_commission_cash_per_contract.pine"
             | "tests/fixtures/runtime/strategy_commission_cash_per_order.pine"
             | "tests/fixtures/runtime/strategy_commission_percent.pine"
+            | "tests/fixtures/runtime/strategy_commission_value_default_percent.pine"
             | "tests/fixtures/runtime/strategy_slippage.pine"
             | "tests/fixtures/runtime/strategy_trade_counts.pine"
             | "tests/fixtures/runtime/strategy_exit_qty_state.pine"

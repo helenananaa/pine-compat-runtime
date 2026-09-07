@@ -15,9 +15,7 @@ impl Analyzer {
         let mut default_qty_value_arg = None;
         let mut default_qty_constructor: Option<fn(f64) -> pine_ir::StrategyDefaultQuantity> = None;
         let mut default_qty_value = None;
-        let mut commission_type_arg = None;
         let mut commission_constructor: Option<fn(f64) -> pine_ir::StrategyCommission> = None;
-        let mut commission_value_arg = None;
         let mut commission_value = None;
 
         for (index, arg) in args.iter().enumerate() {
@@ -138,7 +136,6 @@ impl Analyzer {
                     default_qty_value = Some(qty);
                 }
                 "commission_type" => {
-                    commission_type_arg = Some(arg);
                     let Some(commission_type) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
@@ -172,7 +169,6 @@ impl Analyzer {
                     }
                 }
                 "commission_value" => {
-                    commission_value_arg = Some(arg);
                     let Some(value) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
@@ -359,19 +355,13 @@ impl Analyzer {
         } else if let Some(qty) = default_qty_value {
             self.strategy_settings.default_qty = Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
         }
-        if commission_value_arg.is_some() && commission_type_arg.is_none() {
-            if let Some(arg) = commission_value_arg {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`strategy` argument `commission_value` requires a supported commission_type",
-                    arg.span,
-                ));
-            }
-            return;
-        }
         if let Some(commission_constructor) = commission_constructor {
             self.strategy_settings.commission =
                 Some(commission_constructor(commission_value.unwrap_or(0.0)));
+        } else if commission_value.is_some() {
+            self.strategy_settings.commission = Some(pine_ir::StrategyCommission::Percent(
+                commission_value.unwrap_or(0.0),
+            ));
         }
     }
 }

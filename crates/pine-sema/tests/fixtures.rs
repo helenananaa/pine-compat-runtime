@@ -4181,6 +4181,13 @@ fn accepts_supported_strategy_commission_cash_per_order_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_commission_value_default_percent_fixture() {
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_strategy_commission_value_default_percent.pine",
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_commission_percent_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_commission_percent.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

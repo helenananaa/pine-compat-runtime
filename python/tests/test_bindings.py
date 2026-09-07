@@ -12987,6 +12987,11 @@ def test_strategy_remaining_host_golden_parity():
                 "strategy_commission_percent.pine",
                 "strategy_next_tick_close_bars.csv",
             ),
+            (
+                "runtime_strategy_commission_value_default_percent.json",
+                "strategy_commission_value_default_percent.pine",
+                "strategy_next_tick_close_bars.csv",
+            ),
             ("runtime_strategy_empty.json", "strategy_no_order.pine", "bars.csv"),
             (
                 "runtime_strategy_entry_limit.json",
@@ -13118,6 +13123,7 @@ def test_strategy_remaining_host_golden_parity():
             "tests/snapshots/runtime_strategy_commission_cash_per_contract.json",
             "tests/snapshots/runtime_strategy_commission_cash_per_order.json",
             "tests/snapshots/runtime_strategy_commission_percent.json",
+            "tests/snapshots/runtime_strategy_commission_value_default_percent.json",
             "tests/snapshots/runtime_strategy_empty.json",
             "tests/snapshots/runtime_strategy_entry_limit.json",
             "tests/snapshots/runtime_strategy_entry_stop.json",

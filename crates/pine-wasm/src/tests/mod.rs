@@ -5001,6 +5001,22 @@ fn runs_strategy_commission_percent_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_commission_value_default_percent_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_commission_value_default_percent.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
+    )
+    .expect("strategy omitted commission_type percent fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_commission_value_default_percent.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_slippage_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_slippage.pine"),

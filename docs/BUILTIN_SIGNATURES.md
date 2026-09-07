@@ -945,7 +945,9 @@ precision, and lot-step handling remain outside this subset.
 `strategy(...)` accepts
 `commission_type=strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, or `strategy.commission.percent` with a
-finite non-negative const numeric `commission_value`; entry cash, exit cash,
+finite non-negative const numeric `commission_value`. Omitted `commission_type`
+with an explicit `commission_value` uses the official default
+`strategy.commission.percent`. Entry cash, exit cash,
 realized trade profit, `strategy.netprofit`, and `strategy.equity` include that
 commission when configured. `strategy(..., slippage=N)` accepts finite
 non-negative integer

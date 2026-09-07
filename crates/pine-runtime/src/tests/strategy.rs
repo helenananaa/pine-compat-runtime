@@ -10647,6 +10647,70 @@ plot(strategy.equity)
 }
 
 #[test]
+fn omitted_commission_type_defaults_to_percent_commission() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("commission", commission_value=10)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    strategy.close("L")
+plot(strategy.opentrades.commission(0))
+plot(strategy.closedtrades.commission(0))
+plot(strategy.netprofit)
+plot(strategy.equity)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis.hir.as_ref().unwrap().strategy_settings.commission,
+        Some(pine_ir::StrategyCommission::Percent(10.0))
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.4),
+            PineValue::Float(0.4),
+            PineValue::Na,
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(0.4 + 0.8),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(4.0 - (0.4 + 0.8)),
+        ]
+    );
+
+    let strategy = result.strategy.expect("strategy output");
+    assert_eq!(strategy.trades[0].profit, 4.0 - (0.4 + 0.8));
+}
+
+#[test]
 fn strategy_percent_commission_updates_profit_and_trade_fields() {
     let source = SourceFile::new(
         "strategy.pine",

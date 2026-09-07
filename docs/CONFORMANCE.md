@@ -1201,7 +1201,8 @@ accepts `commission_type=strategy.commission.cash_per_order`, both with finite
 non-negative const numeric `commission_value`. Stage 7 Slice 21 accepts
 `commission_type=strategy.commission.percent` and debits
 `qty * fill_price * commission_value / 100` on each supported entry and exit
-fill. Stage 7 Slice 19 accepts finite non-negative integer const `slippage`
+fill. Omitted `commission_type` with an explicit `commission_value` uses that
+same percent default. Stage 7 Slice 19 accepts finite non-negative integer const `slippage`
 ticks using the fixed `syminfo.mintick` subset. Stage 7 Slice 20 accepts finite
 non-negative integer const
 `backtest_fill_limits_assumption` ticks for supported limit-order

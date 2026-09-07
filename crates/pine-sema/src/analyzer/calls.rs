@@ -401,7 +401,7 @@ impl Analyzer {
         }
         if self.function_depth > 0
             && is_array_mutation_builtin(name)
-            && !self.allows_legacy_v4_udf_reference_side_effect(name)
+            && !self.allows_udf_collection_mutation_side_effect(name)
         {
             self.unsupported(
                 "function_side_effect",
@@ -454,7 +454,10 @@ impl Analyzer {
             );
             return Some(None);
         };
-        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+        if self.function_depth > 0
+            && is_array_mutation_builtin(builtin_name)
+            && !self.allows_udf_collection_mutation_side_effect(builtin_name)
+        {
             self.unsupported(
                 "function_side_effect",
                 &unsupported_collection_mutation_udf_reason(builtin_name),
@@ -945,7 +948,10 @@ impl Analyzer {
         let (builtin_name, signature) = signature;
         self.check_feature_name(builtin_name, callee.span);
 
-        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+        if self.function_depth > 0
+            && is_array_mutation_builtin(builtin_name)
+            && !self.allows_udf_collection_mutation_side_effect(builtin_name)
+        {
             self.unsupported(
                 "function_side_effect",
                 &unsupported_collection_mutation_udf_reason(builtin_name),

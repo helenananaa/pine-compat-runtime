@@ -875,6 +875,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/udf_box_new.pine",
     ),
     (
+        "runtime_udf_array_unshift.json",
+        "tests/fixtures/runtime/udf_array_unshift.pine",
+    ),
+    (
         "runtime_box_new_points.json",
         "tests/fixtures/runtime/box_new_points.pine",
     ),

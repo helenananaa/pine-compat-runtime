@@ -1704,6 +1704,28 @@ fn run_script_csv_returns_box_new_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_udf_array_unshift_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/udf_array_unshift.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("udf array.unshift fixture should run");
+
+    assert_snapshot("runtime_udf_array_unshift.json", &output);
+}
+
+#[test]
+fn runs_strategy_udf_array_unshift_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_udf_array_unshift.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy udf array.unshift fixture should run");
+
+    assert_snapshot("runtime_strategy_udf_array_unshift.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_udf_box_new_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/udf_box_new.pine"),

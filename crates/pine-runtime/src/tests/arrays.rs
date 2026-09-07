@@ -582,6 +582,57 @@ plot(color_first == color.red and color_last == color.green and color_shifted ==
 }
 
 #[test]
+fn udf_array_unshift_prepends_like_top_level_unshift() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("udf unshift")
+var values = array.new_int()
+prepend(id, value) =>
+    id.unshift(value)
+    array.get(id, 0)
+plot(prepend(values, bar_index))
+plot(array.size(values))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn udf_namespace_array_unshift_matches_method_form() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("udf namespace unshift")
+var values = array.new_int()
+prepend(id, value) =>
+    array.unshift(id, value)
+    array.get(id, 0)
+plot(prepend(values, bar_index))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 2.0]);
+}
+
+#[test]
 fn runs_array_insert_remove_operations() {
     let source = SourceFile::new(
         "test.pine",

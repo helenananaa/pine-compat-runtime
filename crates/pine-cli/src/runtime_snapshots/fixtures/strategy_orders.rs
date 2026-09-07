@@ -26,6 +26,10 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_udf_box_new.pine",
     ),
     (
+        "runtime_strategy_udf_array_unshift.json",
+        "tests/fixtures/runtime/strategy_udf_array_unshift.pine",
+    ),
+    (
         "runtime_strategy_entry.json",
         "tests/fixtures/runtime/strategy_entry.pine",
     ),

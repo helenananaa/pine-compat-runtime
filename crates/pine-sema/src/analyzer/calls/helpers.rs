@@ -39,6 +39,13 @@ impl Analyzer {
         self.legacy.dialect() >= crate::PineDialect::V5 && name == "box.new"
     }
 
+    pub(super) fn allows_udf_collection_mutation_side_effect(&self, name: &str) -> bool {
+        if self.allows_legacy_v4_udf_reference_side_effect(name) {
+            return true;
+        }
+        self.legacy.dialect() >= crate::PineDialect::V5 && name == "array.unshift"
+    }
+
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {
         let current_symbol = self.scope.resolve(name);
         let symbol = self

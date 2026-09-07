@@ -534,6 +534,7 @@ runtime_strategy_risk_max_position_size_reversal.json
 runtime_strategy_slippage.json
 runtime_strategy_trade_counts.json
 runtime_strategy_trade_outcome_counts.json
+runtime_strategy_udf_array_unshift.json
 runtime_strategy_udf_box_new.json
 runtime_strategy_use_bar_magnifier_fallback.json
 runtime_strategy_use_bar_magnifier_false.json
@@ -559,6 +560,7 @@ runtime_timeframe.json
 runtime_trend.json
 runtime_tsi.json
 runtime_udf.json
+runtime_udf_array_unshift.json
 runtime_udf_box_new.json
 runtime_user_methods.json
 runtime_user_type_functions.json

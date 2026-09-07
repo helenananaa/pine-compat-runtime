@@ -1,0 +1,7 @@
+//@version=5
+indicator("UDF array.unshift rollback")
+var values = array.new_int()
+prepend() =>
+    values.unshift(bar_index)
+    array.size(values)
+plot(prepend())

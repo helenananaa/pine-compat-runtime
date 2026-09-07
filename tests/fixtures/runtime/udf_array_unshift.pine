@@ -1,0 +1,8 @@
+//@version=5
+indicator("UDF array.unshift")
+var values = array.new_int()
+prepend(id, value) =>
+    id.unshift(value)
+    array.get(id, 0)
+plot(prepend(values, bar_index))
+plot(array.size(values))

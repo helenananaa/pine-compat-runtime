@@ -1,0 +1,6 @@
+//@version=6
+strategy("Strategy order default quantity short")
+if bar_index == 1
+    strategy.order("S", strategy.short)
+plot(strategy.position_size)
+plot(strategy.opentrades)

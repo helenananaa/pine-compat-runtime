@@ -69,6 +69,7 @@ impl Analyzer {
     }
 
     pub(crate) fn known_const_int_value(&self, expr: &pine_syntax::Expr) -> Option<i64> {
+        let expr = expr.without_groups();
         self.legacy
             .canonical_value_name(self.current_source_context_id(), expr.span)
             .and_then(pine_builtins::named_int_constant)
@@ -172,6 +173,7 @@ impl Analyzer {
         expr: &pine_syntax::Expr,
         env: &mut HistoryOffsetIntEnv,
     ) -> Option<i64> {
+        let expr = expr.without_groups();
         match &expr.kind {
             pine_syntax::ExprKind::Identifier(name) => {
                 if let Some(local) = env.locals.get(name).cloned() {
@@ -631,6 +633,7 @@ impl Analyzer {
     }
 
     pub(crate) fn known_const_string_value(&self, expr: &pine_syntax::Expr) -> Option<String> {
+        let expr = expr.without_groups();
         self.legacy
             .canonical_string_value(self.current_source_context_id(), expr.span)
             .map(str::to_owned)
@@ -882,6 +885,7 @@ impl Analyzer {
     }
 
     pub(crate) fn known_const_color_value(&self, expr: &pine_syntax::Expr) -> Option<u32> {
+        let expr = expr.without_groups();
         self.legacy
             .canonical_value_name(self.current_source_context_id(), expr.span)
             .and_then(pine_builtins::named_color)
@@ -982,6 +986,7 @@ impl Analyzer {
     }
 
     pub(crate) fn known_const_numeric_value(&self, expr: &pine_syntax::Expr) -> Option<f64> {
+        let expr = expr.without_groups();
         self.legacy
             .canonical_value_name(self.current_source_context_id(), expr.span)
             .and_then(|name| {
@@ -1135,6 +1140,7 @@ impl Analyzer {
     }
 
     pub(crate) fn known_const_bool_value(&self, expr: &pine_syntax::Expr) -> Option<bool> {
+        let expr = expr.without_groups();
         match &expr.kind {
             pine_syntax::ExprKind::Literal(pine_syntax::Literal::Bool(value)) => Some(*value),
             pine_syntax::ExprKind::Identifier(name) => {
@@ -1260,6 +1266,7 @@ impl Analyzer {
         &self,
         expr: &pine_syntax::Expr,
     ) -> Option<ConstSwitchKey> {
+        let expr = expr.without_groups();
         if let pine_syntax::ExprKind::Identifier(name) = &expr.kind
             && let Some(key) = self.function_param_const_switch_key(name).cloned()
         {

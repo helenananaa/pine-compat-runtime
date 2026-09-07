@@ -8,6 +8,7 @@ use crate::types::is_numeric_matrix_kind;
 
 mod arrays;
 mod declarations;
+mod drawing_call_results;
 mod drawing_options;
 mod helpers;
 mod legacy;
@@ -17,11 +18,12 @@ mod return_types;
 use legacy::FocusedLegacyCallAnalysis;
 
 pub(crate) use helpers::{
-    alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
-    bound_matrix_call_result_method_parts, builtin_map_call_result_method_name,
-    builtin_matrix_call_result_method_name, call_arg_accepts_type_expected_diagnostic,
-    call_arg_expected_label_diagnostic, call_arg_expected_type_diagnostic,
-    call_arg_type_diagnostic, call_requirement_diagnostic, drawing_method_builtin_name, expr_name,
+    alias_qualified_method_name, arg_type_for_param_index, array_call_result_builtin_name,
+    array_method_builtin_name, bound_matrix_call_result_method_parts,
+    builtin_map_call_result_method_name, builtin_matrix_call_result_method_name,
+    call_arg_accepts_type_expected_diagnostic, call_arg_expected_label_diagnostic,
+    call_arg_expected_type_diagnostic, call_arg_type_diagnostic, call_requirement_diagnostic,
+    drawing_call_result_builtin_name, drawing_method_builtin_name, expr_name,
     is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
     is_map_mutation_method_call_name, is_output_or_declaration_builtin,
     is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
@@ -199,6 +201,9 @@ impl Analyzer {
         if let Some(result) =
             self.analyze_postfix_user_type_call_result_method(callee, args, span, &arg_types)
         {
+            return result;
+        }
+        if let Some(result) = self.analyze_drawing_call_result_method(callee, args, &arg_types) {
             return result;
         }
         if let Some((_, method_name)) = postfix_call_result_method_parts(callee, args) {
@@ -391,7 +396,7 @@ impl Analyzer {
         self.validate_strategy_value_function_call(name, callee_span);
         if self.function_depth > 0
             && is_output_or_declaration_builtin(name)
-            && !self.allows_legacy_v4_udf_reference_side_effect(name)
+            && !self.allows_udf_output_or_declaration_side_effect(name)
         {
             self.unsupported(
                 "function_side_effect",
@@ -401,7 +406,7 @@ impl Analyzer {
         }
         if self.function_depth > 0
             && is_array_mutation_builtin(name)
-            && !self.allows_legacy_v4_udf_reference_side_effect(name)
+            && !self.allows_udf_collection_mutation_side_effect(name)
         {
             self.unsupported(
                 "function_side_effect",
@@ -454,7 +459,10 @@ impl Analyzer {
             );
             return Some(None);
         };
-        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+        if self.function_depth > 0
+            && is_array_mutation_builtin(builtin_name)
+            && !self.allows_udf_collection_mutation_side_effect(builtin_name)
+        {
             self.unsupported(
                 "function_side_effect",
                 &unsupported_collection_mutation_udf_reason(builtin_name),
@@ -945,7 +953,10 @@ impl Analyzer {
         let (builtin_name, signature) = signature;
         self.check_feature_name(builtin_name, callee.span);
 
-        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+        if self.function_depth > 0
+            && is_array_mutation_builtin(builtin_name)
+            && !self.allows_udf_collection_mutation_side_effect(builtin_name)
+        {
             self.unsupported(
                 "function_side_effect",
                 &unsupported_collection_mutation_udf_reason(builtin_name),
@@ -1473,18 +1484,5 @@ fn matrix_pair_expected_label(
         MatrixPairScalarPolicy::NumericOrNumericArray => {
             "numeric matrix, numeric-compatible, or numeric array"
         }
-    })
-}
-
-fn arg_type_for_param_index(
-    signature: &BuiltinSignature,
-    args: &[CallArg],
-    arg_types: &[Option<PineType>],
-    param_index: usize,
-) -> Option<PineType> {
-    args.iter().enumerate().find_map(|(arg_index, arg)| {
-        (param_index_for_arg(signature, arg_index, arg)? == param_index)
-            .then(|| arg_types.get(arg_index).copied().flatten())
-            .flatten()
     })
 }

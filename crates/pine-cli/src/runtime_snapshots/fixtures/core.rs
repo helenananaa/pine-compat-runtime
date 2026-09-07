@@ -91,6 +91,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/generic_input.pine",
     ),
     (
+        "runtime_generic_input_source.json",
+        "tests/fixtures/runtime/generic_input_source.pine",
+    ),
+    (
         "runtime_global_series.json",
         "tests/fixtures/runtime/global_series.pine",
     ),
@@ -549,6 +553,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     ),
     ("runtime_wma.json", "tests/fixtures/runtime/wma.pine"),
     (
+        "runtime_wma_input_float_length.json",
+        "tests/fixtures/runtime/wma_input_float_length.pine",
+    ),
+    (
         "runtime_wma_edge_cases.json",
         "tests/fixtures/runtime/wma_edge_cases.pine",
     ),
@@ -707,6 +715,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     ),
     ("runtime_hline_fill.json", "tests/fixtures/runtime/io.pine"),
     (
+        "runtime_fill_transp.json",
+        "tests/fixtures/runtime/fill_transp.pine",
+    ),
+    (
         "runtime_label_new.json",
         "tests/fixtures/runtime/label_new.pine",
     ),
@@ -859,6 +871,14 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/box_new.pine",
     ),
     (
+        "runtime_udf_box_new.json",
+        "tests/fixtures/runtime/udf_box_new.pine",
+    ),
+    (
+        "runtime_udf_array_unshift.json",
+        "tests/fixtures/runtime/udf_array_unshift.pine",
+    ),
+    (
         "runtime_box_new_points.json",
         "tests/fixtures/runtime/box_new_points.pine",
     ),
@@ -897,6 +917,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_box_array.json",
         "tests/fixtures/runtime/box_array.pine",
+    ),
+    (
+        "runtime_box_call_result_set_right.json",
+        "tests/fixtures/runtime/box_call_result_set_right.pine",
     ),
     (
         "runtime_drawing_methods.json",

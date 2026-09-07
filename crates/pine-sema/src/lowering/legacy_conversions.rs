@@ -61,6 +61,11 @@ impl Analyzer {
                 },
             };
         }
+        if self.lowering_inline_depth > 0
+            && let Some(series_id) = lowered.series_id
+        {
+            self.execution_scoped_series_ids.insert(series_id);
+        }
         Some(lowered)
     }
 }

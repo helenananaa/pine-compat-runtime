@@ -263,9 +263,21 @@ impl Analyzer {
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
         fn strategy_entry_arg_name(index: usize, arg: &CallArg) -> Option<&str> {
             arg.name.as_deref().or_else(|| {
-                ["id", "direction", "qty", "limit", "stop"]
-                    .get(index)
-                    .copied()
+                [
+                    "id",
+                    "direction",
+                    "qty",
+                    "limit",
+                    "stop",
+                    "oca_name",
+                    "oca_type",
+                    "comment",
+                    "alert_message",
+                    "disable_alert",
+                    "when",
+                ]
+                .get(index)
+                .copied()
             })
         }
         let direction = args.iter().enumerate().find_map(|(index, arg)| {
@@ -323,6 +335,26 @@ impl Analyzer {
                         ));
                     }
                 }
+                "oca_name" => {}
+                "oca_type" => match self.known_const_string_value(&arg.value).as_deref() {
+                    Some("strategy.oca.none" | "strategy.oca.cancel" | "strategy.oca.reduce") => {}
+                    _ => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.entry` argument `oca_type` only supports strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce",
+                            arg.span,
+                        ));
+                    }
+                },
+                "comment" | "alert_message" | "disable_alert" => {}
+                "when" if self.legacy.dialect().version() >= 6 => {
+                    self.unsupported(
+                        "strategy.entry.when",
+                        "`strategy.entry` argument `when` was removed in Pine v6",
+                        arg.span,
+                    );
+                }
+                "when" => {}
                 _ => {}
             }
         }
@@ -545,28 +577,6 @@ impl Analyzer {
                 .get(index)
                 .copied()
             })
-        }
-        let direction = args.iter().enumerate().find_map(|(index, arg)| {
-            let name = strategy_order_arg_name(index, arg)?;
-            (name == "direction")
-                .then(|| self.known_const_string_value(&arg.value))
-                .flatten()
-        });
-        let has_qty = args
-            .iter()
-            .enumerate()
-            .any(|(index, arg)| strategy_order_arg_name(index, arg) == Some("qty"));
-        if direction.as_deref() == Some("strategy.short")
-            && !has_qty
-            && let Some(direction_arg) = args.iter().enumerate().find_map(|(index, arg)| {
-                (strategy_order_arg_name(index, arg) == Some("direction")).then_some(arg)
-            })
-        {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_VALUE",
-                "`strategy.order` reduce-only strategy.short requires an explicit positive qty",
-                direction_arg.span,
-            ));
         }
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = strategy_order_arg_name(index, arg) else {

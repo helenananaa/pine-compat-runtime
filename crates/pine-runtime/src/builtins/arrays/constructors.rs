@@ -95,7 +95,8 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let initial_value = if let Some(value_arg) = args.get(1) {
+        let initial_value = if let Some(value_arg) = crate::builtins::args::positional_arg(args, 1)
+        {
             self.eval_array_value(&value_arg.value, ArrayElementKind::UserType)?
         } else {
             PineValue::Na
@@ -203,7 +204,8 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let initial_value = if let Some(value_arg) = args.get(1) {
+        let initial_value = if let Some(value_arg) = crate::builtins::args::positional_arg(args, 1)
+        {
             self.eval_array_value(&value_arg.value, kind)?
         } else {
             PineValue::Na

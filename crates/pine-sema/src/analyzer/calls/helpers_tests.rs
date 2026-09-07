@@ -722,17 +722,28 @@ mod tests {
             "`input.int` argument `options` expects tuple, got const int"
         );
 
+        assert_eq!(
+            call_arg_accepts_type_expected_diagnostic(
+                "input",
+                "defval",
+                Accepts::InputDefval,
+                pine_type(Qualifier::Series, ValueKind::Float),
+                Span::default(),
+            ),
+            None,
+            "series float source defval should satisfy generic input"
+        );
         let diagnostic = call_arg_accepts_type_expected_diagnostic(
             "input",
             "defval",
             Accepts::InputDefval,
-            pine_type(Qualifier::Series, ValueKind::Float),
+            pine_type(Qualifier::Series, ValueKind::Int),
             Span::default(),
         )
-        .expect("series float should not satisfy input defval");
+        .expect("series int should not satisfy input defval");
         assert_eq!(
             diagnostic.message,
-            "`input` argument `defval` expects const int/float/bool/string/color, got series float"
+            "`input` argument `defval` expects const int/float/bool/string/color or series float, got series int"
         );
 
         let diagnostic = call_arg_accepts_type_expected_diagnostic(

@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported UDF box call-result set_right")
+extend_right(values, x) =>
+    values.get(0).set_right(x)
+    x
+var boxes = array.new_box()
+if bar_index == 0
+    array.push(boxes, box.new(bar_index, high, bar_index + 1, low))
+plot(extend_right(boxes, bar_index))

@@ -1,0 +1,6 @@
+//@version=6
+strategy("Strategy WMA input float length")
+length = input.int(5, "Length")
+plot(ta.wma(close, length / 2))
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)

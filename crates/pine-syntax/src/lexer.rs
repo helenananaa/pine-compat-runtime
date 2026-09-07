@@ -86,7 +86,7 @@ struct Lexer<'a> {
     line_start: bool,
     indent_stack: Vec<usize>,
     paren_depth: usize,
-    structured_layout_paren_depth: Option<usize>,
+    structured_layout: Option<(usize, usize)>,
     saw_version_directive: bool,
 }
 
@@ -101,7 +101,7 @@ impl<'a> Lexer<'a> {
             line_start: true,
             indent_stack: vec![0],
             paren_depth: 0,
-            structured_layout_paren_depth: None,
+            structured_layout: None,
             saw_version_directive: false,
         }
     }
@@ -120,7 +120,7 @@ impl<'a> Lexer<'a> {
                 b' ' | b'\t' | b'\r' => {
                     self.pos += 1;
                 }
-                b'\n' if self.paren_depth > 0 && self.structured_layout_paren_depth.is_none() => {
+                b'\n' if self.paren_depth > 0 && self.structured_layout.is_none() => {
                     self.pos += 1;
                     self.line_start = true;
                 }
@@ -279,12 +279,36 @@ impl<'a> Lexer<'a> {
     }
 
     fn close_paren(&mut self) {
+        let closes_structured_layout = self
+            .structured_layout
+            .is_some_and(|(paren_depth, _)| self.paren_depth <= paren_depth);
+        if closes_structured_layout {
+            let (_, base_indent_depth) = self
+                .structured_layout
+                .expect("closing structured layout has metadata");
+            if self.indent_stack.len() > base_indent_depth {
+                if !self
+                    .tokens
+                    .last()
+                    .is_some_and(|token| matches!(token.kind, TokenKind::Newline))
+                {
+                    self.tokens.push(Token {
+                        kind: TokenKind::Newline,
+                        span: Span::new(self.pos, self.pos),
+                    });
+                }
+                while self.indent_stack.len() > base_indent_depth {
+                    self.indent_stack.pop();
+                    self.tokens.push(Token {
+                        kind: TokenKind::Dedent,
+                        span: Span::new(self.pos, self.pos),
+                    });
+                }
+            }
+        }
         self.single(TokenKind::RParen);
-        if self
-            .structured_layout_paren_depth
-            .is_some_and(|depth| self.paren_depth <= depth)
-        {
-            self.structured_layout_paren_depth = None;
+        if closes_structured_layout {
+            self.structured_layout = None;
         }
         self.paren_depth = self.paren_depth.saturating_sub(1);
     }
@@ -436,9 +460,9 @@ impl<'a> Lexer<'a> {
         self.line_start = false;
         if self.paren_depth > 0
             && matches!(raw, "if" | "for" | "switch" | "while")
-            && self.structured_layout_paren_depth.is_none()
+            && self.structured_layout.is_none()
         {
-            self.structured_layout_paren_depth = Some(self.paren_depth);
+            self.structured_layout = Some((self.paren_depth, self.indent_stack.len()));
         }
     }
 
@@ -714,7 +738,7 @@ impl<'a> Lexer<'a> {
             return;
         }
 
-        if self.paren_depth > 0 && self.structured_layout_paren_depth.is_none() {
+        if self.paren_depth > 0 && self.structured_layout.is_none() {
             self.line_start = false;
             return;
         }

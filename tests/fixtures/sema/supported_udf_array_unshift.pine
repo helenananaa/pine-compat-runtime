@@ -1,0 +1,7 @@
+//@version=5
+indicator("Supported UDF array.unshift")
+var values = array.new_float()
+prepend(id, value) =>
+    id.unshift(value)
+    array.get(id, 0)
+plot(prepend(values, close))

@@ -262,7 +262,7 @@ fn accepts_label_array_from_constructor() {
 #[test]
 fn accepts_box_array_operations() {
     let analysis = analyze(
-        "values = array.new_box()\nid = box.new(bar_index, high, bar_index + 1, low)\narray.push(values, id)\nfirst = array.get(values, 0)\nbox.set_text(first, \"array\")\ncopy = array.copy(values)\nbox.set_bgcolor(copy.get(0), color.green)\nplot(array.size(values) + copy.size())\n",
+        "values = array.new_box()\nid = box.new(bar_index, high, bar_index + 1, low)\narray.push(values, id)\nfirst = array.get(values, 0)\nbox.set_text(first, \"array\")\ncopy = array.copy(values)\nbox.set_bgcolor(copy.get(0), color.green)\nvalues.get(0).set_right(bar_index)\nplot(array.size(values) + copy.size())\n",
     );
 
     assert!(
@@ -278,6 +278,53 @@ fn accepts_box_array_operations() {
             .any(|feature| feature.feature == "array.new_box")
     );
     assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "box.set_right")
+    );
+}
+
+#[test]
+fn accepts_box_call_result_set_right() {
+    let analysis = analyze(
+        "values = array.new_box()\nid = box.new(bar_index, high, bar_index + 1, low)\narray.push(values, id)\nvalues.get(0).set_right(bar_index)\nvalues.get(0).set_right(x=bar_index)\nplot(box.get_right(values.get(0)))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "box.set_right")
+    );
+}
+
+#[test]
+fn rejects_box_call_result_set_left() {
+    let analysis = analyze(
+        "values = array.new_box()\nid = box.new(bar_index, high, bar_index + 1, low)\narray.push(values, id)\nvalues.get(0).set_left(bar_index)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|unsupported| unsupported.feature == "call_result.set_left"
+                && unsupported.reason.contains("bind the result first")),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
 }
 
 #[test]

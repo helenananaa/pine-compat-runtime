@@ -5,6 +5,27 @@ use crate::builtins::colors::{color_rgba, compose_color, interpolate_color};
 use super::*;
 
 #[test]
+fn reordered_named_color_args_use_signature_order() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("named colors")
+value = color.rgb(blue=30, red=10, green=20)
+plot(color.r(value) * 10000 + color.g(value) * 100 + color.b(value))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("named color call should run");
+    assert_values_close(&result.plots[0].values, &[102_030.0]);
+}
+
+#[test]
 fn runs_color_new_and_named_colors() {
     let source = SourceFile::new(
         "test.pine",

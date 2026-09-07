@@ -1,0 +1,6 @@
+//@version=6
+strategy("Generic source input strategy")
+src = input(close, "Source")
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)
+plot(src)

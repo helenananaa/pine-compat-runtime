@@ -1,0 +1,10 @@
+//@version=5
+strategy("Strategy box call-result set_right")
+var boxes = array.new_box()
+if bar_index == 0
+    array.push(boxes, box.new(bar_index, high, bar_index + 1, low))
+if array.size(boxes) > 0
+    boxes.get(0).set_right(bar_index)
+plot(box.get_right(array.get(boxes, 0)))
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)

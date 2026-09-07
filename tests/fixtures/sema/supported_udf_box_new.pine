@@ -1,0 +1,6 @@
+//@version=5
+indicator("Supported UDF box.new")
+draw(top, bottom) =>
+    box.new(bar_index, top, bar_index, bottom)
+    top
+plot(draw(high, low))

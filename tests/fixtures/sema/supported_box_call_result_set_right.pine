@@ -1,0 +1,13 @@
+//@version=5
+indicator("Supported box call-result set_right")
+var chained = array.new_box()
+var bound = array.new_box()
+if bar_index == 0
+    array.push(chained, box.new(bar_index, high, bar_index + 1, low))
+    array.push(bound, box.new(bar_index, high, bar_index + 1, low))
+chained.get(0).set_right(bar_index)
+chained.get(0).set_right(x=bar_index)
+bound_id = array.get(bound, 0)
+bound_id.set_right(bar_index)
+plot(box.get_right(array.get(chained, 0)))
+plot(box.get_right(bound_id))

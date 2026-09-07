@@ -1,0 +1,4 @@
+//@version=5
+indicator("WMA input float length rollback")
+length = input.int(5, "Length")
+plot(ta.wma(close, length / 2))

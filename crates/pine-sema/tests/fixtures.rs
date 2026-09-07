@@ -918,8 +918,15 @@ fn accepts_supported_indicator_named_const_metadata_fixture() {
 fn reports_unsupported_input_defval_series_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_input_defval_series.pine",
-        &["`input` argument `defval` expects const int/float/bool/string/color, got series float"],
+        &[
+            "`input` argument `defval` expects const int/float/bool/string/color or series float, got series int",
+        ],
     );
+}
+
+#[test]
+fn accepts_supported_input_defval_source_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_input_defval_source.pine");
 }
 
 #[test]
@@ -1607,6 +1614,19 @@ fn reports_unsupported_plotcandle_simple_show_last_fixture() {
 #[test]
 fn accepts_supported_fill_input_show_last_fixture() {
     assert_valid_fixture("tests/fixtures/sema/supported_fill_input_show_last.pine");
+}
+
+#[test]
+fn accepts_supported_fill_transp_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_fill_transp.pine");
+}
+
+#[test]
+fn reports_unsupported_fill_transp_v6_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_fill_transp_v6.pine",
+        &["`fill.transp` is not supported: `fill` argument `transp` was removed in Pine v6"],
+    );
 }
 
 #[test]
@@ -2776,8 +2796,13 @@ fn reports_unsupported_ta_weighted_regression_return_qualifier_fixture() {
 fn reports_unsupported_ta_wma_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_wma_length.pine",
-        &["`ta.wma` argument `length` expects integer-compatible, got const float"],
+        &["`ta.wma` argument `length` expects numeric-compatible, got series bool"],
     );
+}
+
+#[test]
+fn accepts_supported_ta_wma_input_float_length_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_ta_wma_input_float_length.pine");
 }
 
 #[test]
@@ -3656,6 +3681,42 @@ fn accepts_supported_strategy_declaration_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_format_precision_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_strategy_format_precision.pine");
+}
+
+#[test]
+fn accepts_supported_strategy_entry_when_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_strategy_entry_when.pine");
+}
+
+#[test]
+fn reports_unsupported_strategy_entry_when_v6_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_entry_when_v6.pine",
+        &[
+            "`strategy.entry.when` is not supported: `strategy.entry` argument `when` was removed in Pine v6",
+        ],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_format_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_format.pine",
+        &["format.inherit, format.price, format.percent, format.volume"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_precision_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_precision.pine",
+        &["`strategy` argument `precision` must be between 0 and 16"],
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_pyramiding_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_pyramiding.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -4120,6 +4181,13 @@ fn accepts_supported_strategy_commission_cash_per_order_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_commission_value_default_percent_fixture() {
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_strategy_commission_value_default_percent.pine",
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_commission_percent_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_commission_percent.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -4269,7 +4337,7 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
-        &["currency", "risk_free_rate", "fill_orders_on_standard_ohlc"],
+        &["risk_free_rate", "fill_orders_on_standard_ohlc"],
     );
 }
 
@@ -4501,8 +4569,15 @@ fn reports_strategy_calc_on_order_fills_series_rejected() {
 fn reports_unsupported_strategy_currency_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_currency.pine",
-        &["`strategy` argument `currency` only supports currency.NONE"],
+        &[
+            "`strategy` argument `currency` only supports currency.NONE or the current symbol currency",
+        ],
     );
+}
+
+#[test]
+fn accepts_supported_strategy_currency_usd_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_strategy_currency_usd.pine");
 }
 
 #[test]
@@ -4693,12 +4768,7 @@ fn reports_unsupported_strategy_order_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
-        &[
-            "explicit positive qty",
-            "strategy.long",
-            "oca_type",
-            "strategy.oca.cancel",
-        ],
+        &["strategy.long", "oca_type", "strategy.oca.cancel"],
     );
 }
 
@@ -4706,6 +4776,14 @@ fn reports_unsupported_strategy_order_fixture() {
 fn reports_unsupported_strategy_order_oca_series_name_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_order_oca_series_name.pine",
+        &["oca_name"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_entry_oca_series_name_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_entry_oca_series_name.pine",
         &["oca_name"],
     );
 }
@@ -4940,6 +5018,9 @@ fn accepts_supported_strategy_entry_fixture() {
         "tests/fixtures/sema/supported_strategy_entry_limit_short.pine",
         "tests/fixtures/sema/supported_strategy_entry_stop_short.pine",
         "tests/fixtures/sema/supported_strategy_entry_stop_limit_short.pine",
+        "tests/fixtures/sema/supported_strategy_entry_oca_none.pine",
+        "tests/fixtures/sema/supported_strategy_entry_oca_cancel.pine",
+        "tests/fixtures/sema/supported_strategy_entry_oca_reduce.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -4973,6 +5054,7 @@ fn accepts_supported_strategy_order_fixture() {
         "tests/fixtures/sema/supported_strategy_order_oca_none.pine",
         "tests/fixtures/sema/supported_strategy_order_oca_cancel.pine",
         "tests/fixtures/sema/supported_strategy_order_oca_reduce.pine",
+        "tests/fixtures/sema/supported_strategy_order_default_qty_short.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -8933,14 +9015,13 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`function_side_effect` is not supported: collection mutation via `array.shift` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.remove` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.push` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.unshift` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.insert` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.set` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.fill` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.sort` is not supported inside user-defined functions",
         ],
     );
-    assert_diagnostic_count(path, 255);
+    assert_diagnostic_count(path, 254);
 }
 
 #[test]
@@ -20754,6 +20835,34 @@ fn reports_unsupported_array_function_side_effect_fixture() {
 }
 
 #[test]
+fn accepts_supported_udf_array_unshift_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_udf_array_unshift.pine");
+}
+
+#[test]
+fn accepts_supported_box_call_result_set_right_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_box_call_result_set_right.pine");
+}
+
+#[test]
+fn reports_unsupported_box_call_result_set_left_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_box_call_result_set_left.pine",
+        "call_result.set_left",
+        "bind the result first",
+    );
+}
+
+#[test]
+fn reports_unsupported_udf_box_call_result_set_right_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_udf_box_call_result_set_right.pine",
+        "function_side_effect",
+        "inside user-defined functions",
+    );
+}
+
+#[test]
 fn reports_unsupported_input_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_input_function_side_effect.pine",
@@ -20766,6 +20875,20 @@ fn reports_unsupported_input_function_side_effect_fixture() {
 fn reports_unsupported_drawing_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_drawing_function_side_effect.pine",
+        "function_side_effect",
+        "inside user-defined functions",
+    );
+}
+
+#[test]
+fn accepts_supported_udf_box_new_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_udf_box_new.pine");
+}
+
+#[test]
+fn reports_unsupported_udf_box_new_v4_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_udf_box_new_v4.pine",
         "function_side_effect",
         "inside user-defined functions",
     );
@@ -20839,6 +20962,11 @@ fn accepts_supported_dynamic_history_integer_result_offsets_fixture() {
     assert_valid_fixture(
         "tests/fixtures/sema/supported_dynamic_history_integer_result_offsets.pine",
     );
+}
+
+#[test]
+fn accepts_supported_dynamic_history_input_float_offset_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_dynamic_history_input_float_offset.pine");
 }
 
 #[test]

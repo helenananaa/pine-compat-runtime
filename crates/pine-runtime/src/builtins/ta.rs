@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
+use crate::builtins::args::call_arg_expr;
 use crate::*;
 mod averages;
 mod flow;
@@ -93,13 +94,6 @@ pub(crate) enum CrossMode {
     Under,
 }
 
-pub(crate) fn rma_next(previous: Option<f64>, source: f64, length: i64) -> f64 {
-    match previous {
-        Some(previous) => (previous * (length - 1) as f64 + source) / length as f64,
-        None => source,
-    }
-}
-
 pub(crate) fn two_na_tuple() -> PineValue {
     PineValue::Tuple(vec![PineValue::Na, PineValue::Na])
 }
@@ -121,14 +115,7 @@ pub(crate) fn ta_arg<'a>(
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
-    args.iter()
-        .find(|arg| arg.name.as_deref() == Some(name))
-        .map(|arg| &arg.value)
-        .or_else(|| {
-            args.get(positional)
-                .filter(|arg| arg.name.is_none())
-                .map(|arg| &arg.value)
-        })
+    call_arg_expr(args, positional, name)
 }
 
 pub(crate) fn vwap_arg<'a>(
@@ -296,21 +283,6 @@ pub(crate) fn supertrend_state(value: Option<&PineValue>) -> Option<(f64, f64, f
     ))
 }
 
-pub(crate) fn dmi_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
-    let Some(PineValue::Tuple(values)) = value else {
-        return None;
-    };
-    let [smoothed_tr, smoothed_plus_dm, smoothed_minus_dm, adx] = values.as_slice() else {
-        return None;
-    };
-    Some((
-        smoothed_tr.as_f64()?,
-        smoothed_plus_dm.as_f64()?,
-        smoothed_minus_dm.as_f64()?,
-        adx.as_f64()?,
-    ))
-}
-
 pub(crate) fn kc_state(value: Option<&PineValue>) -> Option<(f64, f64)> {
     let Some(PineValue::Tuple(values)) = value else {
         return None;
@@ -392,6 +364,39 @@ pub(crate) fn rsi_from_averages(average_gain: f64, average_loss: f64) -> f64 {
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn wilder_rma(
+        &mut self,
+        call_site_id: CallSiteId,
+        channel: u8,
+        previous: Option<f64>,
+        source: Option<f64>,
+        length: i64,
+    ) -> Option<f64> {
+        if length <= 0 {
+            return None;
+        }
+        let source = source?;
+        let length_us = length as usize;
+        let mean = {
+            let window = self.update_rolling_window_key(
+                RollingWindowKey::Rma {
+                    call_site: call_site_id,
+                    channel,
+                },
+                Some(source),
+                length_us,
+            );
+            if !window.is_ready(length_us) {
+                return None;
+            }
+            window.mean(length_us)
+        };
+        Some(match previous {
+            Some(previous) => (previous * (length - 1) as f64 + source) / length as f64,
+            None => mean,
+        })
+    }
+
     pub(crate) fn eval_ta_call(
         &mut self,
         callee: &str,

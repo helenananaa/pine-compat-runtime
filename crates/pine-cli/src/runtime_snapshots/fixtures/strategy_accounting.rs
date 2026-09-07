@@ -58,6 +58,10 @@ pub(crate) const STRATEGY_ACCOUNTING_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapsho
         "tests/fixtures/runtime/strategy_commission_percent.pine",
     ),
     (
+        "runtime_strategy_commission_value_default_percent.json",
+        "tests/fixtures/runtime/strategy_commission_value_default_percent.pine",
+    ),
+    (
         "runtime_strategy_slippage.json",
         "tests/fixtures/runtime/strategy_slippage.pine",
     ),

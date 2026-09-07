@@ -3,6 +3,24 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn named_math_pow_args_bind_by_name() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("named pow")
+plot(math.pow(exponent=2, base=3))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+    assert_eq!(result.plots[0].values, vec![PineValue::Float(9.0)]);
+}
+
+#[test]
 fn integer_math_extremes_preserve_i64_precision() {
     let source = SourceFile::new(
         "test.pine",

@@ -1,0 +1,5 @@
+//@version=6
+strategy("Supported strategy order default qty short")
+if bar_index == 1
+    strategy.order("S", strategy.short)
+plot(close)

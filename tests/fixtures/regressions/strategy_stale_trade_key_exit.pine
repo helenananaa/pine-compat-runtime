@@ -1,0 +1,10 @@
+//@version=6
+strategy("stale trade key exit", pyramiding=2)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 2
+    strategy.exit("XP", profit=1000)
+if bar_index == 3
+    strategy.close("L", qty=1)

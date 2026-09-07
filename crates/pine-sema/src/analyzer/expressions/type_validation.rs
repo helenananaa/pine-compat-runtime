@@ -27,6 +27,16 @@ impl Analyzer {
             return;
         }
 
+        // Input/simple float offsets are admitted here; runtime still requires a
+        // whole non-negative number (`value.fract() == 0.0`). Series float, bool,
+        // string, and const float stay rejected so `close[close]` and non-whole
+        // const offsets keep static diagnostics.
+        if offset_type.kind == ValueKind::Float
+            && matches!(offset_type.qualifier, Qualifier::Input | Qualifier::Simple)
+        {
+            return;
+        }
+
         let actual = pine_type_name(offset_type);
         self.unsupported(
             "dynamic_history_offset",

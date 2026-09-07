@@ -231,7 +231,8 @@ impl<'a> HistoricalRuntime<'a> {
             match self.read_declared_series_history(series_id, 1).as_f64() {
                 Some(previous) if source > previous => (Some(source * volume), Some(0.0)),
                 Some(previous) if source < previous => (Some(0.0), Some(source * volume)),
-                Some(_) | None => (Some(0.0), Some(0.0)),
+                Some(_) => (Some(0.0), Some(0.0)),
+                None => return Ok(PineValue::Na),
             };
         self.update_mfi_windows(call_site_id, positive_flow, negative_flow, length);
 
@@ -721,10 +722,9 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: WindowExtreme,
     ) -> Result<(PineValue, Option<SeriesId>, i64), RuntimeError> {
-        let has_explicit_source = args.iter().any(|arg| arg.name.as_deref() == Some("source"))
-            || args
-                .first()
-                .is_some_and(|arg| arg.name.is_none() && args.len() > 1);
+        let positional_default_source =
+            args.len() == 1 && args.first().is_some_and(|arg| arg.name.is_none());
+        let has_explicit_source = !positional_default_source && ta_arg(args, 0, "source").is_some();
 
         if has_explicit_source {
             let source_arg = ta_arg(args, 0, "source");
@@ -740,7 +740,8 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok((source, source_arg.and_then(|arg| arg.series_id), length));
         }
 
-        let length = ta_arg(args, 0, "length")
+        let length = ta_arg(args, 1, "length")
+            .or_else(|| ta_arg(args, 0, "length"))
             .map(|arg| self.eval_expr(arg))
             .transpose()?
             .and_then(|value| value.as_i64())

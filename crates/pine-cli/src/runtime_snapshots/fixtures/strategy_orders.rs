@@ -6,8 +6,40 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),
     (
+        "runtime_strategy_generic_input_source.json",
+        "tests/fixtures/runtime/strategy_generic_input_source.pine",
+    ),
+    (
+        "runtime_strategy_wma_input_float_length.json",
+        "tests/fixtures/runtime/strategy_wma_input_float_length.pine",
+    ),
+    (
+        "runtime_strategy_format_precision.json",
+        "tests/fixtures/runtime/strategy_format_precision.pine",
+    ),
+    (
+        "runtime_strategy_currency_usd.json",
+        "tests/fixtures/runtime/strategy_currency_usd.pine",
+    ),
+    (
+        "runtime_strategy_box_call_result_set_right.json",
+        "tests/fixtures/runtime/strategy_box_call_result_set_right.pine",
+    ),
+    (
+        "runtime_strategy_udf_box_new.json",
+        "tests/fixtures/runtime/strategy_udf_box_new.pine",
+    ),
+    (
+        "runtime_strategy_udf_array_unshift.json",
+        "tests/fixtures/runtime/strategy_udf_array_unshift.pine",
+    ),
+    (
         "runtime_strategy_entry.json",
         "tests/fixtures/runtime/strategy_entry.pine",
+    ),
+    (
+        "runtime_strategy_entry_when.json",
+        "tests/fixtures/runtime/strategy_entry_when.pine",
     ),
     (
         "runtime_strategy_entry_short.json",
@@ -104,6 +136,14 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
     (
         "runtime_strategy_order_default_quantity.json",
         "tests/fixtures/runtime/strategy_order_default_quantity.pine",
+    ),
+    (
+        "runtime_strategy_order_default_quantity_short.json",
+        "tests/fixtures/runtime/strategy_order_default_quantity_short.pine",
+    ),
+    (
+        "runtime_strategy_order_default_quantity_short_reduce_long.json",
+        "tests/fixtures/runtime/strategy_order_default_quantity_short_reduce_long.pine",
     ),
     (
         "runtime_strategy_order_limit_default_quantity.json",
@@ -248,6 +288,38 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
     (
         "runtime_strategy_order_oca_reduce_zero.json",
         "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine",
+    ),
+    (
+        "runtime_strategy_mixed_oca_entry_order_cancel.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine",
+    ),
+    (
+        "runtime_strategy_mixed_oca_entry_order_reduce.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine",
+    ),
+    (
+        "runtime_strategy_mixed_oca_order_exit_reduce.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine",
+    ),
+    (
+        "runtime_strategy_mixed_oca_none.json",
+        "tests/fixtures/runtime/strategy_mixed_oca_none.pine",
+    ),
+    (
+        "runtime_strategy_ordinary_chart_up_gap_stop.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_up_gap_stop.pine",
+    ),
+    (
+        "runtime_strategy_ordinary_chart_down_gap_limit.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_down_gap_limit.pine",
+    ),
+    (
+        "runtime_strategy_ordinary_chart_no_gap_stop.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_no_gap_stop.pine",
+    ),
+    (
+        "runtime_strategy_ordinary_chart_gap_stop_limit.json",
+        "tests/fixtures/runtime/strategy_ordinary_chart_gap_stop_limit.pine",
     ),
     (
         "runtime_strategy_constants.json",

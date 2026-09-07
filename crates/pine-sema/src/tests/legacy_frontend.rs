@@ -3707,9 +3707,10 @@ fn v5_integer_division_depends_on_const_qualifiers() {
     let input_history = analyze_production(
         "//@version=5\nindicator(\"v5 input history division\")\ndivisor = input.int(2)\nplot(close[5 / divisor])\n",
     );
-    assert_eq!(
-        diagnostic_codes(&input_history),
-        vec!["E_UNSUPPORTED_FEATURE"]
+    assert!(
+        input_history.diagnostics.is_empty(),
+        "{:?}",
+        input_history.diagnostics
     );
     assert!(
         input_history
@@ -3723,7 +3724,7 @@ fn v5_integer_division_depends_on_const_qualifiers() {
 #[test]
 fn integer_division_rejects_float_operands_and_nonconst_modern_qualifiers() {
     let legacy_float = analyze_production(
-        "//@version=4\nstudy(\"float lengths\")\nlength=input(5)\nplot(wma(close, length / 2.0))\nplot(wma(close, 5.0))\n",
+        "//@version=4\nstudy(\"float lengths\")\nlength=input(5)\nplot(sma(close, length / 2.0))\nplot(sma(close, 5.0))\n",
     );
     assert_eq!(
         diagnostic_codes(&legacy_float),
@@ -3737,13 +3738,21 @@ fn integer_division_rejects_float_operands_and_nonconst_modern_qualifiers() {
             .all(|emulation| !emulation.feature.contains("integer_division"))
     );
 
+    let legacy_wma = analyze_production(
+        "//@version=4\nstudy(\"wma float lengths\")\nlength=input(5)\nplot(wma(close, length / 2.0))\nplot(wma(close, 5.0))\n",
+    );
+    assert!(
+        legacy_wma.diagnostics.is_empty(),
+        "{:?}",
+        legacy_wma.diagnostics
+    );
+
     for version in [5, 6] {
         let modern = analyze_production(&format!(
             "//@version={version}\nindicator(\"modern division\")\nlength=input.int(5)\nplot(ta.wma(close, length / 2))\n"
         ));
-        assert_eq!(
-            diagnostic_codes(&modern),
-            vec!["E_CALL_ARG_TYPE"],
+        assert!(
+            modern.diagnostics.is_empty(),
             "v{version}: {:?}",
             modern.diagnostics
         );

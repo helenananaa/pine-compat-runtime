@@ -41,6 +41,149 @@ fn forming_close_fixture_rolls_back_repeated_updates() {
 }
 
 #[test]
+fn udf_array_unshift_fixture_rolls_back_forming_size() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/udf_array_unshift.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back the UDF unshift");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit the UDF unshift");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0, 2.0]);
+}
+
+#[test]
+fn box_call_result_set_right_fixture_rolls_back_forming_right() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/box_call_result_set_right.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back the chained set_right");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit the chained set_right");
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0, 4.0]);
+}
+
+#[test]
+fn udf_box_new_fixture_rolls_back_forming_boxes() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/udf_box_new.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.boxes.len(), 1);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back the UDF box");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit the UDF box");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 2);
+}
+
+#[test]
+fn generic_source_input_fixture_rolls_back_forming_close() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/generic_input_source.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit");
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+}
+
+#[test]
+fn wma_input_float_length_fixture_rolls_back_forming_close() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/wma_input_float_length.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[5.0 / 3.0]);
+    assert_eq!(runtime.confirmed_result().plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[7.0 / 3.0]);
+    assert_eq!(runtime.confirmed_result().plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[3.0]);
+    assert_eq!(runtime.confirmed_result().plots[0].values[0], PineValue::Na);
+    assert_values(&runtime.confirmed_result().plots[0].values[1..], &[3.0]);
+}
+
+#[test]
 fn alertcondition_fixture_rolls_back_forming_events() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/alertcondition_rollback.pine");
 
@@ -1665,6 +1808,42 @@ fn matrix_varip_fixture_persists_intrabar_backing_store_between_forming_updates(
         .update(BarUpdate::forming(bar(5.0)))
         .expect("next forming update should start from confirmed matrix varip state");
     assert_values(&result.plots[0].values, &[1.0, 10.0, 15.0]);
+}
+
+#[test]
+fn dynamic_history_input_float_offset_rolls_back_forming_history() {
+    let mut runtime =
+        runtime_for_fixture("tests/fixtures/realtime/dynamic_history_input_float_offset.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[1.0]);
+    assert_eq!(runtime.confirmed_result().plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should read confirmed history only");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit dynamic history");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should use latest confirmed history");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[1.0, 4.0]);
 }
 
 #[test]

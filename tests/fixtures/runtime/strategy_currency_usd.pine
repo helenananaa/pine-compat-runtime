@@ -1,0 +1,6 @@
+//@version=5
+strategy("Strategy currency USD", currency=currency.USD)
+plot(strategy.account_currency == "USD" ? 1 : 0)
+plot(strategy.convert_to_account(close))
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)

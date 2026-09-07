@@ -70,11 +70,13 @@ pub(crate) fn run_script_csv_with_request_bars_internal(
     let request_environment = parsed.environment;
     let execution_times = parsed.execution_times;
     let magnifier = parsed.magnifier;
+    let session_windows = parsed.session_windows;
     program.run_csv_with_request_environment_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
         magnifier,
+        session_windows,
     )
 }
 
@@ -105,12 +107,14 @@ fn run_script_csv_with_request_bars_and_input_overrides_internal(
     let request_environment = parsed.environment;
     let execution_times = parsed.execution_times;
     let magnifier = parsed.magnifier;
+    let session_windows = parsed.session_windows;
     program.run_csv_with_request_bars_and_input_overrides_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
         input_overrides_json,
         magnifier,
+        session_windows,
     )
 }
 
@@ -189,11 +193,13 @@ pub(crate) fn run_script_csv_with_libraries_and_request_bars_internal(
     let request_environment = parsed.environment;
     let execution_times = parsed.execution_times;
     let magnifier = parsed.magnifier;
+    let session_windows = parsed.session_windows;
     program.run_csv_with_request_environment_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
         magnifier,
+        session_windows,
     )
 }
 
@@ -228,12 +234,14 @@ fn run_script_csv_with_libraries_and_request_bars_and_input_overrides_internal(
     let request_environment = parsed.environment;
     let execution_times = parsed.execution_times;
     let magnifier = parsed.magnifier;
+    let session_windows = parsed.session_windows;
     program.run_csv_with_request_bars_and_input_overrides_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
         input_overrides_json,
         magnifier,
+        session_windows,
     )
 }
 
@@ -277,12 +285,14 @@ impl WasmProgram {
         let request_environment = parsed.environment;
         let execution_times = parsed.execution_times;
         let magnifier = parsed.magnifier;
+        let session_windows = parsed.session_windows;
         self.run_csv_with_request_bars_and_input_overrides_internal(
             bars_csv,
             request_environment,
             execution_times.as_deref(),
             input_overrides_json,
             magnifier,
+            session_windows,
         )
         .map_err(|err| JsValue::from_str(&err))
     }
@@ -293,6 +303,7 @@ impl WasmProgram {
         self.run_csv_with_request_environment_internal(
             bars_csv,
             RequestEnvironment::default(),
+            None,
             None,
             None,
         )
@@ -310,6 +321,7 @@ impl WasmProgram {
             input_overrides,
             None,
             None,
+            None,
         )
     }
 
@@ -322,11 +334,13 @@ impl WasmProgram {
         let request_environment = parsed.environment;
         let execution_times = parsed.execution_times;
         let magnifier = parsed.magnifier;
+        let session_windows = parsed.session_windows;
         self.run_csv_with_request_environment_internal(
             bars_csv,
             request_environment,
             execution_times.as_deref(),
             magnifier,
+            session_windows,
         )
     }
 
@@ -337,6 +351,7 @@ impl WasmProgram {
         execution_times: Option<&[i64]>,
         input_overrides_json: &str,
         magnifier: Option<MagnifierInput>,
+        session_windows: Option<pine_runtime::SessionWindowInput>,
     ) -> Result<String, String> {
         let input_overrides = input_overrides_from_json(input_overrides_json, &self.hir)?;
         self.run_csv_with_request_environment_and_input_overrides_internal(
@@ -345,6 +360,7 @@ impl WasmProgram {
             input_overrides,
             execution_times,
             magnifier,
+            session_windows,
         )
     }
 
@@ -354,6 +370,7 @@ impl WasmProgram {
         request_environment: RequestEnvironment,
         execution_times: Option<&[i64]>,
         magnifier: Option<MagnifierInput>,
+        session_windows: Option<pine_runtime::SessionWindowInput>,
     ) -> Result<String, String> {
         self.run_csv_with_request_environment_and_input_overrides_internal(
             bars_csv,
@@ -361,6 +378,7 @@ impl WasmProgram {
             InputOverrides::new(),
             execution_times,
             magnifier,
+            session_windows,
         )
     }
 
@@ -371,6 +389,7 @@ impl WasmProgram {
         input_overrides: InputOverrides,
         execution_times: Option<&[i64]>,
         magnifier: Option<MagnifierInput>,
+        session_windows: Option<pine_runtime::SessionWindowInput>,
     ) -> Result<String, String> {
         let bars = parse_bars_csv(bars_csv)?;
         let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
@@ -380,6 +399,11 @@ impl WasmProgram {
         );
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
+        }
+        if let Some(session_windows) = session_windows {
+            runtime = runtime
+                .with_session_windows(session_windows)
+                .map_err(|err| err.message)?;
         }
         match execution_times {
             Some(execution_times) => {

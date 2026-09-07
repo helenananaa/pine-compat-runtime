@@ -158,6 +158,21 @@ impl BrokerState {
         self.order_book.clear_exits_for_entry(entry_id);
     }
 
+    fn drop_exits_for_closed_trade_keys(&mut self, allocations: &[ledger::TradeAllocation]) {
+        let closed_keys: Vec<u64> = allocations
+            .iter()
+            .filter(|allocation| {
+                self.trade_ledger
+                    .open_quantity_for_key(allocation.trade_key)
+                    <= allocation.quantity
+            })
+            .map(|allocation| allocation.trade_key)
+            .collect();
+        self.order_book
+            .exits_mut()
+            .drop_for_closed_trade_keys(&closed_keys);
+    }
+
     pub(crate) fn cancel_pending_order(&mut self, id: &str) {
         self.order_book.cancel_id(id);
     }

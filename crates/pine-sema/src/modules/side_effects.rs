@@ -223,7 +223,9 @@ fn visit_function_body(body: &FunctionBody, visitor: &mut impl FnMut(&Expr)) {
 fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
     visitor(expr);
     match &expr.kind {
-        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => visit_expr(expr, visitor),
+        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } | ExprKind::Group(expr) => {
+            visit_expr(expr, visitor)
+        }
         ExprKind::Binary { left, right, .. } => {
             visit_expr(left, visitor);
             visit_expr(right, visitor);

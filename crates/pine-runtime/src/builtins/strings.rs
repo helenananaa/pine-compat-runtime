@@ -1132,7 +1132,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let end = if let Some(arg) = args.get(2) {
+        let end = if let Some(arg) = crate::builtins::args::positional_arg(args, 2) {
             self.eval_optional_string_index(&arg.value, len)?
         } else {
             len
@@ -1173,7 +1173,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(repeat) = self.eval_string_index(&args[1].value)? else {
             return Ok(PineValue::Na);
         };
-        let separator = if let Some(arg) = args.get(2) {
+        let separator = if let Some(arg) = crate::builtins::args::positional_arg(args, 2) {
             let PineValue::String(separator) = self.eval_expr(&arg.value)? else {
                 return Ok(PineValue::Na);
             };
@@ -1218,7 +1218,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some((source, target, replacement)) = self.eval_replace_strings(args)? else {
             return Ok(PineValue::Na);
         };
-        let occurrence = if let Some(arg) = args.get(3) {
+        let occurrence = if let Some(arg) = crate::builtins::args::positional_arg(args, 3) {
             self.eval_optional_string_index(&arg.value, 0)?
         } else {
             0
@@ -1272,7 +1272,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let value = self.eval_expr(&args[0].value)?;
-        let format = if let Some(arg) = args.get(1) {
+        let format = if let Some(arg) = crate::builtins::args::positional_arg(args, 1) {
             match self.eval_expr(&arg.value)? {
                 PineValue::String(format) => format,
                 PineValue::Na => "#.########".to_owned(),
@@ -1370,7 +1370,7 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Na => 0,
             _ => return Ok(PineValue::Na),
         };
-        let format = if let Some(arg) = args.get(1) {
+        let format = if let Some(arg) = crate::builtins::args::positional_arg(args, 1) {
             match self.eval_expr(&arg.value)? {
                 PineValue::String(format) => format,
                 PineValue::Na => "yyyy-MM-dd'T'HH:mm:ssZ".to_owned(),
@@ -1379,7 +1379,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             "yyyy-MM-dd'T'HH:mm:ssZ".to_owned()
         };
-        let timezone = if let Some(arg) = args.get(2) {
+        let timezone = if let Some(arg) = crate::builtins::args::positional_arg(args, 2) {
             match self.eval_expr(&arg.value)? {
                 PineValue::String(timezone) => timezone,
                 PineValue::Na => "UTC".to_owned(),

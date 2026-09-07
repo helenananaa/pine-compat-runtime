@@ -493,7 +493,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id1 = self.eval_expr(&args[0].value)?;
         let id2 = self.eval_expr(&args[1].value)?;
-        let biased = match args.get(2) {
+        let biased = match crate::builtins::args::positional_arg(args, 2) {
             Some(arg) => matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true)),
             None => true,
         };
@@ -546,7 +546,7 @@ impl<'a> HistoricalRuntime<'a> {
         mode: ArrayVarianceMode,
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
-        let biased = match args.get(1) {
+        let biased = match crate::builtins::args::positional_arg(args, 1) {
             Some(arg) => matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true)),
             None => true,
         };

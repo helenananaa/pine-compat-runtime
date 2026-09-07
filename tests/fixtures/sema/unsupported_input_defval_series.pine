@@ -1,4 +1,4 @@
 //@version=5
 indicator("Unsupported input defval series")
-value = input(close, "Value")
+value = input(bar_index, "Value")
 plot(close)

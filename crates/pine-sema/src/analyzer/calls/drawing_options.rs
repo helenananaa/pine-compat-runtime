@@ -286,6 +286,17 @@ impl Analyzer {
                     HLINE_STYLES,
                 );
             }
+            "fill" if self.legacy.dialect().version() >= 6 => {
+                for arg in args {
+                    if arg.name.as_deref() == Some("transp") {
+                        self.unsupported(
+                            "fill.transp",
+                            "`fill` argument `transp` was removed in Pine v6",
+                            arg.span,
+                        );
+                    }
+                }
+            }
             _ => {}
         }
     }

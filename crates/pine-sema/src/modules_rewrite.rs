@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
 use pine_syntax::{
-    CallArg, DeclaredType, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, Program, Stmt,
-    StmtKind, SwitchArm, SwitchArmResult,
+    CallArg, DeclaredType, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, MethodDecl,
+    Program, Stmt, StmtKind, SwitchArm, SwitchArmResult,
 };
 
 use crate::analyzer::calls::{expr_name, postfix_call_result_method_parts};
@@ -160,10 +160,22 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
                 rewrite_function_body(body, &param_names, context)
             },
         },
+        StmtKind::Method(method) => {
+            let param_names: Vec<String> = method
+                .params
+                .iter()
+                .map(|param| param.name.clone())
+                .collect();
+            StmtKind::Method(MethodDecl {
+                name: method.name.clone(),
+                name_span: method.name_span,
+                params: method.params.clone(),
+                body: rewrite_function_body(&method.body, &param_names, context),
+            })
+        }
         StmtKind::Import(_)
         | StmtKind::Library(_)
         | StmtKind::UserType(_)
-        | StmtKind::Method(_)
         | StmtKind::Break
         | StmtKind::Continue
         | StmtKind::Unsupported { .. } => statement.kind.clone(),
@@ -324,6 +336,7 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
             expr: Box::new(rewrite_expr(expr, context)),
             offset: Box::new(rewrite_expr(offset, context)),
         },
+        ExprKind::Group(inner) => ExprKind::Group(Box::new(rewrite_expr(inner, context))),
         ExprKind::QualifiedName(parts) => {
             rewrite_qualified_name(parts, context).unwrap_or_else(|| expr.kind.clone())
         }

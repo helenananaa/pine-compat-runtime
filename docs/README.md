@@ -16,8 +16,8 @@ plan is not mistaken for a current compatibility claim.
    [Next Internal Capability Plan](NEXT_INTERNAL_CAPABILITY_PLAN.md), and
    [Long-Term Execution Plan](LONG_TERM_EXECUTION_PLAN.md) track current
    maintenance and future work. The
-   [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md)
-   is the active slice order when strategy work is selected.
+   [Modern Strategy Five-Stage Execution Plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md)
+   is the active step-by-step order when strategy work is selected.
 4. Phase plans, phase audits, design gates, and historical review documents
    record how a slice was designed or closed. They remain useful evidence, but
    their roadmap wording does not override the conformance matrix.
@@ -55,6 +55,24 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Status And Roadmap Documents
 
+- [Strategy G5 Baseline Review](STRATEGY_MODERN_G5_BASELINE_REVIEW_AUDIT.md):
+  corrected true-append/realtime timings, release probe, resource measurements
+  and remaining optimization gates.
+- [Remaining Modern Strategy Blockers](STRATEGY_MODERN_REMAINING_BLOCKERS_REVIEW.md):
+  dependency/version/template probes and the input package still needed for G3.
+
+- [Modern Strategy Five-Stage Execution Plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md):
+  detailed Chinese execution steps for frozen corpus measurements, language
+  blockers, independent strategy-result validation, account/report contracts,
+  and measured performance improvements. Includes dependencies, deliverables,
+  commands, acceptance gates, and recovery from missing inputs. Planned work,
+  not a claim that these five stages are complete.
+- [Strategy Accuracy Next Execution Plan](STRATEGY_ACCURACY_NEXT_EXECUTION_PLAN.md):
+  step-by-step Chinese plan for mixed-family OCA, host-neutral session risk
+  windows, standard inter-bar gaps, and corpus-driven follow-up, with explicit
+  evidence gates and stop conditions. Stages A–C are closed; D1 still needs
+  frozen manifests and measurements, while D2 lacks an independent reference
+  for a behavioral slice. The five-stage plan continues that work.
 - [Task Breakdown](TASK_BREAKDOWN.md): high-level baseline and ongoing work
   status.
 - [Next Internal Capability Plan](NEXT_INTERNAL_CAPABILITY_PLAN.md): recommended
@@ -65,8 +83,9 @@ cargo run -p pine-cli -- matrix --format json
   directions.
 - [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
   Stage 17-23 implementation record. Stage 18g true OHLC path execution and
-  Stage 23 Bar Magnifier fill wiring are closed; mixed-family OCA is the next
-  strategy slice.
+  Stage 23 Bar Magnifier fill wiring are closed. Later OCA, session-window,
+  and ordinary-gap closeout is recorded by the strategy accuracy plan;
+  current follow-up is in the five-stage plan.
 - [Strategy Stage 23 Bar Magnifier Fill Wiring Execution Plan](STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_EXECUTION_PLAN.md):
   step-by-step plan for behavior locking, the lower-bar sequence cursor,
   unified broker integration, recalculation, CLI/Python/WASM host inputs,
@@ -159,8 +178,7 @@ cargo run -p pine-cli -- matrix --format json
 - [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
   Stage 17-23 record for the unified fill kernel, historical order timing,
   generic netting, OCA, recalculation, broker-enforced risk rules, and Bar
-  Magnifier fill wiring; Stage 18g and Stage 23 are closed and mixed-family
-  OCA is the next strategy target.
+  Magnifier fill wiring; use the five-stage plan for current follow-up.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):
   process for selecting a language slice.
 
@@ -183,3 +201,6 @@ latest audit before changing compatibility claims.
 release gate. It checks Rust formatting and linting, all workspace tests,
 source structure, host parity, the real WASM/Node path, the Python wheel, and
 Python binding tests.
+
+- [G3 参考输入接收审计](STRATEGY_MODERN_G3_REFERENCE_INTAKE_AUDIT.md)：下载导出核验与 Chrome 登录阻塞。
+- [G5 checkpoint 优化审计](STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md)：单热点优化、交替 A/B、资源与回归证据。

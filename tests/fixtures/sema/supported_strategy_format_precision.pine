@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported strategy format precision", format=format.price, precision=8)
+plot(close)

@@ -1,0 +1,7 @@
+//@version=6
+strategy("Benchmark dense lifecycle", initial_capital=1000000)
+if bar_index % 4 == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index % 4 == 2
+    strategy.close("L")
+plot(strategy.position_size)

@@ -148,16 +148,12 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             arg_type.kind.array_element_kind(),
             Some(ValueKind::Float | ValueKind::Int | ValueKind::String)
         ),
-        Accepts::InputDefval => accepts_kind_exact(arg_type, Qualifier::Const, |kind| {
-            matches!(
-                kind,
-                ValueKind::Int
-                    | ValueKind::Float
-                    | ValueKind::Bool
-                    | ValueKind::String
-                    | ValueKind::Color
-            )
-        }),
+        #[rustfmt::skip]
+        Accepts::InputDefval => matches!(
+            (arg_type.qualifier, arg_type.kind),
+            (Qualifier::Const, ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::String | ValueKind::Color)
+                | (Qualifier::Series, ValueKind::Float)
+        ),
     }
 }
 fn accepts_kind_exact(

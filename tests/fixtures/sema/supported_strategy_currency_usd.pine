@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy currency USD", currency=currency.USD)
+plot(strategy.account_currency == "USD" ? 1 : 0)
+plot(strategy.convert_to_account(close))

@@ -1,0 +1,8 @@
+//@version=5
+strategy("Mixed OCA entry cancels order peer")
+if bar_index == 1
+    strategy.entry("E", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("O", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.cancel)
+plot(strategy.position_size)
+plot(strategy.opentrades)
+plot(strategy.closedtrades)

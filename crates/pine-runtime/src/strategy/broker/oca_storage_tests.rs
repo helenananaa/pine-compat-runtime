@@ -479,3 +479,268 @@ fn oca_same_name_different_types_do_not_share_peer_sets() {
         other => panic!("expected order members, got {other:?}"),
     }
 }
+
+fn pyramiding_broker(limit: usize) -> BrokerState {
+    BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        pine_ir::StrategyMarginSetting::default(),
+        pine_ir::StrategyMarginSetting::default(),
+        limit,
+    )
+}
+
+#[test]
+fn mixed_oca_entry_cancel_cancels_order_peer() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.place_pending_limit_long_order("O".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.cancel"));
+    broker.assign_pending_order_oca_named("O", "g".to_owned(), Some("strategy.oca.cancel"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "E");
+    assert_eq!(broker.orders[0].qty, 1.0);
+    assert!(broker.order_book.entries().find_by_id("O").is_none());
+    assert!(broker.pending_entry_oca("O").is_none());
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_order_cancel_cancels_entry_peer() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_order("O".to_owned(), 1.0, 90.0, 1);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("O", "g".to_owned(), Some("strategy.oca.cancel"));
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.cancel"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "O");
+    assert_eq!(broker.orders[0].qty, 1.0);
+    assert!(broker.order_book.entries().find_by_id("E").is_none());
+    assert!(broker.pending_entry_oca("E").is_none());
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_none_entry_and_order_fill_independently() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.place_pending_limit_long_order("O".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.none"));
+    broker.assign_pending_order_oca_named("O", "g".to_owned(), Some("strategy.oca.none"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.orders.len(), 2);
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_entry_reduce_cuts_order_quantity() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.place_pending_limit_long_order("O".to_owned(), 2.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.assign_pending_order_oca_named("O", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[0].id, "E");
+    assert_eq!(broker.orders[0].qty, 1.0);
+    assert_eq!(broker.orders[1].id, "O");
+    assert_eq!(broker.orders[1].qty, 1.0);
+    assert!(broker.order_book.entries().find_by_id("O").is_none());
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_order_reduce_removes_entry_peer_at_zero() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_order("O".to_owned(), 2.0, 90.0, 1);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("O", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "O");
+    assert_eq!(broker.orders[0].qty, 2.0);
+    assert!(broker.order_book.entries().find_by_id("E").is_none());
+    assert!(broker.pending_entry_oca("E").is_none());
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_order_fill_reduces_exit_reserved_quantity() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0));
+    broker.place_pending_limit_short_order("TP".to_owned(), 1.0, 110.0, 1);
+    broker.assign_pending_order_oca_named("TP", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.set_next_exit_oca_name(Some("g".to_owned()));
+    broker.place_exit_stop("SL".to_owned(), "L".to_owned(), 90.0, 1);
+    assert_eq!(
+        broker
+            .order_book
+            .exits()
+            .find_by_identity("SL", "L")
+            .map(|pending| pending.reserved_quantity),
+        Some(2.0)
+    );
+    broker.fill_pending_limit_short_entries(2, 20, 111.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert_eq!(
+        broker.orders.last().map(|order| order.id.as_str()),
+        Some("TP")
+    );
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(1.0));
+    assert_eq!(
+        broker
+            .order_book
+            .exits()
+            .find_by_identity("SL", "L")
+            .map(|pending| pending.reserved_quantity),
+        Some(1.0)
+    );
+    assert_eq!(
+        broker.pending_exit_oca("SL", "L"),
+        Some(&OcaGroupKey::new("g", OcaType::Reduce))
+    );
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_exit_fill_reduces_order_peer_to_zero() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0));
+    broker.place_pending_limit_short_order("TP".to_owned(), 2.0, 110.0, 1);
+    broker.assign_pending_order_oca_named("TP", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.set_next_exit_oca_name(Some("g".to_owned()));
+    broker.place_exit_stop("SL".to_owned(), "L".to_owned(), 90.0, 1);
+    broker.evaluate_pending_exits(2, 20, 100.0, 89.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(
+        broker.orders.last().map(|order| order.id.as_str()),
+        Some("SL")
+    );
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
+    assert!(broker.order_book.entries().find_by_id("TP").is_none());
+    assert!(broker.pending_entry_oca("TP").is_none());
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_entry_fill_reduces_live_exit_peer() {
+    let mut broker = pyramiding_broker(2);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0));
+    broker.set_next_exit_oca_name(Some("g".to_owned()));
+    broker.place_exit_stop("SL".to_owned(), "L".to_owned(), 90.0, 1);
+    broker.place_pending_limit_long_entry("L2".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("L2", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 3.0);
+    assert_eq!(
+        broker
+            .order_book
+            .exits()
+            .find_by_identity("SL", "L")
+            .map(|pending| pending.reserved_quantity),
+        Some(1.0)
+    );
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_exit_fill_reduces_pending_entry_peer() {
+    let mut broker = pyramiding_broker(2);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0));
+    broker.place_pending_limit_long_entry("L2".to_owned(), 2.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("L2", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.set_next_exit_oca_name(Some("g".to_owned()));
+    broker.place_exit_stop("SL".to_owned(), "L".to_owned(), 90.0, 1);
+    broker.evaluate_pending_exits(2, 20, 100.0, 89.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert!(broker.order_book.entries().find_by_id("L2").is_none());
+    assert!(broker.pending_entry_oca("L2").is_none());
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_same_name_different_types_do_not_cancel_or_reduce() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.place_pending_limit_long_order("O".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.cancel"));
+    broker.assign_pending_order_oca_named("O", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.orders.len(), 2);
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_empty_name_does_not_join_a_group() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.place_pending_limit_long_order("O".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("E", String::new(), Some("strategy.oca.cancel"));
+    broker.assign_pending_order_oca_named("O", String::new(), Some("strategy.oca.cancel"));
+    assert!(broker.pending_entry_oca("E").is_none());
+    assert!(broker.pending_entry_oca("O").is_none());
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 2.0);
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_unrelated_group_is_unchanged() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0));
+    broker.place_pending_limit_short_order("TP".to_owned(), 1.0, 110.0, 1);
+    broker.assign_pending_order_oca_named("TP", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.set_next_exit_oca_name(Some("other".to_owned()));
+    broker.place_exit_stop("SL".to_owned(), "L".to_owned(), 90.0, 1);
+    broker.fill_pending_limit_short_entries(2, 20, 111.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert_eq!(
+        broker
+            .order_book
+            .exits()
+            .find_by_identity("SL", "L")
+            .map(|pending| pending.reserved_quantity),
+        Some(2.0),
+        "ungrouped exclusive exit must not be reduced by a different OCA group"
+    );
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_reduce_uses_decimal_filled_quantity() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_entry("E".to_owned(), 0.25, 90.0, 1);
+    broker.place_pending_limit_long_order("O".to_owned(), 1.0, 90.0, 1);
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.assign_pending_order_oca_named("O", "g".to_owned(), Some("strategy.oca.reduce"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert_eq!(broker.orders[0].qty, 0.25);
+    assert_eq!(broker.orders[1].qty, 0.75);
+    broker.assert_ledger_aggregates();
+}
+
+#[test]
+fn mixed_oca_stop_limit_peer_is_cancelled_before_activation() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_limit_long_entry("E".to_owned(), 1.0, 90.0, 1);
+    broker.place_pending_stop_limit_long_order("S".to_owned(), 1.0, 110.0, 100.0, 1);
+    broker.assign_pending_order_oca_named("E", "g".to_owned(), Some("strategy.oca.cancel"));
+    broker.assign_pending_order_oca_named("S", "g".to_owned(), Some("strategy.oca.cancel"));
+    broker.fill_pending_limit_long_entries(2, 20, 89.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert!(broker.order_book.entries().find_by_id("S").is_none());
+    assert!(broker.pending_entry_oca("S").is_none());
+    broker.assert_ledger_aggregates();
+}

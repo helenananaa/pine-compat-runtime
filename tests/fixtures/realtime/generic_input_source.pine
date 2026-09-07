@@ -1,0 +1,4 @@
+//@version=6
+indicator("Generic source input forming")
+src = input(close, "Source")
+plot(src)

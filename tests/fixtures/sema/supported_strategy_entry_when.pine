@@ -1,0 +1,5 @@
+//@version=5
+strategy("Supported strategy entry when")
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1, when=true)
+plot(close)

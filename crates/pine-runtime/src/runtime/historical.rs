@@ -69,6 +69,7 @@ struct StrategyEvalCheckpoint {
     random_state: HashMap<CallSiteId, u64>,
     current_symbols: HashMap<SymbolId, PineValue>,
     current_series: HashMap<SeriesId, PineValue>,
+    active_series: HashSet<SeriesId>,
 }
 
 #[derive(Clone)]
@@ -77,6 +78,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) input_overrides: InputOverrides,
     pub(crate) magnifier_input: MagnifierInput,
     pub(crate) magnifier_chart_bar_count: Option<usize>,
+    pub(crate) session_windows: crate::SessionWindowInput,
     pub(crate) bars: usize,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
@@ -99,6 +101,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) history_dynamic_retention_max_missed_offset: Option<usize>,
     pub(crate) current_symbols: HashMap<SymbolId, PineValue>,
     pub(crate) current_series: HashMap<SeriesId, PineValue>,
+    pub(crate) active_series: HashSet<SeriesId>,
     pub(crate) var_store: HashMap<VarSlotId, PineValue>,
     pub(crate) array_store: HashMap<u32, Vec<PineValue>>,
     pub(crate) array_kinds: HashMap<u32, ArrayElementKind>,
@@ -325,6 +328,7 @@ impl<'a> HistoricalRuntime<'a> {
             input_overrides: InputOverrides::new(),
             magnifier_input: MagnifierInput::new(),
             magnifier_chart_bar_count: None,
+            session_windows: crate::SessionWindowInput::new(),
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
@@ -347,6 +351,7 @@ impl<'a> HistoricalRuntime<'a> {
             history_dynamic_retention_max_missed_offset: None,
             current_symbols: HashMap::new(),
             current_series: HashMap::new(),
+            active_series: HashSet::new(),
             var_store: HashMap::new(),
             array_store: HashMap::new(),
             array_kinds: HashMap::new(),
@@ -455,6 +460,33 @@ impl<'a> HistoricalRuntime<'a> {
         &self.magnifier_input
     }
 
+    pub fn with_session_windows(
+        mut self,
+        input: crate::SessionWindowInput,
+    ) -> Result<Self, RuntimeError> {
+        self.session_windows
+            .validate_replacement(&input, self.bars)
+            .map_err(crate::SessionWindowInputError::runtime_error)?;
+        self.session_windows = input;
+        Ok(self)
+    }
+
+    pub fn extend_session_windows(
+        &mut self,
+        input: crate::SessionWindowInput,
+    ) -> Result<(), RuntimeError> {
+        self.session_windows
+            .validate_extension(&input, self.bars)
+            .map_err(crate::SessionWindowInputError::runtime_error)?;
+        self.session_windows.extend_validated(input);
+        Ok(())
+    }
+
+    #[must_use]
+    pub fn session_windows(&self) -> &crate::SessionWindowInput {
+        &self.session_windows
+    }
+
     /// Validate the complete chart range before using the one-bar streaming API.
     ///
     /// Batch APIs derive this value from their complete input slice. Streaming
@@ -558,6 +590,11 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.session_windows
+                .validate_range(self.bars, self.bars + bars.len())
+                .map_err(crate::SessionWindowInputError::runtime_error)?;
+        }
         if self.bars == 0 && self.magnifier_chart_bar_count.is_none() {
             self.prepare_magnifier_chart_bar_count(bars.len())?;
         }
@@ -618,6 +655,11 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.session_windows
+                .validate_range(bar_index, bar_index + 1)
+                .map_err(crate::SessionWindowInputError::runtime_error)?;
+        }
         if update_kind == BarUpdateKind::Historical
             && bar_index == 0
             && !self.magnifier_input.is_empty()
@@ -657,7 +699,11 @@ impl<'a> HistoricalRuntime<'a> {
             self.strategy_scheduler.begin_bar(bar_index);
         }
         self.set_builtin_symbols(&bar, bar_index)?;
-        if self.program.script_mode == ScriptMode::Strategy {
+        // Evaluation checkpoints are only consumed by fill-triggered re-execution.
+        // Single-pass strategies keep live state and need no clone/restore cycle.
+        if self.program.script_mode == ScriptMode::Strategy
+            && self.program.strategy_settings.calc_on_order_fills
+        {
             self.snapshot_strategy_eval_checkpoint();
         }
         self.run_pre_script_strategy_phases(bar_index, bar)?;
@@ -1149,6 +1195,7 @@ impl<'a> HistoricalRuntime<'a> {
             random_state: self.random_state.clone(),
             current_symbols: self.current_symbols.clone(),
             current_series: self.current_series.clone(),
+            active_series: self.active_series.clone(),
         });
     }
 
@@ -1167,6 +1214,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.random_state.clone_from(&checkpoint.random_state);
         self.current_symbols.clone_from(&checkpoint.current_symbols);
         self.current_series.clone_from(&checkpoint.current_series);
+        self.active_series.clone_from(&checkpoint.active_series);
     }
 
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {

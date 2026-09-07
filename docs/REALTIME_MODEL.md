@@ -1,5 +1,30 @@
 # Realtime Model
 
+## Incremental Session Windows
+
+Python `RealtimeSession.extend_session_windows(payload)` accepts the same v1
+dict or JSON string as the optional constructor `session_windows` argument.
+Supply only the next known bars; there is no need to precompute an unlimited calendar:
+
+```python
+session.extend_session_windows({
+    "schemaVersion": 1,
+    "bars": [{"barIndex": next_index, "windowId": window_id,
+              "tradingDayId": trading_day_id}],
+})
+session.update_forming(next_bar)
+session.update_confirmed(closed_bar)
+```
+
+Use host ids before the first executed bar to opt into session-window mode.
+Missing coverage raises `E_SESSION_COVERAGE`; extend the mapping and retry the
+same bar. Extensions merge rows atomically, preserve prior rows, and reject
+changes to executed confirmed/forming identities with `E_SESSION_HISTORY_CHANGED`.
+Repeating identical rows is allowed. An extension does not execute a script,
+reset risk counters, discard a forming result or change lifecycle timestamps.
+Rust `HistoricalRuntime` and `RealtimeRuntime` expose the same extension operation.
+Their replacement builder `with_session_windows` now returns `Result<Self, RuntimeError>`.
+
 This document defines the realtime bar model before implementation of rollback
 semantics.
 

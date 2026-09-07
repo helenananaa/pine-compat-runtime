@@ -1,0 +1,6 @@
+//@version=5
+strategy("Supported strategy entry oca none")
+grp = "g"
+none_type = strategy.oca.none
+strategy.entry("A", strategy.long, qty=1, oca_name="g", oca_type=strategy.oca.none)
+strategy.entry("B", strategy.long, qty=1, limit=close, oca_name=grp, oca_type=none_type)

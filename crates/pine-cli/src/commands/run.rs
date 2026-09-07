@@ -5,6 +5,7 @@ use pine_runtime::{
     RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe, RunningAlertConfig,
     RuntimeProfile, RuntimeResult, input_calls, magnifier_input_from_json,
     public_runtime_profiled_result_json, public_runtime_result_json,
+    session_window_input_from_json,
 };
 use pine_sema::analyze_input;
 
@@ -51,6 +52,7 @@ struct RunOptions {
     path: String,
     bars_path: String,
     magnifier_bars_path: Option<String>,
+    session_windows_path: Option<String>,
     execution_times_path: Option<String>,
     chart_context: ChartContext,
     profile: bool,
@@ -176,6 +178,7 @@ fn run_profiled_json_with_options_in_mode(
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
     let magnifier = magnifier_input_from_path(options.magnifier_bars_path.as_deref())?;
+    let session_windows = session_windows_from_path(options.session_windows_path.as_deref())?;
     let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
         &hir,
         request_environment,
@@ -183,6 +186,11 @@ fn run_profiled_json_with_options_in_mode(
     );
     if let Some(magnifier) = magnifier {
         runtime = runtime.with_magnifier_input(magnifier);
+    }
+    if let Some(session_windows) = session_windows {
+        runtime = runtime
+            .with_session_windows(session_windows)
+            .map_err(|err| err.message)?;
     }
     match execution_times.as_deref() {
         Some(execution_times) => runtime.append_bars_with_execution_times(&bars, execution_times),
@@ -235,6 +243,7 @@ fn run_result_with_options_in_mode(
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
     let magnifier = magnifier_input_from_path(options.magnifier_bars_path.as_deref())?;
+    let session_windows = session_windows_from_path(options.session_windows_path.as_deref())?;
     let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
         &hir,
         request_environment,
@@ -242,6 +251,11 @@ fn run_result_with_options_in_mode(
     );
     if let Some(magnifier) = magnifier {
         runtime = runtime.with_magnifier_input(magnifier);
+    }
+    if let Some(session_windows) = session_windows {
+        runtime = runtime
+            .with_session_windows(session_windows)
+            .map_err(|err| err.message)?;
     }
     match execution_times.as_deref() {
         Some(execution_times) => runtime.append_bars_with_execution_times(&bars, execution_times),
@@ -289,6 +303,7 @@ fn run_non_batch_with_options(
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
     let magnifier = magnifier_input_from_path(options.magnifier_bars_path.as_deref())?;
+    let session_windows = session_windows_from_path(options.session_windows_path.as_deref())?;
 
     if let Some(execution_times) = &execution_times
         && execution_times.len() != bars.len()
@@ -311,6 +326,11 @@ fn run_non_batch_with_options(
             if let Some(magnifier) = magnifier {
                 runtime = runtime.with_magnifier_input(magnifier);
             }
+            if let Some(session_windows) = session_windows.clone() {
+                runtime = runtime
+                    .with_session_windows(session_windows)
+                    .map_err(|err| err.message)?;
+            }
             match execution_times.as_deref() {
                 Some(execution_times) => {
                     runtime.append_bars_with_execution_times(&bars, execution_times)
@@ -328,6 +348,11 @@ fn run_non_batch_with_options(
             );
             if let Some(magnifier) = magnifier.clone() {
                 runtime = runtime.with_magnifier_input(magnifier);
+            }
+            if let Some(session_windows) = session_windows.clone() {
+                runtime = runtime
+                    .with_session_windows(session_windows)
+                    .map_err(|err| err.message)?;
             }
             runtime
                 .prepare_magnifier_chart_bar_count(bars.len())
@@ -353,6 +378,11 @@ fn run_non_batch_with_options(
             );
             if let Some(magnifier) = magnifier {
                 runtime = runtime.with_magnifier_input(magnifier);
+            }
+            if let Some(session_windows) = session_windows.clone() {
+                runtime = runtime
+                    .with_session_windows(session_windows)
+                    .map_err(|err| err.message)?;
             }
             runtime
                 .prepare_magnifier_chart_bar_count(history.len())
@@ -446,6 +476,7 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
         path: path.clone(),
         bars_path: String::new(),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -480,6 +511,16 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     return Err("magnifier bars path must not be empty".to_owned());
                 }
                 options.magnifier_bars_path = Some(value.clone());
+            }
+            "--session-windows" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                if value.trim().is_empty() {
+                    return Err("session windows path must not be empty".to_owned());
+                }
+                options.session_windows_path = Some(value.clone());
             }
             "--execution-times" => {
                 index += 1;
@@ -717,6 +758,16 @@ fn magnifier_input_from_path(path: Option<&str>) -> Result<Option<MagnifierInput
     };
     let text = fs::read_to_string(path).map_err(|err| format!("failed to read {path}: {err}"))?;
     magnifier_input_from_json(&text).map(Some)
+}
+
+fn session_windows_from_path(
+    path: Option<&str>,
+) -> Result<Option<pine_runtime::SessionWindowInput>, String> {
+    let Some(path) = path else {
+        return Ok(None);
+    };
+    let text = fs::read_to_string(path).map_err(|err| format!("failed to read {path}: {err}"))?;
+    session_window_input_from_json(&text).map(Some)
 }
 
 #[cfg(test)]

@@ -80,10 +80,11 @@ indicator-level `max_bars_back` support.
   direct/nested passthrough/constructor-returned fields, with imported method
   coverage including receiver-style and alias-qualified calls.
 - Non-integer dynamic offsets such as `close[close]`, `close[close > open]`,
-  UDF-returned float offsets, built-in-returned float offsets, or
-  ternary/if/switch/for/for...in/while-expression float results are rejected
+  UDF-returned series float offsets, built-in-returned series float offsets, or
+  ternary/if/switch/for/for...in/while-expression series float results are rejected
   with `dynamic_history_offset` diagnostics that include the actual offset
-  type. UDT field-produced non-integer offsets are fixture-backed for direct
+  type. Input and simple float offsets such as `close[input.int(2) / 2]` are
+  accepted; runtime still requires a whole non-negative number. UDT field-produced non-integer offsets are fixture-backed for direct
   fields, local/imported UDF direct/nested passthrough/constructor-returned
   fields, local method direct/nested passthrough/constructor-returned fields
   plus method-returned bool/string fields, and imported receiver-style or

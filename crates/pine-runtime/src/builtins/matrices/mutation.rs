@@ -133,7 +133,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
-        let column = match args.get(1) {
+        let column = match crate::builtins::args::positional_arg(args, 1) {
             Some(column) => matrix_index_value("column", self.eval_expr(&column.value)?)?,
             None => 0,
         };
@@ -467,7 +467,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_matrix_sort_descending(&mut self, args: &[HirCallArg]) -> Result<bool, RuntimeError> {
-        match args.get(2) {
+        match crate::builtins::args::positional_arg(args, 2) {
             Some(order) => match self.eval_expr(&order.value)? {
                 PineValue::String(order) if order == "order.descending" => Ok(true),
                 PineValue::String(order) if order == "order.ascending" => Ok(false),
@@ -487,7 +487,7 @@ impl<'a> HistoricalRuntime<'a> {
         name: &str,
         default: i64,
     ) -> Result<i64, RuntimeError> {
-        match args.get(index) {
+        match crate::builtins::args::positional_arg(args, index) {
             Some(arg) => matrix_index_value(name, self.eval_expr(&arg.value)?),
             None => Ok(default),
         }

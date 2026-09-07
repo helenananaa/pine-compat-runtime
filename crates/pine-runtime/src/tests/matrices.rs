@@ -4,6 +4,30 @@ use crate::builtins::matrices::MatrixElementKind;
 
 use super::*;
 
+#[test]
+fn named_matrix_args_preserve_omitted_optional_slots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("named matrix optional gap")
+values = matrix.new<float>(2, 1, 0.0)
+matrix.set(values, 0, 0, 1.0)
+matrix.set(values, 1, 0, 2.0)
+matrix.sort(id=values, order=order.descending)
+plot(matrix.get(values, 0, 0))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("sparse named matrix call should run");
+    assert_values_close(&result.plots[0].values, &[2.0]);
+}
+
 fn runtime_program() -> pine_ir::HirProgram {
     let source = SourceFile::new("test.pine", "indicator(\"matrix runtime scaffold\")\n");
     let analysis = analyze_source(&source);

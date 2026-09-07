@@ -837,6 +837,7 @@ fn is_const_import_expr(expr: &Expr) -> bool {
         | ExprKind::Switch { .. }
         | ExprKind::Tuple(_)
         | ExprKind::History { .. }
+        | ExprKind::Group(_)
         | ExprKind::Identifier(_) => false,
     }
 }

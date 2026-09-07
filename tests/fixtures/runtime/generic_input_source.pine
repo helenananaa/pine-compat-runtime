@@ -1,0 +1,6 @@
+//@version=6
+indicator("Generic source input")
+src = input(close, "Source")
+hl = input(hl2, title="HL2")
+plot(src)
+plot(hl)

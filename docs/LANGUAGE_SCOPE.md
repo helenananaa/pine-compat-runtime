@@ -172,10 +172,17 @@ Phase 1 executable subset:
   `docs/PHASE_I_AUDIT.md`
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
-- constant history offsets and guarded dynamic integer history offsets
+- constant history offsets, guarded dynamic integer history offsets, and
+  input/simple float history offsets that evaluate to a whole non-negative
+  number at runtime
 - `indicator`
 - `strategy(...)` as a Phase G declaration subset with strategy-mode runtime
-  output, positive const numeric `initial_capital`, and Phase L fixed default
+  output, named const `format`/`precision` using the same `format.inherit` /
+  `format.price` / `format.percent` / `format.volume` and 0–16 precision rules
+  as `indicator`, positive const numeric `initial_capital`, same-currency
+  `currency=currency.NONE` or `currency=currency.USD` matching the fixed
+  `syminfo.currency`, omitted `commission_type` with explicit
+  `commission_value` defaulting to `strategy.commission.percent`, and Phase L fixed default
   quantity settings through `default_qty_type=strategy.fixed` plus positive
   const numeric `default_qty_value`, plus positive integer const `pyramiding`
   for the accepted same-direction long market-entry subset; const bool
@@ -192,10 +199,17 @@ Phase 1 executable subset:
   host-owned bar-magnifier lower-timeframe input is keyed by chart bar with
   explicit standard-OHLC fallback; named const bool `use_bar_magnifier` is
   accepted for v5/v6 historical fill wiring with host-owned lower-timeframe
-  bars, chart-scoped public fill identity, and standard-OHLC fallback
+  bars, chart-scoped public fill identity, and standard-OHLC fallback;
+  ordinary-chart and magnifier host sequences share one gap point event at
+  the next open when the previous host close differs from that open, so
+  gapped-through price orders fill at the open rather than at the trigger
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled through the supported historical broker model for long market entries
-  up to the configured `pyramiding` limit
+  up to the configured `pyramiding` limit; v5 hidden `when` places the entry
+  only when the bool-compatible condition is true and is rejected in v6
+- v5 hidden `fill(..., transp=...)` applies simple-int transparency to the fill
+  color unless the color already carries alpha; omitted `transp` keeps the
+  supplied color; v6 rejects `transp`
 - `strategy.entry(id, strategy.short, qty=...)` in strategy-mode scripts only,
   filled as a next-bar-open market short while flat or already short, or as a
   reversal that first flattens an opposite long at the reverse fill price then
@@ -243,7 +257,9 @@ Phase 1 executable subset:
 - host-neutral intraday risk windows keyed by UTC day from bar time when the
   chart timeframe is at or below 1D, and by bar time when the timeframe is
   higher than 1D; missing bars start a new window; non-positive timeframes fail
-  closed to the UTC-day key; this runtime has no session calendar
+  closed to the UTC-day key; optional host session window input may replace
+  those UTC keys with per-bar `windowId` and `tradingDayId`; missing input
+  keeps the UTC subset; this runtime does not maintain an exchange calendar
 - `strategy.risk.max_intraday_loss(value, type)` in strategy-mode scripts only
   with simple positive finite numeric value and `strategy.cash` or
   `strategy.percent_of_equity`; loss is measured from maximum window equity
@@ -263,6 +279,9 @@ Phase 1 executable subset:
 - `strategy.entry(id, strategy.long)` in strategy-mode scripts only when the
   declaration configures the supported fixed default quantity subset; explicit
   `qty` continues to override the declaration default
+- `strategy.order(id, strategy.short)` in strategy-mode scripts only, using the
+  same configured default quantity as omitted-qty long `strategy.order` when
+  `qty` is omitted; explicit `qty` continues to override the declaration default
 - same-id `strategy.order` replacement of pending market, limit, stop, and
   stop-limit generic orders in the same direction; opposite-direction same-id
   replacement cancels the old intent then places the new one;
@@ -271,10 +290,11 @@ Phase 1 executable subset:
   families share a public id; generic-order reductions allocate FIFO, or id-specific ANY when
   `close_entries_rule` is ANY and the order id matches an open entry;
   const/simple `oca_name` with explicit `strategy.oca.none` keeps grouped
-  `strategy.order` intents independent; `strategy.oca.cancel` cancels
-  still-pending same-group generic-order peers after a fill;
+  `strategy.entry` and `strategy.order` intents independent; `strategy.oca.cancel`
+  cancels still-pending same-group entry and generic-order peers after a fill;
   `strategy.oca.reduce` reduces same-group peer remaining quantity by the
-  filled quantity and removes peers reduced to zero; const/simple
+  filled quantity and removes peers reduced to zero, including mixed
+  entry/order/exit members that share the same name and reduce type; const/simple
   `strategy.exit` `oca_name` maps onto that implicit reduce reservation model
 - `strategy.close(id)`, `strategy.close(id, qty=...)`, and
   `strategy.close(id, qty_percent=...)` in strategy-mode scripts only, closing
@@ -317,7 +337,9 @@ Phase 1 executable subset:
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
   rolling statistics, momentum/history helpers, crosses, extremes, trend
   checks, value lookups, true range, volume flow helpers, and the fixed-metadata
-  UTC-daily/explicit-anchor VWAP contract
+  UTC-daily/explicit-anchor VWAP contract; `ta.wma` length is numeric-compatible
+  and truncated toward zero like Pine `int()`, while `ta.sma`/`ta.hma`/`ta.vwma`
+  length remain integer-compatible
 - partial float, int, bool, string, color, label-id, line-id, linefill-id, box-id, and table-id arrays with `array.new_float`,
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
   `array.new_label`, `array.new_line`, `array.new_linefill`, `array.new_box`,
@@ -339,7 +361,10 @@ Phase 1 executable subset:
   root-field selector, `array.reverse`, scalar-array
   `array.join`, and
   equivalent method-call syntax such as
-  `values.push(close)` and `values.get(0)`
+  `values.push(close)` and `values.get(0)`, plus Box-typed call-result
+  `.set_right(...)` without an intermediate binding (`id.get(0).set_right(x)`).
+  Other drawing call-result methods still require binding the result first;
+  namespace `array.get(...).set_right(...)` remains outside this parse subset.
 
 For v6 scripts, `and` and `or` use lazy evaluation: the right operand is skipped
 when the left operand already determines the result. Earlier-version scripts
@@ -440,7 +465,9 @@ reassignment, conditional, or loop can supply the return. A final conditional
 without `else` yields `na` when its condition is false; final loops may produce
 `void` when their body is side-effect-only. Pine v4 additionally admits the
 exact namespace-call subset `array.set/pop/unshift/clear`,
-`label.new/delete`, and `line.new/delete` inside UDF bodies. Recursive
+`label.new/delete`, and `line.new/delete` inside UDF bodies. Pine v5/v6 admit
+`box.new` constructors and `array.unshift` (namespace and method) inside UDF
+bodies. Recursive
 functions, all other collection/drawing side effects, output/alert side
 effects, global reassignment inside functions, and side-effecting calls as UDF
 arguments are rejected in the current executable subset. UDF arguments are
@@ -468,7 +495,7 @@ Global values:
 
 Input namespace:
 
-- `input`
+- `input`, including series-float source defvals such as `input(close)`
 - `input.int`
 - `input.float`
 - `input.bool`
@@ -486,6 +513,9 @@ TA namespace:
 
 - common indicator helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md)
+- `ta.wma(source, length)` with series numeric source and numeric-compatible
+  length truncated toward zero like Pine `int()`; non-numeric length remains
+  rejected; `ta.sma`, `ta.hma`, and `ta.vwma` length stay integer-compatible
 
 Plotting:
 
@@ -604,7 +634,8 @@ The analyzer should reject these with clear diagnostics:
 - strategy order functions and reporting helpers outside the narrow
   `strategy.entry`, `strategy.order`, `strategy.close`, `strategy.close_all`,
   `strategy.cancel`, `strategy.cancel_all`, and `strategy.exit` subsets,
-  including series `oca_name`,
+  including series `oca_name` on `strategy.entry`, `strategy.order`, and
+  `strategy.exit`,
   same-side or 3+ trigger exits, invalid trailing combinations, partial
   `strategy.close_all()`, pyramiding behavior beyond the fixture-backed
   long-only subset, broker settings beyond the supported declaration subset,

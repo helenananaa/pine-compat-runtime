@@ -15,6 +15,7 @@ mod request;
 mod retention;
 mod runtime;
 mod series;
+mod session_windows;
 mod strategy;
 mod value;
 
@@ -88,6 +89,10 @@ pub use runtime::historical::{
 };
 pub use runtime::realtime::RealtimeRuntime;
 pub use series::SeriesStore;
+pub use session_windows::{
+    SESSION_WINDOW_SCHEMA_VERSION, SessionWindowIds, SessionWindowInput, SessionWindowInputError,
+    session_window_input_from_bars, session_window_input_from_json, session_window_input_from_v1,
+};
 pub use strategy::BrokerState;
 pub use value::{PineValue, encode_color_literal, encode_color_rgba, is_valid_public_color};
 

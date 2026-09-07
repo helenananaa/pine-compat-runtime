@@ -144,6 +144,7 @@ mod tests {
             series_max_bars_back: Vec::new(),
             history: HirHistoryRequirements::default(),
             series_history: Vec::new(),
+            execution_scoped_series: Vec::new(),
         }));
         HistoricalRuntime::new(program)
     }

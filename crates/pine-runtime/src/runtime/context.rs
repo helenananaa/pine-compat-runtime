@@ -116,6 +116,7 @@ impl<'a> HistoricalRuntime<'a> {
                 })?;
             self.current_symbols.insert(symbol.id, value.clone());
             if let Some(series_id) = symbol.series_id {
+                self.activate_bar_aligned_series(series_id);
                 self.current_series.insert(series_id, value);
             }
         }
@@ -333,8 +334,31 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn set_symbol_value(&mut self, symbol: SymbolId, value: PineValue) {
         self.current_symbols.insert(symbol, value.clone());
         if let Some(series_id) = self.series_id_for_symbol(symbol) {
+            self.activate_bar_aligned_series(series_id);
             self.current_series.insert(series_id, value);
         }
+    }
+
+    pub(crate) fn activate_bar_aligned_series(&mut self, series_id: SeriesId) {
+        let requires_history = self.program.series_history.iter().any(|requirement| {
+            requirement.series_id == series_id
+                && (requirement.max_constant_offset > 0 || requirement.has_dynamic_offsets)
+        });
+        if requires_history && !self.program.execution_scoped_series.contains(&series_id) {
+            self.active_series.insert(series_id);
+        }
+    }
+
+    fn series_ids_to_commit(&self) -> Vec<SeriesId> {
+        let mut series_ids: Vec<_> = self.active_series.iter().copied().collect();
+        series_ids.extend(
+            self.current_series
+                .keys()
+                .filter(|series_id| !self.active_series.contains(series_id))
+                .copied(),
+        );
+        series_ids.sort_unstable();
+        series_ids
     }
 
     pub(crate) fn commit_current_series(&mut self) -> Result<(), RuntimeError> {
@@ -346,8 +370,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let mut series_ids: Vec<_> = self.current_series.keys().copied().collect();
-        series_ids.sort_unstable();
+        let series_ids = self.series_ids_to_commit();
         for series_id in series_ids {
             let max_depth = self.series_retention.max_depth_for(series_id);
             let value = self
@@ -366,7 +389,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn projected_series_values_after_commit(&self) -> usize {
         let mut total = self.series_store.values_len();
-        for series_id in self.current_series.keys().copied() {
+        for series_id in self.series_ids_to_commit() {
             let current_len = self.series_store.len(series_id);
             let next_len = current_len.saturating_add(1);
             let retained_len = self

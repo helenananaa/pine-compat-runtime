@@ -9,7 +9,9 @@ mod declarations;
 mod phase_j;
 mod statements;
 
-const MAX_EXPR_DEPTH: u32 = 256;
+// Keep the recursive parser comfortably below Rust's default test-thread stack.
+// The limit is a fail-closed resource bound, not part of Pine's syntax.
+const MAX_EXPR_DEPTH: u32 = 192;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Parse {
@@ -157,7 +159,7 @@ impl Parser {
                 && self.nth_is_identifier(1)
                 && self.nth_at(2, TokenKind::LParen)
             {
-                left = self.finish_call_result_method_call(left)?;
+                left = self.finish_postfix_method_call(left)?;
                 continue;
             }
             if self.at(TokenKind::LBracket) {
@@ -272,10 +274,26 @@ impl Parser {
                 })
             }
             TokenKind::LParen => {
+                let start = token.span;
                 self.bump();
                 let expr = self.parse_expr(0)?;
-                self.expect(TokenKind::RParen, "expected `)`")?;
-                Some(expr)
+                let end = self.expect(TokenKind::RParen, "expected `)`")?;
+                let span = start.merge(end);
+                if matches!(
+                    expr.kind,
+                    ExprKind::If { .. }
+                        | ExprKind::For { .. }
+                        | ExprKind::ForIn { .. }
+                        | ExprKind::While { .. }
+                        | ExprKind::Switch { .. }
+                ) {
+                    Some(Expr {
+                        span,
+                        kind: ExprKind::Group(Box::new(expr)),
+                    })
+                } else {
+                    Some(expr)
+                }
             }
             TokenKind::For => self.parse_for_expr(),
             TokenKind::If => self.parse_if_expr(),
@@ -567,6 +585,30 @@ impl Parser {
         })
     }
 
+    fn finish_postfix_method_call(&mut self, receiver: Expr) -> Option<Expr> {
+        let receiver = ungroup_expr(receiver);
+        if call_result_receiver_prefix(&receiver).is_some() {
+            return self.finish_call_result_method_call(receiver);
+        }
+        if let ExprKind::Identifier(name) = &receiver.kind {
+            let receiver_name = name.clone();
+            let start = receiver.span;
+            self.expect(TokenKind::Dot, "expected `.` before method name")?;
+            let method_span = self.current().span;
+            let TokenKind::Identifier(method_name) = self.current().kind.clone() else {
+                self.error_here("E_PARSE_NAME", "expected method name after `.`");
+                return None;
+            };
+            self.bump();
+            let callee = Expr {
+                span: start.merge(method_span),
+                kind: ExprKind::QualifiedName(vec![receiver_name, method_name]),
+            };
+            return self.finish_call(callee);
+        }
+        self.finish_call_result_method_call(receiver)
+    }
+
     fn finish_call_result_method_call(&mut self, receiver: Expr) -> Option<Expr> {
         let Some(prefix) = call_result_receiver_prefix(&receiver) else {
             self.error_here(
@@ -789,7 +831,15 @@ impl Parser {
     }
 }
 
+fn ungroup_expr(mut expr: Expr) -> Expr {
+    while let ExprKind::Group(inner) = expr.kind {
+        expr = *inner;
+    }
+    expr
+}
+
 fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
+    let receiver = receiver.without_groups();
     let ExprKind::Call { callee, .. } = &receiver.kind else {
         return None;
     };

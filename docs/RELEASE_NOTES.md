@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- Corrected session-window validation to avoid repeated full-history scans and
+  reject missing batch coverage before execution. Added atomic Rust/Python
+  realtime `extend_session_windows` for ongoing host input. Executed confirmed
+  and forming ids cannot be rewritten (`E_SESSION_HISTORY_CHANGED`). Rust
+  `with_session_windows` now returns a `Result`; existing Rust callers must
+  handle it. Public JSON and Python RealtimeSession schema versions are unchanged.
+- Closed ordinary-chart inter-bar gaps on the shared host-gap entry. A
+  previous host close that differs from the next host open is a point at
+  that open, including chart-to-chart bars and the last Magnifier lower bar
+  of one chart bar to the first of the next. Gapped-through price orders
+  fill at the next open, not at the trigger and not along a close-to-open
+  segment. Stop-limit activation does not reuse pre-activation gap prices.
+  Trailing uses the open mark only. No-gap samples still fill at the
+  trigger on the inferred path. Public `StrategyResult` schema is unchanged.
+- Added host-neutral session window input `schemaVersion` 1. Optional
+  per-bar `windowId` and `tradingDayId` drive intraday loss/filled-order
+  resets and consecutive-loss-day windows. Missing input keeps the documented
+  UTC subset. Overnight sessions that keep the same `windowId` across UTC
+  midnight do not false-reset. Public `StrategyResult` and RealtimeSession
+  schema versions are unchanged.
+- Closed mixed-family OCA. Const/simple `strategy.entry` `oca_name` with
+  `strategy.oca.none`, `strategy.oca.cancel`, or `strategy.oca.reduce` joins
+  the same `(name, type)` groups as `strategy.order`. Same-group entry and
+  order peers cancel or reduce together; `strategy.oca.reduce` also reduces
+  same-name `strategy.exit` peers and the reverse. Same name with different
+  types stays two groups. Empty names do not join a group. Series `oca_name`
+  stays rejected. Public `StrategyResult` schema is unchanged.
 - Closed Stage 18g true historical OHLC path execution. Supported price
   entries, generic orders, exits, and margin calls walk open-high-low-close or
   open-low-high-close instead of a long-then-short family rank. Equal-distance
@@ -10,8 +37,8 @@
   stop-limit fills stay fail-closed until a later bar. Same-price user exit
   versus margin is sample-locked user-then-margin. `calc_on_order_fills`
   resumes from the current path mark. Public `StrategyResult` schema versions
-  are unchanged. Bar Magnifier fill wiring and inter-bar gap rewrite remain
-  deferred.
+  are unchanged. Bar Magnifier fill wiring is closed. Ordinary-chart inter-bar
+  gaps are closed on the same host-gap entry.
 - Added the versioned Python `RealtimeSession` ABI. A compiled program can now
   own a persistent native realtime runtime without leaking its HIR, seed a
   complete historical batch with correct dataset-end semantics, replace a

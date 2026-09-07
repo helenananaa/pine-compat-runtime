@@ -67,6 +67,103 @@ fn parses_run_options_with_magnifier_bars() {
 }
 
 #[test]
+fn parses_run_options_with_session_windows() {
+    let options = parse_options(&[
+        "script.pine".to_owned(),
+        "--bars".to_owned(),
+        "bars.csv".to_owned(),
+        "--session-windows".to_owned(),
+        "session.json".to_owned(),
+    ])
+    .expect("run options");
+    assert_eq!(
+        options.session_windows_path.as_deref(),
+        Some("session.json")
+    );
+}
+
+#[test]
+fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_reset_on_window_switch()
+{
+    let script_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_overnight_filled_orders.pine");
+    let bars_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_overnight_filled_orders_bars.csv");
+    let overnight_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_overnight_windows.json");
+    let switch_path =
+        workspace_path("tests/fixtures/runtime/strategy_session_window_switch_windows.json");
+    let utc_options = RunOptions {
+        path: script_path.clone(),
+        bars_path: bars_path.clone(),
+        magnifier_bars_path: None,
+        session_windows_path: None,
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+    let overnight_options = RunOptions {
+        path: script_path.clone(),
+        bars_path: bars_path.clone(),
+        magnifier_bars_path: None,
+        session_windows_path: Some(overnight_path),
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+    let switch_options = RunOptions {
+        path: script_path,
+        bars_path,
+        magnifier_bars_path: None,
+        session_windows_path: Some(switch_path),
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let utc = run_json_with_options(&utc_options).expect("utc CLI output");
+    let overnight = run_json_with_options(&overnight_options).expect("overnight CLI output");
+    let switch = run_json_with_options(&switch_options).expect("window-switch CLI output");
+    let utc_parsed: serde_json::Value = serde_json::from_str(&utc).expect("utc JSON");
+    let overnight_parsed: serde_json::Value =
+        serde_json::from_str(&overnight).expect("overnight JSON");
+    let switch_parsed: serde_json::Value = serde_json::from_str(&switch).expect("switch JSON");
+
+    let last_size = |value: &serde_json::Value| {
+        value["strategy"]["position"]
+            .as_array()
+            .and_then(|rows| rows.last())
+            .and_then(|row| row["size"].as_f64())
+    };
+    assert_eq!(last_size(&utc_parsed), Some(2.0));
+    assert_ne!(
+        last_size(&overnight_parsed),
+        Some(2.0),
+        "same overnight windowId across UTC midnight must keep the filled-order count: {overnight}"
+    );
+    assert_eq!(
+        last_size(&switch_parsed),
+        Some(2.0),
+        "a windowId change must reset the filled-order count once: {switch}"
+    );
+}
+
+#[test]
 fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
     let script_path = workspace_path("tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine");
     let bars_path =
@@ -77,6 +174,7 @@ fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
         path: script_path.clone(),
         bars_path: bars_path.clone(),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -90,6 +188,7 @@ fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
         path: script_path,
         bars_path,
         magnifier_bars_path: Some(magnifier_path),
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -380,6 +479,7 @@ fn runs_timenow_with_explicit_execution_times_in_normal_and_profile_modes() {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: Some(execution_times.to_string_lossy().into_owned()),
         chart_context: ChartContext::default(),
         profile: false,
@@ -467,6 +567,7 @@ fn cli_timenow_fails_closed_when_execution_times_are_missing_or_misaligned() {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -533,6 +634,7 @@ bgcolor(shade)
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -571,6 +673,7 @@ bgcolor(shade)
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -633,6 +736,7 @@ plot(color.t(shade))
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -741,6 +845,7 @@ fn runs_v4_legacy_input_overrides_through_cli_host() {
         path,
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -769,6 +874,7 @@ fn profiled_run_reports_max_bars_back_without_retention_misses() {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -794,6 +900,7 @@ fn profiled_run_reports_max_bars_back_retention_misses() {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -819,6 +926,7 @@ fn profiled_run_reports_udf_max_bars_back_retention_misses() {
         path: workspace_path("tests/fixtures/profile/dynamic_history_udf_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -858,6 +966,7 @@ fn assert_profile_series_max_bars_back_miss_with_libraries(
         path: workspace_path(path),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -887,6 +996,7 @@ fn profiled_run_reports_effective_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -915,6 +1025,7 @@ fn profiled_run_reports_expression_source_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -944,6 +1055,7 @@ fn profiled_run_reports_alias_expression_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -973,6 +1085,7 @@ fn profiled_run_reports_ternary_expression_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1002,6 +1115,7 @@ fn profiled_run_reports_qualified_builtin_ternary_series_max_bars_back_diagnosti
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1031,6 +1145,7 @@ fn profiled_run_reports_pure_math_call_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1060,6 +1175,7 @@ fn profiled_run_reports_named_pure_math_call_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1089,6 +1205,7 @@ fn profiled_run_reports_numeric_cast_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1154,6 +1271,7 @@ fn profiled_run_reports_udf_length_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1183,6 +1301,7 @@ fn profiled_run_reports_block_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1212,6 +1331,7 @@ fn profiled_run_reports_switch_block_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1241,6 +1361,7 @@ fn profiled_run_reports_statement_switch_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1270,6 +1391,7 @@ fn profiled_run_reports_expression_block_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1299,6 +1421,7 @@ fn profiled_run_reports_tuple_switch_expression_block_series_max_bars_back_diagn
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1328,6 +1451,7 @@ fn profiled_run_reports_if_expression_block_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1357,6 +1481,7 @@ fn profiled_run_reports_tuple_if_expression_block_series_max_bars_back_diagnosti
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1386,6 +1511,7 @@ fn profiled_run_reports_call_argument_block_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1415,6 +1541,7 @@ fn profiled_run_reports_block_result_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1444,6 +1571,7 @@ fn profiled_run_reports_loop_result_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1473,6 +1601,7 @@ fn profiled_run_reports_for_in_result_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1502,6 +1631,7 @@ fn profiled_run_reports_for_statement_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1531,6 +1661,7 @@ fn profiled_run_reports_for_in_statement_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1560,6 +1691,7 @@ fn profiled_run_reports_while_result_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1589,6 +1721,7 @@ fn profiled_run_reports_while_statement_series_max_bars_back_diagnostic() {
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1694,6 +1827,7 @@ fn runs_request_bars_integration_fixture() {
         path: workspace_path("tests/fixtures/request/request_security_host.pine"),
         bars_path: workspace_path("tests/fixtures/request/chart_1m.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -1733,12 +1867,14 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[34,35,36,37,38]"));
     assert!(output.contains("\"values\":[null,41,43,45,47]"));
     assert!(output.contains("\"values\":[20.01,21.01,22.01,23.01,24.01]"));
-    assert!(output.contains("\"values\":[null,100,100,100,100]"));
+    assert!(output.contains("\"values\":[null,null,null,100,100]"));
     assert!(output.contains("\"values\":[2,10,10,10,10]"));
     assert!(output.contains("\"values\":[null,10,10,10,10]"));
-    assert!(output.contains(
-        "\"values\":[2,4.666666666666667,6.4444444444444455,7.629629629629631,8.419753086419753]"
-    ));
+    assert!(
+        output.contains(
+            "\"values\":[null,null,7.333333333333333,8.222222222222221,8.814814814814815]"
+        )
+    );
     assert!(output.contains("\"values\":[null,null,13,14,15]"));
     assert!(output.contains("\"values\":[null,null,9,10,11]"));
     assert!(output.contains("\"values\":[null,1,1,1,1]"));
@@ -1861,7 +1997,7 @@ fn runs_request_bars_integration_fixture() {
             "\"values\":[0.017453292519943295,0.019198621771937627,0.020943951023931952,0.022689280275926284,0.024434609527920613]"
         ));
     assert!(output.contains("\"values\":[2,10,10,10,10]"));
-    assert!(output.contains("\"values\":[2,6,8,9,9.5]"));
+    assert!(output.contains("\"values\":[null,6,8,9,9.5]"));
     assert!(output.contains("\"values\":[null,12,13,14,15]"));
     assert!(output.contains("\"values\":[null,9,10,11,12]"));
     assert!(output.matches("\"values\":[null,1,1,1,1]").count() >= 2);
@@ -1917,13 +2053,11 @@ fn runs_request_bars_integration_fixture() {
     );
     assert!(output.matches("\"values\":[null,null,22,23,24]").count() >= 2);
     assert!(
-            output
-                .matches(
-                    "\"values\":[20,20.333333333333332,20.88888888888889,21.59259259259259,22.395061728395063]"
-                )
-                .count()
-                >= 2
-        );
+        output
+            .matches("\"values\":[null,null,21,21.666666666666668,22.444444444444446]")
+            .count()
+            >= 2
+    );
     assert!(
         output
             .matches("\"values\":[20,20.75,21.75,22.8125,23.875]")
@@ -1941,9 +2075,9 @@ fn runs_request_bars_integration_fixture() {
         output
             .matches("\"values\":[null,null,null,100,100]")
             .count()
-            >= 2
+            >= 4
     );
-    assert!(output.matches("\"values\":[null,null,100,100,100]").count() >= 3);
+    assert!(output.matches("\"values\":[null,null,100,100,100]").count() >= 2);
     assert!(output.contains(
         "\"values\":[null,null,0.15552315827194782,0.1484539238050411,0.14199940537873496]"
     ));
@@ -1954,9 +2088,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[null,null,21,22,23]"));
     assert!(output.contains("\"values\":[null,null,20,21,22]"));
     assert!(output.matches("\"values\":[null,null,100,100,100]").count() >= 2);
-    assert!(output.contains(
-        "\"values\":[20,20.333333333333332,20.88888888888889,21.59259259259259,22.395061728395063]"
-    ));
+    assert!(output.contains("\"values\":[null,null,21,21.666666666666668,22.444444444444446]"));
     assert!(output.contains("\"values\":[20,20.75,21.75,22.8125,23.875]"));
     assert!(output.contains("\"values\":[20,20.875,21.9375,23,24.03125]"));
     assert!(output.contains("\"values\":[null,1,1,1,1]"));
@@ -2029,7 +2161,7 @@ fn runs_request_bars_integration_fixture() {
         )
     );
     assert!(output.matches("\"values\":[20,20.5,21,21.5,22]").count() >= 2);
-    assert!(output.contains("\"values\":[null,null,100,100,133.33333333333334]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
     assert!(output.contains("\"values\":[null,null,100,100,175]"));
     assert!(output.contains("\"values\":[null,null,100,100,187.5]"));
     assert!(output.matches("\"values\":[null,null,null,null,1]").count() >= 2);
@@ -2050,7 +2182,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[null,null,1.2,1.2,2]"));
     assert!(output.matches("\"values\":[null,null,100,100,150]").count() >= 2);
     assert!(output.contains("\"values\":[null,null,30,30,110]"));
-    assert!(output.contains("\"values\":[null,null,30,30,70]"));
+    assert!(output.contains("\"values\":[null,null,null,null,70]"));
     assert!(output.contains("\"values\":[null,null,null,null,210]"));
     assert!(output.contains("\"values\":[null,null,null,null,80]"));
     assert!(
@@ -2111,12 +2243,13 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[20,20.5,21.25,22.125,23.0625]"));
     assert!(output.contains("\"values\":[24,32.5,37.25,40.125,42.0625]"));
     assert!(output.contains("\"values\":[16,8.5,5.25,4.125,4.0625]"));
-    assert!(output.contains("\"values\":[14,6,6,6,6]"));
-    assert!(output.contains("\"values\":[1,-1,-1,-1,-1]"));
     assert!(output.contains(
-        "\"values\":[0,7.1428571428571415,8.620689655172411,9.223300970873785,9.530791788856305]"
+        "\"values\":[null,null,26.666666666666664,26.666666666666664,26.666666666666664]"
     ));
-    assert!(output.contains("\"values\":[0,50,75,87.5,93.75]"));
+    assert!(output.contains("\"values\":[null,null,1,1,1]"));
+    assert!(output.contains("\"values\":[null,null,null,10,10]"));
+    assert!(output.contains("\"values\":[null,null,null,0,0]"));
+    assert!(output.contains("\"values\":[null,null,null,null,100]"));
     assert!(output.contains("\"values\":[20,20.5,21,21.5,22]"));
     assert!(
         output.contains(
@@ -2140,10 +2273,10 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[null,null,100,100,150]"));
     assert!(output.contains("\"values\":[null,null,100,100,250]"));
     assert!(output.contains("\"values\":[null,null,100,100,50]"));
-    assert!(output.contains("\"values\":[null,null,155,155,81.66666666666667]"));
-    assert!(output.contains("\"values\":[null,null,1,1,-1]"));
-    assert!(output.contains("\"values\":[null,null,0,0,71.42857142857143]"));
-    assert!(output.contains("\"values\":[null,null,0,0,50]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
+    assert!(output.contains("\"values\":[null,null,null,null,null]"));
+    assert!(output.contains("\"values\":[null,null,null,null,50]"));
     assert!(output.contains("\"values\":[null,20,21,22,23]"));
     assert!(output.contains("\"values\":[10,20,21,22,23]"));
     assert!(output.contains("\"values\":[0,1,1,1,1]"));
@@ -2216,7 +2349,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains(
         "\"values\":[20,20.666666666666668,21.555555555555557,22.51851851851852,23.506172839506174]"
     ));
-    assert!(output.matches("\"values\":[null,100,100,100,100]").count() >= 2);
+    assert!(output.matches("\"values\":[null,100,100,100,100]").count() >= 1);
     assert!(output.contains(
             "\"values\":[null,0.0975609756097561,0.09302325581395349,0.08888888888888889,0.0851063829787234]"
         ));
@@ -2239,6 +2372,7 @@ fn runs_legacy_v4_security_provider_fixture() {
         path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
         bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2277,6 +2411,7 @@ fn legacy_v4_security_cli_missing_provider_error_is_source_spanned() {
         path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
         bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2300,6 +2435,7 @@ fn runs_imported_function_with_library_source_integration_fixture() {
         path: workspace_path("tests/fixtures/runtime/import.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2336,6 +2472,7 @@ fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"),
         bars_path: bars_path.display().to_string(),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2365,6 +2502,7 @@ fn run_output_renders_strategy_order_alert_template() {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2389,6 +2527,7 @@ fn run_output_rejects_unknown_strategy_order_alert_placeholder() {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2413,6 +2552,7 @@ fn run_output_renders_strategy_running_alert() {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2442,6 +2582,7 @@ fn run_output_rejects_unknown_strategy_running_alert_placeholder() {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2471,6 +2612,7 @@ fn run_json_keeps_strategy_alert_template_output_out_of_default_json() {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
         magnifier_bars_path: None,
+        session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,

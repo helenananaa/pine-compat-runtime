@@ -1,0 +1,5 @@
+//@version=5
+indicator("Dynamic history input float offset rollback", max_bars_back=2)
+length = input.int(2, "Length")
+lag = length / 2
+plot(close[lag])

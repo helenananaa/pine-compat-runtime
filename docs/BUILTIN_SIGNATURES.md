@@ -317,6 +317,18 @@ polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
 ```
 
+Box-typed call results admit `.set_right(x)` without an intermediate binding,
+including `id.get(0).set_right(x)`; the mutation is the same as `id.set_right(x)`
+and `box.set_right(id, x)`. Other drawing call-result methods still require
+binding the result first. Namespace `array.get(...).set_right(...)` remains
+outside the current parse subset. UDF `box.set_right` remains rejected.
+
+Pine v5/v6 user-defined function bodies may call `box.new` and `array.unshift`
+(namespace and method). Pine v4 UDF `box.new`, `label.new`, `array.push` and
+other collection mutations, plot/strategy/input, and other drawing mutations
+inside UDFs remain rejected. Note that Pine v4 UDF bodies already admit the
+namespace `array.unshift` subset.
+
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
 and `second` currently expose UTC calendar components derived from each bar's
 `time`. Full exchange-timezone calendar semantics are not claimed until symbol
@@ -769,13 +781,13 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, currency?: const string, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, process_orders_on_close?: const bool, calc_on_order_fills?: const bool, calc_on_every_tick?: const bool, use_bar_magnifier?: const bool named-only gated subset)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, currency?: const string, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, process_orders_on_close?: const bool, calc_on_order_fills?: const bool, calc_on_every_tick?: const bool, use_bar_magnifier?: const bool named-only gated subset, format?: const string named subset, precision?: const int named subset)
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, when?: bool-compatible v5 hidden)
 -> void
-strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none or strategy.oca.cancel subset, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
 strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool)
 -> void
@@ -911,6 +923,13 @@ Both positional declaration slots remain outside the current subset.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity.
+`strategy(..., format=..., precision=...)` accepts the same const
+`format.inherit` / `format.price` / `format.percent` / `format.volume` values
+and const integer precision 0 through 16 as `indicator`; unknown format
+constants and out-of-range precision stay rejected. These arguments do not add
+public runtime JSON fields. `strategy.order(..., strategy.short)`
+may also omit `qty`; the same default-quantity resolution applies as for
+`strategy.long` market/limit/stop/stop-limit orders.
 `strategy(..., calc_on_order_fills=true)` accepts const bool and re-executes
 strategy statements after historical fills so later Stage 18 price ticks on
 the same bar can fill orders placed on that extra pass. Series or non-bool
@@ -938,7 +957,9 @@ precision, and lot-step handling remain outside this subset.
 `strategy(...)` accepts
 `commission_type=strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, or `strategy.commission.percent` with a
-finite non-negative const numeric `commission_value`; entry cash, exit cash,
+finite non-negative const numeric `commission_value`. Omitted `commission_type`
+with an explicit `commission_value` uses the official default
+`strategy.commission.percent`. Entry cash, exit cash,
 realized trade profit, `strategy.netprofit`, and `strategy.equity` include that
 commission when configured. `strategy(..., slippage=N)` accepts finite
 non-negative integer
@@ -975,11 +996,13 @@ placement time. Fixture-backed limit-short
 `strategy.order(id, strategy.short, qty=..., limit=price)` fills through the
 supported short limit timing model and also bypasses the `strategy.entry()`
 pyramiding limit and applies signed netting after later-bar trigger selection;
-explicit positive `qty` is required. Fixture-backed stop-short
+omitted `qty` uses the configured default quantity at placement time.
+Fixture-backed stop-short
 `strategy.order(id, strategy.short, qty=..., stop=price)` fills through the
 supported short stop timing model and also bypasses the `strategy.entry()`
 pyramiding limit while flat or already short and applies signed netting after
-stop trigger selection; explicit positive `qty` is required. Fixture-backed stop-long
+stop trigger selection; omitted `qty` uses the configured default quantity at
+placement time. Fixture-backed stop-long
 `strategy.order(id, strategy.long, qty=..., stop=price)` fills through the
 supported long stop timing model and also bypasses the `strategy.entry()`
 pyramiding limit; omitted long `qty` uses the configured default quantity at
@@ -991,8 +1014,8 @@ configured default quantity at placement time. Fixture-backed stop-limit-short
 `strategy.order(id, strategy.short, qty=..., stop=stop_price, limit=limit_price)`
 uses the supported short stop-limit activation and fill timing model and also
 bypasses the `strategy.entry()` pyramiding limit while flat or already short; it
-applies signed netting after stop activation and a later limit fill, and
-explicit positive `qty` is required.
+applies signed netting after stop activation and a later limit fill; omitted
+`qty` uses the configured default quantity at placement time.
 Fixture-backed market
 `strategy.order(id, strategy.long, qty=...)` and
 `strategy.order(id, strategy.short, qty=...)` apply signed netting on the next
@@ -1001,8 +1024,8 @@ Filled signed quantity `D` against position `P` yields target `P+D`. Public
 order quantity is `|D|`. Limit generic orders reuse that signed netting after
 limit trigger selection. Stop and stop-limit generic orders reuse that signed
 netting after trigger selection or activation plus later limit fill.
-Price-based `strategy.entry()` reversal remains unsupported. Omitted
-`qty` remains unsupported for `strategy.short`. OCA behavior, same-tick
+Omitted market `strategy.short` `qty` uses the same default-quantity resolution
+as long. Price-based `strategy.entry()` reversal remains unsupported. OCA behavior, same-tick
 price-based entry exceptions, and broader multi-entry exit/reporting
 semantics remain unsupported unless fixture-backed.
 The supported `strategy.order()` subset accepts `comment`, `alert_message`,
@@ -1059,11 +1082,13 @@ returns the positive configured `strategy(..., initial_capital=...)` value, or
 the existing default starting capital when omitted, on every bar. It follows
 ordinary series history and does not add a public runtime schema field.
 `strategy.account_currency` is a read-only strategy-mode simple string. In the
-current default-only `currency.NONE` declaration subset, it inherits the fixed
+current no-conversion declaration subset, it inherits the fixed
 `syminfo.currency` value, currently `"USD"`. Direct, UDF, and history reads are
-supported without adding a public runtime schema field. The explicit
-`strategy(..., currency=currency.NONE)` no-conversion declaration is accepted;
-other currency values and settings overrides remain outside the current subset.
+supported without adding a public runtime schema field. Explicit
+`strategy(..., currency=currency.NONE)` and
+`strategy(..., currency=currency.USD)` select the same-currency identity path
+because `currency.USD` matches the current symbol currency; other currency
+values and settings overrides remain outside the current subset.
 `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`
 support the resulting same-currency boundary as strategy-mode `series float`
 identities. They accept series/simple numeric values, coerce integers to floats,
@@ -1246,7 +1271,7 @@ unsupported. Other open-trade namespace functions outside `entry_price`,
 ## Inputs
 
 ```text
-input(defval: const int/float/bool/string/color, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input defval kind
+input(defval: const int/float/bool/string/color or series float, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input defval kind, or series float when defval is a source
 input.int(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
 input.float(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
 input.bool(defval: const bool, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input bool
@@ -1278,6 +1303,10 @@ Rules:
 - `input.source` returns the selected source series. Phase 1 may restrict this
   to known OHLCV-derived series. Host-side `input.source` overrides remain
   unsupported.
+- Generic `input(close)` (or another series float defval) infers the same
+  source-input return as `input.source`. Const scalar defvals still promote to
+  the `input` qualifier. Series int/bool/string/color defvals stay rejected.
+  Host-side source overrides remain unsupported.
 
 ## Plotting
 
@@ -1309,12 +1338,17 @@ plotcandle(open: series/simple numeric, high: series/simple numeric, low: series
 hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const string)
   -> hline
 
-fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string)
+fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string, transp?: simple integer-compatible v5 hidden)
   -> void
 
 bgcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
 barcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
 ```
+
+v5 `fill(..., transp=N)` applies simple-int transparency after the base color
+unless the color already carries alpha; omitted `transp` keeps the supplied
+color. Pine v6 rejects `transp`. v5 `strategy.entry(..., when=cond)` places
+the entry only when `cond` is true; Pine v6 rejects `when`.
 
 `alertcondition` emits a runtime alert event when its reached condition
 evaluates to `true`. `title` is serialized as event `source`; `message` is
@@ -1403,11 +1437,11 @@ non-default merge behavior remains unsupported.
 Supported direct currency constants include the official `currency.*`
 currency-code set from `currency.AUD` through `currency.ZAR`, including
 `currency.NONE`, `currency.BTC`, `currency.ETH`, `currency.USD`, and
-`currency.USDT`, as string values such as `"USD"`. Request currency conversion,
-non-`NONE` strategy account-currency configuration, and cross-currency strategy
-conversion are not implemented; the default and explicit `currency.NONE`
-`strategy.account_currency` reads and same-currency strategy conversions are
-supported as described above.
+`currency.USDT`, as string values such as `"USD"`. Request currency conversion
+and cross-currency strategy conversion are not implemented; the default
+`currency.NONE` path, explicit `currency.USD` when it matches the current
+symbol currency, `strategy.account_currency` reads, and same-currency strategy
+conversions are supported as described above.
 Supported direct strategy constants include `strategy.long`, `strategy.short`,
 `strategy.direction.all`, `strategy.direction.long`,
 `strategy.direction.short`,
@@ -1420,9 +1454,10 @@ string values. `strategy.entry` execution supports `strategy.long`, market
 `strategy.short`, including
 market reversals that flatten opposite exposure then open the requested
 quantity unless `strategy.risk.allow_entry_in` forbids the new side;
-`strategy.order` accepts const/simple `oca_name` with
+`strategy.entry` and `strategy.order` accept const/simple `oca_name` with
 `strategy.oca.none`, `strategy.oca.cancel`, or `strategy.oca.reduce`.
-`strategy.exit` accepts const/simple `oca_name` as implicit
+Same-name same-type mixed entry/order/exit reduce peers cancel or reduce
+together. `strategy.exit` accepts const/simple `oca_name` as implicit
 `strategy.oca.reduce` grouping. Series `oca_name` remains unsupported.
 `strategy.risk.allow_entry_in` accepts const/simple
 `strategy.direction.all`, `strategy.direction.long`, or
@@ -1765,7 +1800,7 @@ ta.variance(source: series int/float, length: int-compatible, biased?: bool-comp
 ta.range(source: series int/float, length: int-compatible) -> series float
 ta.dev(source: series int/float, length: int-compatible) -> series float
 ta.vwma(source: series int/float, length: int-compatible) -> series float
-ta.wma(source: series int/float, length: int-compatible) -> series float
+ta.wma(source: series int/float, length: numeric-compatible) -> series float
 ta.hma(source: series int/float, length: int-compatible) -> series float
 ta.swma(source: series int/float) -> series float
 ta.alma(series: series int/float, length: int-compatible, offset: simple numeric-compatible, sigma: simple numeric-compatible, floor?: simple bool-compatible) -> series float
@@ -1907,7 +1942,9 @@ Rules:
 - `ta.wma` returns a weighted mean where the oldest ready-window value has
   weight `1` and the current value has weight `length`. Named/reordered
   `source`/`length` arguments bind to the same window state. Its `length`
-  argument is integer-compatible.
+  argument is numeric-compatible and truncated toward zero like Pine `int()`
+  before the window size is applied; non-numeric length arguments remain
+  rejected. `ta.sma`, `ta.hma`, and `ta.vwma` length stay integer-compatible.
 - `ta.hma` composes `ta.wma`-style windows as
   `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
   Named/reordered `source`/`length` arguments bind to the same staged window

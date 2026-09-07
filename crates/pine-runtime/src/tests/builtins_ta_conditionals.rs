@@ -340,7 +340,8 @@ plot(r)
 
     assert_eq!(result.plots.len(), 1);
     assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_values_close(&result.plots[0].values[1..], &[2.0, 100.0]);
+    assert_eq!(result.plots[0].values[1], PineValue::Float(2.0));
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
 }
 
 #[test]
@@ -369,7 +370,8 @@ plot(a)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 1);
-    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 2.5]);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[2.0, 2.5]);
 }
 
 #[test]
@@ -400,10 +402,10 @@ plot(score)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 1);
-    assert_values_close(
-        &result.plots[0].values,
-        &[0.0, 2.0, 100.0, 132.14285714285714],
-    );
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Float(2.0));
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_eq!(result.plots[0].values[3], PineValue::Na);
 }
 
 #[test]
@@ -564,7 +566,8 @@ plot(score)
 
     assert_eq!(result.plots.len(), 1);
     assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_values_close(&result.plots[0].values[1..], &[2.0, 100.0]);
+    assert_eq!(result.plots[0].values[1], PineValue::Float(2.0));
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
 }
 
 #[test]

@@ -17,6 +17,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         let value = result?;
         if let Some(series_id) = expr.series_id {
+            self.activate_bar_aligned_series(series_id);
             self.current_series.insert(series_id, value.clone());
         }
 
@@ -53,7 +54,7 @@ impl<'a> HistoricalRuntime<'a> {
                                 return Ok(PineValue::Bool(false));
                             }
                             let right = self.eval_expr(right)?;
-                            return eval_binary(*op, left, right);
+                            return eval_binary_with_semantics(*op, left, right, true);
                         }
                         HirBinaryOp::Or => {
                             let left = self.eval_expr(left)?;
@@ -61,14 +62,14 @@ impl<'a> HistoricalRuntime<'a> {
                                 return Ok(PineValue::Bool(true));
                             }
                             let right = self.eval_expr(right)?;
-                            return eval_binary(*op, left, right);
+                            return eval_binary_with_semantics(*op, left, right, true);
                         }
                         _ => {}
                     }
                 }
                 let left = self.eval_expr(left)?;
                 let right = self.eval_expr(right)?;
-                eval_binary(*op, left, right)?
+                eval_binary_with_semantics(*op, left, right, self.uses_v6_semantics())?
             }
             HirExprKind::Ternary {
                 condition,
@@ -190,7 +191,12 @@ impl<'a> HistoricalRuntime<'a> {
                 (Some(selector_value), Some(case_expr)) => {
                     let case_value = self.eval_expr(case_expr)?;
                     matches!(
-                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value)?,
+                        eval_binary_with_semantics(
+                            HirBinaryOp::Eq,
+                            selector_value.clone(),
+                            case_value,
+                            self.uses_v6_semantics(),
+                        )?,
                         PineValue::Bool(true)
                     )
                 }
@@ -227,7 +233,9 @@ pub(crate) fn eval_unary(op: HirUnaryOp, value: PineValue) -> PineValue {
     match op {
         HirUnaryOp::Plus => value,
         HirUnaryOp::Minus => match value {
-            PineValue::Int(value) => PineValue::Int(-value),
+            PineValue::Int(value) => value
+                .checked_neg()
+                .map_or_else(|| finite_float_or_na(-(value as f64)), PineValue::Int),
             PineValue::Float(value) => PineValue::Float(-value),
             _ => PineValue::Na,
         },
@@ -243,11 +251,33 @@ pub(crate) fn eval_binary(
     left: PineValue,
     right: PineValue,
 ) -> Result<PineValue, RuntimeError> {
-    if left.is_na() || right.is_na() {
-        return Ok(PineValue::Na);
-    }
+    eval_binary_with_semantics(op, left, right, false)
+}
 
+pub(crate) fn eval_binary_with_semantics(
+    op: HirBinaryOp,
+    left: PineValue,
+    right: PineValue,
+    uses_v6_semantics: bool,
+) -> Result<PineValue, RuntimeError> {
     Ok(match op {
+        HirBinaryOp::And => eval_logical_and(left, right, uses_v6_semantics),
+        HirBinaryOp::Or => eval_logical_or(left, right, uses_v6_semantics),
+        HirBinaryOp::Eq
+        | HirBinaryOp::NotEq
+        | HirBinaryOp::Gt
+        | HirBinaryOp::Gte
+        | HirBinaryOp::Lt
+        | HirBinaryOp::Lte
+            if left.is_na() || right.is_na() =>
+        {
+            if uses_v6_semantics {
+                PineValue::Bool(false)
+            } else {
+                PineValue::Na
+            }
+        }
+        _ if left.is_na() || right.is_na() => PineValue::Na,
         HirBinaryOp::Add => add(left, right)?,
         HirBinaryOp::Sub => numeric_sub(left, right),
         HirBinaryOp::Mul => numeric_mul(left, right),
@@ -259,15 +289,41 @@ pub(crate) fn eval_binary(
         HirBinaryOp::Gte => compare_binary(left, right, |left, right| left >= right),
         HirBinaryOp::Lt => compare_binary(left, right, |left, right| left < right),
         HirBinaryOp::Lte => compare_binary(left, right, |left, right| left <= right),
-        HirBinaryOp::And => match (left, right) {
-            (PineValue::Bool(left), PineValue::Bool(right)) => PineValue::Bool(left && right),
-            _ => PineValue::Na,
-        },
-        HirBinaryOp::Or => match (left, right) {
-            (PineValue::Bool(left), PineValue::Bool(right)) => PineValue::Bool(left || right),
-            _ => PineValue::Na,
-        },
     })
+}
+
+fn eval_logical_and(left: PineValue, right: PineValue, uses_v6_semantics: bool) -> PineValue {
+    match (left, right) {
+        (PineValue::Bool(false), _) | (_, PineValue::Bool(false)) => PineValue::Bool(false),
+        (PineValue::Bool(true), PineValue::Bool(true)) => PineValue::Bool(true),
+        (PineValue::Na, PineValue::Na)
+        | (PineValue::Na, PineValue::Bool(true))
+        | (PineValue::Bool(true), PineValue::Na) => {
+            if uses_v6_semantics {
+                PineValue::Bool(false)
+            } else {
+                PineValue::Na
+            }
+        }
+        _ => PineValue::Na,
+    }
+}
+
+fn eval_logical_or(left: PineValue, right: PineValue, uses_v6_semantics: bool) -> PineValue {
+    match (left, right) {
+        (PineValue::Bool(true), _) | (_, PineValue::Bool(true)) => PineValue::Bool(true),
+        (PineValue::Bool(false), PineValue::Bool(false)) => PineValue::Bool(false),
+        (PineValue::Na, PineValue::Na)
+        | (PineValue::Na, PineValue::Bool(false))
+        | (PineValue::Bool(false), PineValue::Na) => {
+            if uses_v6_semantics {
+                PineValue::Bool(false)
+            } else {
+                PineValue::Na
+            }
+        }
+        _ => PineValue::Na,
+    }
 }
 
 fn add(left: PineValue, right: PineValue) -> Result<PineValue, RuntimeError> {

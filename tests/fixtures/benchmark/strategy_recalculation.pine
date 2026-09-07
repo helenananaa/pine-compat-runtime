@@ -1,0 +1,7 @@
+//@version=6
+strategy("Benchmark recalculation", initial_capital=1000000, calc_on_order_fills=true)
+if bar_index % 4 == 0 and strategy.position_size == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index % 4 == 2 and strategy.position_size > 0
+    strategy.close("L")
+plot(strategy.position_size)

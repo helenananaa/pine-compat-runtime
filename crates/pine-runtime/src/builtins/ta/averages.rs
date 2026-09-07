@@ -261,7 +261,7 @@ impl<'a> HistoricalRuntime<'a> {
         let length = ta_arg(args, 1, "length")
             .map(|arg| self.eval_expr(arg))
             .transpose()?
-            .and_then(|value| value.as_i64())
+            .and_then(|value| value.as_trunc_i64())
             .unwrap_or(0);
         Ok((source, length))
     }
@@ -508,13 +508,17 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let value = rma_next(
+        let Some(value) = self.wilder_rma(
+            call_site_id,
+            0,
             self.call_state
                 .get(&call_site_id)
                 .and_then(PineValue::as_f64),
-            source,
+            Some(source),
             length,
-        );
+        ) else {
+            return Ok(PineValue::Na);
+        };
         let value = PineValue::Float(value);
         self.call_state.insert(call_site_id, value.clone());
         Ok(value)
@@ -548,12 +552,15 @@ impl<'a> HistoricalRuntime<'a> {
         let change = source - state.previous_source;
         let gain = change.max(0.0);
         let loss = (-change).max(0.0);
-        let average_gain = rma_next(state.average_gain, gain, length);
-        let average_loss = rma_next(state.average_loss, loss, length);
+        let average_gain = self.wilder_rma(call_site_id, 0, state.average_gain, Some(gain), length);
+        let average_loss = self.wilder_rma(call_site_id, 1, state.average_loss, Some(loss), length);
         state.previous_source = source;
-        state.average_gain = Some(average_gain);
-        state.average_loss = Some(average_loss);
+        state.average_gain = average_gain;
+        state.average_loss = average_loss;
         self.rsi_state.insert(call_site_id, state);
+        let (Some(average_gain), Some(average_loss)) = (average_gain, average_loss) else {
+            return Ok(PineValue::Na);
+        };
 
         Ok(PineValue::Float(rsi_from_averages(
             average_gain,

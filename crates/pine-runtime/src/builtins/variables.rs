@@ -89,7 +89,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_nz(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let value = self.eval_expr(&args[0].value)?;
         if value.is_na() {
-            if let Some(replacement) = args.get(1) {
+            if let Some(replacement) = crate::builtins::args::positional_arg(args, 1) {
                 self.eval_expr(&replacement.value)
             } else {
                 Ok(PineValue::Int(0))

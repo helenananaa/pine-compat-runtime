@@ -1002,6 +1002,44 @@ plot(close)
 }
 
 #[test]
+fn mixed_oca_magnifier_entry_fill_cancels_later_lower_bar_order() {
+    let program = enabled_strategy(
+        r#"
+strategy("mixed oca magnifier", overlay=false, pyramiding=2, initial_capital=100000, use_bar_magnifier=true)
+if bar_index == 0
+    strategy.entry("LIM", strategy.long, qty=1, limit=8.2, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("STP", strategy.long, qty=1, stop=10.8, oca_name="g", oca_type=strategy.oca.cancel)
+plot(close)
+"#,
+    );
+    let chart = [timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 11.0, 8.0, 9.0)];
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1_000, 10.0)]),
+        group(
+            1,
+            vec![
+                ohlc(2_000, 10.0, 10.2, 8.0, 8.5),
+                ohlc(2_300, 8.5, 11.0, 8.5, 10.0),
+            ],
+        ),
+    ])
+    .expect("valid");
+    let strategy = HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&chart)
+        .expect("run")
+        .strategy
+        .expect("strategy");
+    let ids: Vec<_> = strategy
+        .orders
+        .iter()
+        .map(|order| order.id.as_str())
+        .collect();
+    assert_eq!(ids, vec!["LIM"], "{ids:?}");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+}
+
+#[test]
 fn magnifier_risk_close_loses_to_earlier_lower_bar_exit() {
     let program = enabled_strategy(
         r#"

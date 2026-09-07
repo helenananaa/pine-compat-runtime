@@ -32,6 +32,20 @@ impl Analyzer {
         )
     }
 
+    pub(super) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
+        if self.allows_legacy_v4_udf_reference_side_effect(name) {
+            return true;
+        }
+        self.legacy.dialect() >= crate::PineDialect::V5 && name == "box.new"
+    }
+
+    pub(super) fn allows_udf_collection_mutation_side_effect(&self, name: &str) -> bool {
+        if self.allows_legacy_v4_udf_reference_side_effect(name) {
+            return true;
+        }
+        self.legacy.dialect() >= crate::PineDialect::V5 && name == "array.unshift"
+    }
+
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {
         let current_symbol = self.scope.resolve(name);
         let symbol = self
@@ -79,6 +93,19 @@ pub(crate) fn param_index_for_arg(
     } else {
         signature.variadic.then_some(signature.params.len() - 1)
     }
+}
+
+pub(crate) fn arg_type_for_param_index(
+    signature: &BuiltinSignature,
+    args: &[CallArg],
+    arg_types: &[Option<PineType>],
+    param_index: usize,
+) -> Option<PineType> {
+    args.iter().enumerate().find_map(|(arg_index, arg)| {
+        (param_index_for_arg(signature, arg_index, arg)? == param_index)
+            .then(|| arg_types.get(arg_index).copied().flatten())
+            .flatten()
+    })
 }
 
 pub(crate) fn method_call_parts(expr: &Expr) -> Option<(&str, &str)> {
@@ -403,7 +430,9 @@ fn accepts_expected_label(accepts: Accepts) -> Option<String> {
         Accepts::FloatMatrix => Some("matrix<float>".to_owned()),
         Accepts::QualifierBoundScalar(bound) => Some(bound.expected_label()),
         Accepts::Tuple => Some("tuple".to_owned()),
-        Accepts::InputDefval => Some("const int/float/bool/string/color".to_owned()),
+        Accepts::InputDefval => {
+            Some("const int/float/bool/string/color or series float".to_owned())
+        }
         _ => None,
     }
 }
@@ -528,6 +557,17 @@ pub(crate) fn map_method_builtin_name(method_name: &str) -> Option<&'static str>
         "put_all" => Some("map.put_all"),
         "keys" => Some("map.keys"),
         "values" => Some("map.values"),
+        _ => None,
+    }
+}
+
+pub(crate) fn drawing_call_result_builtin_name(
+    receiver_kind: ValueKind,
+    method_name: &str,
+) -> Option<String> {
+    // Homogeneous G2 slice: Box-typed call results currently admit only `.set_right()`.
+    match (receiver_kind, method_name) {
+        (ValueKind::Box, "set_right") => drawing_method_builtin_name(receiver_kind, method_name),
         _ => None,
     }
 }

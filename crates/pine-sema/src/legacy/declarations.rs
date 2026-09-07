@@ -533,7 +533,7 @@ fn find_strategy_reference_in_expr(expr: &Expr) -> Option<Span> {
                     .find_map(|arg| find_strategy_reference_in_expr(&arg.value))
             })
         }
-        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
+        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } | ExprKind::Group(expr) => {
             find_strategy_reference_in_expr(expr)
         }
         ExprKind::Binary { left, right, .. } => {

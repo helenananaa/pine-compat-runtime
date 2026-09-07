@@ -53,6 +53,7 @@ runtime_bbw.json
 runtime_block_statements.json
 runtime_bop.json
 runtime_box_array.json
+runtime_box_call_result_set_right.json
 runtime_box_control_flow.json
 runtime_box_copy.json
 runtime_box_delete.json
@@ -83,9 +84,11 @@ runtime_dmi.json
 runtime_drawing_methods.json
 runtime_drawing_typed_declarations.json
 runtime_dynamic_history.json
+runtime_dynamic_history_input_float_offset.json
 runtime_dynamic_history_scopes.json
 runtime_extreme_bars.json
 runtime_extremes.json
+runtime_fill_transp.json
 runtime_for_edges.json
 runtime_for_in.json
 runtime_for_in_bool.json
@@ -98,6 +101,7 @@ runtime_for_in_string.json
 runtime_for_in_zero_iteration.json
 runtime_for_stateful.json
 runtime_generic_input.json
+runtime_generic_input_source.json
 runtime_global_series.json
 runtime_history_edges.json
 runtime_hline_fill.json
@@ -201,6 +205,7 @@ runtime_series_history_offset.json
 runtime_session.json
 runtime_stdev.json
 runtime_stoch.json
+runtime_strategy_box_call_result_set_right.json
 runtime_strategy_builtin_default_quantity.json
 runtime_strategy_calc_on_every_tick.json
 runtime_strategy_calc_on_order_fills.json
@@ -241,8 +246,11 @@ runtime_strategy_closedtrades_fields_pyramiding.json
 runtime_strategy_commission_cash_per_contract.json
 runtime_strategy_commission_cash_per_order.json
 runtime_strategy_commission_percent.json
+runtime_strategy_commission_value_default_percent.json
+runtime_strategy_currency_usd.json
 runtime_strategy_default_quantity.json
 runtime_strategy_default_quantity_override.json
+runtime_strategy_dynamic_history_input_float_offset.json
 runtime_strategy_empty.json
 runtime_strategy_entry.json
 runtime_strategy_entry_limit.json
@@ -261,6 +269,7 @@ runtime_strategy_entry_stop_limit_short.json
 runtime_strategy_entry_stop_reverses_long.json
 runtime_strategy_entry_stop_reverses_short.json
 runtime_strategy_entry_stop_short.json
+runtime_strategy_entry_when.json
 runtime_strategy_equity.json
 runtime_strategy_exit_active_entry_attachment.json
 runtime_strategy_exit_active_entry_loss_attachment.json
@@ -397,6 +406,8 @@ runtime_strategy_fill_path_high_first_long.json
 runtime_strategy_fill_path_limit_stop_collision.json
 runtime_strategy_fill_path_low_first_short.json
 runtime_strategy_fill_path_stop_limit_long.json
+runtime_strategy_format_precision.json
+runtime_strategy_generic_input_source.json
 runtime_strategy_limit_verification_entry.json
 runtime_strategy_limit_verification_exit.json
 runtime_strategy_margin_call_long.json
@@ -405,9 +416,15 @@ runtime_strategy_margin_capital_held_long.json
 runtime_strategy_margin_capital_held_short.json
 runtime_strategy_margin_entry_affordability.json
 runtime_strategy_margin_entry_affordability_short.json
+runtime_strategy_mixed_oca_entry_order_cancel.json
+runtime_strategy_mixed_oca_entry_order_reduce.json
+runtime_strategy_mixed_oca_none.json
+runtime_strategy_mixed_oca_order_exit_reduce.json
 runtime_strategy_opentrades_fields.json
 runtime_strategy_opentrades_fields_pyramiding.json
 runtime_strategy_order_cancel_shared_id.json
+runtime_strategy_order_default_quantity_short.json
+runtime_strategy_order_default_quantity_short_reduce_long.json
 runtime_strategy_order_limit_long_against_short.json
 runtime_strategy_order_limit_long_flatten_short.json
 runtime_strategy_order_limit_long_reduce_short.json
@@ -440,6 +457,10 @@ runtime_strategy_order_stop_long_flatten_short.json
 runtime_strategy_order_stop_short.json
 runtime_strategy_order_stop_short_against_long.json
 runtime_strategy_order_stop_short_reduce_long.json
+runtime_strategy_ordinary_chart_down_gap_limit.json
+runtime_strategy_ordinary_chart_gap_stop_limit.json
+runtime_strategy_ordinary_chart_no_gap_stop.json
+runtime_strategy_ordinary_chart_up_gap_stop.json
 runtime_strategy_percent_of_equity_default_quantity.json
 runtime_strategy_position_state.json
 runtime_strategy_process_orders_on_close.json
@@ -515,10 +536,13 @@ runtime_strategy_risk_max_position_size_reversal.json
 runtime_strategy_slippage.json
 runtime_strategy_trade_counts.json
 runtime_strategy_trade_outcome_counts.json
+runtime_strategy_udf_array_unshift.json
+runtime_strategy_udf_box_new.json
 runtime_strategy_use_bar_magnifier_fallback.json
 runtime_strategy_use_bar_magnifier_false.json
 runtime_strategy_use_bar_magnifier_gap.json
 runtime_strategy_variable_interactions.json
+runtime_strategy_wma_input_float_length.json
 runtime_strings.json
 runtime_supertrend.json
 runtime_switch.json
@@ -538,6 +562,8 @@ runtime_timeframe.json
 runtime_trend.json
 runtime_tsi.json
 runtime_udf.json
+runtime_udf_array_unshift.json
+runtime_udf_box_new.json
 runtime_user_methods.json
 runtime_user_type_functions.json
 runtime_user_type_varip.json
@@ -554,5 +580,6 @@ runtime_while.json
 runtime_while_edges.json
 runtime_while_stateful.json
 runtime_wma.json
+runtime_wma_input_float_length.json
 runtime_wpr.json
 runtime_wvad.json

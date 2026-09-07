@@ -25,6 +25,7 @@ mod runtime_control_flow;
 mod runtime_core;
 mod runtime_history;
 mod strategy;
+mod strategy_regressions;
 mod user_types;
 mod versioned_arithmetic;
 
@@ -78,14 +79,27 @@ fn bar_ohlcv(open: f64, high: f64, low: f64, close: f64, volume: f64) -> Bar {
 }
 
 fn assert_values_close(actual: &[PineValue], expected: &[f64]) {
-    assert_eq!(actual.len(), expected.len());
-    for (actual, expected) in actual.iter().zip(expected) {
-        let actual = actual
-            .as_f64()
-            .unwrap_or_else(|| panic!("expected numeric value, got {actual:?}"));
+    assert_eq!(actual.len(), expected.len(), "actual={actual:?}");
+    for (index, (value, expected)) in actual.iter().zip(expected).enumerate() {
+        let Some(actual_number) = value.as_f64() else {
+            panic!("expected numeric value at {index}, got {value:?} in {actual:?}");
+        };
         assert!(
-            (actual - expected).abs() < 1e-10,
-            "expected {expected}, got {actual}"
+            (actual_number - expected).abs() < 1e-10,
+            "expected {expected} at {index}, got {actual_number} in {actual:?}"
+        );
+    }
+}
+
+fn assert_na_prefix(actual: &[PineValue], count: usize) {
+    assert!(
+        actual.len() >= count,
+        "series shorter than na prefix: {actual:?}"
+    );
+    for value in &actual[..count] {
+        assert!(
+            value.is_na(),
+            "expected leading na, got {value:?} in {actual:?}"
         );
     }
 }

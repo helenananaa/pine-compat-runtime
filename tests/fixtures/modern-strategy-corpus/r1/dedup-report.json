@@ -1,0 +1,16 @@
+{
+  "excludedDuplicates": [],
+  "method": "source SHA-256 identity; whitespace-normalized hash is advisory only",
+  "nearDuplicates": [
+    {
+      "normalizedSha256": "4177d8da43b1bc0a18d5f3f856386cf72eff07fd74d76307257d8da3d3a6f48b",
+      "sampleIds": [
+        "original.runtime.strategy_session_overnight_filled_orders.utc_default",
+        "original.runtime.strategy_session_overnight_filled_orders.overnight",
+        "original.runtime.strategy_session_overnight_filled_orders.window_switch"
+      ]
+    }
+  ],
+  "scenariosM": 482,
+  "scriptsN": 480
+}

@@ -94,7 +94,9 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         v4_default: Option<i64>,
     ) -> Result<Option<i64>, RuntimeError> {
-        if let Some(expr) = call_arg_expr(args, usize::MAX, pine_ir::LEGACY_TRANSPARENCY_ARG) {
+        if let Some(expr) = call_arg_expr(args, usize::MAX, pine_ir::LEGACY_TRANSPARENCY_ARG)
+            .or_else(|| call_arg_expr(args, usize::MAX, "transp"))
+        {
             return match self.eval_expr(expr)? {
                 PineValue::Int(value) => Ok(Some(value)),
                 PineValue::Na => Ok(Some(0)),
@@ -603,7 +605,19 @@ impl<'a> HistoricalRuntime<'a> {
         let first = self.eval_expr(first_arg)?;
         let second = self.eval_expr(second_arg)?;
         let color = self.eval_output_arg(args, 2, "color", PineValue::Color(0x2196F3))?;
-        let transp = self.eval_legacy_transparency(args, Some(90))?;
+        let transp = if let Some(expr) = call_arg_expr(args, 8, "transp") {
+            match self.eval_expr(expr)? {
+                PineValue::Int(value) => Some(value),
+                PineValue::Na => Some(0),
+                _ => {
+                    return Err(RuntimeError {
+                        message: "fill transparency must evaluate to an integer or na".to_owned(),
+                    });
+                }
+            }
+        } else {
+            self.eval_legacy_transparency(args, Some(90))?
+        };
         let color = Self::apply_legacy_transparency(color, transp);
         let title = self.eval_output_arg(args, 3, "title", PineValue::String(String::new()))?;
         let editable = self.eval_output_arg(args, 4, "editable", PineValue::Bool(true))?;

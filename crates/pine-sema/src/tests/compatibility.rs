@@ -316,6 +316,25 @@ fn reports_unsupported_drawing_method_without_unknown_method_noise() {
 }
 
 #[test]
+fn accepts_input_float_history_offset() {
+    let analysis = analyze("length = input.int(2)\nplot(close[length / 2])\n");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .all(|feature| feature.feature != "dynamic_history_offset"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+}
+
+#[test]
 fn reports_dynamic_history_offset_actual_float_type() {
     let analysis = analyze("plot(close[close])\n");
 
@@ -3662,6 +3681,28 @@ fn import_accepts_exported_constant_and_pure_function_subset() {
             "user/lib/1",
             "library(\"lib\")\nexport offset = 2\nexport scale(value) => value * offset\n",
         )],
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rewrites_aliases_inside_root_method_bodies() {
+    let analysis = analyze_with_libraries(
+        r#"import user/lib/1 as lib
+indicator("root method import rewrite")
+type Box
+    int seed
+method importedOffset(Box this) => lib.offset
+box = Box.new(0)
+plot(box.importedOffset())
+"#,
+        vec![("user/lib/1", "library(\"lib\")\nexport offset = 2\n")],
     );
 
     assert!(

@@ -241,8 +241,17 @@ fn legacy_v2_core_matches_explicit_canonical_batch_incremental_and_realtime() {
         &batch.plots[3].values,
         &[23.0, 23.0, 27.0, 21.0, 21.0, 23.0],
     );
-    assert_eq!(batch.plots[4].values[0], PineValue::Na);
-    assert_values_close(&batch.plots[4].values[1..], &[1.0, 1.0, 1.0, 1.0, 2.0]);
+    assert_eq!(
+        batch.plots[4].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(2.0),
+        ]
+    );
 
     let mut incremental = HistoricalRuntime::new(&legacy);
     for bar in bars {

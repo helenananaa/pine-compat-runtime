@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy precision", precision=17)
+plot(close)

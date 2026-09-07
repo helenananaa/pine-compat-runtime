@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported commission value default percent", commission_value=10)
+plot(close)

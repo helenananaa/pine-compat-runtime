@@ -24,6 +24,9 @@ pub fn change_return_for_arg(arg_type: PineType) -> Option<PineType> {
 
 #[must_use]
 pub fn input_return_for_arg(arg_type: PineType) -> Option<PineType> {
+    if arg_type.qualifier == Qualifier::Series && arg_type.kind == ValueKind::Float {
+        return Some(PineType::new(Qualifier::Series, ValueKind::Float));
+    }
     if arg_type.qualifier != Qualifier::Const {
         return None;
     }

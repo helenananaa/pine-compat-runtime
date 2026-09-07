@@ -311,62 +311,12 @@ impl BrokerState {
             };
             self.allocate_close_rule_exit_for_direction(direction, from_entry_filter, qty)
         };
+        if allocations.is_empty() {
+            return;
+        }
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let exit_id = pending_exit.id;
-        let closed_entry_commission = if allocations.is_empty() {
-            let entry_fill = AllocatedEntryFill::from_allocations(
-                &allocations,
-                self.avg_price,
-                self.entry_bar_index.unwrap_or(bar_index),
-                self.entry_time.unwrap_or(time),
-                self.entry_commission_for_closed_quantity(qty),
-            );
-            let commission = entry_fill.entry_commission + exit_commission;
-            let signed_qty = direction.signed_quantity(qty);
-            let profit = (exit_price - entry_fill.entry_price) * signed_qty - commission;
-            let entry_commission = entry_fill.entry_commission;
-
-            self.record_order_event(
-                exit_id.clone(),
-                bar_index,
-                time,
-                "strategy.exit",
-                qty,
-                exit_price,
-            );
-            self.record_order_fill_alert_from_exit_metadata(
-                &alert_metadata,
-                alert_kind,
-                StrategyOrderFillAlertEvent {
-                    id: exit_id.clone(),
-                    bar_index,
-                    time,
-                    direction: "strategy.exit".to_owned(),
-                    qty,
-                    price: exit_price,
-                    entry_id: (!pending_exit.from_entry.is_empty())
-                        .then(|| pending_exit.from_entry.clone()),
-                    exit_id: Some(exit_id.clone()),
-                    message: String::new(),
-                },
-            );
-            self.record_closed_trade_fill(ClosedTradeFill {
-                entry_id: pending_exit.from_entry,
-                exit_id: exit_id.clone(),
-                entry_fill,
-                exit_bar_index: bar_index,
-                exit_time: time,
-                exit_price,
-                qty: signed_qty,
-                profit,
-                commission,
-                close_metadata: StrategyOrderMetadata {
-                    comment: exit_comment(&alert_metadata, alert_kind),
-                    ..StrategyOrderMetadata::default()
-                },
-            });
-            entry_commission
-        } else {
+        let closed_entry_commission = {
             let mut closed_entry_commission = 0.0;
             for allocation in &allocations {
                 let allocated_exit_commission = exit_commission * (allocation.quantity / qty);

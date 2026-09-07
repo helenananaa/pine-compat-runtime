@@ -171,6 +171,18 @@ mod tests {
         assert_eq!(signature.params[23].name, "use_bar_magnifier");
         assert_eq!(signature.params[23].accepts, crate::Accepts::ConstBool);
         assert!(signature.params[23].optional);
+        assert_eq!(signature.params[24].name, "format");
+        assert_eq!(signature.params[24].accepts, crate::Accepts::ConstString);
+        assert!(signature.params[24].optional);
+        assert_eq!(signature.params[25].name, "precision");
+        assert_eq!(
+            signature.params[25].accepts,
+            crate::Accepts::Exact(pine_ir::PineType::new(
+                pine_ir::Qualifier::Const,
+                pine_ir::ValueKind::Int
+            ))
+        );
+        assert!(signature.params[25].optional);
         assert!(!signature.variadic);
     }
 
@@ -265,21 +277,30 @@ mod tests {
         assert!(signature.params[3].optional);
         assert_eq!(signature.params[4].name, "stop");
         assert!(signature.params[4].optional);
-        assert_eq!(signature.params[5].name, "comment");
-        assert_eq!(
-            signature.params[5].accepts,
-            crate::Accepts::StringCompatible
-        );
+        assert_eq!(signature.params[5].name, "oca_name");
         assert!(signature.params[5].optional);
-        assert_eq!(signature.params[6].name, "alert_message");
+        assert_eq!(signature.params[5].accepts, crate::Accepts::SimpleString);
+        assert_eq!(signature.params[6].name, "oca_type");
+        assert!(signature.params[6].optional);
+        assert_eq!(signature.params[6].accepts, crate::Accepts::SimpleString);
+        assert_eq!(signature.params[7].name, "comment");
         assert_eq!(
-            signature.params[6].accepts,
+            signature.params[7].accepts,
             crate::Accepts::StringCompatible
         );
-        assert!(signature.params[6].optional);
-        assert_eq!(signature.params[7].name, "disable_alert");
-        assert_eq!(signature.params[7].accepts, crate::Accepts::BoolCompatible);
         assert!(signature.params[7].optional);
+        assert_eq!(signature.params[8].name, "alert_message");
+        assert_eq!(
+            signature.params[8].accepts,
+            crate::Accepts::StringCompatible
+        );
+        assert!(signature.params[8].optional);
+        assert_eq!(signature.params[9].name, "disable_alert");
+        assert_eq!(signature.params[9].accepts, crate::Accepts::BoolCompatible);
+        assert!(signature.params[9].optional);
+        assert_eq!(signature.params[10].name, "when");
+        assert_eq!(signature.params[10].accepts, crate::Accepts::BoolCompatible);
+        assert!(signature.params[10].optional);
         assert!(!signature.variadic);
     }
 

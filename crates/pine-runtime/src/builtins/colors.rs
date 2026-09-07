@@ -110,7 +110,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let color = self.eval_expr(&args[0].value)?;
-        let transp = if let Some(arg) = args.get(1) {
+        let transp = if let Some(arg) = crate::builtins::args::positional_arg(args, 1) {
             self.eval_expr(&arg.value)?.as_i64().unwrap_or(0)
         } else {
             0
@@ -135,7 +135,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(blue) = self.eval_expr(&args[2].value)?.as_f64() else {
             return Ok(PineValue::Na);
         };
-        let transp = if let Some(arg) = args.get(3) {
+        let transp = if let Some(arg) = crate::builtins::args::positional_arg(args, 3) {
             let Some(transp) = self.eval_expr(&arg.value)?.as_f64() else {
                 return Ok(PineValue::Na);
             };

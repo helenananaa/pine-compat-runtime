@@ -22,6 +22,7 @@ impl Analyzer {
             return Some(*pine_type);
         }
         match &expr.kind {
+            ExprKind::Group(inner) => self.type_of_expr_with_params(inner, param_types),
             ExprKind::Literal(literal) => Some(literal_type(literal)),
             ExprKind::Identifier(name) => param_types
                 .get(name)
@@ -180,6 +181,14 @@ impl Analyzer {
                         .is_some_and(|pine_type| is_array_kind(pine_type.kind))
                     && let Some(builtin_name) = array_call_result_builtin_name(method_name)
                     && let Some(signature) = pine_builtins::get_phase_1_builtin(builtin_name)
+                {
+                    return self.return_type_for_call(signature, args, &arg_types);
+                }
+                if let Some((_, method_name)) = postfix_call_result_method_parts(callee, args)
+                    && let Some(receiver_type) = arg_types.first().copied().flatten()
+                    && let Some(builtin_name) =
+                        drawing_call_result_builtin_name(receiver_type.kind, method_name)
+                    && let Some(signature) = pine_builtins::get_phase_1_builtin(&builtin_name)
                 {
                     return self.return_type_for_call(signature, args, &arg_types);
                 }

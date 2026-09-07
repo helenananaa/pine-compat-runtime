@@ -24,7 +24,8 @@ impl PyRealtimeSession {
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
         magnifier: Option<pine_runtime::MagnifierInput>,
-    ) -> Self {
+        session_windows: Option<pine_runtime::SessionWindowInput>,
+    ) -> PyResult<Self> {
         let mut runtime =
             RealtimeRuntime::from_program_with_request_environment_and_input_overrides(
                 hir,
@@ -34,13 +35,18 @@ impl PyRealtimeSession {
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
         }
-        Self {
+        if let Some(session_windows) = session_windows {
+            runtime = runtime
+                .with_session_windows(session_windows)
+                .map_err(|err| PyValueError::new_err(err.message))?;
+        }
+        Ok(Self {
             runtime,
             seeded: false,
             confirmed_bars: 0,
             last_confirmed_time: None,
             forming_time: None,
-        }
+        })
     }
 
     fn require_seeded(&self) -> PyResult<()> {
@@ -77,6 +83,18 @@ impl PyRealtimeSession {
 
 #[pymethods]
 impl PyRealtimeSession {
+    fn extend_session_windows(
+        &mut self,
+        py: Python<'_>,
+        session_windows: &Bound<'_, PyAny>,
+    ) -> PyResult<()> {
+        let input = crate::parse_session_windows(py, Some(session_windows))?
+            .ok_or_else(|| PyValueError::new_err("session window input is required"))?;
+        self.runtime
+            .extend_session_windows(input)
+            .map_err(|err| PyValueError::new_err(err.message))
+    }
+
     fn seed(&mut self, py: Python<'_>, bars: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
         if self.seeded {
             return Err(PyValueError::new_err(
@@ -161,7 +179,8 @@ impl PyRealtimeSession {
     input_overrides=None,
     chart_symbol=None,
     chart_timeframe=None,
-    magnifier_bars=None
+    magnifier_bars=None,
+    session_windows=None
 ))]
 #[allow(clippy::too_many_arguments)]
 fn create_realtime_session(
@@ -173,6 +192,7 @@ fn create_realtime_session(
     chart_symbol: Option<&str>,
     chart_timeframe: Option<&str>,
     magnifier_bars: Option<&Bound<'_, PyAny>>,
+    session_windows: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<PyRealtimeSession> {
     compile_script(source, library_sources)?.realtime_session(
         py,
@@ -181,6 +201,7 @@ fn create_realtime_session(
         chart_symbol,
         chart_timeframe,
         magnifier_bars,
+        session_windows,
     )
 }
 

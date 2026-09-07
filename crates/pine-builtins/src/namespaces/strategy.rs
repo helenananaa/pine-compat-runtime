@@ -29,6 +29,16 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "oca_name",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "oca_type",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
         name: "comment",
         accepts: Accepts::StringCompatible,
         optional: true,
@@ -40,6 +50,11 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "disable_alert",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "when",
         accepts: Accepts::BoolCompatible,
         optional: true,
     },

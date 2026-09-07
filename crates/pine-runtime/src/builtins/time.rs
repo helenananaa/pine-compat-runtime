@@ -616,6 +616,13 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<Option<BarTimeFunctionArgs>, RuntimeError> {
+        if args
+            .iter()
+            .any(|arg| arg.name.as_deref() == Some(pine_ir::OMITTED_BUILTIN_ARG))
+        {
+            return self.eval_canonical_bar_time_function_args(args);
+        }
+
         let mut parsed = BarTimeFunctionArgs::default();
         let mut positional = Vec::new();
         let mut saw_timeframe = false;
@@ -719,6 +726,46 @@ impl<'a> HistoricalRuntime<'a> {
             parsed.timeframe_bars_back = value;
         }
 
+        Ok(Some(parsed))
+    }
+
+    fn eval_canonical_bar_time_function_args(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<Option<BarTimeFunctionArgs>, RuntimeError> {
+        let mut parsed = BarTimeFunctionArgs::default();
+        let Some(timeframe) = crate::builtins::args::positional_arg(args, 0) else {
+            return Ok(None);
+        };
+        let Some(value) = self.eval_time_function_string_arg(timeframe)? else {
+            return Ok(None);
+        };
+        parsed.timeframe = value;
+
+        if let Some(session) = crate::builtins::args::positional_arg(args, 1) {
+            let Some(value) = self.eval_time_function_string_arg(session)? else {
+                return Ok(None);
+            };
+            parsed.session = Some(value);
+        }
+        if let Some(timezone) = crate::builtins::args::positional_arg(args, 2) {
+            let Some(value) = self.eval_time_function_string_arg(timezone)? else {
+                return Ok(None);
+            };
+            parsed.timezone = value;
+        }
+        if let Some(bars_back) = crate::builtins::args::positional_arg(args, 3) {
+            let Some(value) = self.eval_time_function_int_arg(bars_back)? else {
+                return Ok(None);
+            };
+            parsed.bars_back = value;
+        }
+        if let Some(timeframe_bars_back) = crate::builtins::args::positional_arg(args, 4) {
+            let Some(value) = self.eval_time_function_int_arg(timeframe_bars_back)? else {
+                return Ok(None);
+            };
+            parsed.timeframe_bars_back = value;
+        }
         Ok(Some(parsed))
     }
 

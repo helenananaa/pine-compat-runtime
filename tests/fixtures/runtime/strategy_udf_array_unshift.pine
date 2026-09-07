@@ -1,0 +1,9 @@
+//@version=5
+strategy("Strategy UDF array.unshift")
+var boxes = array.new_box()
+prepend(id, top, bottom) =>
+    id.unshift(box.new(bar_index, top, bar_index, bottom))
+    array.size(id)
+plot(prepend(boxes, high, low))
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)

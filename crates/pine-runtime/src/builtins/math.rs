@@ -53,7 +53,7 @@ fn eval_math_abs(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    match args.value(context, 0)? {
+    match args.value(context, 0, "number")? {
         PineValue::Int(value) => Ok(value
             .checked_abs()
             .map(PineValue::Int)
@@ -68,8 +68,9 @@ fn eval_math_round(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    let value = args.value(context, 0)?;
-    if args.len() == 1 {
+    let value = args.value(context, 0, "number")?;
+    let precision = args.optional_value(context, 1, "precision")?;
+    if precision.is_none() {
         return match value {
             PineValue::Int(value) => Ok(PineValue::Int(value)),
             PineValue::Float(value) => Ok(float_to_int_or_na(round_ties_up(value))),
@@ -81,7 +82,7 @@ fn eval_math_round(
     let Some(value) = value.as_f64() else {
         return Ok(PineValue::Na);
     };
-    let Some(precision) = args.value(context, 1)?.as_i64() else {
+    let Some(precision) = precision.and_then(|value| value.as_i64()) else {
         return Ok(PineValue::Na);
     };
     let precision = precision.clamp(i32::MIN as i64, i32::MAX as i64) as i32;
@@ -93,7 +94,7 @@ fn round_ties_up(value: f64) -> f64 {
     (value + 0.5).floor()
 }
 
-fn float_to_int_or_na(value: f64) -> PineValue {
+pub(crate) fn float_to_int_or_na(value: f64) -> PineValue {
     const I64_MAX_EXCLUSIVE: f64 = 9_223_372_036_854_775_808.0;
     if !value.is_finite() || value < i64::MIN as f64 || value >= I64_MAX_EXCLUSIVE {
         PineValue::Na
@@ -106,7 +107,7 @@ fn eval_math_round_to_mintick(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    let Some(value) = args.value(context, 0)?.as_f64() else {
+    let Some(value) = args.value(context, 0, "number")?.as_f64() else {
         return Ok(PineValue::Na);
     };
     let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
@@ -122,7 +123,7 @@ fn eval_math_random(
     call_site_id: CallSiteId,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    let min = match args.optional_value(context, 0)? {
+    let min = match args.optional_value(context, 0, "min")? {
         Some(value) => {
             let Some(value) = value.as_f64() else {
                 return Ok(PineValue::Na);
@@ -131,7 +132,7 @@ fn eval_math_random(
         }
         None => 0.0,
     };
-    let max = match args.optional_value(context, 1)? {
+    let max = match args.optional_value(context, 1, "max")? {
         Some(value) => {
             let Some(value) = value.as_f64() else {
                 return Ok(PineValue::Na);
@@ -140,7 +141,7 @@ fn eval_math_random(
         }
         None => 1.0,
     };
-    let seed = match args.optional_value(context, 2)? {
+    let seed = match args.optional_value(context, 2, "seed")? {
         Some(value) => value.as_i64(),
         None => None,
     };
@@ -162,8 +163,8 @@ fn eval_math_sum(
     call_site_id: CallSiteId,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    let source = args.value(context, 0)?;
-    let length = args.value(context, 1)?.as_i64().unwrap_or(0);
+    let source = args.value(context, 0, "source")?;
+    let length = args.value(context, 1, "length")?.as_i64().unwrap_or(0);
     if length <= 0 {
         return Ok(PineValue::Na);
     }
@@ -181,7 +182,7 @@ fn eval_math_floor(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    match args.value(context, 0)? {
+    match args.value(context, 0, "number")? {
         PineValue::Int(value) => Ok(PineValue::Int(value)),
         PineValue::Float(value) => Ok(float_to_int_or_na(value.floor())),
         PineValue::Na => Ok(PineValue::Na),
@@ -193,7 +194,7 @@ fn eval_math_ceil(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    match args.value(context, 0)? {
+    match args.value(context, 0, "number")? {
         PineValue::Int(value) => Ok(PineValue::Int(value)),
         PineValue::Float(value) => Ok(float_to_int_or_na(value.ceil())),
         PineValue::Na => Ok(PineValue::Na),
@@ -205,7 +206,7 @@ fn eval_math_trunc(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    match args.value(context, 0)? {
+    match args.value(context, 0, "number")? {
         PineValue::Int(value) => Ok(PineValue::Int(value)),
         PineValue::Float(value) => Ok(float_to_int_or_na(value.trunc())),
         PineValue::Na => Ok(PineValue::Na),
@@ -218,7 +219,7 @@ fn eval_math_unary_float(
     args: RuntimeArgs<'_>,
     op: impl FnOnce(f64) -> f64,
 ) -> Result<PineValue, RuntimeError> {
-    let Some(value) = args.value(context, 0)?.as_f64() else {
+    let Some(value) = args.value(context, 0, "number")?.as_f64() else {
         return Ok(PineValue::Na);
     };
     Ok(finite_float_or_na(op(value)))
@@ -228,7 +229,7 @@ fn eval_math_sign(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    let Some(value) = args.value(context, 0)?.as_f64() else {
+    let Some(value) = args.value(context, 0, "number")?.as_f64() else {
         return Ok(PineValue::Na);
     };
     Ok(PineValue::Float(if value > 0.0 {
@@ -244,10 +245,10 @@ fn eval_math_pow(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    let Some(base) = args.value(context, 0)?.as_f64() else {
+    let Some(base) = args.value(context, 0, "base")?.as_f64() else {
         return Ok(PineValue::Na);
     };
-    let Some(exponent) = args.value(context, 1)?.as_f64() else {
+    let Some(exponent) = args.value(context, 1, "exponent")?.as_f64() else {
         return Ok(PineValue::Na);
     };
     Ok(finite_float_or_na(base.powf(exponent)))
@@ -257,10 +258,10 @@ fn eval_math_hypot(
     context: &mut RuntimeCallContext<'_, '_>,
     args: RuntimeArgs<'_>,
 ) -> Result<PineValue, RuntimeError> {
-    let Some(left) = args.value(context, 0)?.as_f64() else {
+    let Some(left) = args.value(context, 0, "number1")?.as_f64() else {
         return Ok(PineValue::Na);
     };
-    let Some(right) = args.value(context, 1)?.as_f64() else {
+    let Some(right) = args.value(context, 1, "number2")?.as_f64() else {
         return Ok(PineValue::Na);
     };
     Ok(finite_float_or_na(left.hypot(right)))

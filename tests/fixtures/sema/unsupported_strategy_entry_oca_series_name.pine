@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy entry series oca name")
+name = close > open ? "g" : "h"
+strategy.entry("A", strategy.long, qty=1, oca_name=name, oca_type=strategy.oca.none)

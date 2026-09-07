@@ -393,10 +393,6 @@ impl BrokerState {
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
             self.clear_open_long_legacy_state();
             self.apply_trade_allocations_and_sync_position(allocations);
-            if allocations.is_empty() {
-                self.trade_ledger.clear_open_trade();
-                self.sync_aggregate_position_from_ledger();
-            }
             self.record_position_snapshot(bar_index);
             return;
         }

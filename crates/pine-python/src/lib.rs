@@ -5,7 +5,7 @@ use pine_runtime::{
     Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, InputCall, InputOverrides,
     MagnifierInput, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue,
     RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal, input_calls,
-    is_valid_public_color, magnifier_input_from_json,
+    is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -39,7 +39,8 @@ impl PyProgram {
         chart_symbol=None,
         chart_timeframe=None,
         execution_times=None,
-        magnifier_bars=None
+        magnifier_bars=None,
+        session_windows=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn run(
@@ -52,6 +53,7 @@ impl PyProgram {
         chart_timeframe: Option<&str>,
         execution_times: Option<&Bound<'_, PyAny>>,
         magnifier_bars: Option<&Bound<'_, PyAny>>,
+        session_windows: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         let bars = parse_bars(bars)?;
         let request_environment =
@@ -59,6 +61,7 @@ impl PyProgram {
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
         let execution_times = parse_execution_times(execution_times)?;
         let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
+        let session_windows = parse_session_windows(py, session_windows)?;
         let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
             &self.hir,
             request_environment,
@@ -66,6 +69,11 @@ impl PyProgram {
         );
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
+        }
+        if let Some(session_windows) = session_windows {
+            runtime = runtime
+                .with_session_windows(session_windows)
+                .map_err(|err| PyValueError::new_err(err.message))?;
         }
         match execution_times.as_deref() {
             Some(execution_times) => {
@@ -82,8 +90,10 @@ impl PyProgram {
         input_overrides=None,
         chart_symbol=None,
         chart_timeframe=None,
-        magnifier_bars=None
+        magnifier_bars=None,
+        session_windows=None
     ))]
+    #[allow(clippy::too_many_arguments)]
     fn realtime_session(
         &self,
         py: Python<'_>,
@@ -92,17 +102,20 @@ impl PyProgram {
         chart_symbol: Option<&str>,
         chart_timeframe: Option<&str>,
         magnifier_bars: Option<&Bound<'_, PyAny>>,
+        session_windows: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<PyRealtimeSession> {
         let request_environment =
             parse_request_environment(request_bars, chart_symbol, chart_timeframe)?;
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
         let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
-        Ok(PyRealtimeSession::new(
+        let session_windows = parse_session_windows(py, session_windows)?;
+        PyRealtimeSession::new(
             self.hir.clone(),
             request_environment,
             input_overrides,
             magnifier,
-        ))
+            session_windows,
+        )
     }
 }
 
@@ -144,7 +157,8 @@ fn analyze_script(
     chart_symbol=None,
     chart_timeframe=None,
     execution_times=None,
-    magnifier_bars=None
+    magnifier_bars=None,
+    session_windows=None
 ))]
 #[allow(clippy::too_many_arguments)]
 fn run_script(
@@ -158,6 +172,7 @@ fn run_script(
     chart_timeframe: Option<&str>,
     execution_times: Option<&Bound<'_, PyAny>>,
     magnifier_bars: Option<&Bound<'_, PyAny>>,
+    session_windows: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     let program = compile_script(source, library_sources)?;
     program.run(
@@ -169,6 +184,7 @@ fn run_script(
         chart_timeframe,
         execution_times,
         magnifier_bars,
+        session_windows,
     )
 }
 
@@ -244,6 +260,25 @@ fn parse_magnifier_bars(
             .extract::<String>()?
     };
     magnifier_input_from_json(&json)
+        .map(Some)
+        .map_err(PyValueError::new_err)
+}
+
+fn parse_session_windows(
+    py: Python<'_>,
+    session_windows: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Option<pine_runtime::SessionWindowInput>> {
+    let Some(session_windows) = session_windows else {
+        return Ok(None);
+    };
+    let json = if let Ok(text) = session_windows.extract::<String>() {
+        text
+    } else {
+        py.import("json")?
+            .call_method1("dumps", (session_windows,))?
+            .extract::<String>()?
+    };
+    session_window_input_from_json(&json)
         .map(Some)
         .map_err(PyValueError::new_err)
 }
@@ -554,13 +589,15 @@ fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {
                 "bar sequences must contain time, open, high, low, close, volume",
             ));
         }
+        let time_value = sequence.get_item(0)?;
+        reject_py_bool(&time_value, "bar `time` must be an integer")?;
         return Ok(Bar {
-            time: sequence.get_item(0)?.extract()?,
-            open: finite_bar_value(sequence.get_item(1)?.extract()?, "open")?,
-            high: finite_bar_value(sequence.get_item(2)?.extract()?, "high")?,
-            low: finite_bar_value(sequence.get_item(3)?.extract()?, "low")?,
-            close: finite_bar_value(sequence.get_item(4)?.extract()?, "close")?,
-            volume: finite_bar_value(sequence.get_item(5)?.extract()?, "volume")?,
+            time: time_value.extract()?,
+            open: extract_finite_bar_field(&sequence.get_item(1)?, "open")?,
+            high: extract_finite_bar_field(&sequence.get_item(2)?, "high")?,
+            low: extract_finite_bar_field(&sequence.get_item(3)?, "low")?,
+            close: extract_finite_bar_field(&sequence.get_item(4)?, "close")?,
+            volume: extract_finite_bar_field(&sequence.get_item(5)?, "volume")?,
         });
     }
 
@@ -570,17 +607,30 @@ fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {
 }
 
 fn dict_i64(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<i64> {
-    dict.get_item(name)?
-        .ok_or_else(|| PyValueError::new_err(format!("bar is missing `{name}`")))?
-        .extract()
+    let value = dict
+        .get_item(name)?
+        .ok_or_else(|| PyValueError::new_err(format!("bar is missing `{name}`")))?;
+    reject_py_bool(&value, &format!("bar `{name}` must be an integer"))?;
+    value.extract()
 }
 
 fn dict_finite_f64(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<f64> {
     let value = dict
         .get_item(name)?
-        .ok_or_else(|| PyValueError::new_err(format!("bar is missing `{name}`")))?
-        .extract()?;
-    finite_bar_value(value, name)
+        .ok_or_else(|| PyValueError::new_err(format!("bar is missing `{name}`")))?;
+    extract_finite_bar_field(&value, name)
+}
+
+fn extract_finite_bar_field(value: &Bound<'_, PyAny>, name: &str) -> PyResult<f64> {
+    reject_py_bool(value, &format!("bar `{name}` must be a number"))?;
+    finite_bar_value(value.extract()?, name)
+}
+
+fn reject_py_bool(value: &Bound<'_, PyAny>, message: &str) -> PyResult<()> {
+    if value.is_instance_of::<PyBool>() {
+        return Err(PyValueError::new_err(message.to_owned()));
+    }
+    Ok(())
 }
 
 fn finite_bar_value(value: f64, name: &str) -> PyResult<f64> {

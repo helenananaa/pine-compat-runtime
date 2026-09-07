@@ -1,0 +1,8 @@
+//@version=5
+strategy("Strategy UDF box.new")
+draw(top, bottom) =>
+    box.new(bar_index, top, bar_index, bottom)
+    top
+plot(draw(high, low))
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)

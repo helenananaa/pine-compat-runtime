@@ -129,21 +129,24 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         let symbol = format!("{prefix}:{ticker}");
-        let Some(session_arg) = args.get(2) else {
+        let Some(session_arg) = crate::builtins::args::positional_arg(args, 2) else {
             return Ok(PineValue::String(symbol));
         };
         let PineValue::String(session) = self.eval_expr(&session_arg.value)? else {
             return Ok(PineValue::Na);
         };
-        let adjustment = if let Some(adjustment_arg) = args.get(3) {
-            let PineValue::String(adjustment) = self.eval_expr(&adjustment_arg.value)? else {
-                return Ok(PineValue::Na);
+        let adjustment =
+            if let Some(adjustment_arg) = crate::builtins::args::positional_arg(args, 3) {
+                let PineValue::String(adjustment) = self.eval_expr(&adjustment_arg.value)? else {
+                    return Ok(PineValue::Na);
+                };
+                Some(adjustment)
+            } else {
+                None
             };
-            Some(adjustment)
-        } else {
-            None
-        };
-        let settlement_as_close = if let Some(settlement_arg) = args.get(4) {
+        let settlement_as_close = if let Some(settlement_arg) =
+            crate::builtins::args::positional_arg(args, 4)
+        {
             let PineValue::String(settlement_as_close) = self.eval_expr(&settlement_arg.value)?
             else {
                 return Ok(PineValue::Na);
@@ -152,7 +155,9 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             None
         };
-        let backadjustment = if let Some(backadjustment_arg) = args.get(5) {
+        let backadjustment = if let Some(backadjustment_arg) =
+            crate::builtins::args::positional_arg(args, 5)
+        {
             let PineValue::String(backadjustment) = self.eval_expr(&backadjustment_arg.value)?
             else {
                 return Ok(PineValue::Na);
@@ -176,21 +181,24 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let Some(session_arg) = args.get(1) else {
+        let Some(session_arg) = crate::builtins::args::positional_arg(args, 1) else {
             return Ok(PineValue::String(tickerid));
         };
         let PineValue::String(session) = self.eval_expr(&session_arg.value)? else {
             return Ok(PineValue::Na);
         };
-        let adjustment = if let Some(adjustment_arg) = args.get(2) {
-            let PineValue::String(adjustment) = self.eval_expr(&adjustment_arg.value)? else {
-                return Ok(PineValue::Na);
+        let adjustment =
+            if let Some(adjustment_arg) = crate::builtins::args::positional_arg(args, 2) {
+                let PineValue::String(adjustment) = self.eval_expr(&adjustment_arg.value)? else {
+                    return Ok(PineValue::Na);
+                };
+                Some(adjustment)
+            } else {
+                None
             };
-            Some(adjustment)
-        } else {
-            None
-        };
-        let settlement_as_close = if let Some(settlement_arg) = args.get(3) {
+        let settlement_as_close = if let Some(settlement_arg) =
+            crate::builtins::args::positional_arg(args, 3)
+        {
             let PineValue::String(settlement_as_close) = self.eval_expr(&settlement_arg.value)?
             else {
                 return Ok(PineValue::Na);
@@ -199,7 +207,9 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             None
         };
-        let backadjustment = if let Some(backadjustment_arg) = args.get(4) {
+        let backadjustment = if let Some(backadjustment_arg) =
+            crate::builtins::args::positional_arg(args, 4)
+        {
             let PineValue::String(backadjustment) = self.eval_expr(&backadjustment_arg.value)?
             else {
                 return Ok(PineValue::Na);

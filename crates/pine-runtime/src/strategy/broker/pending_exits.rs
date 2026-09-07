@@ -679,4 +679,15 @@ impl PendingExitBook {
         self.deferred_relative_exits
             .retain(|pending_exit| pending_exit.from_entry != entry_id);
     }
+
+    pub(super) fn drop_for_closed_trade_keys(&mut self, closed_keys: &[u64]) {
+        if closed_keys.is_empty() {
+            return;
+        }
+        self.exits.retain(|pending_exit| {
+            pending_exit
+                .target_trade_key
+                .is_none_or(|key| !closed_keys.contains(&key))
+        });
+    }
 }

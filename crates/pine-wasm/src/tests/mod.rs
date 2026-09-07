@@ -787,6 +787,17 @@ fn run_script_csv_returns_hline_fill_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_fill_transp_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/fill_transp.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("fill transp fixture should run");
+
+    assert_snapshot("runtime_fill_transp.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_legacy_v4_output_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/legacy/v4/runtime/outputs_legacy.pine"),
@@ -1693,6 +1704,72 @@ fn run_script_csv_returns_box_new_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_box_call_result_set_right_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/box_call_result_set_right.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("box call-result set_right fixture should run");
+
+    assert_snapshot("runtime_box_call_result_set_right.json", &output);
+}
+
+#[test]
+fn runs_strategy_box_call_result_set_right_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_box_call_result_set_right.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy box call-result set_right fixture should run");
+
+    assert_snapshot("runtime_strategy_box_call_result_set_right.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_udf_array_unshift_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/udf_array_unshift.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("udf array.unshift fixture should run");
+
+    assert_snapshot("runtime_udf_array_unshift.json", &output);
+}
+
+#[test]
+fn runs_strategy_udf_array_unshift_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_udf_array_unshift.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy udf array.unshift fixture should run");
+
+    assert_snapshot("runtime_strategy_udf_array_unshift.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_udf_box_new_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/udf_box_new.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("udf box.new fixture should run");
+
+    assert_snapshot("runtime_udf_box_new.json", &output);
+}
+
+#[test]
+fn runs_strategy_udf_box_new_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_udf_box_new.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy udf box.new fixture should run");
+
+    assert_snapshot("runtime_strategy_udf_box_new.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_box_mutation_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/box_mutation.pine"),
@@ -2086,6 +2163,33 @@ fn run_script_csv_returns_dynamic_history_scopes_fixture_contract() {
     .expect("dynamic history scopes fixture should run");
 
     assert_snapshot("runtime_dynamic_history_scopes.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_dynamic_history_input_float_offset_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/dynamic_history_input_float_offset.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("dynamic history input float offset fixture should run");
+
+    assert_snapshot("runtime_dynamic_history_input_float_offset.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_strategy_dynamic_history_input_float_offset_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_dynamic_history_input_float_offset.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy dynamic history input float offset fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_dynamic_history_input_float_offset.json",
+        &output,
+    );
 }
 
 #[test]
@@ -3074,6 +3178,17 @@ fn run_script_csv_returns_wma_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_wma_input_float_length_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/wma_input_float_length.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("wma input float length fixture should run");
+
+    assert_snapshot("runtime_wma_input_float_length.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_hma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/hma.pine"),
@@ -3192,6 +3307,17 @@ fn run_script_csv_returns_generic_input_fixture_contract() {
     .expect("generic input fixture should run");
 
     assert_snapshot("runtime_generic_input.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_generic_input_source_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/generic_input_source.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("generic source input fixture should run");
+
+    assert_snapshot("runtime_generic_input_source.json", &output);
 }
 
 #[test]
@@ -3774,6 +3900,50 @@ fn runs_strategy_entry_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_generic_input_source_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_generic_input_source.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("generic source input strategy fixture should run");
+
+    assert_snapshot("runtime_strategy_generic_input_source.json", &output);
+}
+
+#[test]
+fn runs_strategy_wma_input_float_length_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_wma_input_float_length.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy wma input float length fixture should run");
+
+    assert_snapshot("runtime_strategy_wma_input_float_length.json", &output);
+}
+
+#[test]
+fn runs_strategy_format_precision_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_format_precision.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy format precision fixture should run");
+
+    assert_snapshot("runtime_strategy_format_precision.json", &output);
+}
+
+#[test]
+fn runs_strategy_currency_usd_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_currency_usd.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy currency usd fixture should run");
+
+    assert_snapshot("runtime_strategy_currency_usd.json", &output);
+}
+
+#[test]
 fn runs_strategy_entry_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_entry.pine"),
@@ -3782,6 +3952,17 @@ fn runs_strategy_entry_fixture_contract() {
     .expect("strategy entry fixture should run");
 
     assert_snapshot("runtime_strategy_entry.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_when_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_when.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy entry when fixture should run");
+
+    assert_snapshot("runtime_strategy_entry_when.json", &output);
 }
 
 #[test]
@@ -4225,6 +4406,110 @@ fn runs_strategy_order_oca_none_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_mixed_oca_entry_order_cancel_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca entry order cancel should run");
+    assert_snapshot(
+        "runtime_strategy_mixed_oca_entry_order_cancel.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_mixed_oca_entry_order_reduce_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca entry order reduce should run");
+    assert_snapshot(
+        "runtime_strategy_mixed_oca_entry_order_reduce.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_mixed_oca_order_exit_reduce_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca order exit reduce should run");
+    assert_snapshot("runtime_strategy_mixed_oca_order_exit_reduce.json", &output);
+}
+
+#[test]
+fn runs_strategy_mixed_oca_none_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_mixed_oca_none.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy mixed oca none should run");
+    assert_snapshot("runtime_strategy_mixed_oca_none.json", &output);
+}
+
+#[test]
+fn runs_strategy_ordinary_chart_up_gap_stop_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_up_gap_stop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_up_gap_bars.csv"),
+    )
+    .expect("strategy ordinary chart up gap stop should run");
+    assert_snapshot("runtime_strategy_ordinary_chart_up_gap_stop.json", &output);
+}
+
+#[test]
+fn runs_strategy_ordinary_chart_down_gap_limit_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_down_gap_limit.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_down_gap_bars.csv"
+        ),
+    )
+    .expect("strategy ordinary chart down gap limit should run");
+    assert_snapshot(
+        "runtime_strategy_ordinary_chart_down_gap_limit.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_ordinary_chart_no_gap_stop_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_no_gap_stop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_no_gap_bars.csv"),
+    )
+    .expect("strategy ordinary chart no gap stop should run");
+    assert_snapshot("runtime_strategy_ordinary_chart_no_gap_stop.json", &output);
+}
+
+#[test]
+fn runs_strategy_ordinary_chart_gap_stop_limit_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_ordinary_chart_gap_stop_limit.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_ordinary_chart_up_gap_bars.csv"),
+    )
+    .expect("strategy ordinary chart gap stop-limit should run");
+    assert_snapshot(
+        "runtime_strategy_ordinary_chart_gap_stop_limit.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_order_replace_limit_with_stop_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!(
@@ -4298,6 +4583,38 @@ fn runs_strategy_order_short_flat_noop_from_csv_to_strategy_json() {
     .expect("strategy market short order while flat should run");
 
     assert_snapshot("runtime_strategy_order_short_flat_noop.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_default_quantity_short_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_default_quantity_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("default-qty market short order should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_default_quantity_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_default_quantity_short_reduce_long_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_default_quantity_short_reduce_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("default-qty market short reduce-long should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_default_quantity_short_reduce_long.json",
+        &output,
+    );
 }
 
 #[test]
@@ -4747,6 +5064,22 @@ fn runs_strategy_commission_percent_fixture_contract() {
     .expect("strategy percent commission fixture should run");
 
     assert_snapshot("runtime_strategy_commission_percent.json", &output);
+}
+
+#[test]
+fn runs_strategy_commission_value_default_percent_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_commission_value_default_percent.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
+    )
+    .expect("strategy omitted commission_type percent fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_commission_value_default_percent.json",
+        &output,
+    );
 }
 
 #[test]
@@ -8513,7 +8846,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][6]["values"],
-        serde_json::json!([null, 100, 100, 100, 100])
+        serde_json::json!([null, null, null, 100, 100])
     );
     assert_eq!(
         parsed["plots"][7]["values"],
@@ -8526,11 +8859,11 @@ fn request_host_data_runs_through_direct_wasm_api() {
     assert_eq!(
         parsed["plots"][9]["values"],
         serde_json::json!([
-            2,
-            4.666666666666667,
-            6.4444444444444455,
-            7.629629629629631,
-            8.419753086419753
+            null,
+            null,
+            7.333333333333333,
+            8.222222222222221,
+            8.814814814814815
         ])
     );
     assert_eq!(
@@ -8701,13 +9034,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][41]["values"],
-        serde_json::json!([
-            20,
-            20.333333333333332,
-            20.88888888888889,
-            21.59259259259259,
-            22.395061728395063
-        ])
+        serde_json::json!([null, null, 21, 21.666666666666668, 22.444444444444446])
     );
     assert_eq!(
         parsed["plots"][42]["values"],
@@ -8727,7 +9054,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][46]["values"],
-        serde_json::json!([null, null, 100, 100, 100])
+        serde_json::json!([null, null, null, 100, 100])
     );
     assert_eq!(
         parsed["plots"][47]["values"],
@@ -8911,29 +9238,29 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][80]["values"],
-        serde_json::json!([14, 6, 6, 6, 6])
-    );
-    assert_eq!(
-        parsed["plots"][81]["values"],
-        serde_json::json!([1, -1, -1, -1, -1])
-    );
-    assert_eq!(
-        parsed["plots"][82]["values"],
         serde_json::json!([
-            0,
-            7.1428571428571415,
-            8.620689655172411,
-            9.223300970873783,
-            9.530791788856304
+            null,
+            null,
+            26.666666666666664,
+            26.666666666666664,
+            26.666666666666664
         ])
     );
     assert_eq!(
+        parsed["plots"][81]["values"],
+        serde_json::json!([null, null, 1, 1, 1])
+    );
+    assert_eq!(
+        parsed["plots"][82]["values"],
+        serde_json::json!([null, null, null, 10, 10])
+    );
+    assert_eq!(
         parsed["plots"][83]["values"],
-        serde_json::json!([0, 0, 0, 0, 0])
+        serde_json::json!([null, null, null, 0, 0])
     );
     assert_eq!(
         parsed["plots"][84]["values"],
-        serde_json::json!([0, 50, 75, 87.5, 93.75])
+        serde_json::json!([null, null, null, null, 100])
     );
     assert_eq!(
         parsed["plots"][85]["values"],
@@ -9033,23 +9360,23 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][106]["values"],
-        serde_json::json!([null, null, 155, 155, 81.66666666666667])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][107]["values"],
-        serde_json::json!([null, null, 1, 1, -1])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][108]["values"],
-        serde_json::json!([null, null, 0, 0, 71.42857142857143])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][109]["values"],
-        serde_json::json!([null, null, 0, 0, 0])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][110]["values"],
-        serde_json::json!([null, null, 0, 0, 50])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][111]["values"],
@@ -9369,13 +9696,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][183]["values"],
-        serde_json::json!([
-            20,
-            20.333333333333332,
-            20.88888888888889,
-            21.59259259259259,
-            22.395061728395063
-        ])
+        serde_json::json!([null, null, 21, 21.666666666666668, 22.444444444444446])
     );
     assert_eq!(
         parsed["plots"][184]["values"],
@@ -9395,7 +9716,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][188]["values"],
-        serde_json::json!([null, null, 100, 100, 100])
+        serde_json::json!([null, null, null, 100, 100])
     );
     assert_eq!(
         parsed["plots"][189]["values"],
@@ -9563,7 +9884,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][221]["values"],
-        serde_json::json!([null, null, 100, 100, 133.33333333333334])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][222]["values"],
@@ -9583,7 +9904,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][226]["values"],
-        serde_json::json!([null, null, null, null, 100])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][227]["values"],
@@ -9629,7 +9950,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][236]["values"],
-        serde_json::json!([null, null, 30, 30, 70])
+        serde_json::json!([null, null, null, null, 70])
     );
     assert_eq!(
         parsed["plots"][237]["values"],
@@ -10032,10 +10353,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         292,
         &[Some(2.0), Some(10.0), Some(10.0), Some(10.0), Some(10.0)],
     );
-    assert_plot_values_close(
-        293,
-        &[Some(2.0), Some(6.0), Some(8.0), Some(9.0), Some(9.5)],
-    );
+    assert_plot_values_close(293, &[None, Some(6.0), Some(8.0), Some(9.0), Some(9.5)]);
     assert_plot_values_close(294, &[None, Some(12.0), Some(13.0), Some(14.0), Some(15.0)]);
     assert_plot_values_close(295, &[None, Some(9.0), Some(10.0), Some(11.0), Some(12.0)]);
     assert_plot_values_close(296, &[None, Some(1.0), Some(1.0), Some(1.0), Some(1.0)]);
@@ -10203,6 +10521,63 @@ fn run_csv_with_request_bars_accepts_reserved_magnifier_envelope() {
     )
     .expect_err("unsupported schema");
     assert!(invalid.contains("E_MAGNIFIER_SCHEMA_VERSION"), "{invalid}");
+}
+
+#[test]
+fn run_csv_with_request_bars_accepts_reserved_session_windows_envelope() {
+    let source = "//@version=5\nstrategy(\"session host\")\nplot(close)\n";
+    let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n";
+    let host_input = r#"{"$sessionWindows":{"schemaVersion":1,"bars":[{"barIndex":0,"windowId":"eth","tradingDayId":"d1"}]}}"#;
+    let output = run_script_csv_with_request_bars(source, bars, host_input)
+        .expect("session window envelope is valid");
+    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    let invalid = run_script_csv_with_request_bars_internal(
+        source,
+        bars,
+        r#"{"$sessionWindows":{"schemaVersion":2,"bars":[]}}"#,
+    )
+    .expect_err("unsupported schema");
+    assert!(invalid.contains("E_SESSION_SCHEMA_VERSION"), "{invalid}");
+}
+
+#[test]
+fn run_csv_with_session_windows_keeps_filled_orders_across_utc_midnight_and_resets_on_window_switch()
+ {
+    let source = include_str!(
+        "../../../../tests/fixtures/runtime/strategy_session_overnight_filled_orders.pine"
+    );
+    let bars = include_str!(
+        "../../../../tests/fixtures/runtime/strategy_session_overnight_filled_orders_bars.csv"
+    );
+    let overnight = format!(
+        r#"{{"$sessionWindows":{}}}"#,
+        include_str!("../../../../tests/fixtures/runtime/strategy_session_overnight_windows.json")
+    );
+    let switch = format!(
+        r#"{{"$sessionWindows":{}}}"#,
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_session_window_switch_windows.json"
+        )
+    );
+    let utc = run_script_csv(source, bars).expect("utc wasm");
+    let overnight_output =
+        run_script_csv_with_request_bars(source, bars, &overnight).expect("overnight wasm");
+    let switch_output =
+        run_script_csv_with_request_bars(source, bars, &switch).expect("window-switch wasm");
+    let last_size = |output: &str| {
+        let parsed: serde_json::Value = serde_json::from_str(output).expect("json");
+        parsed["strategy"]["position"]
+            .as_array()
+            .and_then(|rows| rows.last())
+            .and_then(|row| row["size"].as_f64())
+    };
+    assert_eq!(last_size(&utc), Some(2.0));
+    assert_ne!(
+        last_size(&overnight_output),
+        Some(2.0),
+        "{overnight_output}"
+    );
+    assert_eq!(last_size(&switch_output), Some(2.0), "{switch_output}");
 }
 
 #[test]

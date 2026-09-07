@@ -76,10 +76,10 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let id = self.eval_expr(&id_arg.value)?;
         let PineValue::Map(id) = id else {
-            if let Some(key_arg) = args.get(1) {
+            if let Some(key_arg) = crate::builtins::args::positional_arg(args, 1) {
                 let _ = self.eval_expr(&key_arg.value)?;
             }
-            if let Some(value_arg) = args.get(2) {
+            if let Some(value_arg) = crate::builtins::args::positional_arg(args, 2) {
                 let _ = self.eval_expr(&value_arg.value)?;
             }
             return Ok(PineValue::Void);
@@ -114,7 +114,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let id = self.eval_expr(&id_arg.value)?;
         let PineValue::Map(id) = id else {
-            if let Some(key_arg) = args.get(1) {
+            if let Some(key_arg) = crate::builtins::args::positional_arg(args, 1) {
                 let _ = self.eval_expr(&key_arg.value)?;
             }
             return Ok(PineValue::Na);
@@ -145,7 +145,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let id = self.eval_expr(&id_arg.value)?;
         let PineValue::Map(id) = id else {
-            if let Some(key_arg) = args.get(1) {
+            if let Some(key_arg) = crate::builtins::args::positional_arg(args, 1) {
                 let _ = self.eval_expr(&key_arg.value)?;
             }
             return Ok(PineValue::Bool(false));
@@ -189,7 +189,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let id = self.eval_expr(&id_arg.value)?;
         let PineValue::Map(id) = id else {
-            if let Some(key_arg) = args.get(1) {
+            if let Some(key_arg) = crate::builtins::args::positional_arg(args, 1) {
                 let _ = self.eval_expr(&key_arg.value)?;
             }
             return Ok(PineValue::Void);
@@ -230,7 +230,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         let target = self.eval_expr(&target_arg.value)?;
-        let source = if let Some(source_arg) = args.get(1) {
+        let source = if let Some(source_arg) = crate::builtins::args::positional_arg(args, 1) {
             self.eval_expr(&source_arg.value)?
         } else {
             return Err(RuntimeError {

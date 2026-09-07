@@ -197,26 +197,26 @@ impl<'a> HistoricalRuntime<'a> {
         let id = self.eval_expr(&args[0].value)?;
         let PineValue::Array(id) = id else {
             let _ = self.eval_expr(&args[1].value)?;
-            if let Some(index_from) = args.get(2) {
+            if let Some(index_from) = crate::builtins::args::positional_arg(args, 2) {
                 let _ = self.eval_expr(&index_from.value)?;
             }
-            if let Some(index_to) = args.get(3) {
+            if let Some(index_to) = crate::builtins::args::positional_arg(args, 3) {
                 let _ = self.eval_expr(&index_to.value)?;
             }
             return Ok(PineValue::Void);
         };
         let Some(kind) = self.array_kinds.get(&id).copied() else {
             let _ = self.eval_expr(&args[1].value)?;
-            if let Some(index_from) = args.get(2) {
+            if let Some(index_from) = crate::builtins::args::positional_arg(args, 2) {
                 let _ = self.eval_expr(&index_from.value)?;
             }
-            if let Some(index_to) = args.get(3) {
+            if let Some(index_to) = crate::builtins::args::positional_arg(args, 3) {
                 let _ = self.eval_expr(&index_to.value)?;
             }
             return Ok(PineValue::Void);
         };
         let value = self.eval_array_value(&args[1].value, kind)?;
-        let index_from = if let Some(index_from) = args.get(2) {
+        let index_from = if let Some(index_from) = crate::builtins::args::positional_arg(args, 2) {
             self.eval_expr(&index_from.value)?.as_i64()
         } else {
             Some(0)
@@ -224,7 +224,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(index_from) = index_from else {
             return Ok(PineValue::Void);
         };
-        let index_to = if let Some(index_to) = args.get(3) {
+        let index_to = if let Some(index_to) = crate::builtins::args::positional_arg(args, 3) {
             self.eval_expr(&index_to.value)?.as_i64()
         } else {
             self.array_len(id)?.map(|len| len as i64)
@@ -390,12 +390,12 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
         let PineValue::Array(id) = id else {
-            if let Some(separator) = args.get(1) {
+            if let Some(separator) = crate::builtins::args::positional_arg(args, 1) {
                 let _ = self.eval_expr(&separator.value)?;
             }
             return Ok(PineValue::Na);
         };
-        let separator = if let Some(separator) = args.get(1) {
+        let separator = if let Some(separator) = crate::builtins::args::positional_arg(args, 1) {
             match self.eval_expr(&separator.value)? {
                 PineValue::String(separator) => separator,
                 PineValue::Na => ",".to_owned(),
@@ -478,6 +478,7 @@ mod tests {
             series_max_bars_back: Vec::new(),
             history: HirHistoryRequirements::default(),
             series_history: Vec::new(),
+            execution_scoped_series: Vec::new(),
         }));
         HistoricalRuntime::new(program)
     }

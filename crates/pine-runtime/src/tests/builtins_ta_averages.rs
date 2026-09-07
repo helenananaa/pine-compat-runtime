@@ -134,15 +134,9 @@ plot(ma)
     let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_values_close(
-        &result.plots[0].values,
-        &[
-            1.0,
-            1.3333333333333333,
-            1.8888888888888888,
-            2.5925925925925926,
-        ],
-    );
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[2.0, 8.0 / 3.0]);
 }
 
 #[test]
@@ -165,9 +159,11 @@ plot(r)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
     assert_values_close(
-        &result.plots[0].values[1..],
-        &[100.0, 100.0, 66.66666666666666, 83.33333333333333],
+        &result.plots[0].values[3..],
+        &[66.66666666666666, 83.33333333333333],
     );
 }
 
@@ -370,6 +366,36 @@ plot(na(invalid) ? 1 : 0)
     );
     assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn truncates_wma_numeric_length_toward_zero_like_int() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("wma float length")
+length = input.int(5)
+plot(ta.wma(close, 2))
+plot(ta.wma(close, 2.9))
+plot(ta.wma(close, length / 2))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(7.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values, result.plots[1].values);
+    assert_eq!(result.plots[0].values, result.plots[2].values);
+    assert_values_close(&result.plots[0].values[1..], &[5.0 / 3.0, 10.0 / 3.0, 6.0]);
 }
 
 #[test]

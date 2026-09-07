@@ -655,6 +655,23 @@ def test_run_script_rejects_non_finite_bar_values():
         raise AssertionError("non-finite bar value should fail")
 
 
+def test_run_script_rejects_bool_bar_values():
+    invalid_bars = [
+        [{"time": True, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0}],
+        [{"time": 0, "open": True, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0}],
+        [[True, 1.0, 1.0, 1.0, 1.0, 1.0]],
+        [[0, True, 1.0, 1.0, 1.0, 1.0]],
+    ]
+
+    for bars in invalid_bars:
+        try:
+            pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
+        except ValueError as error:
+            assert "must be" in str(error)
+        else:
+            raise AssertionError(f"bool bar value should fail: {bars!r}")
+
+
 def test_run_script_rejects_duplicate_bar_times():
     bars = [
         {"time": 0, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0},
@@ -818,6 +835,18 @@ def test_run_script_returns_ticker_fixture_contract():
 def test_run_script_returns_hline_fill_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/io.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_hline_fill.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_fill_transp_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/fill_transp.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_fill_transp.json").read_text())
 
     result = pine_compat.run_script(
         source,
@@ -1712,6 +1741,90 @@ def test_run_script_returns_polyline_lifecycle_fixture_contract():
     assert result["plots"][0]["values"][-1] == 0
 
 
+def test_run_script_returns_box_call_result_set_right_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/box_call_result_set_right.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_box_call_result_set_right.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_box_call_result_set_right_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_box_call_result_set_right.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_box_call_result_set_right.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_udf_array_unshift_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/udf_array_unshift.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_udf_array_unshift.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_udf_array_unshift_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_udf_array_unshift.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_udf_array_unshift.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_udf_box_new_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/udf_box_new.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_udf_box_new.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_udf_box_new_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_udf_box_new.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_udf_box_new.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_box_new_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/box_new.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_box_new.json").read_text())
@@ -2188,6 +2301,44 @@ def test_run_script_returns_dynamic_history_scopes_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/dynamic_history_scopes.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_dynamic_history_scopes.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_dynamic_history_input_float_offset_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/dynamic_history_input_float_offset.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_dynamic_history_input_float_offset.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_dynamic_history_input_float_offset_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_dynamic_history_input_float_offset.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_dynamic_history_input_float_offset.json"
+        ).read_text()
     )
 
     result = pine_compat.run_script(
@@ -2749,6 +2900,20 @@ def test_run_script_returns_generic_input_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/generic_input.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_generic_input.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_generic_input_source_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/generic_input_source.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_generic_input_source.json").read_text()
     )
 
     result = pine_compat.run_script(
@@ -3451,6 +3616,20 @@ def test_run_script_returns_wma_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_wma_input_float_length_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/wma_input_float_length.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_wma_input_float_length.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_hma_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/hma.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_hma.json").read_text())
@@ -3600,10 +3779,84 @@ def test_run_script_returns_strategy_entry_contract():
     ]
 
 
+def test_run_script_returns_strategy_generic_input_source_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_generic_input_source.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_generic_input_source.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_wma_input_float_length_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_wma_input_float_length.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_wma_input_float_length.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_format_precision_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_format_precision.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_format_precision.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_currency_usd_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_currency_usd.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_currency_usd.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_entry_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_entry.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_strategy_entry.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_when_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_when.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_when.json").read_text()
     )
 
     result = pine_compat.run_script(
@@ -3825,6 +4078,186 @@ def test_run_script_returns_strategy_order_oca_none_fixture_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_mixed_oca_entry_order_cancel_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_mixed_oca_entry_order_cancel.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_entry_order_cancel.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_mixed_oca_entry_order_reduce_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_mixed_oca_entry_order_reduce.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_entry_order_reduce.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_mixed_oca_order_exit_reduce_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_mixed_oca_order_exit_reduce.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_order_exit_reduce.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_rejects_unknown_session_window_schema_version() -> None:
+    source = """//@version=5
+strategy("session")
+strategy.risk.max_intraday_filled_orders(2)
+plot(strategy.position_size)
+"""
+    try:
+        pine_compat.run_script(
+            source,
+            BARS,
+            session_windows={"schemaVersion": 2, "bars": []},
+        )
+        raise AssertionError("expected schema version error")
+    except ValueError as exc:
+        assert "E_SESSION_SCHEMA_VERSION" in str(exc)
+
+
+def test_run_script_accepts_session_windows_and_keeps_utc_subset_without_input() -> None:
+    source = """//@version=5
+strategy("session utc subset", pyramiding=2)
+strategy.risk.max_intraday_filled_orders(8)
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+plot(strategy.position_size)
+"""
+    without = pine_compat.run_script(source, BARS)
+    with_windows = pine_compat.run_script(
+        source,
+        BARS,
+        session_windows={
+            "schemaVersion": 1,
+            "bars": [
+                {"barIndex": 0, "windowId": "eth", "tradingDayId": "d1"},
+                {"barIndex": 1, "windowId": "eth", "tradingDayId": "d1"},
+                {"barIndex": 2, "windowId": "rth", "tradingDayId": "d1"},
+            ],
+        },
+    )
+    assert without["diagnostics"] == []
+    assert with_windows["diagnostics"] == []
+    assert without["strategy"]["orders"][0]["id"] == "A"
+    assert with_windows["strategy"]["orders"][0]["id"] == "A"
+
+
+def test_run_script_session_windows_keep_filled_orders_across_utc_midnight_and_reset_on_window_switch() -> None:
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_session_overnight_filled_orders.pine"
+    ).read_text()
+    bars = fixture_bars(
+        "tests/fixtures/runtime/strategy_session_overnight_filled_orders_bars.csv"
+    )
+    overnight = json.loads(
+        (ROOT / "tests/fixtures/runtime/strategy_session_overnight_windows.json").read_text()
+    )
+    switch = json.loads(
+        (ROOT / "tests/fixtures/runtime/strategy_session_window_switch_windows.json").read_text()
+    )
+
+    def last_size(result):
+        position = result["strategy"]["position"]
+        return position[-1]["size"] if position else None
+
+    utc = pine_compat.run_script(source, bars)
+    overnight_result = pine_compat.run_script(source, bars, session_windows=overnight)
+    switch_result = pine_compat.run_script(source, bars, session_windows=switch)
+    assert last_size(utc) == 2.0
+    assert last_size(overnight_result) != 2.0
+    assert last_size(switch_result) == 2.0
+
+
+def test_run_script_returns_strategy_mixed_oca_none_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_mixed_oca_none.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_mixed_oca_none.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_ordinary_chart_up_gap_stop_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_ordinary_chart_up_gap_stop.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_ordinary_chart_up_gap_stop.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_ordinary_chart_up_gap_bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_ordinary_chart_down_gap_limit_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_ordinary_chart_down_gap_limit.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_ordinary_chart_down_gap_limit.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_ordinary_chart_down_gap_bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_ordinary_chart_no_gap_stop_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_ordinary_chart_no_gap_stop.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_ordinary_chart_no_gap_stop.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_ordinary_chart_no_gap_bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_ordinary_chart_gap_stop_limit_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_ordinary_chart_gap_stop_limit.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_ordinary_chart_gap_stop_limit.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_ordinary_chart_up_gap_bars.csv"),
     )
     assert result == expected
 
@@ -4121,6 +4554,45 @@ def test_run_script_returns_strategy_order_short_flat_noop_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_order_default_quantity_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_default_quantity_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_order_default_quantity_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_default_quantity_short_reduce_long_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_order_default_quantity_short_reduce_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_order_default_quantity_short_reduce_long.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_order_market_short_increase_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_order_market_short_increase.pine"
@@ -4327,21 +4799,21 @@ def test_run_script_returns_strategy_entry_stop_limit_contract():
     result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 0.0, 0.0, 2.0],
-        [None, None, None, 4.0],
+        [0.0, 0.0, 2.0, 2.0],
+        [None, None, 3.0, 3.0],
     ]
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 3,
-            "time": 4,
+            "barIndex": 2,
+            "time": 3,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 4.0,
+            "price": 3.0,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 3, "size": 2.0, "avgPrice": 4.0}
+        {"barIndex": 2, "size": 2.0, "avgPrice": 3.0}
     ]
     assert "pending" not in result["strategy"]
     assert "stop" not in result["strategy"]
@@ -4545,7 +5017,7 @@ def test_run_script_returns_strategy_pyramiding_exit_from_entry_contract():
             "time": 4,
             "direction": "strategy.exit",
             "qty": 1.0,
-            "price": 3.0,
+            "price": 4.0,
         },
     ]
     assert result["strategy"]["trades"] == [
@@ -4556,9 +5028,9 @@ def test_run_script_returns_strategy_pyramiding_exit_from_entry_contract():
             "entryTime": 2,
             "exitTime": 4,
             "entryPrice": 2.0,
-            "exitPrice": 3.0,
+            "exitPrice": 4.0,
             "qty": 1.0,
-            "profit": 1.0,
+            "profit": 2.0,
         }
     ]
     assert result["strategy"]["position"] == [
@@ -4673,7 +5145,7 @@ def test_run_script_returns_strategy_pyramiding_exit_same_id_contract():
             "time": 4,
             "direction": "strategy.exit",
             "qty": 1.0,
-            "price": 5.0,
+            "price": 6.0,
         },
         {
             "id": "XL",
@@ -4681,7 +5153,7 @@ def test_run_script_returns_strategy_pyramiding_exit_same_id_contract():
             "time": 4,
             "direction": "strategy.exit",
             "qty": 3.0,
-            "price": 5.0,
+            "price": 6.0,
         },
     ]
     assert result["strategy"]["trades"] == [
@@ -4692,9 +5164,9 @@ def test_run_script_returns_strategy_pyramiding_exit_same_id_contract():
             "entryTime": 2,
             "exitTime": 4,
             "entryPrice": 2.0,
-            "exitPrice": 5.0,
+            "exitPrice": 6.0,
             "qty": 1.0,
-            "profit": 3.0,
+            "profit": 4.0,
         },
         {
             "id": "L",
@@ -4703,9 +5175,9 @@ def test_run_script_returns_strategy_pyramiding_exit_same_id_contract():
             "entryTime": 3,
             "exitTime": 4,
             "entryPrice": 4.0,
-            "exitPrice": 5.0,
+            "exitPrice": 6.0,
             "qty": 3.0,
-            "profit": 3.0,
+            "profit": 6.0,
         },
     ]
     assert result["strategy"]["position"] == [
@@ -5541,8 +6013,8 @@ def test_run_script_returns_strategy_limit_verification_exit_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, None, None, 3.0],
-        [None, None, None, 2.0],
+        [None, None, None, 4.0],
+        [None, None, None, 4.0],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -5559,11 +6031,11 @@ def test_run_script_returns_strategy_limit_verification_exit_plots():
             "time": 4,
             "direction": "strategy.exit",
             "qty": 2.0,
-            "price": 3.0,
+            "price": 4.0,
         },
     ]
-    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
-    assert result["strategy"]["trades"][0]["profit"] == 2.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 4.0
+    assert result["strategy"]["trades"][0]["profit"] == 4.0
 
 
 def test_run_script_returns_strategy_opentrades_field_plots():
@@ -8546,7 +9018,7 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
             "time": 2,
             "direction": "strategy.exit",
             "qty": 2.0,
-            "price": 2.5,
+            "price": 2.0,
         },
     ]
     assert result["strategy"]["trades"] == [
@@ -8557,9 +9029,9 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
             "entryTime": 2,
             "exitTime": 2,
             "entryPrice": 2.0,
-            "exitPrice": 2.5,
+            "exitPrice": 2.0,
             "qty": 2.0,
-            "profit": 1.0,
+            "profit": 0.0,
         },
     ]
     assert result["strategy"]["position"] == [
@@ -8628,7 +9100,7 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
             "time": 3,
             "direction": "strategy.exit",
             "qty": 2.0,
-            "price": 2.5,
+            "price": 3.0,
         },
     ]
     assert result["strategy"]["trades"] == [
@@ -8639,9 +9111,9 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
             "entryTime": 2,
             "exitTime": 3,
             "entryPrice": 2.0,
-            "exitPrice": 2.5,
+            "exitPrice": 3.0,
             "qty": 2.0,
-            "profit": 1.0,
+            "profit": 2.0,
         },
     ]
     assert result["strategy"]["position"] == [
@@ -8680,19 +9152,19 @@ def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract(
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 2,
-            "time": 3,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 3.0,
+            "price": 2.0,
         },
     ]
     assert result["strategy"]["trades"] == []
     assert result["strategy"]["position"] == [
-        {"barIndex": 2, "size": 2.0, "avgPrice": 3.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 0.0, 2.0, 2.0],
+        [0.0, 2.0, 2.0, 2.0],
         [0.0, 0.0, 0.0, 0.0],
     ]
     assert result["diagnostics"] == []
@@ -10698,16 +11170,10 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][3]["values"] == [34.0, 35.0, 36.0, 37.0, 38.0]
     assert result["plots"][4]["values"] == [None, 41.0, 43.0, 45.0, 47.0]
     assert result["plots"][5]["values"] == [20.01, 21.01, 22.01, 23.01, 24.01]
-    assert result["plots"][6]["values"] == [None, 100.0, 100.0, 100.0, 100.0]
+    assert result["plots"][6]["values"] == [None, None, None, 100.0, 100.0]
     assert result["plots"][7]["values"] == [2.0, 10.0, 10.0, 10.0, 10.0]
     assert result["plots"][8]["values"] == [None, 10.0, 10.0, 10.0, 10.0]
-    assert result["plots"][9]["values"] == [
-        2.0,
-        4.666666666666667,
-        6.4444444444444455,
-        7.629629629629631,
-        8.419753086419753,
-    ]
+    assert result["plots"][9]["values"] == [None, None, 7.333333333333333, 8.222222222222221, 8.814814814814815]
     assert result["plots"][10]["values"] == [None, None, 13.0, 14.0, 15.0]
     assert result["plots"][11]["values"] == [None, None, 9.0, 10.0, 11.0]
     assert result["plots"][12]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
@@ -10793,18 +11259,12 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][38]["values"] == [None, None, 21.0, 22.0, 23.0]
     assert result["plots"][39]["values"] == [None, None, 21.0, 22.0, 23.0]
     assert result["plots"][40]["values"] == [None, None, 100.0, 100.0, 100.0]
-    assert result["plots"][41]["values"] == [
-        20.0,
-        20.333333333333332,
-        20.88888888888889,
-        21.59259259259259,
-        22.395061728395063,
-    ]
+    assert result["plots"][41]["values"] == [None, None, 21.0, 21.666666666666668, 22.444444444444446]
     assert result["plots"][42]["values"] == [20.0, 20.75, 21.75, 22.8125, 23.875]
     assert result["plots"][43]["values"] == [20.0, 20.875, 21.9375, 23.0, 24.03125]
     assert result["plots"][44]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
     assert result["plots"][45]["values"] == [None, None, None, 100.0, 100.0]
-    assert result["plots"][46]["values"] == [None, None, 100.0, 100.0, 100.0]
+    assert result["plots"][46]["values"] == [None, None, None, 100.0, 100.0]
     assert result["plots"][47]["values"] == [None, None, 325.0, 325.0, 325.0]
     assert result["plots"][48]["values"] == [None, None, 225.0, 225.0, 225.0]
     assert result["plots"][49]["values"] == [None, 9.0, 9.0, 9.16, 9.4504]
@@ -10892,17 +11352,11 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][77]["values"] == [20.0, 20.5, 21.25, 22.125, 23.0625]
     assert result["plots"][78]["values"] == [24.0, 32.5, 37.25, 40.125, 42.0625]
     assert result["plots"][79]["values"] == [16.0, 8.5, 5.25, 4.125, 4.0625]
-    assert result["plots"][80]["values"] == [14.0, 6.0, 6.0, 6.0, 6.0]
-    assert result["plots"][81]["values"] == [1.0, -1.0, -1.0, -1.0, -1.0]
-    assert result["plots"][82]["values"] == [
-        0.0,
-        7.1428571428571415,
-        8.620689655172411,
-        9.223300970873785,
-        9.530791788856305,
-    ]
-    assert result["plots"][83]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][84]["values"] == [0.0, 50.0, 75.0, 87.5, 93.75]
+    assert result["plots"][80]["values"] == [None, None, 26.666666666666664, 26.666666666666664, 26.666666666666664]
+    assert result["plots"][81]["values"] == [None, None, 1.0, 1.0, 1.0]
+    assert result["plots"][82]["values"] == [None, None, None, 10.0, 10.0]
+    assert result["plots"][83]["values"] == [None, None, None, 0.0, 0.0]
+    assert result["plots"][84]["values"] == [None, None, None, None, 100.0]
     assert result["plots"][85]["values"] == [20.0, 20.5, 21.0, 21.5, 22.0]
     assert result["plots"][86]["values"] == [
         20.0,
@@ -10966,23 +11420,11 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][103]["values"] == [None, None, 100.0, 100.0, 150.0]
     assert result["plots"][104]["values"] == [None, None, 100.0, 100.0, 250.0]
     assert result["plots"][105]["values"] == [None, None, 100.0, 100.0, 50.0]
-    assert result["plots"][106]["values"] == [
-        None,
-        None,
-        155.0,
-        155.0,
-        81.66666666666667,
-    ]
-    assert result["plots"][107]["values"] == [None, None, 1.0, 1.0, -1.0]
-    assert result["plots"][108]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        71.42857142857143,
-    ]
-    assert result["plots"][109]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][110]["values"] == [None, None, 0.0, 0.0, 50.0]
+    assert result["plots"][106]["values"] == [None, None, None, None, None]
+    assert result["plots"][107]["values"] == [None, None, None, None, None]
+    assert result["plots"][108]["values"] == [None, None, None, None, None]
+    assert result["plots"][109]["values"] == [None, None, None, None, None]
+    assert result["plots"][110]["values"] == [None, None, None, None, None]
     assert result["plots"][111]["values"] == [None, 20.0, 21.0, 22.0, 23.0]
     assert result["plots"][112]["values"] == [10.0, 20.0, 21.0, 22.0, 23.0]
     assert result["plots"][113]["values"] == [0.0, 1.0, 1.0, 1.0, 1.0]
@@ -11101,18 +11543,12 @@ def test_run_script_request_fixture_matches_cli_contract():
         23.462027683060324,
     ]
     assert result["plots"][182]["values"] == [None, None, 22.0, 23.0, 24.0]
-    assert result["plots"][183]["values"] == [
-        20.0,
-        20.333333333333332,
-        20.88888888888889,
-        21.59259259259259,
-        22.395061728395063,
-    ]
+    assert result["plots"][183]["values"] == [None, None, 21.0, 21.666666666666668, 22.444444444444446]
     assert result["plots"][184]["values"] == [20.0, 20.75, 21.75, 22.8125, 23.875]
     assert result["plots"][185]["values"] == [20.0, 20.875, 21.9375, 23.0, 24.03125]
     assert result["plots"][186]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
     assert result["plots"][187]["values"] == [None, None, None, 100.0, 100.0]
-    assert result["plots"][188]["values"] == [None, None, 100.0, 100.0, 100.0]
+    assert result["plots"][188]["values"] == [None, None, None, 100.0, 100.0]
     assert result["plots"][189]["values"] == [None, None, 325.0, 325.0, 325.0]
     assert result["plots"][190]["values"] == [None, None, 225.0, 225.0, 225.0]
     assert result["plots"][191]["values"] == [None, 9.0, 9.0, 9.16, 9.4504]
@@ -11193,12 +11629,12 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][218]["values"] == [None, None, None, None, None]
     assert result["plots"][219]["values"] == [None, None, None, None, None]
     assert result["plots"][220]["values"] == [None, None, None, None, None]
-    assert result["plots"][221]["values"] == [None, None, 100.0, 100.0, 133.33333333333334]
+    assert result["plots"][221]["values"] == [None, None, None, None, None]
     assert result["plots"][222]["values"] == [None, None, 100.0, 100.0, 175.0]
     assert result["plots"][223]["values"] == [None, None, 100.0, 100.0, 187.5]
     assert result["plots"][224]["values"] == [None, None, None, None, 1.0]
     assert result["plots"][225]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][226]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][226]["values"] == [None, None, None, None, None]
     assert result["plots"][227]["values"] == [
         None,
         None,
@@ -11238,7 +11674,7 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][233]["values"] == [None, None, 1.2, 1.2, 2.0]
     assert result["plots"][234]["values"] == [None, None, 100.0, 100.0, 150.0]
     assert result["plots"][235]["values"] == [None, None, 30.0, 30.0, 110.0]
-    assert result["plots"][236]["values"] == [None, None, 30.0, 30.0, 70.0]
+    assert result["plots"][236]["values"] == [None, None, None, None, 70.0]
     assert result["plots"][237]["values"] == [None, None, None, None, 210.0]
     assert result["plots"][238]["values"] == [None, None, None, None, 80.0]
     assert result["plots"][239]["values"] == [None, None, None, None, 100.0]
@@ -11483,7 +11919,7 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.024434609527920613,
     ]
     assert result["plots"][292]["values"] == [2.0, 10.0, 10.0, 10.0, 10.0]
-    assert result["plots"][293]["values"] == [2.0, 6.0, 8.0, 9.0, 9.5]
+    assert result["plots"][293]["values"] == [None, 6.0, 8.0, 9.0, 9.5]
     assert result["plots"][294]["values"] == [None, 12.0, 13.0, 14.0, 15.0]
     assert result["plots"][295]["values"] == [None, 9.0, 10.0, 11.0, 12.0]
     assert result["plots"][296]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
@@ -12635,6 +13071,11 @@ def test_strategy_remaining_host_golden_parity():
                 "strategy_commission_percent.pine",
                 "strategy_next_tick_close_bars.csv",
             ),
+            (
+                "runtime_strategy_commission_value_default_percent.json",
+                "strategy_commission_value_default_percent.pine",
+                "strategy_next_tick_close_bars.csv",
+            ),
             ("runtime_strategy_empty.json", "strategy_no_order.pine", "bars.csv"),
             (
                 "runtime_strategy_entry_limit.json",
@@ -12766,6 +13207,7 @@ def test_strategy_remaining_host_golden_parity():
             "tests/snapshots/runtime_strategy_commission_cash_per_contract.json",
             "tests/snapshots/runtime_strategy_commission_cash_per_order.json",
             "tests/snapshots/runtime_strategy_commission_percent.json",
+            "tests/snapshots/runtime_strategy_commission_value_default_percent.json",
             "tests/snapshots/runtime_strategy_empty.json",
             "tests/snapshots/runtime_strategy_entry_limit.json",
             "tests/snapshots/runtime_strategy_entry_stop.json",

@@ -437,7 +437,7 @@ fn collect_expr_dependencies(
                 );
             }
         }
-        ExprKind::Unary { expr, .. } => collect_expr_dependencies(
+        ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => collect_expr_dependencies(
             expr,
             names,
             historical,

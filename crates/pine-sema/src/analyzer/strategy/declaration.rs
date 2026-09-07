@@ -6,6 +6,8 @@ const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.ca
 const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
 const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
 const STRATEGY_NONE_ACCOUNT_CURRENCY: &str = "NONE";
+// Matches the registered `syminfo.currency` value used by the no-conversion path.
+const STRATEGY_SYMBOL_ACCOUNT_CURRENCY: &str = "USD";
 
 impl Analyzer {
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
@@ -13,9 +15,7 @@ impl Analyzer {
         let mut default_qty_value_arg = None;
         let mut default_qty_constructor: Option<fn(f64) -> pine_ir::StrategyDefaultQuantity> = None;
         let mut default_qty_value = None;
-        let mut commission_type_arg = None;
         let mut commission_constructor: Option<fn(f64) -> pine_ir::StrategyCommission> = None;
-        let mut commission_value_arg = None;
         let mut commission_value = None;
 
         for (index, arg) in args.iter().enumerate() {
@@ -45,6 +45,8 @@ impl Analyzer {
                     "calc_on_order_fills",
                     "calc_on_every_tick",
                     "use_bar_magnifier",
+                    "format",
+                    "precision",
                 ]
                 .get(index)
                 .copied()
@@ -74,10 +76,12 @@ impl Analyzer {
                     let Some(currency) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
-                    if currency != STRATEGY_NONE_ACCOUNT_CURRENCY {
+                    if currency != STRATEGY_NONE_ACCOUNT_CURRENCY
+                        && currency != STRATEGY_SYMBOL_ACCOUNT_CURRENCY
+                    {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy` argument `currency` only supports currency.NONE in the current no-conversion subset",
+                            "`strategy` argument `currency` only supports currency.NONE or the current symbol currency in the current no-conversion subset",
                             arg.span,
                         ));
                     }
@@ -132,7 +136,6 @@ impl Analyzer {
                     default_qty_value = Some(qty);
                 }
                 "commission_type" => {
-                    commission_type_arg = Some(arg);
                     let Some(commission_type) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
@@ -166,7 +169,6 @@ impl Analyzer {
                     }
                 }
                 "commission_value" => {
-                    commission_value_arg = Some(arg);
                     let Some(value) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
@@ -306,6 +308,35 @@ impl Analyzer {
                         self.strategy_settings.use_bar_magnifier = value;
                     }
                 }
+                "format" => {
+                    let Some(value) = self.known_const_string_value(&arg.value) else {
+                        continue;
+                    };
+                    if !matches!(
+                        value.as_str(),
+                        "format.inherit" | "format.price" | "format.percent" | "format.volume"
+                    ) {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `format` only supports format.inherit, format.price, format.percent, format.volume",
+                            arg.span,
+                        ));
+                    }
+                }
+                "precision" => {
+                    if let Some(value) = self.known_const_int_for_validation(&arg.value)
+                        && match value {
+                            Ok(value) => !(0..=16).contains(&value),
+                            Err(()) => true,
+                        }
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `precision` must be between 0 and 16",
+                            arg.span,
+                        ));
+                    }
+                }
                 _ => {}
             }
         }
@@ -324,19 +355,13 @@ impl Analyzer {
         } else if let Some(qty) = default_qty_value {
             self.strategy_settings.default_qty = Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
         }
-        if commission_value_arg.is_some() && commission_type_arg.is_none() {
-            if let Some(arg) = commission_value_arg {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`strategy` argument `commission_value` requires a supported commission_type",
-                    arg.span,
-                ));
-            }
-            return;
-        }
         if let Some(commission_constructor) = commission_constructor {
             self.strategy_settings.commission =
                 Some(commission_constructor(commission_value.unwrap_or(0.0)));
+        } else if commission_value.is_some() {
+            self.strategy_settings.commission = Some(pine_ir::StrategyCommission::Percent(
+                commission_value.unwrap_or(0.0),
+            ));
         }
     }
 }

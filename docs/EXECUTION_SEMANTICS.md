@@ -142,10 +142,12 @@ Strategy-mode runtime results include a `strategy` object with `orders`,
 runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
 cash value; when omitted, the runtime uses 100000.
-With the currently supported default account-currency path (`currency.NONE`),
+With the currently supported default account-currency path (`currency.NONE` or
+same-symbol `currency.USD`),
 `strategy.account_currency` inherits the fixed `syminfo.currency` value,
-currently `"USD"`. Explicit `strategy(..., currency=currency.NONE)` selects
-the same no-conversion path. In that path,
+currently `"USD"`. Explicit `strategy(..., currency=currency.NONE)` or
+`strategy(..., currency=currency.USD)` selects the same no-conversion path.
+In that path,
 `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`
 return the numeric input as a series float, coercing integers and preserving
 typed `na`. Direct, named, UDF, and history calls are supported; indicator and
@@ -319,12 +321,13 @@ Strategy-mode scripts can read `strategy.position_size`,
 `strategy.opentrades` as historical series ints in the current count-only
 reporting subset. `strategy.position_entry_name` is a historical series string.
 `strategy.account_currency` is a read-only simple string that inherits the
-current fixed symbol currency under the default `currency.NONE` path. Direct,
-UDF, and history reads are supported without expanding public strategy JSON;
-indicator use, requested-context use, and mutation remain unsupported. An
-explicit `currency.NONE` declaration is accepted; other currency settings and
-cross-currency conversion remain unsupported. The same-currency conversion
-helpers follow the identity behavior described above.
+current fixed symbol currency under the default `currency.NONE` path and
+explicit same-symbol `currency.USD`. Direct, UDF, and history reads are
+supported without expanding public strategy JSON; indicator use,
+requested-context use, and mutation remain unsupported. Explicit
+`currency.NONE` and `currency.USD` declarations are accepted; other currency
+settings and cross-currency conversion remain unsupported. The same-currency
+conversion helpers follow the identity behavior described above.
 `strategy.position_size` is `0` when flat, positive while long, and negative
 while short.
 `strategy.position_avg_price` is `na` when flat and the current average entry
@@ -417,12 +420,16 @@ When coverage exists, each lower-timeframe bar walks the existing Stage 18g
 OHLC or OLHC path through the unified broker candidate selector. Public fill,
 order, trade, and alert `bar_index` and `time` stay chart-bar scoped; the
 public event timestamp is the chart-bar time. The first tradable open of a
-covered chart bar is that group's first lower-bar open. A gap between one
-lower bar's close and the next lower bar's open is a point event at the next
-open, not a tradable close-to-open segment. Price orders are therefore tested
-for direction-aware marketability at that open; a stop-limit cannot reuse a
-pre-activation gap price, and trailing activation/ratchet transitions occur
-before any later stop fill. `calc_on_order_fills` extra passes resume from the
+covered chart bar is that group's first lower-bar open. A previous host close
+that differs from the next host open — including ordinary chart-to-chart bars
+and the last lower bar of one chart bar to the first lower bar of the next —
+is a point event at that next open, not a tradable close-to-open segment.
+Price orders are therefore tested for direction-aware marketability at that
+open; a stop-limit cannot reuse a pre-activation gap price, and trailing
+activation/ratchet transitions occur before any later stop fill. Pending
+market orders still fill once on the pre-script open path. When previous
+close equals next open, the inferred OHLC/OLHC path still fills at the
+trigger. `calc_on_order_fills` extra passes resume from the
 unconsumed lower-bar/path cursor and do not replay consumed marks. Missing
 groups emit `W_MAGNIFIER_FALLBACK` and empty groups emit `W_MAGNIFIER_GAP`, both
 falling back to that chart bar's standard OHLC path. Invalid host input fails
@@ -448,10 +455,25 @@ Intraday windows are keyed from host-neutral bar timestamps and the chart
 timeframe already available to the runtime: UTC day of `time` when the chart
 timeframe is at or below 1D, and the bar timestamp itself when the timeframe
 is higher than 1D so one chart bar is one window. Non-positive timeframes fail
-closed to the UTC-day key. This runtime has no session calendar. A new window
+closed to the UTC-day key. Optional host session window input replaces those
+UTC keys with per-bar `windowId` for intraday loss/filled-order rules and
+`tradingDayId` for consecutive-loss-day rules. Missing input keeps the UTC
+subset and does not claim session-accurate support. This runtime does not
+maintain an exchange calendar. A new window
+is determined by a changed window id, not by the mere presence of a calendar gap.
+Session coverage is checked before execution: batch calls preflight their appended
+range, while single-bar calls check only the next index. Missing coverage does not
+partially execute that batch/bar. Rust runtimes and Python `RealtimeSession` accept
+`extend_session_windows` with the same v1 payload, merging supplied rows without
+dropping earlier rows. Identical executed rows are idempotent; conflicting confirmed
+or executed forming rows fail atomically with `E_SESSION_HISTORY_CHANGED`. Future
+unexecuted rows may be supplied or corrected. A runtime already executed with UTC
+fallback cannot switch to host ids without replay in a new runtime.
+Rust `with_session_windows` validates full replacement and returns a `Result`;
+Python/WASM output and RealtimeSession schema versions remain unchanged. A new window
 zeros the filled-order count, seeds a finite equity baseline, and clears
 window-scoped trips while permanent `max_drawdown` stops remain. Same-window
-bars keep the baseline and counters; a missing-bar gap starts a new window.
+bars keep the baseline and counters; calendar gaps reset only if the selected window key changes.
 `strategy.risk.allow_entry_in` accepts documented `strategy.direction.*`
 constants and rewrites later `strategy.entry` admission: allowed directions
 keep current open, add, and reversal behavior; a disallowed opposite entry
@@ -702,13 +724,18 @@ orders, pending exits, deferred relative exits, and pending closes, including
 when those families share a public id. Generic-order reductions allocate FIFO, or
 id-specific ANY when `close_entries_rule` is ANY and the order id matches an
 open entry; unmatched ANY stays FIFO. Const/simple `oca_name` with explicit
-`strategy.oca.none` keeps grouped `strategy.order` intents independent.
-`strategy.oca.cancel` cancels still-pending same-group generic-order peers
-after a fill, in internal creation order, and leaves unrelated groups in
-place. `strategy.oca.reduce` reduces same-group peer remaining quantity by
-the filled quantity and removes peers reduced to zero. Const/simple
-`strategy.exit` `oca_name` maps onto that implicit reduce reservation model:
-grouped exits share overlapping quantity, and a fill reduces same-group peers.
+`strategy.oca.none` keeps grouped `strategy.entry` and `strategy.order`
+intents independent. `strategy.oca.cancel` cancels still-pending same-group
+entry and generic-order peers after a fill, in internal creation order, and
+leaves unrelated groups in place. `strategy.oca.reduce` reduces same-group
+peer remaining quantity by the filled quantity and removes peers reduced to
+zero, including mixed entry, generic-order, and exit members that share the
+same name and reduce type. Const/simple `strategy.exit` `oca_name` maps onto
+that implicit reduce reservation model: grouped exits share overlapping
+quantity, and a fill reduces same-group peers. Same name with different OCA
+types remains two groups. Empty `oca_name` does not join a group. OCA peer
+effects from an entry fill apply before deferred relative exits for that
+entry are resolved.
 Omitted `qty` remains unsupported for `strategy.short`.
 The supported `strategy.order()` subset accepts
 `comment`, `alert_message`, and `disable_alert` metadata. Supported long order
@@ -719,7 +746,7 @@ exit comments, and supported order-fill alert payloads are exposed under
 supported single-trigger, one-downside/one-upside bracket, trailing-stop,
 fixed-quantity, percent-quantity, explicit single-trigger or bracket/trailing
 reservation subset, `strategy.cancel(id)`, and `strategy.cancel_all()`,
-series `oca_name` `strategy.order` and `strategy.exit` forms,
+series `oca_name` `strategy.entry`, `strategy.order`, and `strategy.exit` forms,
 rich order families, strategy reporting helpers beyond the supported
 position/profit/equity/count/run-up/drawdown/buy-and-hold return variables,
 requested-context strategy state, strategy state mutation, and realtime
@@ -2605,7 +2632,9 @@ control-flow blocks after box deletion or max-count eviction. `box.set_left`,
 `box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update the host-neutral geometry snapshot, including when
-called from ordinary and independent while-loop control-flow blocks.
+called from ordinary and independent while-loop control-flow blocks. Box-typed
+call results such as `id.get(0).set_right(x)` mutate the same snapshot as
+bound `id.set_right(x)`; other drawing call-result methods still require binding.
 `box.set_bgcolor`, `box.set_border_color`, `box.set_border_width`,
 `box.set_border_style`, and `box.set_extend` update the host-neutral style
 snapshot, including when called from ordinary and independent while-loop

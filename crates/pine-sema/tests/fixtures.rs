@@ -20840,6 +20840,29 @@ fn accepts_supported_udf_array_unshift_fixture() {
 }
 
 #[test]
+fn accepts_supported_box_call_result_set_right_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_box_call_result_set_right.pine");
+}
+
+#[test]
+fn reports_unsupported_box_call_result_set_left_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_box_call_result_set_left.pine",
+        "call_result.set_left",
+        "bind the result first",
+    );
+}
+
+#[test]
+fn reports_unsupported_udf_box_call_result_set_right_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_udf_box_call_result_set_right.pine",
+        "function_side_effect",
+        "inside user-defined functions",
+    );
+}
+
+#[test]
 fn reports_unsupported_input_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_input_function_side_effect.pine",

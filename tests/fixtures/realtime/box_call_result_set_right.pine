@@ -1,0 +1,7 @@
+//@version=5
+indicator("Box call-result set_right rollback")
+var boxes = array.new_box()
+if bar_index == 0
+    array.push(boxes, box.new(0, high, 1, low))
+boxes.get(0).set_right(int(close))
+plot(box.get_right(array.get(boxes, 0)))

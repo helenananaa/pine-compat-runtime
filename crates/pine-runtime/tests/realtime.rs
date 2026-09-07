@@ -69,6 +69,34 @@ fn udf_array_unshift_fixture_rolls_back_forming_size() {
 }
 
 #[test]
+fn box_call_result_set_right_fixture_rolls_back_forming_right() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/box_call_result_set_right.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back the chained set_right");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit the chained set_right");
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0, 4.0]);
+}
+
+#[test]
 fn udf_box_new_fixture_rolls_back_forming_boxes() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/udf_box_new.pine");
 

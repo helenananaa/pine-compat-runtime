@@ -40,6 +40,16 @@ impl Analyzer {
         ) {
             return Some(result);
         }
+        if let Some(result) = self.lower_postfix_drawing_call_result_method(
+            callee,
+            args,
+            pine_type,
+            series_id,
+            param_exprs,
+            param_types,
+        ) {
+            return Some(result);
+        }
         if let Some(result) =
             self.lower_postfix_user_type_call_result_method(callee, args, param_exprs, param_types)
         {
@@ -58,6 +68,37 @@ impl Analyzer {
             return Some(Some(method_call));
         }
         postfix_call_result_method_parts(callee, args).map(|_| None)
+    }
+
+    pub(super) fn lower_postfix_drawing_call_result_method(
+        &mut self,
+        callee: &Expr,
+        args: &[CallArg],
+        pine_type: PineType,
+        series_id: Option<pine_ir::SeriesId>,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<Option<HirExpr>> {
+        let (_, method_name) = postfix_call_result_method_parts(callee, args)?;
+        let receiver = args.first()?;
+        let receiver_kind = self
+            .type_of_expr_with_params(&receiver.value, param_types)?
+            .kind;
+        let builtin_name = drawing_call_result_builtin_name(receiver_kind, method_name)?;
+        let Some(args) =
+            self.lower_builtin_call_args(&builtin_name, args, param_exprs, param_types)
+        else {
+            return Some(None);
+        };
+        Some(Some(HirExpr {
+            pine_type,
+            series_id,
+            kind: HirExprKind::Call {
+                callee: builtin_name,
+                call_site_id: self.alloc_call_site(),
+                args,
+            },
+        }))
     }
 
     pub(super) fn lower_postfix_array_call_result_method(

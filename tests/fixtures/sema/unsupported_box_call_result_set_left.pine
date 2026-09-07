@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported box call-result set_left")
+var boxes = array.new_box()
+if bar_index == 0
+    array.push(boxes, box.new(bar_index, high, bar_index + 1, low))
+boxes.get(0).set_left(bar_index)
+plot(close)

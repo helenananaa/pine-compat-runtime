@@ -361,7 +361,10 @@ Phase 1 executable subset:
   root-field selector, `array.reverse`, scalar-array
   `array.join`, and
   equivalent method-call syntax such as
-  `values.push(close)` and `values.get(0)`
+  `values.push(close)` and `values.get(0)`, plus Box-typed call-result
+  `.set_right(...)` without an intermediate binding (`id.get(0).set_right(x)`).
+  Other drawing call-result methods still require binding the result first;
+  namespace `array.get(...).set_right(...)` remains outside this parse subset.
 
 For v6 scripts, `and` and `or` use lazy evaluation: the right operand is skipped
 when the left operand already determines the result. Earlier-version scripts

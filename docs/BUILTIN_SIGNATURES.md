@@ -317,6 +317,12 @@ polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
 ```
 
+Box-typed call results admit `.set_right(x)` without an intermediate binding,
+including `id.get(0).set_right(x)`; the mutation is the same as `id.set_right(x)`
+and `box.set_right(id, x)`. Other drawing call-result methods still require
+binding the result first. Namespace `array.get(...).set_right(...)` remains
+outside the current parse subset. UDF `box.set_right` remains rejected.
+
 Pine v5/v6 user-defined function bodies may call `box.new` and `array.unshift`
 (namespace and method). Pine v4 UDF `box.new`, `label.new`, `array.push` and
 other collection mutations, plot/strategy/input, and other drawing mutations

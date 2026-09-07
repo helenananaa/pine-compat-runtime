@@ -95,6 +95,19 @@ pub(crate) fn param_index_for_arg(
     }
 }
 
+pub(crate) fn arg_type_for_param_index(
+    signature: &BuiltinSignature,
+    args: &[CallArg],
+    arg_types: &[Option<PineType>],
+    param_index: usize,
+) -> Option<PineType> {
+    args.iter().enumerate().find_map(|(arg_index, arg)| {
+        (param_index_for_arg(signature, arg_index, arg)? == param_index)
+            .then(|| arg_types.get(arg_index).copied().flatten())
+            .flatten()
+    })
+}
+
 pub(crate) fn method_call_parts(expr: &Expr) -> Option<(&str, &str)> {
     match &expr.kind {
         ExprKind::QualifiedName(parts) if parts.len() == 2 => {
@@ -544,6 +557,17 @@ pub(crate) fn map_method_builtin_name(method_name: &str) -> Option<&'static str>
         "put_all" => Some("map.put_all"),
         "keys" => Some("map.keys"),
         "values" => Some("map.values"),
+        _ => None,
+    }
+}
+
+pub(crate) fn drawing_call_result_builtin_name(
+    receiver_kind: ValueKind,
+    method_name: &str,
+) -> Option<String> {
+    // Homogeneous G2 slice: Box-typed call results currently admit only `.set_right()`.
+    match (receiver_kind, method_name) {
+        (ValueKind::Box, "set_right") => drawing_method_builtin_name(receiver_kind, method_name),
         _ => None,
     }
 }

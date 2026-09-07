@@ -53,6 +53,7 @@ runtime_bbw.json
 runtime_block_statements.json
 runtime_bop.json
 runtime_box_array.json
+runtime_box_call_result_set_right.json
 runtime_box_control_flow.json
 runtime_box_copy.json
 runtime_box_delete.json
@@ -204,6 +205,7 @@ runtime_series_history_offset.json
 runtime_session.json
 runtime_stdev.json
 runtime_stoch.json
+runtime_strategy_box_call_result_set_right.json
 runtime_strategy_builtin_default_quantity.json
 runtime_strategy_calc_on_every_tick.json
 runtime_strategy_calc_on_order_fills.json

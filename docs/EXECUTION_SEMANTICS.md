@@ -2632,7 +2632,9 @@ control-flow blocks after box deletion or max-count eviction. `box.set_left`,
 `box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update the host-neutral geometry snapshot, including when
-called from ordinary and independent while-loop control-flow blocks.
+called from ordinary and independent while-loop control-flow blocks. Box-typed
+call results such as `id.get(0).set_right(x)` mutate the same snapshot as
+bound `id.set_right(x)`; other drawing call-result methods still require binding.
 `box.set_bgcolor`, `box.set_border_color`, `box.set_border_width`,
 `box.set_border_style`, and `box.set_extend` update the host-neutral style
 snapshot, including when called from ordinary and independent while-loop

@@ -344,6 +344,45 @@ plot(close)
 }
 
 #[test]
+fn box_call_result_set_right_matches_bound_mutation() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=5
+indicator("box call-result set_right")
+var chained = array.new_box()
+var bound = array.new_box()
+if bar_index == 0
+    array.push(chained, box.new(bar_index, high, bar_index + 1, low))
+    array.push(bound, box.new(bar_index, high, bar_index + 1, low))
+chained.get(0).set_right(bar_index)
+bound_id = array.get(bound, 0)
+bound_id.set_right(bar_index)
+plot(box.get_right(array.get(chained, 0)))
+plot(box.get_right(array.get(bound, 0)))
+plot(box.get_right(array.get(chained, 0)) == box.get_right(array.get(bound, 0)) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
+    assert_eq!(result.boxes.len(), 2);
+    for drawing in &result.boxes {
+        let last = drawing.snapshots.last().expect("box snapshot");
+        assert_eq!(last.right, PineValue::Int(2));
+    }
+}
+
+#[test]
 fn udf_box_new_creates_boxes_on_each_historical_bar() {
     let source = SourceFile::new(
         "test.pine",

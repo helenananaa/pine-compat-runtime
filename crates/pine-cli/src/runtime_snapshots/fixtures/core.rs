@@ -919,6 +919,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/box_array.pine",
     ),
     (
+        "runtime_box_call_result_set_right.json",
+        "tests/fixtures/runtime/box_call_result_set_right.pine",
+    ),
+    (
         "runtime_drawing_methods.json",
         "tests/fixtures/runtime/drawing_methods.pine",
     ),

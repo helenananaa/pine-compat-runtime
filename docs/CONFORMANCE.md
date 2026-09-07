@@ -2111,7 +2111,10 @@ snapshots, including when called from ordinary and independent while-loop
 control-flow blocks. `box.set_left`, `box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update box geometry snapshots, including when called from
-ordinary and independent while-loop control-flow blocks. `box.set_text`,
+ordinary and independent while-loop control-flow blocks. Box-typed call results
+such as `id.get(0).set_right(x)` mutate the same geometry as bound
+`id.set_right(x)`; other drawing call-result methods still require binding.
+`box.set_text`,
 `box.set_text_color`, `box.set_text_size`, `box.set_text_halign`,
 `box.set_text_valign`, `box.set_text_wrap`, `box.set_text_font_family`, and
 `box.set_text_formatting` update box text snapshots, including when called from

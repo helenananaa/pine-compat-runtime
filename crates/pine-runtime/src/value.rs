@@ -123,11 +123,39 @@ impl PineValue {
             _ => None,
         }
     }
+
+    /// Truncate a numeric value toward zero, matching Pine `int()`.
+    #[must_use]
+    pub fn as_trunc_i64(&self) -> Option<i64> {
+        match self {
+            Self::Int(value) => Some(*value),
+            Self::Float(value) if value.is_finite() => {
+                let truncated = value.trunc();
+                if truncated > i64::MAX as f64 || truncated < i64::MIN as f64 {
+                    None
+                } else {
+                    Some(truncated as i64)
+                }
+            }
+            _ => None,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::is_valid_public_color;
+    use super::{PineValue, is_valid_public_color};
+
+    #[test]
+    fn truncates_numeric_values_toward_zero() {
+        assert_eq!(PineValue::Int(3).as_trunc_i64(), Some(3));
+        assert_eq!(PineValue::Float(2.9).as_trunc_i64(), Some(2));
+        assert_eq!(PineValue::Float(-2.9).as_trunc_i64(), Some(-2));
+        assert_eq!(PineValue::Float(2.0).as_trunc_i64(), Some(2));
+        assert_eq!(PineValue::Na.as_trunc_i64(), None);
+        assert_eq!(PineValue::Float(f64::NAN).as_trunc_i64(), None);
+        assert_eq!(PineValue::Float(f64::INFINITY).as_trunc_i64(), None);
+    }
 
     #[test]
     fn validates_public_numeric_color_encodings() {

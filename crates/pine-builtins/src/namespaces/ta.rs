@@ -226,7 +226,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "ta.wma",
         phase: BuiltinPhase::Phase1Core,
-        params: TA_SOURCE_DYNAMIC_LENGTH_PARAMS,
+        params: TA_WMA_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

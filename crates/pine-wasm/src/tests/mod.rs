@@ -3112,6 +3112,17 @@ fn run_script_csv_returns_wma_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_wma_input_float_length_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/wma_input_float_length.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("wma input float length fixture should run");
+
+    assert_snapshot("runtime_wma_input_float_length.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_hma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/hma.pine"),
@@ -3831,6 +3842,17 @@ fn runs_strategy_generic_input_source_fixture_contract() {
     .expect("generic source input strategy fixture should run");
 
     assert_snapshot("runtime_strategy_generic_input_source.json", &output);
+}
+
+#[test]
+fn runs_strategy_wma_input_float_length_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_wma_input_float_length.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy wma input float length fixture should run");
+
+    assert_snapshot("runtime_strategy_wma_input_float_length.json", &output);
 }
 
 #[test]

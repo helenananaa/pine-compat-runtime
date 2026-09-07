@@ -334,7 +334,9 @@ Phase 1 executable subset:
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
   rolling statistics, momentum/history helpers, crosses, extremes, trend
   checks, value lookups, true range, volume flow helpers, and the fixed-metadata
-  UTC-daily/explicit-anchor VWAP contract
+  UTC-daily/explicit-anchor VWAP contract; `ta.wma` length is numeric-compatible
+  and truncated toward zero like Pine `int()`, while `ta.sma`/`ta.hma`/`ta.vwma`
+  length remain integer-compatible
 - partial float, int, bool, string, color, label-id, line-id, linefill-id, box-id, and table-id arrays with `array.new_float`,
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
   `array.new_label`, `array.new_line`, `array.new_linefill`, `array.new_box`,
@@ -503,6 +505,9 @@ TA namespace:
 
 - common indicator helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md)
+- `ta.wma(source, length)` with series numeric source and numeric-compatible
+  length truncated toward zero like Pine `int()`; non-numeric length remains
+  rejected; `ta.sma`, `ta.hma`, and `ta.vwma` length stay integer-compatible
 
 Plotting:
 

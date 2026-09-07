@@ -43,6 +43,19 @@ pub(super) const TA_SOURCE_DYNAMIC_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+pub(super) const TA_WMA_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+];
+
 pub(super) const TA_SOURCE_DYNAMIC_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",

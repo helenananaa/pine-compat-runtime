@@ -67,6 +67,38 @@ fn generic_source_input_fixture_rolls_back_forming_close() {
 }
 
 #[test]
+fn wma_input_float_length_fixture_rolls_back_forming_close() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/wma_input_float_length.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[5.0 / 3.0]);
+    assert_eq!(runtime.confirmed_result().plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[7.0 / 3.0]);
+    assert_eq!(runtime.confirmed_result().plots[0].values[0], PineValue::Na);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values(&result.plots[0].values[1..], &[3.0]);
+    assert_eq!(runtime.confirmed_result().plots[0].values[0], PineValue::Na);
+    assert_values(&runtime.confirmed_result().plots[0].values[1..], &[3.0]);
+}
+
+#[test]
 fn alertcondition_fixture_rolls_back_forming_events() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/alertcondition_rollback.pine");
 

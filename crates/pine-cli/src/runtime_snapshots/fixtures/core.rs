@@ -553,6 +553,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     ),
     ("runtime_wma.json", "tests/fixtures/runtime/wma.pine"),
     (
+        "runtime_wma_input_float_length.json",
+        "tests/fixtures/runtime/wma_input_float_length.pine",
+    ),
+    (
         "runtime_wma_edge_cases.json",
         "tests/fixtures/runtime/wma_edge_cases.pine",
     ),

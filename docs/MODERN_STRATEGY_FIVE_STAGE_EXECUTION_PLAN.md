@@ -2,7 +2,8 @@
 
 状态：in-progress。步骤 0、阶段 1、阶段 2 切片 `generic_input_source`、
 `default_qty_short_order`、`input_float_history_offset`、
-`strategy_format_precision` 与 `v5_fill_transp_entry_when`、阶段 4 deferred 与
+`strategy_format_precision`、`v5_fill_transp_entry_when` 与
+`ta_wma_input_float_length`、阶段 4 deferred 与
 阶段 5 基线已关闭；阶段 3 比较器已交付但独立成交验收 blocked。本文不代表全 Pine 兼容。
 
 编写日期：2026-09-06。规划基线：`9a68e4f02cf2186e1cc880df43ce1cd9743552c4`。

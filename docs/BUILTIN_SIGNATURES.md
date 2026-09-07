@@ -1784,7 +1784,7 @@ ta.variance(source: series int/float, length: int-compatible, biased?: bool-comp
 ta.range(source: series int/float, length: int-compatible) -> series float
 ta.dev(source: series int/float, length: int-compatible) -> series float
 ta.vwma(source: series int/float, length: int-compatible) -> series float
-ta.wma(source: series int/float, length: int-compatible) -> series float
+ta.wma(source: series int/float, length: numeric-compatible) -> series float
 ta.hma(source: series int/float, length: int-compatible) -> series float
 ta.swma(source: series int/float) -> series float
 ta.alma(series: series int/float, length: int-compatible, offset: simple numeric-compatible, sigma: simple numeric-compatible, floor?: simple bool-compatible) -> series float
@@ -1926,7 +1926,9 @@ Rules:
 - `ta.wma` returns a weighted mean where the oldest ready-window value has
   weight `1` and the current value has weight `length`. Named/reordered
   `source`/`length` arguments bind to the same window state. Its `length`
-  argument is integer-compatible.
+  argument is numeric-compatible and truncated toward zero like Pine `int()`
+  before the window size is applied; non-numeric length arguments remain
+  rejected. `ta.sma`, `ta.hma`, and `ta.vwma` length stay integer-compatible.
 - `ta.hma` composes `ta.wma`-style windows as
   `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
   Named/reordered `source`/`length` arguments bind to the same staged window

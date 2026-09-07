@@ -261,7 +261,7 @@ impl<'a> HistoricalRuntime<'a> {
         let length = ta_arg(args, 1, "length")
             .map(|arg| self.eval_expr(arg))
             .transpose()?
-            .and_then(|value| value.as_i64())
+            .and_then(|value| value.as_trunc_i64())
             .unwrap_or(0);
         Ok((source, length))
     }

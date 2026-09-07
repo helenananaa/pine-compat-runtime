@@ -2796,8 +2796,13 @@ fn reports_unsupported_ta_weighted_regression_return_qualifier_fixture() {
 fn reports_unsupported_ta_wma_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_wma_length.pine",
-        &["`ta.wma` argument `length` expects integer-compatible, got const float"],
+        &["`ta.wma` argument `length` expects numeric-compatible, got series bool"],
     );
+}
+
+#[test]
+fn accepts_supported_ta_wma_input_float_length_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_ta_wma_input_float_length.pine");
 }
 
 #[test]

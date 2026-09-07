@@ -536,6 +536,7 @@ runtime_strategy_use_bar_magnifier_fallback.json
 runtime_strategy_use_bar_magnifier_false.json
 runtime_strategy_use_bar_magnifier_gap.json
 runtime_strategy_variable_interactions.json
+runtime_strategy_wma_input_float_length.json
 runtime_strings.json
 runtime_supertrend.json
 runtime_switch.json
@@ -571,5 +572,6 @@ runtime_while.json
 runtime_while_edges.json
 runtime_while_stateful.json
 runtime_wma.json
+runtime_wma_input_float_length.json
 runtime_wpr.json
 runtime_wvad.json

@@ -3532,6 +3532,20 @@ def test_run_script_returns_wma_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_wma_input_float_length_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/wma_input_float_length.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_wma_input_float_length.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_hma_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/hma.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_hma.json").read_text())
@@ -3687,6 +3701,22 @@ def test_run_script_returns_strategy_generic_input_source_fixture_contract():
     ).read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_strategy_generic_input_source.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_wma_input_float_length_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_wma_input_float_length.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_wma_input_float_length.json").read_text()
     )
 
     result = pine_compat.run_script(

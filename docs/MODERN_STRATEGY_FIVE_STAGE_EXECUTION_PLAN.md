@@ -6,7 +6,8 @@
 `ta_wma_input_float_length`、`strategy_currency_usd`、
 `strategy_commission_value_default_percent`、`udf_v5_box_new`、
 `udf_v5_array_unshift` 与 `box_call_result_set_right`、阶段 4 deferred 与
-阶段 5 基线已关闭；阶段 3 比较器已交付但独立成交验收 blocked。本文不代表全 Pine 兼容。
+阶段 5 已补真实增量、连续实时替换、资源测量与单个 checkpoint 热点优化验收；
+阶段 3 比较器已交付但独立成交验收 blocked。本文不代表全 Pine 兼容。
 
 编写日期：2026-09-06。规划基线：`9a68e4f02cf2186e1cc880df43ce1cd9743552c4`。
 步骤 0 实际 HEAD 与规划基线相同。每次开始实现前重新记录实际 HEAD、工作区状态
@@ -305,7 +306,8 @@ cargo run -p pine-cli -- run-incremental tests/fixtures/runtime/strategy_trade_c
 - [ ] 选择已能执行的目标策略，冻结源码、参数、OHLCV、预热和所有宿主输入。
 - [ ] 记录参考环境的图表类型、周期、品种、回测范围、成交设置、佣金、滑点、
   pyramiding、重算选项、Magnifier 覆盖和可获得的版本信息。
-- [ ] 获取允许使用的独立参考输出，例如用户导出的 Tester 结果；保留原始文件及 hash。
+- [x] 获取允许使用的独立参考输出，例如用户导出的 Tester 结果；保留原始文件及 hash。
+  已接收 8 份 CSV（6 份内容唯一）及 K 线；对应源码/设置尚未确认，仍不可比。
 - [ ] 先核对参考与本地 bar 时间、OHLCV 和输入设置，解释调整/聚合/时区差异。
 - [ ] 数据不一致或参考缺字段时，标记不可比或部分可比，不立即归因为 broker 错误。
 
@@ -314,8 +316,8 @@ cargo run -p pine-cli -- run-incremental tests/fixtures/runtime/strategy_trade_c
 
 ### 3.2 建立逐笔比较工具
 
-- [x] 计划新增 `scripts/compare_strategy_reference_outputs.py` 及对应测试；
-  它是待实现工具，先设计规范化输入格式和 CLI，再提供可复制运行命令。
+- [x] 已实现 `scripts/compare_strategy_reference_outputs.py` 及对应测试；
+  当前比较格式和覆盖边界见 `STRATEGY_MODERN_G3_TRADE_COMPARATOR_AUDIT.md`。
 - [x] 保留原始参考，在外部工具中做时间、字段和单位归一化，不把参考格式写进 runtime。
 - [x] 明确参考记录是订单成交、平仓交易还是聚合摘要，禁止混用粒度。
 - [x] 对同一 ID 多次成交、部分退出、反转建立确定性匹配规则；不得只按 ID 或总收益匹配。
@@ -408,6 +410,10 @@ cargo run -p pine-cli -- run-incremental tests/fixtures/runtime/strategy_trade_c
 目标：在结果一致的前提下，改善代表性策略的执行成本，并验证增长可控。
 先测量再选实现方向，不预设必须引入字节码、JIT、并行执行或重写 VM。
 
+2026-09-07 复核：旧 Python prefix-rerun 不算增量，seed/forming/confirm 混合计时
+不算独立实时测量。现由 Rust example + Python runner 替代；实测记录、运行命令与限制见
+[阶段 5 基线复核审计](STRATEGY_MODERN_G5_BASELINE_REVIEW_AUDIT.md)。
+
 ### 5.1 冻结基准集合与环境
 
 - [x] 从已验证样本选趋势、密集订单、集合/历史、Magnifier、重算/实时等有代表性的场景。
@@ -419,13 +425,15 @@ cargo run -p pine-cli -- run-incremental tests/fixtures/runtime/strategy_trade_c
 
 ### 5.2 建立可重跑的基准 harness
 
-- [x] 计划新增 `scripts/benchmark_modern_strategy.py` 或 Rust bench harness，先确定接口。
+- [x] 已实现 Rust `strategy_benchmark` example 与 Python v2 runner；
+  真实调用路径和 CLI 命令见阶段 5 复核审计。
 - [x] 分开测编译、编译后历史执行、增量 append、形成中 bar 替换/确认、输出序列化。
 - [x] 纯运行基准复用编译产物并直接调用 runtime；CLI 端到端计时另报。
 - [x] 固定预热次数；吞吐测试建议至少 10 次有效独立测量，报告中位数与离散程度。
   实时延迟报告 p95 时收集至少 100 次有效操作，并注明这些是操作样本而非独立进程。
-- [ ] 内存分开记录外部峰值 RSS、runtime profile 和输出保留量；profile 容量计数不等于字节。
-- [ ] 使用既有 `RuntimeProfile` 观察 series、集合、request cache 和策略重算计数；
+- [x] 分开记录独立探针进程的峰值 RSS、runtime profile 和输出保留量；profile 容量计数不等于字节。
+  当前 RSS 由 Linux `/proc/self/status` 读取，包含编译/验证开销，非 runtime-only RSS。
+- [x] 使用既有 `RuntimeProfile` 观察 series、集合、request cache 和策略重算计数；
   无 broker 热点计数时先使用本地 profiler 或内部计数，公开扩展另做契约设计。
 
 现有 CLI 可以采集 profile，以下用于验证采集链路，不是可靠性能结论：
@@ -439,31 +447,38 @@ cargo run --release -p pine-cli -- run tests/fixtures/runtime/strategy_trade_cou
 
 ### 5.3 定位并只优化一个热点
 
-- [ ] 保存未修改版本原始样本，再用 profiler 确认实际热点。
-- [ ] 优先评估重复查找、整段历史扫描、不必要 clone/分配、候选重复重建和输出复制。
-- [ ] 为优化写出预期复杂度、缓存身份、失效条件、回滚语义和资源上界。
-- [ ] 不改变 Pine 可观察顺序；不能通过跳过风险检查、减少重算或放宽保留限制换取速度。
-- [ ] 每次只改一个热点，保持可独立比较和撤回。
+- [x] 保存未修改版本原始样本，再用 profiler 确认实际热点。
+- [x] 优先评估重复查找、整段历史扫描、不必要 clone/分配、候选重复重建和输出复制。
+- [x] 为优化写出预期复杂度、缓存身份、失效条件、回滚语义和资源上界。
+- [x] 不改变 Pine 可观察顺序；不能通过跳过风险检查、减少重算或放宽保留限制换取速度。
+- [x] 每次只改一个热点，保持可独立比较和撤回。
 
 ### 5.4 做前后对照和增长测试
 
-- [ ] 在同一硬件/配置交替运行基线与修改版本，避免环境漂移造成虚假提升。
-- [ ] 所有基准输出与指定模式参考一致，比较器和策略回归通过。
-- [ ] 性能目标在实施前根据基线波动冻结；收益必须超过噪声，并满足预设延迟/内存目标。
-- [ ] 对非目标场景检查回退；超过预先冻结预算时解释并重新决策，不能平均后隐藏。
-- [ ] 随规模增长检查历史、输出、订单/交易、集合和缓存各自的增长。
+- [x] 在同一硬件/配置交替运行基线与修改版本，避免环境漂移造成虚假提升。
+- [x] 所有基准输出与指定模式参考一致，比较器和策略回归通过。
+- [x] 性能目标在正式 A/B 前根据基线冻结；收益须满足预设耗时/内存目标。
+  本轮阈值在局部代码修改后、正式 A/B 前保存；没有追溯声称在实现前冻结。
+- [x] 对非目标场景检查回退；超过预先冻结预算时解释并重新决策，不能平均后隐藏。
+- [x] 随规模增长检查历史、输出、订单/交易、集合和缓存各自的增长。
   允许契约要求的线性输出存储，禁止把“全部内存恒定”当作不现实的统一标准。
-- [ ] 测试超限诊断、失败后状态和重试行为，不因优化丢失 guardrail。
+- [x] 测试超限诊断、失败后状态和重试行为，不因优化丢失 guardrail。
 
 ### 5.5 收口或放弃本次优化
 
 - [x] 输出基准 manifest、原始计时、环境、前后统计、正确性结果和资源增长说明。
-- [x] 没有可重复收益或语义风险超出收益时撤回本次优化，保留测量结论。
-- [ ] 新增有实际保护价值的资源测试；硬件敏感的绝对耗时不直接作为普通 CI 硬阈值。
+  六轮交替 A/B、初轮未通过记录及资源差异见下方优化审计。
+- 不适用：没有可重复收益时撤回。当前固定预算下复测通过，保留单个局部优化。
+- [x] 新增有实际保护价值的资源测试；硬件敏感的绝对耗时不直接作为普通 CI 硬阈值。
 - [x] 完成第 9 节门禁；报告范围限定到已测平台、样本和数据规模。
 
 **G5：** 测量可复现、前后语义一致、收益超过噪声且资源限制有效。
 仅完成测量时写“基线完成”；放弃优化时写“评估完成，无优化合入”，不能宣称已提速。
+
+本轮 G5 限定在六类离线样本、64/256/1024 bars 和 Linux/WSL 环境；
+1024 bars 六轮复测目标耗时改善中位数 24.65%，不代表任意策略的容量上界。
+资源检查复用完整 guardrail 回归，并新增 2048 bars 的 rolling 状态及 100 次实时替换对照。
+详见 [checkpoint 优化审计](STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md)。
 
 ## 9. 每个行为切片的共同验收
 

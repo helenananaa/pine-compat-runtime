@@ -55,6 +55,12 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Status And Roadmap Documents
 
+- [Strategy G5 Baseline Review](STRATEGY_MODERN_G5_BASELINE_REVIEW_AUDIT.md):
+  corrected true-append/realtime timings, release probe, resource measurements
+  and remaining optimization gates.
+- [Remaining Modern Strategy Blockers](STRATEGY_MODERN_REMAINING_BLOCKERS_REVIEW.md):
+  dependency/version/template probes and the input package still needed for G3.
+
 - [Modern Strategy Five-Stage Execution Plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md):
   detailed Chinese execution steps for frozen corpus measurements, language
   blockers, independent strategy-result validation, account/report contracts,
@@ -195,3 +201,6 @@ latest audit before changing compatibility claims.
 release gate. It checks Rust formatting and linting, all workspace tests,
 source structure, host parity, the real WASM/Node path, the Python wheel, and
 Python binding tests.
+
+- [G3 参考输入接收审计](STRATEGY_MODERN_G3_REFERENCE_INTAKE_AUDIT.md)：下载导出核验与 Chrome 登录阻塞。
+- [G5 checkpoint 优化审计](STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md)：单热点优化、交替 A/B、资源与回归证据。

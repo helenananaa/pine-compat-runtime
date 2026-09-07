@@ -39,6 +39,14 @@
 已尝试：审计记录、`.local/` 文件名搜索、upstream mirrors。无 Tester/独立成交包。
 证据：`.local/five-stage-evidence/stage3/blocked.txt`。
 
-恢复条件：授权的 v5/v6 策略 + 冻结 K 线 + 独立预期成交。在此之前不实施成交/状态根因修复。
+2026-09-07 再查（HEAD `8737a28ba`，G2 `box_call_result_set_right` 之后）：公共 r1 577
+行与 combined 607 行 `reference.status` 仍全部为 `none`；263 个 run-pass 且
+`tradeCount>0` 的样本只是本解释器自金；`.local/legacy-corpus-r2` 的
+`tv-r2-*.json` 是 request.security CSV 映射，不是 Tester 成交表。未把 runtime
+快照或手算账本当作独立参考。
 
-剩余限制：无独立参考则结果一致性保持 N/A。下一阶段 4 仅在语料有合格账户需求时实施，否则 deferred。
+恢复条件：授权的 v5/v6 策略 + 冻结 K 线 + 独立预期成交（TradingView Strategy
+Tester 或同等来源）。在此之前不实施成交/状态根因修复。
+
+剩余限制：无独立参考则结果一致性保持 N/A。阶段 4 已 deferred；阶段 5 为测量基线。
+整体五阶段目标在 G3 缺独立参考时不得标为完成。

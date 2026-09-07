@@ -699,7 +699,11 @@ impl<'a> HistoricalRuntime<'a> {
             self.strategy_scheduler.begin_bar(bar_index);
         }
         self.set_builtin_symbols(&bar, bar_index)?;
-        if self.program.script_mode == ScriptMode::Strategy {
+        // Evaluation checkpoints are only consumed by fill-triggered re-execution.
+        // Single-pass strategies keep live state and need no clone/restore cycle.
+        if self.program.script_mode == ScriptMode::Strategy
+            && self.program.strategy_settings.calc_on_order_fills
+        {
             self.snapshot_strategy_eval_checkpoint();
         }
         self.run_pre_script_strategy_phases(bar_index, bar)?;

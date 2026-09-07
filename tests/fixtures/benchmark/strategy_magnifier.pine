@@ -1,0 +1,7 @@
+//@version=6
+strategy("Benchmark lower bar lifecycle", initial_capital=1000000, use_bar_magnifier=true)
+if bar_index % 4 == 0
+    strategy.entry("L", strategy.long, qty=1)
+if strategy.position_size > 0
+    strategy.exit("X", "L", limit=strategy.position_avg_price + 0.2, stop=strategy.position_avg_price - 0.2)
+plot(strategy.position_size)

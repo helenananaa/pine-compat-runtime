@@ -20,6 +20,8 @@ run python3 -m unittest scripts/tests/test_merge_legacy_corpus_manifests.py
 run python3 -m unittest scripts/tests/test_compare_tradingview_outputs.py
 run python3 -m unittest scripts/tests/test_compare_strategy_reference_outputs.py
 run python3 -m unittest scripts/tests/test_benchmark_modern_strategy.py
+run python3 -m unittest scripts/tests/test_compare_strategy_benchmarks.py
+run python3 -m unittest scripts/tests/test_strategy_benchmark_probe.py
 run python3 -m unittest scripts/tests/test_normalize_tradingview_bars.py
 run python3 -m unittest scripts/tests/test_profile_legacy_release.py
 run python3 scripts/check_host_parity.py

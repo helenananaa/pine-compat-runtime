@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Release manifests classify prerelease/development versions correctly and
+  normalize equivalent Python wheel/RC tag versions. Candidate GitHub releases
+  are marked prerelease and are not promoted to latest by the release workflow.
+  Manifest tooling requires `scripts/requirements-release.txt`.
+
 - Removed a redundant confirmed broker/scheduler/alert copy during realtime
   replay. Existing rollback and varip behavior is preserved. Full-scale
   resource acceptance remains pending; see

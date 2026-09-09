@@ -40,7 +40,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
 | D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory and explicit unit-point configuration validation are implemented; per-call source provenance and remaining configured-input readiness review remain open without unconditional gates |
-| D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; source audit found Linux-only peak memory and whole-history incremental replay; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
+| D4 | Long-session resources | Codex measurement and acceptance | Windows memory and sustained-tail probes are implemented; first full trend run timed out, second run remains under frozen budgets; no full long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
 ## Current next action
@@ -202,3 +202,14 @@ complete output hashes. A 100k+64 diagnostic tail improves confirmation median
 about 23%, but its 52.0943 ms P95 does not demonstrate the original 50 ms target.
 See REALTIME_CHECKPOINT_COPY_AUDIT.md. The full 10k-tail run and original budgets
 remain outstanding, as do the other D2-D5 requirements.
+
+
+D5 release-label audit corrected the wheel manifest's unconditional stable
+channel. PEP 440 version parsing now identifies alpha/beta/RC/development builds
+as prereleases and accepts equivalent normalized RC tags/wheel versions. The
+release workflow uses the manifest channel to add --prerelease --latest=false
+for candidate tags; stable behavior is retained. Release-only tool dependency:
+`scripts/requirements-release.txt`. Six manifest tests and the extracted Bash
+channel selector pass locally. No workflow was dispatched, tag created, release
+published or repository pushed. This fixes candidate identity handling; it does
+not complete D5's multi-surface artifact or platform acceptance.

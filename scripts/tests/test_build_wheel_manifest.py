@@ -58,6 +58,7 @@ class BuildWheelManifestTests(unittest.TestCase):
 
             rendered = json.loads(manifest_path.read_text())
             self.assertEqual(rendered["version"], "0.1.0")
+            self.assertEqual(rendered["channel"], "stable")
             self.assertEqual(rendered["python_requires"], ">=3.10")
             self.assertEqual(
                 [asset["platform_tag"] for asset in rendered["assets"]],
@@ -98,6 +99,33 @@ class BuildWheelManifestTests(unittest.TestCase):
                     commit="abc123",
                     expected_wheel_count=2,
                 )
+
+    def test_candidate_and_development_versions_are_not_stable(self) -> None:
+        for version in ("0.3.0a1", "0.3.0b1", "0.3.0rc1", "0.3.0.dev1"):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as temp_dir:
+                dist = Path(temp_dir)
+                write_wheel(dist, "win_amd64", version=version)
+                manifest = build_wheel_manifest.build_manifest(dist, tag=f"v{version}", commit="abc123")
+                self.assertEqual(manifest["channel"], "prerelease")
+                self.assertEqual(manifest["version"], version)
+
+    def test_semver_candidate_tag_matches_normalized_wheel_version(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dist = Path(temp_dir)
+            write_wheel(dist, "win_amd64", version="0.3.0rc1")
+            manifest = build_wheel_manifest.build_manifest(dist, tag="v0.3.0-rc.1", commit="abc123")
+            self.assertEqual(manifest["version"], "0.3.0rc1")
+            self.assertEqual(manifest["tag"], "v0.3.0-rc.1")
+            self.assertEqual(manifest["channel"], "prerelease")
+
+    def test_malformed_tag_or_wheel_version_is_rejected(self) -> None:
+        for tag, version, reason in (("vnot-a-version", "0.1.0", "invalid release version"),
+                                     ("v0.1.0", "broken", "invalid wheel version")):
+            with self.subTest(tag=tag, version=version), tempfile.TemporaryDirectory() as temp_dir:
+                dist = Path(temp_dir)
+                write_wheel(dist, "win_amd64", version=version)
+                with self.assertRaisesRegex(build_wheel_manifest.ManifestError, reason):
+                    build_wheel_manifest.build_manifest(dist, tag=tag, commit="abc123")
 
 
 if __name__ == "__main__":

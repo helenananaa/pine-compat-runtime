@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Build the deterministic GitHub Release manifest for binary wheels."""
+"""Build the deterministic wheel release manifest.
+
+Install tool dependencies with: python -m pip install -r scripts/requirements-release.txt
+"""
 
 from __future__ import annotations
 
@@ -10,6 +13,8 @@ import re
 import zipfile
 from email.parser import BytesParser
 from pathlib import Path
+
+from packaging.version import InvalidVersion, Version
 
 
 SCHEMA_VERSION = 1
@@ -90,6 +95,11 @@ def build_manifest(
     expected_version = tag.removeprefix("v")
     if not tag.startswith("v") or not expected_version:
         raise ManifestError(f"release tag must use v<version> form, got {tag!r}")
+    try:
+        release_version = Version(expected_version)
+    except InvalidVersion as exc:
+        raise ManifestError(f"invalid release version in tag {tag!r}") from exc
+    expected_version = str(release_version)
 
     assets: list[dict[str, object]] = []
     python_requires: str | None = None
@@ -101,7 +111,11 @@ def build_manifest(
                 f"{wheel.name}: expected distribution {expected_distribution!r}, "
                 f"got {metadata['distribution']!r}"
             )
-        if metadata["version"] != expected_version:
+        try:
+            actual_version = Version(metadata["version"])
+        except InvalidVersion as exc:
+            raise ManifestError(f"{wheel.name}: invalid wheel version {metadata['version']!r}") from exc
+        if actual_version != release_version:
             raise ManifestError(
                 f"{wheel.name}: version {metadata['version']!r} does not match tag {tag!r}"
             )
@@ -128,7 +142,7 @@ def build_manifest(
 
     return {
         "schema_version": SCHEMA_VERSION,
-        "channel": "stable",
+        "channel": "prerelease" if release_version.is_prerelease else "stable",
         "distribution": expected_distribution,
         "module": module,
         "version": expected_version,

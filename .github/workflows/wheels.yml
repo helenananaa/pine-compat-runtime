@@ -95,19 +95,21 @@ jobs:
           merge-multiple: true
 
       - name: Build release manifest
-        run: >-
-          python3 scripts/build_wheel_manifest.py
-          --dist dist
-          --tag "$GITHUB_REF_NAME"
-          --commit "$GITHUB_SHA"
-          --expected-wheel-count 2
+        # Version normalization/classification is an explicit tool dependency.
+        # Candidate tags must not become stable releases merely by matching v*.
+        run: |
+          python3 -m pip install -r scripts/requirements-release.txt
+          python3 scripts/build_wheel_manifest.py --dist dist --tag "$GITHUB_REF_NAME" --commit "$GITHUB_SHA" --expected-wheel-count 2
 
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create "$GITHUB_REF_NAME"
-          dist/*
-          --verify-tag
-          --generate-notes
-          --title "Pine Compat Runtime $GITHUB_REF_NAME"
+        run: |
+          channel=$(python3 -c 'import json; print(json.load(open("dist/manifest.json"))["channel"])')
+          flags=()
+          case "$channel" in
+            stable) ;;
+            prerelease) flags+=(--prerelease --latest=false) ;;
+            *) echo "Unsupported release channel: $channel" >&2; exit 1 ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --title "Pine Compat Runtime $GITHUB_REF_NAME" "${flags[@]}"

@@ -38,7 +38,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | --- | --- | --- | --- | --- |
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
-| D2 | Independent execution correctness | Codex | EMA/SMA seed and repeated-bar correction closed at 391386d7e; 9 controls / 739,655 values match; previous G3 real-strategy references rerun unchanged | Broader strategy/account, matched MTF/Magnifier inputs and real tick reference remain open |
+| D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF and paired historical Magnifier on/off references pass with Windows host parity | Margin/account expansion and real tick reference remain open; broader request/Magnifier claims stay bounded by actual cases |
 | D3 | Explicit embedding/data contract | Codex | Price grid exists; market/account assumptions and required capabilities need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
 | D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
@@ -59,8 +59,10 @@ These are historical CLI reruns, not new tick or MTF/Magnifier coverage.
 
 The independent 15-minute/60-minute default-HTF package now passes: 21,133 chart
 bars, 5,286 hourly inputs and 422,660 output values, with full installed-wheel/
-actual-WASM/CLI parity (MTF_REFERENCE_AUDIT.md). Next continue Magnifier/account
-references and D3-D5. Preserve frozen denominators and keep each reference batch
+actual-WASM/CLI parity (MTF_REFERENCE_AUDIT.md). Paired historical Magnifier
+references also pass: 148 hourly/888 intrabars, two trades and 2,960 plot values,
+with full host and historical mode parity (MAGNIFIER_REFERENCE_AUDIT.md).
+Next continue margin/account references and D3-D5. Preserve frozen denominators and keep each reference batch
 separate. The public r1 independent-reference count is not increased by these
 other batches. Windows debug qualification is not final Linux/release acceptance.
 

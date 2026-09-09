@@ -130,6 +130,7 @@ struct HistoryOffsetIntEnv {
 
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionInfo {
+    pub(crate) display_name: String,
     pub(crate) source_id: SourceId,
     pub(crate) source_context_id: SourceContextId,
     pub(crate) params: Vec<String>,

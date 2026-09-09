@@ -164,6 +164,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     module.functions.insert(
                         name.clone(),
                         FunctionInfo {
+                            display_name: name.clone(),
                             source_id: module.id,
                             // Library declarations are re-contextualized for each root import
                             // instance in `build_import_plan` before semantic analysis.
@@ -227,6 +228,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                 module.functions.insert(
                     name.clone(),
                     FunctionInfo {
+                        display_name: name.clone(),
                         source_id: module.id,
                         // Library declarations are re-contextualized for each root import
                         // instance in `build_import_plan` before semantic analysis.
@@ -378,32 +380,71 @@ fn build_import_plan(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> ImportPlan {
     let mut plan = ImportPlan::default();
-    for (import_instance, import) in imports_in_program(&modules[0].program)
-        .into_iter()
+    let root_imports = imports_in_program(&modules[0].program);
+    let mut contexts = root_imports
+        .iter()
         .enumerate()
-    {
-        let source_context_id = SourceContextId::import_instance(import_instance);
-        let Some((alias, _)) = import.alias else {
-            continue;
-        };
-        let Some(module_index) = library_index.get(&import.key) else {
-            continue;
-        };
-        let module = &modules[*module_index];
-        let module_context = rewrite_context_for_module(&alias, module);
+        .filter_map(|(index, import)| {
+            Some((
+                import.alias.as_ref()?.0.clone(),
+                *library_index.get(&import.key)?,
+                SourceContextId::import_instance(index),
+                true,
+            ))
+        })
+        .collect::<Vec<_>>();
+    // One canonical context per dependency source, not one per path through
+    // the graph. Diamonds and cycles cannot cause recursive body expansion.
+    let dependency_indices: HashSet<_> = modules
+        .iter()
+        .skip(1)
+        .flat_map(|module| imports_in_program(&module.program))
+        .filter_map(|import| library_index.get(&import.key).copied())
+        .collect();
+    contexts.extend(
+        modules
+            .iter()
+            .enumerate()
+            .skip(1)
+            .filter(|(index, _)| dependency_indices.contains(index))
+            .map(|(index, module)| {
+                (
+                    dependency_namespace(module),
+                    index,
+                    SourceContextId::import_instance(root_imports.len() + index - 1),
+                    false,
+                )
+            }),
+    );
+    for (alias, module_index, source_context_id, is_root_import) in contexts {
+        let module = &modules[module_index];
+        let mut module_context = rewrite_context_for_module(&alias, module);
+        for import in imports_in_program(&module.program) {
+            let (Some((dependency_alias, _)), Some(index)) =
+                (import.alias, library_index.get(&import.key))
+            else {
+                continue;
+            };
+            add_dependency_bindings(&mut module_context, &dependency_alias, &modules[*index]);
+        }
 
         for (name, export) in &module.exports {
             match export {
                 ExportInfo::Const { value, .. } => {
-                    plan.root_rewrites.constants.insert(
-                        format!("{alias}.{name}"),
-                        rewrite_expr(value, &module_context),
-                    );
+                    if is_root_import {
+                        plan.root_rewrites.constants.insert(
+                            format!("{alias}.{name}"),
+                            rewrite_expr(value, &module_context),
+                        );
+                    }
                 }
                 ExportInfo::Function { .. } => {
-                    plan.root_rewrites
-                        .function_targets
-                        .insert(format!("{alias}.{name}"), format!("{alias}.{name}"));
+                    if is_root_import {
+                        plan.root_rewrites.function_targets.insert(
+                            format!("{alias}.{name}"),
+                            module_function_key(&alias, module, name),
+                        );
+                    }
                 }
                 ExportInfo::UserType {
                     identity,
@@ -442,6 +483,15 @@ fn build_import_plan(
                 plan.imported_functions.insert(
                     key,
                     FunctionInfo {
+                        display_name: if is_root_import {
+                            if name_is_exported_function(module, name) {
+                                format!("{alias}.{name}")
+                            } else {
+                                format!("__import_{alias}_{name}")
+                            }
+                        } else {
+                            format!("{}::{name}", module.key.as_deref().unwrap_or("library"))
+                        },
                         source_id: function.source_id,
                         source_context_id,
                         params: function.params.clone(),
@@ -465,7 +515,8 @@ fn build_import_plan(
         }
 
         for ((_, name), method) in &module.methods {
-            let Some(method_info) = imported_method_info(&alias, module, method, source_context_id)
+            let Some(method_info) =
+                imported_method_info(&alias, module, method, source_context_id, &module_context)
             else {
                 continue;
             };
@@ -490,6 +541,7 @@ fn imported_method_info(
     module: &ModuleInfo,
     method: &ModuleMethodInfo,
     source_context_id: SourceContextId,
+    module_context: &RewriteContext,
 ) -> Option<MethodInfo> {
     let identity = method.receiver_identity.as_ref()?;
     if !exported_user_type(module, &identity.name) {
@@ -501,14 +553,13 @@ fn imported_method_info(
         params.push(imported_method_param_info(alias, module, param)?);
     }
 
-    let module_context = rewrite_context_for_module(alias, module);
     Some(MethodInfo {
         source_id: identity.source_id,
         source_context_id,
         receiver_type: format!("{alias}.{}", identity.name),
         receiver_name: method.receiver_name.clone(),
         params,
-        body: rewrite_function_body(&method.body, &method.param_names, &module_context),
+        body: rewrite_function_body(&method.body, &method.param_names, module_context),
         span: method.span,
     })
 }
@@ -666,18 +717,11 @@ fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContex
     let mut context = RewriteContext::default();
     for (name, value) in &module.constants {
         context.constants.insert(name.clone(), value.clone());
-        context
-            .constants
-            .insert(format!("{alias}.{name}"), value.clone());
     }
     for name in module.functions.keys() {
         context
             .function_targets
             .insert(name.clone(), module_function_key(alias, module, name));
-        context.function_targets.insert(
-            format!("{alias}.{name}"),
-            module_function_key(alias, module, name),
-        );
     }
     for name in module
         .exports
@@ -687,18 +731,42 @@ fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContex
         context
             .type_targets
             .insert(name.clone(), format!("{alias}.{name}"));
-        context
-            .type_targets
-            .insert(format!("{alias}.{name}"), format!("{alias}.{name}"));
     }
     context
 }
 
-fn module_function_key(alias: &str, module: &ModuleInfo, name: &str) -> String {
-    if name_is_exported_function(module, name) {
-        format!("{alias}.{name}")
-    } else {
-        format!("__import_{alias}_{name}")
+fn module_function_key(alias: &str, _module: &ModuleInfo, name: &str) -> String {
+    // Not spellable by Pine source, so public aliases cannot capture builtin
+    // calls inside a library or collide with generated private function keys.
+    format!("@import:{alias}.{name}")
+}
+
+fn dependency_namespace(module: &ModuleInfo) -> String {
+    format!("@source{}", module.id.get())
+}
+
+fn add_dependency_bindings(context: &mut RewriteContext, alias: &str, module: &ModuleInfo) {
+    let namespace = dependency_namespace(module);
+    for (name, export) in &module.exports {
+        let source_name = format!("{alias}.{name}");
+        match export {
+            ExportInfo::Function { .. } => {
+                context
+                    .function_targets
+                    .insert(source_name, module_function_key(&namespace, module, name));
+            }
+            ExportInfo::Const { value, .. } => {
+                context.constants.insert(
+                    source_name,
+                    rewrite_expr(value, &rewrite_context_for_module(&namespace, module)),
+                );
+            }
+            ExportInfo::UserType { .. } => {
+                context
+                    .type_targets
+                    .insert(source_name, format!("{namespace}.{name}"));
+            }
+        }
     }
 }
 

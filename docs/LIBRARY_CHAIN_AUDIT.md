@@ -35,10 +35,41 @@ Log: library-grammar-full-verify-v2.log. The earlier gate failure came from a
 test's diagnostic-prefix string being mistaken for an emitted code; the test
 now asserts the actual E_UDT_FIELD_TYPE instead of adding a fictitious code.
 
+## Source-scoped transitive imports — 2026-09-09
+
+Baseline 7aa527a19. Nested exported function calls now bind in the owning
+library's import scope. Public root aliases remain distinct; dependencies use
+one internal context per referenced source, avoiding path expansion for diamonds.
+Internal function keys cannot be spelled by source, preventing caller aliases
+from capturing a library's builtin calls. Exported namespace members take
+precedence, with builtin fallback for absent members. Imported method bodies
+receive the same owning-module bindings.
+
+Original tests exercise independent state through two root aliases and a diamond,
+historical/append/forming parity, builtin shadowing, method calls into a dependency,
+private access, missing libraries, duplicate/missing aliases and import cycles.
+The transitive runtime fixture supplies both complete original test libraries
+through CLI, Python, WASM Rust tests and generated WASM/Node.
+
+The first full gate caught missing dependency bundles in the incremental/realtime
+fixture harnesses; these now supply both libraries instead of excluding the
+fixture. The second caught a verifier blind spot: the host-parity scanner omitted
+the CLI library-triple registry. It now reads complete dependency tuples, ignores
+comment/string examples, and tests missing registration and missing host assertion
+failures. Existing paired runtime_import and runtime_import_state snapshots are
+now explicitly required too; no old expected outputs changed.
+
+This is not a general nested-UDT or full library execution claim. The complete
+unchanged TechnicalRating root now reaches three remaining declaration errors:
+two export-effect diagnostics and the duplicate-export diagnosis for RelativeValue
+overloads (technical-after-transitive.json). The previous unknown-call cascade
+is gone. Final full gate exited 0: transitive-full-verify-v3.log, 6,605 Rust tests,
+679 fresh installed-wheel Python tests, 103 tool tests, structural/parity checks
+and actual generated WASM/Node smoke. This remains Windows debug qualification,
+not the final release/Linux artifact matrix.
+
 ## Remaining chain work
 
-- Bind nested imports in their owning module, preserve builtin namespace
-  fallback, private visibility and distinct source contexts.
 - Admit legitimate overload identities; keep duplicate/ambiguous declarations
   and invalid invocations rejected.
 - Distinguish valid-but-unimplemented export capabilities from invalid source.
@@ -48,7 +79,7 @@ now asserts the actual E_UDT_FIELD_TYPE instead of adding a fictitious code.
 - Execute the unmodified root with all three exact sources, then compare the
   frozen 21,133 closed bars and three rating outputs. That gate is still open.
 
-Current complete-root diagnostics after grammar correction are retained in
+Historical complete-root diagnostics after grammar correction are retained in
 technical-after-grammar.json: two unsupported-export effect diagnostics, one
 duplicate-export diagnostic, and four unresolved nested function names with
 their consequent unknown-variable cascade. These are not 42 independent bugs.

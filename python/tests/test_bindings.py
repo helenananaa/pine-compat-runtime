@@ -1178,6 +1178,17 @@ def test_run_script_returns_label_array_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_transitive_imports_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/transitive_imports.pine").read_text()
+    libraries = {
+        "user/transitive_outer/1": (ROOT / "tests/fixtures/libraries/transitive_outer_lib.pine").read_text(),
+        "user/transitive_inner/1": (ROOT / "tests/fixtures/libraries/transitive_inner_lib.pine").read_text(),
+    }
+    expected = json.loads((ROOT / "tests/snapshots/runtime_transitive_imports.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"), library_sources=libraries)
+    assert_json_close(result, expected)
+
+
 def test_run_script_returns_library_declaration_forms_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/library_declaration_forms.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_library_declaration_forms.json").read_text())

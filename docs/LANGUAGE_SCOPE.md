@@ -28,8 +28,8 @@ A missing directive selects v1 with origin `implicit`; it is not treated as the
 latest language. Leading comments, blank lines, and indentation before the
 directive are accepted. Horizontal whitespace before or after `=` and trailing
 whitespace are accepted, including the corpus-proven `//@version = 4`
-spelling. The `//@version` prefix remains exact, so `// @version=6` is an
-ordinary comment. A second recognized directive or a recognized directive
+spelling. ASCII horizontal spaces/tabs between `//` and `@version` are also
+accepted, including `// @version=6`. A second recognized directive or a recognized directive
 after a source statement is rejected before ordinary semantic analysis.
 Versions outside v1-v6 and root/library version mismatches are also rejected
 before lowering.

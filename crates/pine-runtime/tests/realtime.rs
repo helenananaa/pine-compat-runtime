@@ -2348,6 +2348,24 @@ fn hir_for_fixture(path: &str) -> pine_ir::HirProgram {
 }
 
 fn analyze_realtime_fixture(source: SourceFile) -> pine_sema::Analysis {
+    if source.text().contains("import user/transitive_outer/1") {
+        let libraries = ["inner", "outer"]
+            .into_iter()
+            .map(|name| {
+                let path = workspace_fixture(&format!(
+                    "tests/fixtures/libraries/transitive_{name}_lib.pine"
+                ));
+                (
+                    format!("user/transitive_{name}/1"),
+                    SourceFile::new(
+                        path.display().to_string(),
+                        fs::read_to_string(path).unwrap(),
+                    ),
+                )
+            })
+            .collect();
+        return analyze_input(&AnalysisInput::with_library_sources(source, libraries).unwrap());
+    }
     let library = if source.text().contains("import user/lib/1") {
         Some(("user/lib/1", "tests/fixtures/libraries/import_lib.pine"))
     } else if source.text().contains("import user/udt/1") {

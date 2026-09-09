@@ -10719,6 +10719,21 @@ fn library_source_json_runs_imported_function_subset() {
 }
 
 #[test]
+fn library_source_json_returns_transitive_imports_fixture_contract() {
+    let libraries = serde_json::json!({
+        "user/transitive_outer/1":include_str!("../../../../tests/fixtures/libraries/transitive_outer_lib.pine"),
+        "user/transitive_inner/1":include_str!("../../../../tests/fixtures/libraries/transitive_inner_lib.pine"),
+    });
+    let output = run_script_csv_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/transitive_imports.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        &libraries.to_string(),
+    )
+    .expect("transitive imports should run");
+    assert_snapshot("runtime_transitive_imports.json", &output);
+}
+
+#[test]
 fn library_source_json_returns_import_fixture_contract() {
     let library_json = import_fixture_library_json();
     let output = run_script_csv_with_libraries(

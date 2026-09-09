@@ -438,6 +438,7 @@ impl Analyzer {
             self.functions.insert(
                 name.clone(),
                 FunctionInfo {
+                    display_name: name.clone(),
                     source_id: SourceId::root(),
                     source_context_id: SourceContextId::root(),
                     params: param_names,
@@ -462,7 +463,10 @@ impl Analyzer {
         if self.function_stack.iter().any(|active| active == name) {
             self.diagnostics.push(Diagnostic::error(
                 "E_RECURSIVE_FUNCTION",
-                format!("recursive function `{name}` is not supported"),
+                format!(
+                    "recursive function `{}` is not supported",
+                    function.display_name
+                ),
                 span,
             ));
             return None;
@@ -497,7 +501,13 @@ impl Analyzer {
         let completed_args = match function.complete_args(args, call_span) {
             Ok(args) => args,
             Err(error) => {
-                self.report_udf_arg_error(name, span, function.params.len(), args.len(), error);
+                self.report_udf_arg_error(
+                    &function.display_name,
+                    span,
+                    function.params.len(),
+                    args.len(),
+                    error,
+                );
                 return None;
             }
         };
@@ -505,7 +515,13 @@ impl Analyzer {
         let arg_indices = match resolve_udf_arg_indices(&function.params, args) {
             Ok(arg_indices) => arg_indices,
             Err(error) => {
-                self.report_udf_arg_error(name, span, function.params.len(), args.len(), error);
+                self.report_udf_arg_error(
+                    &function.display_name,
+                    span,
+                    function.params.len(),
+                    args.len(),
+                    error,
+                );
                 return None;
             }
         };

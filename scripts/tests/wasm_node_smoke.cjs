@@ -58,6 +58,15 @@ const libraryFormsSource = require('node:fs').readFileSync(
 const libraryFormsExpected = JSON.parse(require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/snapshots/runtime_library_declaration_forms.json'), 'utf8'));
 assert.deepEqual(JSON.parse(pine.runScriptCsv(libraryFormsSource, simpleBars)), libraryFormsExpected);
+const transitiveSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/transitive_imports.pine'), 'utf8');
+const transitiveLibraries = Object.fromEntries(['inner', 'outer'].map(name => [
+  `user/transitive_${name}/1`, require('node:fs').readFileSync(
+    path.resolve(__dirname, `../../tests/fixtures/libraries/transitive_${name}_lib.pine`), 'utf8')
+]));
+const transitiveExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_transitive_imports.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsvWithLibraries(transitiveSource, simpleBars, JSON.stringify(transitiveLibraries))), transitiveExpected);
 const simpleRejection = JSON.parse(pine.analyzeScript(
   '//@version=6\nindicator("simple")\nf(simple float x) => x\nplot(f(close))\n'));
 assert.equal(simpleRejection.executable, false);

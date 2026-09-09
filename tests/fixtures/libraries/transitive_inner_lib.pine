@@ -1,0 +1,6 @@
+//@version=6
+library("inner")
+export accumulate(series float source) =>
+    var float total = 0
+    total += source
+    total

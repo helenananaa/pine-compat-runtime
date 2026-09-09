@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_DIR = ROOT / "crates/pine-cli/src/runtime_snapshots/fixtures"
+LIBRARY_FIXTURE_FILE = FIXTURE_DIR.with_suffix(".rs")
 REQUIRED_MANIFEST = ROOT / "scripts/host_parity_required.txt"
 ANALYSIS_FIXTURE_FILE = ROOT / "crates/pine-cli/src/analysis_snapshots.rs"
 ANALYSIS_REQUIRED_MANIFEST = ROOT / "scripts/legacy_analysis_parity_required.txt"
@@ -28,6 +29,12 @@ UNPAIRED_REGISTERED_ALLOWLIST: dict[str, str] = {}
 # Keep the parser independent of whitespace and of that optional final comma.
 SNAPSHOT_FIXTURE = re.compile(
     r'\(\s*"([^"]+\.json)"\s*,\s*"([^"]+\.pine)"\s*,?\s*\)',
+    re.DOTALL,
+)
+LIBRARY_SNAPSHOT_FIXTURE = re.compile(
+    r'\(\s*"([^"\n]+\.json)"\s*,\s*"([^"\n]+\.pine)"\s*,\s*&\['
+    r'(?:\s*\(\s*"[^"\n]+"\s*,\s*"[^"\n]+\.pine"\s*,?\s*\)\s*,?)*'
+    r'\s*\]\s*,?\s*\)',
     re.DOTALL,
 )
 PYTHON_SNAPSHOT_PATH = re.compile(
@@ -57,6 +64,41 @@ def runtime_snapshot_fixtures() -> list[RuntimeSnapshotFixture]:
     fixtures: list[RuntimeSnapshotFixture] = []
     for path in sorted(FIXTURE_DIR.glob("*.rs")):
         fixtures.extend(parse_runtime_snapshot_fixtures(path.read_text(), path))
+    fixtures.extend(parse_library_snapshot_fixtures(
+        LIBRARY_FIXTURE_FILE.read_text(), LIBRARY_FIXTURE_FILE
+    ))
+    return fixtures
+
+
+def parse_library_snapshot_fixtures(
+    text: str, path: Path
+) -> list[RuntimeSnapshotFixture]:
+    """Read CLI library triples, including their complete dependency list."""
+    fixtures: list[RuntimeSnapshotFixture] = []
+    index = 0
+    while index < len(text):
+        next_code = _skip_rust_trivia(text, index)
+        if next_code != index:
+            index = next_code
+            continue
+        raw_end = _rust_raw_string_end(text, index)
+        if raw_end is not None:
+            index = raw_end
+            continue
+        if text[index] == '"':
+            index = _skip_rust_quoted(text, index, '"')
+            continue
+        if text[index] == "'":
+            char_end = _rust_char_end(text, index)
+            if char_end is not None:
+                index = char_end
+                continue
+        match = LIBRARY_SNAPSHOT_FIXTURE.match(text, index)
+        if match is not None:
+            fixtures.append(RuntimeSnapshotFixture(path, *match.groups()))
+            index = match.end()
+        else:
+            index += 1
     return fixtures
 
 

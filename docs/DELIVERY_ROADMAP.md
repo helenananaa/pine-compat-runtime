@@ -157,3 +157,24 @@ measurement before freezing numerical acceptance budgets. Do not extrapolate
 them into a 100k-bar or long-session pass. Files: `resources/pilot-plan.json`,
 `resources/host-preflight.json`, `resources/pilot-build.log`, and
 `resources/pilot.json` under `.local/delivery-20260909/`.
+
+
+D4 memory instrumentation now records Windows process peak working set and
+peak commit charge using GetProcessMemoryInfo. Linux retains VmHWM; unsupported
+platforms and failed reads remain unavailable. This is benchmark-only host code,
+not a runtime API or runtime-only memory claim. The measurement includes input,
+compilation, all benchmark phases and verification before final report rendering.
+Counter semantics follow [Microsoft PROCESS_MEMORY_COUNTERS](https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-process_memory_counters).
+
+The 12-scenario pilot with memory preserves every source/input/result/live-result
+hash from the initial pilot. At 10k bars, observed peak working sets range from
+29260 to 89008 KiB and peak commit from 30908 to 96644 KiB. The report remains
+partial because the pilot is not long-session acceptance. Probe Clippy and all
+12 benchmark-tool tests pass, including real Windows counter reads and rejection
+of zero, negative, boolean and non-finite memory values. Tool version is 3;
+reports identify the memory source and hash supporting probe modules. Evidence:
+`.local/delivery-20260909/resources/pilot-with-commit-memory.json`.
+
+Next extend measurement to a true appended tail and repeated forming/confirmation
+cycles after the fixed history, then freeze numerical budgets before acceptance.
+Windows memory availability does not by itself complete D4 or the product goal.

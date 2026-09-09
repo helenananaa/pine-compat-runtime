@@ -28,6 +28,11 @@ class StrategyBenchmarkProbeTests(unittest.TestCase):
                 raw = bench.run_probe(self.binary, payload, 60)
                 summary = bench.summarize_probe(raw, spec=spec, payload=payload)
                 self.assertEqual(summary['status'], 'measured')
+                if sys.platform in ('win32', 'linux'):
+                    self.assertGreater(summary['peakRssKiB'], 0)
+                    if sys.platform == 'win32':
+                        self.assertGreater(summary['peakCommitKiB'], 0)
+                    self.assertEqual(summary['memorySource'], 'windowsPeakWorkingSet' if sys.platform=='win32' else 'linuxVmHWM')
                 self.assertEqual(summary['phases']['incrementalAppend']['n'], 2)
                 if not spec.get('magnifier'):
                     self.assertEqual(summary['phases']['formingReplace']['n'], 6)

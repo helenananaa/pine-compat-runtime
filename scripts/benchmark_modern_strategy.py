@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Callable, Sequence
 
 SCHEMA_VERSION = 2
-TOOL_VERSION = 2
+TOOL_VERSION = 3
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -94,6 +94,10 @@ def summarize_probe(raw: dict, *, spec: dict, payload: dict) -> dict:
         expected_count = payload['iters'] * (payload['replacements'] if phase == 'formingReplace' else 1)
         if len(raw['timingsMs'][phase]) != expected_count:
             raise BenchmarkError(f'wrong measurement count for {phase}')
+    for key in ('peakRssKiB', 'peakCommitKiB'):
+        peak = raw.get(key)
+        if peak is not None and (type(peak) is not int or peak <= 0):
+            raise BenchmarkError(f'{key} must be a positive integer KiB measurement or null')
     profiles = raw['profile']
     if not profiles or profiles.get('bars') != len(payload['bars']):
         raise BenchmarkError('missing or wrong runtime profile')
@@ -112,9 +116,10 @@ def summarize_probe(raw: dict, *, spec: dict, payload: dict) -> dict:
         orderCount=raw['orderCount'], correctness=correctness,
         phases={key: stats_ms(value) for key, value in raw['timingsMs'].items()},
         profile=profiles, confirmedRealtimeProfile=raw['confirmedRealtimeProfile'],
-        peakRssKiB=raw.get('peakRssKiB'),
+        peakRssKiB=raw.get('peakRssKiB'), peakCommitKiB=raw.get('peakCommitKiB'),
         rssStatus='measured' if raw.get('peakRssKiB') is not None else 'unavailable',
-        rssScope='fresh Linux process peak through verification, before final probe report rendering; not runtime-only',
+        memorySource=raw.get('memorySource', 'legacyLinuxVmHWM'),
+        rssScope='fresh process peak through verification, before final probe report rendering; not runtime-only',
         realtimeExclusion=raw.get('realtimeExclusion'),
         formingExecution=('historical-only: excluded' if spec.get('magnifier') else
                           'script executes on replacements' if spec['sampleId'] in {'realtime', 'collection'} else
@@ -132,6 +137,7 @@ def resource_growth(samples: list[dict]) -> list[dict]:
         for a, b in zip(ordered, ordered[1:]):
             result.append(dict(sampleId=name, fromBars=a['barCount'], toBars=b['barCount'],
                                outputBytesDelta=b['outputBytes']-a['outputBytes'],
+                               peakCommitKiBDelta=b['peakCommitKiB']-a['peakCommitKiB'] if a.get('peakCommitKiB') is not None and b.get('peakCommitKiB') is not None else None,
                                peakRssKiBDelta=b['peakRssKiB']-a['peakRssKiB'] if a['peakRssKiB'] is not None and b['peakRssKiB'] is not None else None,
                                profileDeltas={k: v-a['profile'][k] for k, v in b['profile'].items()
                                               if type(v) is int and type(a['profile'].get(k)) is int}))
@@ -159,6 +165,7 @@ def build_report(*, root: Path, binary: Path, bar_counts: Sequence[int], seed: i
     failed = any(s['status'] == 'failed' for s in samples)
     adequate = iters >= 10 and replacements >= 100 and len(bar_counts) >= 3
     resources = not failed and all(s['rssStatus'] == 'measured' for s in samples)
+    resources = resources and all(s.get('peakCommitKiB') is not None for s in samples if s.get('memorySource') == 'windowsPeakWorkingSet')
     revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, text=True, capture_output=True, check=True).stdout.strip()
     dirty = subprocess.run(['git', 'status', '--porcelain'], cwd=root, text=True, capture_output=True, check=True).stdout
     return dict(schemaVersion=SCHEMA_VERSION, toolVersion=TOOL_VERSION,
@@ -169,6 +176,7 @@ def build_report(*, root: Path, binary: Path, bar_counts: Sequence[int], seed: i
                                  processor=platform.processor(), logicalCpuCount=os.cpu_count(),
                                  cargoLockSha256=hashlib.sha256((root/'Cargo.lock').read_bytes()).hexdigest(),
                                  probeSourceSha256=hashlib.sha256((root/'crates/pine-runtime/examples/strategy_benchmark.rs').read_bytes()).hexdigest(),
+                                 probeSupportSha256={str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((root/'crates/pine-runtime/examples/benchmark_support').glob('*.rs'))},
                                  rustc=subprocess.run(['rustc', '-vV'], capture_output=True, text=True, check=True).stdout,
                                  buildRevision=revision, worktreeStatus=dirty, binaryPath=str(binary),
                                  binarySha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
@@ -177,7 +185,7 @@ def build_report(*, root: Path, binary: Path, bar_counts: Sequence[int], seed: i
                                  incrementalAppend='one append_bar per bar on one runtime; excludes result snapshot and JSON',
                                  formingReplace='each changed forming update after seed and initial forming; includes runtime returned snapshot',
                                  formingConfirm='confirmed update only; includes returned snapshot',
-                                 peakRss='Linux /proc process high-water mark; unavailable elsewhere'),
+                                 peakRss='Windows peak working set or Linux VmHWM; source labeled; unavailable on other platforms'),
                 samples=samples, resourceGrowth=resource_growth(samples),
                 limitations=['synthetic local regression inputs, not independent TradingView reference',
                              'resource growth observations are not a proved asymptotic bound',

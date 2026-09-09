@@ -45,35 +45,23 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 
 ## Current next action
 
-Return to D1 using the complete source/dependency graph, not one first-error
-probe at a time. The bounded read-only map is retained as
-`.local/delivery-20260909/grok-full-chain-map-report.md`; it separates full-source
-parsing/admission from reachable calcRatingAll execution. Current-head analysis
-(`technical-owned-fields-qualified-analysis.json` in the local evidence directory)
-admits the complete root with zero diagnostics. Its first full 21,133-bar run
-has numerical differences (technical-owned-fields-comparison.json).
-Collection-field parsing and statement switch arms are qualified at 7aa527a19;
-source-scoped transitive imports and namespace fallback passed their final Windows gate.
-Imported scalar overloads and owned-field declaration admission have passed
-their Windows gates. MACD initialization and same-bar behavior are now Windows
-qualified against native seed/repeated/missing controls. Native numeric comparison
-semantics are now Windows qualified (NUMERIC_COMPARISON_AUDIT.md), eliminating
-all remaining oscillator differences. Full-root differences are now 1/0/1
-(technical-comparison-candidate-result.json). The subsequent bounded nearby SMA
-replacement correction closes the last MA difference: all 63,399 values match.
-Complete-root Windows mode and CLI/installed-Python/actual-WASM parity now pass
-from 5920add7e; receipt is technical-5920add7e-hosts/qualification.json under the
-existing evidence directory. Next revalidate the frozen independent strategy
-batches on this numerical baseline, then continue D2 request/Magnifier/account
-references and D3-D5. Preserve measured semantics and reference tolerances.
-The static map is not execution evidence. The target remains
-unmodified TechnicalRating/3 with exact ta/9 and RelativeValue/3; unused
-libraries must not be omitted or trimmed to pass admission.
+D1 is Windows-qualified at 5920add7e: unmodified TechnicalRating/3 with exact
+ta/9 and RelativeValue/3, all 21,133 closed bars from bar_index=0, and all
+63,399 rating values agree with the independent reference. CLI execution modes,
+installed Python wheel and generated WASM agree on complete output. Receipt:
+`.local/delivery-20260909/technical-5920add7e-hosts/qualification.json`.
 
-The full TradingView reference is ready: 21,133 closed bars from bar_index=0,
-no skipped warmup, three rating outputs. It is still a reference-only package;
-local full-library comparison has not passed. Manifest:
-`.local/delivery-20260909/technical-reference-manifest.json`.
+The rebuilt current CLI also revalidates both frozen strategy batches: r3 has
+65 trades/14,711 series values; r2 has 41 trades/18,907 values. All pass with
+original source/export hashes, tolerances and prior warmup policies unchanged.
+Receipt: `.local/delivery-20260909/strategy-revalidation-summary.json`.
+These are historical CLI reruns, not new tick or MTF/Magnifier coverage.
+
+Next build an independent matched chart/request data package for a standard
+15-minute chart requesting 60-minute data, then continue Magnifier/account
+references and D3-D5. Preserve frozen denominators and keep each reference batch
+separate. The public r1 independent-reference count is not increased by these
+other batches. Windows debug qualification is not final Linux/release acceptance.
 
 ## Qualified evidence and limits
 
@@ -96,9 +84,10 @@ local full-library comparison has not passed. Manifest:
 - [Performance baseline](STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md)
   is historical small-workload evidence, not a current long-session guarantee.
 
-Latest local qualification receipt:
-`.local/delivery-20260909/ema-final-qualification.json`; retained wheel and
-WASM artifacts: `ema-final-hosts/` in the same evidence directory. These are
+Latest local full-library qualification receipt:
+`.local/delivery-20260909/technical-5920add7e-hosts/qualification.json`; retained
+wheel/WASM and complete results are in that directory. EMA-specific historical
+evidence remains in `ema-final-qualification.json` and `ema-final-hosts/`. These are
 qualification builds, not a stable release or a completed Linux matrix.
 
 ## Work and evidence rules

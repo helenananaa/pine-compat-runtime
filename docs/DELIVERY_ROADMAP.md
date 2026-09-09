@@ -37,7 +37,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | ID | Required result | Owner | Current state | Acceptance still needed |
 | --- | --- | --- | --- | --- |
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
-| D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Complete original graph runs; qualified numerical fixes yield zero differences across all 63,399 frozen values (SMA_ROLLING_SUM_AUDIT) | Preserve all values and zero skipped warmup; finish complete-root mode/host acceptance from known installed artifacts |
+| D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | EMA/SMA seed and repeated-bar correction closed at 391386d7e; 9 controls / 739,655 values match; previous G3 real-strategy references rerun unchanged | Broader strategy/account, matched MTF/Magnifier inputs and real tick reference remain open |
 | D3 | Explicit embedding/data contract | Codex | Price grid exists; market/account assumptions and required capabilities need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
 | D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
@@ -60,10 +60,12 @@ qualified against native seed/repeated/missing controls. Native numeric comparis
 semantics are now Windows qualified (NUMERIC_COMPARISON_AUDIT.md), eliminating
 all remaining oscillator differences. Full-root differences are now 1/0/1
 (technical-comparison-candidate-result.json). The subsequent bounded nearby SMA
-replacement correction closes the last MA difference: all 63,399 values match
-(technical-bounded-delta-candidate-result.json). Next finish full-root execution
-mode and CLI/installed-Python/actual-WASM parity from this source. Preserve
-measured Pine semantics and frozen tolerances; component probes are diagnostic only.
+replacement correction closes the last MA difference: all 63,399 values match.
+Complete-root Windows mode and CLI/installed-Python/actual-WASM parity now pass
+from 5920add7e; receipt is technical-5920add7e-hosts/qualification.json under the
+existing evidence directory. Next revalidate the frozen independent strategy
+batches on this numerical baseline, then continue D2 request/Magnifier/account
+references and D3-D5. Preserve measured semantics and reference tolerances.
 The static map is not execution evidence. The target remains
 unmodified TechnicalRating/3 with exact ta/9 and RelativeValue/3; unused
 libraries must not be omitted or trimmed to pass admission.

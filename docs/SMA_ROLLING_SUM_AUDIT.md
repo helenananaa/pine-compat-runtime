@@ -44,3 +44,22 @@ CLI, installed Python and WASM, including real Node instantiation. Full gate:
 sma-delta-full-verify.log exited 0: 6,621 Rust tests, 682 installed-wheel Python
 tests, 103 tool tests and real generated WASM/Node. Complete-library mode/host acceptance
 and the overall resource/release goals remain separate requirements.
+
+## Complete-root Windows acceptance
+
+Commit 5920add7e68a51ea307c8dcbc5fc8c42cace22e9: retained fresh installed wheel
+and generated WASM both produce exactly the same complete JSON as CLI on the
+unchanged three-library root and all 21,133 frozen bars. All 63,399 reference
+values match at the original tolerances. CLI incremental, realtime-history and
+realtime-forming commands also match the complete baseline JSON. The forming
+command mutates, replaces and confirms the final bar; this is not a many-hour
+forming soak or every-bar lifecycle claim.
+
+All eight frozen source/data/reference hashes and CSV/JSON input parity were
+rechecked. Receipt with commit and artifact checksums:
+`.local/delivery-20260909/technical-5920add7e-hosts/qualification.json`.
+Wheel, generated WASM, payload and complete Python/WASM outputs are retained in
+that directory. Reproducer: `technical-host-check.py` with the retained venv's
+Python, using companion `technical-host-check.cjs`. These are Windows debug
+qualification artifacts; final Linux/release packaging and long-session resource
+acceptance remain open.

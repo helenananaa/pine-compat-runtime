@@ -197,10 +197,6 @@ fn legacy_modern_or_missing_declarations_are_rejected_precisely() {
             ScriptModeClassification::Missing,
         ),
         (
-            "// @version=6\nindicator(\"still implicit v1\")\nplot(close)\n",
-            ScriptModeClassification::Indicator,
-        ),
-        (
             "//@version=4\nlibrary(\"not an indicator\")\n",
             ScriptModeClassification::Library,
         ),
@@ -218,6 +214,18 @@ fn legacy_modern_or_missing_declarations_are_rejected_precisely() {
         assert_eq!(analysis.compatibility.script_mode, expected_mode);
         assert!(analysis.hir.is_none());
     }
+}
+
+#[test]
+fn spaced_version_comment_selects_modern_dialect() {
+    // Preserve the original source while correcting its former implicit-v1 classification.
+    let analysis = analyze("// @version=6\nindicator(\"still implicit v1\")\nplot(close)\n");
+    assert!(diagnostic_codes(&analysis).is_empty());
+    assert_eq!(
+        analysis.compatibility.script_mode,
+        ScriptModeClassification::Indicator
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

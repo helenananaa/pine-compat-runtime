@@ -90,7 +90,7 @@ fn rejects_version_directive_after_source_statement() {
 }
 
 #[test]
-fn accepts_whitespace_around_version_equals_but_not_after_comment_prefix() {
+fn accepts_horizontal_whitespace_in_version_annotations() {
     for source in [
         "//@version =6\nindicator(\"Demo\")\n",
         "//@version\t=\t6\nindicator(\"Demo\")\n",
@@ -106,7 +106,10 @@ fn accepts_whitespace_around_version_equals_but_not_after_comment_prefix() {
 
     let parsed = parse("// @version=6\nindicator(\"Demo\")\n");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    assert!(parsed.program.version.is_none());
+    assert_eq!(
+        parsed.program.version.map(|version| version.version),
+        Some(6)
+    );
 }
 
 #[test]

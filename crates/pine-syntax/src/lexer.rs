@@ -667,20 +667,23 @@ impl<'a> Lexer<'a> {
             .map_or(self.text.len(), |offset| start + offset);
         let line = &self.text[start..line_end];
 
-        if let Some(raw_version) = line.strip_prefix("//@version") {
+        if let Some(raw_version) = line.strip_prefix("//") {
             let raw_version = raw_version.trim_start_matches([' ', '\t']);
-            if let Some(raw_version) = raw_version.strip_prefix('=') {
-                self.saw_version_directive = true;
-                match raw_version.trim().parse::<u16>() {
-                    Ok(version) => self.tokens.push(Token {
-                        kind: TokenKind::VersionDirective(version),
-                        span: Span::new(start, line_end),
-                    }),
-                    Err(_) => self.diagnostics.push(Diagnostic::error(
-                        "E_LEX_VERSION",
-                        "invalid version directive",
-                        Span::new(start, line_end),
-                    )),
+            if let Some(raw_version) = raw_version.strip_prefix("@version") {
+                let raw_version = raw_version.trim_start_matches([' ', '\t']);
+                if let Some(raw_version) = raw_version.strip_prefix('=') {
+                    self.saw_version_directive = true;
+                    match raw_version.trim().parse::<u16>() {
+                        Ok(version) => self.tokens.push(Token {
+                            kind: TokenKind::VersionDirective(version),
+                            span: Span::new(start, line_end),
+                        }),
+                        Err(_) => self.diagnostics.push(Diagnostic::error(
+                            "E_LEX_VERSION",
+                            "invalid version directive",
+                            Span::new(start, line_end),
+                        )),
+                    }
                 }
             }
         }

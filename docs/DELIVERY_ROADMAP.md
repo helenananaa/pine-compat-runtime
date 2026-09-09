@@ -57,8 +57,9 @@ original source/export hashes, tolerances and prior warmup policies unchanged.
 Receipt: `.local/delivery-20260909/strategy-revalidation-summary.json`.
 These are historical CLI reruns, not new tick or MTF/Magnifier coverage.
 
-Next build an independent matched chart/request data package for a standard
-15-minute chart requesting 60-minute data, then continue Magnifier/account
+The independent 15-minute/60-minute default-HTF package now passes: 21,133 chart
+bars, 5,286 hourly inputs and 422,660 output values, with full installed-wheel/
+actual-WASM/CLI parity (MTF_REFERENCE_AUDIT.md). Next continue Magnifier/account
 references and D3-D5. Preserve frozen denominators and keep each reference batch
 separate. The public r1 independent-reference count is not increased by these
 other batches. Windows debug qualification is not final Linux/release acceptance.

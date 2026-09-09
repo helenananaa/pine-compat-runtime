@@ -1,7 +1,6 @@
 # Independent runtime delivery
 
-Owner: Codex. Implementation/review support: bounded Grok tasks in isolated
-worktrees. Started 2026-09-09. Status: active, no stable release accepted yet.
+Owner: Codex, directly responsible for implementation, review and validation. Started 2026-09-09. Status: active, no stable release accepted yet.
 
 ## Candidate scope and acceptance
 
@@ -38,10 +37,10 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | ID | Required result | Owner | Current state | Acceptance still needed |
 | --- | --- | --- | --- | --- |
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
-| D1 | Full TechnicalRating dependency chain | Grok bounded implementation, Codex semantics/oracle | Simple parameters b8e38333d and spaced versions c2c028269 closed; all three exact sources captured; compound declarations/admission and transitive calls still block execution | Original sources preserved; complete root runs and matches frozen three-rating reference; mode/host parity |
+| D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Simple parameters b8e38333d and spaced versions c2c028269 closed; all three exact sources captured; compound declarations/admission and transitive calls still block execution | Original sources preserved; complete root runs and matches frozen three-rating reference; mode/host parity |
 | D2 | Independent execution correctness | Codex | EMA/SMA seed and repeated-bar correction closed at 391386d7e; 9 controls / 739,655 values match; previous G3 real-strategy references rerun unchanged | Broader strategy/account, matched MTF/Magnifier inputs and real tick reference remain open |
-| D3 | Explicit embedding/data contract | Codex plus bounded Grok audit | Price grid exists; market/account assumptions and required capabilities need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
-| D4 | Long-session resources | Grok measurements, Codex acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
+| D3 | Explicit embedding/data contract | Codex | Price grid exists; market/account assumptions and required capabilities need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
+| D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
 ## Current next action
@@ -90,9 +89,12 @@ qualification builds, not a stable release or a completed Linux matrix.
 
 ## Work and evidence rules
 
-Grok receives an exact baseline, finite turns, explicit file ownership,
-minimal permissions, no subagents and no push/publish/global configuration.
-Codex independently reviews patches and verifies results before integration.
+Grok delegation/resume authorization was revoked by the current goal file.
+Codex implements and verifies directly. Prior task logs/reports are retained as
+historical leads, not current authority. At takeover no matching live Grok task
+process was found; the latest four task records ended normally. Do not restart
+those tasks or change shared/global agent settings. Keep bounded implementation
+scope and independent verification, including review of self-authored tools.
 Keep workspace, committed, installed-artifact and published states separate.
 
 Raw third-party sources and captures stay in ignored local evidence folders;

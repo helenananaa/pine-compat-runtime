@@ -990,6 +990,11 @@ impl Analyzer {
         self.legacy
             .canonical_value_name(self.current_source_context_id(), expr.span)
             .and_then(|name| {
+                if pine_builtins::builtin_series_value_type(name)
+                    .is_some_and(|ty| ty.qualifier != Qualifier::Const)
+                {
+                    return None;
+                }
                 pine_builtins::named_float_constant(name)
                     .or_else(|| pine_builtins::named_int_constant(name).map(|value| value as f64))
             })

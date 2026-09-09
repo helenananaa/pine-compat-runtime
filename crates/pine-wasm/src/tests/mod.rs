@@ -3282,6 +3282,17 @@ fn run_script_csv_returns_macd_fixture_contract() {
 }
 
 #[test]
+fn quantity_precision_fixture_matches_cli_contract() {
+    let output = run_script_csv_with_request_bars(
+        include_str!("../../../../tests/fixtures/runtime/quantity_precision.pine"),
+        include_str!("../../../../tests/fixtures/runtime/quantity_precision_bars.csv"),
+        r#"{"$chart":{"minMove":1,"priceScale":10,"quantityPrecision":6}}"#,
+    )
+    .expect("fractional margin should run");
+    assert_snapshot("runtime_quantity_precision.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_sma_nearby_replacement_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/sma_nearby_replacement.pine"),

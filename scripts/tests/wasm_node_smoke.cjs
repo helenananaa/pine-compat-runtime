@@ -46,6 +46,11 @@ assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
+const quantitySource = require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/fixtures/runtime/quantity_precision.pine'), 'utf8');
+const quantityBars = require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/fixtures/runtime/quantity_precision_bars.csv'), 'utf8');
+const quantityExpected = JSON.parse(require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/snapshots/runtime_quantity_precision.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(quantitySource, quantityBars,
+  JSON.stringify({$chart:{minMove:1,priceScale:10,quantityPrecision:6}}))), quantityExpected);
 const simpleSource = require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/fixtures/runtime/simple_scalar_parameters.pine'), 'utf8');
 const simpleBars = require('node:fs').readFileSync(

@@ -144,6 +144,13 @@ fn normalize_default(
                 return None;
             }
             let name = parts.join(".");
+            if let Some(pine_type) = pine_builtins::builtin_series_value_type(&name)
+                && pine_type.qualifier != Qualifier::Const
+                && (pine_builtins::named_float_constant(&name).is_some()
+                    || pine_builtins::named_int_constant(&name).is_some())
+            {
+                return Some((value.clone(), pine_type));
+            }
             if let Some(value) = pine_builtins::named_color(&name) {
                 Literal::ColorHex(format!("#{value:06x}"))
             } else if let Some(value) = pine_builtins::named_int_constant(&name) {

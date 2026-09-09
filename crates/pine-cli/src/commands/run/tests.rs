@@ -1,4 +1,47 @@
 use super::*;
+
+#[test]
+fn quantity_precision_fixture_matches_installed_host_contract() {
+    let args = vec![
+        workspace_path("tests/fixtures/runtime/quantity_precision.pine"),
+        "--bars".to_owned(),
+        workspace_path("tests/fixtures/runtime/quantity_precision_bars.csv"),
+        "--chart-price-grid".to_owned(),
+        "1/10".to_owned(),
+        "--chart-quantity-precision".to_owned(),
+        "6".to_owned(),
+    ];
+    let options = parse_options(&args).unwrap();
+    let output = run_json_with_options(&options).unwrap();
+    assert_snapshot("runtime_quantity_precision.json", &output);
+}
+
+#[test]
+fn chart_quantity_precision_cli_validates_the_explicit_profile() {
+    for value in ["-1", "1.5", "true", "10", "4294967296"] {
+        let args = [
+            "a.pine",
+            "--bars",
+            "a.csv",
+            "--chart-quantity-precision",
+            value,
+        ]
+        .map(str::to_owned);
+        assert!(parse_options(&args).is_err(), "{value}");
+    }
+    let args = [
+        "a.pine",
+        "--bars",
+        "a.csv",
+        "--chart-quantity-precision",
+        "6",
+    ]
+    .map(str::to_owned);
+    assert_eq!(
+        parse_options(&args).unwrap().chart_context.min_contract(),
+        0.000001
+    );
+}
 use std::path::PathBuf;
 
 #[test]

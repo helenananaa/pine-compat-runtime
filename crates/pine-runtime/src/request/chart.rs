@@ -6,6 +6,7 @@ pub struct ChartContext {
     timeframe: RequestTimeframe,
     min_move: u32,
     price_scale: u32,
+    quantity_scale: u32,
 }
 
 impl ChartContext {
@@ -16,6 +17,7 @@ impl ChartContext {
             timeframe,
             min_move: 1,
             price_scale: 100,
+            quantity_scale: 1,
         }
     }
 
@@ -58,6 +60,24 @@ impl ChartContext {
         f64::from(self.min_move) / f64::from(self.price_scale)
     }
 
+    /// Decimal quantity precision supplied by the host (0 through 9).
+    /// This profile represents a minimum contract of 10^-precision units.
+    pub fn with_quantity_precision(mut self, precision: u32) -> Result<Self, &'static str> {
+        self.quantity_scale = 10_u32
+            .checked_pow(precision)
+            .ok_or("chart quantity precision must be between 0 and 9")?;
+        Ok(self)
+    }
+
+    #[must_use]
+    pub fn min_contract(&self) -> f64 {
+        1.0 / f64::from(self.quantity_scale)
+    }
+
+    pub(crate) fn quantity_scale(&self) -> u32 {
+        self.quantity_scale
+    }
+
     #[must_use]
     pub fn with_symbol(mut self, symbol: impl Into<String>) -> Self {
         self.symbol = symbol.into();
@@ -78,6 +98,7 @@ impl Default for ChartContext {
             timeframe: RequestTimeframe::default(),
             min_move: 1,
             price_scale: 100,
+            quantity_scale: 1,
         }
     }
 }

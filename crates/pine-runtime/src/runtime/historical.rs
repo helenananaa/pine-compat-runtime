@@ -320,6 +320,7 @@ impl<'a> HistoricalRuntime<'a> {
             program.strategy_settings.margin_short,
             program.strategy_settings.pyramiding_limit,
         )
+        .with_quantity_scale(request_environment.chart().quantity_scale())
         .with_close_entries_rule(program.strategy_settings.close_entries_rule)
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
         Self {

@@ -3433,8 +3433,8 @@ plot(strategy.opentrades.size(1))
     assert_eq!(
         result.plots[5].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(3.0),
             PineValue::Float(3.0),
         ]
@@ -11615,8 +11615,8 @@ plot(strategy.margin_liquidation_price)
             PineValue::Float(after_call),
             PineValue::Float(later),
         ] => {
-            assert!((after_call - 660.0 / 126.0).abs() < 1e-10);
-            assert!((later - 660.0 / 126.0).abs() < 1e-10);
+            assert!((after_call - 5.24).abs() < 1e-10);
+            assert!((later - 5.24).abs() < 1e-10);
         }
         other => panic!("unexpected liquidation-price plots: {other:?}"),
     }
@@ -12037,7 +12037,11 @@ plot(strategy.closedtrades.max_drawdown_percent(0.5))
     assert_eq!(result.plots[8].values, vec![PineValue::Float(0.0); 3]);
     assert_eq!(
         result.plots[9].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0)]
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0)
+        ]
     );
     assert_eq!(
         result.plots[10].values,
@@ -12222,10 +12226,10 @@ plot(strategy.opentrades.max_drawdown_percent(0.5))
     assert_eq!(
         result.plots[4].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
             PineValue::Float(2.0),
-            PineValue::Na
+            PineValue::Float(0.0)
         ]
     );
     assert_eq!(
@@ -12268,11 +12272,13 @@ plot(strategy.opentrades.max_drawdown_percent(0.5))
         result.plots[9].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na]
     );
-    for plot in &result.plots[10..37] {
-        assert_eq!(
-            plot.values,
-            vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na]
-        );
+    for (index, plot) in result.plots.iter().enumerate().take(37).skip(10) {
+        let expected = if matches!(index, 14 | 23) {
+            PineValue::Float(0.0)
+        } else {
+            PineValue::Na
+        };
+        assert_eq!(plot.values, vec![expected; 4]);
     }
     assert_eq!(
         result.plots[37].values,

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added host-owned decimal quantity precision (0 through 9), surfaced as
+  `syminfo.mincontract`, through Rust ChartContext, CLI and Python/WASM chart
+  metadata. Margin cover truncates at that precision; displayed liquidation
+  price rounds to the chart tick. Missing integer trade-size records return
+  zero and size(na) selects the first record. Simple numeric metadata remains
+  runtime-evaluated in history offsets and function defaults. Defaults and
+  public JSON schemas remain unchanged. This does not add arbitrary lot steps,
+  contract multipliers or currency conversion. See
+  [margin reference audit](MARGIN_REFERENCE_AUDIT.md).
+
 - Corrected EMA initialization to use the first length non-na executed-bar
   samples, and SMA/EMA repeated calls to replace a bar's tentative sample.
   This changes early values and loop results that depended on the old

@@ -11,6 +11,20 @@ plot(str.tostring(10.26, format.mintick) == "10.3" ? 1 : 0)
 '''
 
 
+def test_chart_quantity_precision_is_per_execution_and_preserves_default():
+    source = "//@version=6\nindicator(\"quantity\")\nf(simple float value=syminfo.mincontract) => value\nplot(f())\n"
+    program = pine_compat.compile_script(source)
+    configured = program.run(BARS, request_bars={"$chart": {"minMove": 1, "priceScale": 10, "quantityPrecision": 6}})
+    assert configured["plots"][0]["values"] == [0.000001]
+    assert program.run(BARS)["plots"][0]["values"] == [1]
+
+
+@pytest.mark.parametrize("precision", [True, -1, 1.5, "6", 10, 4294967296])
+def test_chart_quantity_precision_rejects_invalid_metadata(precision):
+    with pytest.raises(ValueError):
+        pine_compat.run_script(SOURCE, BARS, request_bars={"$chart": {"minMove": 1, "priceScale": 10, "quantityPrecision": precision}})
+
+
 def test_chart_price_grid_is_per_execution_and_preserves_default():
     program = pine_compat.compile_script(SOURCE)
     result = program.run(BARS, request_bars={"$chart": {"minMove": 1, "priceScale": 10}})

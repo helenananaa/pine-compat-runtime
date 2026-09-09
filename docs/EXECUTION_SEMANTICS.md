@@ -3113,7 +3113,7 @@ in the core runtime.
 
 Positive integer minMove/priceScale can be supplied through ChartContext::with_price_grid,
 CLI --chart-price-grid MIN_MOVE/PRICE_SCALE, Python request_bars["$chart"]
-(with exactly minMove and priceScale), or WASM $chart JSON. Missing input preserves
+(with required minMove and priceScale and optional quantityPrecision), or WASM $chart JSON. Missing input preserves
 the synthetic 1/100 default; no exchange lookup is performed. Same-symbol request
 contexts inherit the grid; other symbols retain the existing default metadata.
 Tick orders, slippage, limit verification, rounding and mintick scalar/collection
@@ -3125,3 +3125,29 @@ exceptions to the general absent-trade na rule. An na index and absent identity
 fields retain na. Nonzero cash-per-order entry reversal uses the existing
 atomic netting transition and splits one transaction fee between old and new
 exposure. See STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md for evidence and limits.
+
+
+## Host quantity precision and margin rounding
+
+`ChartContext::with_quantity_precision(N)` supplies a decimal-power minimum
+contract of `10^-N`, for integer N from 0 through 9. Default N=0 preserves the
+synthetic integer profile. CLI uses `--chart-quantity-precision N`; Python uses
+`request_bars={"$chart":{"minMove":1,"priceScale":10,"quantityPrecision":6}}`;
+WASM accepts `quantityPrecision` in its existing `$chart` object. No symbol
+lookup occurs. `syminfo.mincontract` reflects host metadata at execution time,
+including metadata-dependent history offsets and simple function defaults.
+
+Margin cover truncates the calculated quantity at that precision before the
+four-times cover multiplier and position clamp. Script-visible
+`strategy.margin_liquidation_price` rounds down for longs and up for shorts on
+the chart price grid; internal candidate accounting retains its raw formula.
+This field alone does not specify a tick-level liquidation event threshold.
+The quantity profile does not impose general order-size rounding or implement
+arbitrary lot steps, non-unit point values, or account-currency conversion.
+
+Absent integer records for `strategy.closedtrades.size` and
+`strategy.opentrades.size` return zero, including negative indices. An `na`
+index selects record zero for these two size functions. Fractional invalid
+indices retain their existing rejection/result behavior. Other trade fields
+retain their own contracts. See [margin evidence](MARGIN_REFERENCE_AUDIT.md)
+for independent coverage, controls and remaining limits.

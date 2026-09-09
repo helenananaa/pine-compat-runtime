@@ -676,3 +676,46 @@ impl BrokerState {
             .map_or(PineValue::Na, |name| PineValue::String(name.clone()))
     }
 }
+
+impl super::BrokerState {
+    pub(super) fn margin_call_quantity(&self, current_price: f64) -> Option<f64> {
+        if !current_price.is_finite() || current_price <= 0.0 {
+            return None;
+        }
+        if self.position_size > 0.0 && self.margin_long.is_active() {
+            let margin_ratio = self.margin_long.value_percent / 100.0;
+            if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
+                return None;
+            }
+            let margin_required = self.position_size * current_price * margin_ratio;
+            let available_funds = self.equity_value(current_price) - margin_required;
+            if !available_funds.is_finite() || available_funds >= 0.0 {
+                return None;
+            }
+            let cover_amount = ((available_funds / margin_ratio / current_price)
+                * f64::from(self.quantity_scale))
+            .trunc()
+                / f64::from(self.quantity_scale);
+            let qty = (cover_amount * 4.0).abs().min(self.position_size);
+            return (qty.is_finite() && qty > 0.0).then_some(qty);
+        }
+        if self.position_size < 0.0 && self.margin_short.is_active() {
+            let margin_ratio = self.margin_short.value_percent / 100.0;
+            if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
+                return None;
+            }
+            let margin_required = self.margin_required_for_position(current_price)?;
+            let available_funds = self.equity_value(current_price) - margin_required;
+            if !available_funds.is_finite() || available_funds >= 0.0 {
+                return None;
+            }
+            let cover_amount = ((available_funds / margin_ratio / current_price)
+                * f64::from(self.quantity_scale))
+            .trunc()
+                / f64::from(self.quantity_scale);
+            let qty = (cover_amount * 4.0).abs().min(self.position_size.abs());
+            return (qty.is_finite() && qty > 0.0).then_some(qty);
+        }
+        None
+    }
+}

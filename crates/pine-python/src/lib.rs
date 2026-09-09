@@ -13,6 +13,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyDict, PyList, PyModule, PySequence};
 mod alerts;
+mod chart_metadata;
 mod diagnostics;
 mod outputs;
 mod realtime;
@@ -347,26 +348,7 @@ fn parse_request_environment(
     for (key, value) in dict {
         let key: String = key.extract()?;
         if key == "$chart" {
-            let grid = value.cast::<PyDict>().map_err(|_| {
-                PyValueError::new_err("$chart must be a dict with minMove and priceScale")
-            })?;
-            if grid.len() != 2 || !grid.contains("minMove")? || !grid.contains("priceScale")? {
-                return Err(PyValueError::new_err(
-                    "$chart requires exactly minMove and priceScale; use chart_symbol/chart_timeframe for identity",
-                ));
-            }
-            let integer = |key: &str| -> PyResult<u32> {
-                let value = grid.get_item(key)?.expect("checked key");
-                if value.is_instance_of::<PyBool>() {
-                    return Err(PyValueError::new_err("price grid does not accept booleans"));
-                }
-                value
-                    .extract::<u32>()
-                    .map_err(|_| PyValueError::new_err("price grid must contain positive integers"))
-            };
-            chart = chart
-                .with_price_grid(integer("minMove")?, integer("priceScale")?)
-                .map_err(PyValueError::new_err)?;
+            chart = chart_metadata::parse_chart_metadata(chart, &value)?;
             continue;
         }
         let request_key = parse_request_key(&key)?;

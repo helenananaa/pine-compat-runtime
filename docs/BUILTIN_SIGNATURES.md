@@ -471,11 +471,11 @@ syminfo.session -> const string
 syminfo.timezone -> const string
 syminfo.root -> const string
 syminfo.volumetype -> const string
-syminfo.mintick -> const float
-syminfo.mincontract -> const float
-syminfo.pointvalue -> const float
-syminfo.minmove -> const int
-syminfo.pricescale -> const int
+syminfo.mintick -> simple float
+syminfo.mincontract -> simple float
+syminfo.pointvalue -> simple float
+syminfo.minmove -> simple int
+syminfo.pricescale -> simple int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
 ticker.heikinashi(tickerid: simple string) -> simple string
@@ -495,7 +495,11 @@ prefix `NASDAQ`, stock type, `Electronic Technology` sector,
 `Telecommunications Equipment` industry, `US` country, `USD` currency/base
 currency, `regular` session, `Etc/UTC` timezone, `base` volume type,
 `mintick = 0.01`, `mincontract = 1.0`, `pointvalue = 1.0`, `minmove = 1`, and
-`pricescale = 100`.
+`pricescale = 100`. ChartContext overrides chart identity, price grid and
+optional decimal quantity precision; `mincontract = 10^-quantityPrecision`
+with precision 0 through 9. `pointvalue` remains 1.0. Numeric metadata has
+`simple` qualification and is not a compile-time synthetic constant. See
+[execution contracts](EXECUTION_SEMANTICS.md#host-quantity-precision-and-margin-rounding).
 `syminfo.prefix(symbol)` and `syminfo.ticker(symbol)` parse the supplied simple
 string directly. They split `PREFIX:TICKER` on the first `:`; symbols without a
 prefix return `""` from `syminfo.prefix()` and the whole symbol from

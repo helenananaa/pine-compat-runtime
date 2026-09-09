@@ -111,12 +111,21 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
     if let Some(field) = object.keys().find(|field| {
         !matches!(
             field.as_str(),
-            "symbol" | "timeframe" | "minMove" | "priceScale"
+            "symbol" | "timeframe" | "minMove" | "priceScale" | "quantityPrecision"
         )
     }) {
         return Err(format!("request bars `$chart` has unknown field `{field}`"));
     }
     let mut chart = ChartContext::default();
+    if let Some(precision) = object.get("quantityPrecision") {
+        let precision = precision
+            .as_u64()
+            .and_then(|value| u32::try_from(value).ok())
+            .ok_or("request bars `$chart.quantityPrecision` must be an integer between 0 and 9")?;
+        chart = chart
+            .with_quantity_precision(precision)
+            .map_err(str::to_owned)?;
+    }
     if object.contains_key("minMove") || object.contains_key("priceScale") {
         let integer = |key: &str| -> Result<u32, String> {
             object
@@ -151,6 +160,29 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
 #[cfg(test)]
 mod price_grid_tests {
     use super::*;
+
+    #[test]
+    fn quantity_precision_metadata_validates_and_preserves_default() {
+        let environment =
+            request_environment_from_json(r#"{"$chart":{"quantityPrecision":6}}"#).unwrap();
+        assert_eq!(environment.chart().min_contract(), 0.000001);
+        assert_eq!(
+            request_environment_from_json("{}")
+                .unwrap()
+                .chart()
+                .min_contract(),
+            1.0
+        );
+        for value in ["true", "-1", "1.5", "\"6\"", "10", "4294967296"] {
+            assert!(
+                request_environment_from_json(&format!(
+                    r#"{{"$chart":{{"quantityPrecision":{value}}}}}"#
+                ))
+                .is_err(),
+                "{value}"
+            );
+        }
+    }
 
     #[test]
     fn chart_price_grid_validates_metadata_without_affecting_default() {

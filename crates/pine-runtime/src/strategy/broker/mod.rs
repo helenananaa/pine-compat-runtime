@@ -65,6 +65,7 @@ pub struct BrokerState {
     close_entries_rule: StrategyCloseEntriesRule,
     margin_long: StrategyMarginSetting,
     margin_short: StrategyMarginSetting,
+    quantity_scale: u32,
     open_entry_commission: f64,
     slippage_price_offset: f64,
     limit_verification_price_offset: f64,

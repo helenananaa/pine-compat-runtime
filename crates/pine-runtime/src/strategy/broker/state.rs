@@ -118,6 +118,7 @@ impl BrokerState {
             margin_long,
             margin_short,
             open_entry_commission: 0.0,
+            quantity_scale: 1,
             slippage_price_offset,
             limit_verification_price_offset,
             cash: initial_capital,
@@ -174,6 +175,12 @@ impl BrokerState {
         self.order_book
             .exits_mut()
             .set_allow_same_bar_price_fills(calc_on_order_fills);
+        self
+    }
+
+    pub(crate) fn with_quantity_scale(mut self, scale: u32) -> Self {
+        debug_assert!(scale > 0);
+        self.quantity_scale = scale;
         self
     }
 

@@ -554,6 +554,17 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     RequestTimeframe::parse(value).map_err(|error| error.to_string())?;
                 options.chart_context = options.chart_context.clone().with_timeframe(timeframe);
             }
+            "--chart-quantity-precision" => {
+                index += 1;
+                let value = args.get(index).ok_or_else(usage)?;
+                let precision = value.parse::<u32>().map_err(|_| {
+                    "chart quantity precision must be an integer between 0 and 9".to_owned()
+                })?;
+                options.chart_context = options
+                    .chart_context
+                    .with_quantity_precision(precision)
+                    .map_err(str::to_owned)?;
+            }
             "--chart-price-grid" => {
                 index += 1;
                 let value = args.get(index).ok_or_else(usage)?;

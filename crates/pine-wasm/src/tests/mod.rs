@@ -3282,6 +3282,16 @@ fn run_script_csv_returns_macd_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_sma_nearby_replacement_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/sma_nearby_replacement.pine"),
+        include_str!("../../../../tests/fixtures/runtime/macd_edge_cases_bars.csv"),
+    )
+    .expect("nearby SMA replacement runs");
+    assert_snapshot("runtime_sma_nearby_replacement.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_numeric_comparison_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/numeric_comparison.pine"),

@@ -95,6 +95,18 @@ impl RollingWindowState {
             self.evicted.push(evicted);
         }
         self.append(value);
+        // For nearby same-sign values, Sterbenz's lemma gives an exact input
+        // difference. Apply that small delta to the sum once instead of rounding
+        // after both the removal and insertion. Other transitions keep the
+        // existing path, including large magnitude jumps and opposite signs.
+        if self.evicted.len() == 1
+            && let (Some(incoming), Some(outgoing)) = (value, self.evicted[0])
+            && incoming.is_sign_positive() == outgoing.is_sign_positive()
+            && incoming.abs() >= outgoing.abs() * 0.5
+            && outgoing.abs() >= incoming.abs() * 0.5
+        {
+            self.sum = self.prev_sum + (incoming - outgoing);
+        }
     }
 
     /// Undo the open append when it belongs to `bar`, leaving no sample for
@@ -257,6 +269,41 @@ mod tests {
         assert_eq!(window.values, VecDeque::from(vec![Some(3.0)]));
         assert_eq!(window.sum, 3.0);
         assert_eq!(window.na_count, 0);
+    }
+
+    #[test]
+    fn nearby_replacement_avoids_two_roundings_and_restores_on_discard() {
+        for sign in [1.0, -1.0] {
+            let mut window = RollingWindowState::default();
+            for (bar, value) in [1053.7, 1029.4, 1017.3, 1087.1].into_iter().enumerate() {
+                window.push_for_bar(Some(sign * value), 4, bar);
+            }
+            let base = window.clone();
+            window.push_for_bar(Some(sign * 1090.9), 4, 4);
+            assert_eq!(window.sum.to_bits(), (sign * 4224.7_f64).to_bits());
+            window.push_for_bar(Some(sign * 1088.2), 4, 4);
+            let mut once = base.clone();
+            once.push_for_bar(Some(sign * 1088.2), 4, 4);
+            assert_eq!(window.sum.to_bits(), once.sum.to_bits());
+            window.discard_for_bar(4);
+            assert_eq!(window.values, base.values);
+            assert_eq!(window.sum.to_bits(), base.sum.to_bits());
+            assert_eq!(window.sum_squares.to_bits(), base.sum_squares.to_bits());
+        }
+    }
+
+    #[test]
+    fn wide_magnitude_and_sign_changes_retain_existing_update_path() {
+        for values in [[1e16, 1.0, 1.0], [1000.1, 1000.2, -1000.3]] {
+            let mut ordinary = RollingWindowState::default();
+            let mut per_bar = RollingWindowState::default();
+            for (bar, value) in values.into_iter().enumerate() {
+                ordinary.push(Some(value), 2);
+                per_bar.push_for_bar(Some(value), 2, bar);
+            }
+            assert_eq!(ordinary.values, per_bar.values);
+            assert_eq!(ordinary.sum.to_bits(), per_bar.sum.to_bits());
+        }
     }
 
     #[test]

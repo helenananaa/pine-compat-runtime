@@ -608,6 +608,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     ),
     ("runtime_macd.json", "tests/fixtures/runtime/macd.pine"),
     (
+        "runtime_sma_nearby_replacement.json",
+        "tests/fixtures/runtime/sma_nearby_replacement.pine",
+    ),
+    (
         "runtime_numeric_comparison.json",
         "tests/fixtures/runtime/numeric_comparison.pine",
     ),

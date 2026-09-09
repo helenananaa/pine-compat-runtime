@@ -37,7 +37,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | ID | Required result | Owner | Current state | Acceptance still needed |
 | --- | --- | --- | --- | --- |
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
-| D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Complete original source graph analyzes and runs; owned-field admission Windows gate passed; MACD and numeric-comparison fixes leave 1/0/1 differences, isolated to SMA(10) at index 15460 | Preserve all 63,399 values and zero skipped warmup; correct numerical differences, then qualify complete-root mode/host parity |
+| D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Complete original graph runs; qualified numerical fixes yield zero differences across all 63,399 frozen values (SMA_ROLLING_SUM_AUDIT) | Preserve all values and zero skipped warmup; finish complete-root mode/host acceptance from known installed artifacts |
 | D2 | Independent execution correctness | Codex | EMA/SMA seed and repeated-bar correction closed at 391386d7e; 9 controls / 739,655 values match; previous G3 real-strategy references rerun unchanged | Broader strategy/account, matched MTF/Magnifier inputs and real tick reference remain open |
 | D3 | Explicit embedding/data contract | Codex | Price grid exists; market/account assumptions and required capabilities need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
 | D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
@@ -59,9 +59,11 @@ their Windows gates. MACD initialization and same-bar behavior are now Windows
 qualified against native seed/repeated/missing controls. Native numeric comparison
 semantics are now Windows qualified (NUMERIC_COMPARISON_AUDIT.md), eliminating
 all remaining oscillator differences. Full-root differences are now 1/0/1
-(technical-comparison-candidate-result.json). Next isolate the MA difference at
-index 15460. Preserve measured Pine semantics and frozen reference tolerances;
-source component probes are diagnostic only.
+(technical-comparison-candidate-result.json). The subsequent bounded nearby SMA
+replacement correction closes the last MA difference: all 63,399 values match
+(technical-bounded-delta-candidate-result.json). Next finish full-root execution
+mode and CLI/installed-Python/actual-WASM parity from this source. Preserve
+measured Pine semantics and frozen tolerances; component probes are diagnostic only.
 The static map is not execution evidence. The target remains
 unmodified TechnicalRating/3 with exact ta/9 and RelativeValue/3; unused
 libraries must not be omitted or trimmed to pass admission.

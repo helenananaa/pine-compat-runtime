@@ -223,6 +223,11 @@ boundary. Implementing that language rule eliminates all 129 oscillator errors;
 the independent reference tolerances remain unchanged. Full-root comparison is
 now 1/0/1, still failing only at the single MA decision at index 15460.
 
+The subsequent [nearby SMA replacement qualification](SMA_ROLLING_SUM_AUDIT.md)
+closes that final decision difference. All 63,399 frozen rating values match
+without changing reference tolerance or input. Full original root mode/host
+acceptance remains separate from the passed kernel Windows gate.
+
 Independent overload intake at baseline 1e1638123 (Chrome, original unsaved
 controls; raw source and DOM receipts in the existing local evidence directory):
 

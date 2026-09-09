@@ -58,6 +58,13 @@ const macdSource = require('node:fs').readFileSync(
 const macdExpected = JSON.parse(require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/snapshots/runtime_macd.json'), 'utf8'));
 assert.deepEqual(JSON.parse(pine.runScriptCsv(macdSource, simpleBars)), macdExpected);
+const nearbySource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/sma_nearby_replacement.pine'), 'utf8');
+const nearbyBars = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/macd_edge_cases_bars.csv'), 'utf8');
+const nearbyExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_sma_nearby_replacement.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(nearbySource, nearbyBars)), nearbyExpected);
 const comparisonSource = require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/fixtures/runtime/numeric_comparison.pine'), 'utf8');
 const comparisonExpected = JSON.parse(require('node:fs').readFileSync(

@@ -2866,6 +2866,13 @@ def test_run_script_returns_numeric_comparison_fixture_contract():
     assert_json_close(result, expected)
 
 
+def test_run_script_returns_sma_nearby_replacement_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/sma_nearby_replacement.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_sma_nearby_replacement.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/macd_edge_cases_bars.csv"))
+    assert_json_close(result, expected)
+
+
 def test_run_script_returns_macd_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/macd.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_macd.json").read_text())

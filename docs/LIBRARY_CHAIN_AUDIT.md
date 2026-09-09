@@ -115,6 +115,68 @@ native controls separately match all corresponding local fixture values:
 overload-constant-comparison.json. This does not qualify Linux/release artifacts
 or the full TechnicalRating numerical reference.
 
+## Owned-field admission and first complete-root execution
+
+Candidate after ac329c10e: exact complete root first analyzed with
+zero diagnostics, then ran all 21,133 frozen bars with all three exact sources
+unchanged. This is a candidate result, not qualified integration.
+The frozen comparison (technical-owned-fields-comparison.json) FAILS: ratingTotal
+164 mismatches, ratingOther 164, ratingMA 1, across 63,399 values with unchanged
+1e-9 absolute/relative tolerances and zero skipped warmup. Differences extend
+beyond initialization; MA differs at index 15460. Runtime capture:
+technical-owned-fields-runtime.json. Do not call the full-library oracle closed.
+
+The ownership candidate checks fresh array-field constructors, fresh conditional
+replacement and narrowly recognized local container helpers. Negative tests caught
+an initial conditional-alias hole; conditional/grouped aliases, borrowed receiver
+replacement and helper field/parameter replacement remain rejected. The follow-up
+review and final qualification are described below; this changes declaration
+admission only, not execution support for collection-bearing UDTs.
+
+Follow-up review extended negative coverage to return/element aliases, custom
+push/size methods, implicit container receivers, expression-block field writes,
+helper global assignments and free reassignment of helper results. Intermediate
+full Windows gates owned-fields-full-verify.log and owned-fields-full-verify-v2.log
+passed, but further source review caused another tightening; neither is the final
+receipt for the current candidate. owned-fields-full-verify-v3.log exited 0:
+6,611 Rust tests, 680 installed-wheel Python tests, tools and real WASM/Node.
+Constructor review then added exact positional/named binding, duplicate/unknown
+argument rejection and rejection of unknown calls in scalar constructor fields.
+Recognized scalar time/math/string calls are read-only; imported array/math/string
+namespace shadows and local time-function shadows invalidate that proof. Array
+fields must be freshly allocated. Reassignment only replaces owned roots with
+fresh allocations; helper mutations stay on the local receiver, helper scalar
+reassignment stays local, and reference aliases/escapes remain rejected.
+Original regressions include both named scalar-field initialization and constructor
+escape/binding failures, including an imported factory named array.new_float.
+The final gate owned-fields-qualification-verify.log exited 0: 6,613 Rust tests,
+680 installed-wheel Python tests, 103 tool tests and real generated WASM/Node.
+A freshly rebuilt CLI also reports the complete original root executable with
+zero diagnostics (technical-owned-fields-qualified-analysis.json). Existing
+runtime goldens are unchanged. This qualifies Windows declaration admission,
+not the failed full-library numerical comparison or Linux release artifacts.
+
+The next numerical defect now has independent evidence: macd-seed-control.pine
+uses source bar_index+1 and ta.macd(12,26,9). TradingView's retained DOM reports
+first MACD index 25, first signal index 33, both seed values 7. The same local
+control on 64 bars reports indices 0/0 and seeds 0/0 (macd-seed-control-before.json).
+No MACD implementation change has been made yet. This explains an initialization
+defect, not all full-root discrepancies: there are 129 oscillator mismatches after
+index 200, each exactly one rating contribution (+/-1/11). Their diagnostic list
+is technical-oscillator-difference-indices.json; the full acceptance denominator
+remains all 63,399 values.
+
+MACD follow-up native controls are retained for implementation: repeated calls
+on one bar agree with the last source sample only (macd-repeat-control, lengths
+2/3/2, first indices 2/3 and seeds 5/5). Alternating missing sources seed at
+indices 5/7, return na on the missing bar 10, and resume MACD=1 on bar 11
+(macd-missing-control). DOM receipts accompany both original control scripts.
+
+Next isolate the
+oscillator initialization/scattered differences and the single MA decision
+difference with independent component controls. Preserve original source and
+frozen root reference; diagnostic probes are additional evidence only.
+
 ## Remaining chain work
 
 Independent overload intake at baseline 1e1638123 (Chrome, original unsaved

@@ -169,7 +169,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                             diagnostics,
                         );
                     }
-                    if function_body_has_side_effect(body) {
+                    if function_body_has_side_effect(body, &statements) {
                         diagnostics.push(Diagnostic::error(
                             "E_IMPORT_FUNCTION_SIDE_EFFECT",
                             format!("exported function `{name}` contains unsupported side effects"),

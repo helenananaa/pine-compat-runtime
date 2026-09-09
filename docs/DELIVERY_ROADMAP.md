@@ -37,7 +37,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | ID | Required result | Owner | Current state | Acceptance still needed |
 | --- | --- | --- | --- | --- |
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
-| D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Complete sources parse; transitive binding and imported scalar overload Windows gates passed (LIBRARY_CHAIN_AUDIT); only two RelativeValue export-effect admission errors remain | Original sources preserved; complete root runs and matches frozen three-rating reference; mode/host parity |
+| D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Complete original source graph analyzes and runs; owned-field admission Windows gate passed; frozen numerical comparison fails with 164/164/1 differences across three plots | Preserve all 63,399 values and zero skipped warmup; correct numerical differences, then qualify complete-root mode/host parity |
 | D2 | Independent execution correctness | Codex | EMA/SMA seed and repeated-bar correction closed at 391386d7e; 9 controls / 739,655 values match; previous G3 real-strategy references rerun unchanged | Broader strategy/account, matched MTF/Magnifier inputs and real tick reference remain open |
 | D3 | Explicit embedding/data contract | Codex | Price grid exists; market/account assumptions and required capabilities need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
 | D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
@@ -49,13 +49,15 @@ Return to D1 using the complete source/dependency graph, not one first-error
 probe at a time. The bounded read-only map is retained as
 `.local/delivery-20260909/grok-full-chain-map-report.md`; it separates full-source
 parsing/admission from reachable calcRatingAll execution. Current-head analysis
-(`technical-after-overload-candidate.json` in the local evidence directory)
-still rejects the complete root, now at the two RelativeValue export-effect checks.
+(`technical-owned-fields-qualified-analysis.json` in the local evidence directory)
+admits the complete root with zero diagnostics. Its first full 21,133-bar run
+has numerical differences (technical-owned-fields-comparison.json).
 Collection-field parsing and statement switch arms are qualified at 7aa527a19;
 source-scoped transitive imports and namespace fallback passed their final Windows gate.
-Imported scalar overloads have also passed their final Windows gate, with native
-type/qualifier/order controls. Next address owned collection mutation without
-removing checks for invalid source, global mutation or unsupported invocations.
+Imported scalar overloads and owned-field declaration admission have passed
+their Windows gates. Next correct independently confirmed MACD initialization
+and same-bar behavior, then isolate the remaining oscillator and MA differences.
+The native MACD controls cover seeds, repeated calls and missing source samples.
 The static map is not execution evidence. The target remains
 unmodified TechnicalRating/3 with exact ta/9 and RelativeValue/3; unused
 libraries must not be omitted or trimmed to pass admission.

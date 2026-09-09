@@ -1,10 +1,12 @@
 use super::*;
+mod owned_fields;
 
-pub(super) fn function_body_has_side_effect(body: &FunctionBody) -> bool {
+pub(super) fn function_body_has_side_effect(body: &FunctionBody, declarations: &[Stmt]) -> bool {
     match body {
         FunctionBody::Expr(expr) => contains_output_or_declaration_call(expr),
         FunctionBody::Block(statements) => {
-            let allowed = crate::analyzer::functions::local_array_mutation_spans(body);
+            let mut allowed = crate::analyzer::functions::local_array_mutation_spans(body);
+            allowed.extend(owned_fields::local_field_mutation_spans(body, declarations));
             let mut checked = statements.clone();
             for statement in &mut checked {
                 if let StmtKind::Expr(expr) = &mut statement.kind

@@ -142,3 +142,18 @@ and its incremental phase replays the whole history rather than measuring a
 sustained tail after a 100k-bar seed. Instrument those missing boundaries before
 using it to claim the frozen long-session resource targets. D3 source provenance
 remains required; the resource pilot does not waive it.
+
+
+D4 pilot at 0d8cb0091 completed all 12 scenario/size combinations (six unchanged
+synthetic benchmark workloads at 1k/10k bars, one warmup, three measured repeats,
+10 forming replacements per repeat). Internal batch/incremental and repeated
+live output checks pass. The overall report correctly remains partial: Windows
+RSS is unavailable and this is not the frozen long-session acceptance workload.
+Trend historical medians were 6.294/60.030 ms; collection forming medians were
+0.359/9.592 ms, including returned snapshots. Default strategy forming timings
+are not interchangeable with scripts that execute on every update. These small
+observations justify adding Windows process-memory evidence and sustained-tail
+measurement before freezing numerical acceptance budgets. Do not extrapolate
+them into a 100k-bar or long-session pass. Files: `resources/pilot-plan.json`,
+`resources/host-preflight.json`, `resources/pilot-build.log`, and
+`resources/pilot.json` under `.local/delivery-20260909/`.

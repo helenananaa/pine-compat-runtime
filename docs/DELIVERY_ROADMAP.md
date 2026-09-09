@@ -38,8 +38,8 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | ID | Result required | Owner | State / evidence | Acceptance |
 | --- | --- | --- | --- | --- |
 | D0 | Recover and freeze prior qualified changes | Codex | Complete: 85f42f20f tooling, 149d10c7a semantics, 7393379b3 roadmap; committed Windows full gate exit 0; intake 104/104 hashes match | Completed locally; Linux/new release qualification remains D5 |
-| D1 | Complete real TechnicalRating dependency chain | Grok implementation, Codex oracle/review | Simple slice merged locally as b8e38333d (isolated qualified commit 6c100a4ec); exact RelativeValue/3 captured; spaced version comment and transitive function resolution remain blockers | Original library sources and dependency identities retained; reachable exports run; independent outputs; mode and host parity |
-| D2 | Broaden independent execution evidence | Codex | New EMA origin oracle: 21,133 exact matching OHLCV bars; EMA3 differs at 22 values, EMA200 at 1,704; SMA3 and bar index agree; old G3/r1 denominators unchanged | Matched closed-bar, requested/lower-bar inputs; trades, fees, positions, margin/equity compared; all differences dispositioned |
+| D1 | Complete real TechnicalRating dependency chain | Grok implementation, Codex oracle/review | Simple slice b8e38333d; spaced-version fix c2c028269 qualified, exact RelativeValue/3 captured; compound declarations and transitive function resolution remain blockers | Original library sources and dependency identities retained; reachable exports run; independent outputs; mode and host parity |
+| D2 | Broaden independent execution evidence | Codex | EMA candidate removes the 22/1,704 initial mismatches; five separate controls now match (see EMA_INITIALIZATION_AUDIT.md); downstream regression review pending; old G3/r1 denominators unchanged | Matched closed-bar, requested/lower-bar inputs; trades, fees, positions, margin/equity compared; all differences dispositioned |
 | D3 | Explicit embedding/data contract | Codex + bounded Grok audit | Price grid exists; account/context assumptions need product-level review | Required inputs, unsupported account/chart modes, source diagnostics and versioning documented and checked across hosts |
 | D4 | Resource and long-session qualification | Grok measurement, Codex acceptance | Existing small benchmark and checkpoint optimization are historical baselines | Frozen workloads/budgets, repeatable release measurements, correct output, growth/limits documented |
 | D5 | Deliver candidate from a known commit | Codex | No new release; working package version 0.2.0 | Windows/Linux installed wheels; Rust embedding example, CLI package, generated WASM/Node package; checksums, versions, migration docs and acceptance manifest agree |
@@ -101,3 +101,20 @@ runtime goldens. Main integration has byte-equivalent core/test/build content
 to the verified isolated commit. Installation artifacts are still candidate
 builds, not a stable release. D2-D5 remain open. External publication requires
 user approval.
+
+Latest continuation: c2c028269 fixes spaced version annotations, with full
+Windows gate (6,575 Rust / 677 installed-wheel Python / 101 tool tests plus
+real WASM/Node) and no golden refresh. The exact RelativeValue/3 no longer
+raises a version conflict. Current complete-library diagnostics are retained
+as `technical-after-version.json`; parser errors are not counted as independent
+defects until recovery cascades are resolved.
+
+EMA candidate remains isolated at `E:/projects/pine-interpreter-delivery-ema`.
+Modern initialization, v5/v6 missing-value controls, recovery and legacy v4
+reference comparisons pass without skipped warmup. 932 candidate outputs were
+captured into ignored storage; nine semantic output changes plus three
+last-bit math differences require disposition. No golden was overwritten.
+Next: v3 control and affected loop/request review, select only justified
+golden updates, run the full gate and cross-host references, then integrate.
+See [EMA candidate audit](EMA_INITIALIZATION_AUDIT.md) and
+[version annotation audit](VERSION_COMMENT_SPACING_AUDIT.md).

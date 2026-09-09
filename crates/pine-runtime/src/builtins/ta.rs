@@ -18,8 +18,10 @@ pub(crate) struct RsiState {
     average_loss: Option<f64>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub(crate) struct MacdState {
+    last_bar: Option<usize>,
+    base: [Option<f64>; 3],
     fast_ema: Option<f64>,
     slow_ema: Option<f64>,
     signal_ema: Option<f64>,

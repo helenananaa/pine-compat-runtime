@@ -53,6 +53,11 @@ const simpleBars = require('node:fs').readFileSync(
 const simpleExpected = JSON.parse(require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/snapshots/runtime_simple_scalar_parameters.json'), 'utf8'));
 assert.deepEqual(JSON.parse(pine.runScriptCsv(simpleSource, simpleBars)), simpleExpected);
+const macdSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/macd.pine'), 'utf8');
+const macdExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_macd.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(macdSource, simpleBars)), macdExpected);
 const libraryFormsSource = require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/fixtures/runtime/library_declaration_forms.pine'), 'utf8');
 const libraryFormsExpected = JSON.parse(require('node:fs').readFileSync(

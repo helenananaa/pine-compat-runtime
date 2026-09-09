@@ -628,13 +628,6 @@ impl<'a> HistoricalRuntime<'a> {
             .transpose()?
             .and_then(|value| value.as_i64())
             .unwrap_or(0);
-        let Some(source) = source.as_f64() else {
-            return Ok(PineValue::Tuple(vec![
-                PineValue::Na,
-                PineValue::Na,
-                PineValue::Na,
-            ]));
-        };
         if fast_length <= 0 || slow_length <= 0 || signal_length <= 0 {
             return Ok(PineValue::Tuple(vec![
                 PineValue::Na,
@@ -647,25 +640,63 @@ impl<'a> HistoricalRuntime<'a> {
             .macd_state
             .get(&call_site_id)
             .copied()
-            .unwrap_or(MacdState {
-                fast_ema: None,
-                slow_ema: None,
-                signal_ema: None,
-            });
-        let fast_ema = ema_next(state.fast_ema, source, fast_length);
-        let slow_ema = ema_next(state.slow_ema, source, slow_length);
-        let macd = fast_ema - slow_ema;
-        let signal = ema_next(state.signal_ema, macd, signal_length);
-        let hist = macd - signal;
-        state.fast_ema = Some(fast_ema);
-        state.slow_ema = Some(slow_ema);
-        state.signal_ema = Some(signal);
+            .unwrap_or_default();
+        if state.last_bar != Some(self.bars) {
+            state.base = [state.fast_ema, state.slow_ema, state.signal_ema];
+            state.last_bar = Some(self.bars);
+        }
+        let source = source.as_f64().filter(|value| value.is_finite());
+        let fast = self.macd_ema_sample(call_site_id, 0, state.base[0], source, fast_length);
+        let slow = self.macd_ema_sample(call_site_id, 1, state.base[1], source, slow_length);
+        let macd = fast.zip(slow).map(|(fast, slow)| fast - slow);
+        let signal = self.macd_ema_sample(call_site_id, 2, state.base[2], macd, signal_length);
+        let hist = macd.zip(signal).map(|(macd, signal)| macd - signal);
+        state.fast_ema = if source.is_some() {
+            fast
+        } else {
+            state.base[0]
+        };
+        state.slow_ema = if source.is_some() {
+            slow
+        } else {
+            state.base[1]
+        };
+        state.signal_ema = if macd.is_some() {
+            signal
+        } else {
+            state.base[2]
+        };
         self.macd_state.insert(call_site_id, state);
 
         Ok(PineValue::Tuple(vec![
-            PineValue::Float(macd),
-            PineValue::Float(signal),
-            PineValue::Float(hist),
+            macd.map_or(PineValue::Na, PineValue::Float),
+            signal.map_or(PineValue::Na, PineValue::Float),
+            hist.map_or(PineValue::Na, PineValue::Float),
         ]))
+    }
+
+    fn macd_ema_sample(
+        &mut self,
+        call_site: CallSiteId,
+        channel: u8,
+        previous: Option<f64>,
+        source: Option<f64>,
+        length: i64,
+    ) -> Option<f64> {
+        let key = RollingWindowKey::Macd { call_site, channel };
+        let Some(source) = source else {
+            if let Some(window) = self.rolling_windows.get_mut(&key) {
+                window.discard_for_bar(self.bars);
+            }
+            return None;
+        };
+        if let Some(previous) = previous {
+            return Some(ema_next(Some(previous), source, length));
+        }
+        let window = self.rolling_windows.entry(key).or_default();
+        window.push_for_bar(Some(source), length as usize, self.bars);
+        window
+            .is_ready(length as usize)
+            .then(|| window.mean(length as usize))
     }
 }

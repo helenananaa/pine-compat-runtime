@@ -55,9 +55,12 @@ has numerical differences (technical-owned-fields-comparison.json).
 Collection-field parsing and statement switch arms are qualified at 7aa527a19;
 source-scoped transitive imports and namespace fallback passed their final Windows gate.
 Imported scalar overloads and owned-field declaration admission have passed
-their Windows gates. Next correct independently confirmed MACD initialization
-and same-bar behavior, then isolate the remaining oscillator and MA differences.
-The native MACD controls cover seeds, repeated calls and missing source samples.
+their Windows gates. MACD initialization and same-bar behavior are now Windows
+qualified against native seed/repeated/missing controls. The full-root differences
+are now 130/129/1 (technical-macd-candidate-comparison.json). Next isolate the
+Stochastic RSI K/D strict-comparison divergence found at the first remaining
+index 487, then the single MA difference at index 15460. Keep exact Pine
+comparisons and frozen tolerances; source component probes are diagnostic only.
 The static map is not execution evidence. The target remains
 unmodified TechnicalRating/3 with exact ta/9 and RelativeValue/3; unused
 libraries must not be omitted or trimmed to pass admission.

@@ -131,7 +131,16 @@ The replacement window retains only its evicted elements and exact previous
 aggregates for undo, not a full window copy per call. Existing forming-bar and
 strategy-evaluation checkpoints include this state. Profile window value and
 capacity totals include the undo buffer. This qualification is specific to
-SMA/EMA; other stateful built-ins are not upgraded by inference.
+SMA/EMA and the separately qualified MACD behavior below; other stateful
+built-ins are not upgraded by inference.
+
+`ta.macd` seeds its fast/slow EMA channels from their first respective non-na
+samples and then seeds the signal EMA from its first non-na MACD samples. Its
+three channels retain a committed bar base; repeated evaluations replace the
+current sample. Missing source input returns an all-na tuple and discards the
+current tentative samples without losing committed state. The channel seed
+windows participate in existing rollback and resource profiles. See the MACD
+controls and qualification in `LIBRARY_CHAIN_AUDIT.md`.
 
 Stateful built-ins include, at minimum:
 

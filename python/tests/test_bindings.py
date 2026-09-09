@@ -11388,27 +11388,9 @@ def test_run_script_request_fixture_matches_cli_contract():
         18.65518539431583,
     ]
     assert result["plots"][70]["values"] == [500.0, 500.0, 500.0, 500.0, 500.0]
-    assert result["plots"][71]["values"] == [
-        0.0,
-        0.16666666666666785,
-        0.30555555555555713,
-        0.39351851851851904,
-        0.4436728395061742,
-    ]
-    assert result["plots"][72]["values"] == [
-        0.0,
-        0.1111111111111119,
-        0.24074074074074206,
-        0.3425925925925934,
-        0.40997942386831393,
-    ]
-    assert result["plots"][73]["values"] == [
-        0.0,
-        0.055555555555555955,
-        0.06481481481481507,
-        0.05092592592592565,
-        0.03369341563786027,
-    ]
+    assert result["plots"][71]["values"] == [None, None, 0.5, 0.5, 0.5]
+    assert result["plots"][72]["values"] == [None, None, None, 0.5, 0.5]
+    assert result["plots"][73]["values"] == [None, None, None, 0.0, 0.0]
     assert result["plots"][74]["values"] == [None, None, 21.0, 22.0, 23.0]
     assert result["plots"][75]["values"] == [
         None,
@@ -11453,27 +11435,9 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][91]["values"] == [None, None, 100.0, 100.0, 200.0]
     assert result["plots"][92]["values"] == [None, None, 101.0, 101.0, 201.0]
     assert result["plots"][93]["values"] == [None, None, 1.0, 1.0, 1.0]
-    assert result["plots"][94]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        16.666666666666657,
-    ]
-    assert result["plots"][95]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        11.111111111111104,
-    ]
-    assert result["plots"][96]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        5.555555555555554,
-    ]
+    assert result["plots"][94]["values"] == [None, None, None, None, None]
+    assert result["plots"][95]["values"] == [None, None, None, None, None]
+    assert result["plots"][96]["values"] == [None, None, None, None, None]
     assert result["plots"][97]["values"] == [None, None, None, None, 150.0]
     assert result["plots"][98]["values"] == [None, None, None, None, 250.0]
     assert result["plots"][99]["values"] == [None, None, None, None, 50.0]

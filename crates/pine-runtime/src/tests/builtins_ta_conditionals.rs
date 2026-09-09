@@ -720,15 +720,12 @@ if close > open
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 1);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(
-        &[
-            result.plots[0].values[0].clone(),
-            result.plots[0].values[2].clone(),
-            result.plots[0].values[3].clone(),
-        ],
-        &[0.0, 0.666666666666667, 0.8888888888888893],
+    assert!(
+        result.plots[0].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
+    assert_values_close(&result.plots[0].values[3..], &[4.0 / 3.0]);
 }
 
 #[test]

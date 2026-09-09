@@ -2249,15 +2249,9 @@ fn runs_request_bars_integration_fixture() {
             >= 2
     );
     assert!(output.matches("\"values\":[500,500,500,500,500]").count() >= 2);
-    assert!(output.contains(
-            "\"values\":[0,0.16666666666666785,0.30555555555555713,0.39351851851851904,0.4436728395061742]"
-        ));
-    assert!(output.contains(
-            "\"values\":[0,0.1111111111111119,0.24074074074074206,0.3425925925925934,0.40997942386831393]"
-        ));
-    assert!(output.contains(
-            "\"values\":[0,0.055555555555555955,0.06481481481481507,0.05092592592592565,0.03369341563786027]"
-        ));
+    assert!(output.contains("\"values\":[null,null,0.5,0.5,0.5]"));
+    assert!(output.contains("\"values\":[null,null,null,0.5,0.5]"));
+    assert!(output.contains("\"values\":[null,null,null,0,0]"));
     assert!(output.contains("\"values\":[null,null,21,22,23]"));
     assert!(output.contains(
         "\"values\":[null,null,22.632993161855453,23.632993161855453,24.632993161855453]"
@@ -2289,7 +2283,12 @@ fn runs_request_bars_integration_fixture() {
         )
     );
     assert!(output.contains("\"values\":[null,null,101,101,201]"));
-    assert!(output.contains("\"values\":[null,null,0,0,16.666666666666657]"));
+    for index in 94..=96 {
+        assert_eq!(
+            parsed["plots"][index]["values"],
+            serde_json::json!([null, null, null, null, null])
+        );
+    }
     assert!(output.contains("\"values\":[null,null,null,null,150]"));
     assert!(output.contains("\"values\":[null,null,null,null,250]"));
     assert!(output.contains("\"values\":[null,null,null,null,50]"));

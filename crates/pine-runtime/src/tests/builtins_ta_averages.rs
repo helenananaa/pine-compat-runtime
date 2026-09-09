@@ -185,22 +185,28 @@ plot(hist)
         analysis.diagnostics
     );
 
-    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 3);
-    assert_values_close(
-        &result.plots[0].values,
-        &[0.0, 0.16666666666666674, 0.30555555555555536],
+    assert!(
+        result.plots[0].values[..2]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[0.0, 0.11111111111111116, 0.24074074074074063],
+    assert_values_close(&result.plots[0].values[2..], &[0.5, 0.5]);
+    assert!(
+        result.plots[1].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[2].values,
-        &[0.0, 0.05555555555555558, 0.06481481481481474],
+    assert_values_close(&result.plots[1].values[3..], &[0.5]);
+    assert!(
+        result.plots[2].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
+    assert_values_close(&result.plots[2].values[3..], &[0.0]);
 }
 
 #[test]

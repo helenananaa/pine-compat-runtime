@@ -251,22 +251,28 @@ fn request_security_same_context_returns_tuple_expression() {
     let program = compile_program(
         "indicator(\"request tuple\")\n[macd, signal, hist] = request.security(syminfo.tickerid, timeframe.period, ta.macd(close, 2, 3, 2))\nplot(macd)\nplot(signal)\nplot(hist)\n",
     );
-    let result = run_historical(&program, &[bar(1.0), bar(2.0), bar(3.0)])
+    let result = run_historical(&program, &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)])
         .expect("same-context tuple request.security expression should run");
 
     assert_eq!(result.plots.len(), 3);
-    assert_values_close(
-        &result.plots[0].values,
-        &[0.0, 0.16666666666666674, 0.30555555555555536],
+    assert!(
+        result.plots[0].values[..2]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[0.0, 0.11111111111111116, 0.24074074074074063],
+    assert_values_close(&result.plots[0].values[2..], &[0.5, 0.5]);
+    assert!(
+        result.plots[1].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[2].values,
-        &[0.0, 0.05555555555555558, 0.06481481481481474],
+    assert_values_close(&result.plots[1].values[3..], &[0.5]);
+    assert!(
+        result.plots[2].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
+    assert_values_close(&result.plots[2].values[3..], &[0.0]);
 }
 
 #[test]
@@ -875,36 +881,24 @@ fn request_security_evaluates_provider_macd_tuple_in_requested_context() {
         .expect("provider ta.macd tuple expression should run");
 
     assert_eq!(result.plots.len(), 3);
-    assert_values_close(
-        &result.plots[0].values,
-        &[
-            0.0,
-            0.16666666666666785,
-            0.30555555555555713,
-            0.39351851851851904,
-            0.4436728395061713,
-        ],
+    assert!(
+        result.plots[0].values[..2]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[
-            0.0,
-            0.1111111111111119,
-            0.24074074074074136,
-            0.3425925925925929,
-            0.409_979_423_868_311_8,
-        ],
+    assert_values_close(&result.plots[0].values[2..], &[0.5, 0.5, 0.5]);
+    assert!(
+        result.plots[1].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[2].values,
-        &[
-            0.0,
-            0.05555555555555595,
-            0.06481481481481577,
-            0.05092592592592615,
-            0.033_693_415_637_859_46,
-        ],
+    assert_values_close(&result.plots[1].values[3..], &[0.5, 0.5]);
+    assert!(
+        result.plots[2].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
+    assert_values_close(&result.plots[2].values[3..], &[0.0, 0.0]);
 }
 
 #[test]
@@ -915,7 +909,12 @@ fn request_security_aligns_provider_higher_timeframe_macd_tuple() {
     let environment = external_symbol_environment_with_timeframe(
         "NYSE:IBM",
         "5",
-        vec![timed_bar(0, 100.0), timed_bar(300_000, 200.0)],
+        vec![
+            timed_bar(0, 100.0),
+            timed_bar(300_000, 200.0),
+            timed_bar(600_000, 300.0),
+            timed_bar(900_000, 400.0),
+        ],
     );
     let result = HistoricalRuntime::with_request_environment(&program, environment)
         .run(&[
@@ -924,25 +923,32 @@ fn request_security_aligns_provider_higher_timeframe_macd_tuple() {
             timed_bar(240_000, 3.0),
             timed_bar(300_000, 4.0),
             timed_bar(540_000, 5.0),
+            timed_bar(600_000, 6.0),
+            timed_bar(840_000, 7.0),
+            timed_bar(900_000, 8.0),
+            timed_bar(1_140_000, 9.0),
         ])
         .expect("higher timeframe provider ta.macd tuple request should run");
 
     assert_eq!(result.plots.len(), 3);
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[0].values[2..],
-        &[0.0, 0.0, 16.666666666666657],
+    assert!(
+        result.plots[0].values[..6]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[1].values[2..],
-        &[0.0, 0.0, 11.111111111111105],
+    assert_values_close(&result.plots[0].values[6..], &[50.0, 50.0, 50.0]);
+    assert!(
+        result.plots[1].values[..8]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_eq!(result.plots[2].values[0], PineValue::Na);
-    assert_eq!(result.plots[2].values[1], PineValue::Na);
-    assert_values_close(&result.plots[2].values[2..], &[0.0, 0.0, 5.555555555555552]);
+    assert_values_close(&result.plots[1].values[8..], &[50.0]);
+    assert!(
+        result.plots[2].values[..8]
+            .iter()
+            .all(|v| *v == PineValue::Na)
+    );
+    assert_values_close(&result.plots[2].values[8..], &[0.0]);
 }
 
 #[test]

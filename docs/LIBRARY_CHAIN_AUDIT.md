@@ -160,7 +160,7 @@ The next numerical defect now has independent evidence: macd-seed-control.pine
 uses source bar_index+1 and ta.macd(12,26,9). TradingView's retained DOM reports
 first MACD index 25, first signal index 33, both seed values 7. The same local
 control on 64 bars reports indices 0/0 and seeds 0/0 (macd-seed-control-before.json).
-No MACD implementation change has been made yet. This explains an initialization
+At that point no MACD implementation change had been made. This explains an initialization
 defect, not all full-root discrepancies: there are 129 oscillator mismatches after
 index 200, each exactly one rating contribution (+/-1/11). Their diagnostic list
 is technical-oscillator-difference-indices.json; the full acceptance denominator
@@ -178,6 +178,46 @@ difference with independent component controls. Preserve original source and
 frozen root reference; diagnostic probes are additional evidence only.
 
 ## Remaining chain work
+
+MACD candidate after owned-field admission: each of its three EMA channels now
+uses a non-na SMA seed and a committed per-bar base; repeated calls replace the
+current sample and missing sources discard tentative samples while retaining the
+previous committed value. The three native controls match through the candidate
+CLI (macd-{seed,repeat,missing}-control-candidate.json). Two new runtime tests
+cover seed/missing behavior plus historical/append/forming equivalence.
+
+The original 21,133-bar root rerun reduces ratingTotal/ratingOther/ratingMA
+mismatches from 164/164/1 to 130/129/1, with the first remaining difference at
+index 487. All 63,399 values remain in acceptance, with unchanged 1e-9 tolerances
+(technical-macd-candidate-comparison.json). This is still a failing oracle.
+
+The initial runtime regression run exposed five old first-bar-seed expectations.
+They were corrected against the independent seed evidence; short tuple tests
+were extended by a bar to exercise the signal, and the higher-timeframe provider
+test retains its original bars and appends two provider/four chart bars to test
+actual post-warmup alignment. Runtime library tests then passed 1,797/1,797
+(macd-runtime-regressions-v2.log). Golden acquisition is separate from test
+acceptance (capture-macd-goldens.ps1); do not refresh all snapshots.
+
+The MACD slice passed final Windows qualification in macd-final-verify-v2.log:
+6,615 Rust tests, 680 installed-wheel Python tests, 103 tool tests, structural
+checks and actual generated WASM/Node (including MACD output). Six reviewed
+goldens changed only MACD values and downstream NA history; runtime_math's
+unrelated last-bit differences were excluded (macd-approved-golden-deltas.json).
+Native v4 and v5 seed controls agree with v6. Request-integration assertions
+were corrected in all three hosts, including higher-timeframe warmup. An initial
+WASM expectation used JSON float zero instead of the serializer's integer zero;
+that test-format issue was corrected, without changing runtime serialization.
+
+The next component control is technical-component-probe-487.pine, a separate
+diagnostic copy, retaining the exact original imported libraries. Native and local
+time/close agree at 1770342300000 / 65715.2, and native copied/original ratings
+agree. Only oscillator component 7 differs (native 0, local -1): local Stochastic
+RSI K=98.55303933471674, D=98.55303933471681, yielding a negative difference
+of 7.105427357601002e-14 and a sell condition. Native displayed values round to
+the same 12 decimal places. This locates the branch divergence but does not yet
+establish the precise underlying floating-point calculation or fix. Do not add
+an epsilon to Pine comparisons or relax frozen rating tolerances.
 
 Independent overload intake at baseline 1e1638123 (Chrome, original unsaved
 controls; raw source and DOM receipts in the existing local evidence directory):

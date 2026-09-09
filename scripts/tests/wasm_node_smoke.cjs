@@ -234,3 +234,9 @@ assert.throws(
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );
+
+const requirementsFs = require('node:fs');
+const requirementsRoot = path.resolve(__dirname, '../..');
+const requirementsProgram = pine.compileScript(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/host_requirements/strategy.pine'), 'utf8'));
+assert.deepStrictEqual(JSON.parse(requirementsProgram.hostRequirements()), JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/snapshots/host_requirements.json'), 'utf8')));
+requirementsProgram.free();

@@ -7,6 +7,7 @@ mod algorithms;
 mod bar;
 mod builtins;
 mod error;
+mod host_requirements;
 mod input_metadata;
 mod magnifier;
 mod output;
@@ -21,6 +22,11 @@ mod value;
 
 pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
+pub use host_requirements::{
+    AccountInputContract, ChartInputContract, ChartInputDefaults, ExecutionInputContract,
+    HOST_REQUIREMENTS_SCHEMA_VERSION, HostRequirements, RequestArgument, RequestRequirement,
+    host_requirements, host_requirements_json,
+};
 pub use input_metadata::{InputCall, input_calls};
 pub use magnifier::{
     MAGNIFIER_SCHEMA_VERSION, MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback,

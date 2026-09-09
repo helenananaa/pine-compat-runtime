@@ -27,6 +27,52 @@ pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
     Ok(())
 }
 
+pub(crate) fn run_requirements(args: Vec<String>) -> Result<(), String> {
+    println!("{}", requirements_json(&args)?);
+    Ok(())
+}
+
+fn requirements_json(args: &[String]) -> Result<String, String> {
+    let options = parse_options(args)?;
+    let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
+    let analysis = analyze_input(&input);
+    let Some(program) = analysis.hir.as_ref() else {
+        return Err(analysis_json(input.root(), &analysis));
+    };
+    Ok(pine_runtime::host_requirements_json(program))
+}
+
+#[cfg(test)]
+mod requirements_tests {
+    use super::requirements_json;
+
+    #[test]
+    fn executable_requirements_match_shared_host_contract() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let actual = requirements_json(&[root
+            .join("tests/fixtures/host_requirements/strategy.pine")
+            .to_string_lossy()
+            .into_owned()])
+        .unwrap();
+        let expected =
+            std::fs::read_to_string(root.join("tests/snapshots/host_requirements.json")).unwrap();
+        assert_eq!(actual.trim(), expected.trim());
+    }
+
+    #[test]
+    fn unsupported_source_returns_analysis_diagnostics_instead_of_requirements() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let error = requirements_json(&[root
+            .join("tests/fixtures/host_requirements/unsupported.pine")
+            .to_string_lossy()
+            .into_owned()])
+        .unwrap_err();
+        let diagnostic: serde_json::Value = serde_json::from_str(&error).unwrap();
+        assert_eq!(diagnostic["executable"], false);
+        assert!(!diagnostic["diagnostics"].as_array().unwrap().is_empty());
+    }
+}
+
 #[derive(Debug)]
 struct AnalyzeOptions {
     path: String,

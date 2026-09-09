@@ -157,6 +157,19 @@ program = pine_compat.compile_script(source)
 result = program.run(bars, input_overrides={length_id: 50})
 ```
 
+Current development builds can inspect a compiled program's potential host inputs
+before supplying data (this API is unreleased):
+
+```python
+requirements = program.host_requirements()
+```
+
+This reports chart/account assumptions, requested contexts, execution-clock
+usage and optional Magnifier/session-window fallbacks. It is a conservative
+inventory, not a dataset-readiness verdict. CLI `pine-compat requirements` and
+WASM `Program.hostRequirements()` expose the same versioned contract. See
+[host input discovery](docs/HOST_REQUIREMENTS.md).
+
 For a persistent realtime stream, create one session, seed its complete
 confirmed history once, replace the current forming bar as ticks arrive, and
 commit that same timestamp when the bar closes:

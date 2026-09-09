@@ -11203,3 +11203,14 @@ fn input_overrides_json(overrides: &[(u64, serde_json::Value)]) -> String {
 fn workspace_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
+#[test]
+fn compiled_host_requirements_match_shared_contract_without_data() {
+    let program = crate::compile_program(crate::analysis_input(include_str!(
+        "../../../../tests/fixtures/host_requirements/strategy.pine"
+    )))
+    .unwrap();
+    assert_eq!(
+        program.host_requirements().trim(),
+        include_str!("../../../../tests/snapshots/host_requirements.json").trim()
+    );
+}

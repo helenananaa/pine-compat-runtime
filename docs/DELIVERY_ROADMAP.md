@@ -39,7 +39,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
-| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; market/account assumptions and required-capability discovery need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
+| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory is implemented; finish configured profile/data readiness review and per-call source provenance without replacing conditional/fallback semantics with unconditional gates |
 | D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
@@ -68,6 +68,18 @@ with full installed-wheel/actual-WASM/CLI parity and CLI mode checks
 and 103 tool tests, plus actual WASM/Node. Next continue real tick evidence and D3-D5. Preserve frozen denominators and keep each reference batch
 separate. The public r1 independent-reference count is not increased by these
 other batches. Windows debug qualification is not final Linux/release acceptance.
+
+## Host-input inventory follow-up
+
+A versioned host-input inventory now describes executable imports, request
+contexts, execution clocks, chart/account defaults and optional Magnifier/risk
+session inputs. Rust/CLI/installed Python/actual WASM agree on the original
+TechnicalRating graph, matched MTF, both margin sources and paired Magnifier
+sources. Current Windows gate: 6640 Rust / 693 installed-wheel Python / 103 tool
+tests plus actual WASM/Node. Evidence: `.local/delivery-20260909/host-contracts/`.
+This is discovery, not a ready-to-run certification. Dynamic request arguments
+remain unresolved explicitly; source provenance and configured-input readiness
+are still D3 work. D2 real tick, D4 resources and D5 final release are unchanged.
 
 ## Qualified evidence and limits
 

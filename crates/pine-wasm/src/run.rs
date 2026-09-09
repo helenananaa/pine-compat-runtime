@@ -247,6 +247,11 @@ fn run_script_csv_with_libraries_and_request_bars_and_input_overrides_internal(
 
 #[wasm_bindgen]
 impl WasmProgram {
+    #[wasm_bindgen(js_name = hostRequirements)]
+    pub fn host_requirements(&self) -> String {
+        pine_runtime::host_requirements_json(&self.hir)
+    }
+
     #[wasm_bindgen(js_name = runCsv)]
     pub fn run_csv(&self, bars_csv: &str) -> Result<String, JsValue> {
         self.run_csv_internal(bars_csv)

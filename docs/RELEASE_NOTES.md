@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added a versioned, side-effect-free host-input inventory for compiled programs:
+  Rust `host_requirements`, CLI `requirements`, Python `Program.host_requirements`
+  and WASM `Program.hostRequirements`. It covers executable library calls,
+  requested contexts, synthetic metadata/account assumptions, conditional
+  execution timestamps and optional Magnifier/session fallbacks. Existing
+  admission, analysis/output schemas and execution behavior are unchanged.
+  See [host input discovery](HOST_REQUIREMENTS.md).
+
 - Added host-owned decimal quantity precision (0 through 9), surfaced as
   `syminfo.mincontract`, through Rust ChartContext, CLI and Python/WASM chart
   metadata. Margin cover truncates at that precision; displayed liquidation

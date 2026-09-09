@@ -33,6 +33,13 @@ struct PyProgram {
 
 #[pymethods]
 impl PyProgram {
+    /// Describe potential host inputs without executing the program.
+    fn host_requirements(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        Ok(PyModule::import(py, "json")?
+            .call_method1("loads", (pine_runtime::host_requirements_json(&self.hir),))?
+            .unbind())
+    }
+
     #[pyo3(signature = (
         bars,
         request_bars=None,

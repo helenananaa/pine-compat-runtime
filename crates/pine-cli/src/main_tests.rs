@@ -1450,6 +1450,14 @@ fn assert_snapshot(name: &str, actual: &str) {
     }
     let expected = fs::read_to_string(&snapshot_path)
         .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
+    if name == "runtime_math.json" {
+        let actual: serde_json::Value =
+            serde_json::from_str(actual).unwrap_or_else(|err| panic!("invalid {name}: {err}"));
+        let expected: serde_json::Value = serde_json::from_str(&expected)
+            .unwrap_or_else(|err| panic!("invalid {}: {err}", snapshot_path.display()));
+        crate::test_support::assert_json_approximately_equal(&actual, &expected, name);
+        return;
+    }
     assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
 }
 fn workspace_dir() -> PathBuf {

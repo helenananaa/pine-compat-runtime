@@ -61,11 +61,7 @@ mod tests {
 
     #[test]
     fn builds_library_analysis_input_from_files() {
-        let prefix = format!(
-            "pine-library-source-{}-{}",
-            std::process::id(),
-            std::thread::current().name().unwrap_or("test")
-        );
+        let prefix = format!("pine-library-source-{}-{}", std::process::id(), line!());
         let root_path = temp_path(&format!("{prefix}-root.pine"));
         let lib_path = temp_path(&format!("{prefix}-lib.pine"));
         fs::write(&root_path, "indicator(\"root\")\nplot(close)\n").expect("write root");

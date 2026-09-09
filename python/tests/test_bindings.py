@@ -2815,9 +2815,13 @@ def test_run_script_returns_strings_fixture_contract():
 
 
 def test_run_script_returns_line_wrapped_strings_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/line_wrapped_strings.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/line_wrapped_strings.pine").read_text(
+        encoding="utf-8"
+    )
     expected = json.loads(
-        (ROOT / "tests/snapshots/runtime_line_wrapped_strings.json").read_text()
+        (ROOT / "tests/snapshots/runtime_line_wrapped_strings.json").read_text(
+            encoding="utf-8"
+        )
     )
 
     result = pine_compat.run_script(

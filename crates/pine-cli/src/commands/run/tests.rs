@@ -416,7 +416,7 @@ fn builds_request_environment_from_csv_specs() {
     let path = std::env::temp_dir().join(format!(
         "pine-request-bars-{}-{}.csv",
         std::process::id(),
-        std::thread::current().name().unwrap_or("test")
+        line!()
     ));
     fs::write(&path, "time,open,high,low,close,volume\n0,10,11,9,12,100\n")
         .expect("write request bars");
@@ -1913,9 +1913,18 @@ fn runs_request_bars_integration_fixture() {
         "\"values\":[null,null,0.10033467208545055,0.10033467208545055,0.10033467208545055]"
     ));
     assert!(output.contains("\"values\":[null,null,1,1,4]"));
-    assert!(output.contains(
-        "\"values\":[null,null,1.3453624047073711,1.3453624047073711,2.7586228448267445]"
-    ));
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    crate::test_support::assert_json_approximately_equal(
+        &parsed["plots"][260]["values"],
+        &serde_json::json!([
+            null,
+            null,
+            1.3453624047073711,
+            1.3453624047073711,
+            2.7586228448267445
+        ]),
+        "request.security math plot",
+    );
     assert!(
         output.contains(
             "\"values\":[null,null,4.605170185988092,4.605170185988092,5.298317366548036]"
@@ -1984,9 +1993,17 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains(
             "\"values\":[0.1001674211615598,0.10519390104038849,0.11022304998774664,0.1152549996675776,0.12028988239478806]"
         ));
-    assert!(output.contains(
-            "\"values\":[0.19739555984988078,0.206992194219821,0.21655030497608926,0.22606838799388393,0.23554498072086333]"
-        ));
+    crate::test_support::assert_json_approximately_equal(
+        &parsed["plots"][286]["values"],
+        &serde_json::json!([
+            0.19739555984988078,
+            0.206992194219821,
+            0.21655030497608926,
+            0.22606838799388393,
+            0.23554498072086333
+        ]),
+        "request.security atan plot",
+    );
     assert!(output.contains("\"values\":[12.5,13.5,14.5,15.5,16.5]"));
     assert!(output.contains("\"values\":[6,7,7,7,8]"));
     assert!(output.contains("\"values\":[1,1,1,1,1]"));
@@ -2459,7 +2476,7 @@ fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
     let base = std::env::temp_dir().join(format!(
         "pine-cli-wrong-entry-{}-{}",
         std::process::id(),
-        std::thread::current().name().unwrap_or("test")
+        line!()
     ));
     let bars_path = base.with_extension("csv");
     fs::write(

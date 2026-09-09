@@ -339,6 +339,16 @@ Before contributing or publishing, run the canonical release gate:
 scripts/verify.sh
 ```
 
+On Windows, install the MSVC C++ Build Tools plus the WASM target, then run the
+PowerShell equivalent. The script initializes the Visual Studio developer
+environment automatically when necessary.
+
+```powershell
+rustup target add wasm32-unknown-unknown
+python -m pip install "maturin>=1.13,<2.0" pytest
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1 -Python python
+```
+
 It covers Rust formatting, clippy, workspace tests, source-structure and host
 parity checks, a real WASM/Node execution smoke, Python wheel build and
 reinstall, and Python binding tests. See [Releasing Binary Wheels](docs/RELEASING.md)

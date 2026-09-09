@@ -13,6 +13,8 @@ mod library_sources;
 mod object_cast_contract_tests;
 #[cfg(test)]
 mod runtime_snapshots;
+#[cfg(test)]
+mod test_support;
 
 fn main() -> ExitCode {
     match run() {

@@ -10076,15 +10076,16 @@ fn request_host_data_runs_through_direct_wasm_api() {
         parsed["plots"][259]["values"],
         serde_json::json!([null, null, 1, 1, 4])
     );
-    assert_eq!(
-        parsed["plots"][260]["values"],
-        serde_json::json!([
+    assert_json_approximately_equal(
+        &parsed["plots"][260]["values"],
+        &serde_json::json!([
             null,
             null,
             1.3453624047073711,
             1.3453624047073711,
             2.7586228448267445
-        ])
+        ]),
+        "request host math plot",
     );
     assert_eq!(
         parsed["plots"][261]["values"],
@@ -10982,7 +10983,87 @@ fn assert_snapshot(name: &str, actual: &str) {
 
     let expected = fs::read_to_string(&snapshot_path)
         .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
+    if name == "runtime_math.json" {
+        let actual: serde_json::Value =
+            serde_json::from_str(actual).unwrap_or_else(|err| panic!("invalid {name}: {err}"));
+        let expected: serde_json::Value = serde_json::from_str(&expected)
+            .unwrap_or_else(|err| panic!("invalid {}: {err}", snapshot_path.display()));
+        assert_json_approximately_equal(&actual, &expected, name);
+        return;
+    }
     assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
+}
+
+fn assert_json_approximately_equal(
+    actual: &serde_json::Value,
+    expected: &serde_json::Value,
+    context: &str,
+) {
+    fn compare(
+        actual: &serde_json::Value,
+        expected: &serde_json::Value,
+        path: &str,
+    ) -> Result<(), String> {
+        match (actual, expected) {
+            (serde_json::Value::Number(actual), serde_json::Value::Number(expected)) => {
+                if actual == expected {
+                    return Ok(());
+                }
+                let actual = actual
+                    .as_f64()
+                    .ok_or_else(|| format!("{path}: actual number is not representable as f64"))?;
+                let expected = expected.as_f64().ok_or_else(|| {
+                    format!("{path}: expected number is not representable as f64")
+                })?;
+                let difference = (actual - expected).abs();
+                let tolerance = 1e-12_f64.max(1e-12 * actual.abs().max(expected.abs()));
+                if difference <= tolerance {
+                    Ok(())
+                } else {
+                    Err(format!(
+                        "{path}: numeric mismatch: actual={actual}, expected={expected}, difference={difference}, tolerance={tolerance}"
+                    ))
+                }
+            }
+            (serde_json::Value::Array(actual), serde_json::Value::Array(expected)) => {
+                if actual.len() != expected.len() {
+                    return Err(format!(
+                        "{path}: array length mismatch: actual={}, expected={}",
+                        actual.len(),
+                        expected.len()
+                    ));
+                }
+                for (index, (actual, expected)) in actual.iter().zip(expected).enumerate() {
+                    compare(actual, expected, &format!("{path}[{index}]"))?;
+                }
+                Ok(())
+            }
+            (serde_json::Value::Object(actual), serde_json::Value::Object(expected)) => {
+                if actual.len() != expected.len() {
+                    return Err(format!(
+                        "{path}: object field count mismatch: actual={}, expected={}",
+                        actual.len(),
+                        expected.len()
+                    ));
+                }
+                for (key, expected) in expected {
+                    let actual = actual
+                        .get(key)
+                        .ok_or_else(|| format!("{path}: missing field {key:?}"))?;
+                    compare(actual, expected, &format!("{path}.{key}"))?;
+                }
+                Ok(())
+            }
+            _ if actual == expected => Ok(()),
+            _ => Err(format!(
+                "{path}: value mismatch: actual={actual}, expected={expected}"
+            )),
+        }
+    }
+
+    if let Err(message) = compare(actual, expected, "$") {
+        panic!("{context}: {message}");
+    }
 }
 
 fn assert_analysis_snapshot(name: &str, actual: &str) {

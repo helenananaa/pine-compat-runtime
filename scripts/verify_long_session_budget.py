@@ -10,6 +10,8 @@ from pathlib import Path
 def evaluate(report, plan):
     if plan.get('schemaVersion') != 1 or report.get('schemaVersion') != 1:
         raise ValueError('unsupported budget/report schema')
+    if report.get('status') != 'measured':
+        return dict(status='failed',failures=[f"probe did not complete: {report.get('error', report.get('status', 'missing status'))}"],timings={})
     expected = plan['expected']
     required_identity = {'historyBars','tailBars','repetitions','replacementsPerBar',
                          'sourceHash','binaryHash','payloadHash','revision','worktreeStatus','formingExecutesScript'}

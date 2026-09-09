@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Removed a redundant confirmed broker/scheduler/alert copy during realtime
+  replay. Existing rollback and varip behavior is preserved. Full-scale
+  resource acceptance remains pending; see
+  [checkpoint copy audit](REALTIME_CHECKPOINT_COPY_AUDIT.md).
+
 - Hosts can explicitly supply unit `pointValue` through Rust ChartContext,
   CLI `--chart-point-value` and Python/WASM chart metadata. Non-unit contract
   multipliers and invalid/non-finite values return a configuration error.

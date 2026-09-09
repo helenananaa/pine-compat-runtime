@@ -16,11 +16,13 @@ impl Default for BrokerState {
 }
 
 impl BrokerState {
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn snapshot(&self) -> Self {
         self.clone()
     }
 
+    #[cfg(test)]
     pub(crate) fn restore(&mut self, snapshot: Self) {
         *self = snapshot;
     }

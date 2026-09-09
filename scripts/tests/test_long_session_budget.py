@@ -44,6 +44,12 @@ class LongSessionBudgetTests(unittest.TestCase):
             broken=copy.deepcopy(report);mutate(broken)
             self.assertEqual(evaluate(broken,plan)['status'],'failed')
 
+    def test_timeout_report_keeps_its_original_failure_reason(self):
+        _,plan=self.fixture()
+        result=evaluate(dict(schemaVersion=1,status='failed',error='timed out after 1800 seconds'),plan)
+        self.assertEqual(result['status'],'failed')
+        self.assertIn('timed out after 1800 seconds',result['failures'][0])
+
     def test_missing_or_nonfinite_budgets_are_rejected(self):
         report,plan=self.fixture()
         for mutate in [lambda p:p['phaseBudgets'].pop('formingConfirm'),

@@ -1250,18 +1250,14 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(())
     }
 
+    #[cfg(test)]
     pub(crate) fn snapshot_strategy_broker(&self) -> BrokerState {
         self.strategy_broker.snapshot()
     }
 
+    #[cfg(test)]
     pub(crate) fn restore_strategy_broker(&mut self, snapshot: BrokerState) {
         self.strategy_broker.restore(snapshot);
-    }
-
-    pub(crate) fn restore_strategy_checkpoint(&mut self, confirmed: &Self) {
-        self.restore_strategy_broker(confirmed.snapshot_strategy_broker());
-        self.strategy_scheduler = confirmed.strategy_scheduler.clone();
-        self.alerts.clone_from(&confirmed.alerts);
     }
 
     pub(crate) fn finalize_series_outputs(&mut self) {

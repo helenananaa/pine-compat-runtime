@@ -167,11 +167,13 @@ impl<'a> RealtimeRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<HistoricalRuntime<'a>, RuntimeError> {
         let is_new_bar = self.forming.is_none();
+        // Clone the confirmed checkpoint once. Intrabar persistence below only
+        // transfers user stores; broker, scheduler and alerts already come from
+        // confirmed state and must not be copied a second time.
         let mut runtime = self.confirmed.clone();
         if let Some(previous_forming) = &self.forming {
             runtime.seed_intrabar_persistence_from(previous_forming);
         }
-        runtime.restore_strategy_checkpoint(&self.confirmed);
         runtime.append_bar_with_context(update.bar, update.kind, is_new_bar, execution_time)?;
         Ok(runtime)
     }

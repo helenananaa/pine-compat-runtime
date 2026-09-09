@@ -190,3 +190,15 @@ replacements per bar. All seven pass internal consistency and counting checks;
 Magnifier remains explicitly historical-only. These are measurement pilots,
 not the 100k/10k acceptance. See LONG_SESSION_RESOURCES.md and
 `.local/delivery-20260909/resources/sustained-*-pilot-v2.json`.
+
+
+The first frozen native trend 100k-history/10k-tail attempt failed to complete
+within 1800 seconds. Plan SHA256 remains
+`d778839832a1db56d8128fb6119dd99b4ba6ec45217b50b03998a795d6a1d26e`.
+The report and failure receipts are retained; no full-scale acceptance is claimed.
+A redundant confirmed broker/scheduler/alert copy was then removed after code
+review and full Windows regression validation. Seven A/B workloads preserve
+complete output hashes. A 100k+64 diagnostic tail improves confirmation median
+about 23%, but its 52.0943 ms P95 does not demonstrate the original 50 ms target.
+See REALTIME_CHECKPOINT_COPY_AUDIT.md. The full 10k-tail run and original budgets
+remain outstanding, as do the other D2-D5 requirements.

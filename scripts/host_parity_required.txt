@@ -205,6 +205,7 @@ runtime_scalar_typed_declarations.json
 runtime_series_history_offset.json
 runtime_series_scalar_parameters.json
 runtime_session.json
+runtime_simple_scalar_parameters.json
 runtime_stdev.json
 runtime_stoch.json
 runtime_strategy_absent_trade_profit.json

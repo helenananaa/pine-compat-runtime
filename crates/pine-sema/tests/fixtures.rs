@@ -20768,9 +20768,21 @@ fn reports_unsupported_function_side_effect_fixture() {
 }
 
 #[test]
-fn reports_unsupported_function_side_effect_arg_fixture() {
+fn accepts_formerly_unsupported_global_input_argument_fixture() {
+    // Original input retained unchanged; TradingView v5 accepts this source.
+    let path = workspace_fixture("tests/fixtures/sema/unsupported_function_side_effect_arg.pine");
+    let analysis = analyze_source(&SourceFile::new(
+        path.display().to_string(),
+        fs::read_to_string(&path).unwrap(),
+    ));
+    assert!(analysis.hir.is_some(), "{:?}", analysis.diagnostics);
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn rejects_output_call_as_function_argument_fixture() {
     assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_function_side_effect_arg.pine",
+        "tests/fixtures/sema/unsupported_function_output_arg.pine",
         "function_side_effect",
         "side-effecting calls cannot be passed as user-defined function arguments",
     );

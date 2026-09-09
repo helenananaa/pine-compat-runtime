@@ -1,5 +1,12 @@
 # Language Scope
 
+Modern v5/v6 scalar UDF parameters additionally accept explicit `simple`
+qualifiers. Const/input/simple actuals are accepted and remain bound as Simple;
+series actuals and series defaults are rejected. Local and host-provided
+imported functions share these rules. Direct `input.*` arguments at global UDF
+calls are admitted; method/reference qualifiers remain outside this slice.
+See [simple parameter evidence](SIMPLE_PARAMETERS_AUDIT.md).
+
 The project should start with an indicator-focused subset. Scope discipline is
 more important than broad, incomplete support.
 

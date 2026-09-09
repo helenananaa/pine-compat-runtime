@@ -686,6 +686,16 @@ fn run_script_csv_returns_function_default_parameters_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_simple_scalar_parameters_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/simple_scalar_parameters.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("simple parameter fixture should run");
+    assert_snapshot("runtime_simple_scalar_parameters.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_zero_pyramiding_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_zero.pine"),

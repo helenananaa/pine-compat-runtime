@@ -63,7 +63,8 @@ pub(crate) fn function_default_values(
             ));
             return None;
         };
-        let type_name = param.type_name.as_deref().map(|name| name.strip_prefix("series ").unwrap_or(name));
+        let explicit_simple = param.type_name.as_deref().is_some_and(|name| name.starts_with("simple "));
+        let type_name = param.type_name.as_deref().map(|name| name.strip_prefix("series ").or_else(|| name.strip_prefix("simple ")).unwrap_or(name));
         let declared_kind = match type_name {
             Some("int") => Some(ValueKind::Int),
             Some("float") => Some(ValueKind::Float),
@@ -80,8 +81,13 @@ pub(crate) fn function_default_values(
             diagnostics.push(Diagnostic::error("E_FUNCTION_DEFAULT_TYPE", "na defaults require an explicit scalar type; v6 bool defaults cannot be na", param.span));
             return None;
         }
+        let declared_qualifier = if explicit_simple {
+            Qualifier::Simple
+        } else {
+            Qualifier::Series
+        };
         if let Some(kind) = declared_kind
-            && !can_assign(PineType::new(Qualifier::Series, kind), value_type) {
+            && !can_assign(PineType::new(declared_qualifier, kind), value_type) {
                 diagnostics.push(Diagnostic::error("E_FUNCTION_DEFAULT_TYPE", format!("default value cannot be assigned to parameter `{}` of type `{}`", param.name, type_name.unwrap()), value.span));
                 return None;
         }

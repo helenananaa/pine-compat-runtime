@@ -1028,15 +1028,7 @@ fn constant_hir_numeric_comparison_with_env(
 ) -> Option<bool> {
     let left = constant_hir_numeric_with_env(left, env, visiting)?;
     let right = constant_hir_numeric_with_env(right, env, visiting)?;
-    Some(match op {
-        HirBinaryOp::Eq => left == right,
-        HirBinaryOp::NotEq => left != right,
-        HirBinaryOp::Gt => left > right,
-        HirBinaryOp::Gte => left >= right,
-        HirBinaryOp::Lt => left < right,
-        HirBinaryOp::Lte => left <= right,
-        _ => return None,
-    })
+    pine_ir::pine_numeric_comparison(op, left, right)
 }
 
 fn constant_hir_string_comparison(op: HirBinaryOp, left: &str, right: &str) -> Option<bool> {

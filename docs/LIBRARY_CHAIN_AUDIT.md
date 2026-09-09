@@ -216,8 +216,12 @@ agree. Only oscillator component 7 differs (native 0, local -1): local Stochasti
 RSI K=98.55303933471674, D=98.55303933471681, yielding a negative difference
 of 7.105427357601002e-14 and a sell condition. Native displayed values round to
 the same 12 decimal places. This locates the branch divergence but does not yet
-establish the precise underlying floating-point calculation or fix. Do not add
-an epsilon to Pine comparisons or relax frozen rating tolerances.
+establish the precise underlying floating-point calculation or fix. Subsequent
+[numeric comparison qualification](NUMERIC_COMPARISON_AUDIT.md) disproved the
+earlier exact-comparison assumption: Pine has an observable numeric comparison
+boundary. Implementing that language rule eliminates all 129 oscillator errors;
+the independent reference tolerances remain unchanged. Full-root comparison is
+now 1/0/1, still failing only at the single MA decision at index 15460.
 
 Independent overload intake at baseline 1e1638123 (Chrome, original unsaved
 controls; raw source and DOM receipts in the existing local evidence directory):

@@ -31,6 +31,26 @@ impl Analyzer {
                     }
                     let pine_type = self.type_of_expr_with_params(expr, param_types)?;
                     let series_id = self.lower_expr_series_id(expr, pine_type);
+                    if self.legacy.dialect().version() < 5
+                        && pine_type.qualifier == Qualifier::Const
+                        && matches!(
+                            op,
+                            BinaryOp::Eq
+                                | BinaryOp::NotEq
+                                | BinaryOp::Lt
+                                | BinaryOp::Lte
+                                | BinaryOp::Gt
+                                | BinaryOp::Gte
+                        )
+                        && let Some(value) = self.known_const_bool_value(expr)
+                    {
+                        values.push(HirExpr {
+                            pine_type,
+                            series_id,
+                            kind: HirExprKind::Literal(HirLiteral::Bool(value)),
+                        });
+                        continue;
+                    }
                     work.push(Work::Build {
                         expr,
                         op: *op,

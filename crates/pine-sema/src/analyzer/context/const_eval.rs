@@ -1296,15 +1296,11 @@ impl Analyzer {
     ) -> Option<bool> {
         let left = self.known_const_numeric_value(left)?;
         let right = self.known_const_numeric_value(right)?;
-        Some(match op {
-            pine_syntax::BinaryOp::Eq => left == right,
-            pine_syntax::BinaryOp::NotEq => left != right,
-            pine_syntax::BinaryOp::Gt => left > right,
-            pine_syntax::BinaryOp::Gte => left >= right,
-            pine_syntax::BinaryOp::Lt => left < right,
-            pine_syntax::BinaryOp::Lte => left <= right,
-            _ => return None,
-        })
+        if self.legacy.dialect().version() < 5 {
+            pine_ir::exact_numeric_comparison(crate::lowering::lower_binary_op(op), left, right)
+        } else {
+            pine_ir::pine_numeric_comparison(crate::lowering::lower_binary_op(op), left, right)
+        }
     }
 
     fn known_const_bool_comparison(

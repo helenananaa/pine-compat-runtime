@@ -285,10 +285,9 @@ pub(crate) fn eval_binary_with_semantics(
         HirBinaryOp::Mod => numeric_mod(left, right),
         HirBinaryOp::Eq => PineValue::Bool(values_equal(&left, &right)),
         HirBinaryOp::NotEq => PineValue::Bool(!values_equal(&left, &right)),
-        HirBinaryOp::Gt => compare_binary(left, right, |left, right| left > right),
-        HirBinaryOp::Gte => compare_binary(left, right, |left, right| left >= right),
-        HirBinaryOp::Lt => compare_binary(left, right, |left, right| left < right),
-        HirBinaryOp::Lte => compare_binary(left, right, |left, right| left <= right),
+        HirBinaryOp::Gt | HirBinaryOp::Gte | HirBinaryOp::Lt | HirBinaryOp::Lte => {
+            compare_binary(op, left, right)
+        }
     })
 }
 
@@ -396,24 +395,21 @@ fn numeric_float_binary(
     }
 }
 
-fn compare_binary(
-    left: PineValue,
-    right: PineValue,
-    op: impl FnOnce(f64, f64) -> bool,
-) -> PineValue {
+fn compare_binary(op: HirBinaryOp, left: PineValue, right: PineValue) -> PineValue {
     match (left.as_f64(), right.as_f64()) {
-        (Some(left), Some(right)) => PineValue::Bool(op(left, right)),
+        (Some(left), Some(right)) => {
+            pine_ir::pine_numeric_comparison(op, left, right).map_or(PineValue::Na, PineValue::Bool)
+        }
         _ => PineValue::Na,
     }
 }
 
 pub(crate) fn values_equal(left: &PineValue, right: &PineValue) -> bool {
     match (left.as_f64(), right.as_f64()) {
-        // Pine Script `==` performs exact numeric equality (no tolerance);
-        // the `as_f64` branch keeps cross-type comparisons such as
-        // `int == float` working without introducing an arbitrary epsilon.
-        #[allow(clippy::float_cmp)]
-        (Some(left), Some(right)) => left == right,
+        // Array first/last lookup shares the native numeric equality boundary.
+        (Some(left), Some(right)) => {
+            pine_ir::pine_numeric_comparison(HirBinaryOp::Eq, left, right).unwrap_or(false)
+        }
         _ => left == right,
     }
 }

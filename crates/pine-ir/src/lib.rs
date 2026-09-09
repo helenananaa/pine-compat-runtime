@@ -1,6 +1,8 @@
 //! Host-independent intermediate representation scaffolding.
 
 mod internal;
+mod numeric_comparison;
+pub use numeric_comparison::{exact_numeric_comparison, pine_numeric_comparison};
 mod strategy;
 mod types;
 mod user_types;

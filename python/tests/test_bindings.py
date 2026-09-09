@@ -2859,6 +2859,13 @@ def test_run_script_returns_dema_tema_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_numeric_comparison_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/numeric_comparison.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_numeric_comparison.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
 def test_run_script_returns_macd_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/macd.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_macd.json").read_text())

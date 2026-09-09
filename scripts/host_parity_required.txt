@@ -175,6 +175,7 @@ runtime_mfi.json
 runtime_mode.json
 runtime_mom.json
 runtime_na.json
+runtime_numeric_comparison.json
 runtime_nvi.json
 runtime_object_array_typed_declarations.json
 runtime_obv.json

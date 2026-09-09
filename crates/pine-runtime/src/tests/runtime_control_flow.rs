@@ -1172,7 +1172,7 @@ fn runs_while_expression_stateful_scope() {
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 1);
-    assert_values_close(&result.plots[0].values, &[5.0, 8.0, 11.0]);
+    assert_values_close(&result.plots[0].values, &[4.0, 7.5, 10.5]);
 }
 
 #[test]
@@ -1557,7 +1557,7 @@ plot(close + sum)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 1);
-    assert_values_close(&result.plots[0].values, &[2.0, 5.5, 8.5]);
+    assert_values_close(&result.plots[0].values, &[1.0, 5.0, 8.0]);
 }
 
 #[test]
@@ -1613,7 +1613,7 @@ plot(close + sum)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 1);
-    assert_values_close(&result.plots[0].values, &[2.0, 5.5, 8.5]);
+    assert_values_close(&result.plots[0].values, &[1.0, 5.0, 8.0]);
 }
 
 #[test]

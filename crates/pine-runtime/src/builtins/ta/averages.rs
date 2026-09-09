@@ -20,7 +20,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let length = length as usize;
-        let window = self.update_rolling_window(call_site_id, source, length);
+        let window = self.update_rolling_window_for_bar(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
         }
@@ -419,23 +419,59 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
-        let Some(source) = source.as_f64() else {
-            return Ok(PineValue::Na);
-        };
         if length <= 0 {
             return Ok(PineValue::Na);
         }
-
-        let alpha = 2.0 / (length as f64 + 1.0);
-        let value = match self
-            .call_state
-            .get(&call_site_id)
-            .and_then(PineValue::as_f64)
-        {
-            Some(previous) => PineValue::Float(alpha * source + (1.0 - alpha) * previous),
-            None => PineValue::Float(source),
+        let bar = self.bars as i64;
+        // State is [last evaluation bar, committed base, current candidate].
+        // Repeated calls on one bar share the base; the final candidate becomes
+        // the base only when execution advances to another bar.
+        let previous = match self.call_state.get(&call_site_id) {
+            Some(PineValue::Tuple(state)) if state.len() == 3 => {
+                let index = if state[0].as_i64() == Some(bar) { 1 } else { 2 };
+                state[index].as_f64()
+            }
+            Some(state) => state.as_f64(),
+            None => None,
         };
-        self.call_state.insert(call_site_id, value.clone());
+        let source = source.as_f64();
+        let alpha = 2.0 / (length as f64 + 1.0);
+        let value = match (source, previous) {
+            (Some(source), Some(previous)) => {
+                PineValue::Float(alpha * source + (1.0 - alpha) * previous)
+            }
+            (Some(source), None) => {
+                let window = self.update_rolling_window_for_bar(
+                    call_site_id,
+                    PineValue::Float(source),
+                    length as usize,
+                );
+                if window.is_ready(length as usize) {
+                    PineValue::Float(window.mean(length as usize))
+                } else {
+                    PineValue::Na
+                }
+            }
+            (None, _) => {
+                if let Some(window) = self
+                    .rolling_windows
+                    .get_mut(&RollingWindowKey::Single(call_site_id))
+                {
+                    window.discard_for_bar(self.bars);
+                }
+                PineValue::Na
+            }
+        };
+        let base = previous.map_or(PineValue::Na, PineValue::Float);
+        let pending = if source.is_some() {
+            value.clone()
+        } else {
+            base.clone()
+        };
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![PineValue::Int(bar), base, pending]),
+        );
         Ok(value)
     }
 

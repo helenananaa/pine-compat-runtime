@@ -964,6 +964,8 @@ fn v4_legacy_security_recomputes_udf_local_dependency_graph_in_requested_context
         timed_close(0, 100.0),
         timed_close(300_000, 200.0),
         timed_close(600_000, 300.0),
+        timed_close(900_000, 400.0),
+        timed_close(1_200_000, 500.0),
     ]);
     let chart = [
         timed_close(0, 1.0),
@@ -972,6 +974,10 @@ fn v4_legacy_security_recomputes_udf_local_dependency_graph_in_requested_context
         timed_close(540_000, 7.0),
         timed_close(600_000, 9.0),
         timed_close(840_000, 11.0),
+        timed_close(900_000, 13.0),
+        timed_close(1_140_000, 15.0),
+        timed_close(1_200_000, 17.0),
+        timed_close(1_440_000, 19.0),
     ];
 
     let mut expected =
@@ -983,6 +989,13 @@ fn v4_legacy_security_recomputes_udf_local_dependency_graph_in_requested_context
         expected.id = actual.id;
     }
     assert_eq!(batch, expected);
+    // Preserve the original six-bar prefix; nested EMA/SMA warmup now extends
+    // beyond it, so also exercise populated results on subsequent bars.
+    assert!(
+        batch.plots[1].values[..6]
+            .iter()
+            .all(|v| *v == PineValue::Na)
+    );
     assert_ne!(batch.plots[0].values.last(), Some(&PineValue::Na));
     assert_ne!(batch.plots[1].values.last(), Some(&PineValue::Na));
 
@@ -1757,19 +1770,15 @@ plot(close > open ? ema(high, 2) : ema(low, 2))
 
     let iff_result = run_historical(&iff, &bars).expect("strict iff run");
     let ternary_result = run_historical(&ternary, &bars).expect("lazy ternary run");
+    assert_eq!(iff_result.plots[0].values[0], PineValue::Na);
     assert_values_close(
-        &iff_result.plots[0].values,
-        &[
-            10.0,
-            16.666_666_666_666_664,
-            3.888_888_888_888_889,
-            5.296_296_296_296_296,
-        ],
+        &iff_result.plots[0].values[1..],
+        &[15.0, 23.0 / 6.0, 95.0 / 18.0],
     );
-    assert_values_close(
-        &ternary_result.plots[0].values,
-        &[10.0, 16.666_666_666_666_664, 5.0, 5.666_666_666_666_666],
-    );
+    assert_eq!(ternary_result.plots[0].values[0], PineValue::Na);
+    assert_eq!(ternary_result.plots[0].values[2], PineValue::Na);
+    assert_values_close(&ternary_result.plots[0].values[1..2], &[15.0]);
+    assert_values_close(&ternary_result.plots[0].values[3..], &[5.5]);
 }
 
 #[test]

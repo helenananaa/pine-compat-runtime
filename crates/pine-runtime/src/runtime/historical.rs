@@ -959,12 +959,12 @@ impl<'a> HistoricalRuntime<'a> {
         let rolling_window_values = self
             .rolling_windows
             .values()
-            .map(|window| window.values.len())
+            .map(RollingWindowState::retained_values)
             .sum::<usize>();
         let rolling_window_value_capacity = self
             .rolling_windows
             .values()
-            .map(|window| window.values.capacity())
+            .map(RollingWindowState::retained_capacity)
             .sum::<usize>();
         let valuewhen_state_values = self
             .valuewhen_state

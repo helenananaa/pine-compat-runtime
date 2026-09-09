@@ -11733,9 +11733,9 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][243]["values"] == [
         None,
         None,
-        100.0,
-        100.0,
-        166.66666666666666,
+        None,
+        None,
+        150.0,
     ]
     assert result["plots"][244]["values"] == [None, None, None, None, 100.0]
     assert result["plots"][245]["values"] == [
@@ -11982,11 +11982,11 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][298]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
     assert result["plots"][299]["values"] == [None, 0.5, 0.5, 0.5, 0.5]
     assert result["plots"][300]["values"] == [
-        20.0,
-        20.666666666666668,
-        21.555555555555557,
-        22.51851851851852,
-        23.506172839506174,
+        None,
+        20.5,
+        21.5,
+        22.5,
+        23.5,
     ]
     assert result["plots"][301]["values"] == [None, 100.0, 100.0, 100.0, 100.0]
     assert result["plots"][302]["values"] == [

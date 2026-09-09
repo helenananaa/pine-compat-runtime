@@ -1293,40 +1293,44 @@ fn varip_local_fixture_persists_intrabar_state_per_declaration_site() {
 #[test]
 fn conditional_ta_fixture_rolls_back_callsite_state_between_forming_updates() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/conditional_ta_rollback.pine");
+    let assert_ema = |values: &[PineValue], tail: &[f64]| {
+        assert_eq!(values.first(), Some(&PineValue::Na));
+        assert_values(&values[1..], tail);
+    };
 
     let result = runtime
         .update(BarUpdate::historical(bar_ohlc(1.0, 2.0)))
         .expect("historical update should run");
-    assert_values(&result.plots[0].values, &[2.0]);
+    assert_ema(&result.plots[0].values, &[]);
 
     let result = runtime
         .update(BarUpdate::forming(bar_ohlc(3.0, 4.0)))
         .expect("forming update should run");
-    assert_values(&result.plots[0].values, &[2.0, 3.333333333333333]);
-    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0]);
+    assert_ema(&result.plots[0].values, &[3.0]);
+    assert_ema(&runtime.confirmed_result().plots[0].values, &[]);
 
     let result = runtime
         .update(BarUpdate::forming(bar_ohlc(7.0, 8.0)))
         .expect("second forming update should roll back callsite state");
-    assert_values(&result.plots[0].values, &[2.0, 6.0]);
-    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0]);
+    assert_ema(&result.plots[0].values, &[5.0]);
+    assert_ema(&runtime.confirmed_result().plots[0].values, &[]);
 
     let result = runtime
         .update(BarUpdate::confirmed(bar_ohlc(4.0, 5.0)))
         .expect("confirmed update should commit callsite state");
-    assert_values(&result.plots[0].values, &[2.0, 4.0]);
-    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0, 4.0]);
+    assert_ema(&result.plots[0].values, &[3.5]);
+    assert_ema(&runtime.confirmed_result().plots[0].values, &[3.5]);
 
     let result = runtime
         .update(BarUpdate::forming(bar_ohlc(4.0, 3.0)))
         .expect("forming update with skipped branch should run");
-    assert_values(&result.plots[0].values, &[2.0, 4.0, 3.0]);
-    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0, 4.0]);
+    assert_ema(&result.plots[0].values, &[3.5, 3.0]);
+    assert_ema(&runtime.confirmed_result().plots[0].values, &[3.5]);
 
     let result = runtime
         .update(BarUpdate::forming(bar_ohlc(7.0, 8.0)))
         .expect("forming update should ignore skipped-branch callsite state");
-    assert_values(&result.plots[0].values, &[2.0, 4.0, 6.666666666666667]);
+    assert_ema(&result.plots[0].values, &[3.5, 6.5]);
 }
 
 #[test]

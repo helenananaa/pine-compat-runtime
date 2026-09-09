@@ -60,10 +60,8 @@ plot(e)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 1);
-    assert_values_close(
-        &result.plots[0].values,
-        &[2.0, 2.0, 4.666666666666667, 6.888888888888889],
-    );
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[2.0, 4.0, 20.0 / 3.0]);
 }
 
 #[test]

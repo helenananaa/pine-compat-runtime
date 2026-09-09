@@ -417,7 +417,8 @@ plot(ma)
     assert_eq!(profiled.profile.history_max_bars_back, None);
     assert!(!profiled.profile.history_has_dynamic_offsets);
     assert_eq!(profiled.profile.rolling_window_slots, 1);
-    assert_eq!(profiled.profile.rolling_window_values, 2);
+    // Two active samples plus one evicted sample retained for same-bar undo.
+    assert_eq!(profiled.profile.rolling_window_values, 3);
     assert!(
         profiled.profile.rolling_window_value_capacity >= profiled.profile.rolling_window_values
     );

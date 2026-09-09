@@ -1790,10 +1790,8 @@ fn request_security_evaluates_provider_tuple_literal_ta_core_momentum_in_request
         .expect("provider tuple literal ta.ema/ta.rsi request.security expression should run");
 
     assert_eq!(result.plots.len(), 2);
-    assert_values_close(
-        &result.plots[0].values,
-        &[20.0, 20.666_666_666_666_668, 21.555_555_555_555_557],
-    );
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[20.5, 21.5]);
     assert_eq!(result.plots[1].values[0], PineValue::Na);
     assert_values_close(&result.plots[1].values[1..], &[100.0, 100.0]);
 }
@@ -3411,10 +3409,9 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_core_momen
     assert_eq!(result.plots.len(), 2);
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[0].values[2..],
-        &[100.0, 100.0, 166.666_666_666_666_66],
-    );
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_eq!(result.plots[0].values[3], PineValue::Na);
+    assert_values_close(&result.plots[0].values[4..], &[150.0]);
     for value in &result.plots[1].values[..4] {
         assert_eq!(*value, PineValue::Na);
     }
@@ -6276,10 +6273,8 @@ fn request_security_evaluates_provider_ema_in_requested_context() {
         ])
         .expect("provider ema expression should run");
 
-    assert_values_close(
-        &result.plots[0].values,
-        &[20.0, 22.0, 24.666_666_666_666_668],
-    );
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[21.5, 24.5]);
 }
 
 #[test]

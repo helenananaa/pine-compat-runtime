@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Corrected EMA initialization to use the first length non-na executed-bar
+  samples, and SMA/EMA repeated calls to replace a bar's tentative sample.
+  This changes early values and loop results that depended on the old
+  first-value or per-call sampling behavior. Runtime/analysis JSON schemas are
+  unchanged; rolling-window profile totals include undo storage. Independent
+  v3-v6, missing-value, loop and request evidence accompanies this correction.
+
 - Added v5/v6 scalar default parameters in local and imported user-defined
   functions, with named omission, caller-scope binding, typed na and numeric
   promotion. Added E_FUNCTION_DEFAULT and E_FUNCTION_DEFAULT_TYPE diagnostics.

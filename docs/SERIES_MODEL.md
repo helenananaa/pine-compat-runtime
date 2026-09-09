@@ -118,6 +118,21 @@ b = ta.ema(close, 20)
 `a` and `b` have two distinct callsites. Their state must be separate even when
 their arguments are textually identical.
 
+`ta.ema` initializes from the mean of its first `length` non-na samples on
+executed bars. Repeated evaluations of the same EMA or SMA callsite in one bar
+replace that bar's tentative sample; they do not append additional historical
+samples. EMA recalculates from its previous committed value on each such call.
+A final na EMA input discards a preceding tentative sample for that bar while
+preserving committed history. SMA retains its documented window-na policy.
+Conditional non-execution does not advance either callsite. Different
+callsites and requested runtimes remain independent.
+
+The replacement window retains only its evicted elements and exact previous
+aggregates for undo, not a full window copy per call. Existing forming-bar and
+strategy-evaluation checkpoints include this state. Profile window value and
+capacity totals include the undo buffer. This qualification is specific to
+SMA/EMA; other stateful built-ins are not upgraded by inference.
+
 Stateful built-ins include, at minimum:
 
 - `ta.ema`

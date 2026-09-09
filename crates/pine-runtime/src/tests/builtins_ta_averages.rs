@@ -79,10 +79,10 @@ plot(ma)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Float(1.0),
-            PineValue::Float(1.5),
-            PineValue::Float(2.25),
-            PineValue::Float(3.125),
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(2.0),
+            PineValue::Float(3.0),
         ]
     );
 }

@@ -2373,9 +2373,7 @@ fn runs_request_bars_integration_fixture() {
             .count()
             >= 2
     );
-    assert!(output.contains(
-        "\"values\":[20,20.666666666666668,21.555555555555557,22.51851851851852,23.506172839506174]"
-    ));
+    assert!(output.contains("\"values\":[null,20.5,21.5,22.5,23.5]"));
     assert!(output.matches("\"values\":[null,100,100,100,100]").count() >= 1);
     assert!(output.contains(
             "\"values\":[null,0.0975609756097561,0.09302325581395349,0.08888888888888889,0.0851063829787234]"

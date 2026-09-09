@@ -1,71 +1,91 @@
-# EMA initialization candidate
+# EMA/SMA initialization and repeated-call qualification
 
-2026-09-09. Status: independent modern references match; regression review
-and integration pending. Candidate worktree:
-`E:/projects/pine-interpreter-delivery-ema`, based on ad2063878. Main has not
-adopted this candidate. No release or existing golden refresh.
+2026-09-09. Scope: standalone EMA initialization and SMA/EMA repeated calls
+on one executed bar. Core implementation and full Windows gate are qualified;
+final source/host artifact receipts accompany the local integration. No release.
 
-## Evidence and implementation
+## Observable contract
 
-The separate EMA reference batch starts at TradingView bar_index=0 and uses
-21,133 frozen closed OKX:BTCUSDT 15-minute bars. All OHLCV and timestamps match
-the supplied runtime input; no warmup rows are skipped. Numeric tolerance
-remains absolute/relative 1e-9. Before correction, EMA3 differed at 22 values
-and EMA200 at 1,704; SMA3 and bar_index matched.
+- EMA seeds from the mean of its first `length` non-na executed-bar samples.
+- Repeated SMA/EMA calls on one bar replace that bar's tentative sample, rather
+  than appending extra historical samples. EMA always recalculates from the
+  previous committed EMA, not the preceding iteration's output.
+- A final na EMA input discards any earlier tentative sample for that bar and
+  preserves committed history. Conditional non-execution does not advance it.
+- Same-bar window length shrink/grow restores the pre-bar tail before replacing
+  the sample. Ordinary variable accumulation inside loops remains unchanged.
+- Callsites and requested runtimes remain independent. Existing forming and
+  strategy-evaluation checkpoints include the new state.
 
-v5/v6 probes confirm an arithmetic mean of the first length non-na samples
-as the seed. Missing inputs are not counted toward that seed and yield na.
-After seeding, missing inputs preserve the internal previous value: following
-three na inputs, the next EMA3 is half the next source plus half the previous
-non-na EMA. Length 1 returns the available source.
+The window stores only evicted elements plus exact prior aggregate values for
+undo; it does not clone its whole deque on each update. Profile rolling-window
+value/capacity totals include this retained undo storage. Other TA algorithms
+keep their existing paths; their repeated-call semantics are not qualified by
+inference. Runtime and analysis JSON schemas are unchanged.
 
-The candidate changes only eval_ema: use its checkpointed callsite rolling
-window during seeding; afterward retain the existing recursive update. No
-changes to the shared ema_next helper, MACD, KC, TSI, DEMA or TEMA. Their own
-initialization contracts are not inferred from standalone ta.ema evidence.
+## Independent evidence
 
-| Independent batch | Compared values | Differences |
+All controls use 21,133 frozen closed bars, begin at TradingView bar index 0,
+skip no warmup bars and retain absolute/relative tolerance 1e-9. Raw captures,
+source files, normalized input, before/after outputs and comparisons are under
+`.local/delivery-20260909/` in the main checkout.
+
+| Control | Compared values | Final differences |
 | --- | ---: | ---: |
-| EMA3/EMA200 with SMA3 and bar_index controls | 84,532 | 0 |
-| v5 initial/interspersed missing values, lengths 1/3, real EMA200 | 105,665 | 0 |
-| Same probe in v6 | 105,665 | 0 |
+| EMA3/EMA200, SMA3 and bar index | 84,532 | 0 |
+| v5 missing inputs, lengths 1/3 and real EMA200 | 105,665 | 0 |
+| Same missing-input control in v6 | 105,665 | 0 |
 | v6 recovery after missing values | 63,399 | 0 |
-| legacy v4 EMA3/EMA200 and bar_index | 63,399 | 0 |
+| v4 EMA3/EMA200 and bar index | 63,399 | 0 |
+| v3 EMA3/EMA200 and native n counter | 63,399 | 0 |
+| Full original loop calculation plus same-context request/direct EMA | 105,665 | 0 |
+| Repeated EMA, including final na | 63,399 | 0 |
+| Repeated SMA, final na and changing length | 84,532 | 0 |
 
-Original runtime tests verify manual seed arithmetic, callsite independence,
-batch/append equivalence and repeated forming replacement on/before the seed
-bar. These targeted tests pass. They are not a full regression gate.
+These are control scenarios sharing a frozen market window, not nine distinct
+strategy families or an expanded public-r1 denominator. The original v3 probe
+incorrectly used bar_index; its compile error/source were retained separately,
+and the native-v3 wrapper uses n without changing the EMA calculation.
 
-Grok's eight-turn implementation task exhausted its bound without editing.
-Codex confirmed terminal status, implemented the candidate and ran tests and
-comparisons. No unbounded approval or subagents were enabled.
+Initially EMA3/EMA200 differed at 22/1,704 values. A seed-only candidate fixed
+those but exposed a pre-existing loop error: both baseline and seed-only
+candidate differed at 21,124 loop outputs and all 21,133 carried values.
+That failure was retained and led to the repeated-call correction; the loop
+golden was not approved merely because the candidate produced a new value.
 
-## Downstream review still required
+Nine final scenarios also undergo 18 exact complete-output comparisons between
+CLI and a newly installed Python wheel / actual generated WASM module. The CLI
+outputs are independently compared to the captured TradingView columns. The
+existing G3 real-strategy batch remains separate: all 65 trades and its prior
+series comparisons pass unchanged in the retained rerun.
 
-An isolated temporary test harness captured all 932 runtime outputs into an
-ignored candidate directory. It did not overwrite existing golden files and
-its successful capture is not a passing regression test. The test harness was
-restored byte-for-byte afterward. Ten outputs differ:
+## Regression and delivery receipts
 
-- runtime_ema_rma_edge_cases.json
-- runtime_legacy_v3_core.json
-- runtime_legacy_v4_expressions.json
-- runtime_loop_state_interactions.json
-- runtime_request_security_same_context.json
-- runtime_simple_scalar_parameters.json
-- runtime_ta.json
-- runtime_ta_named_reordered_remaining_averages.json
-- runtime_typed_declaration_qualifiers.json
-- runtime_math.json (three platform last-bit differences; do not refresh)
+- Final synchronized Windows gate: 6,588 Rust tests, 677 tests against a freshly
+  installed Python wheel, 101 tool tests, real WASM/Node, structural and host
+  parity checks. Log: ema-final-synced-verify.log (exit 0).
+- Original tests cover seed arithmetic, separate callsites, same-bar overwrite,
+  final-na discard, changing lengths, exact aggregate restoration, checkpoint
+  clones, append equivalence and forming replacements around the seed bar.
+- All 932 runtime outputs were captured to a separate ignored directory. Twelve
+  reviewed plot-value-only goldens changed; runtime_math last-bit differences
+  were excluded. Exact reviewed deltas: ema-approved-golden-deltas.json.
+- Related unit/CLI/Python/WASM hard-coded EMA expectations were derived from
+  the new seed rule. The nested legacy request test preserves its original
+  six-bar prefix and adds subsequent bars to test populated post-warmup output.
+  No tolerance or resource ceiling was relaxed.
+- Only ta.sma and ta.ema matrix entries changed, to describe the tested rules.
+- Candidate artifacts are under ema-final-hosts/ (inside the evidence directory),
+  including the installed-wheel environment and generated WASM module. These
+  are local debug qualification artifacts, not a production release matrix.
 
-The other nine differences are confined to plot values downstream of EMA;
-complete field-level deltas were retained. v4 reference passes; v3 and affected
-loop/request assumptions must be reviewed before selecting any golden updates.
-Then update only reviewed expectations, run full Windows and installed-wheel /
-real WASM gates, repeat frozen modern references, and integrate a qualified
-commit. The current candidate is not yet deliverable.
+Grok supplied a bounded read-only delta review, repeated-call design and the
+window undo implementation. Codex obtained the independent evidence, rejected
+unsupported review assumptions, implemented EMA state integration, reviewed
+all changes and ran the actual tests. Grok's earlier no-edit turn-limit failure
+and all intermediate regression failures were retained. No subagents, blanket
+auto-approval, push or publication were enabled.
 
-Evidence in `.local/delivery-20260909/`: ema-candidate-manifest.json,
-ema-comparison-before.json, ema-comparison-candidate.json,
-ema-control-comparison.json, ema-golden-field-deltas.json,
-ema-targeted-v2.log. This batch does not alter older G3 or public r1 denominators.
+Full TechnicalRating dependency-chain execution, other strategy/timeframe
+reference expansion, long-session resource qualification and final cross-platform
+release delivery remain open in DELIVERY_ROADMAP.md.

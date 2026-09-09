@@ -111,12 +111,18 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
     if let Some(field) = object.keys().find(|field| {
         !matches!(
             field.as_str(),
-            "symbol" | "timeframe" | "minMove" | "priceScale" | "quantityPrecision"
+            "symbol" | "timeframe" | "minMove" | "priceScale" | "quantityPrecision" | "pointValue"
         )
     }) {
         return Err(format!("request bars `$chart` has unknown field `{field}`"));
     }
     let mut chart = ChartContext::default();
+    if let Some(value) = object.get("pointValue") {
+        let value = value
+            .as_f64()
+            .ok_or("request bars `$chart.pointValue` must be numeric")?;
+        chart = chart.with_point_value(value).map_err(str::to_owned)?;
+    }
     if let Some(precision) = object.get("quantityPrecision") {
         let precision = precision
             .as_u64()
@@ -160,6 +166,34 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
 #[cfg(test)]
 mod price_grid_tests {
     use super::*;
+
+    #[test]
+    fn explicit_point_value_validates_the_supported_profile() {
+        for value in ["1", "1.0"] {
+            let environment =
+                request_environment_from_json(&format!(r#"{{"$chart":{{"pointValue":{value}}}}}"#))
+                    .unwrap();
+            assert_eq!(environment.chart().point_value(), 1.0);
+        }
+        for value in [
+            "0",
+            "-1",
+            "0.5",
+            "5",
+            "1.0000000001",
+            "true",
+            "null",
+            "\"1\"",
+        ] {
+            assert!(
+                request_environment_from_json(&format!(r#"{{"$chart":{{"pointValue":{value}}}}}"#))
+                    .err()
+                    .expect("invalid pointValue")
+                    .contains("pointValue"),
+                "{value}"
+            );
+        }
+    }
 
     #[test]
     fn quantity_precision_metadata_validates_and_preserves_default() {

@@ -565,6 +565,18 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     .with_quantity_precision(precision)
                     .map_err(str::to_owned)?;
             }
+            "--chart-point-value" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(usage)?
+                    .parse::<f64>()
+                    .map_err(|_| "chart pointValue must be numeric".to_owned())?;
+                options.chart_context = options
+                    .chart_context
+                    .with_point_value(value)
+                    .map_err(str::to_owned)?;
+            }
             "--chart-price-grid" => {
                 index += 1;
                 let value = args.get(index).ok_or_else(usage)?;

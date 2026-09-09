@@ -3113,7 +3113,7 @@ in the core runtime.
 
 Positive integer minMove/priceScale can be supplied through ChartContext::with_price_grid,
 CLI --chart-price-grid MIN_MOVE/PRICE_SCALE, Python request_bars["$chart"]
-(with required minMove and priceScale and optional quantityPrecision), or WASM $chart JSON. Missing input preserves
+(with required minMove and priceScale and optional quantityPrecision/pointValue), or WASM $chart JSON. Missing input preserves
 the synthetic 1/100 default; no exchange lookup is performed. Same-symbol request
 contexts inherit the grid; other symbols retain the existing default metadata.
 Tick orders, slippage, limit verification, rounding and mintick scalar/collection
@@ -3151,3 +3151,11 @@ index selects record zero for these two size functions. Fractional invalid
 indices retain their existing rejection/result behavior. Other trade fields
 retain their own contracts. See [margin evidence](MARGIN_REFERENCE_AUDIT.md)
 for independent coverage, controls and remaining limits.
+
+
+Explicit point-value configuration accepts only the current unit profile:
+`ChartContext::with_point_value(1.0)`, CLI `--chart-point-value 1`, and optional
+Python/WASM `$chart.pointValue`. Non-unit/non-finite values and invalid host
+input types are rejected before execution. `syminfo.pointvalue` reads the
+validated chart profile and remains 1.0. This does not extend the broker to
+contract multipliers, inverse contracts or currency conversion.

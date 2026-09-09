@@ -74,6 +74,22 @@ impl ChartContext {
         1.0 / f64::from(self.quantity_scale)
     }
 
+    /// Validate an explicitly supplied contract multiplier against the current
+    /// unit-point accounting profile. Non-unit contracts are not emulated.
+    pub fn with_point_value(self, value: f64) -> Result<Self, &'static str> {
+        if value != 1.0 {
+            return Err(
+                "chart pointValue must be 1; non-unit contract multipliers are not supported",
+            );
+        }
+        Ok(self)
+    }
+
+    #[must_use]
+    pub fn point_value(&self) -> f64 {
+        1.0
+    }
+
     pub(crate) fn quantity_scale(&self) -> u32 {
         self.quantity_scale
     }

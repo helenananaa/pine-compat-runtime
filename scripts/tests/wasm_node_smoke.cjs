@@ -50,7 +50,7 @@ const quantitySource = require('node:fs').readFileSync(path.resolve(__dirname, '
 const quantityBars = require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/fixtures/runtime/quantity_precision_bars.csv'), 'utf8');
 const quantityExpected = JSON.parse(require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/snapshots/runtime_quantity_precision.json'), 'utf8'));
 assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(quantitySource, quantityBars,
-  JSON.stringify({$chart:{minMove:1,priceScale:10,quantityPrecision:6}}))), quantityExpected);
+  JSON.stringify({$chart:{minMove:1,priceScale:10,quantityPrecision:6,pointValue:1}}))), quantityExpected);
 const simpleSource = require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/fixtures/runtime/simple_scalar_parameters.pine'), 'utf8');
 const simpleBars = require('node:fs').readFileSync(
@@ -231,12 +231,18 @@ assert.throws(
   },
 );
 
-console.log(
-  'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
-);
+
 
 const requirementsFs = require('node:fs');
 const requirementsRoot = path.resolve(__dirname, '../..');
 const requirementsProgram = pine.compileScript(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/host_requirements/strategy.pine'), 'utf8'));
 assert.deepStrictEqual(JSON.parse(requirementsProgram.hostRequirements()), JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/snapshots/host_requirements.json'), 'utf8')));
 requirementsProgram.free();
+
+for (const pointValue of [0, -1, 0.5, 5, 1.0000000001, true, null, '1']) {
+  assert.throws(() => pine.runScriptCsvWithRequestBars(source, bars, JSON.stringify({$chart: {pointValue}})), /pointValue/);
+}
+
+console.log(
+  'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
+);

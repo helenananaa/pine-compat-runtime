@@ -1,6 +1,22 @@
 use super::*;
 
 #[test]
+fn explicit_point_value_cli_rejects_unsupported_or_invalid_profiles() {
+    for value in ["0", "-1", "0.5", "5", "1.0000000001", "NaN", "inf", "true"] {
+        let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", value].map(str::to_owned);
+        assert!(
+            parse_options(&args).unwrap_err().contains("pointValue"),
+            "{value}"
+        );
+    }
+    let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", "1.0"].map(str::to_owned);
+    assert_eq!(
+        parse_options(&args).unwrap().chart_context.point_value(),
+        1.0
+    );
+}
+
+#[test]
 fn quantity_precision_fixture_matches_installed_host_contract() {
     let args = vec![
         workspace_path("tests/fixtures/runtime/quantity_precision.pine"),
@@ -10,6 +26,8 @@ fn quantity_precision_fixture_matches_installed_host_contract() {
         "1/10".to_owned(),
         "--chart-quantity-precision".to_owned(),
         "6".to_owned(),
+        "--chart-point-value".to_owned(),
+        "1".to_owned(),
     ];
     let options = parse_options(&args).unwrap();
     let output = run_json_with_options(&options).unwrap();

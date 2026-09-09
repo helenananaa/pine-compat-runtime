@@ -86,6 +86,22 @@ IDs stable across recompilations. The report is not a source map. Existing
 analysis errors still carry source diagnostics; per-request source provenance
 and runtime-resolved readiness checks remain separate work.
 
+## Explicit point-value validation
+
+The host may declare `pointValue` explicitly: Rust
+`ChartContext::with_point_value(1.0)`, CLI `--chart-point-value 1`, or
+Python/WASM `$chart.pointValue = 1`. Python retains required minMove/priceScale.
+The accepted unit value preserves all existing prices, quantities, fees and
+accounting. Omission retains the unit default. Non-unit values, non-finite
+numbers and invalid types fail configuration parsing before Pine execution,
+with an explicit pointValue/unsupported-contract-multiplier error.
+
+This validates the supported profile; it does not implement contract multipliers
+or infer currencies/inverse-contract accounting from a symbol name. Quantity
+precision and point value describe different properties: fractional quantity
+precision remains supported with unit point value. No numerical tolerances,
+conditional execution rules or optional data fallbacks change.
+
 ## Host integration sequence
 
 1. Supply the original source and complete exact library dependencies to analysis
@@ -132,3 +148,13 @@ real inventory omission: lowered legacy security names were not recognized.
 The implementation now discovers them and preserves their gaps/lookahead labels.
 The first full gate also caught a Clippy style issue; the final gate passes
 without changing warning policies or any prior runtime golden.
+
+
+Explicit point-value follow-up: the Windows gate passes 6643 Rust tests, 705
+fresh installed-wheel Python tests, and 103 tool tests. Updated actual WASM smoke
+covers accepted unit metadata and rejected values/types; the final smoke file
+was rerun after its test-only update. CLI, installed wheel and actual WASM retain
+complete prior long/short margin output equality when pointValue=1 is supplied.
+The initial gate caught an invalid Debug bound in a new parser test; that test
+was corrected without changing production validation. No runtime golden changed.
+Evidence: `.local/delivery-20260909/point-value-contract/`.

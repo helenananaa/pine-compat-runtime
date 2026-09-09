@@ -2,6 +2,35 @@ use pine_runtime::{Bar, ChartContext, HistoricalRuntime, RequestEnvironment};
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
+#[test]
+fn explicit_point_value_accepts_only_the_existing_unit_profile() {
+    let chart = ChartContext::default()
+        .with_price_grid(1, 10)
+        .unwrap()
+        .with_quantity_precision(6)
+        .unwrap();
+    assert_eq!(chart.clone().with_point_value(1.0).unwrap(), chart);
+    assert_eq!(chart.point_value(), 1.0);
+    for value in [
+        0.0,
+        -1.0,
+        0.5,
+        5.0,
+        1.0000000001,
+        f64::NAN,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+    ] {
+        assert!(
+            chart
+                .clone()
+                .with_point_value(value)
+                .unwrap_err()
+                .contains("non-unit contract multipliers")
+        );
+    }
+}
+
 fn execute(precision: u32) -> pine_runtime::RuntimeResult {
     let source = r#"//@version=6
 strategy("Quantity precision",initial_capital=40450,margin_long=50,margin_short=50)

@@ -13,12 +13,13 @@ pub(crate) fn parse_chart_metadata(
         .cast::<PyDict>()
         .map_err(|_| PyValueError::new_err("$chart must be a dict with minMove and priceScale"))?;
     let has_quantity_precision = grid.contains("quantityPrecision")?;
-    if grid.len() != 2 + usize::from(has_quantity_precision)
+    let has_point_value = grid.contains("pointValue")?;
+    if grid.len() != 2 + usize::from(has_quantity_precision) + usize::from(has_point_value)
         || !grid.contains("minMove")?
         || !grid.contains("priceScale")?
     {
         return Err(PyValueError::new_err(
-            "$chart requires minMove and priceScale, optionally quantityPrecision; use chart_symbol/chart_timeframe for identity",
+            "$chart requires minMove and priceScale, optionally quantityPrecision and pointValue; use chart_symbol/chart_timeframe for identity",
         ));
     }
     let integer = |key: &str| -> PyResult<u32> {
@@ -33,6 +34,20 @@ pub(crate) fn parse_chart_metadata(
     chart = chart
         .with_price_grid(integer("minMove")?, integer("priceScale")?)
         .map_err(PyValueError::new_err)?;
+    if has_point_value {
+        let value = grid.get_item("pointValue")?.expect("checked key");
+        if value.is_instance_of::<PyBool>() {
+            return Err(PyValueError::new_err(
+                "pointValue must be numeric, not boolean",
+            ));
+        }
+        let value = value
+            .extract::<f64>()
+            .map_err(|_| PyValueError::new_err("pointValue must be numeric"))?;
+        chart = chart
+            .with_point_value(value)
+            .map_err(PyValueError::new_err)?;
+    }
     if has_quantity_precision {
         let value = grid.get_item("quantityPrecision")?.expect("checked key");
         if value.is_instance_of::<PyBool>() {

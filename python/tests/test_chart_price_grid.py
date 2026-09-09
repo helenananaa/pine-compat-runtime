@@ -11,6 +11,19 @@ plot(str.tostring(10.26, format.mintick) == "10.3" ? 1 : 0)
 '''
 
 
+def test_explicit_unit_point_value_preserves_execution_output():
+    source = '//@version=6\nindicator("point value")\nplot(syminfo.pointvalue)\n'
+    program = pine_compat.compile_script(source)
+    for value in (1, 1.0):
+        assert program.run(BARS, request_bars={"$chart": {"minMove": 1, "priceScale": 100, "pointValue": value}}) == program.run(BARS)
+
+
+@pytest.mark.parametrize("value", [True, None, "1", 0, -1, 0.5, 5, 1.0000000001, float("nan"), float("inf"), float("-inf")])
+def test_explicit_point_value_rejects_unsupported_or_invalid_profiles(value):
+    with pytest.raises(ValueError, match="pointValue"):
+        pine_compat.run_script(SOURCE, BARS, request_bars={"$chart": {"minMove": 1, "priceScale": 10, "pointValue": value}})
+
+
 def test_chart_quantity_precision_is_per_execution_and_preserves_default():
     source = "//@version=6\nindicator(\"quantity\")\nf(simple float value=syminfo.mincontract) => value\nplot(f())\n"
     program = pine_compat.compile_script(source)

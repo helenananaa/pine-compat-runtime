@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Hosts can explicitly supply unit `pointValue` through Rust ChartContext,
+  CLI `--chart-point-value` and Python/WASM chart metadata. Non-unit contract
+  multipliers and invalid/non-finite values return a configuration error.
+  Default behavior and runtime JSON are unchanged; fractional quantities
+  remain independent of point value. See [host contracts](HOST_REQUIREMENTS.md).
+
 - Added a versioned, side-effect-free host-input inventory for compiled programs:
   Rust `host_requirements`, CLI `requirements`, Python `Program.host_requirements`
   and WASM `Program.hostRequirements`. It covers executable library calls,

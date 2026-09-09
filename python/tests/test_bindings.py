@@ -2876,7 +2876,7 @@ def test_run_script_returns_sma_nearby_replacement_fixture_contract():
 def test_run_script_returns_quantity_precision_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/quantity_precision.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_quantity_precision.json").read_text())
-    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/quantity_precision_bars.csv"), request_bars={"$chart": {"minMove": 1, "priceScale": 10, "quantityPrecision": 6}})
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/quantity_precision_bars.csv"), request_bars={"$chart": {"minMove": 1, "priceScale": 10, "quantityPrecision": 6, "pointValue": 1}})
     assert_json_close(result, expected)
 
 

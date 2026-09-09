@@ -107,6 +107,9 @@ impl<'a> HistoricalRuntime<'a> {
             "syminfo.mincontract" => {
                 return PineValue::Float(self.request_environment.chart().min_contract());
             }
+            "syminfo.pointvalue" => {
+                return PineValue::Float(self.request_environment.chart().point_value());
+            }
             "syminfo.minmove" => {
                 return PineValue::Int(i64::from(self.request_environment.chart().min_move()));
             }

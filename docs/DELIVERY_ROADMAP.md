@@ -39,8 +39,8 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
-| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory is implemented; finish configured profile/data readiness review and per-call source provenance without replacing conditional/fallback semantics with unconditional gates |
-| D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
+| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory and explicit unit-point configuration validation are implemented; per-call source provenance and remaining configured-input readiness review remain open without unconditional gates |
+| D4 | Long-session resources | Codex measurement and acceptance | Small historical benchmark exists; source audit found Linux-only peak memory and whole-history incremental replay; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
 ## Current next action
@@ -127,3 +127,18 @@ golden is not independent correctness. B1 remains UNVERIFIED_INTERNAL_ORDER.
 D1-D5 are not waived by the completed numerical slice. No external publication
 or deployment is authorized; prepare a reviewable candidate before requesting
 that final approval.
+
+
+Latest point-value follow-up validates explicit unit contract metadata in Rust,
+CLI and Python/WASM chart configuration; non-unit/non-finite/invalid input fails
+before execution. Existing full long/short margin outputs remain identical with
+pointValue=1. Windows checks pass 6643 Rust / 705 installed-wheel Python / 103
+tool tests, with the updated actual WASM smoke rerun after its final test-only
+change. Evidence: `.local/delivery-20260909/point-value-contract/`.
+
+D4 next action is a small release-profile pilot to select measurement changes
+and budgets, not an acceptance run. The existing probe reports Linux VmHWM only,
+and its incremental phase replays the whole history rather than measuring a
+sustained tail after a 100k-bar seed. Instrument those missing boundaries before
+using it to claim the frozen long-session resource targets. D3 source provenance
+remains required; the resource pilot does not waive it.

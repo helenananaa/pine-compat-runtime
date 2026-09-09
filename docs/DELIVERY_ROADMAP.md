@@ -178,3 +178,15 @@ reports identify the memory source and hash supporting probe modules. Evidence:
 Next extend measurement to a true appended tail and repeated forming/confirmation
 cycles after the fixed history, then freeze numerical budgets before acceptance.
 Windows memory availability does not by itself complete D4 or the product goal.
+
+
+The sustained-tail probe is implemented: prefix seeding, per-bar tail appends,
+forming replacements and confirmations have distinct sample counts and timings.
+A separate budget verifier freezes identity, sizes, all timing budgets and both
+Windows memory budgets, and recomputes statistics from raw samples. Initial
+pilots cover all six existing workload families plus the complete TechnicalRating
+library graph at 1000 seed bars + 128 tail bars, two repetitions and two forming
+replacements per bar. All seven pass internal consistency and counting checks;
+Magnifier remains explicitly historical-only. These are measurement pilots,
+not the 100k/10k acceptance. See LONG_SESSION_RESOURCES.md and
+`.local/delivery-20260909/resources/sustained-*-pilot-v2.json`.

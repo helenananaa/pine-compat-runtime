@@ -35,86 +35,72 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 
 ## Task ledger
 
-| ID | Result required | Owner | State / evidence | Acceptance |
+| ID | Required result | Owner | Current state | Acceptance still needed |
 | --- | --- | --- | --- | --- |
-| D0 | Recover and freeze prior qualified changes | Codex | Complete: 85f42f20f tooling, 149d10c7a semantics, 7393379b3 roadmap; committed Windows full gate exit 0; intake 104/104 hashes match | Completed locally; Linux/new release qualification remains D5 |
-| D1 | Complete real TechnicalRating dependency chain | Grok implementation, Codex oracle/review | Simple slice b8e38333d; spaced-version fix c2c028269 qualified, exact RelativeValue/3 captured; compound declarations and transitive function resolution remain blockers | Original library sources and dependency identities retained; reachable exports run; independent outputs; mode and host parity |
-| D2 | Broaden independent execution evidence | Codex | EMA candidate removes the 22/1,704 initial mismatches; five separate controls now match (see EMA_INITIALIZATION_AUDIT.md); downstream regression review pending; old G3/r1 denominators unchanged | Matched closed-bar, requested/lower-bar inputs; trades, fees, positions, margin/equity compared; all differences dispositioned |
-| D3 | Explicit embedding/data contract | Codex + bounded Grok audit | Price grid exists; account/context assumptions need product-level review | Required inputs, unsupported account/chart modes, source diagnostics and versioning documented and checked across hosts |
-| D4 | Resource and long-session qualification | Grok measurement, Codex acceptance | Existing small benchmark and checkpoint optimization are historical baselines | Frozen workloads/budgets, repeatable release measurements, correct output, growth/limits documented |
-| D5 | Deliver candidate from a known commit | Codex | No new release; working package version 0.2.0 | Windows/Linux installed wheels; Rust embedding example, CLI package, generated WASM/Node package; checksums, versions, migration docs and acceptance manifest agree |
+| D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
+| D1 | Full TechnicalRating dependency chain | Grok bounded implementation, Codex semantics/oracle | Simple parameters b8e38333d and spaced versions c2c028269 closed; all three exact sources captured; compound declarations/admission and transitive calls still block execution | Original sources preserved; complete root runs and matches frozen three-rating reference; mode/host parity |
+| D2 | Independent execution correctness | Codex | EMA/SMA seed and repeated-bar correction closed at 391386d7e; 9 controls / 739,655 values match; previous G3 real-strategy references rerun unchanged | Broader strategy/account, matched MTF/Magnifier inputs and real tick reference remain open |
+| D3 | Explicit embedding/data contract | Codex plus bounded Grok audit | Price grid exists; market/account assumptions and required capabilities need product review | Host can identify required data and unsupported profiles before execution, with useful source diagnostics and versioned contracts |
+| D4 | Long-session resources | Grok measurements, Codex acceptance | Small historical benchmark exists; no current long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
+| D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
-## Evidence already available
+## Current next action
 
-- `LOCAL_FUNCTION_ARRAYS_AUDIT.md`: bounded arrays implementation; retained
-  6,558 Rust / 676 installed-wheel Python / 101 tool tests plus real WASM.
-- `STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md`: two actual strategy families, three
-  scenarios; 65 trades and 14,711 series values compared with no differences.
-- `STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md`: separate six-case reference batch;
-  price grid and commission corrections. Do not merge its denominator with r1.
-- `STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md`: measured small-workload
-  speedup; not a long-session resource guarantee.
+Return to D1 using the complete source/dependency graph, not one first-error
+probe at a time. The bounded read-only map is retained as
+`.local/delivery-20260909/grok-full-chain-map-report.md`; it separates full-source
+parsing/admission from reachable calcRatingAll execution. Current-head analysis
+(`technical-at-391.json`) still rejects the complete root. Next confirm and
+address collection-typed fields / statement switch arms, then source-scoped
+transitive imports, namespace fallback and overload admission as coupled tasks.
+The static map is not execution evidence. The target remains
+unmodified TechnicalRating/3 with exact ta/9 and RelativeValue/3; unused
+libraries must not be omitted or trimmed to pass admission.
 
-Raw third-party sources and captures stay in ignored local evidence directories;
-public regression tests must be original. Private TradingView B1 order remains
-UNVERIFIED_INTERNAL_ORDER; validate observable outcomes without guessing it.
+The full TradingView reference is ready: 21,133 closed bars from bar_index=0,
+no skipped warmup, three rating outputs. It is still a reference-only package;
+local full-library comparison has not passed. Manifest:
+`.local/delivery-20260909/technical-reference-manifest.json`.
 
-## Working protocol and next action
+## Qualified evidence and limits
 
-Grok receives an exact baseline, finite turns, explicit file/task boundaries,
-minimal permissions, no subagents and no push/publish/config changes. Review
-each patch and command result independently before integration. Keep current
-worktree, committed verification and published status separate.
+- [EMA/SMA qualification](EMA_INITIALIZATION_AUDIT.md): 391386d7e; final
+  synchronized Windows gate 6,588 Rust / 677 fresh installed-wheel Python /
+  101 tool tests plus real WASM/Node. Nine reference controls also pass 18
+  exact complete-output CLI/Python/WASM comparisons. Twelve reviewed plot-value
+  goldens changed; unrelated runtime_math differences were excluded. Resource
+  profiles now include undo storage; no resource ceiling was relaxed.
+- [Version annotations](VERSION_COMMENT_SPACING_AUDIT.md): c2c028269; original
+  RelativeValue/3 spaced version no longer misclassified as v1.
+- [Simple parameters](SIMPLE_PARAMETERS_AUDIT.md): b8e38333d; explicit qualifier,
+  defaults and global-input argument behavior with independent type probes.
+- [Prior real strategies](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md): two actual
+  strategy families / three scenarios / 65 trades. The EMA correction rerun
+  passes all prior trade and series comparisons; raw batches stay separate.
+- [Earlier six-case G3](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md) remains a separate
+  batch. The public r1 independent reference denominator remains 0/482 in its
+  last recorded measurement, not upgraded by these other captures.
+- [Performance baseline](STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md)
+  is historical small-workload evidence, not a current long-session guarantee.
 
-Current priority is D1 implementation and reference acquisition. D0 is now
-committed and Windows-verified (6,558 Rust, 676 installed-wheel Python, 101 tool
-tests plus generated WASM/Node). Logs and intake patches remain under
-`.local/delivery-20260909/`. This is not Linux or published release acceptance.
+Latest local qualification receipt:
+`.local/delivery-20260909/ema-final-qualification.json`; retained wheel and
+WASM artifacts: `ema-final-hosts/` in the same evidence directory. These are
+qualification builds, not a stable release or a completed Linux matrix.
 
-Exact RelativeValue/3 was captured from Chrome version history (2024-11-26,
-19:40; source comment v3); its missing-source blocker is resolved. Original
-Chrome probes confirm simple input admission and series/const rejection.
-An original two-layer library probe now proves a further blocker:
-`inner.value` is unresolved despite both exact libraries being supplied.
-Transitive import resolution follows simple parameter implementation; source
-identity, private visibility and per-import state must survive that extension.
+## Work and evidence rules
 
-Full TechnicalRating/3 runs in TradingView. Its first 300-bar export was
-superseded by an additional, separately retained 21,137-bar capture beginning
-at bar_index=0. The frozen reference contains 21,133 closed bars with no skipped
-warmup. Raw source/CSV and normalized input/output hashes are in
-`.local/delivery-20260909/technical-reference-manifest.json`; this reference is
-ready but local full-library execution remains blocked.
+Grok receives an exact baseline, finite turns, explicit file ownership,
+minimal permissions, no subagents and no push/publish/global configuration.
+Codex independently reviews patches and verifies results before integration.
+Keep workspace, committed, installed-artifact and published states separate.
 
-The independent standalone EMA probe discovered an actual numerical gap:
-TradingView initializes EMA3 with SMA3 on bar 2 and EMA200 with SMA200 on bar
-199, whereas the current runtime emits EMA from the first bar. Identical
-OHLCV/timestamps were checked across both captures; SMA3 and bar_index agree.
-See `.local/delivery-20260909/ema-comparison-before.json`. Before changing EMA,
-verify version controls and na/length behavior, review dependent indicators
-and intentional golden changes. This evidence-backed correctness task now
-runs alongside library admission; it cannot be hidden by warmup skipping.
+Raw third-party sources and captures stay in ignored local evidence folders;
+public regressions are original. Do not make CI depend on private exports.
+Never generate TradingView expectations with this runtime, skip failing inputs,
+change a frozen denominator or relax tolerances to pass. A passing internal
+golden is not independent correctness. B1 remains UNVERIFIED_INTERNAL_ORDER.
 
-Simple slice final Windows qualification: 6,567 Rust, 677 freshly installed
-wheel Python, 101 tool tests, real WASM/Node, 879 CLI snapshots and 583 required
-runtime goldens. Main integration has byte-equivalent core/test/build content
-to the verified isolated commit. Installation artifacts are still candidate
-builds, not a stable release. D2-D5 remain open. External publication requires
-user approval.
-
-Latest continuation: c2c028269 fixes spaced version annotations, with full
-Windows gate (6,575 Rust / 677 installed-wheel Python / 101 tool tests plus
-real WASM/Node) and no golden refresh. The exact RelativeValue/3 no longer
-raises a version conflict. Current complete-library diagnostics are retained
-as `technical-after-version.json`; parser errors are not counted as independent
-defects until recovery cascades are resolved.
-
-EMA candidate remains isolated at `E:/projects/pine-interpreter-delivery-ema`.
-Modern initialization, v5/v6 missing-value controls, recovery and legacy v4
-reference comparisons pass without skipped warmup. 932 candidate outputs were
-captured into ignored storage; nine semantic output changes plus three
-last-bit math differences require disposition. No golden was overwritten.
-Next: v3 control and affected loop/request review, select only justified
-golden updates, run the full gate and cross-host references, then integrate.
-See [EMA candidate audit](EMA_INITIALIZATION_AUDIT.md) and
-[version annotation audit](VERSION_COMMENT_SPACING_AUDIT.md).
+D1-D5 are not waived by the completed numerical slice. No external publication
+or deployment is authorized; prepare a reviewable candidate before requesting
+that final approval.

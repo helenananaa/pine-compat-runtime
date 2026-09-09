@@ -118,6 +118,9 @@ fn pure_udf_call_series_key_inner(
         return None;
     }
     let function = analyzer.functions.get(name)?;
+    if !function.overloads.is_empty() {
+        return None;
+    }
     let param_keys = udf_call_param_keys(
         analyzer,
         function,
@@ -906,6 +909,9 @@ fn collect_udf_result_field_param_keys(
         return None;
     }
     let function = analyzer.functions.get(&name)?;
+    if !function.overloads.is_empty() {
+        return None;
+    }
     let param_keys = udf_call_param_keys(
         analyzer,
         function,

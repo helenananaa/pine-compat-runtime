@@ -63,7 +63,9 @@ impl Analyzer {
         outer_param_exprs: &HashMap<String, HirExpr>,
         outer_param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
-        let function = self.functions.get(name)?.clone();
+        let function = self
+            .function_for_call_with_params(name, args, outer_param_types)?
+            .clone();
         let explicit_count = args.len();
         let completed_args = function.complete_args(args, span).ok()?;
         let args = completed_args.as_ref();

@@ -16,7 +16,10 @@ use crate::source_graph::{AnalysisInput, SourceContextId, SourceId};
 use crate::types::array_kind_from_element_type_name;
 
 mod function_parameters;
-use function_parameters::{imported_function_param_types, module_function_param_types};
+use function_parameters::{
+    imported_function_overloads, imported_function_param_types, module_function_param_types,
+    same_parameter_signature,
+};
 
 mod alias_access;
 mod imports;
@@ -148,12 +151,24 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     body,
                     span,
                 } => {
-                    register_export(
-                        module,
-                        name,
-                        ExportInfo::Function { span: *span },
-                        diagnostics,
-                    );
+                    let param_types =
+                        module_function_param_types(module, params, None, diagnostics);
+                    let distinct_overload =
+                        module.functions.get(name).is_some_and(|previous| {
+                            std::iter::once(previous)
+                                .chain(previous.overloads.iter())
+                                .all(|candidate| {
+                                    !same_parameter_signature(&candidate.param_types, &param_types)
+                                })
+                        }) && matches!(module.exports.get(name), Some(ExportInfo::Function { .. }));
+                    if !distinct_overload {
+                        register_export(
+                            module,
+                            name,
+                            ExportInfo::Function { span: *span },
+                            diagnostics,
+                        );
+                    }
                     if function_body_has_side_effect(body) {
                         diagnostics.push(Diagnostic::error(
                             "E_IMPORT_FUNCTION_SIDE_EFFECT",
@@ -161,31 +176,34 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                             *span,
                         ));
                     }
-                    module.functions.insert(
-                        name.clone(),
-                        FunctionInfo {
-                            display_name: name.clone(),
-                            source_id: module.id,
-                            // Library declarations are re-contextualized for each root import
-                            // instance in `build_import_plan` before semantic analysis.
-                            source_context_id: SourceContextId::root(),
-                            params: function_param_names(params),
-                            default_values: function_default_values(
-                                params,
-                                module.program.version.map_or(1, |version| version.version),
-                                &default_shadowed_names,
-                                diagnostics,
-                            ),
-                            param_types: module_function_param_types(
-                                module,
-                                params,
-                                None,
-                                diagnostics,
-                            ),
-                            body: body.clone(),
-                            span: *span,
-                        },
-                    );
+                    let function = FunctionInfo {
+                        overloads: Vec::new(),
+                        display_name: name.clone(),
+                        source_id: module.id,
+                        // Library declarations are re-contextualized for each root import
+                        // instance in `build_import_plan` before semantic analysis.
+                        source_context_id: SourceContextId::root(),
+                        params: function_param_names(params),
+                        default_values: function_default_values(
+                            params,
+                            module.program.version.map_or(1, |version| version.version),
+                            &default_shadowed_names,
+                            diagnostics,
+                        ),
+                        param_types,
+                        body: body.clone(),
+                        span: *span,
+                    };
+                    if distinct_overload {
+                        module
+                            .functions
+                            .get_mut(name)
+                            .unwrap()
+                            .overloads
+                            .push(function);
+                    } else {
+                        module.functions.insert(name.clone(), function);
+                    }
                 }
                 ExportItem::Const { name, value, span } => {
                     register_export(
@@ -228,6 +246,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                 module.functions.insert(
                     name.clone(),
                     FunctionInfo {
+                        overloads: Vec::new(),
                         display_name: name.clone(),
                         source_id: module.id,
                         // Library declarations are re-contextualized for each root import
@@ -483,6 +502,14 @@ fn build_import_plan(
                 plan.imported_functions.insert(
                     key,
                     FunctionInfo {
+                        overloads: imported_function_overloads(
+                            function,
+                            &alias,
+                            name,
+                            module,
+                            source_context_id,
+                            &module_context,
+                        ),
                         display_name: if is_root_import {
                             if name_is_exported_function(module, name) {
                                 format!("{alias}.{name}")

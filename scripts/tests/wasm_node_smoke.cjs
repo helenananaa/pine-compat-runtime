@@ -67,6 +67,13 @@ const transitiveLibraries = Object.fromEntries(['inner', 'outer'].map(name => [
 const transitiveExpected = JSON.parse(require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/snapshots/runtime_transitive_imports.json'), 'utf8'));
 assert.deepEqual(JSON.parse(pine.runScriptCsvWithLibraries(transitiveSource, simpleBars, JSON.stringify(transitiveLibraries))), transitiveExpected);
+const overloadSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/scalar_overloads.pine'), 'utf8');
+const overloadLibraries = { 'test/scalar_overloads/1': require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/libraries/scalar_overloads_lib.pine'), 'utf8') };
+const overloadExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_scalar_overloads.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsvWithLibraries(overloadSource, simpleBars, JSON.stringify(overloadLibraries))), overloadExpected);
 const simpleRejection = JSON.parse(pine.analyzeScript(
   '//@version=6\nindicator("simple")\nf(simple float x) => x\nplot(f(close))\n'));
 assert.equal(simpleRejection.executable, false);

@@ -8,6 +8,7 @@ use crate::source_graph::{SourceContextId, SourceId};
 
 mod defaults;
 mod local_arrays;
+mod overloads;
 pub(crate) use defaults::{function_default_values, record_default_shadowing};
 pub(crate) use local_arrays::local_array_mutation_spans;
 
@@ -438,6 +439,7 @@ impl Analyzer {
             self.functions.insert(
                 name.clone(),
                 FunctionInfo {
+                    overloads: Vec::new(),
                     display_name: name.clone(),
                     source_id: SourceId::root(),
                     source_context_id: SourceContextId::root(),
@@ -459,7 +461,22 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<PineType> {
-        let function = self.functions.get(name)?.clone();
+        let group = self.functions.get(name)?;
+        let is_overloaded = !group.overloads.is_empty();
+        let function = match group.select_overload(args, arg_types) {
+            Some(function) => function.clone(),
+            None => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARG_TYPE",
+                    format!(
+                        "no supported overload of `{}` matches these arguments",
+                        group.display_name
+                    ),
+                    span,
+                ));
+                return None;
+            }
+        };
         if self.function_stack.iter().any(|active| active == name) {
             self.diagnostics.push(Diagnostic::error(
                 "E_RECURSIVE_FUNCTION",
@@ -756,6 +773,26 @@ impl Analyzer {
             self.mark_expr_map(span, info);
         }
 
+        if is_overloaded
+            && return_type.is_some_and(|value| {
+                !matches!(
+                    value.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                        | ValueKind::Na
+                )
+            })
+        {
+            self.unsupported(
+                "function_overload_result",
+                "imported overloads currently require scalar results",
+                call_span,
+            );
+            return None;
+        }
         return_type
     }
 

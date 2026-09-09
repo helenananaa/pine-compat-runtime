@@ -68,6 +68,53 @@ is gone. Final full gate exited 0: transitive-full-verify-v3.log, 6,605 Rust tes
 and actual generated WASM/Node smoke. This remains Windows debug qualification,
 not the final release/Linux artifact matrix.
 
+## Imported scalar overload qualification — 2026-09-09
+
+Baseline 928efd0c3. Exported overload declarations now retain every distinct
+signature and body. Matching includes scalar type and qualifier, named argument
+binding and omitted defaults. Exact int/float kind and the weakest compatible
+qualifier dominate conversions; incomparable candidates retain declaration order.
+The candidate uses the same selection in analysis and scalar lowering/type queries.
+Overload groups are excluded from pure-expression deduplication until its keys
+can describe the selected declaration reliably. Ordinary non-overloaded functions
+retain the existing path.
+
+Independent Chrome controls (source and DOM receipts under the same evidence
+directory) extend the prior intake:
+
+- overload-const-probe and overload-precedence-probe: const float chooses simple
+  float over series float in both declaration orders (11); int chooses int (101)
+  and float chooses float (201), also after reversing declaration order.
+- overload-ambiguous-probe and overload-order-probe: crossed int/float signatures
+  called with two ints choose the first declaration (102 versus 202 after reversal).
+  The initial candidate treated these incomparable costs as an error; this was
+  corrected before acceptance. The probe filename is historical, not a claim that
+  the native call is ambiguous.
+- overload-combined-probe: combined original library/control compiles and shows
+  bool=4, string named/default=5, simple=11, int=101, float=201, crossed-first=202.
+  Visible live accumulation values are not a matched historical numerical oracle.
+
+Original regressions additionally check separate persistent state, negative
+duplicate signatures/unmatched calls, retained invalid-body checks on unused
+overloads, and explicit rejection of reference results. The new scalar_overloads
+fixture participates in historical/append/forming tests and CLI/Python/WASM/Node
+golden comparisons. No existing runtime golden is updated.
+
+This slice admits complete library declarations but only executes scalar-parameter,
+scalar-result imported overloads. Reference parameters/results and root-local
+overload registration remain outside the executable claim. Full original
+TechnicalRating now has only the two RelativeValue export-effect diagnostics
+(technical-after-overload-candidate.json); its numerical acceptance is still open.
+The first full Windows gate passed runtime regressions but failed the existing
+1,200-line modules.rs structural limit. Signature comparison and overload
+parameter recontextualization moved into the existing function_parameters module;
+the limit was unchanged. Final gate overload-full-verify-v2.log exited 0:
+6,609 Rust tests, 680 installed-wheel Python tests, 103 tool tests and real
+generated WASM/Node. The six constant
+native controls separately match all corresponding local fixture values:
+overload-constant-comparison.json. This does not qualify Linux/release artifacts
+or the full TechnicalRating numerical reference.
+
 ## Remaining chain work
 
 Independent overload intake at baseline 1e1638123 (Chrome, original unsaved
@@ -91,8 +138,8 @@ Named/default arguments and qualifier-conversion preference need explicit
 controls before making general dispatch claims. No overload implementation is
 included in the transitive-binding commit.
 
-- Admit legitimate overload identities; keep duplicate/ambiguous declarations
-  and invalid invocations rejected.
+- Replace the two overly broad
+  export-effect rejections with a precise proof for fresh local UDT-owned arrays.
 - Distinguish valid-but-unimplemented export capabilities from invalid source.
   Do not simply drop declaration/body checks: an original Chrome probe proved
   that an unused function with an undeclared name still fails in TradingView

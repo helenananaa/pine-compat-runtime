@@ -333,7 +333,12 @@ fn analyze_fixture(path: &Path, text: String) -> Analysis {
             .collect();
         return analyze_input(&AnalysisInput::with_library_sources(source, libraries).unwrap());
     }
-    let library = if text.contains("import user/lib/1") {
+    let library = if text.contains("import test/scalar_overloads/1") {
+        Some((
+            "test/scalar_overloads/1",
+            "tests/fixtures/libraries/scalar_overloads_lib.pine",
+        ))
+    } else if text.contains("import user/lib/1") {
         Some(("user/lib/1", "tests/fixtures/libraries/import_lib.pine"))
     } else if text.contains("import user/udt_array_returns/1") {
         Some((

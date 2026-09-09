@@ -127,3 +127,66 @@ fn method_body_uses_its_library_import_scope() {
         serde_json::from_str(&public_runtime_result_json(&runtime.result())).unwrap();
     assert_eq!(result["plots"][0]["values"], serde_json::json!([2, 3, 4]));
 }
+
+#[test]
+fn imported_scalar_overloads_bind_types_qualifiers_names_and_defaults() {
+    let library = r#"library("overloads")
+export choose(series float source, simple int length, series bool anchor, simple bool enabled=true) => source + length + (anchor and enabled ? 1.0 : 0.0)
+export choose(series float source, simple int length, simple string timeframe, simple bool enabled=true) => source + length + (enabled ? str.length(timeframe) : 0)
+export qualified(simple float source) => source + 1
+export qualified(series float source) => source + 2
+export reversed(series float source) => source + 2
+export reversed(simple float source) => source + 1
+export numeric(series float source) => source + 200
+export numeric(series int source) => source + 100
+export crossed(series float x, series int y) => x + y + 200
+export crossed(series int x, series float y) => x + y + 100
+export accumulate(series float source) =>
+    var float total=0
+    total+=source
+    total
+export accumulate(simple string source) =>
+    var float total=0
+    total+=str.length(source)
+    total
+"#;
+    let root = r#"import test/overloads/1 as lib
+indicator("overload calls")
+plot(lib.choose(1.0,2,true))
+plot(lib.choose(timeframe="15", source=1.0, length=2))
+plot(lib.qualified(10.0))
+plot(lib.qualified(close))
+plot(lib.accumulate(close))
+plot(lib.accumulate("ab"))
+plot(lib.reversed(10.0))
+plot(lib.numeric(1))
+plot(lib.numeric(1.0))
+plot(lib.crossed(1,1))
+"#;
+    let program = compile(root, &[("test/overloads/1", library)]);
+    let mut runtime = HistoricalRuntime::new(&program);
+    runtime.append_bars(&bars()).unwrap();
+    let result: serde_json::Value =
+        serde_json::from_str(&public_runtime_result_json(&runtime.result())).unwrap();
+    for (index, expected) in [
+        [4, 4, 4],
+        [5, 5, 5],
+        [11, 11, 11],
+        [3, 4, 5],
+        [1, 3, 6],
+        [2, 4, 6],
+        [11, 11, 11],
+        [101, 101, 101],
+        [201, 201, 201],
+        [202, 202, 202],
+    ]
+    .iter()
+    .enumerate()
+    {
+        assert_eq!(
+            result["plots"][index]["values"],
+            serde_json::json!(expected),
+            "plot {index}"
+        );
+    }
+}

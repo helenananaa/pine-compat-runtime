@@ -186,6 +186,12 @@ impl Analyzer {
                 .function_stack
                 .last()
                 .and_then(|name| self.functions.get(name))
-                .is_some_and(|function| local_array_mutation_spans(&function.body).contains(&span))
+                .is_some_and(|function| {
+                    std::iter::once(function)
+                        .chain(function.overloads.iter())
+                        .any(|candidate| {
+                            local_array_mutation_spans(&candidate.body).contains(&span)
+                        })
+                })
     }
 }

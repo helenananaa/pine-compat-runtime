@@ -4,6 +4,43 @@ use crate::types::array_kind_from_element_type_name;
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{Diagnostic, FunctionParam, Span};
 
+pub(super) fn same_parameter_signature(
+    left: &[Option<FunctionParamInfo>],
+    right: &[Option<FunctionParamInfo>],
+) -> bool {
+    left.len() == right.len()
+        && left.iter().zip(right).all(|(a, b)| match (a, b) {
+            (Some(a), Some(b)) => {
+                a.pine_type == b.pine_type && a.user_type_name == b.user_type_name
+            }
+            (None, None) => true,
+            _ => false,
+        })
+}
+
+pub(super) fn imported_function_overloads(
+    function: &super::FunctionInfo,
+    alias: &str,
+    name: &str,
+    module: &ModuleInfo,
+    source_context_id: super::SourceContextId,
+    context: &super::RewriteContext,
+) -> Vec<super::FunctionInfo> {
+    function
+        .overloads
+        .iter()
+        .map(|overload| {
+            let mut imported = overload.clone();
+            imported.source_context_id = source_context_id;
+            imported.display_name = format!("{alias}.{name}");
+            imported.param_types =
+                imported_function_param_types(alias, module, &overload.param_types);
+            imported.body = super::rewrite_function_body(&overload.body, &overload.params, context);
+            imported
+        })
+        .collect()
+}
+
 pub(super) fn module_function_param_types(
     module: &ModuleInfo,
     params: &[FunctionParam],

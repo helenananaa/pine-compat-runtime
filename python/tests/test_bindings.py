@@ -1178,6 +1178,14 @@ def test_run_script_returns_label_array_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_scalar_overloads_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/scalar_overloads.pine").read_text()
+    libraries = {"test/scalar_overloads/1": (ROOT / "tests/fixtures/libraries/scalar_overloads_lib.pine").read_text()}
+    expected = json.loads((ROOT / "tests/snapshots/runtime_scalar_overloads.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"), library_sources=libraries)
+    assert_json_close(result, expected)
+
+
 def test_run_script_returns_transitive_imports_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/transitive_imports.pine").read_text()
     libraries = {

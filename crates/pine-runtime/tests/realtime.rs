@@ -2366,7 +2366,12 @@ fn analyze_realtime_fixture(source: SourceFile) -> pine_sema::Analysis {
             .collect();
         return analyze_input(&AnalysisInput::with_library_sources(source, libraries).unwrap());
     }
-    let library = if source.text().contains("import user/lib/1") {
+    let library = if source.text().contains("import test/scalar_overloads/1") {
+        Some((
+            "test/scalar_overloads/1",
+            "tests/fixtures/libraries/scalar_overloads_lib.pine",
+        ))
+    } else if source.text().contains("import user/lib/1") {
         Some(("user/lib/1", "tests/fixtures/libraries/import_lib.pine"))
     } else if source.text().contains("import user/udt/1") {
         Some(("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine"))

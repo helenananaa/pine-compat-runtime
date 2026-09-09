@@ -742,6 +742,9 @@ impl Analyzer {
         call_span: Span,
     ) -> Option<String> {
         let function = self.functions.get(name)?;
+        if !function.overloads.is_empty() {
+            return None;
+        }
         let explicit_count = args.len();
         let param_index =
             returned_udf_param_index(&function.body, &function.params, &self.functions, 0)?;

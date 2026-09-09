@@ -266,7 +266,7 @@ impl Analyzer {
                         param_types,
                     )
                 } else {
-                    let function = self.functions.get(&name)?;
+                    let function = self.function_for_call_with_params(&name, args, param_types)?;
                     let completed_args = function.complete_args(args, expr.span).ok()?;
                     let args = completed_args.as_ref();
                     let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
@@ -827,7 +827,8 @@ impl Analyzer {
                 {
                     return Some(types);
                 }
-                let function = self.functions.get(&name)?;
+                let function =
+                    self.function_for_call_with_params(&name, args, context.param_types)?;
                 let explicit_count = args.len();
                 let completed_args = function.complete_args(args, expr.span).ok()?;
                 let args = completed_args.as_ref();

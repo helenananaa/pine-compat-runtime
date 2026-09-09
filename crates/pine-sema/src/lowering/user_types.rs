@@ -423,6 +423,9 @@ impl Analyzer {
         }
 
         let function = self.functions.get(&name)?.clone();
+        if !function.overloads.is_empty() {
+            return None;
+        }
         Some(
             self.lowered_user_type_function_call(
                 callee.span,

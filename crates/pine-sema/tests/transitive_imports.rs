@@ -106,3 +106,59 @@ fn nested_alias_declarations_are_checked_before_binding() {
         );
     }
 }
+
+#[test]
+fn overloads_reject_duplicate_signatures_and_unmatched_arguments() {
+    let root = "import test/lib/1 as lib\nindicator(\"overloads\")\nplot(lib.choose(close))\n";
+    let duplicate = "library(\"lib\")\nexport choose(series float source) => source+1\nexport choose(series float source) => source+2\n";
+    let bad = analyze(root, &[("test/lib/1", duplicate)]);
+    assert!(bad.hir.is_none());
+    assert!(
+        bad.diagnostics
+            .iter()
+            .any(|d| d.code == "E_IMPORT_DUPLICATE_EXPORT")
+    );
+    let library = "library(\"lib\")\nexport choose(series bool source) => source ? 1 : 0\nexport choose(simple string source) => str.length(source)\n";
+    let unmatched = analyze(root, &[("test/lib/1", library)]);
+    assert!(unmatched.hir.is_none());
+    assert!(
+        unmatched
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_FUNCTION_ARG_TYPE")
+    );
+    let admitted = analyze(
+        &root.replace("lib.choose(close)", "close"),
+        &[("test/lib/1", library)],
+    );
+    assert!(admitted.hir.is_some(), "{:?}", admitted.diagnostics);
+}
+
+#[test]
+fn overloads_keep_all_body_checks_and_report_reference_result_boundary() {
+    let root = "import test/lib/1 as lib\nindicator(\"overloads\")\nplot(close)\n";
+    let invalid = "library(\"lib\")\nexport choose(series float source) => source\nexport choose(simple string source) => plot(str.length(source))\n";
+    let result = analyze(root, &[("test/lib/1", invalid)]);
+    assert!(result.hir.is_none());
+    assert!(
+        result
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_IMPORT_FUNCTION_SIDE_EFFECT")
+    );
+    let references = "library(\"lib\")\nexport choose(series float source) => array.new<float>(1,source)\nexport choose(simple string source) => str.length(source)\n";
+    let result = analyze(
+        &root.replace("plot(close)", "a=lib.choose(close)\nplot(array.get(a,0))"),
+        &[("test/lib/1", references)],
+    );
+    assert!(result.hir.is_none());
+    assert!(
+        result
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|entry| entry.feature == "function_overload_result"),
+        "{:?}",
+        result.diagnostics
+    );
+}

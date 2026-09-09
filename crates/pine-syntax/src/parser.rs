@@ -458,6 +458,14 @@ impl Parser {
                 let block = self.parse_indented_block()?;
                 end = block.last().map_or(end, |statement| statement.span);
                 (SwitchArmResult::Block(block), true)
+            } else if matches!(self.current().kind, TokenKind::Identifier(_))
+                && self.nth_at(1, TokenKind::ColonEq)
+            {
+                let statement = self.parse_stmt()?;
+                end = statement.span;
+                // The AST reuses an ordinary block, but the parser must still
+                // enforce the newline separating this inline arm from the next.
+                (SwitchArmResult::Block(vec![statement]), false)
             } else {
                 let result = self.parse_expr(0)?;
                 end = result.span;

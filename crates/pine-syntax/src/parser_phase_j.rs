@@ -360,6 +360,17 @@ impl Parser {
 
     fn expect_field_type_name(&mut self) -> Option<(String, Span)> {
         let (first, first_span) = self.expect_identifier("expected field type")?;
+        if first == "array" && self.at(TokenKind::Lt) {
+            self.bump();
+            let (mut element, _) = self.expect_identifier("expected array field element type")?;
+            if self.at(TokenKind::Dot) {
+                self.bump();
+                let (name, _) = self.expect_identifier("expected array field type after `.`")?;
+                element = format!("{element}.{name}");
+            }
+            let end = self.expect(TokenKind::Gt, "expected `>` after array field type")?;
+            return Some((format!("array<{element}>"), first_span.merge(end)));
+        }
         if self.at(TokenKind::Dot) {
             self.bump();
             let (second, second_span) =

@@ -53,6 +53,11 @@ const simpleBars = require('node:fs').readFileSync(
 const simpleExpected = JSON.parse(require('node:fs').readFileSync(
   path.resolve(__dirname, '../../tests/snapshots/runtime_simple_scalar_parameters.json'), 'utf8'));
 assert.deepEqual(JSON.parse(pine.runScriptCsv(simpleSource, simpleBars)), simpleExpected);
+const libraryFormsSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/library_declaration_forms.pine'), 'utf8');
+const libraryFormsExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_library_declaration_forms.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(libraryFormsSource, simpleBars)), libraryFormsExpected);
 const simpleRejection = JSON.parse(pine.analyzeScript(
   '//@version=6\nindicator("simple")\nf(simple float x) => x\nplot(f(close))\n'));
 assert.equal(simpleRejection.executable, false);

@@ -1178,6 +1178,13 @@ def test_run_script_returns_label_array_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_library_declaration_forms_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/library_declaration_forms.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_library_declaration_forms.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
 def test_run_script_returns_simple_scalar_parameters_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/simple_scalar_parameters.pine").read_text()
     expected = json.loads(

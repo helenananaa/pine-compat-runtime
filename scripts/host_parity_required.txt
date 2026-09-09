@@ -135,6 +135,7 @@ runtime_legacy_v4_security_provider.json
 runtime_legacy_v4_security_same_context.json
 runtime_legacy_v4_session_defaults.json
 runtime_legacy_v4_udf_line_setters.json
+runtime_library_declaration_forms.json
 runtime_line_array.json
 runtime_line_control_flow.json
 runtime_line_copy.json

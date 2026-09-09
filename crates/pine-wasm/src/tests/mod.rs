@@ -696,6 +696,16 @@ fn run_script_csv_returns_simple_scalar_parameters_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_library_declaration_forms_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/library_declaration_forms.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("library forms fixture should run");
+    assert_snapshot("runtime_library_declaration_forms.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_zero_pyramiding_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_zero.pine"),

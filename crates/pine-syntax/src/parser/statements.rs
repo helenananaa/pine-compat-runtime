@@ -535,9 +535,30 @@ impl Parser {
         };
         let start = self.current().span;
 
+        if first == "series" && self.source_version >= 5 {
+            self.bump();
+            if matches!(&self.current().kind, TokenKind::Identifier(name)
+                if matches!(name.as_str(), "series" | "simple" | "const" | "input"))
+            {
+                self.error_here("E_PARSE_FUNCTION", "expected type after `series`");
+                return None;
+            }
+            let mut param = self.parse_function_param_head()?;
+            let Some(type_name) = param.type_name else {
+                self.error_here(
+                    "E_PARSE_FUNCTION",
+                    "expected typed parameter after `series`",
+                );
+                return None;
+            };
+            param.type_name = Some(format!("series {type_name}"));
+            param.span = start.merge(param.span);
+            return Some(param);
+        }
+
         // Keep the qualifier in the type spelling: removing it would let a
         // constant argument silently weaken an explicitly series or simple parameter.
-        if (first == "series" || first == "simple") && self.source_version >= 5 {
+        if first == "simple" && self.source_version >= 5 {
             let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 1)?.kind.clone()
             else {
                 return None;

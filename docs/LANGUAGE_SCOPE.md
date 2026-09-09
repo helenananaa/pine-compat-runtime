@@ -754,9 +754,18 @@ host-provided imported UDFs. The qualifier is preserved through analysis and
 inlining, including when the caller supplies a literal or input value. A value
 returned through such a parameter cannot satisfy a builtin's simple-only
 argument. Type checks, numeric promotion, callsite history and realtime rollback
-remain enforced. Simple/const/input parameter qualifiers, explicitly qualified reference
-parameters and method parameters are not added by the series slice. Function
-default arguments are covered by the later contract below. See [the implementation audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
+remain enforced. Explicit series reference annotations are also parsed and
+reuse the existing reference-family type checks, including scalar-tree UDT
+reads. This does not enable unsupported reference families or qualified method
+execution. Simple scalar parameters are covered by the current contract above;
+const/input parameter annotations remain outside the subset. Function defaults
+are covered below. See [library declaration qualification](LIBRARY_CHAIN_AUDIT.md)
+and [the original scalar-series audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
+
+Collection-typed UDT fields such as `array<float> data` are represented by the
+parser for complete library intake. Runtime collection-bearing UDT support is
+not implied: unsupported use still receives a semantic diagnostic. Inline
+switch-arm reassignment uses the existing block scope and effect rules.
 
 ## Modern Function Default Arguments
 

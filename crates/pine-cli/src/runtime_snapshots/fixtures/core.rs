@@ -2,6 +2,10 @@ use super::RuntimeSnapshotFixture;
 
 pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
+        "runtime_library_declaration_forms.json",
+        "tests/fixtures/runtime/library_declaration_forms.pine",
+    ),
+    (
         "runtime_simple_scalar_parameters.json",
         "tests/fixtures/runtime/simple_scalar_parameters.pine",
     ),

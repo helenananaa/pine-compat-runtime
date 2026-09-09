@@ -142,13 +142,14 @@ pub(crate) struct FunctionInfo {
 pub(crate) struct FunctionParamInfo {
     pub(crate) pine_type: PineType,
     pub(crate) explicit_series: bool,
+    pub(crate) explicit_simple: bool,
     pub(crate) user_type_name: Option<String>,
     pub(crate) span: Span,
 }
 
 impl FunctionParamInfo {
     pub(crate) fn bound_type(&self, argument: PineType) -> PineType {
-        if self.explicit_series {
+        if self.explicit_series || self.explicit_simple {
             self.pine_type
         } else if (argument.kind == pine_ir::ValueKind::Int
             && self.pine_type.kind == pine_ir::ValueKind::Float)

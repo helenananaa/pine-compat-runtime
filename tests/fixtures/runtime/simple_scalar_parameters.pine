@@ -1,0 +1,16 @@
+//@version=6
+indicator("Explicit simple scalar parameters")
+length(simple int n=3) => n
+half(simple float x=3) => x / 2
+choose(simple bool enabled, simple string name, simple color tint) =>
+    [enabled ? name : "off", tint]
+accumulate(simple int factor, series float value) =>
+    var float total = 0
+    total += factor * value
+    total
+[caption, tint] = choose(true, "on", color.red)
+plot(ta.ema(close, length(input.int(3))), "direct input ema")
+plot(half(), "default promotion")
+plot(accumulate(2, close), "persistent sum")
+plot(accumulate(3, 1), "independent sum")
+plot(caption == "on" ? 1 : 0, "scalar selection", color=tint)

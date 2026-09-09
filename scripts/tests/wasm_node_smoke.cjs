@@ -46,6 +46,17 @@ assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
+const simpleSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/simple_scalar_parameters.pine'), 'utf8');
+const simpleBars = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/bars.csv'), 'utf8');
+const simpleExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_simple_scalar_parameters.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(simpleSource, simpleBars)), simpleExpected);
+const simpleRejection = JSON.parse(pine.analyzeScript(
+  '//@version=6\nindicator("simple")\nf(simple float x) => x\nplot(f(close))\n'));
+assert.equal(simpleRejection.executable, false);
+assert.ok(simpleRejection.diagnostics.some(d => d.code === 'E_FUNCTION_ARG_TYPE'));
 const gridSource = '//@version=6\nindicator("grid")\nplot(syminfo.mintick)\nplot(math.round_to_mintick(10.26))\n';
 const gridResult = JSON.parse(pine.runScriptCsvWithRequestBars(gridSource, bars,
   JSON.stringify({ $chart: { minMove: 1, priceScale: 10 } })));

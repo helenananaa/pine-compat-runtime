@@ -29,7 +29,24 @@ fn module_function_param_type(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Option<FunctionParamInfo> {
     let explicit_series = type_name.starts_with("series ");
-    let type_name = type_name.strip_prefix("series ").unwrap_or(type_name);
+    let explicit_simple = type_name.starts_with("simple ");
+    let type_name = type_name
+        .strip_prefix("series ")
+        .or_else(|| type_name.strip_prefix("simple "))
+        .unwrap_or(type_name);
+    if explicit_simple && !matches!(type_name, "int" | "float" | "bool" | "string" | "color") {
+        diagnostics.push(Diagnostic::error(
+            "E_FUNCTION_PARAM_TYPE",
+            format!("function parameter type `{type_name}` is not supported"),
+            span,
+        ));
+        return None;
+    }
+    let qualifier = if explicit_simple {
+        Qualifier::Simple
+    } else {
+        Qualifier::Series
+    };
     let (pine_type, user_type_name) = match type_name {
         _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
             let element_type = &type_name["array<".len()..type_name.len() - 1];
@@ -52,11 +69,11 @@ fn module_function_param_type(
                 return None;
             }
         }
-        "int" => (PineType::new(Qualifier::Series, ValueKind::Int), None),
-        "float" => (PineType::new(Qualifier::Series, ValueKind::Float), None),
-        "bool" => (PineType::new(Qualifier::Series, ValueKind::Bool), None),
-        "string" => (PineType::new(Qualifier::Series, ValueKind::String), None),
-        "color" => (PineType::new(Qualifier::Series, ValueKind::Color), None),
+        "int" => (PineType::new(qualifier, ValueKind::Int), None),
+        "float" => (PineType::new(qualifier, ValueKind::Float), None),
+        "bool" => (PineType::new(qualifier, ValueKind::Bool), None),
+        "string" => (PineType::new(qualifier, ValueKind::String), None),
+        "color" => (PineType::new(qualifier, ValueKind::Color), None),
         "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
         "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
         "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
@@ -88,6 +105,7 @@ fn module_function_param_type(
     Some(FunctionParamInfo {
         pine_type,
         explicit_series,
+        explicit_simple,
         user_type_name,
         span,
     })

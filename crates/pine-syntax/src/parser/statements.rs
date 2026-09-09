@@ -536,8 +536,8 @@ impl Parser {
         let start = self.current().span;
 
         // Keep the qualifier in the type spelling: removing it would let a
-        // constant argument silently weaken an explicitly series parameter.
-        if first == "series" && self.source_version >= 5 {
+        // constant argument silently weaken an explicitly series or simple parameter.
+        if (first == "series" || first == "simple") && self.source_version >= 5 {
             let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 1)?.kind.clone()
             else {
                 return None;
@@ -546,7 +546,10 @@ impl Parser {
                 type_name.as_str(),
                 "int" | "float" | "bool" | "string" | "color"
             ) {
-                self.error_here("E_PARSE_FUNCTION", "expected scalar type after `series`");
+                self.error_here(
+                    "E_PARSE_FUNCTION",
+                    &format!("expected scalar type after `{first}`"),
+                );
                 return None;
             }
             let TokenKind::Identifier(name) = self.tokens.get(self.pos + 2)?.kind.clone() else {
@@ -558,7 +561,7 @@ impl Parser {
             }
             return Some(FunctionParam {
                 default_value: None,
-                type_name: Some(format!("series {type_name}")),
+                type_name: Some(format!("{first} {type_name}")),
                 name,
                 span: start.merge(end),
             });

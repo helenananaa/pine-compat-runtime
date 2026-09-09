@@ -2,6 +2,22 @@ use super::RuntimeSnapshotFixture;
 
 pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
+        "runtime_function_default_parameters.json",
+        "tests/fixtures/runtime/function_default_parameters.pine",
+    ),
+    (
+        "runtime_strategy_absent_trade_profit.json",
+        "tests/fixtures/runtime/strategy_absent_trade_profit.pine",
+    ),
+    (
+        "runtime_strategy_pyramiding_zero.json",
+        "tests/fixtures/runtime/strategy_pyramiding_zero.pine",
+    ),
+    (
+        "runtime_series_scalar_parameters.json",
+        "tests/fixtures/runtime/series_scalar_parameters.pine",
+    ),
+    (
         "runtime_basic_plot.json",
         "tests/fixtures/runtime/snapshot_plot.pine",
     ),

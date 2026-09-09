@@ -184,7 +184,7 @@ Phase 1 executable subset:
   `syminfo.currency`, omitted `commission_type` with explicit
   `commission_value` defaulting to `strategy.commission.percent`, and Phase L fixed default
   quantity settings through `default_qty_type=strategy.fixed` plus positive
-  const numeric `default_qty_value`, plus positive integer const `pyramiding`
+  const numeric `default_qty_value`, plus non-negative integer const `pyramiding` (0 means no adding to a position)
   for the accepted same-direction long market-entry subset; const bool
   `calc_on_order_fills` re-executes the script after historical fills, resumes
   the current bar's remaining open-high-low-close or open-low-high-close path
@@ -738,3 +738,29 @@ records also expose compile-time `default`, `min`, `max`, `step`, and `options`
 metadata when those values are present in the supported input signature. The
 optional `legacyPolicy` rejection switch and source migration preview are not
 part of the current API or compatibility claims.
+
+## Explicit Series Function Parameters
+
+The fixture-backed v5/v6 function subset accepts `series int`, `series float`,
+`series bool`, `series string`, and `series color` parameters in local and
+host-provided imported UDFs. The qualifier is preserved through analysis and
+inlining, including when the caller supplies a literal or input value. A value
+returned through such a parameter cannot satisfy a builtin's simple-only
+argument. Type checks, numeric promotion, callsite history and realtime rollback
+remain enforced. Simple/const/input parameter qualifiers, explicitly qualified reference
+parameters and method parameters are not added by the series slice. Function
+default arguments are covered by the later contract below. See [the implementation audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
+
+## Modern Function Default Arguments
+
+The v5/v6 local and imported function subset accepts optional scalar parameters
+with literal, signed numeric, named built-in constant, and predeclared input
+defaults. Required parameters may follow optional parameters; omission and
+named-argument mapping preserve existing binding errors and argument order.
+Defaults are checked at declaration even when overridden or unused. Untyped na,
+v6 bool na, method/reference defaults, computed/call/user-variable defaults and
+dynamic dotted built-in defaults remain rejected. A name must still denote a
+built-in at definition time; an omitted built-in-name argument then resolves in
+the caller scope, with independent bindings for different calls. Typed scalar
+parameters retain numeric promotion and typed-na kinds; explicit series remains
+series. See [the default parameter audit](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md).

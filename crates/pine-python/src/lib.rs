@@ -336,7 +336,7 @@ fn parse_request_environment(
     chart_symbol: Option<&str>,
     chart_timeframe: Option<&str>,
 ) -> PyResult<RequestEnvironment> {
-    let chart = parse_chart_context(chart_symbol, chart_timeframe)?;
+    let mut chart = parse_chart_context(chart_symbol, chart_timeframe)?;
     let Some(request_bars) = request_bars else {
         return Ok(RequestEnvironment::default().for_chart(chart));
     };
@@ -346,6 +346,29 @@ fn parse_request_environment(
     let mut streams = Vec::with_capacity(dict.len());
     for (key, value) in dict {
         let key: String = key.extract()?;
+        if key == "$chart" {
+            let grid = value.cast::<PyDict>().map_err(|_| {
+                PyValueError::new_err("$chart must be a dict with minMove and priceScale")
+            })?;
+            if grid.len() != 2 || !grid.contains("minMove")? || !grid.contains("priceScale")? {
+                return Err(PyValueError::new_err(
+                    "$chart requires exactly minMove and priceScale; use chart_symbol/chart_timeframe for identity",
+                ));
+            }
+            let integer = |key: &str| -> PyResult<u32> {
+                let value = grid.get_item(key)?.expect("checked key");
+                if value.is_instance_of::<PyBool>() {
+                    return Err(PyValueError::new_err("price grid does not accept booleans"));
+                }
+                value
+                    .extract::<u32>()
+                    .map_err(|_| PyValueError::new_err("price grid must contain positive integers"))
+            };
+            chart = chart
+                .with_price_grid(integer("minMove")?, integer("priceScale")?)
+                .map_err(PyValueError::new_err)?;
+            continue;
+        }
         let request_key = parse_request_key(&key)?;
         streams.push((request_key, parse_bars(&value)?));
     }

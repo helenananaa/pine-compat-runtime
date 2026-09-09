@@ -2,18 +2,21 @@ use std::collections::{HashMap, HashSet};
 
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
-    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, FunctionParam, Program, Span,
-    Stmt, StmtKind, SwitchArmResult, UnaryOp, UserTypeField, parse_source,
+    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind,
+    SwitchArmResult, UnaryOp, UserTypeField, parse_source,
 };
 
-use crate::analyzer::context::{FunctionInfo, FunctionParamInfo, MethodInfo, MethodParamInfo};
+use crate::analyzer::context::{FunctionInfo, MethodInfo, MethodParamInfo};
 use crate::analyzer::functions::{
-    contains_output_or_declaration_call, function_param_names,
-    statement_contains_output_or_declaration_call,
+    contains_output_or_declaration_call, function_default_values, function_param_names,
+    record_default_shadowing, statement_contains_output_or_declaration_call,
 };
 use crate::legacy::SourcePolicy;
 use crate::source_graph::{AnalysisInput, SourceContextId, SourceId};
 use crate::types::array_kind_from_element_type_name;
+
+mod function_parameters;
+use function_parameters::{imported_function_param_types, module_function_param_types};
 
 mod alias_access;
 mod imports;
@@ -130,6 +133,7 @@ fn validate_modules_inner(
 
 fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<Diagnostic>) {
     let mut library_declarations = 0;
+    let mut default_shadowed_names = HashSet::new();
     // Temporarily move the statements out so we can iterate by reference
     // without cloning the entire AST; the loop only mutates other fields of
     // `module`, never `module.program.statements`.
@@ -165,6 +169,12 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                             // instance in `build_import_plan` before semantic analysis.
                             source_context_id: SourceContextId::root(),
                             params: function_param_names(params),
+                            default_values: function_default_values(
+                                params,
+                                module.program.version.map_or(1, |version| version.version),
+                                &default_shadowed_names,
+                                diagnostics,
+                            ),
                             param_types: module_function_param_types(
                                 module,
                                 params,
@@ -222,6 +232,12 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                         // instance in `build_import_plan` before semantic analysis.
                         source_context_id: SourceContextId::root(),
                         params: function_param_names(params),
+                        default_values: function_default_values(
+                            params,
+                            module.program.version.map_or(1, |version| version.version),
+                            &default_shadowed_names,
+                            diagnostics,
+                        ),
                         param_types: module_function_param_types(module, params, None, diagnostics),
                         body: body.clone(),
                         span: statement.span,
@@ -249,6 +265,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             StmtKind::Method(_) => {}
             _ => {}
         }
+        record_default_shadowing(statement, &mut default_shadowed_names);
     }
     for statement in &statements {
         let StmtKind::Method(method) = &statement.kind else {
@@ -428,6 +445,7 @@ fn build_import_plan(
                         source_id: function.source_id,
                         source_context_id,
                         params: function.params.clone(),
+                        default_values: function.default_values.clone(),
                         param_types: imported_function_param_types(
                             &alias,
                             module,
@@ -533,111 +551,6 @@ fn imported_method_param_info(
         pine_type: PineType::new(Qualifier::Series, ValueKind::UserType),
         user_type_name: Some(format!("{alias}.{}", param.type_name)),
     })
-}
-
-fn module_function_param_types(
-    module: &ModuleInfo,
-    params: &[FunctionParam],
-    alias: Option<&str>,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Vec<Option<FunctionParamInfo>> {
-    params
-        .iter()
-        .map(|param| {
-            let Some(type_name) = &param.type_name else {
-                return None;
-            };
-            module_function_param_type(module, type_name, alias, param.span, diagnostics)
-        })
-        .collect()
-}
-
-fn module_function_param_type(
-    module: &ModuleInfo,
-    type_name: &str,
-    alias: Option<&str>,
-    span: Span,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Option<FunctionParamInfo> {
-    let (pine_type, user_type_name) = match type_name {
-        _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
-            let element_type = &type_name["array<".len()..type_name.len() - 1];
-            if let Some(kind) = array_kind_from_element_type_name(element_type) {
-                (PineType::new(Qualifier::Series, kind), None)
-            } else if exported_scalar_tree_user_type(module, element_type) {
-                let type_name = alias
-                    .map(|alias| format!("{alias}.{element_type}"))
-                    .unwrap_or_else(|| element_type.to_owned());
-                (
-                    PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
-                    Some(type_name),
-                )
-            } else {
-                diagnostics.push(Diagnostic::error(
-                    "E_FUNCTION_PARAM_TYPE",
-                    format!("function parameter type `{type_name}` is not supported"),
-                    span,
-                ));
-                return None;
-            }
-        }
-        "int" => (PineType::new(Qualifier::Series, ValueKind::Int), None),
-        "float" => (PineType::new(Qualifier::Series, ValueKind::Float), None),
-        "bool" => (PineType::new(Qualifier::Series, ValueKind::Bool), None),
-        "string" => (PineType::new(Qualifier::Series, ValueKind::String), None),
-        "color" => (PineType::new(Qualifier::Series, ValueKind::Color), None),
-        "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
-        "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
-        "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
-        "polyline" => (PineType::new(Qualifier::Series, ValueKind::Polyline), None),
-        "box" => (PineType::new(Qualifier::Series, ValueKind::Box), None),
-        "table" => (PineType::new(Qualifier::Series, ValueKind::Table), None),
-        "chart.point" => (
-            PineType::new(Qualifier::Series, ValueKind::ChartPoint),
-            None,
-        ),
-        _ if module.user_types.contains_key(type_name) => {
-            let type_name = alias
-                .map(|alias| format!("{alias}.{type_name}"))
-                .unwrap_or_else(|| type_name.to_owned());
-            (
-                PineType::new(Qualifier::Series, ValueKind::UserType),
-                Some(type_name),
-            )
-        }
-        _ => {
-            diagnostics.push(Diagnostic::error(
-                "E_FUNCTION_PARAM_TYPE",
-                format!("function parameter type `{type_name}` is not supported"),
-                span,
-            ));
-            return None;
-        }
-    };
-    Some(FunctionParamInfo {
-        pine_type,
-        user_type_name,
-        span,
-    })
-}
-
-fn imported_function_param_types(
-    alias: &str,
-    module: &ModuleInfo,
-    params: &[Option<FunctionParamInfo>],
-) -> Vec<Option<FunctionParamInfo>> {
-    params
-        .iter()
-        .map(|param| {
-            let mut param = param.clone()?;
-            if let Some(type_name) = &param.user_type_name
-                && module.user_types.contains_key(type_name)
-            {
-                param.user_type_name = Some(format!("{alias}.{type_name}"));
-            }
-            Some(param)
-        })
-        .collect()
 }
 
 fn exported_scalar_tree_user_type(module: &ModuleInfo, type_name: &str) -> bool {

@@ -134,14 +134,39 @@ pub(crate) struct FunctionInfo {
     pub(crate) source_context_id: SourceContextId,
     pub(crate) params: Vec<String>,
     pub(crate) param_types: Vec<Option<FunctionParamInfo>>,
+    pub(crate) default_values: Vec<Option<Expr>>,
     pub(crate) body: FunctionBody,
     pub(crate) span: Span,
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionParamInfo {
     pub(crate) pine_type: PineType,
+    pub(crate) explicit_series: bool,
     pub(crate) user_type_name: Option<String>,
     pub(crate) span: Span,
+}
+
+impl FunctionParamInfo {
+    pub(crate) fn bound_type(&self, argument: PineType) -> PineType {
+        if self.explicit_series {
+            self.pine_type
+        } else if (argument.kind == pine_ir::ValueKind::Int
+            && self.pine_type.kind == pine_ir::ValueKind::Float)
+            || (argument.kind == pine_ir::ValueKind::Na
+                && matches!(
+                    self.pine_type.kind,
+                    pine_ir::ValueKind::Int
+                        | pine_ir::ValueKind::Float
+                        | pine_ir::ValueKind::Bool
+                        | pine_ir::ValueKind::String
+                        | pine_ir::ValueKind::Color
+                ))
+        {
+            PineType::new(argument.qualifier, self.pine_type.kind)
+        } else {
+            argument
+        }
+    }
 }
 #[derive(Debug, Clone)]
 pub(crate) struct MethodInfo {

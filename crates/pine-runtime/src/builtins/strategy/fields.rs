@@ -15,8 +15,21 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(trade_num) = self.eval_expr(trade_num_expr)?.as_i64() else {
             return Ok(PineValue::Na);
         };
+        // TradingView returns zero commission/profit for an absent trade,
+        // including negative and out-of-range indices. Identity fields remain na.
+        if callee == "strategy.closedtrades.commission" {
+            return Ok(PineValue::Float(
+                self.strategy_broker
+                    .closed_trade_commission(trade_num)
+                    .unwrap_or(0.0),
+            ));
+        }
         let Some(trade) = self.strategy_broker.closed_trade(trade_num) else {
-            return Ok(PineValue::Na);
+            return Ok(if callee == "strategy.closedtrades.profit" {
+                PineValue::Float(0.0)
+            } else {
+                PineValue::Na
+            });
         };
 
         Ok(match callee {

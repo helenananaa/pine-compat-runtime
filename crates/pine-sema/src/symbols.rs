@@ -76,6 +76,20 @@ pub(crate) fn initial_symbols() -> HashMap<String, SymbolInfo> {
         })
         .collect()
 }
+
+pub(crate) fn initial_symbol(name: &str) -> Option<SymbolInfo> {
+    let (index, (_, pine_type)) = INITIAL_SYMBOLS
+        .iter()
+        .enumerate()
+        .find(|(_, (candidate, _))| *candidate == name)?;
+    Some(SymbolInfo {
+        id: SymbolId(index as u32),
+        pine_type: *pine_type,
+        series_id: (pine_type.qualifier == Qualifier::Series).then_some(SeriesId(index as u32)),
+        persistence: PersistenceKind::None,
+        var_slot_id: None,
+    })
+}
 pub(crate) fn initial_symbol_order() -> Vec<String> {
     INITIAL_SYMBOLS
         .iter()

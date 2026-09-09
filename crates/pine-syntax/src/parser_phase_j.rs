@@ -272,6 +272,13 @@ impl Parser {
                 self.error_here("E_PARSE_METHOD", "expected method parameter");
                 return None;
             };
+            if param.default_value.is_some() {
+                self.error_here(
+                    "E_PARSE_METHOD",
+                    "method default parameters are not supported",
+                );
+                return None;
+            }
             let Some(type_name) = param.type_name else {
                 self.error_here("E_PARSE_METHOD", "method parameters must declare a type");
                 return None;

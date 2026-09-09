@@ -117,6 +117,12 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_FUNCTION_ARG_DUPLICATE`: user-defined function argument was provided more
   than once.
 - `E_FUNCTION_ARG_NAME`: unknown user-defined function named argument.
+- `E_FUNCTION_DEFAULT`: unsupported function default expression; defaults are
+  limited to scalar literals, signed numeric literals, supported built-in input
+  variables and named constants, without calls, user variables or calculations.
+- `E_FUNCTION_DEFAULT_TYPE`: function default is incompatible with its declared
+  scalar type, uses untyped na, uses v6 bool na, defaults a reference parameter, or resolves
+  an omitted default to a reference value in the caller.
 - `E_FUNCTION_ARG_ORDER`: positional argument followed a named argument in a
   user-defined function call.
 - `E_FUNCTION_ARG_TYPE`: user-defined function argument type does not match the

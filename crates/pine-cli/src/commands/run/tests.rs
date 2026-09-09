@@ -1,6 +1,16 @@
 use super::*;
 use std::path::PathBuf;
 
+#[test]
+fn chart_price_grid_cli_rejects_invalid_metadata() {
+    for grid in ["0/10", "1/0", "-1/10", "1/1.5", "10", "1/10/20"] {
+        let args = ["a.pine", "--bars", "a.csv", "--chart-price-grid", grid].map(str::to_owned);
+        assert!(parse_options(&args).is_err(), "{grid}");
+    }
+    let args = ["a.pine", "--bars", "a.csv", "--chart-price-grid", "1/10"].map(str::to_owned);
+    assert_eq!(parse_options(&args).unwrap().chart_context.min_tick(), 0.1);
+}
+
 fn workspace_path(path: &str) -> String {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")

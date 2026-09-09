@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+- Added v5/v6 scalar default parameters in local and imported user-defined
+  functions, with named omission, caller-scope binding, typed na and numeric
+  promotion. Added E_FUNCTION_DEFAULT and E_FUNCTION_DEFAULT_TYPE diagnostics.
+  FunctionParam gains an optional Rust AST default_value field; public JSON
+  schemas remain unchanged. See [default parameter audit](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md).
+
+- Real-strategy reference expansion corrected two additional boundaries:
+  explicit `pyramiding=0` now permits a first entry while preventing additions,
+  and `strategy.closedtrades.profit` returns zero for missing integer trade
+  indices. Identity fields and na indices retain na. Frozen v5/v6 captures and
+  regression evidence are recorded in the next-cycle audit.
+
+- Added explicit v5/v6 `series int/float/bool/string/color` parameters for
+  local and imported user-defined functions. Qualifiers remain series even
+  for constant/input arguments, with history and realtime rollback coverage.
+  Default parameters and other explicit qualifiers remain outside this slice.
+  See [next-cycle audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
+
+- Added host-provided chart price grids through Rust, CLI, Python and WASM,
+  keeping the historical 0.01 default when absent. Tick orders and numeric
+  rounding/formatting use the configured grid. TradingView captures also
+  corrected cash-per-order reversal fee allocation, missing closed-trade
+  commission values, and immediate entry-fee accounting in Pine netprofit.
+  See [G3 reference audit](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md) for evidence
+  and the unchanged B1 internal-order boundary. Public output schema is unchanged.
+
 - Corrected session-window validation to avoid repeated full-history scans and
   reject missing batch coverage before execution. Added atomic Rust/Python
   realtime `extend_session_windows` for ongoing host input. Executed confirmed

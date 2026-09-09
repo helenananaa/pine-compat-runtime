@@ -313,10 +313,9 @@ impl<'a> HistoricalRuntime<'a> {
         let strategy_broker = BrokerState::new_with_account_settings_and_pyramiding(
             program.strategy_settings.initial_capital,
             program.strategy_settings.commission,
-            program.strategy_settings.slippage_ticks
-                * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
+            program.strategy_settings.slippage_ticks * request_environment.chart().min_tick(),
             program.strategy_settings.backtest_fill_limit_ticks
-                * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
+                * request_environment.chart().min_tick(),
             program.strategy_settings.margin_long,
             program.strategy_settings.margin_short,
             program.strategy_settings.pyramiding_limit,

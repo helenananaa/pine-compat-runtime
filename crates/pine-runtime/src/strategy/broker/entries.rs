@@ -78,6 +78,10 @@ impl BrokerState {
             return false;
         }
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && self.position_size < 0.0 {
+            if matches!(self.commission, Some(pine_ir::StrategyCommission::CashPerOrder(value)) if value > 0.0)
+            {
+                return self.entry_reversal_with_order_commission(fill, TradeDirection::Long);
+            }
             self.close_all_position(fill.bar_index, fill.time, fill.price);
         }
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && !self.can_open_long_entry() {
@@ -188,6 +192,10 @@ impl BrokerState {
             return false;
         }
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && self.position_size > 0.0 {
+            if matches!(self.commission, Some(pine_ir::StrategyCommission::CashPerOrder(value)) if value > 0.0)
+            {
+                return self.entry_reversal_with_order_commission(fill, TradeDirection::Short);
+            }
             self.close_all_position(fill.bar_index, fill.time, fill.price);
         }
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && !self.can_open_short_entry() {
@@ -226,6 +234,36 @@ impl BrokerState {
             pyramiding_mode,
             TradeDirection::Short,
             "strategy.short",
+        )
+    }
+
+    // A reversal is one transaction. Reuse the atomic netting transition so a
+    // cash-per-order fee is shared between closing and opening exposure, rather
+    // than charging a separate full fee to each leg. Entry admission has already
+    // run above; target sizing retains the entry-specific risk limit.
+    fn entry_reversal_with_order_commission(
+        &mut self,
+        fill: EntryFill,
+        direction: TradeDirection,
+    ) -> bool {
+        let pending_direction = match direction {
+            TradeDirection::Long => super::pending_entries::PendingEntryDirection::Long,
+            TradeDirection::Short => super::pending_entries::PendingEntryDirection::Short,
+        };
+        let Some(target) = self.clamp_strategy_entry_qty(pending_direction, fill.qty) else {
+            return false;
+        };
+        if self.pyramiding_limit == 0 {
+            return false;
+        }
+        let transaction = direction.signed_quantity(target + self.position_size.abs());
+        self.apply_generic_market_order_netting(
+            fill.id,
+            transaction,
+            fill.bar_index,
+            fill.time,
+            fill.price,
+            fill.metadata,
         )
     }
 

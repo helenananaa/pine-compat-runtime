@@ -780,7 +780,7 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             }
 
-            let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+            let mintick = self.request_environment.chart().min_tick();
             if let Some(trail_price_expr) = trail_price_expr {
                 let activation_price = self
                     .eval_expr(trail_price_expr)?
@@ -859,8 +859,7 @@ impl<'a> HistoricalRuntime<'a> {
                     .eval_expr(profit_expr.expect("checked profit presence"))?
                     .as_f64()
                     .unwrap_or(f64::NAN);
-                let mintick =
-                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                let mintick = self.request_environment.chart().min_tick();
                 if from_entry.is_empty() {
                     self.strategy_broker
                         .with_next_exit_metadata(metadata.clone(), |broker| {
@@ -899,8 +898,7 @@ impl<'a> HistoricalRuntime<'a> {
                     .eval_expr(limit_expr.expect("checked limit presence"))?
                     .as_f64()
                     .unwrap_or(f64::NAN);
-                let mintick =
-                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                let mintick = self.request_environment.chart().min_tick();
                 if from_entry.is_empty() {
                     self.strategy_broker
                         .with_next_exit_metadata(metadata.clone(), |broker| {
@@ -939,8 +937,7 @@ impl<'a> HistoricalRuntime<'a> {
                     .eval_expr(profit_expr.expect("checked profit presence"))?
                     .as_f64()
                     .unwrap_or(f64::NAN);
-                let mintick =
-                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                let mintick = self.request_environment.chart().min_tick();
                 if from_entry.is_empty() {
                     self.strategy_broker
                         .with_next_exit_metadata(metadata.clone(), |broker| {
@@ -988,8 +985,7 @@ impl<'a> HistoricalRuntime<'a> {
                 stop_price
             } else if let Some(loss_expr) = loss_expr {
                 let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
-                let mintick =
-                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                let mintick = self.request_environment.chart().min_tick();
                 let Some(loss_price) = self
                     .strategy_broker
                     .exit_loss_price_from_ticks(loss_ticks, mintick)
@@ -1018,8 +1014,7 @@ impl<'a> HistoricalRuntime<'a> {
                 limit_price
             } else if let Some(profit_expr) = profit_expr {
                 let profit_ticks = self.eval_expr(profit_expr)?.as_f64().unwrap_or(f64::NAN);
-                let mintick =
-                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                let mintick = self.request_environment.chart().min_tick();
                 let Some(profit_price) = self
                     .strategy_broker
                     .exit_profit_price_from_ticks(profit_ticks, mintick)
@@ -1062,7 +1057,7 @@ impl<'a> HistoricalRuntime<'a> {
             );
         } else if let Some(profit_expr) = profit_expr {
             let profit_ticks = self.eval_expr(profit_expr)?.as_f64().unwrap_or(f64::NAN);
-            let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+            let mintick = self.request_environment.chart().min_tick();
             if from_entry.is_empty() {
                 self.strategy_broker
                     .with_next_exit_metadata(metadata.clone(), |broker| {
@@ -1086,7 +1081,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         } else if let Some(loss_expr) = loss_expr {
             let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
-            let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+            let mintick = self.request_environment.chart().min_tick();
             if from_entry.is_empty() {
                 self.strategy_broker
                     .with_next_exit_metadata(metadata.clone(), |broker| {

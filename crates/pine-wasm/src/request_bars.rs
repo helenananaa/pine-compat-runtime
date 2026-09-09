@@ -108,13 +108,27 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
     let object = value
         .as_object()
         .ok_or_else(|| "request bars `$chart` must be an object".to_owned())?;
-    if let Some(field) = object
-        .keys()
-        .find(|field| !matches!(field.as_str(), "symbol" | "timeframe"))
-    {
+    if let Some(field) = object.keys().find(|field| {
+        !matches!(
+            field.as_str(),
+            "symbol" | "timeframe" | "minMove" | "priceScale"
+        )
+    }) {
         return Err(format!("request bars `$chart` has unknown field `{field}`"));
     }
     let mut chart = ChartContext::default();
+    if object.contains_key("minMove") || object.contains_key("priceScale") {
+        let integer = |key: &str| -> Result<u32, String> {
+            object
+                .get(key)
+                .and_then(Value::as_u64)
+                .and_then(|v| u32::try_from(v).ok())
+                .ok_or_else(|| format!("request bars `$chart.{key}` must be a positive integer"))
+        };
+        chart = chart
+            .with_price_grid(integer("minMove")?, integer("priceScale")?)
+            .map_err(str::to_owned)?;
+    }
     if let Some(symbol) = object.get("symbol") {
         let symbol = symbol
             .as_str()
@@ -132,6 +146,34 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
         chart = chart.with_timeframe(timeframe);
     }
     Ok(chart)
+}
+
+#[cfg(test)]
+mod price_grid_tests {
+    use super::*;
+
+    #[test]
+    fn chart_price_grid_validates_metadata_without_affecting_default() {
+        let env =
+            request_environment_from_json(r#"{"$chart":{"minMove":1,"priceScale":10}}"#).unwrap();
+        assert_eq!(env.chart().min_tick(), 0.1);
+        assert_eq!(
+            request_environment_from_json("{}")
+                .unwrap()
+                .chart()
+                .min_tick(),
+            0.01
+        );
+        for grid in [
+            r#"{"minMove":0,"priceScale":10}"#,
+            r#"{"minMove":1,"priceScale":0}"#,
+            r#"{"minMove":true,"priceScale":10}"#,
+            r#"{"minMove":1,"priceScale":1.5}"#,
+            r#"{"minMove":1}"#,
+        ] {
+            assert!(request_environment_from_json(&format!(r#"{{"$chart":{grid}}}"#)).is_err());
+        }
+    }
 }
 
 fn deterministic_entries(object: &serde_json::Map<String, Value>) -> BTreeMap<&String, &Value> {

@@ -315,7 +315,6 @@ impl TradeLedger {
         self.open_trades.first()
     }
 
-    #[cfg(test)]
     pub(super) fn open_trades(&self) -> &[OpenTrade] {
         &self.open_trades
     }

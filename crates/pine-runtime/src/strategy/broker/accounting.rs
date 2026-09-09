@@ -188,8 +188,23 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn net_profit(&self) -> f64 {
+        // Closed trades include allocated fees; subtract only fees still held
+        // by open exposure to account for entry commission exactly once.
+        normalize_zero(
+            self.realized_profit()
+                - self
+                    .trade_ledger
+                    .open_trades()
+                    .iter()
+                    .map(|trade| trade.entry_commission)
+                    .sum::<f64>(),
+        )
+    }
+
+    #[must_use]
     pub(crate) fn realized_profit_percent(&self) -> f64 {
-        self.initial_capital_percent(self.realized_profit())
+        self.initial_capital_percent(self.net_profit())
     }
 
     #[must_use]

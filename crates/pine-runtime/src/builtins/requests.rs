@@ -181,9 +181,15 @@ impl<'a> HistoricalRuntime<'a> {
                     message: err.to_string(),
                 })?
                 .to_vec();
-            let requested_environment = self
-                .request_environment
-                .for_chart(ChartContext::new(key.symbol(), requested_timeframe.clone()));
+            let requested_chart = if key.symbol() == self.request_environment.chart().symbol() {
+                self.request_environment
+                    .chart()
+                    .clone()
+                    .with_timeframe(requested_timeframe.clone())
+            } else {
+                ChartContext::new(key.symbol(), requested_timeframe.clone())
+            };
+            let requested_environment = self.request_environment.for_chart(requested_chart);
             let requested_values =
                 self.evaluate_requested_values(&requested_bars, expression, requested_environment)?;
             self.request_cache

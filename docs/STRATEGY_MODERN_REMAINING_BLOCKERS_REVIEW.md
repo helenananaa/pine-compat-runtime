@@ -1,5 +1,11 @@
 # Modern strategy remaining blockers review
 
+2026-09-08 后续：显式默认参数绑定切片已完成本轮验收；TechnicalRating v3
+现在完整解析，整库仍受 ta/9 缺失和 calcRatingAll 导出副作用限制阻塞。见
+[默认参数验收](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md)。旧默认参数阻塞描述为历史状态。
+
+2026-09-08 更新：G3 六组独立参考已于上一轮收口，旧 r1 仍无参考。本轮从官方 TechnicalRating v3 重现并排除了显式 series 标量参数阻塞；下一个首错是默认参数。见 [下一轮记录](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md)。下文保留历史探针及其当时分母，不代表当前全局阻塞状态。
+
 状态：reviewed；不修改冻结 r1 或核心支持范围。
 日期：2026-09-07。基线 HEAD：`31f16bb87`。
 

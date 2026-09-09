@@ -64,17 +64,27 @@ impl Analyzer {
         outer_param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         let function = self.functions.get(name)?.clone();
+        let explicit_count = args.len();
+        let completed_args = function.complete_args(args, span).ok()?;
+        let args = completed_args.as_ref();
         let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
         let mut resolved_args = vec![None; function.params.len()];
-        for (arg, param_index) in args.iter().zip(arg_indices) {
-            let arg_user_type =
-                self.user_type_name_of_expr_with_params(&arg.value, outer_param_exprs);
-            let arg_user_type_array =
-                self.user_type_array_name_of_expr_with_params(&arg.value, outer_param_exprs);
+        for (arg_index, (arg, param_index)) in args.iter().zip(arg_indices).enumerate() {
+            let arg_user_type = (arg_index < explicit_count)
+                .then(|| self.user_type_name_of_expr_with_params(&arg.value, outer_param_exprs))
+                .flatten();
+            let arg_user_type_array = (arg_index < explicit_count)
+                .then(|| {
+                    self.user_type_array_name_of_expr_with_params(&arg.value, outer_param_exprs)
+                })
+                .flatten();
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
-            let arg_const_switch_key = self.known_const_switch_key(&arg.value);
+            let arg_const_switch_key = (arg_index < explicit_count
+                || matches!(arg.value.kind, ExprKind::Literal(_)))
+            .then(|| self.known_const_switch_key(&arg.value))
+            .flatten();
             resolved_args[param_index] = Some((
                 arg_expr,
                 arg_type,
@@ -88,9 +98,17 @@ impl Analyzer {
         let mut param_types = HashMap::new();
         let mut param_const_switch_keys = HashMap::new();
         let mut arg_statements = Vec::new();
-        for (param, resolved_arg) in function.params.iter().zip(resolved_args) {
+        for ((param, expected_type), resolved_arg) in function
+            .params
+            .iter()
+            .zip(&function.param_types)
+            .zip(resolved_args)
+        {
             let (arg_expr, arg_type, arg_user_type, arg_user_type_array, arg_const_switch_key) =
                 resolved_arg?;
+            let arg_type = expected_type
+                .as_ref()
+                .map_or(arg_type, |expected| expected.bound_type(arg_type));
             if !self.record_lowering_temp_symbol(span) {
                 return None;
             }

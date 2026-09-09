@@ -234,18 +234,20 @@ impl Analyzer {
                         continue;
                     };
                     if !value.is_finite()
-                        || value <= 0.0
+                        || value < 0.0
                         || value.fract() != 0.0
                         || value > usize::MAX as f64
                     {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy` argument `pyramiding` must be a positive integer",
+                            "`strategy` argument `pyramiding` must be a non-negative integer",
                             arg.span,
                         ));
                         continue;
                     }
-                    self.strategy_settings.pyramiding_limit = value as usize;
+                    // Pine's zero spelling disables adding entries, not the
+                    // initial entry. The broker stores the effective capacity.
+                    self.strategy_settings.pyramiding_limit = (value as usize).max(1);
                 }
                 "close_entries_rule" => {
                     let Some(value) = self.known_const_string_value(&arg.value) else {

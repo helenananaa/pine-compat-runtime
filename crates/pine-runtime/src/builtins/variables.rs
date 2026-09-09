@@ -100,6 +100,18 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn eval_builtin_value(&mut self, name: &str) -> PineValue {
+        match name {
+            "syminfo.mintick" => {
+                return PineValue::Float(self.request_environment.chart().min_tick());
+            }
+            "syminfo.minmove" => {
+                return PineValue::Int(i64::from(self.request_environment.chart().min_move()));
+            }
+            "syminfo.pricescale" => {
+                return PineValue::Int(i64::from(self.request_environment.chart().price_scale()));
+            }
+            _ => {}
+        }
         if name == "barstate.isfirst" {
             return PineValue::Bool(self.bars == 0);
         }
@@ -375,7 +387,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
         if name == "strategy.netprofit" {
-            return PineValue::Float(self.strategy_broker.realized_profit());
+            return PineValue::Float(self.strategy_broker.net_profit());
         }
         if name == "strategy.netprofit_percent" {
             return PineValue::Float(self.strategy_broker.realized_profit_percent());

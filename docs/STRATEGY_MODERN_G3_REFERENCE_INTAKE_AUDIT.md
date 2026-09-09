@@ -1,6 +1,15 @@
 # G3 独立参考输入接收审计
 
+同日后续：新 g3-chrome-r2 六组参考（41 笔）和四项修复已完成本轮验收；
+[最终记录](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md)。下文保留此前阶段的历史状态。
+
+
 日期：2026-09-07。状态：partial；G3 可比场景验收仍 blocked。
+
+后续更新：同日通过已登录 Windows Chrome 完成一个新原创场景的完整输入采集与
+逐笔比较，4/4 平仓交易、511/511 持仓值一致。旧导出包的缺项仍在，G3 整体
+保持 partial；新闭环见 [Chrome 参考审计](STRATEGY_MODERN_G3_CHROME_REFERENCE_AUDIT.md)。
+下述 Chrome 连接失败是此前 WSL 尝试的历史记录。
 
 用户授权检查 `I:\sys\下载`，对应 WSL `/mnt/i/sys/下载`。
 已保存 8 份 18g TradingView Tester 成交 CSV，以及 1 份 ADAUSDT.P 的一分钟 K 线 CSV。

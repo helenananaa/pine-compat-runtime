@@ -46,8 +46,45 @@ assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
+const gridSource = '//@version=6\nindicator("grid")\nplot(syminfo.mintick)\nplot(math.round_to_mintick(10.26))\n';
+const gridResult = JSON.parse(pine.runScriptCsvWithRequestBars(gridSource, bars,
+  JSON.stringify({ $chart: { minMove: 1, priceScale: 10 } })));
+assert.deepEqual(gridResult.plots[0].values, [0.1, 0.1, 0.1]);
+assert.ok(gridResult.plots[1].values.every(value => Math.abs(value - 10.3) < 1e-9));
+assert.throws(() => pine.runScriptCsvWithRequestBars(gridSource, bars,
+  JSON.stringify({ $chart: { minMove: 0, priceScale: 10 } })));
 assert.equal(typeof program.runCsv, 'function');
 const compiled = JSON.parse(program.runCsv(bars));
+const seriesSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/series_scalar_parameters.pine'), 'utf8');
+const seriesResult = JSON.parse(pine.runScriptCsv(seriesSource, bars));
+assert.deepEqual(seriesResult.plots[0].values, [null, 3, 3]);
+assert.deepEqual(seriesResult.plots[1].values, [null, 1, 2]);
+assert.deepEqual(seriesResult.plots[2].values, [1.5, 1.5, 1.5]);
+assert.deepEqual(seriesResult.plots[3].values, [1, 3, 6]);
+const defaultsSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/function_default_parameters.pine'), 'utf8');
+const defaultsResult = JSON.parse(pine.runScriptCsv(defaultsSource, bars));
+assert.deepEqual(defaultsResult.plots[0].values, [1.4, 1.4, 1.4]);
+assert.deepEqual(defaultsResult.plots[6].values, [2000, 2000, 2000]);
+assert.deepEqual(defaultsResult.plots[11].values, [1, 3, 6]);
+const invalidDefault = JSON.parse(pine.analyzeScript(
+  '//@version=6\nindicator("invalid")\nf(x=1+2) => x\nplot(f())\n'));
+assert.equal(invalidDefault.executable, false);
+assert.ok(invalidDefault.diagnostics.some(d => d.code === 'E_FUNCTION_DEFAULT'));
+const seriesRejection = JSON.parse(pine.analyzeScript(
+  '//@version=6\nindicator("series")\nf(series int n) => n\nplot(ta.ema(close,f(3)))\n'));
+assert.equal(seriesRejection.executable, false);
+assert.ok(seriesRejection.diagnostics.some(d => d.code === 'E_CALL_ARG_TYPE'));
+const zeroPyramidingSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/strategy_pyramiding_zero.pine'), 'utf8');
+const zeroPyramiding = JSON.parse(pine.runScriptCsv(zeroPyramidingSource, bars));
+assert.deepEqual(zeroPyramiding.plots[0].values, [0, 1, 1]);
+const absentProfitSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/strategy_absent_trade_profit.pine'), 'utf8');
+const absentProfit = JSON.parse(pine.runScriptCsv(absentProfitSource, bars));
+for (const index of [0, 1, 2]) assert.deepEqual(absentProfit.plots[index].values, [0, 0, 0]);
+assert.deepEqual(absentProfit.plots[3].values, [null, null, null]);
 assert.deepEqual(compiled.plots[0].values, [2, 4, 6]);
 assert.deepEqual(compiled, direct);
 program.free();

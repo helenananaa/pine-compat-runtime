@@ -666,6 +666,46 @@ fn run_script_csv_serializes_non_finite_values_as_json_null() {
 }
 
 #[test]
+fn run_script_csv_returns_series_scalar_parameters_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/series_scalar_parameters.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("series parameter fixture should run");
+    assert_snapshot("runtime_series_scalar_parameters.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_function_default_parameters_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/function_default_parameters.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("function defaults fixture should run");
+    assert_snapshot("runtime_function_default_parameters.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_zero_pyramiding_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_zero.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("zero pyramiding fixture should run");
+    assert_snapshot("runtime_strategy_pyramiding_zero.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_absent_trade_profit_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_absent_trade_profit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("absent trade profit fixture should run");
+    assert_snapshot("runtime_strategy_absent_trade_profit.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_plotchar_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/plotchar.pine"),

@@ -918,7 +918,8 @@ impl Analyzer {
                 }
                 if self.functions.contains_key(&name) {
                     let pure_call_series_id =
-                        pure_series::pure_udf_call_series_key(self, &name, args).and(series_id);
+                        pure_series::pure_udf_call_series_key(self, &name, args, expr.span)
+                            .and(series_id);
                     let mut call =
                         self.lower_udf_call(&name, expr.span, args, param_exprs, param_types)?;
                     if let Some(series_id) = pure_call_series_id {

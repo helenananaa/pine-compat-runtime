@@ -224,6 +224,7 @@ pub struct MethodDecl {
 pub struct FunctionParam {
     pub type_name: Option<String>,
     pub name: String,
+    pub default_value: Option<Expr>,
     pub span: Span,
 }
 

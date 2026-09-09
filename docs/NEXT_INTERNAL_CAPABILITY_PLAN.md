@@ -1,13 +1,17 @@
 # Next Internal Capability Plan
 
-Status: active planning document, refreshed on 2026-09-06 after mixed-family
-OCA, host-neutral session window, and ordinary-chart inter-bar gap closeout.
-Stage D has only a preliminary fixture inventory: the per-sample manifest,
-deduplication report and measured stage outcomes remain unfinished. New
-accepted-but-wrong behavior work lacks independent reference outputs, but that
-does not block completing the inventory and measurements.
-Strategy broker accuracy remains the selected direction while further
-source-version expansion is paused.
+2026-09-08 后续：显式默认参数绑定切片已完成本轮验收；TechnicalRating v3
+现在完整解析，整库仍受 ta/9 缺失和 calcRatingAll 导出副作用限制阻塞。见
+[默认参数验收](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md)。旧默认参数阻塞描述为历史状态。
+
+Status: active planning document, refreshed on 2026-09-08. The v5/v6 r1
+manifest, deduplication and stage measurements are complete. The separate
+six-case g3-chrome-r2 reference batch is closed; r1 independent-reference
+coverage remains 0/482. Current work closes the existing G3 worktree, expands
+real-strategy references, and removes one evidenced language blocker. See
+[Next Cycle Audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
+Strategy broker accuracy remains selected; further source-version expansion
+is paused.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -73,7 +77,7 @@ Keep out of scope until separately designed and fixture-backed:
 - Series `oca_name`.
 - Omitted `qty` for remaining unsupported `strategy.short` order forms outside
   the fixture-backed market `strategy.order` default-quantity subset.
-- Currency conversion, symbol precision, and richer account constraints.
+- Currency conversion, contract multipliers, cross-symbol metadata and richer account constraints. Main-chart price-grid input is already implemented.
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - External strategy alert delivery before the host-owned restart-safe durable
@@ -81,11 +85,12 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice: complete the frozen v5/v6 manifest, deduplication and
-stage measurements; then select one evidenced root cause. Language blockers
-have a separate implementation path; accepted-but-wrong fill fixes require
-frozen bars and independent expected behavior. The Stage D
-blocker record is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`. The closed
+Current next slice: expand independently comparable real-strategy scenarios
+in a new revision while retaining the r1 denominator, and close explicit series
+scalar function parameters found in TechnicalRating v3. Language blockers have
+a separate path; fill fixes require frozen bars and independent expectations.
+The historical Stage D inventory is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`;
+current results are tracked by the Next Cycle Audit. The closed
 ordinary-chart gap record is
 `docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`.
 Omitted `from_entry` allocation remains FIFO and `strategy.close_all()`

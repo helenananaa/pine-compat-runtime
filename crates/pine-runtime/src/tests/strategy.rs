@@ -10505,9 +10505,9 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
         ]
     );
@@ -10515,8 +10515,8 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-1.0),
+            PineValue::Float(-1.0),
             PineValue::Float(2.0),
         ]
     );
@@ -10614,9 +10614,9 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(3.0),
         ]
     );
@@ -10624,8 +10624,8 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-1.5),
+            PineValue::Float(-1.5),
             PineValue::Float(1.0),
         ]
     );
@@ -10690,9 +10690,9 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.4 + 0.8),
         ]
     );
@@ -10700,8 +10700,8 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-0.4),
+            PineValue::Float(-0.4),
             PineValue::Float(4.0 - (0.4 + 0.8)),
         ]
     );
@@ -10754,9 +10754,9 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.4 + 0.8),
         ]
     );
@@ -10764,8 +10764,8 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-0.4),
+            PineValue::Float(-0.4),
             PineValue::Float(4.0 - (0.4 + 0.8)),
         ]
     );
@@ -10877,9 +10877,9 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[2].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -10971,8 +10971,8 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(-2.0),
             PineValue::Float(-2.0),
         ]
@@ -11137,8 +11137,8 @@ plot(strategy.closedtrades.profit(0))
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
             PineValue::Float(2.0),
         ]
@@ -12034,17 +12034,18 @@ plot(strategy.closedtrades.max_drawdown_percent(0.5))
         result.plots[7].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Int(30)]
     );
-    assert_eq!(
-        result.plots[8].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(0.0)]
-    );
+    assert_eq!(result.plots[8].values, vec![PineValue::Float(0.0); 3]);
     assert_eq!(
         result.plots[9].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0)]
     );
     assert_eq!(
         result.plots[10].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(4.0)]
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(4.0)
+        ]
     );
     assert_eq!(
         result.plots[11].values,

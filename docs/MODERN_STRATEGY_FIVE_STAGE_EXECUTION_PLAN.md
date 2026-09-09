@@ -1,13 +1,21 @@
 # 现代策略驱动的解释器五阶段执行计划
 
+2026-09-08 后续：显式默认参数绑定切片已完成本轮验收；TechnicalRating v3
+现在完整解析，整库仍受 ta/9 缺失和 calcRatingAll 导出副作用限制阻塞。见
+[默认参数验收](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md)。旧默认参数阻塞描述为历史状态。
+
+2026-09-08 后续：开始 G3 工作区收口、真实策略新参考批次，以及由
+TechnicalRating v3 复现驱动的显式 series 标量参数切片。当前结果与下一层
+默认参数阻塞见 [下一轮记录](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md)。
+
 状态：in-progress。步骤 0、阶段 1、阶段 2 切片 `generic_input_source`、
 `default_qty_short_order`、`input_float_history_offset`、
 `strategy_format_precision`、`v5_fill_transp_entry_when`、
 `ta_wma_input_float_length`、`strategy_currency_usd`、
 `strategy_commission_value_default_percent`、`udf_v5_box_new`、
-`udf_v5_array_unshift` 与 `box_call_result_set_right`、阶段 4 deferred 与
+`udf_v5_array_unshift` 与 `box_call_result_set_right`、阶段 4 原清单 deferred、后续价格网格输入已补齐，与
 阶段 5 已补真实增量、连续实时替换、资源测量与单个 checkpoint 热点优化验收；
-阶段 3 比较器已交付但独立成交验收 blocked。本文不代表全 Pine 兼容。
+阶段 3 新 g3-chrome-r2 批次已取得独立参考并修复价格网格/费用差异；旧 r1 的参考覆盖仍不足。本文不代表全 Pine 兼容。
 
 编写日期：2026-09-06。规划基线：`9a68e4f02cf2186e1cc880df43ce1cd9743552c4`。
 步骤 0 实际 HEAD 与规划基线相同。每次开始实现前重新记录实际 HEAD、工作区状态
@@ -301,15 +309,19 @@ cargo run -p pine-cli -- run-incremental tests/fixtures/runtime/strategy_trade_c
 
 目标：识别并修正已经接受的策略在成交、持仓、费用和权益上的可证实偏差。
 
+本轮验收限定为 g3-chrome-r2 的六组原创场景，见
+[独立参考扩展审计](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md)。它不改变旧 r1
+的 0/482 参考覆盖，不证明 B1 私有内部顺序。
+
 ### 3.1 冻结一个可比场景
 
-- [ ] 选择已能执行的目标策略，冻结源码、参数、OHLCV、预热和所有宿主输入。
-- [ ] 记录参考环境的图表类型、周期、品种、回测范围、成交设置、佣金、滑点、
+- [x] 选择已能执行的目标策略，冻结源码、参数、OHLCV、预热和所有宿主输入。
+- [x] 记录参考环境的图表类型、周期、品种、回测范围、成交设置、佣金、滑点、
   pyramiding、重算选项、Magnifier 覆盖和可获得的版本信息。
 - [x] 获取允许使用的独立参考输出，例如用户导出的 Tester 结果；保留原始文件及 hash。
-  已接收 8 份 CSV（6 份内容唯一）及 K 线；对应源码/设置尚未确认，仍不可比。
-- [ ] 先核对参考与本地 bar 时间、OHLCV 和输入设置，解释调整/聚合/时区差异。
-- [ ] 数据不一致或参考缺字段时，标记不可比或部分可比，不立即归因为 broker 错误。
+  旧导出仍缺匹配输入；新批次已保存配套源码、设置、OHLCV 和原始参考。
+- [x] 先核对参考与本地 bar 时间、OHLCV 和输入设置，解释调整/聚合/时区差异。
+- [x] 数据不一致或参考缺字段时，标记不可比或部分可比，不立即归因为 broker 错误。
 
 证据分级：官方明确规则、独立样本观察、独立手算的最小场景、项目确定性规则、未验证推断。
 手算可证明相应数学/状态转移，项目规则可证明内部一致性；两者都不能冒充 Tester 实测一致。
@@ -335,27 +347,27 @@ cargo run -p pine-cli -- run-incremental tests/fixtures/runtime/strategy_trade_c
 
 ### 3.3 按首个分歧定位根因
 
-- [ ] 先排除参考配置、数据、预热、单位和工具匹配问题。
-- [ ] 依次检查信号产生 → 订单创建 → 候选激活/排序 → 成交 → OCA/预留 →
+- [x] 先排除参考配置、数据、预热、单位和工具匹配问题。
+- [x] 依次检查信号产生 → 订单创建 → 候选激活/排序 → 成交 → OCA/预留 →
   ledger/仓位 → 费用/权益；从首个分歧定位，避免只修最终收益。
-- [ ] 核心定位入口：`runtime/strategy_path.rs`、`runtime/strategy_scheduler.rs`、
+- [x] 核心定位入口：`runtime/strategy_path.rs`、`runtime/strategy_scheduler.rs`、
   `strategy/broker/candidates.rs`、`fill_transition.rs`、`fill_apply.rs`、`ledger.rs`。
-- [ ] 为根因提取最小复现，冻结独立预期，确认旧实现具体失败。
-- [ ] 同价内部顺序等缺独立证据行为，只记录现有确定性规则和限制。
+- [x] 为根因提取最小复现，冻结独立预期，确认旧实现具体失败。
+- [x] 同价内部顺序等缺独立证据行为，只记录现有确定性规则和限制。
 
 ### 3.4 修复并覆盖相关交互
 
-- [ ] 每次只修一个根因，复用已有统一路径和成交入口。
-- [ ] 检查旧候选失效、stop-limit 激活与成交分离、路径只消费一次、OCA/预留一致。
-- [ ] 按问题涉及范围选择多空、部分退出、反转、跳空、Magnifier、强平和风险规则用例。
-- [ ] 检查成交后重算不会使用已消费路径；实时替换回滚身份、订单、账本及事件。
-- [ ] 断言账本与聚合仓位一致、数量/预留合法、费用应用一次、确认后无重复事件。
+- [x] 每次只修一个根因，复用已有统一路径和成交入口。
+- [x] 检查旧候选失效、stop-limit 激活与成交分离、路径只消费一次、OCA/预留一致。
+- [x] 按问题涉及范围选择多空、部分退出、反转、跳空、Magnifier、强平和风险规则用例。
+- [x] 检查成交后重算不会使用已消费路径；实时替换回滚身份、订单、账本及事件。
+- [x] 断言账本与聚合仓位一致、数量/预留合法、费用应用一次、确认后无重复事件。
 
 ### 3.5 验收并回写语料指标
 
-- [ ] 原始目标样本与最小复现都通过独立比较，非目标参考样本无未解释回归。
-- [ ] 区分“可运行提升”“参考覆盖提升”“一致性提升”，分别回写阶段 1 报告。
-- [ ] 完成跨宿主、模式和第 9 节门禁，记录仍未验证的语义。
+- [x] 原始目标样本与最小复现都通过独立比较，非目标参考样本无未解释回归。
+- [x] 区分“可运行提升”“参考覆盖提升”“一致性提升”，分别回写阶段 1 报告。
+- [x] 完成跨宿主、模式和第 9 节门禁，记录仍未验证的语义。
 
 **G3：** 本轮指定场景的指定字段通过独立参考验收，且相关回归通过。
 缺少参考时停在具体场景的 blocked 状态，继续阶段 1/2 或其他具备证据的场景。

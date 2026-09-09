@@ -298,7 +298,7 @@ positions are marked to the current bar close, `equity = cash + marketValue`,
 and the snapshot field `netProfit = equity - initial_capital`, so that public
 output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
-closed-trade profit only and excludes current open profit. The current subset
+closed-trade profit minus the entry fees still attached to open exposure; it excludes current open price profit. The current subset
 supports only `strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, `strategy.commission.percent`,
 fixed-tick slippage, and fixed-tick limit verification, and has no other
@@ -340,9 +340,9 @@ default broker starting capital unchanged on every bar, including through UDF
 and history reads, without expanding public strategy JSON. `strategy.openprofit`
 is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.openprofit_percent` divides that value by
-realized equity (`initial_capital + strategy.netprofit`) and multiplies by 100;
+realized equity (initial capital plus realized closed-trade profit) and multiplies by 100;
 it returns `na` when the realized-equity denominator is non-positive or
-non-finite. `strategy.netprofit` sums realized closed-trade profit.
+non-finite. `strategy.netprofit` sums realized closed-trade profit and subtracts entry fees still attached to open exposure.
 `strategy.grossprofit` sums only positive realized closed-trade profit, so
 losing, flat, and current open trades do not change it.
 `strategy.grossloss` sums realized closed-trade losses as positive values, so
@@ -350,7 +350,7 @@ winning, flat, and current open trades do not change it.
 `strategy.buy_and_hold_return_percent` returns the current close's percentage
 change from the first loaded bar close and returns `na` when that first close is
 zero or non-finite.
-`strategy.avg_trade` returns `strategy.netprofit / strategy.closedtrades` once
+`strategy.avg_trade` returns realized closed-trade profit divided by `strategy.closedtrades` once
 at least one trade is closed, and `na` before the first closed trade.
 `strategy.avg_winning_trade` returns the average realized profit among winning
 closed trades only, and `na` before the first winning closed trade.
@@ -3108,3 +3108,20 @@ reverse, clear, and array/slice history snapshots.
 A compiled program must produce the same result for the same bars and inputs.
 Host time, network access, randomness, and file system access should not exist
 in the core runtime.
+
+## G3 chart price grid and fee follow-up
+
+Positive integer minMove/priceScale can be supplied through ChartContext::with_price_grid,
+CLI --chart-price-grid MIN_MOVE/PRICE_SCALE, Python request_bars["$chart"]
+(with exactly minMove and priceScale), or WASM $chart JSON. Missing input preserves
+the synthetic 1/100 default; no exchange lookup is performed. Same-symbol request
+contexts inherit the grid; other symbols retain the existing default metadata.
+Tick orders, slippage, limit verification, rounding and mintick scalar/collection
+formatting use this grid. Public output schema is unchanged.
+
+TradingView v5/v6 captures establish zero for absent closedtrades.commission
+and closedtrades.profit (including negative/out-of-range integer indices),
+exceptions to the general absent-trade na rule. An na index and absent identity
+fields retain na. Nonzero cash-per-order entry reversal uses the existing
+atomic netting transition and splits one transaction fee between old and new
+exposure. See STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md for evidence and limits.

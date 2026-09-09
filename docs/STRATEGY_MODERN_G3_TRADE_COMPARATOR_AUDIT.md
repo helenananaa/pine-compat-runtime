@@ -1,5 +1,9 @@
 # Strategy Modern G3 Trade Comparator Audit
 
+同日后续：新 g3-chrome-r2 六组参考（41 笔）和四项修复已完成本轮验收；
+[最终记录](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md)。下文保留此前阶段的历史状态。
+
+
 阶段与切片 ID：阶段 3 / 3.1–3.2 比较器；3.3–3.5 成交修复 **blocked**  
 状态：partial（比较器 closed；独立参考缺失，G3 准确性验收 blocked）  
 实际基线 HEAD：`6b757308e`  

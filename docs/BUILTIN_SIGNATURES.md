@@ -982,7 +982,7 @@ flat or already short. Short forced liquidation uses `bar.high` and whole-unit
 truncation. `strategy.margin_liquidation_price` also solves the short-margin
 crossing price for active `margin_short` positions. Symbol precision rounding
 remains unsupported.
-`strategy(..., pyramiding=N)` accepts positive integer const values and limits
+`strategy(..., pyramiding=N)` accepts non-negative integer const values and limits
 same-direction long `strategy.entry()` market entries to that many open trades
 for the current position. The default remains `1`. Fixture-backed market-long
 `strategy.order(id, strategy.long, qty=...)`, or omitted-qty long orders using
@@ -2533,3 +2533,7 @@ Current Phase 4 behavior:
   accept variadic numeric-or-`na` args. Const-or-series `na` inputs return `na`.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.
 - All selected math functions return `na` if any required numeric input is `na`.
+
+Explicit `pyramiding=0` uses an effective capacity of one entry: initial entries
+and reversals remain allowed, while same-direction additions are rejected.
+The core stores effective capacity, so both 0 and 1 map to `pyramiding_limit=1`.

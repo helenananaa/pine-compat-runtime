@@ -425,6 +425,7 @@ impl Analyzer {
         let function = self.functions.get(&name)?.clone();
         Some(
             self.lowered_user_type_function_call(
+                callee.span,
                 name,
                 function,
                 args,
@@ -442,6 +443,7 @@ impl Analyzer {
     #[allow(clippy::too_many_arguments)]
     fn lowered_user_type_function_call(
         &self,
+        call_span: Span,
         name: String,
         function: FunctionInfo,
         args: &[CallArg],
@@ -450,9 +452,13 @@ impl Analyzer {
         user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
     ) -> Option<LoweredUserTypeCall> {
+        let explicit_count = args.len();
+        let completed_args = function.complete_args(args, call_span).ok()?;
+        let args = completed_args.as_ref();
         let (array_aliases, user_type_aliases) = self.lowered_user_type_call_aliases(
             &function.params,
             args,
+            explicit_count,
             param_exprs,
             array_aliases,
             user_type_aliases,
@@ -487,6 +493,7 @@ impl Analyzer {
         let (array_aliases, mut user_type_aliases) = self.lowered_user_type_call_aliases(
             &param_names,
             args,
+            args.len(),
             param_exprs,
             array_aliases,
             user_type_aliases,
@@ -510,6 +517,7 @@ impl Analyzer {
         &self,
         params: &[String],
         args: &[CallArg],
+        explicit_count: usize,
         param_exprs: &HashMap<String, HirExpr>,
         array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
@@ -521,7 +529,10 @@ impl Analyzer {
         let arg_indices = resolve_udf_arg_indices(params, args).ok()?;
         let mut resolved_array_args = vec![UserTypeArrayIdentityResult::Unknown; params.len()];
         let mut resolved_user_type_args = vec![UserTypeArrayIdentityResult::Unknown; params.len()];
-        for (arg, param_index) in args.iter().zip(arg_indices) {
+        for (arg_index, (arg, param_index)) in args.iter().zip(arg_indices).enumerate() {
+            if arg_index >= explicit_count {
+                continue;
+            }
             resolved_array_args[param_index] = self.user_type_array_result_with_params_and_aliases(
                 &arg.value,
                 param_exprs,

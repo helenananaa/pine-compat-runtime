@@ -1178,6 +1178,42 @@ def test_run_script_returns_label_array_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_function_default_parameters_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/function_default_parameters.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_function_default_parameters.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_series_scalar_parameters_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/series_scalar_parameters.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_series_scalar_parameters.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_absent_trade_profit_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_absent_trade_profit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_absent_trade_profit.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_zero_pyramiding_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding_zero.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_pyramiding_zero.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
 def test_run_script_returns_scalar_typed_declarations_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/scalar_typed_declarations.pine").read_text()
     expected = json.loads(
@@ -5875,8 +5911,8 @@ def test_run_script_returns_strategy_cash_per_contract_commission_plots():
 
     assert [plot["values"] for plot in result["plots"]] == [
         [None, 1.0, 1.0, None, None],
-        [None, None, None, 2.0, 2.0],
         [0.0, 0.0, 0.0, 2.0, 2.0],
+        [0.0, -1.0, -1.0, 2.0, 2.0],
         [100000.0, 99999.0, 100001.0, 100002.0, 100002.0],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 2.0
@@ -5895,8 +5931,8 @@ def test_run_script_returns_strategy_cash_per_order_commission_plots():
 
     assert [plot["values"] for plot in result["plots"]] == [
         [None, 1.5, 1.5, None, None],
-        [None, None, None, 3.0, 3.0],
-        [0.0, 0.0, 0.0, 1.0, 1.0],
+        [0.0, 0.0, 0.0, 3.0, 3.0],
+        [0.0, -1.5, -1.5, 1.0, 1.0],
         [100000.0, 99998.5, 100000.5, 100001.0, 100001.0],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 1.0
@@ -5913,8 +5949,8 @@ def test_run_script_returns_strategy_percent_commission_plots():
 
     assert [plot["values"] for plot in result["plots"]] == [
         [None, 0.4, 0.4, None, None],
-        [None, None, None, 1.2000000000000002, 1.2000000000000002],
-        [0.0, 0.0, 0.0, 2.8, 2.8],
+        [0.0, 0.0, 0.0, 1.2000000000000002, 1.2000000000000002],
+        [0.0, -0.4, -0.4, 2.8, 2.8],
         [100000.0, 99999.6, 100001.6, 100002.8, 100002.8],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 2.8
@@ -5932,7 +5968,7 @@ def test_run_script_returns_strategy_slippage_plots():
     assert [plot["values"] for plot in result["plots"]] == [
         [None, None, None, 3.0, 3.0],
         [None, None, None, 3.0, 3.0],
-        [None, None, None, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0],
         [100000.0, 99998.0, 100000.0, 100000.0, 100000.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
@@ -5950,7 +5986,7 @@ def test_run_script_returns_strategy_exit_slippage_plots():
 
     assert [plot["values"] for plot in result["plots"]] == [
         [None, None, 2.0, 2.0],
-        [None, None, -2.0, -2.0],
+        [0.0, 0.0, -2.0, -2.0],
         [100000.0, 99998.0, 99998.0, 99998.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
@@ -6018,7 +6054,7 @@ def test_run_script_returns_strategy_limit_verification_exit_plots():
 
     assert [plot["values"] for plot in result["plots"]] == [
         [None, None, None, 4.0],
-        [None, None, None, 4.0],
+        [0.0, 0.0, 0.0, 4.0],
     ]
     assert result["strategy"]["orders"] == [
         {

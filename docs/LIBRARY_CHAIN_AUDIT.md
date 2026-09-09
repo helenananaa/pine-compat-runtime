@@ -70,6 +70,27 @@ not the final release/Linux artifact matrix.
 
 ## Remaining chain work
 
+Independent overload intake at baseline 1e1638123 (Chrome, original unsaved
+controls; raw source and DOM receipts in the existing local evidence directory):
+
+- overload-declaration-probe-v2: bool versus string overloads compile and execute,
+  with constant visible outputs 4 and 5. The initial probe's spaced library title
+  was rejected with CE10292; its source/receipt remain preserved, not counted as
+  an overload failure.
+- overload-qualifier-probe: simple float versus series float declarations compile
+  and a series close argument executes. This disproves treating base-kind equality
+  alone as a duplicate signature. It does not establish dispatch for const/input
+  arguments, which could fit both overloads.
+- overload-duplicate-probe: two series float signatures are rejected with CE10110
+  (same parameters). Keep this negative behavior in the implementation.
+
+Implementation must preserve every overload rather than replacing the previous
+HashMap entry. Resolve arguments/defaults against candidates before lowering and
+keep declaration identity, diagnostics and inlined callsite state consistent.
+Named/default arguments and qualifier-conversion preference need explicit
+controls before making general dispatch claims. No overload implementation is
+included in the transitive-binding commit.
+
 - Admit legitimate overload identities; keep duplicate/ambiguous declarations
   and invalid invocations rejected.
 - Distinguish valid-but-unimplemented export capabilities from invalid source.

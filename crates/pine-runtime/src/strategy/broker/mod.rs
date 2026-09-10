@@ -22,6 +22,7 @@ mod pending_entries;
 mod pending_entry_fills;
 mod pending_exits;
 mod risk;
+mod shared_history;
 mod state;
 mod stop_profit_brackets;
 mod types;
@@ -48,6 +49,7 @@ use pending_exits::{
     PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
 pub(crate) use pending_exits::{TrailPointsExitSpec, TrailPriceExitSpec};
+use shared_history::SharedHistory;
 pub(crate) use stop_profit_brackets::StopProfitBracketSpec;
 use types::ClosedTradeMetrics;
 pub(crate) use types::{StrategyExitMetadata, StrategyOrderFillAlertEvent, StrategyOrderMetadata};
@@ -92,12 +94,12 @@ pub struct BrokerState {
     max_drawdown_percent: f64,
     max_contracts_held_long: f64,
     max_contracts_held_short: f64,
-    orders: Vec<StrategyOrderEvent>,
-    order_fill_alerts: Vec<StrategyOrderFillAlertEvent>,
-    trades: Vec<StrategyTrade>,
-    closed_trade_metrics: Vec<ClosedTradeMetrics>,
-    position: Vec<StrategyPositionSnapshot>,
-    equity: Vec<StrategyEquitySnapshot>,
+    orders: SharedHistory<StrategyOrderEvent>,
+    order_fill_alerts: SharedHistory<StrategyOrderFillAlertEvent>,
+    trades: SharedHistory<StrategyTrade>,
+    closed_trade_metrics: SharedHistory<ClosedTradeMetrics>,
+    position: SharedHistory<StrategyPositionSnapshot>,
+    equity: SharedHistory<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,
     order_book: OrderBook,
     trade_ledger: TradeLedger,

@@ -146,12 +146,12 @@ impl BrokerState {
             max_drawdown_percent: 0.0,
             max_contracts_held_long: 0.0,
             max_contracts_held_short: 0.0,
-            orders: Vec::new(),
-            order_fill_alerts: Vec::new(),
-            trades: Vec::new(),
-            closed_trade_metrics: Vec::new(),
-            position: Vec::new(),
-            equity: Vec::new(),
+            orders: Default::default(),
+            order_fill_alerts: Default::default(),
+            trades: Default::default(),
+            closed_trade_metrics: Default::default(),
+            position: Default::default(),
+            equity: Default::default(),
             diagnostics: Vec::new(),
             order_book: OrderBook::new(),
             trade_ledger: TradeLedger::default(),
@@ -280,10 +280,10 @@ impl BrokerState {
     #[must_use]
     pub fn result(&self) -> StrategyResult {
         StrategyResult {
-            orders: self.orders.clone(),
-            trades: self.trades.clone(),
-            position: self.position.clone(),
-            equity: self.equity.clone(),
+            orders: self.orders.to_vec(),
+            trades: self.trades.to_vec(),
+            position: self.position.to_vec(),
+            equity: self.equity.to_vec(),
             alerts: self
                 .order_fill_alerts
                 .iter()

@@ -40,7 +40,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
 | D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory and explicit unit-point configuration validation are implemented; per-call source provenance and remaining configured-input readiness review remain open without unconditional gates |
-| D4 | Long-session resources | Codex measurement and acceptance | Windows memory and sustained-tail probes are implemented; first full trend run timed out, second run remains under frozen budgets; no full long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
+| D4 | Long-session resources | Codex measurement and acceptance | Windows memory and sustained-tail probes are implemented; first full trend run timed out; second completed but confirmation P95 exceeded its frozen budget; no full long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
 ## Current next action
@@ -213,3 +213,26 @@ for candidate tags; stable behavior is retained. Release-only tool dependency:
 channel selector pass locally. No workflow was dispatched, tag created, release
 published or repository pushed. This fixes candidate identity handling; it does
 not complete D5's multi-surface artifact or platform acceptance.
+
+
+Trend full-scale v2 completed with matching historical/live outputs and all
+operation counts. Frozen-budget verification fails only formingConfirm:
+64.6616 ms P95 versus 50 ms. History seed max is 817.9125 ms, append P95
+0.0136 ms, forming replacement P95 22.238 ms; peak process working set/commit
+are 250184/359924 KiB, within their original budgets. All values are from the
+complete 100k prefix + 10k tail, two-repetition report. Plan hash remains
+`a741e3a40f3236717c87a5bd43adb0d3ad7f2c34a661af1dcfe5691a9326e604`.
+Evidence: `resources/trend-100k-report-v2.json` and
+`resources/trend-100k-acceptance-v2.json` under `.local/delivery-20260909/`.
+A copy-on-write broker-history candidate is being validated to reduce copying
+unchanged closed history during confirmations; public owned outputs and all
+original numerical/resource budgets are preserved.
+
+
+The broker-history sharing candidate passes the full Windows gate (6645 Rust /
+705 installed-wheel Python / 115 tool tests plus actual WASM) and seven complete
+A/B output-hash comparisons. A 100k+64 diagnostic tail reduces confirmation P95
+from 57.7912 to 42.6792 ms; this is not full-scale acceptance. The next formal
+trend attempt preserves the 100k/10k sizes, two repetitions, all original phase
+and memory limits, and the 1800-second observation window. See
+BROKER_HISTORY_SHARING_AUDIT.md. No D2/D3/D5 requirement is waived.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Broker checkpoints share unchanged historical vectors and detach on mutation,
+  reducing confirmation copy work while preserving independently owned public
+  results. Full resource acceptance remains pending; see
+  [broker history sharing](BROKER_HISTORY_SHARING_AUDIT.md).
+
 - Release manifests classify prerelease/development versions correctly and
   normalize equivalent Python wheel/RC tag versions. Candidate GitHub releases
   are marked prerelease and are not promoted to latest by the release workflow.

@@ -54,3 +54,18 @@ collection. Earlier task-specific restrictions on new captures no longer apply.
   The replay compares 1856 values and retains 14 mismatches in one repeated
   entry-price observation (78175.3 versus 78175.2). Finer input evidence is
   being investigated; no price heuristic has been applied.
+- Current access boundary: the user has no additional trade-level source,
+  proxy, or Ultimate access. Native one-second data also aggregates the
+  relevant changes; public OKX API attempts did not yield data. See
+  `REALTIME_PRICE_INPUT_BOUNDARY_AUDIT.md`. The goal is not complete.
+- Linux native verification of `a6a28528e` passes 6674 Rust / 715 installed
+  Python / actual WASM; the tool suite has the same one Windows-only skip.
+  Release-profile Windows artifact validation is in progress separately.
+- Windows and Ubuntu-native optimized wheels at a6a28528e each pass 715
+  installed tests and the three repaired reference groups. The Linux wheel
+  is tagged manylinux_2_35; it is not the manylinux2014 distribution gate.
+- A 64-execution native trace exposed an additional late-attachment context
+  gap. Rust/Python now accept optional opening-update metadata; the full
+  trace passes 975/975 values when its known mid-bar attachment is supplied.
+  Windows checks pass 6676 Rust / 717 Python / 130 tools and actual WASM.
+  This does not resolve either price-precision capture.

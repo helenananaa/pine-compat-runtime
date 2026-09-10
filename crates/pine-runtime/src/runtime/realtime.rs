@@ -100,7 +100,7 @@ impl<'a> RealtimeRuntime<'a> {
     }
 
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, None)
+        self.update_inner(update, RealtimeUpdateContext::default())
     }
 
     pub fn update_with_execution_time(
@@ -108,14 +108,42 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         execution_time: i64,
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, Some(execution_time))
+        self.update_inner(
+            update,
+            RealtimeUpdateContext {
+                execution_time: Some(execution_time),
+                opening_update: None,
+            },
+        )
+    }
+
+    pub fn update_with_context(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.update_inner(update, context)
     }
 
     fn update_inner(
         &mut self,
         update: BarUpdate,
-        execution_time: Option<i64>,
+        context: RealtimeUpdateContext,
     ) -> Result<RuntimeResult, RuntimeError> {
+        if update.kind == BarUpdateKind::Historical && context.opening_update == Some(false) {
+            return Err(RuntimeError {
+                message: "historical bars always have an opening update".to_owned(),
+            });
+        }
+        if update.kind != BarUpdateKind::Historical
+            && self.forming.is_some()
+            && context.opening_update == Some(true)
+        {
+            return Err(RuntimeError {
+                message: "opening_update cannot repeat for an already forming bar".to_owned(),
+            });
+        }
+        let execution_time = context.execution_time;
         if matches!(
             update.kind,
             BarUpdateKind::Forming | BarUpdateKind::Confirmed
@@ -139,13 +167,13 @@ impl<'a> RealtimeRuntime<'a> {
                 Ok(self.confirmed.result())
             }
             BarUpdateKind::Confirmed => {
-                let runtime = self.replay_from_confirmed(update, execution_time)?;
+                let runtime = self.replay_from_confirmed(update, context)?;
                 self.confirmed = runtime;
                 self.forming = None;
                 Ok(self.confirmed.result())
             }
             BarUpdateKind::Forming => {
-                let runtime = self.replay_from_confirmed(update, execution_time)?;
+                let runtime = self.replay_from_confirmed(update, context)?;
                 let result = runtime.result();
                 self.forming = Some(runtime);
                 Ok(result)
@@ -156,7 +184,7 @@ impl<'a> RealtimeRuntime<'a> {
     fn replay_from_confirmed(
         &mut self,
         update: BarUpdate,
-        execution_time: Option<i64>,
+        context: RealtimeUpdateContext,
     ) -> Result<HistoricalRuntime<'a>, RuntimeError> {
         if update.kind == BarUpdateKind::Forming
             && self.confirmed.program.script_mode == pine_ir::ScriptMode::Strategy
@@ -170,7 +198,7 @@ impl<'a> RealtimeRuntime<'a> {
             runtime.advance_broker_only_forming(update.bar)?;
             return Ok(runtime);
         }
-        let is_new_bar = self.forming.is_none();
+        let is_new_bar = context.opening_update.unwrap_or(self.forming.is_none());
         // User state rolls back, except varip. Orders and fills belong to the
         // live broker and survive successful updates of the same open bar.
         let mut runtime = self.confirmed.clone();
@@ -184,7 +212,12 @@ impl<'a> RealtimeRuntime<'a> {
                 .clone_from(&previous_forming.strategy_scheduler);
         }
         let script_passes = runtime.strategy_scheduler.script_passes();
-        runtime.append_bar_with_context(update.bar, update.kind, is_new_bar, execution_time)?;
+        runtime.append_bar_with_context(
+            update.bar,
+            update.kind,
+            is_new_bar,
+            context.execution_time,
+        )?;
         if update.kind == BarUpdateKind::Forming
             && runtime.program.script_mode == pine_ir::ScriptMode::Strategy
             && runtime.strategy_scheduler.script_passes() == script_passes

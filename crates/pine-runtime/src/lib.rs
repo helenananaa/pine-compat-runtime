@@ -20,7 +20,7 @@ mod session_windows;
 mod strategy;
 mod value;
 
-pub use bar::{Bar, BarUpdate, BarUpdateKind};
+pub use bar::{Bar, BarUpdate, BarUpdateKind, RealtimeUpdateContext};
 pub use error::RuntimeError;
 pub use host_requirements::{
     AccountInputContract, ChartInputContract, ChartInputDefaults, ExecutionInputContract,

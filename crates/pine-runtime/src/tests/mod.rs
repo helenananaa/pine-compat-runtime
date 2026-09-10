@@ -19,6 +19,7 @@ mod matrices;
 mod methods;
 mod outputs;
 mod realtime;
+mod realtime_opening_context;
 mod request;
 mod runtime_const_history;
 mod runtime_control_flow;

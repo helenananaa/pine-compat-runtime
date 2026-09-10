@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Rust realtime updates accept `RealtimeUpdateContext`; Python updates accept
+  optional `opening_update` metadata. An explicit false supports attaching to
+  an already open bar without spuriously reporting `barstate.isnew`. Existing
+  calls retain their inference, and invalid/repeated opening markers are
+  rejected before state changes.
+
 Local candidate identity is Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. This is
 not a GitHub release. TV reference gaps (live-tick exit prices, B1
 `UNVERIFIED_INTERNAL_ORDER`, public r1 0/482) remain open. Dynamic request

@@ -136,6 +136,12 @@ as batch/realtime value parity.
 
 ## Strategy Mode
 
+Realtime Rust/Python callers can supply `RealtimeUpdateContext.opening_update`
+or the Python `opening_update` keyword to distinguish an opening observation
+from attachment to an already open bar. Omission preserves the existing
+first-observation inference. The flag does not synthesize earlier ticks or
+alter storage/commit boundaries. See [opening context](REALTIME_OPENING_CONTEXT_AUDIT.md).
+
 `strategy(...)` selects strategy mode for historical execution.
 Strategy-mode runtime results include a `strategy` object with `orders`,
 `trades`, `position`, `equity`, and `diagnostics` arrays. Indicator-mode

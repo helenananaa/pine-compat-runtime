@@ -5,6 +5,53 @@ import pytest
 import pine_compat
 
 
+def test_mid_bar_opening_context_preserves_varip_and_rejects_duplicate_opening():
+    source = '''//@version=6
+indicator("Opening context")
+varip int n = 0
+if barstate.isnew
+    n := 0
+n += 1
+plot(barstate.isnew ? 1 : 0)
+plot(n)
+plot(timenow)
+'''
+    session = pine_compat.create_realtime_session(source)
+    session.seed([_bar(60_000, 10)], execution_times=[60_100])
+    first = session.update_forming(
+        _bar(120_000, 11), execution_time=120_250, opening_update=False
+    )
+    assert [p["values"][-1] for p in first["plots"]] == [0, 2, 120_250]
+    before = session.result()
+    with pytest.raises(ValueError, match="opening_update cannot repeat"):
+        session.update_forming(
+            _bar(120_000, 12), execution_time=120_500, opening_update=True
+        )
+    assert session.result() == before
+    replacement = session.update_forming(_bar(120_000, 12), execution_time=120_500)
+    assert [p["values"][-1] for p in replacement["plots"]] == [0, 3, 120_500]
+    session.update_confirmed(_bar(120_000, 12), execution_time=179_999)
+    next_bar = session.update_forming(_bar(180_000, 13), execution_time=180_001)
+    assert [p["values"][-1] for p in next_bar["plots"]] == [1, 1, 180_001]
+    assert [p["values"][-1] for p in first["plots"]] == [0, 2, 120_250]
+
+
+def test_opening_context_is_strict_and_can_describe_a_close_only_observation():
+    session = pine_compat.create_realtime_session(
+        '//@version=6\nindicator("Opening")\nplot(barstate.isnew ? 1 : 0)\n'
+    )
+    session.seed([_bar(60_000, 10)])
+    before = session.result()
+    for invalid in [1, 0, "false", [], {}]:
+        with pytest.raises(ValueError, match="opening_update must be a bool"):
+            session.update_forming(_bar(120_000, 11), opening_update=invalid)
+        assert session.result() == before and session.forming_time is None
+    closed = session.update_confirmed(_bar(120_000, 11), opening_update=False)
+    assert closed["plots"][0]["values"][-1] == 0
+    inferred = session.update_confirmed(_bar(180_000, 12), opening_update=None)
+    assert inferred["plots"][0]["values"][-1] == 1
+
+
 def test_realtime_execution_clock_seed_replacement_and_confirmation():
     source = '''//@version=6
 indicator("Clock lifecycle")

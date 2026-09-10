@@ -1,5 +1,7 @@
 use pine_ir::HirProgram;
-use pine_runtime::{Bar, BarUpdate, InputOverrides, RealtimeRuntime, RequestEnvironment};
+use pine_runtime::{
+    Bar, BarUpdate, InputOverrides, RealtimeRuntime, RealtimeUpdateContext, RequestEnvironment,
+};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyModule};
@@ -22,6 +24,16 @@ fn execution_timestamp(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<i64>
 }
 
 pub(crate) const REALTIME_SESSION_SCHEMA_VERSION: u32 = 1;
+
+fn opening_update_flag(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<bool>> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    if !value.is_instance_of::<PyBool>() {
+        return Err(PyValueError::new_err("opening_update must be a bool"));
+    }
+    value.extract::<bool>().map(Some)
+}
 
 #[pyclass(name = "RealtimeSession", skip_from_py_object)]
 pub(crate) struct PyRealtimeSession {
@@ -136,44 +148,52 @@ impl PyRealtimeSession {
         runtime_result_to_py(py, &result)
     }
 
-    #[pyo3(signature = (bar, *, execution_time=None))]
+    #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
     fn update_forming(
         &mut self,
         py: Python<'_>,
         bar: &Bound<'_, PyAny>,
         execution_time: Option<&Bound<'_, PyAny>>,
+        opening_update: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
         self.validate_next_bar(&bar, true)?;
-        let result = match execution_timestamp(execution_time)? {
-            Some(time) => self
-                .runtime
-                .update_with_execution_time(BarUpdate::forming(bar), time),
-            None => self.runtime.update(BarUpdate::forming(bar)),
-        }
-        .map_err(|err| PyValueError::new_err(err.message))?;
+        let result = self
+            .runtime
+            .update_with_context(
+                BarUpdate::forming(bar),
+                RealtimeUpdateContext {
+                    execution_time: execution_timestamp(execution_time)?,
+                    opening_update: opening_update_flag(opening_update)?,
+                },
+            )
+            .map_err(|err| PyValueError::new_err(err.message))?;
         self.forming_time = Some(bar.time);
         runtime_result_to_py(py, &result)
     }
 
-    #[pyo3(signature = (bar, *, execution_time=None))]
+    #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
     fn update_confirmed(
         &mut self,
         py: Python<'_>,
         bar: &Bound<'_, PyAny>,
         execution_time: Option<&Bound<'_, PyAny>>,
+        opening_update: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
         self.validate_next_bar(&bar, false)?;
-        let result = match execution_timestamp(execution_time)? {
-            Some(time) => self
-                .runtime
-                .update_with_execution_time(BarUpdate::confirmed(bar), time),
-            None => self.runtime.update(BarUpdate::confirmed(bar)),
-        }
-        .map_err(|err| PyValueError::new_err(err.message))?;
+        let result = self
+            .runtime
+            .update_with_context(
+                BarUpdate::confirmed(bar),
+                RealtimeUpdateContext {
+                    execution_time: execution_timestamp(execution_time)?,
+                    opening_update: opening_update_flag(opening_update)?,
+                },
+            )
+            .map_err(|err| PyValueError::new_err(err.message))?;
         self.confirmed_bars += 1;
         self.last_confirmed_time = Some(bar.time);
         self.forming_time = None;

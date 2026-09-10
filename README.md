@@ -196,6 +196,11 @@ Development builds also accept `seed(bars, execution_times=[...])` and
 `timenow`. The clock is supplied by the host; it is never read from the machine
 inside the core.
 
+Development builds also accept `opening_update=False` on forming or confirmed
+updates when the host attaches to a bar that is already open. Omitting it
+retains first-observation inference. See the
+[opening-context contract](docs/REALTIME_OPENING_CONTEXT_AUDIT.md).
+
 `update_forming` rolls ordinary `var` state back to the last confirmed bar and
 preserves `varip` state across replacements. The session rejects updates before
 seeding, regressive confirmed timestamps, and a forming/confirmed timestamp

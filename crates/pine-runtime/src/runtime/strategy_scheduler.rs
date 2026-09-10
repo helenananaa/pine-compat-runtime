@@ -59,6 +59,7 @@ pub(crate) struct StrategySchedulerState {
     pub(crate) identity: StrategyExecutionIdentity,
     pub(crate) path_cursor: Option<StrategyPathCursor>,
     last_host_bar: Option<Bar>,
+    last_realtime_observation: Option<Bar>,
     max_recalculation_passes: u32,
     script_passes: usize,
     recalculation_passes: usize,
@@ -82,6 +83,7 @@ impl StrategySchedulerState {
             identity: StrategyExecutionIdentity::default(),
             path_cursor: None,
             last_host_bar: None,
+            last_realtime_observation: None,
             max_recalculation_passes,
             script_passes: 0,
             recalculation_passes: 0,
@@ -306,12 +308,26 @@ impl HistoricalRuntime<'_> {
             bar.close,
             self.session_windows.ids_for(bar_index),
         );
+        let market_price = self
+            .strategy_scheduler
+            .last_realtime_observation
+            .filter(|previous| previous.time == bar.time)
+            .map_or(bar.close, |previous| {
+                match (bar.high > previous.high, bar.low < previous.low) {
+                    (true, false) => bar.high,
+                    (false, true) => bar.low,
+                    // No new extreme, or an unqualified two-sided expansion.
+                    _ => bar.close,
+                }
+            });
         let filled = self.strategy_broker.process_realtime_tick(
             bar_index,
             bar.time,
             bar.close,
+            market_price,
             self.program.strategy_settings.calc_on_order_fills,
         )?;
+        self.strategy_scheduler.last_realtime_observation = Some(bar);
         self.strategy_scheduler.last_host_bar = Some(Bar {
             open: bar.close,
             high: bar.close,

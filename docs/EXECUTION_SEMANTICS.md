@@ -547,7 +547,12 @@ the last confirmed checkpoint.
 The runtime seeds `varip` and the broker from the previous successful forming
 update. Orders, cancellations, activations, fills and broker fill alerts survive
 user-state rollback. Failed updates remain atomic. Each supplied realtime close
-is an observed price tick; cumulative OHLC extremes are not replayed as new ticks.
+is an observed price tick. For pending market entries and closes, a same-bar
+update that expands exactly one cumulative extreme uses that new extreme as
+the fill price before the script executes. Repeated extremes use close, as do
+first observations and currently unqualified two-sided range expansions.
+Price-condition orders still evaluate the supplied close; this market-order
+rule does not introduce an interpolated path or additional script executions.
 Pending orders can execute even when normal strategy calculations wait for close.
 When a fill-triggered calculation executes, it replaces the ordinary calculation
 for that realtime update. A non-calculating update preserves the latest user

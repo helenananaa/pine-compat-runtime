@@ -1,5 +1,13 @@
 # Remaining realtime price evidence boundary
 
+2026-09-10 follow-up: the user-authorized Binance source supplied continuous
+trade data and directional native controls. The scoped market-order repair in
+`REALTIME_MARKET_EXTREME_AUDIT.md` passes both original OKX failures unchanged
+(896/896 and 1856/1856). The access limits and unresolved state below describe
+the earlier investigation; they are no longer the current disposition of
+these named comparisons. Two-sided range and price-condition semantics remain
+outside the new qualification.
+
 Status: unresolved; additional trade-level input or a discriminating native
 control is required. The user currently has no additional data/API/proxy or
 Ultimate access. No tolerance, frozen reference or fill-price heuristic changed.

@@ -3,20 +3,22 @@ use crate::RuntimeError;
 use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
 
 impl BrokerState {
-    /// Consume orders already present before script execution at this observed
-    /// price. No cumulative OHLC extremes or interpolated crossings are ticks.
+    /// Consume orders already present before script execution. The scheduler
+    /// supplies the qualified market-order price for a one-sided range update;
+    /// price-condition orders still use the observed close without interpolation.
     pub(crate) fn process_realtime_tick(
         &mut self,
         bar_index: usize,
         time: i64,
         price: f64,
+        market_price: f64,
         historical_same_bar_fills: bool,
     ) -> Result<bool, RuntimeError> {
         let before = self.public_order_event_count();
-        self.fill_pending_market_closes(bar_index, time, price);
-        self.fill_same_bar_market_closes(bar_index, time, price);
-        self.fill_pending_market_entries(bar_index, time, price);
-        self.fill_same_bar_market_entries(bar_index, time, price);
+        self.fill_pending_market_closes(bar_index, time, market_price);
+        self.fill_same_bar_market_closes(bar_index, time, market_price);
+        self.fill_pending_market_entries(bar_index, time, market_price);
+        self.fill_same_bar_market_entries(bar_index, time, market_price);
         self.order_book
             .entries_mut()
             .set_allow_same_bar_price_fills(true);

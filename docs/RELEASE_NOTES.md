@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Pending realtime market entries and closes use a newly expanded high or low
+  when exactly one side of the same bar's range expands. Unchanged extremes
+  use the current close. This does not add script executions or alter historical
+  paths; two-sided expansion and price-condition order parity remain unqualified.
+
 - Rust realtime updates accept `RealtimeUpdateContext`; Python updates accept
   optional `opening_update` metadata. An explicit false supports attaching to
   an already open bar without spuriously reporting `barstate.isnew`. Existing

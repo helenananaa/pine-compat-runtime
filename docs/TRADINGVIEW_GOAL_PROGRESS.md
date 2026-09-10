@@ -108,3 +108,10 @@ source and matching native chart. `BINANCE_REALTIME_REFERENCE_AUDIT.md` records
 two native fill discrepancies (seven repeated fields out of 975). This changes
 the next action from obtaining a usable feed to testing directional extreme
 and execution-timing controls. It does not resolve or replace the old OKX data.
+
+The subsequent 128-execution long/short control isolates a new-high short fill.
+The market-order correction now passes the original OKX 896 and 1856 values
+and both Binance traces (975 and 1935), all unchanged. Full Windows checks pass
+6677 Rust / 717 Python / 130 tools / actual WASM; optimized-wheel Python passes
+717. See `REALTIME_MARKET_EXTREME_AUDIT.md`. Two-sided expansion and
+price-condition order coverage still need separate evidence.

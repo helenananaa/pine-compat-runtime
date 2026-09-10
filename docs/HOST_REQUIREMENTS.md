@@ -170,8 +170,10 @@ Defaults (synthetic, not inferred from a symbol name):
   values; `while` loops stop at 100,000 iterations; arrays at 100,000
   elements; strings at 40,960 characters.
 
-Supported candidate platforms: Windows x86-64 and glibc Linux x86-64.
-macOS, musllinux, ARM, and free-threaded CPython are out of this matrix.
+Supported candidate platforms: Windows x86-64 (`win_amd64`) and native Ubuntu
+22.04 glibc Linux x86-64 (`manylinux_2_35_x86_64`). The manylinux2014
+`manylinux_2_17_x86_64` wheel is not this candidate's artifact. macOS, musllinux,
+ARM, and free-threaded CPython are out of this matrix.
 
 Account and data range for this candidate: standard candles, host-supplied
 price grid, same-currency linear accounting, unit point value. Foreign-currency

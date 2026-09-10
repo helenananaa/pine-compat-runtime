@@ -1,6 +1,6 @@
 # Realtime market-order range expansion
 
-Status: Windows-qualified correction, 2026-09-10; Linux follow-up pending.
+Status: Windows/Linux-qualified correction at `a2a1ba5fb`, 2026-09-10.
 
 ## Native evidence
 
@@ -54,3 +54,12 @@ late-attachment control retains 975/975 with its documented opening context.
 No reference, denominator, tolerance or price-grid setting changed. Earlier
 failed receipts are retained. These demonstrate closure of the named failures,
 not full realtime broker compatibility.
+
+Ubuntu-native full verification also passes 6677 Rust / 717 installed Python /
+actual WASM; 130 tool tests run with the one Windows-only probe skipped.
+Both optimized wheels pass 717 installed Python tests and the same 19 retained
+native scenarios, 867418 values per platform with zero mismatches. This includes
+the 12 account/admission controls, both formerly failed OKX captures, both new
+Binance captures, the passing repeat, late attachment and multi-fill controls.
+Raw receipt paths and artifact hashes are indexed in
+`.local/binance-directional-20260910/qualification.json`.

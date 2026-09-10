@@ -1,5 +1,13 @@
 # TradingView reference closure
 
+Current acceptance: `TRADINGVIEW_GOAL_ACCEPTANCE.md`. At source `a2a1ba5fb`,
+the named realtime failures are resolved; observable B1 and the new r1 native
+companion pass final Windows/Linux optimized-wheel replays. Each platform
+passes 19 retained scenarios / 867418 values, full 6677 Rust / 717 Python and
+actual WASM. Historical incomplete/blocked entries below are retained as the
+investigation record, not current failure counts. Unverified coverage boundaries
+remain explicit in the acceptance audit; no full Pine compatibility is claimed.
+
 Started 2026-09-10 from clean `c292e5ef591a43c42260423f4a6b1f92d768d680`.
 The user authorized goal execution and Chrome-based TradingView reference
 collection. Earlier task-specific restrictions on new captures no longer apply.

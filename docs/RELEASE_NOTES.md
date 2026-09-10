@@ -14,8 +14,10 @@
   rejected before state changes.
 
 Local candidate identity is Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. This is
-not a GitHub release. TV reference gaps (live-tick exit prices, B1
-`UNVERIFIED_INTERNAL_ORDER`, public r1 0/482) remain open. Dynamic request
+not a GitHub release. The named live-tick price failures now pass unchanged
+after the realtime market-order correction. B1 `UNVERIFIED_INTERNAL_ORDER`
+and the original public r1 0/482 denominator remain separate boundaries; see
+`TRADINGVIEW_GOAL_ACCEPTANCE.md` for new native scenarios. Dynamic request
 arguments remain an engineering/host contract boundary.
 
 - Native-reference correction: omitted strategy initial capital is now

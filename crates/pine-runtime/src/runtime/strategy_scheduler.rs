@@ -282,6 +282,32 @@ impl HistoricalFillStep {
 }
 
 impl HistoricalRuntime<'_> {
+    fn run_realtime_broker_tick(&mut self, bar_index: usize, bar: Bar) -> Result<(), RuntimeError> {
+        let timeframe_seconds =
+            crate::builtins::time::timeframe_seconds(crate::DEFAULT_CHART_TIMEFRAME).unwrap_or(0);
+        self.strategy_broker.reset_risk_windows(
+            bar_index,
+            bar.time,
+            timeframe_seconds,
+            self.strategy_broker.equity_value(bar.close),
+            bar.close,
+            self.session_windows.ids_for(bar_index),
+        );
+        let filled = self.strategy_broker.process_realtime_tick(
+            bar_index,
+            bar.time,
+            bar.close,
+            self.program.strategy_settings.calc_on_order_fills,
+        )?;
+        self.strategy_scheduler.last_host_bar = Some(Bar {
+            open: bar.close,
+            high: bar.close,
+            low: bar.close,
+            ..bar
+        });
+        self.recalculate_after_fill(filled)
+    }
+
     pub(crate) fn run_pre_script_strategy_phases(
         &mut self,
         bar_index: usize,
@@ -289,6 +315,9 @@ impl HistoricalRuntime<'_> {
     ) -> Result<(), RuntimeError> {
         if self.program.script_mode != ScriptMode::Strategy {
             return Ok(());
+        }
+        if self.current_bar_update_kind != crate::BarUpdateKind::Historical {
+            return self.run_realtime_broker_tick(bar_index, bar);
         }
         let sequence = magnifier_host_sequence(
             bar_index,
@@ -635,7 +664,9 @@ impl HistoricalRuntime<'_> {
         if self.program.script_mode != ScriptMode::Strategy {
             return Ok(());
         }
-        if self.program.strategy_settings.process_orders_on_close {
+        if self.program.strategy_settings.process_orders_on_close
+            && self.current_bar_update_kind != crate::BarUpdateKind::Forming
+        {
             self.trace_strategy_phase(StrategyBarPhase::BarCloseMarketFills);
             let mut steps: Vec<_> = HistoricalFillStep::bar_close_path().to_vec();
             steps.sort_by_key(|step| step.ordering_key());

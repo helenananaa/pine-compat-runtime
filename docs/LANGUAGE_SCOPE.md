@@ -198,9 +198,11 @@ Phase 1 executable subset:
   from the fill mark, and can fill later price ticks on the same bar;
   historical execution remains one script pass per bar when that flag is false,
   with internal scheduler bar/tick/pass identity, profile pass counts, and a
-  bounded extra-pass guardrail; forming-bar realtime updates restore the
-  confirmed broker checkpoint so abandoned intrabar orders, cancellations,
-  activations, fills, and alerts do not leak; const bool `calc_on_every_tick`
+  bounded extra-pass guardrail; forming-bar realtime updates preserve successful
+  broker orders, cancellations, activations, fills, and fill alerts independently
+  of user-state rollback, using each supplied close as an observed price tick;
+  fill-triggered realtime execution replaces the ordinary pass for that update;
+  const bool `calc_on_every_tick`
   executes strategy code on each host-provided forming update with `var`
   rollback and `varip` persistence and does not change historical bars;
   host-owned bar-magnifier lower-timeframe input is keyed by chart bar with

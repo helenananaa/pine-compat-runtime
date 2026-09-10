@@ -252,3 +252,41 @@ is not rolled back. Current confirmed-broker rebuilding is therefore a semantic
 gap to repair, not an accepted preview-only substitute. Exact fill pricing also
 requires care: one native fill differs from the sampled close, so no hidden
 price event is invented. D2 remains open; see LIVE_TICK_REFERENCE_AUDIT.md.
+
+An unaccepted implementation now lives on `codex/realtime-broker-ticks` from
+0410bc110. Eight targeted broker tick controls pass. The first installed working
+wheel reduces the frozen native comparison from 62 to 16 mismatches out of 896;
+all remaining mismatches repeat one exit-price discrepancy. A second fresh
+installed wheel including later targeted fixes retains the same 16/896 result.
+The pre-reclassification broad runtime regression reported 1992 passes and
+11 failures; those original expectations and failure logs remain in the baseline
+commit and retained evidence.
+Multiple-fill recalculation order and non-calculating-tick output retention also
+remain under review. This work has not been integrated or release-qualified.
+
+The 11 old failures have now been explicitly reclassified in
+LIVE_TICK_REFERENCE_AUDIT.md, preserving original sources/update sequences and
+historical controls. Targeted validation passes 284 strategy unit tests plus
+6 quantity-precision and 8 realtime-tick tests. A separately reproduced quiet-tick
+output rollback bug is fixed: without script execution, retain the latest script
+state and outputs while advancing broker state. Full Windows gates now pass
+6654 Rust / 710 installed-wheel Python / 115 tool tests and actual WASM smoke.
+The retained v3 working wheel includes this repair and reports the same 16/896
+native exit-price mismatches. Multiple-fill execution ordering still needs native
+evidence; this uncommitted patch remains unaccepted for integration.
+
+The new frozen multi-fill native control resolves duplicate execution for two
+market entries with every-tick plus fill recalculation: 104/448 mismatches before
+the scheduler repair, 448/448 values passing afterward in both Rust and an actual
+installed wheel. Two trades additionally match eight price/quantity values.
+The prior single-entry capture still fails 16/896 exit-price values. Full Windows
+gates after the scheduler repair pass 6655 Rust / 710 Python / 115 tools and WASM.
+Active realtime documents and conformance metadata have been corrected; final
+metadata checks and known-commit artifact qualification precede integration.
+See LIVE_TICK_REFERENCE_AUDIT.md; no resource or final-release requirement is waived.
+
+Metadata synchronization passed all 231 CLI tests, including matrix equality
+and unchanged historical output snapshots. The realtime repair is ready for a
+local candidate commit; main-branch integration and final release claims remain
+pending known-commit artifact qualification. The native single-entry price-input
+uncertainty and D4 long-session failures remain visible outstanding work.

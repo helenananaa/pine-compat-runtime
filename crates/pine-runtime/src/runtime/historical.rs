@@ -706,13 +706,35 @@ impl<'a> HistoricalRuntime<'a> {
         {
             self.snapshot_strategy_eval_checkpoint();
         }
+        let passes_before_tick = self.strategy_scheduler.script_passes();
         self.run_pre_script_strategy_phases(bar_index, bar)?;
+        let skip_normal_strategy_pass = self.program.script_mode == ScriptMode::Strategy
+            && ((update_kind == BarUpdateKind::Forming
+                && !self.program.strategy_settings.calc_on_every_tick)
+                // A realtime observation with fills has already executed the
+                // strategy. Do not execute it again for the same feed update.
+                // Historical path ticks retain their separate closing pass.
+                || (update_kind != BarUpdateKind::Historical
+                    && self.strategy_scheduler.script_passes() > passes_before_tick));
+        if skip_normal_strategy_pass
+            && self.strategy_scheduler.script_passes() == passes_before_tick
+        {
+            self.strategy_broker.record_equity(bar_index, bar.close);
+            self.strategy_eval_checkpoint = None;
+            self.current_bar_update_kind = BarUpdateKind::Historical;
+            self.current_bar_is_new = true;
+            self.current_bar = None;
+            self.current_execution_time = None;
+            return Ok(());
+        }
         if self.program.script_mode == ScriptMode::Strategy {
             self.trace_strategy_phase(
                 crate::runtime::strategy_scheduler::StrategyBarPhase::BuiltinRefresh,
             );
-            let filled = self.run_strategy_script_pass()?;
-            self.recalculate_after_fill(filled)?;
+            if !skip_normal_strategy_pass {
+                let filled = self.run_strategy_script_pass()?;
+                self.recalculate_after_fill(filled)?;
+            }
         } else {
             let program = self.program.clone();
             for statement in &program.statements {

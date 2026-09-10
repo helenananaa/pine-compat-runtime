@@ -14676,7 +14676,7 @@ plot(close)
 }
 
 #[test]
-fn calc_on_every_tick_false_does_not_execute_strategy_on_forming_updates() {
+fn calc_on_every_tick_false_waits_for_observed_limit_price() {
     let hir = analyze_strategy(
         r#"
 strategy("default ticks")
@@ -14698,11 +14698,16 @@ plot(close)
     let confirmed = runtime
         .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("confirmed executes");
-    assert_eq!(confirmed.strategy.expect("strategy").orders.len(), 1);
+    assert!(confirmed.strategy.expect("strategy").orders.is_empty());
+    let filled = runtime
+        .update(BarUpdate::forming(bar(89.0)))
+        .expect("observed limit price");
+    assert_eq!(filled.strategy.expect("strategy").orders.len(), 1);
+    assert_eq!(filled.plots[0].values.len(), 2);
 }
 
 #[test]
-fn calc_on_every_tick_true_executes_strategy_on_forming_and_rolls_back() {
+fn calc_on_every_tick_true_does_not_replay_cumulative_extremes() {
     let hir = analyze_strategy(
         r#"
 strategy("every tick", calc_on_every_tick=true)
@@ -14718,7 +14723,7 @@ plot(close)
     let forming = runtime
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("forming fill");
-    assert_eq!(forming.strategy.expect("strategy").orders.len(), 1);
+    assert!(forming.strategy.expect("strategy").orders.is_empty());
     assert_eq!(forming.plots[0].values.len(), 2);
 
     let replaced = runtime
@@ -15065,7 +15070,7 @@ plot(close)
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_limit_fill() {
+fn forming_bar_broker_does_not_infer_limit_fill_from_past_low() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"
@@ -15090,7 +15095,7 @@ plot(close)
     let forming = runtime
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("forming fill");
-    assert_eq!(forming.strategy.expect("strategy").orders.len(), 1);
+    assert!(forming.strategy.expect("strategy").orders.is_empty());
 
     let replaced = runtime
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
@@ -15112,7 +15117,7 @@ plot(close)
 }
 
 #[test]
-fn forming_bar_broker_commit_keeps_confirmed_limit_fill() {
+fn forming_bar_broker_commit_preserves_pending_limit_until_observed_price() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"
@@ -15139,7 +15144,10 @@ plot(close)
     let confirmed = runtime
         .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("confirmed fill");
-    assert_eq!(confirmed.strategy.expect("strategy").orders.len(), 1);
+    assert!(confirmed.strategy.expect("strategy").orders.is_empty());
+    runtime
+        .update(BarUpdate::confirmed(bar(89.0)))
+        .expect("observed limit fill");
     assert_eq!(
         runtime
             .confirmed_result()
@@ -15152,7 +15160,7 @@ plot(close)
 }
 
 #[test]
-fn strategy_fill_path_realtime_stop_limit_rollback() {
+fn strategy_fill_path_realtime_stop_limit_requires_observed_activation() {
     let hir = analyze_source(&SourceFile::new(
         "strategy_fill_path_realtime_stop_limit_rollback.pine",
         include_str!(
@@ -15170,8 +15178,8 @@ fn strategy_fill_path_realtime_stop_limit_rollback() {
         .expect("forming fill");
     assert_eq!(
         forming_fill.strategy.expect("strategy").orders.len(),
-        1,
-        "high-first forming bar should fill the activated long stop-limit"
+        0,
+        "cumulative extremes are not observed stop-limit ticks"
     );
     runtime
         .update(BarUpdate::forming(bar(10.0)))
@@ -15186,6 +15194,19 @@ fn strategy_fill_path_realtime_stop_limit_rollback() {
             .expect("strategy")
             .orders
             .is_empty()
+    );
+    runtime
+        .update(BarUpdate::forming(bar(11.0)))
+        .expect("observed stop activation");
+    let filled = runtime
+        .update(BarUpdate::forming(bar(8.0)))
+        .expect("observed limit fill");
+    assert_eq!(filled.strategy.as_ref().unwrap().orders.len(), 1);
+    assert_eq!(filled.strategy.as_ref().unwrap().orders[0].price, 8.0);
+    let confirmed = runtime.update(BarUpdate::confirmed(bar(10.0))).unwrap();
+    assert_eq!(
+        confirmed.strategy.unwrap().orders,
+        filled.strategy.unwrap().orders
     );
 }
 
@@ -15227,7 +15248,7 @@ fn strategy_fill_path_realtime_trailing_rollback() {
 }
 
 #[test]
-fn strategy_fill_path_realtime_margin_rollback() {
+fn strategy_fill_path_realtime_margin_requires_observed_adverse_price() {
     let hir = analyze_source(&SourceFile::new(
         "strategy_fill_path_realtime_margin_rollback.pine",
         include_str!(
@@ -15244,7 +15265,7 @@ fn strategy_fill_path_realtime_margin_rollback() {
         .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
         .expect("forming margin");
     assert!(
-        forming
+        !forming
             .strategy
             .expect("strategy")
             .orders
@@ -15266,6 +15287,13 @@ fn strategy_fill_path_realtime_margin_rollback() {
             .iter()
             .any(|order| order.id == "Margin Call")
     );
+    let adverse = runtime
+        .update(BarUpdate::forming(bar(1.0)))
+        .expect("observed adverse price");
+    let margin_orders = adverse.strategy.unwrap().orders;
+    assert!(margin_orders.iter().any(|order| order.id == "Margin Call"));
+    let recovered = runtime.update(BarUpdate::confirmed(bar(10.0))).unwrap();
+    assert_eq!(recovered.strategy.unwrap().orders, margin_orders);
 }
 
 fn analyze_strategy(source: &str) -> pine_ir::HirProgram {
@@ -15280,7 +15308,7 @@ fn analyze_strategy(source: &str) -> pine_ir::HirProgram {
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_order_placement() {
+fn forming_bar_broker_preserves_order_placement_across_updates() {
     let hir = analyze_strategy(
         r#"
 strategy("forming place", calc_on_every_tick=true)
@@ -15307,19 +15335,22 @@ plot(close)
     let later = runtime
         .update(BarUpdate::historical(bar(110.0)))
         .expect("next bar");
-    assert!(later.strategy.expect("strategy").orders.is_empty());
+    let orders = later.strategy.expect("strategy").orders;
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0].price, 100.0);
     assert!(
         runtime
             .confirmed_result()
             .strategy
             .expect("strategy")
             .orders
-            .is_empty()
+            .len()
+            == 1
     );
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_cancel() {
+fn forming_bar_cancel_cannot_undo_fill_on_current_observed_price() {
     let hir = analyze_strategy(
         r#"
 strategy("forming cancel", calc_on_every_tick=true)
@@ -15337,7 +15368,9 @@ plot(close)
     let cancelled = runtime
         .update(BarUpdate::forming(bar_ohlc(96.0, 96.0, 96.0, 40.0)))
         .expect("forming cancel");
-    assert!(cancelled.strategy.expect("strategy").orders.is_empty());
+    let orders = cancelled.strategy.expect("strategy").orders;
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0].price, 40.0);
 
     runtime
         .update(BarUpdate::forming(bar_ohlc(96.0, 96.0, 96.0, 96.0)))
@@ -15381,7 +15414,7 @@ plot(close)
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_fill_alerts() {
+fn forming_bar_fill_alerts_require_observed_fill_not_cumulative_low() {
     let hir = analyze_strategy(
         r#"
 strategy("forming alerts", calc_on_every_tick=true)
@@ -15400,8 +15433,8 @@ plot(close)
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("forming fill");
     let forming_strategy = forming.strategy.expect("strategy");
-    assert_eq!(forming_strategy.orders.len(), 1);
-    assert_eq!(forming_strategy.alerts.len(), 1);
+    assert!(forming_strategy.orders.is_empty());
+    assert!(forming_strategy.alerts.is_empty());
     assert_eq!(forming.alerts.len(), 1);
 
     let replaced = runtime
@@ -15430,7 +15463,7 @@ plot(close)
 }
 
 #[test]
-fn forming_confirmed_strategy_matches_equivalent_historical_batch() {
+fn forming_observations_and_historical_ohlc_have_distinct_fill_inputs() {
     let hir = analyze_strategy(
         r#"
 strategy("parity", calc_on_every_tick=true)
@@ -15454,10 +15487,18 @@ plot(close)
     let confirmed = realtime
         .update(BarUpdate::historical(bars[2]))
         .expect("bar 2");
-    assert_eq!(
-        confirmed.strategy.as_ref().expect("strategy").orders,
-        historical.strategy.as_ref().expect("strategy").orders
+    assert!(
+        confirmed
+            .strategy
+            .as_ref()
+            .expect("strategy")
+            .orders
+            .is_empty()
     );
+    let historical_orders = &historical.strategy.as_ref().expect("strategy").orders;
+    assert_eq!(historical_orders.len(), 1);
+    assert_eq!(historical_orders[0].price, 90.0);
+    assert_eq!(confirmed.plots, historical.plots);
 }
 
 #[test]

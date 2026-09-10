@@ -132,7 +132,7 @@ fn short_fractional_margin_cover_preserves_signed_size_and_remaining_profit() {
 }
 
 #[test]
-fn fractional_margin_history_streaming_and_forming_confirmation_are_consistent() {
+fn fractional_margin_history_parity_and_realtime_liquidation_persistence() {
     use pine_runtime::{BarUpdate, RealtimeRuntime, public_runtime_result_json};
 
     let source = include_str!("../../../tests/fixtures/runtime/quantity_precision.pine").replace(
@@ -166,8 +166,8 @@ fn fractional_margin_history_streaming_and_forming_confirmation_are_consistent()
     assert_eq!(public_runtime_result_json(&incremental.result()), expected);
     assert_eq!(public_runtime_result_json(&streamed.result()), expected);
 
-    // Internal lifecycle control: abandon a losing forming mark, replace it,
-    // then compare with a fresh runtime that never saw the abandoned update.
+    // Internal lifecycle control: an accepted losing mark can liquidate.
+    // Later recovery must preserve that trade, unlike a runtime that never saw it.
     // This is not an independent TradingView tick-sequence oracle.
     let mut realtime = RealtimeRuntime::with_request_environment(&hir, environment.clone());
     realtime.seed_historical(&bars[..2]).unwrap();
@@ -175,7 +175,8 @@ fn fractional_margin_history_streaming_and_forming_confirmation_are_consistent()
     let mut losing = bars[2];
     losing.close = losing.low;
     let forming = realtime.update(BarUpdate::forming(losing)).unwrap();
-    assert!(!forming.strategy.unwrap().trades.is_empty());
+    let liquidations = forming.strategy.unwrap().trades;
+    assert!(!liquidations.is_empty());
     assert_eq!(
         public_runtime_result_json(&realtime.confirmed_result()),
         confirmed
@@ -184,7 +185,17 @@ fn fractional_margin_history_streaming_and_forming_confirmation_are_consistent()
     let mut control = RealtimeRuntime::with_request_environment(&hir, environment);
     control.seed_historical(&bars[..2]).unwrap();
     let control_forming = control.update(BarUpdate::forming(bars[2])).unwrap();
-    assert_eq!(
+    let replacement_trades = &replacement.strategy.as_ref().unwrap().trades;
+    assert!(replacement_trades.starts_with(&liquidations));
+    // The script also requested strategy.close_all on the losing tick. That order
+    // fills the remaining position on this next observed price, after the
+    // previously recorded partial liquidation, instead of being rolled back.
+    assert_eq!(replacement_trades.len(), liquidations.len() + 1);
+    let close = replacement_trades.last().unwrap();
+    assert_eq!(close.exit_id, "Long");
+    assert_eq!(close.exit_price, bars[2].close);
+    assert_eq!(close.qty, 0.990004);
+    assert_ne!(
         public_runtime_result_json(&replacement),
         public_runtime_result_json(&control_forming)
     );
@@ -192,7 +203,16 @@ fn fractional_margin_history_streaming_and_forming_confirmation_are_consistent()
         realtime.update(BarUpdate::confirmed(*bar)).unwrap();
         control.update(BarUpdate::confirmed(*bar)).unwrap();
     }
-    assert_eq!(
+    assert!(
+        realtime
+            .result()
+            .strategy
+            .as_ref()
+            .unwrap()
+            .trades
+            .starts_with(&liquidations)
+    );
+    assert_ne!(
         public_runtime_result_json(&realtime.result()),
         public_runtime_result_json(&control.result())
     );

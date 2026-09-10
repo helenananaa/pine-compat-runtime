@@ -19,13 +19,20 @@ impl BrokerState {
         let market_value = self.position_size * close;
         let equity = self.cash + market_value;
         let net_profit = normalize_zero(equity - self.initial_capital);
-        self.equity.push(StrategyEquitySnapshot {
+        let snapshot = StrategyEquitySnapshot {
             bar_index,
             cash: self.cash,
             market_value,
             equity,
             net_profit,
-        });
+        };
+        if let Some(last) = self.equity.last_mut()
+            && last.bar_index == bar_index
+        {
+            *last = snapshot;
+        } else {
+            self.equity.push(snapshot);
+        }
     }
 
     pub(crate) fn update_open_trade_extremes(&mut self, high: f64, low: f64) {

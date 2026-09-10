@@ -517,11 +517,16 @@ new window's bar open, and permanently blocks later trades. Remaining
 undocumented `strategy.risk.*` calls stay rejected.
 Forming-bar realtime updates with `calc_on_every_tick=true` re-execute from
 the last confirmed checkpoint.
-After seeding `varip` from the previous forming update, the runtime restores
-the confirmed broker checkpoint (order book, OCA, reservations, ledger, cash,
-fill alerts, and script alerts) and commits broker plus output state only on
-the confirmed update. Abandoned forming placements, cancellations, stop-limit
-activations, fills, and alerts do not leak into the confirmed result.
+The runtime seeds `varip` and the broker from the previous successful forming
+update. Orders, cancellations, activations, fills and broker fill alerts survive
+user-state rollback. Failed updates remain atomic. Each supplied realtime close
+is an observed price tick; cumulative OHLC extremes are not replayed as new ticks.
+Pending orders can execute even when normal strategy calculations wait for close.
+When a fill-triggered calculation executes, it replaces the ordinary calculation
+for that realtime update. A non-calculating update preserves the latest user
+state and visible output. Confirmation commits the resulting bar history;
+`confirmed_result()` remains the last committed snapshot until then.
+See LIVE_TICK_REFERENCE_AUDIT.md for native coverage and unresolved input limits.
 Historical price-based fills on a bar run through a deterministic fill-path:
 market closes and entries at open, then the selected open-high-low-close or
 open-low-high-close walk. Same-tick pyramiding still fills every eligible

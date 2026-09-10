@@ -21,6 +21,7 @@ mod pending_closes;
 mod pending_entries;
 mod pending_entry_fills;
 mod pending_exits;
+mod realtime;
 mod risk;
 mod shared_history;
 mod state;

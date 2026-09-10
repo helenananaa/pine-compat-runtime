@@ -25,8 +25,7 @@ reset risk counters, discard a forming result or change lifecycle timestamps.
 Rust `HistoricalRuntime` and `RealtimeRuntime` expose the same extension operation.
 Their replacement builder `with_session_windows` now returns `Result<Self, RuntimeError>`.
 
-This document defines the realtime bar model before implementation of rollback
-semantics.
+This document defines the implemented realtime bar model and its state partitions.
 
 The historical runtime executes only closed bars. Realtime execution adds the
 concept of a forming bar: the latest bar may be evaluated multiple times before
@@ -48,8 +47,9 @@ enum BarUpdateKind {
 existing `HistoricalRuntime::append_bar` behavior.
 
 `Forming` means an intrabar update for the current open bar. A forming update
-must not commit series history. Each new forming update discards effects from
-the previous forming update before re-executing the script.
+must not commit series history. Before script execution, ordinary user state and output roll back to the
+confirmed checkpoint; `varip` and successful broker events persist. An update
+that does not execute the script retains its latest user state and output.
 
 `Confirmed` means the final update for a realtime bar. Confirmed updates execute
 like forming updates, then commit current series values to historical buffers.
@@ -63,7 +63,8 @@ Realtime execution needs explicit state partitions:
 - output side effects for committed bars
 - temporary output side effects for the forming bar
 - persistent `var` state
-- future intrabar `varip` state
+- intrabar `varip` state
+- live broker order, fill, position, risk and cash state
 - callsite state for TA functions
 - immutable request provider data
 - deterministic request result cache
@@ -98,7 +99,8 @@ runtime.update(BarUpdate::confirmed(final_bar))?;
 - a confirmed `HistoricalRuntime` snapshot
 - an optional forming `HistoricalRuntime` snapshot
 
-Each forming update starts from the confirmed snapshot. This rolls back:
+Each forming script execution restores ordinary user state from the confirmed
+snapshot, while inheriting successful live broker state and `varip`. This rolls back:
 
 - current update values
 - uncommitted series values
@@ -188,3 +190,14 @@ from confirmed history during forming updates.
 Next work:
 
 - broaden realtime fixtures for more stateful built-ins and nested scopes
+
+## Observed realtime broker ticks
+
+A forming or confirmed update supplies one observed price at `bar.close`. The
+OHLC fields remain available to the script but are not replayed as historical
+price paths. Supply every required price observation through the host adapter;
+the core cannot reconstruct unobserved fills from candle summaries. Pending
+orders may execute even when `calc_on_every_tick=false`. A fill-triggered script
+execution replaces the ordinary pass for that observation. `process_orders_on_close`
+uses a confirmed closing update, not every forming update. Native multi-order
+coverage and remaining limitations are recorded in LIVE_TICK_REFERENCE_AUDIT.md.

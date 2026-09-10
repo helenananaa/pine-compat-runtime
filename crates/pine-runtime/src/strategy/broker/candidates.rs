@@ -190,8 +190,17 @@ impl BrokerState {
         gap: MagnifierHostGap,
         generation: u64,
     ) -> Vec<BrokerCandidate> {
+        self.collect_observed_price_candidates(bar_index, gap.next_open, generation, false)
+    }
+
+    pub(super) fn collect_observed_price_candidates(
+        &self,
+        bar_index: usize,
+        fill: f64,
+        generation: u64,
+        realtime: bool,
+    ) -> Vec<BrokerCandidate> {
         let mut candidates = Vec::new();
-        let fill = gap.next_open;
         let verify = self.limit_verification_price_offset;
         for pending in self.order_book.entries().iter() {
             if !self
@@ -237,10 +246,12 @@ impl BrokerState {
                     if activated_bar_index.is_none()
                         && entry_stop_marketable(direction, fill, *stop_price)
                     {
-                        if same_bar_stop_limit_fill_allowed(
-                            HistoricalPathKind::OpenHighLowClose,
-                            direction,
-                        ) && entry_limit_marketable(direction, fill, *limit_price, verify)
+                        if (realtime
+                            || same_bar_stop_limit_fill_allowed(
+                                HistoricalPathKind::OpenHighLowClose,
+                                direction,
+                            ))
+                            && entry_limit_marketable(direction, fill, *limit_price, verify)
                         {
                             candidates.push(entry_fill_candidate(
                                 pending,
@@ -265,12 +276,13 @@ impl BrokerState {
                             public_id: pending.id.clone(),
                         });
                     } else if activated_bar_index.is_some_and(|activated| {
-                        stop_limit_fill_bar_eligible(
-                            activated,
-                            bar_index,
-                            HistoricalPathKind::OpenHighLowClose,
-                            direction,
-                        )
+                        realtime
+                            || stop_limit_fill_bar_eligible(
+                                activated,
+                                bar_index,
+                                HistoricalPathKind::OpenHighLowClose,
+                                direction,
+                            )
                     }) && entry_limit_marketable(direction, fill, *limit_price, verify)
                     {
                         candidates.push(entry_fill_candidate(

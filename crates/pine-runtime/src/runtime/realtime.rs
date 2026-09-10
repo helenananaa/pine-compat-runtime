@@ -145,9 +145,6 @@ impl<'a> RealtimeRuntime<'a> {
                 Ok(self.confirmed.result())
             }
             BarUpdateKind::Forming => {
-                if !self.executes_strategy_on_forming() {
-                    return Ok(self.confirmed.result());
-                }
                 let runtime = self.replay_from_confirmed(update, execution_time)?;
                 let result = runtime.result();
                 self.forming = Some(runtime);
@@ -156,25 +153,38 @@ impl<'a> RealtimeRuntime<'a> {
         }
     }
 
-    fn executes_strategy_on_forming(&self) -> bool {
-        self.confirmed.program.script_mode != pine_ir::ScriptMode::Strategy
-            || self.confirmed.program.strategy_settings.calc_on_every_tick
-    }
-
     fn replay_from_confirmed(
         &mut self,
         update: BarUpdate,
         execution_time: Option<i64>,
     ) -> Result<HistoricalRuntime<'a>, RuntimeError> {
         let is_new_bar = self.forming.is_none();
-        // Clone the confirmed checkpoint once. Intrabar persistence below only
-        // transfers user stores; broker, scheduler and alerts already come from
-        // confirmed state and must not be copied a second time.
+        // User state rolls back, except varip. Orders and fills belong to the
+        // live broker and survive successful updates of the same open bar.
         let mut runtime = self.confirmed.clone();
         if let Some(previous_forming) = &self.forming {
             runtime.seed_intrabar_persistence_from(previous_forming);
+            runtime
+                .strategy_broker
+                .clone_from(&previous_forming.strategy_broker);
+            runtime
+                .strategy_scheduler
+                .clone_from(&previous_forming.strategy_scheduler);
         }
+        let script_passes = runtime.strategy_scheduler.script_passes();
         runtime.append_bar_with_context(update.bar, update.kind, is_new_bar, execution_time)?;
+        if update.kind == BarUpdateKind::Forming
+            && runtime.program.script_mode == pine_ir::ScriptMode::Strategy
+            && runtime.strategy_scheduler.script_passes() == script_passes
+        {
+            // A price observation without script execution cannot replace the
+            // last visible plots/drawings or change user state. Only the broker
+            // and its scheduling state advanced in the speculative runtime.
+            let mut retained = self.forming.as_ref().unwrap_or(&self.confirmed).clone();
+            retained.strategy_broker = runtime.strategy_broker;
+            retained.strategy_scheduler = runtime.strategy_scheduler;
+            return Ok(retained);
+        }
         Ok(runtime)
     }
 

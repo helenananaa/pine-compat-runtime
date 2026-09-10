@@ -158,3 +158,23 @@ complete prior long/short margin output equality when pointValue=1 is supplied.
 The initial gate caught an invalid Debug bound in a new parser test; that test
 was corrected without changing production validation. No runtime golden changed.
 Evidence: `.local/delivery-20260909/point-value-contract/`.
+
+
+Python realtime clock support: `seed(bars, execution_times=[...])` accepts one
+integer millisecond timestamp per history bar. `update_forming(bar,
+execution_time=...)` and `update_confirmed(bar, execution_time=...)` accept an
+optional timestamp for that execution. These are keyword-only additions;
+omission retains the existing missing-clock behavior. Core timestamped seeding
+preserves batch context and commits only on success. Invalid types, mismatched
+counts and missing required clocks leave session state unchanged.
+
+Windows validation passes 6646 Rust tests, 710 fresh installed-wheel Python tests,
+115 tool tests and actual WASM smoke. The retained new wheel passes all 12 Python
+realtime-session tests. Original before-fix API failures remain under
+`.local/delivery-20260909/host-contracts/python-clock-before.log`.
+
+A separate frozen real-update oracle was then replayed through the installed
+wheel. All 896 values were compared: 62 mismatches remain in position and trade
+history fields, while time, EMA/SMA and var/varip fields match. This demonstrates
+a broker-lifetime semantic gap; clock plumbing is qualified, but native realtime
+strategy compatibility is not. See LIVE_TICK_REFERENCE_AUDIT.md.

@@ -5,6 +5,62 @@ import pytest
 import pine_compat
 
 
+def test_realtime_execution_clock_seed_replacement_and_confirmation():
+    source = '''//@version=6
+indicator("Clock lifecycle")
+var int committed = 0
+varip int executions = 0
+committed += 1
+executions += 1
+plot(timenow)
+plot(timenow[1])
+plot(committed)
+plot(executions)
+'''
+    session = pine_compat.create_realtime_session(source)
+    bars = [_bar(60_000, 1), _bar(120_000, 2)]
+    with pytest.raises(ValueError, match="execution timestamp"):
+        session.seed(bars)
+    assert not session.is_seeded
+    with pytest.raises(ValueError, match="count"):
+        session.seed(bars, execution_times=[1000])
+    assert not session.is_seeded
+    seeded = session.seed(bars, execution_times=[1000, 2000])
+    assert seeded["plots"][0]["values"] == [1000, 2000]
+    before = session.result()
+    with pytest.raises(ValueError, match="execution timestamp"):
+        session.update_forming(_bar(180_000, 3))
+    assert session.result() == before and session.forming_time is None
+    first = session.update_forming(_bar(180_000, 3), execution_time=3000)
+    replacement = session.update_forming(_bar(180_000, 4), execution_time=4000)
+    assert first["plots"][0]["values"][-1] == 3000
+    assert replacement["plots"][0]["values"][-1] == 4000
+    assert replacement["plots"][1]["values"][-1] == 2000
+    assert replacement["plots"][2]["values"][-1] == 3
+    assert replacement["plots"][3]["values"][-1] == 4
+    assert session.confirmed_result() == seeded
+    confirmed = session.update_confirmed(_bar(180_000, 5), execution_time=5000)
+    assert confirmed["plots"][0]["values"] == [1000, 2000, 5000]
+    assert confirmed["plots"][1]["values"] == [None, 1000, 2000]
+    assert confirmed["plots"][3]["values"][-1] == 5
+    assert session.confirmed_bars == 3 and session.forming_time is None
+
+
+@pytest.mark.parametrize("value", [True, 1.5, "1000", 2**70])
+def test_realtime_execution_clock_rejects_invalid_input_atomically(value):
+    session = pine_compat.create_realtime_session('//@version=6\nindicator("clock")\nplot(timenow)\n')
+    with pytest.raises(ValueError, match="execution_times"):
+        session.seed([_bar(60_000, 1)], execution_times=[value])
+    assert not session.is_seeded
+    session.seed([_bar(60_000, 1)], execution_times=[1000])
+    before = session.result()
+    for method in (session.update_forming, session.update_confirmed):
+        with pytest.raises(ValueError, match="execution_time"):
+            method(_bar(120_000, 2), execution_time=value)
+        assert session.result() == before
+        assert session.confirmed_bars == 1 and session.forming_time is None
+
+
 def _session_windows(indices: list[int], name: str = "day") -> dict:
     return {
         "schemaVersion": 1,

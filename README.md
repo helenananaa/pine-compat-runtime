@@ -182,6 +182,11 @@ preview = session.update_forming(replacement_forming_bar)
 confirmed = session.update_confirmed(closed_bar)
 ```
 
+Development builds also accept `seed(bars, execution_times=[...])` and
+`update_forming`/`update_confirmed(..., execution_time=...)` for scripts reading
+`timenow`. The clock is supplied by the host; it is never read from the machine
+inside the core.
+
 `update_forming` rolls ordinary `var` state back to the last confirmed bar and
 preserves `varip` state across replacements. The session rejects updates before
 seeding, regressive confirmed timestamps, and a forming/confirmed timestamp

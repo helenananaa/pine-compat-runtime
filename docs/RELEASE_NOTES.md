@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Python realtime sessions accept explicit execution clocks on historical seed,
+  forming updates and confirmation. Rust adds timestamped historical seeding.
+  Existing calls and missing-clock errors remain valid; failed operations keep
+  session state unchanged. Native realtime broker compatibility is tracked
+  separately in the live tick audit.
+
 - Broker checkpoints share unchanged historical vectors and detach on mutation,
   reducing confirmation copy work while preserving independently owned public
   results. Full resource acceptance remains pending; see

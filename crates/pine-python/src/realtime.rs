@@ -2,10 +2,24 @@ use pine_ir::HirProgram;
 use pine_runtime::{Bar, BarUpdate, InputOverrides, RealtimeRuntime, RequestEnvironment};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyModule};
+use pyo3::types::{PyAny, PyBool, PyModule};
 
 use crate::outputs::runtime_result_to_py;
-use crate::{compile_script, parse_bar, parse_bars};
+use crate::{compile_script, parse_bar, parse_bars, parse_execution_times};
+
+fn execution_timestamp(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<i64>> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    if value.is_instance_of::<PyBool>() {
+        return Err(PyValueError::new_err(
+            "execution_time must be an integer millisecond timestamp",
+        ));
+    }
+    value.extract::<i64>().map(Some).map_err(|_| {
+        PyValueError::new_err("execution_time must be an integer millisecond timestamp")
+    })
+}
 
 pub(crate) const REALTIME_SESSION_SCHEMA_VERSION: u32 = 1;
 
@@ -95,43 +109,71 @@ impl PyRealtimeSession {
             .map_err(|err| PyValueError::new_err(err.message))
     }
 
-    fn seed(&mut self, py: Python<'_>, bars: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    #[pyo3(signature = (bars, *, execution_times=None))]
+    fn seed(
+        &mut self,
+        py: Python<'_>,
+        bars: &Bound<'_, PyAny>,
+        execution_times: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
         if self.seeded {
             return Err(PyValueError::new_err(
                 "realtime session history has already been seeded",
             ));
         }
         let bars = parse_bars(bars)?;
-        let result = self
-            .runtime
-            .seed_historical(&bars)
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        let times = parse_execution_times(execution_times)?;
+        let result = match times {
+            Some(times) => self
+                .runtime
+                .seed_historical_with_execution_times(&bars, &times),
+            None => self.runtime.seed_historical(&bars),
+        }
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.seeded = true;
         self.confirmed_bars = bars.len();
         self.last_confirmed_time = bars.last().map(|bar| bar.time);
         runtime_result_to_py(py, &result)
     }
 
-    fn update_forming(&mut self, py: Python<'_>, bar: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    #[pyo3(signature = (bar, *, execution_time=None))]
+    fn update_forming(
+        &mut self,
+        py: Python<'_>,
+        bar: &Bound<'_, PyAny>,
+        execution_time: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
         self.validate_next_bar(&bar, true)?;
-        let result = self
-            .runtime
-            .update(BarUpdate::forming(bar))
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        let result = match execution_timestamp(execution_time)? {
+            Some(time) => self
+                .runtime
+                .update_with_execution_time(BarUpdate::forming(bar), time),
+            None => self.runtime.update(BarUpdate::forming(bar)),
+        }
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.forming_time = Some(bar.time);
         runtime_result_to_py(py, &result)
     }
 
-    fn update_confirmed(&mut self, py: Python<'_>, bar: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    #[pyo3(signature = (bar, *, execution_time=None))]
+    fn update_confirmed(
+        &mut self,
+        py: Python<'_>,
+        bar: &Bound<'_, PyAny>,
+        execution_time: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
         self.validate_next_bar(&bar, false)?;
-        let result = self
-            .runtime
-            .update(BarUpdate::confirmed(bar))
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        let result = match execution_timestamp(execution_time)? {
+            Some(time) => self
+                .runtime
+                .update_with_execution_time(BarUpdate::confirmed(bar), time),
+            None => self.runtime.update(BarUpdate::confirmed(bar)),
+        }
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.confirmed_bars += 1;
         self.last_confirmed_time = Some(bar.time);
         self.forming_time = None;

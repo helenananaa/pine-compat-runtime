@@ -236,3 +236,19 @@ from 57.7912 to 42.6792 ms; this is not full-scale acceptance. The next formal
 trend attempt preserves the 100k/10k sizes, two repetitions, all original phase
 and memory limits, and the 1800-second observation window. See
 BROKER_HISTORY_SHARING_AUDIT.md. No D2/D3/D5 requirement is waived.
+
+
+Trend v3 also timed out at the original 1800-second observation window; its
+report and failed budget receipt are retained. No formal resource pass is claimed.
+Before another long attempt, diagnose whole-run costs and add useful progress
+observations instead of repeating the same opaque collection window.
+
+Python realtime execution-clock plumbing is now Windows-qualified: 6646 Rust /
+710 installed-wheel Python / 115 tool tests and actual WASM smoke pass. The new
+retained wheel replays all 896 values of a frozen native real-update sample.
+There are 62 position/trade-history mismatches; time, EMA/SMA and var/varip match.
+Official execution-model documentation states intrabar strategy order/fill data
+is not rolled back. Current confirmed-broker rebuilding is therefore a semantic
+gap to repair, not an accepted preview-only substitute. Exact fill pricing also
+requires care: one native fill differs from the sampled close, so no hidden
+price event is invented. D2 remains open; see LIVE_TICK_REFERENCE_AUDIT.md.

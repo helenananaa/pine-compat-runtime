@@ -179,8 +179,27 @@ impl<'a> RealtimeRuntime<'a> {
     }
 
     pub fn seed_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
+        self.seed_historical_inner(bars, None)
+    }
+
+    pub fn seed_historical_with_execution_times(
+        &mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.seed_historical_inner(bars, Some(execution_times))
+    }
+
+    fn seed_historical_inner(
+        &mut self,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<RuntimeResult, RuntimeError> {
         let mut runtime = self.confirmed.clone();
-        runtime.append_bars(bars)?;
+        match execution_times {
+            Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
+            None => runtime.append_bars(bars)?,
+        }
         self.confirmed = runtime;
         self.forming = None;
         Ok(self.confirmed.result())

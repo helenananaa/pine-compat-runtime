@@ -42,6 +42,12 @@ application to a charting service.
 
 ## Quick Start
 
+The downloads below are the published `v0.2.0` release from July 20, 2026.
+The current checkout includes later development changes. Use the tagged release
+documentation for those wheels, and build the current checkout for newer APIs
+such as host-input discovery and source provenance. The next delivery candidate
+has not been published yet.
+
 Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
 glibc Linux x86-64 and Windows x86-64. See the
 [latest release](https://github.com/helenananaa/pine-compat-runtime/releases/latest)
@@ -134,7 +140,7 @@ and its referenced fixtures are the source of truth. See
 | --- | --- | --- |
 | Python | notebooks, research services, data pipelines, application plugins | `run_script(...)`, reusable `Program`, or persistent `RealtimeSession` |
 | CLI | shell workflows, fixtures, compatibility checks, JSON generation | `pine-compat run`, `analyze`, `fmt-ast`, and `matrix` |
-| Rust | native applications and deeper runtime embedding | workspace crates under [`crates/`](crates) |
+| Rust | native applications and deeper runtime embedding | workspace crates under [`crates/`](crates), [embedding walkthrough](docs/RUST_EMBEDDING.md) |
 | WASM | browser, Node.js, and sandboxed JavaScript hosts | `compileScript`, `analyzeScript`, `runScriptCsv`, and `Program.runCsv` |
 
 ### Python

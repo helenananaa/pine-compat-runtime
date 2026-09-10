@@ -40,7 +40,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
 | D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Scoped D3 review complete: explicit defaults, validated profiles, source provenance and reached-input errors; final platform/distribution qualification remains D5 |
-| D4 | Long-session resources | Codex measurement and acceptance | Windows memory and sustained-tail probes are implemented; first full trend run timed out; second completed but confirmation P95 exceeded its frozen budget; no full long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
+| D4 | Long-session resources | Codex measurement and acceptance | Frozen Windows trend v5 passed: 100k history + 10k tail, two repeats, original budgets; earlier failures retained | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
 ## Current next action
@@ -394,3 +394,41 @@ release-wheel boundary checks supplement existing cross-host tests, without
 adding unconditional gates or claiming dataset completeness. See
 HOST_REQUIREMENTS.md and `host-contracts/readiness-audit.json`. Unsupported
 profiles are still explicitly rejected; final platform packaging remains D5.
+
+D5 Rust embedding work is drafted in the separate delivery-release worktree on
+`codex/rust-embedding-example`, based on 3ca746976. The executable example supplies
+an in-memory library and explicit chart/clock inputs, checks historical versus
+incremental output, handles a failed forming update, and confirms a replacement
+without changing retained results. RUST_EMBEDDING.md includes repository and
+standalone-application usage. The example is not compiled or qualified yet;
+validation waits for the isolated v5 resource run to finish.
+
+The standalone Rust consumer manifest now resolves offline without changing
+dependency versions; compilation remains deferred during v5. Review also found
+that `verify.sh` enumerated an older subset of tool tests. It now uses the same
+discovery pattern as Windows, so later long-session and budget tests are included.
+POSIX shell syntax was checked with Git Bash; this is not a Linux execution gate.
+These D5 changes remain isolated and unintegrated until execution checks pass.
+
+D5 version audit confirms both local and remote v0.2.0 point to
+cec39d807a469ebae199f30bc67a91d7081a3b9f, and GitHub published that release on
+2026-07-20 with Windows/Linux wheels, manifest and checksums. All current workspace
+packages still say 0.2.0. Final candidate packaging must use a new coordinated
+version rather than overwrite or mislabel the old release. No versions, tags or
+external releases were changed during this audit; README now distinguishes the
+published downloads from later development functionality.
+
+V5 completed and passed every frozen trend budget at commit
+3ca74697639d7c2cb378609378d1ce04d77ff0d5. All 20,000 operations in each tail phase
+were present; initial/replacement/confirmation P95 were 28.203/26.132/42.695 ms.
+Peak working set/commit were 250244/359988 KiB; wall before final report was
+1737.968 seconds. Plan/report hashes and percentile arithmetic were independently
+rechecked in `resources/trend-100k-v5-recheck.json`. This qualifies the frozen
+Windows default-strategy trend workload only. Executing-forming, collection,
+dense-order, Magnifier scaling and resource-limit coverage still need final review.
+
+The Rust embedding example now compiles and executes in Windows release mode;
+an independent offline/locked consumer produces identical complete JSON. Clippy
+passes. Ubuntu 22.04 WSL has Rust 1.95, Python 3.10, Node and maturin available.
+Linux source and manylinux-wheel qualification are next; no Linux pass is inferred
+from Windows results or the presence of tools.

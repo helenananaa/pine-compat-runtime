@@ -183,3 +183,12 @@ native reference values over 21,133 bars; four CLI modes, Python and WASM have
 identical complete outputs. Artifacts are in `resources/plot-cow-release-artifacts`.
 These validate semantics and build settings, not the still-failing D4 full-run
 window. No new full-scale acceptance was awarded from short-tail results.
+
+The equity recorder now checks the last row through immutable access before
+choosing replacement or append. Previously, `last_mut()` detached shared history
+even for a new bar, bypassing the append helper's one-allocation path. Numerical
+calculations and same-bar row replacement are unchanged. In a paired 100k+256
+release diagnostic, update-plus-drop average changed from 66.531 to 65.852 ms per
+tail bar (wall time 39.952 to 39.676 seconds). This is a small measured improvement,
+not a new resource acceptance. Six workload outputs match exactly; the new equity
+row isolation test and full gates pass (6663 Rust / 712 Python / 117 tools / WASM).

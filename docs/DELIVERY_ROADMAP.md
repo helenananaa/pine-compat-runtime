@@ -39,7 +39,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
-| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory, explicit unit-point validation and per-call source provenance are Windows-qualified; configured-input readiness review remains open without unconditional gates |
+| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Scoped D3 review complete: explicit defaults, validated profiles, source provenance and reached-input errors; final platform/distribution qualification remains D5 |
 | D4 | Long-session resources | Codex measurement and acceptance | Windows memory and sustained-tail probes are implemented; first full trend run timed out; second completed but confirmation P95 exceeded its frozen budget; no full long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
@@ -381,3 +381,16 @@ CLI/Python/WASM revalidate all 63,399 TechnicalRating values and full-output par
 This is an implementation/build improvement; the measured longer short-tail
 average still leaves the original complete resource window unproven. Continue
 investigating output/transaction-history copying rather than loosening budgets.
+
+Equity append now avoids an unnecessary mutable access before deciding whether
+to replace the current row or append a new one. Paired 100k+256 release diagnostics
+preserve full outputs and show a small reduction in average update-plus-drop
+cost (66.531 to 65.852 ms/bar). Full gates pass 6663 Rust / 712 installed Python /
+117 tools and actual WASM. A new complete resource run must retain all original
+sizes, phase/memory budgets and the 1800-second window.
+
+D3 configured-input review is complete for the frozen profile. Ten installed
+release-wheel boundary checks supplement existing cross-host tests, without
+adding unconditional gates or claiming dataset completeness. See
+HOST_REQUIREMENTS.md and `host-contracts/readiness-audit.json`. Unsupported
+profiles are still explicitly rejected; final platform packaging remains D5.

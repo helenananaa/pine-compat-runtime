@@ -178,8 +178,8 @@ Evidence and hashes are in `.local/delivery-20260909/host-contracts/`.
 
 This report does not prove dataset completeness, static branch reachability,
 real tick ordering, latency or bounded memory. It also does not implement the
-unsupported account profiles it lists. D3 remains open until the remaining
-profile/readiness and source-diagnostic acceptance is addressed.
+unsupported account profiles it lists. The scoped profile/readiness review is
+recorded below; broader profiles and final platform delivery remain separate.
 
 
 Initial checks found unsupported modern empty/input-symbol request forms in two
@@ -226,3 +226,24 @@ offsets; the saved failure audit verifies that only `call_site_sources` differed
 The second gate exposed existing file-size limits. Source-call types, allocation
 logic and the original module tests were extracted into their respective files;
 no limit was loosened. Original execution goldens remain unchanged.
+
+## Scoped configured-input review
+
+The existing boundary behavior was reviewed in the request provider/timeframe
+code and current price-grid, quantity, point-value, execution-clock and session
+tests. Ten additional checks through the retained e7435e036 release wheel passed:
+same-context request without a provider; unreached request and clock reads;
+explicit reached missing-provider/clock errors; lower and nonintegral request
+timeframe rejection; consumption of supplied external data; rejection of nonunit
+point value and an invalid price grid. Evidence is in
+`host-contracts/readiness-audit.py`, `.log` and `.json`.
+
+For the frozen standard-candle, same-currency unit-point profile, the host can
+discover potential inputs, locate their source, select explicit metadata, and
+handle missing/unsupported capabilities at the documented evaluation boundary.
+No additional unconditional preflight gate is required for D3. This conclusion
+does not certify dataset completeness or branch reachability, expand modern
+dynamic-request admission, or remove optional fallbacks. Those are deliberately
+outside the inventory contract, not unimplemented promises. Final Linux/Windows
+distribution qualification remains D5; numerical and resource evidence remain
+D2 and D4 respectively.

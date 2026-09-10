@@ -26,10 +26,12 @@ impl BrokerState {
             equity,
             net_profit,
         };
-        if let Some(last) = self.equity.last_mut()
-            && last.bar_index == bar_index
+        if self
+            .equity
+            .last()
+            .is_some_and(|last| last.bar_index == bar_index)
         {
-            *last = snapshot;
+            *self.equity.last_mut().expect("same-bar equity row exists") = snapshot;
         } else {
             self.equity.push(snapshot);
         }

@@ -59,5 +59,14 @@ context, strict types and close-only observations. Full Windows qualification
 passes 6676 Rust / 717 fresh installed-wheel Python / 130 tool tests and actual
 WASM. A separately installed retained wheel replays the same native source and
 records with `opening_update=False` only for the known mid-bar attachment:
-975/975 values pass. No other input or expected output changed. Linux and
-release-profile qualification of this additive input are separate follow-ups.
+975/975 values pass. No other input or expected output changed.
+
+Final source commit `6c31e2b22c1c7f27a42db4d6df3da76ee425d791` also passes
+Ubuntu-native qualification: 6676 Rust / 717 installed-wheel Python / actual
+WASM; 130 tool tests run with one Windows-only skip. Separately built Windows
+and Linux optimized release wheels each pass all 717 installed tests and the
+same 975-value native trace. Complete release CLI output for the native r1
+commission companion agrees across Windows, Linux and the qualified baseline.
+The Linux release wheel is manylinux_2_35_x86_64; this does not qualify a new
+manylinux2014 distribution. Logs, artifacts and hashes are retained under
+`.local/tv-goal-20260910/`, indexed by `final-evidence-manifest.json`.

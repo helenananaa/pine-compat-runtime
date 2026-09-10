@@ -66,3 +66,11 @@ source/plan, replay report, native trade CSV, selected market events, clock
 calibration, access limitation, and one-second data. Earlier failures remain
 in their original evidence directories. B1 private ordering and the original
 r1 synthetic denominator retain their separate unverified status.
+
+The subsequent 64-execution trace contains 32 matching native fill prices and
+exposes a separately repaired mid-bar opening-context gap. It has no equivalent
+same-close/new-extreme case and cannot decide between the price explanations.
+Both retained failed captures still reproduce on the final Windows optimized
+wheel from `6c31e2b22`: 16/896 and 14/1856 respectively. The user confirmed that
+no additional data source, proxy or Ultimate access is currently available.
+See `REALTIME_OPENING_CONTEXT_AUDIT.md` for the independent context repair.

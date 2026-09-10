@@ -19,7 +19,7 @@ collection. Earlier task-specific restrictions on new captures no longer apply.
 
 ## Current work
 
-- Chrome is connected to the authenticated TradingView chart.
+- Chrome was used for native captures; the original chart script is restored.
 - A second four-update capture is frozen under
   `.local/tv-goal-20260910/live-r2/`. Only the capture start constant differs
   from the original script. The original editor content is backed up.
@@ -69,3 +69,28 @@ collection. Earlier task-specific restrictions on new captures no longer apply.
   trace passes 975/975 values when its known mid-bar attachment is supplied.
   Windows checks pass 6676 Rust / 717 Python / 130 tools and actual WASM.
   This does not resolve either price-precision capture.
+
+## Final qualification for this batch
+
+Source `6c31e2b22c1c7f27a42db4d6df3da76ee425d791` passes full Windows and
+Ubuntu-native checks: 6676 Rust, 717 installed-wheel Python and actual WASM.
+Windows passes 130 tool tests; Linux runs 130 with one Windows-only skip.
+Both optimized release wheels separately pass 717 installed tests and the
+975-value late-attachment trace. Their release CLIs produce identical complete
+output for the native r1 commission companion. The Linux wheel targets
+manylinux_2_35, not a newly qualified manylinux2014 distribution.
+
+Four local implementation commits repair occupied-long stop margin admission,
+default initial capital, absent open-trade commission, versioned margin defaults,
+and mid-bar opening context. The earlier reference groups retain their original
+source commits and denominators; they are not relabeled as fresh full reference
+qualification of the final source. Local artifacts and receipts are indexed in
+`.local/tv-goal-20260910/final-evidence-manifest.json`.
+
+The original 16/896 and newer 14/1856 realtime price comparisons still fail on
+the final Windows release wheel. The 64-execution trace adds passing coverage
+but contains no equivalent same-close/new-extreme discriminator. The user has
+confirmed no additional feed, proxy or Ultimate access. Further price correction
+requires evidence that distinguishes the competing explanations. The goal remains
+incomplete; private B1 ordering, original r1 coverage and general product release
+readiness are not implied by this batch. Nothing was published or pushed.

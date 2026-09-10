@@ -99,3 +99,12 @@ confirmed no additional feed, proxy or Ultimate access. Further price correction
 requires evidence that distinguishes the competing explanations. The goal remains
 incomplete; private B1 ordering, original r1 coverage and general product release
 readiness are not implied by this batch. Nothing was published or pushed.
+
+## Binance continuation
+
+The user's subsequent Binance instruction opened a working independent trade
+source and matching native chart. `BINANCE_REALTIME_REFERENCE_AUDIT.md` records
+64 executions, complete trade-ID coverage, exact closed-bar reconciliation, and
+two native fill discrepancies (seven repeated fields out of 975). This changes
+the next action from obtaining a usable feed to testing directional extreme
+and execution-timing controls. It does not resolve or replace the old OKX data.

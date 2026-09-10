@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+import tempfile
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import benchmark_modern_strategy as bench
@@ -74,6 +76,39 @@ class LongSessionProbeTests(unittest.TestCase):
         payload['libraries'] = {'Test/Sample/1': '//@version=6\nlibrary("Sample")\nexport value() => ta.sma(close,2)\n'}
         report = sustained.summarize(bench.run_probe(self.binary,payload,60),payload)
         self.assertTrue(report['correctness']['batchEqualsTail'])
+
+    def test_progress_and_drop_attribution_preserve_frozen_phase_counts(self):
+        payload = self.payload()
+        with tempfile.TemporaryDirectory() as folder:
+            progress = Path(folder) / 'progress.jsonl'
+            raw = sustained.run_sustained_probe(self.binary, payload, 60, progress)
+            events = [json.loads(line) for line in progress.read_text().splitlines()]
+        self.assertEqual(events[0]['phase'], 'compiled')
+        self.assertEqual(events[-1]['phase'], 'verified')
+        self.assertEqual([e['repetition'] for e in events if e['phase']=='liveTail'], [0,1])
+        self.assertEqual([e['elapsedMs'] for e in events], sorted(e['elapsedMs'] for e in events))
+        report = sustained.summarize(raw, payload)
+        drops = report['diagnostics']['snapshotDropTimingsMs']
+        self.assertEqual(len(drops['liveSeed']), 2)
+        self.assertEqual(len(drops['formingReplace']), 32)
+        self.assertEqual(len(report['phases']), 11)
+        broken = copy.deepcopy(raw)
+        broken['diagnostics']['snapshotDropTimingsMs']['formingConfirm'].pop()
+        with self.assertRaises(bench.BenchmarkError):
+            sustained.summarize(broken, payload)
+
+    def test_timeout_keeps_progress_file_and_original_timeout(self):
+        def timeout(*args, **kwargs):
+            kwargs['stderr'].write('{"phase":"liveTail","completed":256}\n')
+            kwargs['stderr'].flush()
+            raise subprocess.TimeoutExpired(args[0], kwargs['timeout'])
+        with tempfile.TemporaryDirectory() as folder:
+            progress = Path(folder) / 'progress.jsonl'
+            with patch.object(sustained.subprocess, 'run', side_effect=timeout):
+                with self.assertRaises(subprocess.TimeoutExpired) as caught:
+                    sustained.run_sustained_probe(self.binary, self.payload(), 17, progress)
+            self.assertEqual(caught.exception.timeout, 17)
+            self.assertEqual(json.loads(progress.read_text())['completed'], 256)
 
     def test_magnifier_fallback_cannot_be_mislabeled_as_intrabar_measurement(self):
         payload = self.payload(bench.default_samples()[-1])

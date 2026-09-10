@@ -10,9 +10,22 @@ import math
 import subprocess
 from pathlib import Path
 
-from benchmark_modern_strategy import BenchmarkError, magnifier_input, run_probe, sha256_json, stats_ms, synthetic_bars
+from benchmark_modern_strategy import BenchmarkError, magnifier_input, sha256_json, stats_ms, synthetic_bars
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def run_sustained_probe(binary: Path, payload: dict, timeout: float, progress_log: Path) -> dict:
+    # A real file preserves progress during execution and after timeout. Keep
+    # stdout exclusively for the final machine-readable measurement report.
+    progress_log.parent.mkdir(parents=True, exist_ok=True)
+    with progress_log.open('w', encoding='utf-8') as progress:
+        result = subprocess.run([str(binary)], input=json.dumps(payload), text=True,
+                                stdout=subprocess.PIPE, stderr=progress,
+                                timeout=timeout, check=False)
+    if result.returncode:
+        raise BenchmarkError(f'probe exit {result.returncode}: {progress_log.read_text(encoding="utf-8")[-4000:]}')
+    return json.loads(result.stdout)
 
 
 def summarize(raw: dict, payload: dict) -> dict:
@@ -58,9 +71,23 @@ def summarize(raw: dict, payload: dict) -> dict:
                 raise BenchmarkError(f'invalid memory measurement {field}')
     historical = json.loads(raw['historicalResult'])
     live = None if magnified else json.loads(raw['liveResult'])
+    diagnostics = raw.get('diagnostics')
+    if diagnostics is not None:
+        drops = diagnostics['snapshotDropTimingsMs']
+        expected_drops = {} if magnified else {k: counts[k] for k in
+                          ('liveSeed', 'formingInitial', 'formingReplace', 'formingConfirm')}
+        if set(drops) != set(expected_drops):
+            raise BenchmarkError('snapshot drop diagnostic phases do not match workload')
+        for phase, count in expected_drops.items():
+            if len(drops[phase]) != count:
+                raise BenchmarkError(f'wrong snapshot drop count: {phase}')
+            stats_ms(drops[phase])
+        wall = diagnostics['wallBeforeReportMs']
+        if type(wall) not in (int, float) or not math.isfinite(wall) or wall < 0:
+            raise BenchmarkError('invalid diagnostic wall duration')
     return dict(status='measured', qualification='notEvaluated', historyBars=history, tailBars=tail,
                 repetitions=repeats, replacementsPerBar=replacements, phases=phases,
-                memoryCheckpoints=checkpoints, memoryScope=raw['memoryScope'],
+                memoryCheckpoints=checkpoints, memoryScope=raw['memoryScope'], diagnostics=diagnostics,
                 formingTimingScope=raw['formingTimingScope'], formingExecutesScript=raw['formingExecutesScript'],
                 correctness=correctness, realtimeExclusion=raw['realtimeExclusion'],
                 historicalResultHash=sha256_json(historical), liveResultHash=None if magnified else sha256_json(live),
@@ -82,6 +109,7 @@ def main() -> int:
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--magnifier', action='store_true', help='generate two synthetic intrabars per chart bar')
     parser.add_argument('--timeout', type=float, default=180)
+    parser.add_argument('--progress-log', type=Path, help='live stderr/progress file; defaults next to output')
     args = parser.parse_args()
     if not math.isfinite(args.timeout) or args.timeout <= 0:
         parser.error('timeout must be positive and finite')
@@ -121,11 +149,21 @@ def main() -> int:
                   worktreeStatus=subprocess.check_output(['git','status','--porcelain'], cwd=ROOT, text=True),
                   inputKind='suppliedCsv' if args.bars_csv else 'syntheticRegression',
                   limitations=['measurement only; no frozen budget evaluated', 'internal consistency is not an independent TradingView oracle'])
+    progress_log = (args.progress_log or args.output.with_suffix('.progress.jsonl')).resolve()
+    protected = {args.output.resolve(), args.source.resolve(), args.binary.resolve()}
+    protected.update(Path(spec.partition('=')[2]).resolve() for spec in args.library_source)
+    if args.bars_csv:
+        protected.add(args.bars_csv.resolve())
+    if progress_log in protected:
+        parser.error('progress log must not overwrite output, executable, or input files')
+    report['progressLog'] = str(progress_log)
     try:
-        raw = run_probe(args.binary.resolve(), payload, args.timeout)
+        raw = run_sustained_probe(args.binary.resolve(), payload, args.timeout, progress_log)
         report.update(summarize(raw, payload))
     except (BenchmarkError, ValueError, KeyError, OSError, subprocess.TimeoutExpired) as exc:
         report.update(status='failed', qualification='notEvaluated', error=str(exc))
+    if progress_log.exists():
+        report['progressLogSha256'] = hashlib.sha256(progress_log.read_bytes()).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False)+'\n', encoding='utf-8')
     print(report['status'], args.output)

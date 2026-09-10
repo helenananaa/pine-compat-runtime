@@ -290,3 +290,20 @@ and unchanged historical output snapshots. The realtime repair is ready for a
 local candidate commit; main-branch integration and final release claims remain
 pending known-commit artifact qualification. The native single-entry price-input
 uncertainty and D4 long-session failures remain visible outstanding work.
+
+The realtime repair at `141f79513eec327a1d96af908fa6ee2887e6f413` is now
+fast-forwarded into the local main worktree. Its clean-commit debug CLI, installed
+wheel and generated WASM are retained under `realtime-141f79513-artifacts`.
+The actual installed wheel passes 710 tests and the native multi-fill 448-value
+control; the earlier 16/896 single-entry exit-price mismatches remain explicit.
+All four CLI modes plus installed Python and actual WASM revalidate the complete
+TechnicalRating graph: 21,133 bars, 63,399 independent values, no skipped warmup,
+unchanged source/input bytes and tolerance, exact complete-output host parity.
+These are candidate artifacts, not a final Windows/Linux release distribution.
+
+D4 diagnosis now has live progress logs retained on timeout and separate snapshot
+destruction measurements, without changing frozen budget phases or limits. A
+10k+256 debug pilot passes internal consistency and measures 9.816 seconds wall,
+including 0.623 seconds of returned-snapshot destruction. Full trend acceptance
+remains failed; the next formal attempt must use the original sizes and budgets
+with explicit new binary/commit identity, after reviewing diagnostic evidence.

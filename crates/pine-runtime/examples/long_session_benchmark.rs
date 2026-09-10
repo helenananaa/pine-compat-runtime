@@ -47,6 +47,25 @@ fn timed<T>(times: &mut Timings, phase: &'static str, f: impl FnOnce() -> T) -> 
     result
 }
 
+fn timed_snapshot<T, E>(
+    times: &mut Timings,
+    drops: &mut Timings,
+    phase: &'static str,
+    f: impl FnOnce() -> Result<T, E>,
+) -> Result<(), E> {
+    let snapshot = timed(times, phase, f)?;
+    timed(drops, phase, || drop(std::hint::black_box(snapshot)));
+    Ok(())
+}
+
+fn progress(start: Instant, phase: &str, repetition: usize, completed: usize, total: usize) {
+    eprintln!(
+        "{}",
+        json!({"phase":phase,"repetition":repetition,
+        "completed":completed,"total":total,"elapsedMs":start.elapsed().as_secs_f64()*1000.0})
+    );
+}
+
 fn memory_checkpoint(phase: &str, repetition: usize) -> Value {
     let reading = memory::read();
     json!({"phase":phase,"repetition":repetition,"source":memory::SOURCE,
@@ -54,6 +73,7 @@ fn memory_checkpoint(phase: &str, repetition: usize) -> Value {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let wall_start = Instant::now();
     let input: Input = serde_json::from_reader(io::stdin())?;
     if input.history_bars == 0
         || input.history_bars >= input.bars.len()
@@ -91,6 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect(),
     )?;
     let mut times = Timings::new();
+    let mut snapshot_drops = Timings::new();
     let analysis = timed(&mut times, "compile", || analyze_input(&analysis_input));
     if analysis
         .diagnostics
@@ -100,6 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err(format!("analysis failed: {:?}", analysis.diagnostics).into());
     }
     let hir = analysis.hir.ok_or("no executable HIR")?;
+    progress(wall_start, "compiled", 0, 1, 1);
     let magnifier = input
         .magnifier
         .as_ref()
@@ -126,11 +148,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             timed(&mut times, "historySeed", || runtime.append_bars(history))
                 .map_err(|error| error.message)?;
             checkpoints.push(memory_checkpoint("afterHistorySeed", repetition));
+            progress(
+                wall_start,
+                "historySeed",
+                repetition,
+                history.len(),
+                history.len(),
+            );
             for bar in tail {
                 timed(&mut times, "tailAppend", || runtime.append_bar(*bar))
                     .map_err(|error| error.message)?;
             }
             checkpoints.push(memory_checkpoint("afterTailAppend", repetition));
+            progress(wall_start, "tailAppend", repetition, tail.len(), tail.len());
             if runtime.profile().bars != bars.len() {
                 return Err(
                     "historical runtime did not process the complete history and tail".into(),
@@ -152,24 +182,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return Err("historical tail result changed between repetitions".into());
             }
             expected_historical = Some(rendered);
+            progress(
+                wall_start,
+                "historicalVerified",
+                repetition,
+                bars.len(),
+                bars.len(),
+            );
         }
         if magnifier.is_none() {
             let mut runtime = RealtimeRuntime::new(&hir);
-            timed(&mut times, "liveSeed", || runtime.seed_historical(history))
-                .map_err(|error| error.message)?;
+            timed_snapshot(&mut times, &mut snapshot_drops, "liveSeed", || {
+                runtime.seed_historical(history)
+            })
+            .map_err(|error| error.message)?;
             checkpoints.push(memory_checkpoint("afterLiveSeed", repetition));
-            for bar in tail {
+            progress(
+                wall_start,
+                "liveSeed",
+                repetition,
+                history.len(),
+                history.len(),
+            );
+            for (index, bar) in tail.iter().enumerate() {
                 let mut initial = *bar;
                 initial.high = initial.open;
                 initial.low = initial.open;
                 initial.close = initial.open;
                 initial.volume = 0.0;
-                std::hint::black_box(
-                    timed(&mut times, "formingInitial", || {
-                        runtime.update(BarUpdate::forming(initial))
-                    })
-                    .map_err(|error| error.message)?,
-                );
+                timed_snapshot(&mut times, &mut snapshot_drops, "formingInitial", || {
+                    runtime.update(BarUpdate::forming(initial))
+                })
+                .map_err(|error| error.message)?;
                 for replacement in 0..input.replacements_per_bar {
                     let mut changed = *bar;
                     changed.close = if replacement % 2 == 0 {
@@ -177,19 +221,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     } else {
                         bar.low
                     };
-                    std::hint::black_box(
-                        timed(&mut times, "formingReplace", || {
-                            runtime.update(BarUpdate::forming(changed))
-                        })
-                        .map_err(|error| error.message)?,
-                    );
-                }
-                std::hint::black_box(
-                    timed(&mut times, "formingConfirm", || {
-                        runtime.update(BarUpdate::confirmed(*bar))
+                    timed_snapshot(&mut times, &mut snapshot_drops, "formingReplace", || {
+                        runtime.update(BarUpdate::forming(changed))
                     })
-                    .map_err(|error| error.message)?,
-                );
+                    .map_err(|error| error.message)?;
+                }
+                timed_snapshot(&mut times, &mut snapshot_drops, "formingConfirm", || {
+                    runtime.update(BarUpdate::confirmed(*bar))
+                })
+                .map_err(|error| error.message)?;
+                if (index + 1) % 256 == 0 || index + 1 == tail.len() {
+                    progress(wall_start, "liveTail", repetition, index + 1, tail.len());
+                }
             }
             checkpoints.push(memory_checkpoint("afterLiveTail", repetition));
             if runtime.confirmed_profile().bars != bars.len() {
@@ -208,18 +251,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return Err("live tail sequence changed between repetitions".into());
             }
             expected_live = Some(rendered);
+            progress(
+                wall_start,
+                "liveVerified",
+                repetition,
+                tail.len(),
+                tail.len(),
+            );
         }
     }
     checkpoints.push(memory_checkpoint(
         "afterVerification",
         input.repetitions - 1,
     ));
+    progress(
+        wall_start,
+        "verified",
+        input.repetitions - 1,
+        input.repetitions,
+        input.repetitions,
+    );
     println!(
         "{}",
         json!({
             "schemaVersion":1,"historyBars":history.len(),"tailBars":tail.len(),
             "repetitions":input.repetitions,"replacementsPerBar":input.replacements_per_bar,
             "timingsMs":times,"memoryCheckpoints":checkpoints,
+            "diagnostics":{"snapshotDropTimingsMs":snapshot_drops,
+                "wallBeforeReportMs":wall_start.elapsed().as_secs_f64()*1000.0,
+                "scope":"supplementary attribution only; frozen timing phases unchanged; wall excludes report serialization"},
             "memoryScope":"process cumulative peaks including input, all phases and verification; before report rendering",
             "formingTimingScope":"update includes returned full snapshot; snapshot destruction excluded",
             "formingExecutesScript":if magnifier.is_none(){Some(hir.script_mode != pine_ir::ScriptMode::Strategy || hir.strategy_settings.calc_on_every_tick)}else{None},

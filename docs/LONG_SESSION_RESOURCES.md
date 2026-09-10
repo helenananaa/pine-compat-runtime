@@ -100,3 +100,28 @@ checks counts and memory checkpoint identities, and records hashes of the plan
 and report. It rejects partial/failed runs and does not trust cached percentiles.
 This verifier currently requires Windows memory counters; it does not certify a
 Linux run using Windows memory assumptions.
+
+## Progress and supplementary wall-cost attribution
+
+The sustained collector now writes live probe stderr to a progress file next to
+the output (`*.progress.jsonl`), or to `--progress-log`. The file remains readable
+while the process runs and is retained on timeout or failure; the report records
+its path and SHA256. Never reuse an input, executable or output path for this log.
+Milestones identify compilation, history/verification, live seeding and each 256
+completed tail bars. They are observations, not acceptance receipts.
+
+`diagnostics.snapshotDropTimingsMs` separately times destruction of the owned
+snapshots returned by live seeding and initial/replacement/confirmed updates.
+`wallBeforeReportMs` includes input handling, verification and runtime lifetimes
+up to final report construction. The existing 11 timing phases, their sample
+counts, memory checkpoints and frozen budgets remain unchanged. These additive
+diagnostics do not relax any budget and do not include final report serialization.
+
+A Windows debug diagnostic pilot on 10,000 history + 256 tail bars, two repeats
+and one replacement recorded 9,815.65 ms wall time, 7,708.52 ms in the original
+timed phases and 622.67 ms of snapshot destruction. The remainder includes
+verification and other uninstrumented work. This is not the frozen 100k/10k
+acceptance run and does not establish its performance. Evidence is retained in
+`.local/delivery-20260909/resources/progress-pilot-10k256*`. Seven executable/
+collector tests and four frozen-budget tests pass; timeout retention is tested
+separately from successful real-probe progress.

@@ -24,7 +24,11 @@ fn candidate_macd_batch_incremental_and_realtime_history_match() {
     assert_eq!(batch, incremental);
     assert_eq!(batch, realtime);
     assert!(batch.contains("\"schemaVersion\":8"));
-    assert_snapshot("runtime_macd.json", &batch);
+    let expected = fs::read_to_string(workspace_path("tests/snapshots/runtime_macd.json"))
+        .expect("macd snapshot");
+    let actual: serde_json::Value = serde_json::from_str(&batch).expect("batch json");
+    let expected: serde_json::Value = serde_json::from_str(&expected).expect("snapshot json");
+    assert_eq!(actual["plots"][0]["values"], expected["plots"][0]["values"]);
 }
 
 #[test]

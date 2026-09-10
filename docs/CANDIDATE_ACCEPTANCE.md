@@ -1,38 +1,68 @@
 # Candidate acceptance checklist (`0.3.0-rc.1`)
 
-TV-blocked local prerelease. Not a stable release. Not full Pine compatibility.
-No GitHub tag, push, or publish. HEAD `2792a0950`; Windows release binaries
-were produced at `b9cae7ea5` (the follow-up commit is `cfg(test)` only).
+TV-blocked local prerelease; not a stable release or full Pine compatibility.
+No tag, push or publication is authorized by this checklist.
 
-| Item | Commit | Artifact | Evidence | Result |
-| --- | --- | --- | --- | --- |
-| Baseline inventory | da55025dc then this candidate | n/a | scratch `baseline-inventory.json` | recorded |
-| Trend 100k/10k Windows (reuse) | 3ca746976 | `trend-100k-probe-v5.exe` | `.local/delivery-20260909/resources/trend-100k-acceptance-v5.json` | passed (reused) |
-| Every-update 10k+1k | b9cae7ea5 | release `long_session_benchmark` sha256 `f8333ca5…` | scratch `d4/every-update-acceptance.json` | passed |
-| Dense orders 10k+1k | b9cae7ea5 | same | scratch `d4/dense-orders-acceptance.json` | passed |
-| Collection 10k+1k | b9cae7ea5 | same | scratch `d4/collection-acceptance.json` | passed |
-| Complete-output costs | b9cae7ea5 | same reports | scratch `d4/summary.json` snapshot/serialization/drop | recorded |
-| Magnifier 10k+1k historical-only | b9cae7ea5 | same | scratch `d4/magnifier-acceptance.json` | passed |
-| Resource over-limit / atomicity / owned results | 2792a0950 | rustc + python session | `crates/pine-runtime/tests/resource_limit_atomicity.rs`, `python/tests/test_candidate_embedding.py`, scratch `resource-unit-tests.log` | passed |
-| Rust embedding example | b9cae7ea5 | `embed_runtime.exe` | scratch `launch-rust.log` | passed (two launches) |
-| CLI installed binary | b9cae7ea5 | `bin/pine-compat.exe` | scratch `launch-cli.log` | passed (two launches) |
-| Python installed wheel | b9cae7ea5 | `pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl` | scratch `launch-python.log`; verify.ps1 715 tests | passed |
-| WASM Node bindings | b9cae7ea5 | `wasm/pine_wasm.js` + `pine_wasm_bg.wasm` | scratch `launch-wasm.log` | passed (two launches) |
-| Windows verify.ps1 | 2792a0950 | wheel + tests | scratch `verify-windows.log` | passed: 6668 rust / 715 installed Python / 122 tools + WASM |
-| Linux native verify.sh | 2792a0950 | Ubuntu 22.04 WSL wheel `manylinux_2_35` + CLI | scratch `verify-linux.log`; `.local/candidate-0.3.0-rc.1/linux/` | passed: 6668 rust / 715 installed Python / 122 tools + WASM |
-| Linux manylinux2014 image | n/a | n/a | scratch `linux-launcher-failure.log` | unverifiable here (Docker engine down) |
-| Frozen TechnicalRating | b9cae7ea5 CLI | `pine-compat.exe` | scratch `frozen-refs/technical.json` 63399 values, original hashes/1e-9 | passed |
-| Frozen G3 r3/r2 | b9cae7ea5 CLI | same | scratch `frozen-refs/summary.json` 65+41 trades, prior runtime equal | passed |
-| Frozen HTF / Magnifier / margin | b9cae7ea5 CLI | same | scratch `frozen-refs/summary.json` 422660 HTF; 2960 Magnifier plots; 7992 margin values | passed |
-| Known failures still visible | 2792a0950 | n/a | live-tick 16/896; B1 `UNVERIFIED_INTERNAL_ORDER`; r1 0/482 | visible failures |
+## Identity and evidence
 
-## Product claims still blocked on new TradingView evidence
+- Original Windows artifacts: `b9cae7ea5343f284e6f453b6c88c678d59617056`.
+- Candidate test baseline and new manylinux wheel source:
+  `2792a095075d58e4a7145d3b97ce7d1286eb2800`; its change from the Windows
+  artifact source is a `cfg(test)` CLI snapshot registration.
+- Review baseline: `c03cf77bb355113909e3798b67d7d859a8b1b080`. Intervening
+  commits add documentation and a platform test, not runtime semantics.
+- Reconciliation changes are working-tree documentation, evidence and delivery
+  test changes. They do not relabel binaries as built from a later HEAD.
+- Artifact root: `.local/candidate-0.3.0-rc.1/`. `inventory.json` and
+  `SHA256SUMS` bind artifacts; `evidence/manifest.json` binds evidence by
+  relative path, size and SHA-256. These local files are intentionally ignored.
 
-- Live-tick exit-price mismatches (16/896) — blocks “native realtime broker fill parity”.
-- B1 `UNVERIFIED_INTERNAL_ORDER` — blocks independent broker-evidence completion.
-- Public r1 independent-reference 0/482 — blocks raising the public independent-reference denominator.
-- Broader account/tick profiles and unresolved dynamic request arguments — blocks those host-profile claims.
+The original goal scratch directory was removed. Original combined Windows/Linux
+gate logs and candidate frozen-reference comparison logs were not recovered.
+Their old summary counts (6668 Rust / 715 Python / 122 tools plus WASM) remain
+reported historical results, not newly verified original receipts. Fresh checks
+and earlier retained reference receipts are identified separately below.
 
-## Classification
+## Acceptance table
 
-See `docs/CANDIDATE_CLOSEOUT.md`.
+Evidence paths below are relative to the artifact root.
+
+| Item | Evidence | Qualification |
+| --- | --- | --- |
+| Four non-trend workloads | `evidence/d4/original/` original plans, pilot/formal reports and receipts; `evidence/d4/*-recheck.json` | Four budgets independently recomputed and passed; 10k history + 1k tail, two repeats |
+| Trend 100k/10k | `evidence/trend/` frozen plan, full report, original receipt and recheck | Reused Windows qualification at 3ca746976; no scale extrapolation |
+| Output costs | `evidence/d4/original/summary.json` and raw reports | Snapshot, serialization, drop and process memory measured; see budget interpretation |
+| Windows installed candidate wheel | `evidence/reconciliation/windows-installed-wheel-tests.log` | Fresh 715-test check against retained candidate environment |
+| Retained WASM and examples | `evidence/reconciliation/wasm-smoke.log`, `launches.json` | Fresh execution evidence, distinct from lost original gate logs |
+| manylinux2014 candidate | `evidence/reconciliation/manylinux-qualification.json`, `manylinux-build-test-v3.log`, `auditwheel.txt` | Fresh offline release build, actual installed module identity and 715 tests passed; manylinux_2_17 |
+| Current delivery tools | `evidence/reconciliation/tool-tests.log` | Fresh tool regression check |
+| TechnicalRating full graph | `evidence/technical-recheck/technical-qualification.json` and complete outputs | Fresh 63,399 reference values passed at original 1e-9 tolerances; CLI four modes, installed Python and retained WASM have identical complete output |
+| Earlier independent references | `evidence/prior-references/` | Historical receipts only; source identities and limitations retained |
+| Known TV gaps | `LIVE_TICK_REFERENCE_AUDIT.md` | 16/896 exit-price differences remain failed; B1 unverified; r1 0/482 is missing coverage, not 482 failed comparisons |
+
+## Resource budget interpretation
+
+The four non-trend plans were frozen from pilot measurements using 2.5x timing
+and 2x process-memory headroom, then evaluated on separate formal runs. These
+are reproducible regression baselines, not a host-independent product SLA.
+No evidence establishes that those multipliers derive from an embedding client's
+latency or memory requirements. Original plans and thresholds remain unchanged.
+
+The candidate qualifies the recorded single-workload sizes on the measured
+Windows host. It does not qualify concurrency, every workload at 100k/10k,
+Linux resource ceilings, or indefinite bounded output retention. Future host
+acceptance must specify update frequency, concurrent sessions, output retention,
+end-to-end latency and process-memory budgets before its acceptance run.
+That dependency is host requirements / resource qualification, not TradingView.
+
+## Remaining boundaries
+
+- Exact realtime fill pricing and broader broker/account semantics require
+  independent evidence. No tolerance or reference was changed.
+- Dynamic request discovery cannot always return literal context keys. Widening
+  runtime admission/resolution is an engineering scope decision; provider data
+  completeness belongs to the host. Neither automatically needs new TV output.
+- WASM exposes historical execution only. Python uses confirmed session updates
+  for streaming; no separate incremental API is exported.
+- Stable publication remains blocked. Use the candidate for evaluation within
+  its declared scope. See `DELIVERY_SURFACES.md` and `CANDIDATE_CLOSEOUT.md`.

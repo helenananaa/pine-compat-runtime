@@ -23,12 +23,12 @@ them as this checkout.
 
 - Analysis JSON schema 5, runtime JSON schema 8, host-requirements schema 1,
   render metadata 1.
-- Qualified desktop targets for this candidate: Windows x86-64 (`win_amd64`)
-  and native Ubuntu 22.04 glibc Linux x86-64 (`manylinux_2_35_x86_64`). The
-  manylinux2014 / `manylinux_2_17_x86_64` image was not rebuilt here (Docker
-  engine down); do not treat the published `v0.2.0` `manylinux_2_17` wheel as
-  this candidate. macOS, musllinux, ARM, and free-threaded CPython are outside
-  this candidate.
+- Qualified desktop targets for this candidate: Windows x86-64 (`win_amd64`),
+  native Ubuntu 22.04 (`manylinux_2_35_x86_64`), and the separately rebuilt
+  manylinux2014 wheel (`manylinux_2_17_x86_64`) under `linux/manylinux2014/`.
+  The new 0.3.0rc1 manylinux2014 wheel passed auditwheel and 715 installed
+  Python tests. This does not qualify Linux long-session resource ceilings.
+  macOS, musllinux, ARM, and free-threaded CPython are outside this candidate.
 - Default chart context: synthetic `NASDAQ:AAPL`, timeframe `1`, minMove 1,
   priceScale 100, quantityPrecision 0, currency USD, unit point value, timezone
   `Etc/UTC`. These are defaults, not inferred instrument metadata.

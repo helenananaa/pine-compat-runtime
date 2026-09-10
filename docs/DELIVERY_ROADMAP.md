@@ -40,8 +40,8 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
 | D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Scoped D3 review complete: explicit defaults, validated profiles, source provenance and reached-input errors; final platform/distribution qualification remains D5 |
-| D4 | Long-session resources | Codex measurement and acceptance | Windows trend 100k/10k reused (3ca746976). Remaining named workloads passed at 10k+1k on b9cae7ea5 with freeze-then-accept receipts; over-limit/atomicity/independence tests pass | manylinux2014 not re-run; remaining workloads are not a 100k/10k claim |
-| D5 | Candidate from a known commit | Codex | Local `0.3.0-rc.1` / `0.3.0rc1` TV-blocked candidate. Windows+Linux native gates 6668/715/122 + WASM. Frozen refs revalidated. Not published | manylinux2014 image unverifiable here (Docker down); GitHub release not authorized |
+| D4 | Long-session resources | Codex measurement and acceptance | Windows trend 100k/10k reused (3ca746976). Remaining named workloads passed at 10k+1k on b9cae7ea5 with freeze-then-accept receipts; over-limit/atomicity/independence tests pass | Remaining workloads are not a 100k/10k claim; pilot-derived regression budgets are not an embedding SLA |
+| D5 | Candidate from a known commit | Codex | Local `0.3.0-rc.1` / `0.3.0rc1` TV-blocked candidate. Windows+Linux native gates 6668/715/122 + WASM. Frozen refs revalidated. Not published | manylinux2014 rebuilt offline at 2792a0950: auditwheel and 715 installed tests pass; original goal raw gate logs missing; GitHub release not authorized |
 
 ## Current candidate status (authoritative)
 
@@ -62,6 +62,12 @@ This file is the only current delivery-status table. Paragraphs after
   `UNVERIFIED_INTERNAL_ORDER`, public r1 0/482.
 - Other worktrees (`pine-interpreter-delivery-*`) are not current main-tree
   acceptance and must not be overwritten.
+
+Evidence reconciliation: [candidate acceptance](CANDIDATE_ACCEPTANCE.md) binds
+retained reports and artifacts under `.local/candidate-0.3.0-rc.1/evidence/`.
+Original goal scratch logs were removed; fresh checks and historical summaries
+are distinguished. Dynamic request scope and embedding resource budgets are
+engineering/host requirements, not automatically TV dependencies.
 
 Remaining D4 named workloads and modes:
 

@@ -13,9 +13,11 @@ free-threaded CPython remain outside the release matrix.
 The current checkout is local candidate `0.3.0-rc.1` (PEP 440 `0.3.0rc1`).
 Do not tag, push, or publish it as a GitHub Release. The tag commands below
 are the future publication recipe, not authorization for this candidate.
-This candidate's local Linux wheel is native Ubuntu 22.04
-`manylinux_2_35_x86_64`, not the manylinux2014 `manylinux_2_17_x86_64` image
-listed in the future GitHub matrix above.
+The candidate retains its native Ubuntu 22.04 `manylinux_2_35_x86_64`
+wheel and now also a separately qualified manylinux2014 `manylinux_2_17_x86_64`
+wheel under `.local/candidate-0.3.0-rc.1/linux/manylinux2014/`.
+The latter passed auditwheel and 715 tests after installation. See
+`CANDIDATE_ACCEPTANCE.md` for source identities and durable evidence paths.
 
 ## Workflow Behavior
 

@@ -70,6 +70,8 @@ changed source hashes, non-finite data and regressive clocks have negative tests
   the original single-entry capture remains failed at 16/896.
 - Reports and hashes are in `.local/tv-goal-20260910/qualification.json`.
   These are working-source development builds, not a new committed release.
-- Linux and release-profile qualification of this semantic change remain open.
+- Subsequent optimized Windows and Ubuntu-native wheels at `6c31e2b22` each
+  replay all six controls with 9460/9460 values passing. Final cross-platform
+  gates and the retained report paths are in `TRADINGVIEW_GOAL_PROGRESS.md`.
 - Continue the unresolved realtime price-input question and other reference
   gaps; no stable release or complete B1/r1 acceptance is claimed.

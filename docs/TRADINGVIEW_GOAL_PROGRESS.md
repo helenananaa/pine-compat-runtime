@@ -82,9 +82,14 @@ manylinux_2_35, not a newly qualified manylinux2014 distribution.
 
 Four local implementation commits repair occupied-long stop margin admission,
 default initial capital, absent open-trade commission, versioned margin defaults,
-and mid-bar opening context. The earlier reference groups retain their original
-source commits and denominators; they are not relabeled as fresh full reference
-qualification of the final source. Local artifacts and receipts are indexed in
+and mid-bar opening context. A subsequent replay on the final source's optimized
+Windows and Linux wheels independently passes all 12 previously captured native
+controls: 859437/859437 values on each platform (9460 admission, 624806 capital
+and commission, 225171 versioned margin). Source hashes and 1e-9 tolerances are
+unchanged. New receipts are in `final-6c31-windows/summary.json` and
+`final-6c31-linux/summary.json`; old receipts retain their original revisions.
+This is final-artifact verification of existing references, not newly captured
+independent coverage or full language qualification. Local receipts are indexed in
 `.local/tv-goal-20260910/final-evidence-manifest.json`.
 
 The original 16/896 and newer 14/1856 realtime price comparisons still fail on

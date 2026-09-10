@@ -29,20 +29,38 @@ class LongSessionProbeTests(unittest.TestCase):
                     repetitions=2, replacementsPerBar=2,
                     magnifier=bench.magnifier_input(bars) if spec.get('magnifier') else None)
 
+    WORKLOAD_MODES = {
+        'trend': dict(formingExecutesScript=False, live=True),
+        'dense': dict(formingExecutesScript=False, live=True),
+        'collection': dict(formingExecutesScript=True, live=True),
+        'recalculation': dict(formingExecutesScript=False, live=True),
+        'realtime': dict(formingExecutesScript=True, live=True),
+        'magnifier': dict(formingExecutesScript=None, live=False),
+    }
+
     def test_real_tail_operations_and_confirmations_across_all_workloads(self):
+        self.assertEqual([spec['sampleId'] for spec in bench.default_samples()],
+                         list(self.WORKLOAD_MODES))
         for spec in bench.default_samples():
             with self.subTest(sample=spec['sampleId']):
                 payload = self.payload(spec)
                 report = sustained.summarize(bench.run_probe(self.binary, payload, 60), payload)
+                expected = self.WORKLOAD_MODES[spec['sampleId']]
                 self.assertEqual(report['qualification'], 'notEvaluated')
                 self.assertEqual(report['phases']['tailAppend']['n'], 16)
-                if not spec.get('magnifier'):
+                self.assertEqual(report['formingExecutesScript'], expected['formingExecutesScript'])
+                self.assertIn('resultSnapshot', report['phases'])
+                self.assertIn('outputSerialization', report['phases'])
+                if expected['live']:
                     self.assertEqual(report['phases']['formingReplace']['n'], 32)
                     self.assertEqual(report['phases']['formingConfirm']['n'], 16)
-                    self.assertEqual(report['formingExecutesScript'], spec['sampleId'] in ('collection','realtime'))
+                    self.assertIsNone(report['realtimeExclusion'])
+                    self.assertTrue(report['correctness']['repeatedLiveStable'])
                 else:
                     self.assertNotIn('formingReplace', report['phases'])
-                    self.assertIsNotNone(report['realtimeExclusion'])
+                    self.assertEqual(report['realtimeExclusion'], 'historical-only magnifier input')
+                self.assertTrue(report['correctness']['batchEqualsTail'])
+                self.assertTrue(report['correctness']['repeatedHistoricalStable'])
                 if sys.platform in ('win32','linux'):
                     self.assertTrue(all(row['peakRssKiB']>0 for row in report['memoryCheckpoints']))
 
@@ -119,6 +137,12 @@ class LongSessionProbeTests(unittest.TestCase):
         payload['magnifier'] = bench.magnifier_input(payload['bars'])
         with self.assertRaisesRegex(bench.BenchmarkError, 'declaration and intrabar input to agree'):
             bench.run_probe(self.binary,payload,60)
+
+    def test_resource_over_limit_fails_the_probe_before_a_budget_can_pass(self):
+        payload = self.payload()
+        payload['source'] = '//@version=6\nindicator("loop")\nwhile true\n    x = close\nplot(close)\n'
+        with self.assertRaisesRegex(bench.BenchmarkError, 'exceeded maximum iteration'):
+            bench.run_probe(self.binary, payload, 60)
 
 
 if __name__ == '__main__':

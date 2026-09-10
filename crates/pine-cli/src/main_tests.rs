@@ -16,6 +16,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[test]
+fn package_version_is_the_coordinated_prerelease_identity() {
+    assert_eq!(crate::package_version(), "0.3.0-rc.1");
+    assert_eq!(crate::package_version_line(), "pine-compat 0.3.0-rc.1");
+    assert!(crate::usage().contains("pine-compat --version"));
+}
+
 fn strategy_orders_segment(output: &str) -> &str {
     let start = output.find(r#""orders":["#).expect("strategy orders start");
     let tail = &output[start..];

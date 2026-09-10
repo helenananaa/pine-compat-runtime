@@ -10,6 +10,10 @@ The `abi3-py310` PyO3 feature makes each platform wheel compatible with
 ordinary GIL-enabled CPython 3.10 and newer. macOS, musllinux, ARM, and
 free-threaded CPython remain outside the release matrix.
 
+The current checkout is local candidate `0.3.0-rc.1` (PEP 440 `0.3.0rc1`).
+Do not tag, push, or publish it as a GitHub Release. The tag commands below
+are the future publication recipe, not authorization for this candidate.
+
 ## Workflow Behavior
 
 `.github/workflows/wheels.yml` runs for pull requests, pushes to `main`, version
@@ -47,8 +51,8 @@ does not match the packaged version or if the two expected wheels are missing.
 3. Create and push the annotated tag:
 
    ```text
-   git tag -a v0.2.0 -m "Pine Compat Runtime v0.2.0"
-   git push origin v0.2.0
+   git tag -a v0.3.0-rc.1 -m "Pine Compat Runtime v0.3.0-rc.1"
+   git push origin v0.3.0-rc.1
    ```
 
 4. Confirm the GitHub Release contains exactly two wheels plus the manifest and

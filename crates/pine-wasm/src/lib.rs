@@ -26,6 +26,11 @@ pub(crate) use run::{
     run_script_csv_with_request_bars_internal,
 };
 
+#[wasm_bindgen(js_name = packageVersion)]
+pub fn package_version() -> String {
+    env!("CARGO_PKG_VERSION").to_owned()
+}
+
 #[wasm_bindgen(js_name = compileScript)]
 pub fn compile_script(source: &str) -> Result<WasmProgram, JsValue> {
     compile_program(analysis_input(source)).map_err(|err| JsValue::from_str(&err))

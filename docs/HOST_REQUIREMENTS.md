@@ -8,7 +8,8 @@ source diagnostics and do not produce an executable requirements report.
 
 ## APIs
 
-This API is currently unreleased; use the qualified development build.
+This API ships in the local `0.3.0-rc.1` candidate (Python wheel `0.3.0rc1`).
+It is not part of the published `v0.2.0` GitHub release.
 
 Rust accepts the compiled HIR and returns a typed `HostRequirements`:
 
@@ -155,6 +156,38 @@ conditional execution rules or optional data fallbacks change.
    closed list of concrete keys in those cases.
 4. Run with the appropriate history/forming/confirmation lifecycle. Handle input
    and capability errors when the relevant expressions actually execute.
+
+## Defaults, platforms, limits, and version compatibility
+
+Defaults (synthetic, not inferred from a symbol name):
+
+- chart symbol `NASDAQ:AAPL`, timeframe `1`, minMove 1, priceScale 100,
+  quantityPrecision 0, currency `USD`, point value `1`, timezone `Etc/UTC`;
+- indicator reports have a null account contract; strategies disclose
+  same-currency linear accounting with unit point value;
+- drawing objects use the existing 50-default / 500-max (100 for polylines)
+  oldest-active eviction; series history is capped at 1,000,000 committed
+  values; `while` loops stop at 100,000 iterations; arrays at 100,000
+  elements; strings at 40,960 characters.
+
+Supported candidate platforms: Windows x86-64 and glibc Linux x86-64.
+macOS, musllinux, ARM, and free-threaded CPython are out of this matrix.
+
+Account and data range for this candidate: standard candles, host-supplied
+price grid, same-currency linear accounting, unit point value. Foreign-currency
+conversion, non-unit contract multipliers, and nonstandard charts remain
+unsupported and fail closed.
+
+Dynamic input limits: `input.*` overrides apply to compiled call-site IDs from
+the current compilation. Runtime-expression request arguments stay unresolved
+in the inventory; they are not treated as literal keys. Call-site IDs are not
+stable across recompilation.
+
+Version compatibility: analysis schema 5, runtime schema 8, host-requirements
+schema 1. The crate identity is Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. Do not
+mix this candidate with published `0.2.0` wheels or crates. A failed compile,
+seed, or update returns an error and does not replace previously owned results
+on the realtime session path.
 
 Do not translate every inventory entry into an unconditional rejection rule.
 For example, `false ? timenow : close` still executes without an execution clock,

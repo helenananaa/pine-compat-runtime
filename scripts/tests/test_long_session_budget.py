@@ -58,5 +58,52 @@ class LongSessionBudgetTests(unittest.TestCase):
             broken=copy.deepcopy(plan);mutate(broken)
             with self.assertRaises(ValueError):evaluate(report,broken)
 
+    def magnifier_fixture(self):
+        identity = dict(historyBars=1000,tailBars=100,repetitions=2,replacementsPerBar=1,
+                        sourceHash='source',binaryHash='binary',payloadHash='payload',revision='commit',
+                        worktreeStatus='',formingExecutesScript=None)
+        counts = dict(compile=1,historySeed=2,tailAppend=200,resultSnapshot=2,outputSerialization=2)
+        memory = [dict(phase=phase,repetition=repeat,source='windowsPeakWorkingSet',peakRssKiB=100,peakCommitKiB=200)
+                  for repeat in range(2) for phase in ('afterHistorySeed','afterTailAppend')]
+        memory.append(dict(memory[-1],phase='afterVerification'))
+        report = dict(schemaVersion=1,status='measured',qualification='notEvaluated',**identity,
+                      realtimeExclusion='historical-only magnifier input',
+                      correctness=dict(batchEqualsTail=True,repeatedHistoricalStable=True,repeatedLiveStable=None),
+                      phases={k:dict(n=n,samplesMs=[1.0]*n) for k,n in counts.items()},memoryCheckpoints=memory)
+        plan = dict(schemaVersion=1,expected=identity,realtimeExclusion='historical-only magnifier input',
+                    modes=['historical','incremental'],
+                    phaseBudgets={k:dict(statistic='p95' if n>=100 else 'max',limitMs=2) for k,n in counts.items()},
+                    memoryBudgets=dict(source='windowsPeakWorkingSet',peakRssKiB=300,peakCommitKiB=300))
+        return report,plan
+
+    def test_magnifier_historical_only_plan_passes_without_live_phases(self):
+        report,plan = self.magnifier_fixture()
+        report['phases']['tailAppend']['p95Ms'] = 9999
+        result = evaluate(report,plan)
+        self.assertEqual(result['status'],'passed')
+        self.assertEqual(result['timings']['tailAppend']['actualMs'],1.0)
+        self.assertNotIn('formingConfirm', result['timings'])
+
+    def test_magnifier_plan_rejects_live_or_partial_reports(self):
+        report,plan = self.magnifier_fixture()
+        live = copy.deepcopy(report)
+        live['realtimeExclusion'] = None
+        self.assertEqual(evaluate(live,plan)['status'],'failed')
+        timeout = evaluate(dict(schemaVersion=1,status='failed',error='timed out after 1800 seconds'),plan)
+        self.assertEqual(timeout['status'],'failed')
+        self.assertIn('timed out after 1800 seconds', timeout['failures'][0])
+
+    def test_freeze_recomputes_limits_from_raw_samples_before_acceptance(self):
+        from verify_long_session_budget import freeze_from_report
+        report,_ = self.fixture()
+        report['qualification'] = 'notEvaluated'
+        plan = freeze_from_report(report, name='fixture', headroom=2.0, memory_headroom=2.0)
+        self.assertEqual(plan['phaseBudgets']['tailAppend']['limitMs'], 2.0)
+        self.assertEqual(plan['modes'], ['historical','incremental','realtime'])
+        self.assertEqual(evaluate(report,plan)['status'],'passed')
+        worse = copy.deepcopy(report)
+        worse['phases']['tailAppend']['samplesMs'] = [3.0]*200
+        self.assertEqual(evaluate(worse,plan)['status'],'failed')
+
 
 if __name__=='__main__':unittest.main()

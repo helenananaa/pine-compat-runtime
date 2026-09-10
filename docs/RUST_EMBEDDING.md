@@ -1,7 +1,8 @@
 # Embedding the runtime in Rust
 
 The executable example is `crates/pine-runtime/examples/embed_runtime.rs`.
-Use Rust 1.95 or newer. From the repository root, run:
+This candidate's crate identity is `0.3.0-rc.1`. Use Rust 1.95 or newer. From
+the repository root, run:
 
 ```text
 cargo run --locked --release -p pine-runtime --example embed_runtime

@@ -40,8 +40,40 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
 | D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Scoped D3 review complete: explicit defaults, validated profiles, source provenance and reached-input errors; final platform/distribution qualification remains D5 |
-| D4 | Long-session resources | Codex measurement and acceptance | Frozen Windows trend v5 passed: 100k history + 10k tail, two repeats, original budgets; earlier failures retained | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
-| D5 | Candidate from a known commit | Codex | Windows and Linux native gates pass; manylinux2014 wheel and Windows Rust embedding example qualified; package version still 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
+| D4 | Long-session resources | Codex measurement and acceptance | Frozen Windows trend v5 passed at 3ca746976: 100k history + 10k tail, two repeats, original budgets; earlier failures retained. Remaining named workloads (every-update, dense, collection, complete-output, Magnifier) are judged on this candidate | Remaining-workload receipts, resource-limit/atomicity/independence checks, complete-output costs |
+| D5 | Candidate from a known commit | Codex | Coordinated local prerelease `0.3.0-rc.1` / PEP 440 `0.3.0rc1` (not a stable tag, not published). Prior Linux native + manylinux evidence exists at da099ac11 under interim 0.2.0 labeling | Windows/Linux installed artifacts of *this* identity, checksums, schema, capability lists, frozen-reference rerun |
+
+## Current candidate status (authoritative)
+
+This file is the only current delivery-status table. Paragraphs after
+**Historical audit log** are citations, not competing status.
+
+- Identity: Cargo `0.3.0-rc.1`, Python `0.3.0rc1`, not `0.2.0`, not a stable tag.
+- Classification: TV-blocked local candidate. Not full Pine compatibility.
+- Trend 100k/10k Windows resource qualification: reuse
+  `.local/delivery-20260909/resources/trend-100k-acceptance-v5.json` (commit
+  3ca746976). Later commits through da55025dc are docs/test-only relative to
+  that runtime; this candidate adds packaging/tests/docs plus remaining D4
+  measurements and does not rerun trend without cause.
+- Already-passing independent references stay required: TechnicalRating
+  complete graph, frozen G3 batches, matched default-HTF, paired historical
+  Magnifier, long/short margin.
+- Known visible failures: live-tick 16/896 exit-price mismatches, B1
+  `UNVERIFIED_INTERNAL_ORDER`, public r1 0/482.
+- Other worktrees (`pine-interpreter-delivery-*`) are not current main-tree
+  acceptance and must not be overwritten.
+
+Remaining D4 named workloads and modes:
+
+| Workload | Source | Historical | Incremental | Realtime | Formal scale (non-trend) |
+| --- | --- | --- | --- | --- | --- |
+| every-update | `tests/fixtures/runtime/strategy_calc_on_every_tick.pine` | yes | yes | yes (script executes on forming) | 10k history + 1k tail, 2 reps, 1 replacement |
+| dense orders | `tests/fixtures/benchmark/strategy_dense.pine` | yes | yes | yes (default strategy forming) | same |
+| collection | `tests/fixtures/profile/matrix_heavy.pine` | yes | yes | yes (script executes on forming) | same |
+| complete output | snapshot/serialization/drop phases of the above | yes | yes | when live is measured | recorded from the same runs |
+| Magnifier | `tests/fixtures/benchmark/strategy_magnifier.pine` | yes | yes | excluded (historical-only contract) | same history/tail, no live phases |
+
+## Historical audit log
 
 ## Current next action
 

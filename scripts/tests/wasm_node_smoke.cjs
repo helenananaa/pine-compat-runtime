@@ -11,9 +11,10 @@ if (process.argv.length !== 3) {
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
 
-for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript']) {
+for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript', 'packageVersion']) {
   assert.equal(typeof pine[name], 'function', `missing Wasm export ${name}`);
 }
+assert.equal(pine.packageVersion(), '0.3.0-rc.1');
 
 const source = '//@version=6\nindicator("node smoke")\nplot(close * 2)\n';
 const bars = [
@@ -46,6 +47,23 @@ assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
+const requirements = JSON.parse(program.hostRequirements());
+assert.equal(requirements.schemaVersion, 1);
+assert.equal(requirements.chart.bars, 'hostSuppliedStandardOhlcv');
+const compiledRun = JSON.parse(program.runCsv(bars));
+assert.deepEqual(compiledRun.plots[0].values, [2, 4, 6]);
+const owned = compiledRun.plots[0].values.slice();
+compiledRun.plots[0].values[0] = 999;
+assert.deepEqual(JSON.parse(program.runCsv(bars)).plots[0].values, owned);
+const rejected = (() => {
+  try {
+    pine.runScriptCsv('//@version=6\nindicator("bad")\nplot(unknown_name)\n', bars);
+    return null;
+  } catch (error) {
+    return String(error);
+  }
+})();
+assert.match(rejected, /unknown_name|unknown identifier/i);
 const quantitySource = require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/fixtures/runtime/quantity_precision.pine'), 'utf8');
 const quantityBars = require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/fixtures/runtime/quantity_precision_bars.csv'), 'utf8');
 const quantityExpected = JSON.parse(require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/snapshots/runtime_quantity_precision.json'), 'utf8'));

@@ -43,10 +43,13 @@ application to a charting service.
 ## Quick Start
 
 The downloads below are the published `v0.2.0` release from July 20, 2026.
-The current checkout includes later development changes. Use the tagged release
-documentation for those wheels, and build the current checkout for newer APIs
-such as host-input discovery and source provenance. The next delivery candidate
-has not been published yet.
+This checkout is the local `0.3.0-rc.1` candidate (Python wheel `0.3.0rc1`).
+It is a TV-blocked prerelease, not a stable tag and not full Pine compatibility.
+Build this tree for host-input discovery, source provenance, realtime clocks,
+and the four-surface candidate artifacts. Do not install the published `v0.2.0`
+wheels and treat them as this candidate. See
+[delivery surfaces](docs/DELIVERY_SURFACES.md) and
+[releasing](docs/RELEASING.md).
 
 Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
 glibc Linux x86-64 and Windows x86-64. See the
@@ -279,8 +282,9 @@ behavior.
 
 ## Honest Compatibility
 
-`0.2.0` is a compatibility-focused release, not a full drop-in
-implementation of every Pine feature. Important current boundaries include:
+The published `0.2.0` tag and this `0.3.0-rc.1` candidate are
+compatibility-focused, not a full drop-in implementation of every Pine
+feature. Important current boundaries include:
 
 - the strategy broker model is still a partial side-aware long/short subset;
 - `request.*` support is limited and all requested data must be supplied by the

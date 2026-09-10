@@ -1,6 +1,33 @@
 use super::*;
 
 #[test]
+fn candidate_macd_batch_incremental_and_realtime_history_match() {
+    let options = RunOptions {
+        path: workspace_path("tests/fixtures/runtime/macd.pine"),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
+        session_windows_path: None,
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+    let batch = run_json_with_options(&options).expect("batch");
+    let incremental =
+        run_json_with_options_in_mode(&options, ExecutionMode::Incremental).expect("incremental");
+    let realtime = run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
+        .expect("realtime history");
+    assert_eq!(batch, incremental);
+    assert_eq!(batch, realtime);
+    assert!(batch.contains("\"schemaVersion\":8"));
+    assert_snapshot("runtime_macd.json", &batch);
+}
+
+#[test]
 fn explicit_point_value_cli_rejects_unsupported_or_invalid_profiles() {
     for value in ["0", "-1", "0.5", "5", "1.0000000001", "NaN", "inf", "true"] {
         let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", value].map(str::to_owned);

@@ -43,6 +43,13 @@ requires enabled Magnifier and supplied intrabars to agree, so absent data canno
 silently become a Magnifier performance measurement. This is a probe constraint,
 not a change to the core's existing explicit fallback contract. Magnifier live
 phases are excluded explicitly because that input is historical-only.
+`verify_long_session_budget.py` can freeze and evaluate that historical-only
+shape when `realtimeExclusion` is `historical-only magnifier input`; ordinary
+plans still require the full live phase set. Remaining named workloads and
+their historical/incremental/realtime modes are listed in
+[DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md). The qualified Windows trend
+100k/10k result is not rerun without a code or identity change that invalidates
+it.
 
 The collector validates every operation count:
 

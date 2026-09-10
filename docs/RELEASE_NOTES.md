@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+Local candidate identity is Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. This is
+not a GitHub release. TV-blocked items (live-tick exit prices, B1
+`UNVERIFIED_INTERNAL_ORDER`, public r1 0/482, dynamic request arguments)
+remain open.
+
+## 0.3.0-rc.1 - local candidate
+
+- Coordinated prerelease identity across Rust crates, CLI `--version`, Python
+  `pine_compat.__version__`, and WASM `packageVersion()`.
+- Four-surface capability list and embedding examples for compile →
+  requirements → historical / incremental / realtime → error → owned result.
+  WASM remains historical-only.
+- Long-session budget verifier accepts Magnifier historical-only plans; new
+  remaining D4 workloads are measured separately from the already-qualified
+  Windows trend 100k/10k result.
+
+## Unreleased (prior development)
+
 - Python realtime sessions accept explicit execution clocks on historical seed,
   forming updates and confirmation. Rust adds timestamped historical seeding.
   Existing calls and missing-clock errors remain valid; failed operations keep

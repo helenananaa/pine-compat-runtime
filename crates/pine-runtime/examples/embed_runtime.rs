@@ -151,6 +151,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "{}",
         serde_json::to_string_pretty(&json!({
             "example":"host-neutral-rust-embedding", "syntheticInputs":true,
+            "packageVersion": env!("CARGO_PKG_VERSION"),
             "historicalEqualsIncremental":true, "failedUpdatePreservedState":true,
             "missingClockError":rejected.message, "requirements":requirements, "result":result,
         }))?

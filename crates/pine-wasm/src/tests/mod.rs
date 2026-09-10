@@ -4,6 +4,11 @@ use pine_sema::PUBLIC_ANALYSIS_SCHEMA_VERSION;
 use std::{collections::HashMap, env, fs, path::PathBuf};
 
 #[test]
+fn package_version_is_the_coordinated_prerelease_identity() {
+    assert_eq!(package_version(), "0.3.0-rc.1");
+}
+
+#[test]
 fn analyzes_script_to_json() {
     let output = analyze_script("//@version=6\nindicator(\"demo\")\nplot(close)\n");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");

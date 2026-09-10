@@ -32,9 +32,9 @@ plot(close)
     assert!(strategy.position.is_empty());
     assert_eq!(strategy.equity.len(), 2);
     assert_eq!(strategy.equity[0].bar_index, 0);
-    assert_eq!(strategy.equity[0].cash, 100_000.0);
+    assert_eq!(strategy.equity[0].cash, 1000000.0);
     assert_eq!(strategy.equity[0].market_value, 0.0);
-    assert_eq!(strategy.equity[0].equity, 100_000.0);
+    assert_eq!(strategy.equity[0].equity, 1000000.0);
     assert_eq!(strategy.equity[0].net_profit, 0.0);
     assert!(strategy.diagnostics.is_empty());
     assert_eq!(
@@ -170,9 +170,9 @@ plot(close)
     assert_eq!(strategy.position[0].bar_index, 2);
     assert_eq!(strategy.position[0].size, 2.0);
     assert_eq!(strategy.position[0].avg_price, Some(3.0));
-    assert_eq!(strategy.equity[2].cash, 99_994.0);
+    assert_eq!(strategy.equity[2].cash, 999994.0);
     assert_eq!(strategy.equity[2].market_value, 6.0);
-    assert_eq!(strategy.equity[2].equity, 100_000.0);
+    assert_eq!(strategy.equity[2].equity, 1000000.0);
 }
 
 #[test]
@@ -234,9 +234,9 @@ plot(strategy.max_contracts_held_short)
     assert_eq!(strategy.position[0].bar_index, 2);
     assert_eq!(strategy.position[0].size, -2.0);
     assert_eq!(strategy.position[0].avg_price, Some(3.0));
-    assert_eq!(strategy.equity[2].cash, 100_006.0);
+    assert_eq!(strategy.equity[2].cash, 1000006.0);
     assert_eq!(strategy.equity[2].market_value, -6.0);
-    assert_eq!(strategy.equity[2].equity, 100_000.0);
+    assert_eq!(strategy.equity[2].equity, 1000000.0);
     assert_eq!(
         result.plots[0].values,
         vec![
@@ -326,7 +326,7 @@ plot(strategy.netprofit)
         strategy.position.last().map(|position| position.size),
         Some(0.0)
     );
-    assert_eq!(strategy.equity[3].cash, 99_998.0);
+    assert_eq!(strategy.equity[3].cash, 999998.0);
     assert_eq!(strategy.equity[3].net_profit, -2.0);
 }
 
@@ -7965,7 +7965,7 @@ if bar_index == 1
             .as_ref()
             .unwrap()
             .strategy_settings
-            .default_entry_qty(100_000.0, 2.0),
+            .default_entry_qty(1000000.0, 2.0),
         Some(3.0)
     );
 
@@ -7978,11 +7978,11 @@ if bar_index == 1
     assert_eq!(strategy.orders[0].qty, 3.0);
     assert_eq!(strategy.orders[0].price, 4.0);
     assert_eq!(strategy.position[0].size, 3.0);
-    assert_eq!(strategy.equity[0].cash, 100_000.0);
+    assert_eq!(strategy.equity[0].cash, 1000000.0);
     assert_eq!(strategy.equity[0].market_value, 0.0);
-    assert_eq!(strategy.equity[1].cash, 99_988.0);
+    assert_eq!(strategy.equity[1].cash, 999988.0);
     assert_eq!(strategy.equity[1].market_value, 12.0);
-    assert_eq!(strategy.equity[1].equity, 100_000.0);
+    assert_eq!(strategy.equity[1].equity, 1000000.0);
 }
 
 #[test]
@@ -8356,7 +8356,7 @@ if bar_index == 0
     assert_eq!(strategy.orders[0].id, "E");
     assert_eq!(strategy.orders[0].qty, 5.0);
     assert_eq!(strategy.position[0].size, 5.0);
-    assert_eq!(strategy.equity[1].cash, 99_985.0);
+    assert_eq!(strategy.equity[1].cash, 999985.0);
 }
 
 #[test]
@@ -8428,10 +8428,10 @@ if bar_index == 2
         strategy.position.last().map(|snapshot| snapshot.size),
         Some(0.0)
     );
-    assert_eq!(strategy.equity[2].cash, 99_994.0);
-    assert_eq!(strategy.equity[3].cash, 100_002.0);
+    assert_eq!(strategy.equity[2].cash, 999994.0);
+    assert_eq!(strategy.equity[3].cash, 1000002.0);
     assert_eq!(strategy.equity[3].market_value, 0.0);
-    assert_eq!(strategy.equity[3].equity, 100_002.0);
+    assert_eq!(strategy.equity[3].equity, 1000002.0);
 }
 
 #[test]
@@ -8701,9 +8701,9 @@ plot(strategy.opentrades)
         strategy.position.last().map(|snapshot| snapshot.size),
         Some(0.0)
     );
-    assert_eq!(strategy.equity[3].cash, 100_004.0);
+    assert_eq!(strategy.equity[3].cash, 1000004.0);
     assert_eq!(strategy.equity[3].market_value, 0.0);
-    assert_eq!(strategy.equity[3].equity, 100_004.0);
+    assert_eq!(strategy.equity[3].equity, 1000004.0);
     assert_eq!(strategy.equity[3].net_profit, 4.0);
 }
 
@@ -8928,7 +8928,7 @@ if bar_index == 0
     assert_eq!(strategy.trades[0].profit, -4.0);
     assert_eq!(strategy.position.len(), 2);
     assert_eq!(strategy.position[1].size, 0.0);
-    assert_eq!(strategy.equity[1].cash, 99_996.0);
+    assert_eq!(strategy.equity[1].cash, 999996.0);
     assert_eq!(strategy.equity[1].market_value, 0.0);
     assert_eq!(strategy.equity[1].net_profit, -4.0);
     assert!(strategy.diagnostics.is_empty());
@@ -9416,7 +9416,7 @@ if bar_index == 0
     assert_eq!(strategy.trades[0].exit_price, 12.0);
     assert_eq!(strategy.trades[0].profit, 2.0);
     assert_eq!(strategy.position[1].size, 0.0);
-    assert_eq!(strategy.equity[1].cash, 100_002.0);
+    assert_eq!(strategy.equity[1].cash, 1000002.0);
 }
 
 #[test]
@@ -10496,10 +10496,10 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(1.0),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -10523,18 +10523,18 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_999.0),
-            PineValue::Float(100_001.0),
-            PineValue::Float(100_002.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999999.0),
+            PineValue::Float(1000001.0),
+            PineValue::Float(1000002.0),
         ]
     );
 
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.trades[0].profit, 2.0);
-    assert_eq!(strategy.equity[1].cash, 99_995.0);
-    assert_eq!(strategy.equity[1].equity, 99_999.0);
-    assert_eq!(strategy.equity[3].cash, 100_002.0);
+    assert_eq!(strategy.equity[1].cash, 999995.0);
+    assert_eq!(strategy.equity[1].equity, 999999.0);
+    assert_eq!(strategy.equity[3].cash, 1000002.0);
 }
 
 #[test]
@@ -10605,10 +10605,10 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(1.5),
             PineValue::Float(1.5),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -10632,18 +10632,18 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_998.5),
-            PineValue::Float(100_000.5),
-            PineValue::Float(100_001.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999998.5),
+            PineValue::Float(1000000.5),
+            PineValue::Float(1000001.0),
         ]
     );
 
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.trades[0].profit, 1.0);
-    assert_eq!(strategy.equity[1].cash, 99_994.5);
-    assert_eq!(strategy.equity[1].equity, 99_998.5);
-    assert_eq!(strategy.equity[3].cash, 100_001.0);
+    assert_eq!(strategy.equity[1].cash, 999994.5);
+    assert_eq!(strategy.equity[1].equity, 999998.5);
+    assert_eq!(strategy.equity[3].cash, 1000001.0);
 }
 
 #[test]
@@ -10681,10 +10681,10 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(0.4),
             PineValue::Float(0.4),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -10745,10 +10745,10 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(0.4),
             PineValue::Float(0.4),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -10772,18 +10772,19 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_999.6),
-            PineValue::Float(100_001.6),
-            PineValue::Float(100_000.0 + 4.0 - (0.4 + 0.8)),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999999.6),
+            PineValue::Float(1000001.6),
+            // Cash records the entry cost/fee and exit proceeds/fee separately.
+            PineValue::Float(1000000.0 - 4.0 - 0.4 + 8.0 - 0.8),
         ]
     );
 
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.trades[0].profit, 4.0 - (0.4 + 0.8));
-    assert_eq!(strategy.equity[1].cash, 99_995.6);
-    assert_eq!(strategy.equity[1].equity, 99_999.6);
-    assert_eq!(strategy.equity[3].cash, 100_000.0 + 4.0 - (0.4 + 0.8));
+    assert_eq!(strategy.equity[1].cash, 999995.6);
+    assert_eq!(strategy.equity[1].equity, 999999.6);
+    assert_eq!(strategy.equity[3].cash, 1000000.0 - 4.0 - 0.4 + 8.0 - 0.8);
 }
 
 #[test]
@@ -10886,10 +10887,10 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_998.0),
-            PineValue::Float(100_000.0),
-            PineValue::Float(100_000.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999998.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(1000000.0),
         ]
     );
 
@@ -10980,10 +10981,10 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[2].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_998.0),
-            PineValue::Float(99_998.0),
-            PineValue::Float(99_998.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999998.0),
+            PineValue::Float(999998.0),
+            PineValue::Float(999998.0),
         ]
     );
 
@@ -12244,10 +12245,10 @@ plot(strategy.opentrades.max_drawdown_percent(0.5))
     assert_eq!(
         result.plots[6].values,
         vec![
-            PineValue::Na,
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Na
+            PineValue::Float(0.0),
+            PineValue::Float(0.0)
         ]
     );
     assert_eq!(
@@ -12273,7 +12274,7 @@ plot(strategy.opentrades.max_drawdown_percent(0.5))
         vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na]
     );
     for (index, plot) in result.plots.iter().enumerate().take(37).skip(10) {
-        let expected = if matches!(index, 14 | 23) {
+        let expected = if matches!(index, 14 | 16 | 23 | 25) {
             PineValue::Float(0.0)
         } else {
             PineValue::Na

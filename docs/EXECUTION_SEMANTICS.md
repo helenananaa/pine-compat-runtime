@@ -141,7 +141,14 @@ Strategy-mode runtime results include a `strategy` object with `orders`,
 `trades`, `position`, `equity`, and `diagnostics` arrays. Indicator-mode
 runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
-cash value; when omitted, the runtime uses 100000.
+cash value; when omitted, the runtime uses 1000000, matching independently
+captured Pine v5/v6 defaults. Builds through the initial local 0.3.0-rc.1
+candidate used 100000; scripts requiring that amount should declare it explicitly.
+
+For integer indices, `strategy.opentrades.commission` returns zero when the
+trade is absent, including negative indices and reads while flat. Other
+identity fields retain their `na` behavior; non-integer/`na` commission indices
+are outside this captured correction.
 
 When an additional long stop entry is requested with an existing long position,
 its combined long exposure must fit available equity at the stop price under

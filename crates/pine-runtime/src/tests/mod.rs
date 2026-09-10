@@ -26,6 +26,7 @@ mod runtime_core;
 mod runtime_history;
 mod strategy;
 mod strategy_margin_admission;
+mod strategy_native_defaults;
 mod strategy_regressions;
 mod user_types;
 mod versioned_arithmetic;

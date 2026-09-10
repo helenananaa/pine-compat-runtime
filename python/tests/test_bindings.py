@@ -47,23 +47,23 @@ EMPTY_STRATEGY_RESULT = {
 FLAT_EQUITY = [
     {
         "barIndex": 0,
-        "cash": 100000.0,
+        "cash": 1000000.0,
         "marketValue": 0.0,
-        "equity": 100000.0,
+        "equity": 1000000.0,
         "netProfit": 0.0,
     },
     {
         "barIndex": 1,
-        "cash": 100000.0,
+        "cash": 1000000.0,
         "marketValue": 0.0,
-        "equity": 100000.0,
+        "equity": 1000000.0,
         "netProfit": 0.0,
     },
     {
         "barIndex": 2,
-        "cash": 100000.0,
+        "cash": 1000000.0,
         "marketValue": 0.0,
-        "equity": 100000.0,
+        "equity": 1000000.0,
         "netProfit": 0.0,
     },
 ]
@@ -3860,16 +3860,16 @@ def test_run_script_returns_strategy_entry_contract():
         FLAT_EQUITY[0],
         {
             "barIndex": 1,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 2,
-            "cash": 99994.0,
+            "cash": 999994.0,
             "marketValue": 6.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
     ]
@@ -5966,14 +5966,14 @@ def test_run_script_returns_strategy_cash_per_contract_commission_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 1.0, 1.0, None, None],
+        [0.0, 1.0, 1.0, 0.0, 0.0],
         [0.0, 0.0, 0.0, 2.0, 2.0],
         [0.0, -1.0, -1.0, 2.0, 2.0],
-        [100000.0, 99999.0, 100001.0, 100002.0, 100002.0],
+        [1000000.0, 999999.0, 1000001.0, 1000002.0, 1000002.0],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 2.0
-    assert result["strategy"]["equity"][1]["cash"] == 99995.0
-    assert result["strategy"]["equity"][1]["equity"] == 99999.0
+    assert result["strategy"]["equity"][1]["cash"] == 999995.0
+    assert result["strategy"]["equity"][1]["equity"] == 999999.0
 
 
 def test_run_script_returns_strategy_cash_per_order_commission_plots():
@@ -5986,14 +5986,14 @@ def test_run_script_returns_strategy_cash_per_order_commission_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 1.5, 1.5, None, None],
+        [0.0, 1.5, 1.5, 0.0, 0.0],
         [0.0, 0.0, 0.0, 3.0, 3.0],
         [0.0, -1.5, -1.5, 1.0, 1.0],
-        [100000.0, 99998.5, 100000.5, 100001.0, 100001.0],
+        [1000000.0, 999998.5, 1000000.5, 1000001.0, 1000001.0],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 1.0
-    assert result["strategy"]["equity"][1]["cash"] == 99994.5
-    assert result["strategy"]["equity"][1]["equity"] == 99998.5
+    assert result["strategy"]["equity"][1]["cash"] == 999994.5
+    assert result["strategy"]["equity"][1]["equity"] == 999998.5
 
 
 def test_run_script_returns_strategy_percent_commission_plots():
@@ -6004,14 +6004,18 @@ def test_run_script_returns_strategy_percent_commission_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 0.4, 0.4, None, None],
+        [0.0, 0.4, 0.4, 0.0, 0.0],
         [0.0, 0.0, 0.0, 1.2000000000000002, 1.2000000000000002],
         [0.0, -0.4, -0.4, 2.8, 2.8],
-        [100000.0, 99999.6, 100001.6, 100002.8, 100002.8],
+        [
+            1000000.0, 999999.6, 1000001.6,
+            1000000.0 - 4.0 - 0.4 + 8.0 - 0.8,
+            1000000.0 - 4.0 - 0.4 + 8.0 - 0.8,
+        ],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 2.8
-    assert result["strategy"]["equity"][1]["cash"] == 99995.6
-    assert result["strategy"]["equity"][1]["equity"] == 99999.6
+    assert result["strategy"]["equity"][1]["cash"] == 999995.6
+    assert result["strategy"]["equity"][1]["equity"] == 999999.6
 
 
 def test_run_script_returns_strategy_slippage_plots():
@@ -6025,7 +6029,7 @@ def test_run_script_returns_strategy_slippage_plots():
         [None, None, None, 3.0, 3.0],
         [None, None, None, 3.0, 3.0],
         [0.0, 0.0, 0.0, 0.0, 0.0],
-        [100000.0, 99998.0, 100000.0, 100000.0, 100000.0],
+        [1000000.0, 999998.0, 1000000.0, 1000000.0, 1000000.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
     assert result["strategy"]["trades"][0]["entryPrice"] == 3.0
@@ -6043,7 +6047,7 @@ def test_run_script_returns_strategy_exit_slippage_plots():
     assert [plot["values"] for plot in result["plots"]] == [
         [None, None, 2.0, 2.0],
         [0.0, 0.0, -2.0, -2.0],
-        [100000.0, 99998.0, 99998.0, 99998.0],
+        [1000000.0, 999998.0, 999998.0, 999998.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
     assert result["strategy"]["orders"][1]["price"] == 2.0
@@ -6072,30 +6076,30 @@ def test_run_script_returns_strategy_limit_verification_entry_plots():
     assert result["strategy"]["equity"] == [
         {
             "barIndex": 0,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 1,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 2,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 3,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
     ]

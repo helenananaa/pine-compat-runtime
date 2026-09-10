@@ -78,6 +78,11 @@ Windows checks and retained development-artifact parity. This does not relabel
 the previously retained candidate binaries. `TRADINGVIEW_GOAL_PROGRESS.md`
 tracks the new captures; the original live-price failure and B1/r1 evidence
 boundaries remain open.
+`STRATEGY_NATIVE_DEFAULTS_AUDIT.md` subsequently qualifies the native 1000000
+initial-capital default and zero commission for absent open trades. Its
+unmodified r1 native companion plus v5/v6 controls pass 624806 values and
+complete Windows gates. This behavioral correction is later development, not
+a relabeling of the earlier local candidate's artifacts.
 
 | Workload | Source | Historical | Incremental | Realtime | Formal scale (non-trend) |
 | --- | --- | --- | --- | --- | --- |

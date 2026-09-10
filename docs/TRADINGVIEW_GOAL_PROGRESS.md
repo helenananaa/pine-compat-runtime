@@ -35,6 +35,10 @@ collection. Earlier task-specific restrictions on new captures no longer apply.
 - An unmodified r1 commission script now has a separate native-data companion
   capture from bar zero (24988 closed bars). Before repair, 49974/99952 plot
   values differ, in initial-capital and absent-open-trade commission behavior.
-  These are new defects under investigation, not failures of the long-stop fix.
+  These defects are now corrected: 99952/99952 values pass, and the separate
+  v5/v6 controls bring the new reference total to 624806 passing values.
+  Full Windows checks pass 6672 Rust / 715 Python / 130 tools and actual WASM.
+  See `STRATEGY_NATIVE_DEFAULTS_AUDIT.md`. The original r1 source and synthetic
+  scenario are unchanged; this is one new native companion scenario.
 - No publication is performed. B1 private ordering and original r1 coverage
   are not upgraded by these separate captures.

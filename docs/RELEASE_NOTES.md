@@ -3,9 +3,19 @@
 ## Unreleased
 
 Local candidate identity is Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. This is
-not a GitHub release. TV-blocked items (live-tick exit prices, B1
-`UNVERIFIED_INTERNAL_ORDER`, public r1 0/482, dynamic request arguments)
-remain open.
+not a GitHub release. TV reference gaps (live-tick exit prices, B1
+`UNVERIFIED_INTERNAL_ORDER`, public r1 0/482) remain open. Dynamic request
+arguments remain an engineering/host contract boundary.
+
+- Native-reference correction: omitted strategy initial capital is now
+  1,000,000 rather than 100,000. This changes default cash/equity and may change
+  sizing for scripts using equity percentages. Declare `initial_capital=100000`
+  explicitly when that starting amount is intended. Native v5/v6 captures and
+  an unmodified r1 commission script establish the corrected default.
+- Native-reference correction: absent integer-index open-trade commission
+  reads return zero rather than `na`; other trade identity fields are unchanged.
+- Occupied-long stop admission rejects requests whose combined margin cannot
+  be funded at the stop price, even if a later exit would release funds.
 
 ## 0.3.0-rc.1 - local candidate
 

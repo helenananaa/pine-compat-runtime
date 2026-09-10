@@ -1,4 +1,4 @@
-pub const DEFAULT_STRATEGY_INITIAL_CAPITAL: f64 = 100_000.0;
+pub const DEFAULT_STRATEGY_INITIAL_CAPITAL: f64 = 1_000_000.0;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StrategyDefaultQuantity {

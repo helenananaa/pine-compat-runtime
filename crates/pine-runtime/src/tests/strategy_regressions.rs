@@ -86,7 +86,7 @@ fn stale_trade_key_exit_does_not_create_a_ghost_close() {
     assert_eq!(strategy.trades[1].profit, 10.0);
     assert_eq!(
         strategy.equity.last().map(|value| value.cash),
-        Some(100_013.0)
+        Some(1000013.0)
     );
     assert_eq!(strategy.position.last().map(|value| value.size), Some(0.0));
 }
@@ -133,7 +133,7 @@ fn close_same_id_records_each_entry_allocation() {
     assert_eq!(strategy.trades[1].profit, 2.0);
     assert_eq!(
         strategy.equity.last().map(|value| value.cash),
-        Some(100_005.0)
+        Some(1000005.0)
     );
     assert_eq!(
         strategy.equity.last().map(|value| value.net_profit),

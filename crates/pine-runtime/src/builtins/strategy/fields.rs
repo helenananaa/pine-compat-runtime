@@ -155,7 +155,7 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.opentrades.commission" => self
                 .strategy_broker
                 .open_trade_commission(trade_num)
-                .map_or(PineValue::Na, PineValue::Float),
+                .map_or(PineValue::Float(0.0), PineValue::Float),
             "strategy.opentrades.max_runup" => self
                 .strategy_broker
                 .open_trade_max_runup(trade_num)

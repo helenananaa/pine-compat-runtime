@@ -74,6 +74,9 @@ fn normalized_hir(source: &str) -> pine_ir::HirProgram {
     );
     let mut hir = analysis.hir.expect("HIR");
     hir.language_version = None;
+    // These comparisons deliberately check execution IR across different
+    // source spellings/versions. Original locations are checked separately.
+    hir.call_site_sources.clear();
     hir
 }
 
@@ -174,6 +177,20 @@ fn exact_function_alias_lowers_to_canonical_hir_and_preserves_source_span() {
     assert_eq!(translation.canonical_feature, "ta.sma");
     assert_eq!(translation.kind, LegacyTranslationKind::ExactAlias);
     assert_eq!(translation.span, Span::new(start, start + "sma".len()));
+    let HirExprKind::Call { call_site_id, .. } = &plot_arg.kind else {
+        panic!("expected the lowered canonical call");
+    };
+    let origin = analysis
+        .hir
+        .as_ref()
+        .unwrap()
+        .call_site_sources
+        .iter()
+        .find(|entry| entry.call_site_id == *call_site_id)
+        .expect("original call location");
+    assert_eq!(origin.source_id, 0);
+    assert!(origin.library_key.is_none());
+    assert_eq!(&source[origin.start..origin.end], "sma(close, 2)");
 }
 
 #[test]
@@ -4093,6 +4110,10 @@ fn implicit_v1_matches_explicit_v2_only_for_the_claimed_shared_profile() {
     let mut v2_hir = v2.hir.expect("v2 HIR");
     v1_hir.language_version = None;
     v2_hir.language_version = None;
+    // The explicit version directive shifts source byte ranges; this control
+    // compares only the already-claimed shared execution profile.
+    v1_hir.call_site_sources.clear();
+    v2_hir.call_site_sources.clear();
     assert_eq!(v1_hir, v2_hir);
 }
 

@@ -157,3 +157,113 @@ fn discovery_does_not_expand_modern_request_admission() {
         );
     }
 }
+
+#[test]
+fn root_input_and_request_locations_are_original_utf8_byte_ranges() {
+    let source = "//@version=6\n// 中文位置\nindicator(\"source\")\ns=input.symbol(\"REMOTE\")\nplot(request.security(\"REMOTE\",\"60\",close))\n";
+    let report = host_requirements(&program(source));
+    assert_eq!(report.call_sites.len(), 2);
+    for call in &report.call_sites {
+        let location = call.source.as_ref().unwrap();
+        assert_eq!(location.source_id, 0);
+        assert!(location.library_key.is_none());
+        let text = &source[location.start..location.end];
+        if report.input_call_site_ids.contains(&call.call_site_id) {
+            assert_eq!(text, "input.symbol(\"REMOTE\")");
+        } else {
+            assert_eq!(text, "request.security(\"REMOTE\",\"60\",close)");
+        }
+    }
+}
+
+#[test]
+fn aliased_and_transitive_calls_keep_physical_library_identity() {
+    let leaf = "//@version=6\n// 原始库\nlibrary(\"Leaf\")\nexport value() => request.security(\"REMOTE\",\"60\",close)\n";
+    let parent = "//@version=6\nimport Test/Leaf/1 as leaf\nlibrary(\"Parent\")\nexport value() => leaf.value()\n";
+    let input = AnalysisInput::with_library_sources(
+        SourceFile::new("same.pine", "//@version=6\nimport Test/Leaf/1 as left\nimport Test/Leaf/1 as right\nimport Test/Parent/1 as parent\nindicator(\"origins\")\nplot(left.value())\nplot(right.value())\nplot(parent.value())\n"),
+        vec![
+            ("Test/Parent/1".into(), SourceFile::new("same.pine", parent)),
+            ("Test/Leaf/1".into(), SourceFile::new("same.pine", leaf)),
+        ],
+    ).unwrap();
+    let analysis = analyze_input(&input);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let report = host_requirements(&analysis.hir.unwrap());
+    assert_eq!(report.requests.len(), 3);
+    assert_eq!(report.call_sites.len(), 3);
+    for call in &report.call_sites {
+        let source = call.source.as_ref().unwrap();
+        assert_eq!(
+            source.source_id, 1,
+            "physical IDs follow sorted library sources"
+        );
+        assert_eq!(source.library_key.as_deref(), Some("Test/Leaf/1"));
+        assert_eq!(
+            &leaf[source.start..source.end],
+            "request.security(\"REMOTE\",\"60\",close)"
+        );
+    }
+}
+
+#[test]
+fn legacy_security_location_is_not_replaced_with_the_canonical_callee_text() {
+    let source = "//@version=4\nstudy(\"origin\")\nplot(security(\"REMOTE\",\"60\",close))\n";
+    let report = host_requirements(&program(source));
+    assert_eq!(report.call_sites.len(), 1);
+    let location = report.call_sites[0].source.as_ref().unwrap();
+    assert_eq!(
+        &source[location.start..location.end],
+        "security(\"REMOTE\",\"60\",close)"
+    );
+}
+
+#[test]
+fn absent_hir_provenance_is_explicitly_unavailable() {
+    let mut hir = program(
+        "//@version=6\nindicator(\"manual\")\nplot(request.security(\"REMOTE\",\"60\",close))\n",
+    );
+    hir.call_site_sources.clear();
+    let report = host_requirements(&hir);
+    assert_eq!(report.requests.len(), 1);
+    assert_eq!(report.call_sites.len(), 1);
+    assert!(report.call_sites[0].source.is_none());
+    let json: serde_json::Value = serde_json::from_str(&host_requirements_json(&hir)).unwrap();
+    assert!(json["callSites"][0]["source"].is_null());
+}
+
+#[test]
+fn caller_request_argument_does_not_acquire_the_inlined_library_origin() {
+    let root = "//@version=6\nimport Test/Identity/1 as lib\nindicator(\"caller\")\nplot(lib.value(request.security(\"REMOTE\",\"60\",close)))\n";
+    let input = AnalysisInput::with_library_sources(
+        SourceFile::new("root.pine", root),
+        vec![(
+            "Test/Identity/1".into(),
+            SourceFile::new(
+                "library.pine",
+                "//@version=6\nlibrary(\"Identity\")\nexport value(float x) => x\n",
+            ),
+        )],
+    )
+    .unwrap();
+    let analysis = analyze_input(&input);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let report = host_requirements(&analysis.hir.unwrap());
+    assert_eq!(report.requests.len(), 1);
+    assert_eq!(report.call_sites.len(), 1);
+    let source = report.call_sites[0].source.as_ref().unwrap();
+    assert_eq!(source.source_id, 0);
+    assert!(source.library_key.is_none());
+    assert_eq!(
+        &root[source.start..source.end],
+        "request.security(\"REMOTE\",\"60\",close)"
+    );
+}

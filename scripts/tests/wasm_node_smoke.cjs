@@ -235,9 +235,31 @@ assert.throws(
 
 const requirementsFs = require('node:fs');
 const requirementsRoot = path.resolve(__dirname, '../..');
-const requirementsProgram = pine.compileScript(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/host_requirements/strategy.pine'), 'utf8'));
-assert.deepStrictEqual(JSON.parse(requirementsProgram.hostRequirements()), JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/snapshots/host_requirements.json'), 'utf8')));
+const requirementsSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/host_requirements/strategy.pine'), 'utf8');
+const requirementsProgram = pine.compileScript(requirementsSource);
+const requirementsExpected = JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/snapshots/host_requirements.json'), 'utf8'));
+const requirementsSpans = JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/host_requirements/source_spans.json'), 'utf8'));
+const requirementsBytes = Buffer.from(requirementsSource, 'utf8');
+requirementsExpected.callSites = requirementsSpans.map(({callSiteId, text}) => {
+  const bytes = Buffer.from(text, 'utf8');
+  const start = requirementsBytes.indexOf(bytes);
+  assert(start >= 0);
+  assert.equal(requirementsBytes.indexOf(bytes, start + 1), -1);
+  return {callSiteId, source: {sourceId: 0, libraryKey: null, start, end: start + bytes.length}};
+});
+assert.deepStrictEqual(JSON.parse(requirementsProgram.hostRequirements()), requirementsExpected);
 requirementsProgram.free();
+
+for (const newline of ['\n', '\r\n']) {
+  const expression = 'request.security("REMOTE","60",close)';
+  const original = ['//@version=6', '// 中文', 'indicator("origin")', `plot(${expression})`, ''].join(newline);
+  const compiled = pine.compileScript(original);
+  const report = JSON.parse(compiled.hostRequirements());
+  const start = Buffer.from(original, 'utf8').indexOf(Buffer.from(expression));
+  assert.deepStrictEqual(report.callSites, [{callSiteId: report.requests[0].callSiteId,
+    source: {sourceId: 0, libraryKey: null, start, end: start + Buffer.byteLength(expression)}}]);
+  compiled.free();
+}
 
 for (const pointValue of [0, -1, 0.5, 5, 1.0000000001, true, null, '1']) {
   assert.throws(() => pine.runScriptCsvWithRequestBars(source, bars, JSON.stringify({$chart: {pointValue}})), /pointValue/);

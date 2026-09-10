@@ -112,6 +112,8 @@ fn analyze_validated_modules(
         legacy,
         source_context_id: Cell::new(SourceContextId::root()),
         source_context_depth: Cell::new(0),
+        source_context_origins: module_validation.source_context_origins,
+        call_site_sources: Vec::new(),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),

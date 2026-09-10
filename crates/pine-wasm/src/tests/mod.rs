@@ -11205,12 +11205,28 @@ fn workspace_dir() -> PathBuf {
 }
 #[test]
 fn compiled_host_requirements_match_shared_contract_without_data() {
-    let program = crate::compile_program(crate::analysis_input(include_str!(
-        "../../../../tests/fixtures/host_requirements/strategy.pine"
-    )))
+    let source = include_str!("../../../../tests/fixtures/host_requirements/strategy.pine");
+    let program = crate::compile_program(crate::analysis_input(source)).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&program.host_requirements()).unwrap();
+    let mut expected: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../tests/snapshots/host_requirements.json"
+    ))
     .unwrap();
-    assert_eq!(
-        program.host_requirements().trim(),
-        include_str!("../../../../tests/snapshots/host_requirements.json").trim()
+    let spans: Vec<serde_json::Value> = serde_json::from_str(include_str!(
+        "../../../../tests/fixtures/host_requirements/source_spans.json"
+    ))
+    .unwrap();
+    expected["callSites"] = serde_json::Value::Array(
+        spans
+            .iter()
+            .map(|span| {
+                let text = span["text"].as_str().unwrap();
+                assert_eq!(source.matches(text).count(), 1);
+                let start = source.find(text).unwrap();
+                serde_json::json!({"callSiteId":span["callSiteId"],"source":{
+            "sourceId":0,"libraryKey":null,"start":start,"end":start+text.len()}})
+            })
+            .collect(),
     );
+    assert_eq!(actual, expected);
 }

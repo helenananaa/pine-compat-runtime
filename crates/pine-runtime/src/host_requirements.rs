@@ -21,6 +21,26 @@ pub struct HostRequirements {
     pub execution: ExecutionInputContract,
     pub requests: Vec<RequestRequirement>,
     pub input_call_site_ids: Vec<u32>,
+    pub call_sites: Vec<HostCallSite>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HostCallSite {
+    pub call_site_id: u32,
+    /// None means unavailable (for example, a manually constructed HIR).
+    pub source: Option<HostSourceLocation>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HostSourceLocation {
+    pub source_id: usize,
+    /// None identifies the root; a library uses its exact supplied import key.
+    pub library_key: Option<String>,
+    /// Half-open UTF-8 byte offsets in the original physical source.
+    pub start: usize,
+    pub end: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -165,6 +185,30 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
     });
     requests.sort_by_key(|request| request.call_site_id);
     requests.dedup();
+    let source_locations: HashMap<_, _> = program
+        .call_site_sources
+        .iter()
+        .map(|source| (source.call_site_id.0, source))
+        .collect();
+    let required_calls: BTreeSet<_> = input_ids
+        .iter()
+        .copied()
+        .chain(requests.iter().map(|request| request.call_site_id))
+        .collect();
+    let call_sites = required_calls
+        .into_iter()
+        .map(|call_site_id| HostCallSite {
+            call_site_id,
+            source: source_locations
+                .get(&call_site_id)
+                .map(|source| HostSourceLocation {
+                    source_id: source.source_id,
+                    library_key: source.library_key.clone(),
+                    start: source.start,
+                    end: source.end,
+                }),
+        })
+        .collect();
     let strategy = program.script_mode == ScriptMode::Strategy;
     HostRequirements {
         schema_version: HOST_REQUIREMENTS_SCHEMA_VERSION,
@@ -220,6 +264,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         },
         requests,
         input_call_site_ids: input_ids.into_iter().collect(),
+        call_sites,
     }
 }
 

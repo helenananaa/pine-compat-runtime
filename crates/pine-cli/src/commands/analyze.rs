@@ -56,7 +56,31 @@ mod requirements_tests {
         .unwrap();
         let expected =
             std::fs::read_to_string(root.join("tests/snapshots/host_requirements.json")).unwrap();
-        assert_eq!(actual.trim(), expected.trim());
+        let actual: serde_json::Value = serde_json::from_str(&actual).unwrap();
+        let mut expected: serde_json::Value = serde_json::from_str(&expected).unwrap();
+        let source =
+            std::fs::read_to_string(root.join("tests/fixtures/host_requirements/strategy.pine"))
+                .unwrap();
+        let spans: Vec<serde_json::Value> = serde_json::from_str(
+            &std::fs::read_to_string(
+                root.join("tests/fixtures/host_requirements/source_spans.json"),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        expected["callSites"] = serde_json::Value::Array(
+            spans
+                .iter()
+                .map(|span| {
+                    let text = span["text"].as_str().unwrap();
+                    assert_eq!(source.matches(text).count(), 1);
+                    let start = source.find(text).unwrap();
+                    serde_json::json!({"callSiteId":span["callSiteId"],"source":{
+                "sourceId":0,"libraryKey":null,"start":start,"end":start+text.len()}})
+                })
+                .collect(),
+        );
+        assert_eq!(actual, expected);
     }
 
     #[test]

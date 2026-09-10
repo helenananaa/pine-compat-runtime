@@ -1,0 +1,5 @@
+[
+  {"callSiteId": 1, "text": "input.symbol(\"OTHER\", \"Requested symbol\")"},
+  {"callSiteId": 4, "text": "request.security(\"OTHER\", \"60\", close)"},
+  {"callSiteId": 6, "text": "request.security(syminfo.tickerid, timeframe.period, close)"}
+]

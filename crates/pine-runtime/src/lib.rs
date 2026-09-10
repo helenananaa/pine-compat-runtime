@@ -24,8 +24,8 @@ pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
 pub use host_requirements::{
     AccountInputContract, ChartInputContract, ChartInputDefaults, ExecutionInputContract,
-    HOST_REQUIREMENTS_SCHEMA_VERSION, HostRequirements, RequestArgument, RequestRequirement,
-    host_requirements, host_requirements_json,
+    HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements, HostSourceLocation,
+    RequestArgument, RequestRequirement, host_requirements, host_requirements_json,
 };
 pub use input_metadata::{InputCall, input_calls};
 pub use magnifier::{

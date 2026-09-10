@@ -316,3 +316,42 @@ wall time dropped from 25.471 to 20.001 seconds. A more intrusive reuse experime
 did not improve overall time in its trial and was retained but not selected.
 This supports a new full 100k/10k attempt with the original budgets and a freshly
 frozen commit/binary identity; it does not itself complete D4.
+
+While the frozen v4 resource run remains active in the delivery-hosts worktree,
+D3 source-provenance work proceeds without builds in the delivery-release
+worktree on `codex/host-source-provenance`, based on 6ce9c895d. The draft records
+physical source identity and byte ranges at lowering, then joins discovered
+request/input call IDs in the host inventory. Five tests cover Unicode root
+ranges, duplicate aliases with transitive imports, legacy security, explicitly unavailable manual-HIR provenance, and caller-owned arguments
+passed into imported functions. These edits are uncompiled/unqualified and not
+integrated; see the working-draft section of HOST_REQUIREMENTS.md. Current main
+and the resource-run source tree remain clean and unchanged.
+
+V4 resource acceptance is terminal and failed at its unchanged 1800-second
+timeout. First live repetition completed; the last retained second-repetition
+milestone is 3072/10000 at 1794.454 seconds. The process is gone and the unchanged
+budget verifier emitted `trend-100k-acceptance-v4.json` with a timeout failure.
+No final timing distributions were produced, so this is not evidence that its
+individual latency budgets passed. Preserve the progress/report/plan hashes and
+diagnose full-history copying before another full run.
+
+The source-provenance draft has now compiled and passed all 12 targeted inventory
+tests. Cross-host expectations preserve the old semantic-field golden and add
+independently specified source text ranges, calculated against actual UTF-8 bytes
+for LF/CRLF inputs. Full regression and installed-host qualification have started;
+the draft remains isolated until those checks pass.
+
+Source provenance now passes full Windows qualification: 6660 Rust / 712
+installed-wheel Python / 117 tools and actual WASM. Discovered request/input
+calls carry original physical source identity and UTF-8 byte ranges, including
+aliases, transitive imports and caller-owned arguments. Missing metadata is
+explicitly null. Schema-1 extension and LF/CRLF/Unicode controls are validated;
+configured-provider readiness review remains separate. Known-commit retained
+artifact checks and local integration follow this qualified implementation.
+
+A historical capacity inspection using the retained 141f79513 CLI on the same
+100k trend source/input finds only two retained series values, versus 200,000
+plot values, 100,000 equity rows and substantial order/trade/alert vectors. This
+directs subsequent copy-cost investigation toward output histories, not already
+trimmed series storage. These counts are not heap-size measurements or evidence
+that a proposed optimization has met the unchanged D4 budgets.

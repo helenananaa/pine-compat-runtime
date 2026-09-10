@@ -51,6 +51,7 @@ impl Analyzer {
             statements,
             next_series_id: self.next_series_id,
             next_call_site_id: self.next_call_site_id,
+            call_site_sources: self.call_site_sources.clone(),
             next_var_slot_id: self.next_var_slot_id,
             max_bars_back,
             series_max_bars_back,

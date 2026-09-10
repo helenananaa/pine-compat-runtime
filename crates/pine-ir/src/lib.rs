@@ -1,5 +1,6 @@
 //! Host-independent intermediate representation scaffolding.
 
+mod call_sites;
 mod internal;
 mod numeric_comparison;
 pub use numeric_comparison::{exact_numeric_comparison, pine_numeric_comparison};
@@ -7,6 +8,7 @@ mod strategy;
 mod types;
 mod user_types;
 
+pub use call_sites::{CallSiteId, HirCallSiteSource};
 pub use internal::{LEGACY_TRANSPARENCY_ARG, OMITTED_BUILTIN_ARG};
 pub use strategy::{
     DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCloseEntriesRule, StrategyCommission,
@@ -18,9 +20,6 @@ pub use user_types::{HirUserTypeField, HirUserTypeIdentity, HirUserTypeInfo};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesId(pub u32);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct CallSiteId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct VarSlotId(pub u32);
@@ -62,6 +61,9 @@ pub struct HirProgram {
     pub statements: Vec<HirStmt>,
     pub next_series_id: u32,
     pub next_call_site_id: u32,
+    /// Original physical source and byte range of lowered source calls.
+    /// Generated/manual calls may have no entry; absence is not a root location.
+    pub call_site_sources: Vec<HirCallSiteSource>,
     pub next_var_slot_id: u32,
     pub max_bars_back: Option<u32>,
     pub series_max_bars_back: Vec<HirSeriesMaxBarsBack>,

@@ -979,7 +979,7 @@ impl Analyzer {
                         param_exprs,
                         param_types,
                     )?;
-                    let call_site_id = self.alloc_call_site();
+                    let call_site_id = self.alloc_call_site_at(expr.span);
                     return self.finish_legacy_expr_coercion(
                         expr,
                         HirExpr {
@@ -993,7 +993,7 @@ impl Analyzer {
                         },
                     );
                 }
-                let call_site_id = self.alloc_call_site();
+                let call_site_id = self.alloc_call_site_at(expr.span);
                 let lowered_args =
                     self.lower_builtin_call_args(&name, args, param_exprs, param_types)?;
                 HirExprKind::Call {

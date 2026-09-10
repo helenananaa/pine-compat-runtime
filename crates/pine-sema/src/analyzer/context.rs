@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 mod const_eval;
 mod history_offsets;
+mod provenance;
 
 use pine_ir::{
     CallSiteId, DrawingSettings, PersistenceKind, PineType, Qualifier, ScriptMode, SeriesId,
@@ -50,6 +51,8 @@ pub(crate) struct Analyzer {
     pub(crate) legacy: LegacyFrontEnd,
     pub(crate) source_context_id: Cell<SourceContextId>,
     pub(crate) source_context_depth: Cell<usize>,
+    pub(crate) source_context_origins: HashMap<SourceContextId, (SourceId, Option<String>)>,
+    pub(crate) call_site_sources: Vec<pine_ir::HirCallSiteSource>,
     pub(crate) scope: ScopeResolver,
     pub(crate) bindings: HashMap<BindingKey, SymbolInfo>,
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,

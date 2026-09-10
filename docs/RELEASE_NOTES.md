@@ -16,6 +16,10 @@ arguments remain an engineering/host contract boundary.
   reads return zero rather than `na`; other trade identity fields are unchanged.
 - Occupied-long stop admission rejects requests whose combined margin cannot
   be funded at the stop price, even if a later exit would release funds.
+- Omitted long/short margins now follow source-version defaults: v5 uses 0,
+  v6 uses 100. Explicit zero remains supported. This changes v6 affordability
+  and liquidation behavior for scripts that previously ran with disabled
+  margin checks; use explicit margins to select the intended account model.
 
 ## 0.3.0-rc.1 - local candidate
 

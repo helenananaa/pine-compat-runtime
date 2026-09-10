@@ -42,3 +42,15 @@ collection. Earlier task-specific restrictions on new captures no longer apply.
   scenario are unchanged; this is one new native companion scenario.
 - No publication is performed. B1 private ordering and original r1 coverage
   are not upgraded by these separate captures.
+- Source-version margin defaults are corrected and Windows-qualified in
+  `STRATEGY_VERSIONED_MARGIN_AUDIT.md`: 6674 Rust / 715 Python / 130 tool tests,
+  actual WASM, and three native controls totaling 225171 matching values.
+- Linux native verification of commit 906e04592 passes 6672 Rust / 715
+  installed-wheel Python / actual WASM. Of 130 tool tests, the Windows-only
+  memory probe is skipped on Linux. Evidence is retained in
+  `.local/tv-goal-20260910/linux-906e04592-gate-v3.log` and the pinned source path.
+- Five repeated live round trips with concurrent browser market-event capture
+  are retained under `live-r3-quotes`. Native closed counts progress 1 through 5.
+  The replay compares 1856 values and retains 14 mismatches in one repeated
+  entry-price observation (78175.3 versus 78175.2). Finer input evidence is
+  being investigated; no price heuristic has been applied.

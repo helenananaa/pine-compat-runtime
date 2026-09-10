@@ -209,7 +209,13 @@ fixed `syminfo.mintick` ticks past the limit price while preserving the limit
 fill price. Other commission modes and richer fill models remain unsupported.
 `strategy(..., margin_long=N, margin_short=N)` accepts finite non-negative
 const numeric declaration values and stores their explicit presence in the
-internal strategy settings. Stage 7 Margin Slice M2 uses explicit active
+internal strategy settings. Omitted margins resolve to 0 in v5 and 100 in v6.
+Explicit zero disables margin for that side in either version. The `explicit`
+flag records source provenance; a resolved v6 default is active without that
+flag. Both the analyzer and direct Rust runtime apply these version defaults.
+See [versioned margin reference](STRATEGY_VERSIONED_MARGIN_AUDIT.md).
+
+Stage 7 Margin Slice M2 uses active
 `margin_long` for long-only `strategy.opentrades.capital_held`; Stage 7 Margin
 Slice M3 also checks supported long entry affordability at the actual fill
 price. Stage 7 Margin Slice M5 implements the first long-only forced

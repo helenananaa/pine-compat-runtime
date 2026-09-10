@@ -17,6 +17,8 @@ pub enum StrategyCommission {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StrategyMarginSetting {
     pub value_percent: f64,
+    /// Whether the source supplied the property; inherited v6 margins are active
+    /// even though this provenance flag remains false.
     pub explicit: bool,
 }
 
@@ -31,7 +33,7 @@ impl StrategyMarginSetting {
 
     #[must_use]
     pub fn is_active(self) -> bool {
-        self.explicit && self.value_percent > 0.0
+        self.value_percent > 0.0
     }
 }
 
@@ -88,6 +90,24 @@ impl Default for StrategySettings {
 }
 
 impl StrategySettings {
+    /// Resolve omitted account margins without marking them as source-explicit.
+    /// Pine v5 uses zero; v6 uses 100 percent. Explicit zero remains an override.
+    #[must_use]
+    pub fn with_language_defaults(mut self, language_version: Option<u16>) -> Self {
+        let margin = if language_version.is_some_and(|version| version >= 6) {
+            100.0
+        } else {
+            0.0
+        };
+        if !self.margin_long.explicit {
+            self.margin_long.value_percent = margin;
+        }
+        if !self.margin_short.explicit {
+            self.margin_short.value_percent = margin;
+        }
+        self
+    }
+
     #[must_use]
     pub fn default_entry_qty(self, equity: f64, price: f64) -> Option<f64> {
         self.default_qty.and_then(|default_qty| match default_qty {

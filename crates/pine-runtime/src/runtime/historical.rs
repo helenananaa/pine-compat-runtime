@@ -310,14 +310,21 @@ impl<'a> HistoricalRuntime<'a> {
         request_environment: RequestEnvironment,
     ) -> Self {
         let series_retention = SeriesRetention::from_program(&program);
+        let strategy_settings = if program.script_mode == ScriptMode::Strategy {
+            program
+                .strategy_settings
+                .with_language_defaults(program.language_version)
+        } else {
+            program.strategy_settings
+        };
         let strategy_broker = BrokerState::new_with_account_settings_and_pyramiding(
             program.strategy_settings.initial_capital,
             program.strategy_settings.commission,
             program.strategy_settings.slippage_ticks * request_environment.chart().min_tick(),
             program.strategy_settings.backtest_fill_limit_ticks
                 * request_environment.chart().min_tick(),
-            program.strategy_settings.margin_long,
-            program.strategy_settings.margin_short,
+            strategy_settings.margin_long,
+            strategy_settings.margin_short,
             program.strategy_settings.pyramiding_limit,
         )
         .with_quantity_scale(request_environment.chart().quantity_scale())

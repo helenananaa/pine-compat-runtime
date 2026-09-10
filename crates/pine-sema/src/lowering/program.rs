@@ -40,11 +40,17 @@ impl Analyzer {
         let script_mode = self
             .script_declaration
             .map_or(ScriptMode::Indicator, |(mode, _)| mode);
+        let strategy_settings = if script_mode == ScriptMode::Strategy {
+            self.strategy_settings
+                .with_language_defaults(self.compatibility.language_version)
+        } else {
+            self.strategy_settings
+        };
         let program = HirProgram {
             language_version: self.compatibility.language_version,
             script_mode,
             timenow_symbol: self.timenow_symbol,
-            strategy_settings: self.strategy_settings,
+            strategy_settings,
             drawing_settings: self.drawing_settings,
             user_types: self.lower_user_types(),
             symbols,

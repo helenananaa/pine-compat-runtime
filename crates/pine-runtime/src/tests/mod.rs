@@ -28,6 +28,7 @@ mod strategy;
 mod strategy_margin_admission;
 mod strategy_native_defaults;
 mod strategy_regressions;
+mod strategy_versioned_margin;
 mod user_types;
 mod versioned_arithmetic;
 

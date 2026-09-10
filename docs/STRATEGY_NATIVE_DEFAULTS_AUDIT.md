@@ -72,6 +72,12 @@ comparison tolerances have not changed.
   qualification remain separate; prior reference suites remain regression
   requirements for final delivery.
 
+Linux native follow-up at commit `906e04592` passes 6672 Rust / 715
+installed-wheel Python tests and actual WASM in a fresh pinned checkout.
+The 130-tool suite passes with its Windows-only memory probe skipped. Raw
+logs are retained in `linux-906e04592-gate-v3.log`; setup failures are separate.
+This does not qualify subsequent runtime changes or a release-profile wheel.
+
 This is not a release, full Pine compatibility, or acceptance of the original
 unresolved realtime-price capture. Broader v6 account-default behavior remains
 outside this two-field slice.

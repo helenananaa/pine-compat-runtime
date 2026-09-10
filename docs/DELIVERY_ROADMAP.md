@@ -60,6 +60,8 @@ This file is the only current delivery-status table. Paragraphs after
   Magnifier, long/short margin.
 - Known visible failures: live-tick 16/896 exit-price mismatches, B1
   `UNVERIFIED_INTERNAL_ORDER`, public r1 0/482.
+- New separate five-round live capture: 14/1856 entry-price observations differ;
+  detailed browser market events are retained while finer input is investigated.
 - Other worktrees (`pine-interpreter-delivery-*`) are not current main-tree
   acceptance and must not be overwritten.
 
@@ -83,6 +85,9 @@ initial-capital default and zero commission for absent open trades. Its
 unmodified r1 native companion plus v5/v6 controls pass 624806 values and
 complete Windows gates. This behavioral correction is later development, not
 a relabeling of the earlier local candidate's artifacts.
+`STRATEGY_VERSIONED_MARGIN_AUDIT.md` then qualifies v5/v6 omitted-margin
+defaults and explicit-zero overrides against three native controls (225171
+values), complete Windows checks, and actual CLI/Python/WASM parity.
 
 | Workload | Source | Historical | Incremental | Realtime | Formal scale (non-trend) |
 | --- | --- | --- | --- | --- | --- |

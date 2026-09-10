@@ -158,6 +158,18 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         execution_time: Option<i64>,
     ) -> Result<HistoricalRuntime<'a>, RuntimeError> {
+        if update.kind == BarUpdateKind::Forming
+            && self.confirmed.program.script_mode == pine_ir::ScriptMode::Strategy
+            && !self.confirmed.program.strategy_settings.calc_on_every_tick
+            && !self.confirmed.program.strategy_settings.calc_on_order_fills
+        {
+            // No script can execute on this observation. Clone its last visible
+            // state once, advance the broker transactionally, and retain all
+            // user state instead of restoring then cloning it again.
+            let mut runtime = self.forming.as_ref().unwrap_or(&self.confirmed).clone();
+            runtime.advance_broker_only_forming(update.bar)?;
+            return Ok(runtime);
+        }
         let is_new_bar = self.forming.is_none();
         // User state rolls back, except varip. Orders and fills belong to the
         // live broker and survive successful updates of the same open bar.

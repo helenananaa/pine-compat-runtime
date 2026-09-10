@@ -282,6 +282,19 @@ impl HistoricalFillStep {
 }
 
 impl HistoricalRuntime<'_> {
+    pub(crate) fn advance_broker_only_forming(&mut self, bar: Bar) -> Result<(), RuntimeError> {
+        debug_assert_eq!(self.program.script_mode, ScriptMode::Strategy);
+        debug_assert!(!self.program.strategy_settings.calc_on_every_tick);
+        debug_assert!(!self.program.strategy_settings.calc_on_order_fills);
+        self.session_windows
+            .validate_range(self.bars, self.bars + 1)
+            .map_err(crate::SessionWindowInputError::runtime_error)?;
+        self.strategy_scheduler.begin_bar(self.bars);
+        self.run_realtime_broker_tick(self.bars, bar)?;
+        self.strategy_broker.record_equity(self.bars, bar.close);
+        Ok(())
+    }
+
     fn run_realtime_broker_tick(&mut self, bar_index: usize, bar: Bar) -> Result<(), RuntimeError> {
         let timeframe_seconds =
             crate::builtins::time::timeframe_seconds(crate::DEFAULT_CHART_TIMEFRAME).unwrap_or(0);

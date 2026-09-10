@@ -125,3 +125,27 @@ acceptance run and does not establish its performance. Evidence is retained in
 `.local/delivery-20260909/resources/progress-pilot-10k256*`. Seven executable/
 collector tests and four frozen-budget tests pass; timeout retention is tested
 separately from successful real-probe progress.
+
+## Default-strategy forming copy reduction
+
+At clean baseline 843cd3fda, a release probe with 100,000 history bars and a
+64-bar tail (two repeats, one replacement) measured forming initial/replacement/
+confirmation P95 of 55.732/54.259/51.971 ms. For default strategies with both
+every-tick and order-fill recalculation disabled, the implementation copied the
+confirmed runtime and then copied retained user state again despite executing no
+script. The optimized path clones the last visible runtime once and advances
+only broker/scheduler state, with the same session validation and failure atomicity.
+
+The same workload produced 32.940/33.347/47.151 ms P95 and 20.001 seconds total
+wall time versus 25.471 seconds before. Historical/live output hashes are equal,
+and six distinct workload comparisons retain identical full outputs. These are
+pooled short-tail observations, not independent-process statistics or full-scale
+acceptance. Full Windows gates pass 6655 Rust / 710 installed-wheel Python /
+117 tool tests and actual WASM. The executing-strategy path is unchanged.
+
+A second experiment reused the forming instance with component-level rollback.
+Its replacement median improved, but total time was 20.819 seconds and confirmed
+P95 was 52.544 ms in that trial. It was not selected on this evidence; its patch,
+source, binary and measurements remain in `resources/broker-only-v2-*`.
+The selected implementation is the simpler first variant. No original phase,
+size, tolerance, memory limit or 1800-second observation window was loosened.

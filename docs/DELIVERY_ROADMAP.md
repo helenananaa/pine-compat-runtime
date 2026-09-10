@@ -307,3 +307,12 @@ destruction measurements, without changing frozen budget phases or limits. A
 including 0.623 seconds of returned-snapshot destruction. Full trend acceptance
 remains failed; the next formal attempt must use the original sizes and budgets
 with explicit new binary/commit identity, after reviewing diagnostic evidence.
+
+The new 100k+64 release diagnostic found redundant copying on default-strategy
+forming updates. Removing the second full-runtime copy preserves all six tested
+workload outputs and passes full Windows gates. Initial/replacement/confirmation
+P95 changed from 55.732/54.259/51.971 to 32.940/33.347/47.151 ms; total short-run
+wall time dropped from 25.471 to 20.001 seconds. A more intrusive reuse experiment
+did not improve overall time in its trial and was retained but not selected.
+This supports a new full 100k/10k attempt with the original budgets and a freshly
+frozen commit/binary identity; it does not itself complete D4.

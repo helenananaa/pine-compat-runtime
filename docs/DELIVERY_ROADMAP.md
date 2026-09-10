@@ -432,3 +432,15 @@ an independent offline/locked consumer produces identical complete JSON. Clippy
 passes. Ubuntu 22.04 WSL has Rust 1.95, Python 3.10, Node and maturin available.
 Linux source and manylinux-wheel qualification are next; no Linux pass is inferred
 from Windows results or the presence of tools.
+
+Linux native verification at da099ac1134a9c04936ca01fcb77bd936ce91603 passes
+6663 Rust / 712 installed-wheel Python / 117 tool tests and actual WASM on Ubuntu
+22.04 WSL, with a clean independent Linux checkout. The fixed manylinux2014 image
+digest is 493d2032114d757aaa761a9385ad8497f391503bf71acef9abeeb66682ca5d90;
+its release wheel passes auditwheel for manylinux_2_17_x86_64. First wheel testing
+found one one-ULP math.hypot discrepancy. An audit evaluated all 307 assertions in
+the affected test and found only that one value (absolute difference 2.776e-17).
+The original expected values now use the already-established 1e-12 float helper
+for that one list; all other assertions and runtime code are unchanged. All 712
+manylinux tests and the corresponding Windows test pass. Final versioned packaging
+and remaining runtime/reference/resource scopes are still required.

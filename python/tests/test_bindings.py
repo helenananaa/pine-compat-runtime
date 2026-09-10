@@ -11916,13 +11916,15 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.0529,
         0.0576,
     ]
-    assert result["plots"][281]["values"] == [
+    # The manylinux libm result differs by one ULP here. Keep the original
+    # expected values and use the existing cross-host floating-point contract.
+    assert_json_close(result["plots"][281]["values"], [
         0.223606797749979,
         0.23706539182259395,
         0.25059928172283336,
         0.2641968962724581,
         0.2778488797889961,
-    ]
+    ])
     assert result["plots"][282]["values"] == [
         2.995732273553991,
         3.044522437723423,

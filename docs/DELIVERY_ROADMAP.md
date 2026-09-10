@@ -41,7 +41,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
 | D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Scoped D3 review complete: explicit defaults, validated profiles, source provenance and reached-input errors; final platform/distribution qualification remains D5 |
 | D4 | Long-session resources | Codex measurement and acceptance | Frozen Windows trend v5 passed: 100k history + 10k tail, two repeats, original budgets; earlier failures retained | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
-| D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
+| D5 | Candidate from a known commit | Codex | Windows and Linux native gates pass; manylinux2014 wheel and Windows Rust embedding example qualified; package version still 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
 ## Current next action
 
@@ -444,3 +444,11 @@ The original expected values now use the already-established 1e-12 float helper
 for that one list; all other assertions and runtime code are unchanged. All 712
 manylinux tests and the corresponding Windows test pass. Final versioned packaging
 and remaining runtime/reference/resource scopes are still required.
+
+Linux and Rust embedding evidence is retained in
+`linux-da099ac11-artifacts/qualification.json` and
+`rust-embedding-qualification.json`. Main now includes the test-only floating
+comparison adjustment e46f7303c; no runtime code changed to fit a platform result.
+There are no live v5 or Linux qualification processes from these completed runs.
+Next: remaining D4 workloads/limits and a new coordinated version with complete
+CLI/WASM/Rust/Python packaging and final reference checks. No release was published.

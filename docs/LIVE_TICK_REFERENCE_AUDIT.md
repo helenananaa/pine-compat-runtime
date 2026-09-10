@@ -173,3 +173,10 @@ describe persistent broker state and observed-price input. Only that reviewed
 description was changed in the matrix snapshot; runtime golden outputs and
 independent reference values were not refreshed. Final known-commit artifact
 qualification and release integration remain separate required work.
+
+An unconditional floating-point floor to the price grid is not a valid repair
+for the older exit-price discrepancy. With the supplied binary64 values and
+0.1 tick size, flooring 78246.2 / 0.1 yields 78246.1, but the same operation
+would also change the independently matched multi-fill exit 78105.2 to 78105.1.
+That simple rule therefore contradicts the second native control. The original
+price-input uncertainty remains; no such rounding patch was applied.

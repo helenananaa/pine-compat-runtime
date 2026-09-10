@@ -39,7 +39,7 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D0 | Freeze recovered baseline | Codex | Complete locally: 85f42f20f tooling, 149d10c7a prior semantics; current integrated source includes later qualified fixes | Linux/release artifact qualification is tracked by D5 |
 | D1 | Full TechnicalRating dependency chain | Codex implementation, semantics and oracle | Windows acceptance complete at 5920add7e: original graph, all 63,399 reference values, full CLI/installed-wheel/WASM output parity and CLI mode checks (SMA_ROLLING_SUM_AUDIT) | Linux/release matrix remains D5; long-session acceptance remains D4 |
 | D2 | Independent execution correctness | Codex | Numerical controls qualified; frozen G3 batches revalidated; matched default HTF, paired historical Magnifier and long/short fractional-margin references pass with Windows host parity | Real tick reference and broader account profiles remain open; request/Magnifier/margin claims stay bounded by actual cases |
-| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory and explicit unit-point configuration validation are implemented; per-call source provenance and remaining configured-input readiness review remain open without unconditional gates |
+| D3 | Explicit embedding/data contract | Codex | Price grid and decimal quantity precision exist; versioned conservative host-input inventory is Windows-qualified across Rust/CLI/installed Python/actual WASM (HOST_REQUIREMENTS.md) | Inventory, explicit unit-point validation and per-call source provenance are Windows-qualified; configured-input readiness review remains open without unconditional gates |
 | D4 | Long-session resources | Codex measurement and acceptance | Windows memory and sustained-tail probes are implemented; first full trend run timed out; second completed but confirmation P95 exceeded its frozen budget; no full long-session qualification | Frozen workloads/budgets for the stated historical/append/forming scales; latency, output cost, memory growth and limit behavior |
 | D5 | Candidate from a known commit | Codex | Windows installed debug wheel, actual WASM/Node and CLI qualification retained for current slices; working package version remains 0.2.0 | Linux/Windows final installed artifacts, Rust embedding example, CLI/WASM packaging, synchronized versions/checksums/docs/acceptance manifest |
 
@@ -355,3 +355,11 @@ plot values, 100,000 equity rows and substantial order/trade/alert vectors. This
 directs subsequent copy-cost investigation toward output histories, not already
 trimmed series storage. These counts are not heap-size measurements or evidence
 that a proposed optimization has met the unchanged D4 budgets.
+
+Source-provenance commit 52372584375b0d12430f7e0cd4416ccccec67a37 is integrated
+locally. Retained clean-commit CLI/wheel/WASM artifacts pass identical complete
+requirements reports for LF and CRLF Unicode sources, with two aliases and a
+transitive dependency (five verified source locations per case). Receipt:
+`host-contracts/source-provenance-523725843-artifacts/qualification.json`.
+No publication occurred; configured-provider readiness, D4 and final release
+qualification remain incomplete.

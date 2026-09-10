@@ -142,6 +142,14 @@ Strategy-mode runtime results include a `strategy` object with `orders`,
 runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
 cash value; when omitted, the runtime uses 100000.
+
+When an additional long stop entry is requested with an existing long position,
+its combined long exposure must fit available equity at the stop price under
+the configured margin. A later exit does not retroactively fund a rejected
+request. This occupied-long admission rule is independently qualified in
+[Long stop margin admission](STRATEGY_LONG_STOP_MARGIN_ADMISSION_AUDIT.md);
+it does not establish private same-price order precedence.
+
 With the currently supported default account-currency path (`currency.NONE` or
 same-symbol `currency.USD`),
 `strategy.account_currency` inherits the fixed `syminfo.currency` value,

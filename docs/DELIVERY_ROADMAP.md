@@ -71,6 +71,14 @@ engineering/host requirements, not automatically TV dependencies.
 
 Remaining D4 named workloads and modes:
 
+Development follow-up (2026-09-10 user-authorized TradingView goal):
+`STRATEGY_LONG_STOP_MARGIN_ADMISSION_AUDIT.md` records a scoped occupied-long
+stop admission repair with six independent controls (9460 values), complete
+Windows checks and retained development-artifact parity. This does not relabel
+the previously retained candidate binaries. `TRADINGVIEW_GOAL_PROGRESS.md`
+tracks the new captures; the original live-price failure and B1/r1 evidence
+boundaries remain open.
+
 | Workload | Source | Historical | Incremental | Realtime | Formal scale (non-trend) |
 | --- | --- | --- | --- | --- | --- |
 | every-update | `tests/fixtures/runtime/strategy_calc_on_every_tick.pine` | yes | yes | yes (script executes on forming) | 10k history + 1k tail, 2 reps, 1 replacement |

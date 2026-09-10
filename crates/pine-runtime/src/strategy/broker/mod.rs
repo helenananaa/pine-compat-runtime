@@ -747,6 +747,25 @@ impl BrokerState {
                 if !this.can_place_long_entry() {
                     return;
                 }
+                // A new same-side stop cannot rely on margin released by a
+                // future exit. Native controls reject it before its trigger,
+                // including when the existing position closes on an earlier
+                // bar. Assess the combined exposure at the stop price.
+                // Keep reversal and invalid-input handling on their existing
+                // paths; they have separate contracts.
+                if this.position_size > 0.0
+                    && stop.is_finite()
+                    && qty.is_finite()
+                    && qty > 0.0
+                    && !this.can_afford_long_entry(this.position_size + qty, stop)
+                {
+                    this.diagnostics.push(RuntimeDiagnostic {
+                        code: "E_STRATEGY_MARGIN".to_owned(),
+                        message: "`strategy.entry` requires more margin than available equity"
+                            .to_owned(),
+                    });
+                    return;
+                }
                 let diagnostics = &mut this.diagnostics;
                 this.order_book.with_entry_allocator(|entries, allocate| {
                     entries.place_stop_long_with_metadata(

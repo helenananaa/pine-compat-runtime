@@ -142,7 +142,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) wad_state: PineValue,
     pub(crate) wad_current: PineValue,
     pub(crate) wvad_current: PineValue,
-    pub(crate) plots: Vec<PlotSeries>,
+    pub(crate) plots: Arc<Vec<PlotSeries>>,
     pub(crate) plot_chars: Vec<PlotCharSeries>,
     pub(crate) plot_shapes: Vec<PlotShapeSeries>,
     pub(crate) plot_arrows: Vec<PlotArrowSeries>,
@@ -390,7 +390,7 @@ impl<'a> HistoricalRuntime<'a> {
             wad_state: PineValue::Na,
             wad_current: PineValue::Na,
             wvad_current: PineValue::Na,
-            plots: Vec::new(),
+            plots: Arc::new(Vec::new()),
             plot_chars: Vec::new(),
             plot_shapes: Vec::new(),
             plot_arrows: Vec::new(),
@@ -772,7 +772,7 @@ impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn result(&self) -> RuntimeResult {
         RuntimeResult {
-            plots: self.plots.clone(),
+            plots: self.plots.as_ref().clone(),
             plot_chars: self.plot_chars.clone(),
             plot_shapes: self.plot_shapes.clone(),
             plot_arrows: self.plot_arrows.clone(),
@@ -1283,7 +1283,8 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn finalize_series_outputs(&mut self) {
-        finalize_plot_values(&mut self.plots, self.bars);
+        let bar_index = self.bars;
+        finalize_plot_values(self.plots_mut().as_mut_slice(), bar_index);
         finalize_bar_aligned_outputs(&mut self.plot_chars, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_shapes, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_arrows, self.bars);

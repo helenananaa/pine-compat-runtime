@@ -149,3 +149,37 @@ P95 was 52.544 ms in that trial. It was not selected on this evidence; its patch
 source, binary and measurements remain in `resources/broker-only-v2-*`.
 The selected implementation is the simpler first variant. No original phase,
 size, tolerance, memory limit or 1800-second observation window was loosened.
+
+## Shared plot checkpoints and release profile
+
+The 100k trend capacity inspection finds two retained series values but 200,000
+plot values. Runtime plot checkpoints now share an immutable plot vector through
+`Arc`; a writer detaches it with room for one new value/color per plot. The public
+`RuntimeResult.plots` remains an owned `Vec<PlotSeries>`, and previously returned
+values remain independent. Runtime forks, forming replacements, color changes
+and caller mutation are covered by dedicated isolation tests. Capacity figures
+reflect actual backing allocations and are not unique-memory measurements.
+
+At 100k history + 64 tail, the initial shared-plot change reduced wall time from
+23.864 to 19.952 seconds with identical complete historical/live outputs. Reserving
+the next append during detachment reduced confirmation median from 37.678 to
+31.216 ms in a subsequent trial. Six distinct workloads retain exact output parity.
+
+The workspace release profile now uses ThinLTO and one code-generation unit. It
+does not enable fast-math or host-specific CPU instructions. Embedding Rust
+applications control their own Cargo profiles; workspace settings are not forced
+on downstream applications. With these settings, the 100k+64 diagnostic measured
+24.678/23.001/36.048 ms P95 for initial/replacement/confirmed updates. A 100k+256
+diagnostic measured 28.324/24.961/39.185 ms P95, but updates plus returned-snapshot
+destruction still averaged 91.929 ms per tail bar. These observations do not
+establish the full 100k/10k, two-repeat, 1800-second acceptance. All original
+budgets and input sizes remain required. Evidence is retained in `resources/plot-cow-*`.
+
+Validation passes 6662 Rust / 712 installed-wheel Python / 117 tool tests and
+actual WASM in the normal gate. The release profile separately passes 23 focused
+Rust tests, actual release WASM smoke and 712 tests against its installed wheel.
+Its complete TechnicalRating/3 + ta/9 + RelativeValue/3 graph matches all 63,399
+native reference values over 21,133 bars; four CLI modes, Python and WASM have
+identical complete outputs. Artifacts are in `resources/plot-cow-release-artifacts`.
+These validate semantics and build settings, not the still-failing D4 full-run
+window. No new full-scale acceptance was awarded from short-tail results.

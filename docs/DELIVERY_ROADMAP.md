@@ -363,3 +363,21 @@ transitive dependency (five verified source locations per case). Receipt:
 `host-contracts/source-provenance-523725843-artifacts/qualification.json`.
 No publication occurred; configured-provider readiness, D4 and final release
 qualification remain incomplete.
+
+The next D4 optimization shares immutable plot output between runtime checkpoints
+and detaches with one append slot when writing, preserving public owned results.
+Six workloads match baseline outputs; dedicated fork/rollback/caller-mutation
+tests pass. ThinLTO plus one code-generation unit improves the release diagnostic
+without adding CPU-specific flags. At 100k+256, individual update P95 values are
+below 50 ms, but update-plus-snapshot-destruction average is still about 92 ms per
+tail bar. Full resource acceptance remains unproven; do not infer a 30-minute pass
+or restart a full run solely from these short diagnostics. Release wheel/WASM
+qualification of the changed build profile is in progress in the hosts worktree.
+
+Shared plot checkpoints, append-aware detachment and the portable ThinLTO release
+profile now pass normal gates (6662 Rust / 712 Python / 117 tools / actual WASM),
+plus release-mode focused tests and 712 installed release-wheel tests. Release
+CLI/Python/WASM revalidate all 63,399 TechnicalRating values and full-output parity.
+This is an implementation/build improvement; the measured longer short-tail
+average still leaves the original complete resource window unproven. Continue
+investigating output/transaction-history copying rather than loosening budgets.

@@ -200,9 +200,10 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String("format.inherit".to_owned()),
         )?;
         let precision = self.eval_output_arg(args, 13, "precision", PineValue::Na)?;
-        push_plot_value(&mut self.plots, self.bars, call_site_id.0, value, color);
-        let output = self
-            .plots
+        let bar_index = self.bars;
+        let plots = self.plots_mut();
+        push_plot_value(plots, bar_index, call_site_id.0, value, color);
+        let output = plots
             .iter_mut()
             .find(|output| output.id == call_site_id.0)
             .expect("plot output was just inserted");

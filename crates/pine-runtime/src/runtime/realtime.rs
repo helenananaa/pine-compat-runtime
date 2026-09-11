@@ -1,10 +1,18 @@
 use pine_ir::HirProgram;
 
+use super::streaming::OutputCursor;
 use crate::*;
 
 pub struct RealtimeRuntime<'a> {
     confirmed: HistoricalRuntime<'a>,
     forming: Option<HistoricalRuntime<'a>>,
+    revision: u64,
+    cursor: OutputCursor,
+    last_changes: Option<RuntimeChanges>,
+    output_retention: OutputRetention,
+    live_chart: Option<(Bar, RealtimeUpdateContext)>,
+    chart_bars: Vec<Bar>,
+    chart_execution_times: Option<Vec<i64>>,
 }
 impl<'a> RealtimeRuntime<'a> {
     #[must_use]
@@ -20,6 +28,13 @@ impl<'a> RealtimeRuntime<'a> {
         Self {
             confirmed: HistoricalRuntime::with_request_environment(program, request_environment),
             forming: None,
+            revision: 0,
+            cursor: OutputCursor::default(),
+            last_changes: None,
+            output_retention: OutputRetention::unlimited(),
+            live_chart: None,
+            chart_bars: Vec::new(),
+            chart_execution_times: None,
         }
     }
 
@@ -36,6 +51,13 @@ impl<'a> RealtimeRuntime<'a> {
                 input_overrides,
             ),
             forming: None,
+            revision: 0,
+            cursor: OutputCursor::default(),
+            last_changes: None,
+            output_retention: OutputRetention::unlimited(),
+            live_chart: None,
+            chart_bars: Vec::new(),
+            chart_execution_times: None,
         }
     }
 
@@ -100,7 +122,7 @@ impl<'a> RealtimeRuntime<'a> {
     }
 
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, None)
+        self.update_and_snapshot(update, RealtimeUpdateContext::default())
     }
 
     pub fn update_with_execution_time(
@@ -108,14 +130,193 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         execution_time: i64,
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, Some(execution_time))
+        self.update_and_snapshot(
+            update,
+            RealtimeUpdateContext {
+                execution_time: Some(execution_time),
+                opening_update: None,
+            },
+        )
+    }
+
+    pub fn update_with_context(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.update_and_snapshot(update, context)
+    }
+
+    /// Capture a result and its cursor in one call. Hosts bind the replica to
+    /// this stream; create a new replica when replacing the producer session.
+    #[must_use]
+    pub fn replica(&self) -> RuntimeReplica {
+        RuntimeReplica::with_retained_from(self.result(), self.revision, self.display_origin())
+    }
+
+    #[must_use]
+    pub fn with_output_retention(mut self, retention: OutputRetention) -> Self {
+        self.output_retention = retention;
+        self
+    }
+
+    pub fn set_output_retention(&mut self, retention: OutputRetention) {
+        self.output_retention = retention;
+        self.apply_output_retention();
+        self.sync_cursor();
+    }
+
+    #[must_use]
+    pub fn output_retention(&self) -> OutputRetention {
+        self.output_retention
+    }
+
+    #[must_use]
+    pub fn display_origin(&self) -> usize {
+        self.confirmed
+            .display_origin
+            .max(self.output_retention.origin(self.confirmed.bars))
+    }
+
+    fn apply_output_retention(&mut self) {
+        let origin = self.display_origin();
+        self.confirmed.apply_display_origin(origin);
+        if let Some(forming) = &mut self.forming {
+            forming.apply_display_origin(origin);
+        }
+    }
+
+    pub fn apply_request_update(
+        &mut self,
+        key: RequestKey,
+        update: BarUpdate,
+    ) -> Result<Option<RuntimeChanges>, RuntimeError> {
+        let confirmed_feed = self.confirmed.request_feed.clone();
+        let confirmed_cache = self.confirmed.request_cache.clone();
+        let forming = self.forming.clone();
+        let cursor = self.cursor.clone();
+        let last_changes = self.last_changes.clone();
+        let revision = self.revision;
+        let live_chart = self.live_chart;
+        let result = self.apply_request_update_inner(key, update);
+        if result.is_err() {
+            self.confirmed.request_feed = confirmed_feed;
+            self.confirmed.request_cache = confirmed_cache;
+            self.forming = forming;
+            self.cursor = cursor;
+            self.last_changes = last_changes;
+            self.revision = revision;
+            self.live_chart = live_chart;
+        }
+        result
+    }
+
+    fn apply_request_update_inner(
+        &mut self,
+        key: RequestKey,
+        update: BarUpdate,
+    ) -> Result<Option<RuntimeChanges>, RuntimeError> {
+        self.confirmed.apply_request_update(key.clone(), update)?;
+        if let Some(forming) = &mut self.forming {
+            forming.apply_request_update(key, update)?;
+        }
+        if self.forming.is_none() {
+            return Ok(None);
+        }
+        let Some((bar, context)) = self.live_chart else {
+            return Ok(None);
+        };
+        self.update_inner(BarUpdate::forming(bar), context)?;
+        self.revision += 1;
+        self.apply_output_retention();
+        let mut changes =
+            self.cursor
+                .diff(self.live(), self.revision, StreamingVisibility::Preview);
+        changes.retained_from = self.display_origin();
+        self.sync_cursor();
+        self.last_changes = Some(changes.clone());
+        Ok(Some(changes))
+    }
+
+    pub fn apply_update(&mut self, update: BarUpdate) -> Result<RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context(update, RealtimeUpdateContext::default())
+    }
+
+    pub fn apply_update_with_execution_time(
+        &mut self,
+        update: BarUpdate,
+        execution_time: i64,
+    ) -> Result<RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context(
+            update,
+            RealtimeUpdateContext {
+                execution_time: Some(execution_time),
+                opening_update: None,
+            },
+        )
+    }
+
+    pub fn apply_update_with_context(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<RuntimeChanges, RuntimeError> {
+        let kind = update.kind;
+        self.update_inner(update, context)?;
+        self.revision += 1;
+        let visibility = if kind == BarUpdateKind::Forming {
+            StreamingVisibility::Preview
+        } else {
+            StreamingVisibility::Confirmed
+        };
+        self.apply_output_retention();
+        let mut changes = self.cursor.diff(self.live(), self.revision, visibility);
+        changes.retained_from = self.display_origin();
+        self.sync_cursor();
+        self.last_changes = Some(changes.clone());
+        Ok(changes)
+    }
+
+    fn update_and_snapshot(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.update_inner(update, context)?;
+        self.revision += 1;
+        self.apply_output_retention();
+        self.sync_cursor();
+        self.last_changes = None;
+        Ok(self.result())
+    }
+
+    fn live(&self) -> &HistoricalRuntime<'a> {
+        self.forming.as_ref().unwrap_or(&self.confirmed)
+    }
+
+    fn sync_cursor(&mut self) {
+        self.cursor = OutputCursor::capture(self.live());
     }
 
     fn update_inner(
         &mut self,
         update: BarUpdate,
-        execution_time: Option<i64>,
-    ) -> Result<RuntimeResult, RuntimeError> {
+        context: RealtimeUpdateContext,
+    ) -> Result<(), RuntimeError> {
+        if update.kind == BarUpdateKind::Historical && context.opening_update == Some(false) {
+            return Err(RuntimeError {
+                message: "historical bars always have an opening update".to_owned(),
+            });
+        }
+        if update.kind != BarUpdateKind::Historical
+            && self.forming.is_some()
+            && context.opening_update == Some(true)
+        {
+            return Err(RuntimeError {
+                message: "opening_update cannot repeat for an already forming bar".to_owned(),
+            });
+        }
+        let execution_time = context.execution_time;
         if matches!(
             update.kind,
             BarUpdateKind::Forming | BarUpdateKind::Confirmed
@@ -132,66 +333,376 @@ impl<'a> RealtimeRuntime<'a> {
         }
         match update.kind {
             BarUpdateKind::Historical => {
+                self.validate_confirmed_clock(execution_time)?;
                 let mut runtime = self.confirmed.clone();
                 runtime.append_bar_with_context(update.bar, update.kind, true, execution_time)?;
                 self.confirmed = runtime;
                 self.forming = None;
-                Ok(self.confirmed.result())
+                self.live_chart = None;
+                self.push_confirmed_bar(update.bar, execution_time);
+                Ok(())
             }
             BarUpdateKind::Confirmed => {
-                let runtime = self.replay_from_confirmed(update, execution_time)?;
+                self.validate_confirmed_clock(execution_time)?;
+                let runtime = self.replay_from_confirmed(update, context)?;
                 self.confirmed = runtime;
                 self.forming = None;
-                Ok(self.confirmed.result())
+                self.live_chart = None;
+                self.push_confirmed_bar(update.bar, execution_time);
+                Ok(())
             }
             BarUpdateKind::Forming => {
-                if !self.executes_strategy_on_forming() {
-                    return Ok(self.confirmed.result());
-                }
-                let runtime = self.replay_from_confirmed(update, execution_time)?;
-                let result = runtime.result();
+                let runtime = self.replay_from_confirmed(update, context)?;
                 self.forming = Some(runtime);
-                Ok(result)
+                self.live_chart = Some((update.bar, context));
+                Ok(())
             }
         }
-    }
-
-    fn executes_strategy_on_forming(&self) -> bool {
-        self.confirmed.program.script_mode != pine_ir::ScriptMode::Strategy
-            || self.confirmed.program.strategy_settings.calc_on_every_tick
     }
 
     fn replay_from_confirmed(
         &mut self,
         update: BarUpdate,
-        execution_time: Option<i64>,
+        context: RealtimeUpdateContext,
     ) -> Result<HistoricalRuntime<'a>, RuntimeError> {
-        let is_new_bar = self.forming.is_none();
+        if update.kind == BarUpdateKind::Forming
+            && self.confirmed.program.script_mode == pine_ir::ScriptMode::Strategy
+            && !self.confirmed.program.strategy_settings.calc_on_every_tick
+            && !self.confirmed.program.strategy_settings.calc_on_order_fills
+        {
+            // No script can execute on this observation. Clone its last visible
+            // state once, advance the broker transactionally, and retain all
+            // user state instead of restoring then cloning it again.
+            let mut runtime = self.forming.as_ref().unwrap_or(&self.confirmed).clone();
+            runtime.advance_broker_only_forming(update.bar)?;
+            return Ok(runtime);
+        }
+        let is_new_bar = context.opening_update.unwrap_or(self.forming.is_none());
+        // User state rolls back, except varip. Orders and fills belong to the
+        // live broker and survive successful updates of the same open bar.
         let mut runtime = self.confirmed.clone();
         if let Some(previous_forming) = &self.forming {
             runtime.seed_intrabar_persistence_from(previous_forming);
+            runtime
+                .strategy_broker
+                .clone_from(&previous_forming.strategy_broker);
+            runtime
+                .strategy_scheduler
+                .clone_from(&previous_forming.strategy_scheduler);
         }
-        runtime.restore_strategy_checkpoint(&self.confirmed);
-        runtime.append_bar_with_context(update.bar, update.kind, is_new_bar, execution_time)?;
+        let script_passes = runtime.strategy_scheduler.script_passes();
+        runtime.append_bar_with_context(
+            update.bar,
+            update.kind,
+            is_new_bar,
+            context.execution_time,
+        )?;
+        if update.kind == BarUpdateKind::Forming
+            && runtime.program.script_mode == pine_ir::ScriptMode::Strategy
+            && runtime.strategy_scheduler.script_passes() == script_passes
+        {
+            // A price observation without script execution cannot replace the
+            // last visible plots/drawings or change user state. Only the broker
+            // and its scheduling state advanced in the speculative runtime.
+            let mut retained = self.forming.as_ref().unwrap_or(&self.confirmed).clone();
+            retained.strategy_broker = runtime.strategy_broker;
+            retained.strategy_scheduler = runtime.strategy_scheduler;
+            return Ok(retained);
+        }
         Ok(runtime)
     }
 
-    pub fn seed_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
-        let mut runtime = self.confirmed.clone();
-        runtime.append_bars(bars)?;
+    fn validate_confirmed_clock(&self, execution_time: Option<i64>) -> Result<(), RuntimeError> {
+        if self.chart_execution_times.is_some() && execution_time.is_none() {
+            return Err(RuntimeError {
+                message: "E_HISTORY_CLOCK: confirmed update missing execution timestamp".to_owned(),
+            });
+        }
+        Ok(())
+    }
+
+    fn push_confirmed_bar(&mut self, bar: Bar, execution_time: Option<i64>) {
+        self.chart_bars.push(bar);
+        if let Some(times) = &mut self.chart_execution_times {
+            times.push(execution_time.expect("confirmed clock validated"));
+        }
+    }
+
+    /// Replace confirmed history from `from_time` forward. Bars with `time <
+    /// from_time` are kept; `bars` is the corrected suffix. Forming state is
+    /// discarded. Replicas must reset from the returned snapshot.
+    pub fn correct_historical(
+        &mut self,
+        from_time: i64,
+        bars: &[Bar],
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.correct_historical_inner(from_time, bars, None)
+    }
+
+    pub fn correct_historical_with_execution_times(
+        &mut self,
+        from_time: i64,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.correct_historical_inner(from_time, bars, Some(execution_times))
+    }
+
+    fn correct_historical_inner(
+        &mut self,
+        from_time: i64,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        let (combined, combined_times) =
+            self.corrected_history(from_time, bars, execution_times)?;
+        match combined_times {
+            Some(times) => self.replay_historical_inner(&combined, Some(&times)),
+            None => self.replay_historical_inner(&combined, None),
+        }
+    }
+
+    fn corrected_history(
+        &self,
+        from_time: i64,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<(Vec<Bar>, Option<Vec<i64>>), RuntimeError> {
+        if let Some(last) = self.chart_bars.last()
+            && from_time > last.time
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "E_HISTORY_CORRECT: from_time `{from_time}` is after confirmed time `{}`",
+                    last.time
+                ),
+            });
+        }
+        if let Some(first) = bars.first()
+            && first.time < from_time
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "E_HISTORY_CORRECT: corrected bars start at `{}` before from_time `{from_time}`",
+                    first.time
+                ),
+            });
+        }
+        let cut = self
+            .chart_bars
+            .iter()
+            .position(|bar| bar.time >= from_time)
+            .unwrap_or(self.chart_bars.len());
+        if let (Some(prefix_last), Some(suffix_first)) = (
+            self.chart_bars
+                .get(cut.saturating_sub(1))
+                .filter(|_| cut > 0),
+            bars.first(),
+        ) && suffix_first.time <= prefix_last.time
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "E_HISTORY_CORRECT: corrected bars must follow retained time `{}`",
+                    prefix_last.time
+                ),
+            });
+        }
+        let mut combined = self.chart_bars[..cut].to_vec();
+        combined.extend_from_slice(bars);
+        let combined_times = match (&self.chart_execution_times, execution_times) {
+            (Some(stored), Some(suffix)) => {
+                if suffix.len() != bars.len() {
+                    return Err(RuntimeError {
+                        message: format!(
+                            "execution timestamp count {} does not match bar count {}",
+                            suffix.len(),
+                            bars.len()
+                        ),
+                    });
+                }
+                let mut times = stored[..cut].to_vec();
+                times.extend_from_slice(suffix);
+                Some(times)
+            }
+            (Some(stored), None) if bars.is_empty() => Some(stored[..cut].to_vec()),
+            (None, None) => None,
+            (None, Some(suffix)) if cut == 0 => Some(suffix.to_vec()),
+            (None, Some(_)) => {
+                return Err(RuntimeError {
+                    message: "E_HISTORY_CLOCK: confirmed prefix was recorded without execution timestamps".to_owned(),
+                });
+            }
+            (Some(_), None) => {
+                return Err(RuntimeError {
+                    message: "E_HISTORY_CLOCK: corrected suffix must include execution timestamps"
+                        .to_owned(),
+                });
+            }
+        };
+        Ok((combined, combined_times))
+    }
+
+    /// Replace confirmed history by re-executing `bars` from a blank runtime.
+    /// Forming state is discarded. Request feed, inputs, magnifier and session
+    /// windows are kept. Replicas cannot apply this as a delta; reset them from
+    /// the returned snapshot and `revision`.
+    pub fn replay_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
+        self.replay_historical_inner(bars, None)
+    }
+
+    pub fn replay_historical_with_execution_times(
+        &mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.replay_historical_inner(bars, Some(execution_times))
+    }
+
+    fn replay_historical_inner(
+        &mut self,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        let confirmed = self.confirmed.clone();
+        let forming = self.forming.clone();
+        let cursor = self.cursor.clone();
+        let last_changes = self.last_changes.clone();
+        let revision = self.revision;
+        let live_chart = self.live_chart;
+        let chart_bars = self.chart_bars.clone();
+        let chart_execution_times = self.chart_execution_times.clone();
+        let result = self.replay_historical_apply(bars, execution_times);
+        if result.is_err() {
+            self.confirmed = confirmed;
+            self.forming = forming;
+            self.cursor = cursor;
+            self.last_changes = last_changes;
+            self.revision = revision;
+            self.live_chart = live_chart;
+            self.chart_bars = chart_bars;
+            self.chart_execution_times = chart_execution_times;
+        }
+        result
+    }
+
+    fn replay_historical_apply(
+        &mut self,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        let mut runtime = self.confirmed.blank_for_replay();
+        runtime
+            .request_feed
+            .trim_after(bars.last().map(|bar| bar.time));
+        match execution_times {
+            Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
+            None => runtime.append_bars(bars)?,
+        }
         self.confirmed = runtime;
         self.forming = None;
+        self.live_chart = None;
+        self.chart_bars = bars.to_vec();
+        self.chart_execution_times = execution_times.map(Vec::from);
+        self.revision += 1;
+        self.apply_output_retention();
+        self.sync_cursor();
+        self.last_changes = None;
         Ok(self.confirmed.result())
+    }
+
+    pub fn seed_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
+        self.seed_historical_inner(bars, None)
+    }
+
+    pub fn seed_historical_with_execution_times(
+        &mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.seed_historical_inner(bars, Some(execution_times))
+    }
+
+    fn seed_historical_inner(
+        &mut self,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.validate_seed_clocks(bars.len(), execution_times)?;
+        let mut runtime = self.confirmed.clone();
+        match execution_times {
+            Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
+            None => runtime.append_bars(bars)?,
+        }
+        self.confirmed = runtime;
+        self.forming = None;
+        let prior_len = self.chart_bars.len();
+        self.chart_bars.extend_from_slice(bars);
+        match (&mut self.chart_execution_times, execution_times) {
+            (Some(stored), Some(times)) => stored.extend_from_slice(times),
+            (None, Some(times)) if prior_len == 0 => {
+                self.chart_execution_times = Some(times.to_vec());
+            }
+            _ => {}
+        }
+        self.revision += 1;
+        self.apply_output_retention();
+        self.sync_cursor();
+        self.last_changes = None;
+        Ok(self.confirmed.result())
+    }
+
+    fn validate_seed_clocks(
+        &self,
+        bar_count: usize,
+        execution_times: Option<&[i64]>,
+    ) -> Result<(), RuntimeError> {
+        match (&self.chart_execution_times, execution_times) {
+            (Some(_), None) => Err(RuntimeError {
+                message: "E_HISTORY_CLOCK: historical seed missing execution timestamps".to_owned(),
+            }),
+            (None, Some(_)) if !self.chart_bars.is_empty() => Err(RuntimeError {
+                message: "E_HISTORY_CLOCK: cannot add execution timestamps after history recorded without them".to_owned(),
+            }),
+            (Some(_), Some(times)) | (None, Some(times)) if times.len() != bar_count => {
+                Err(RuntimeError {
+                    message: format!(
+                        "execution timestamp count {} does not match bar count {bar_count}",
+                        times.len()
+                    ),
+                })
+            }
+            _ => Ok(()),
+        }
+    }
+
+    #[must_use]
+    pub fn confirmed_bar_count(&self) -> usize {
+        self.chart_bars.len()
+    }
+
+    #[must_use]
+    pub fn last_confirmed_bar_time(&self) -> Option<i64> {
+        self.chart_bars.last().map(|bar| bar.time)
     }
 
     #[must_use]
     pub fn result(&self) -> RuntimeResult {
-        self.forming.as_ref().unwrap_or(&self.confirmed).result()
+        self.live().result()
     }
 
     #[must_use]
     pub fn confirmed_result(&self) -> RuntimeResult {
         self.confirmed.result()
+    }
+
+    #[must_use]
+    pub fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    #[must_use]
+    pub fn last_changes(&self) -> Option<&RuntimeChanges> {
+        self.last_changes.as_ref()
     }
 
     #[must_use]
@@ -229,6 +740,13 @@ impl RealtimeRuntime<'static> {
                     input_overrides,
                 ),
             forming: None,
+            revision: 0,
+            cursor: OutputCursor::default(),
+            last_changes: None,
+            output_retention: OutputRetention::unlimited(),
+            live_chart: None,
+            chart_bars: Vec::new(),
+            chart_execution_times: None,
         }
     }
 }

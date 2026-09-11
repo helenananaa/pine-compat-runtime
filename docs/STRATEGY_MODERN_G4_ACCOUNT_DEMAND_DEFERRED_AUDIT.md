@@ -1,5 +1,11 @@
 # Strategy Modern G4 Account Demand Deferred Audit
 
+2026-09-07 后续：新 G3 参考已证明价格网格输入和费用处理的具体缺口，
+本轮已补 main-chart price grid，并修复费用分配和计入时点。见
+[独立参考审计](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md)。下文是此前无合格需求
+时的历史决策；货币换算、合约乘数等其他 deferred 项未因此实现。
+
+
 阶段与切片 ID：阶段 4 / 需求清单  
 状态：deferred  
 实际基线 HEAD：`6b757308e` 之后的阶段 3 工作区  

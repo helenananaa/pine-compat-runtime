@@ -1,0 +1,16 @@
+//@version=6
+indicator("Native numeric comparison")
+a=close
+b=a+0.00000000005
+plot(a==b?1:0,"equal")
+plot(a!=b?1:0,"not equal")
+plot(a<b?1:0,"less")
+plot(a<=b?1:0,"less equal")
+plot(a>b?1:0,"greater")
+plot(a>=b?1:0,"greater equal")
+plot(math.sign(a-b),"raw sign")
+plot(0.0==0.0000000001?1:0,"inclusive boundary")
+plot(0.0==0.0000000001001?1:0,"outside boundary")
+plot(1.00000000049==1.00000000051?1:0,"different decimal buckets")
+plot(array.indexof(array.from(a),b),"array lookup")
+plot(0.1+0.2==0.3?1:0,"constant arithmetic")

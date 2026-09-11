@@ -1,0 +1,19 @@
+//@version=6
+indicator("Nearby SMA replacement")
+src=switch bar_index
+    0 => 1053.7
+    1 => 1029.4
+    2 => 1017.3
+    3 => 1087.1
+    => 1090.9
+p=ta.sma(src,4)
+n=ta.sma(-src,4)
+var float pd=na
+var float nd=na
+if bar_index==4
+    pd:=(p-1056.175)*1000000000000
+    nd:=(n+1056.175)*1000000000000
+plot(p,"positive SMA")
+plot(n,"negative SMA")
+plot(pd,"positive residual pico")
+plot(nd,"negative residual pico")

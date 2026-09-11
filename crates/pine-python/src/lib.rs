@@ -13,9 +13,13 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyDict, PyList, PyModule, PySequence};
 mod alerts;
+mod changes;
+mod chart_metadata;
 mod diagnostics;
 mod outputs;
 mod realtime;
+mod replica;
+mod result_parse;
 mod tables;
 #[cfg(test)]
 mod tests;
@@ -32,6 +36,13 @@ struct PyProgram {
 
 #[pymethods]
 impl PyProgram {
+    /// Describe potential host inputs without executing the program.
+    fn host_requirements(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        Ok(PyModule::import(py, "json")?
+            .call_method1("loads", (pine_runtime::host_requirements_json(&self.hir),))?
+            .unbind())
+    }
+
     #[pyo3(signature = (
         bars,
         request_bars=None,
@@ -190,11 +201,13 @@ fn run_script(
 
 #[pymodule]
 fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
+    module.add("__version__", env!("CARGO_PKG_VERSION"))?;
     module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     module.add("RENDER_METADATA_VERSION", PUBLIC_RENDER_METADATA_VERSION)?;
     module.add_class::<PyProgram>()?;
     realtime::register(module)?;
+    changes::register(module)?;
     module.add_function(wrap_pyfunction!(compile_script, module)?)?;
     module.add_function(wrap_pyfunction!(analyze_script, module)?)?;
     module.add_function(wrap_pyfunction!(run_script, module)?)?;
@@ -336,7 +349,7 @@ fn parse_request_environment(
     chart_symbol: Option<&str>,
     chart_timeframe: Option<&str>,
 ) -> PyResult<RequestEnvironment> {
-    let chart = parse_chart_context(chart_symbol, chart_timeframe)?;
+    let mut chart = parse_chart_context(chart_symbol, chart_timeframe)?;
     let Some(request_bars) = request_bars else {
         return Ok(RequestEnvironment::default().for_chart(chart));
     };
@@ -346,6 +359,10 @@ fn parse_request_environment(
     let mut streams = Vec::with_capacity(dict.len());
     for (key, value) in dict {
         let key: String = key.extract()?;
+        if key == "$chart" {
+            chart = chart_metadata::parse_chart_metadata(chart, &value)?;
+            continue;
+        }
         let request_key = parse_request_key(&key)?;
         streams.push((request_key, parse_bars(&value)?));
     }

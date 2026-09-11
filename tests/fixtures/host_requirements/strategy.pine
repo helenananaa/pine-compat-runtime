@@ -1,0 +1,8 @@
+//@version=6
+strategy("Host requirements", use_bar_magnifier=true, calc_on_every_tick=true)
+symbol = input.symbol("OTHER", "Requested symbol")
+strategy.risk.max_intraday_loss(10, strategy.percent_of_equity)
+plot(request.security("OTHER", "60", close))
+plot(request.security(syminfo.tickerid, timeframe.period, close))
+plot(timenow)
+plot(syminfo.mincontract)

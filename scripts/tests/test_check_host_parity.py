@@ -10,6 +10,50 @@ import check_host_parity  # noqa: E402
 
 
 class HostParityGuardTests(unittest.TestCase):
+    def test_library_registry_includes_complete_dependency_bundles(self):
+        source = '''
+const LIBRARIES: &[LibraryFixture] = &[
+    ("one.json", "one.pine", &[("user/a/1", "a.pine")]),
+    (
+        "nested.json", "nested.pine",
+        &[
+            ("user/a/1", "a.pine",),
+            ("user/b/1", "b.pine"),
+        ],
+    ),
+];
+// ("comment.json", "fake.pine", &[]),
+/* ("block.json", "fake.pine", &[]), */
+let fake = r#"("string.json", "fake.pine", &[])"#;
+'''
+        fixtures = check_host_parity.parse_library_snapshot_fixtures(
+            source, Path("fixtures.rs")
+        )
+        self.assertEqual(
+            [(item.snapshot, item.source) for item in fixtures],
+            [("one.json", "one.pine"), ("nested.json", "nested.pine")],
+        )
+        registered = {item.snapshot for item in fixtures}
+        self.assertEqual(check_host_parity.parity_errors(
+            registered, registered, registered, registered
+        ), [])
+        self.assertIn("not registered by the CLI: nested.json", "\n".join(
+            check_host_parity.parity_errors(
+                registered - {"nested.json"}, registered, registered, registered
+            )
+        ))
+        self.assertIn("missing a WASM golden assertion", "\n".join(
+            check_host_parity.parity_errors(
+                registered, registered, {"one.json"}, registered
+            )
+        ))
+
+    def test_library_registry_rejects_incomplete_dependency_tuple(self):
+        self.assertEqual(check_host_parity.parse_library_snapshot_fixtures(
+            '("broken.json", "root.pine", &[("user/a/1", )]),',
+            Path("fixtures.rs"),
+        ), [])
+
     def test_parses_rustfmt_multiline_tuples_and_trailing_commas(self):
         fixtures = check_host_parity.parse_runtime_snapshot_fixtures(
             '''

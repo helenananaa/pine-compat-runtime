@@ -21,6 +21,15 @@ pub struct BarUpdate {
     pub kind: BarUpdateKind,
 }
 
+/// Host facts about a realtime observation, separate from OHLCV data.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct RealtimeUpdateContext {
+    pub execution_time: Option<i64>,
+    /// Whether this is the market bar's opening update. `None` retains the
+    /// first-observation inference; `Some(false)` supports attaching mid-bar.
+    pub opening_update: Option<bool>,
+}
+
 impl BarUpdate {
     #[must_use]
     pub const fn historical(bar: Bar) -> Self {

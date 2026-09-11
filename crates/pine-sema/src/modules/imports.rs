@@ -13,8 +13,17 @@ pub(super) fn validate_root_imports(
 ) {
     let root = &modules[0];
     let imports = imports_in_program(&root.program);
+    validate_import_declarations(&imports, library_index, diagnostics);
+    validate_alias_access(root, &imports, modules, library_index, diagnostics);
+}
+
+fn validate_import_declarations(
+    imports: &[ImportRef],
+    library_index: &HashMap<String, usize>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
     let mut aliases = HashMap::new();
-    for import in &imports {
+    for import in imports {
         if !library_index.contains_key(&import.key) {
             diagnostics.push(Diagnostic::error(
                 "E_IMPORT_MISSING_LIBRARY",
@@ -41,8 +50,6 @@ pub(super) fn validate_root_imports(
             ));
         }
     }
-
-    validate_alias_access(root, &imports, modules, library_index, diagnostics);
 }
 
 pub(super) fn validate_library_imports(
@@ -51,15 +58,9 @@ pub(super) fn validate_library_imports(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     for module in modules.iter().skip(1) {
-        for import in imports_in_program(&module.program) {
-            if !library_index.contains_key(&import.key) {
-                diagnostics.push(Diagnostic::error(
-                    "E_IMPORT_MISSING_LIBRARY",
-                    format!("missing library source for import `{}`", import.key),
-                    import.span,
-                ));
-            }
-        }
+        let imports = imports_in_program(&module.program);
+        validate_import_declarations(&imports, library_index, diagnostics);
+        validate_alias_access(module, &imports, modules, library_index, diagnostics);
     }
 }
 

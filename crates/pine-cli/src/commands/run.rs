@@ -554,6 +554,48 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     RequestTimeframe::parse(value).map_err(|error| error.to_string())?;
                 options.chart_context = options.chart_context.clone().with_timeframe(timeframe);
             }
+            "--chart-quantity-precision" => {
+                index += 1;
+                let value = args.get(index).ok_or_else(usage)?;
+                let precision = value.parse::<u32>().map_err(|_| {
+                    "chart quantity precision must be an integer between 0 and 9".to_owned()
+                })?;
+                options.chart_context = options
+                    .chart_context
+                    .with_quantity_precision(precision)
+                    .map_err(str::to_owned)?;
+            }
+            "--chart-point-value" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(usage)?
+                    .parse::<f64>()
+                    .map_err(|_| "chart pointValue must be numeric".to_owned())?;
+                options.chart_context = options
+                    .chart_context
+                    .with_point_value(value)
+                    .map_err(str::to_owned)?;
+            }
+            "--chart-price-grid" => {
+                index += 1;
+                let value = args.get(index).ok_or_else(usage)?;
+                let (min_move, price_scale) = value
+                    .split_once('/')
+                    .ok_or("chart price grid must be MIN_MOVE/PRICE_SCALE")?;
+                options.chart_context = options
+                    .chart_context
+                    .clone()
+                    .with_price_grid(
+                        min_move
+                            .parse()
+                            .map_err(|_| "chart minMove must be a positive integer")?,
+                        price_scale
+                            .parse()
+                            .map_err(|_| "chart priceScale must be a positive integer")?,
+                    )
+                    .map_err(str::to_owned)?;
+            }
             "--render-strategy-order-alert-template" => {
                 index += 1;
                 let Some(value) = args.get(index) else {

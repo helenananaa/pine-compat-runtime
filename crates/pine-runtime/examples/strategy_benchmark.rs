@@ -1,5 +1,8 @@
 //! Offline benchmark probe. No benchmark instrumentation enters the runtime API.
-use std::{collections::BTreeMap, fs, io, time::Instant};
+use std::{collections::BTreeMap, io, time::Instant};
+
+#[path = "benchmark_support/memory.rs"]
+mod memory;
 
 use pine_runtime::{
     Bar, BarUpdate, HistoricalRuntime, RealtimeRuntime, magnifier_input_from_json,
@@ -169,21 +172,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    // Linux process high-water mark includes input, compilation, all phases and verification.
+    // Process high-water mark includes input, compilation, all phases and verification.
     // It is intentionally not presented as runtime-only retained memory.
-    let peak_rss_kib = fs::read_to_string("/proc/self/status").ok().and_then(|s| {
-        s.lines()
-            .find(|l| l.starts_with("VmHWM:"))
-            .and_then(|l| l.split_whitespace().nth(1))
-            .and_then(|n| n.parse::<u64>().ok())
-    });
+    let memory = memory::read();
     println!(
         "{}",
         json!({
             "timingsMs": timings, "result": serde_json::from_str::<Value>(&final_result)?,
             "liveResult": expected_live.map(|s| serde_json::from_str::<Value>(&s)).transpose()?,
             "profile": profile, "confirmedRealtimeProfile": live_profile,
-            "peakRssKiB": peak_rss_kib, "orderCount": order_count,
+            "peakRssKiB": memory.peak_resident_kib, "peakCommitKiB": memory.peak_commit_kib, "memorySource": memory::SOURCE, "orderCount": order_count,
             "correctness": {"batchEqualsIncremental": true, "repeatedHistoricalStable": true,
                 "repeatedLiveStable": if input.magnifier.is_none() { Some(true) } else { None }},
             "realtimeExclusion": if input.magnifier.is_some() { Some("historical-only magnifier input") } else { None },

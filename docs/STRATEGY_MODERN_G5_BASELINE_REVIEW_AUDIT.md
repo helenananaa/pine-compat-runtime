@@ -1,5 +1,7 @@
 # Strategy modern G5 baseline review audit
 
+2026-09-08 状态更新：本文为优化前历史基线；G3 后续六组参考已收口，main-chart price grid 已实现。参见 [G3 closeout](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md) 与 [当前开发记录](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md)。文末的 G3 blocked 描述仅代表当时状态。
+
 状态：测量基线完成。后续热点分析及 A/B 已完成，见
 [checkpoint 优化审计](STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md)；不宣称普遍资源上界。
 日期：2026-09-07。实际基线 HEAD：`31f16bb87`。

@@ -13,6 +13,8 @@ mod library_sources;
 mod object_cast_contract_tests;
 #[cfg(test)]
 mod runtime_snapshots;
+#[cfg(test)]
+mod test_support;
 
 fn main() -> ExitCode {
     match run() {
@@ -31,7 +33,12 @@ fn run() -> Result<(), String> {
     };
 
     match command.as_str() {
+        "--version" | "-V" | "version" => {
+            println!("{}", package_version_line());
+            Ok(())
+        }
         "analyze" => commands::analyze::run(args.collect()),
+        "requirements" => commands::analyze::run_requirements(args.collect()),
         "fmt-ast" => commands::fmt_ast::run(args.collect()),
         "run" => commands::run::run(args.collect()),
         "run-incremental" => commands::run::run_incremental(args.collect()),
@@ -42,8 +49,16 @@ fn run() -> Result<(), String> {
     }
 }
 
+pub(crate) fn package_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
+
+pub(crate) fn package_version_line() -> String {
+    format!("pine-compat {}", package_version())
+}
+
 pub(crate) fn usage() -> String {
-    "usage: pine-compat analyze <script.pine> [--library-source KEY=path.pine]... [--format text|json]\n       pine-compat fmt-ast <script.pine>\n       pine-compat run <script.pine> --bars <bars.csv> [--magnifier-bars <magnifier.json>] [--execution-times <timestamps.txt>] [--chart-symbol SYMBOL] [--chart-timeframe TIMEFRAME] [--library-source KEY=path.pine]... [--request-bars SYMBOL:TIMEFRAME=bars.csv]... [--input-override CALL_SITE_ID=value]... [--profile]\n       pine-compat run-incremental <script.pine> --bars <bars.csv> [same options as run]\n       pine-compat run-realtime-history <script.pine> --bars <bars.csv> [same options as run]\n       pine-compat run-realtime-forming <script.pine> --bars <bars.csv> [same options as run]\n       pine-compat run <script.pine> --bars <bars.csv> --render-strategy-order-alert-template <template> --strategy-alert-index <index>\n       pine-compat run <script.pine> --bars <bars.csv> --render-strategy-running-alert <template> --strategy-alert-index <index> --running-alert-script-snapshot-id <id> --running-alert-symbol <symbol> --running-alert-timeframe <timeframe>\n       pine-compat matrix [--format text|json]".to_owned()
+    "usage: pine-compat --version\n       pine-compat analyze <script.pine> [--library-source KEY=path.pine]... [--format text|json]\n       pine-compat requirements <script.pine> [--library-source KEY=path.pine]...\n       pine-compat fmt-ast <script.pine>\n       pine-compat run <script.pine> --bars <bars.csv> [--magnifier-bars <magnifier.json>] [--execution-times <timestamps.txt>] [--chart-symbol SYMBOL] [--chart-timeframe TIMEFRAME] [--chart-price-grid MIN_MOVE/PRICE_SCALE] [--chart-quantity-precision 0..9] [--chart-point-value 1] [--library-source KEY=path.pine]... [--request-bars SYMBOL:TIMEFRAME=bars.csv]... [--input-override CALL_SITE_ID=value]... [--profile]\n       pine-compat run-incremental <script.pine> --bars <bars.csv> [same options as run]\n       pine-compat run-realtime-history <script.pine> --bars <bars.csv> [same options as run]\n       pine-compat run-realtime-forming <script.pine> --bars <bars.csv> [same options as run]\n       pine-compat run <script.pine> --bars <bars.csv> --render-strategy-order-alert-template <template> --strategy-alert-index <index>\n       pine-compat run <script.pine> --bars <bars.csv> --render-strategy-running-alert <template> --strategy-alert-index <index> --running-alert-script-snapshot-id <id> --running-alert-symbol <symbol> --running-alert-timeframe <timeframe>\n       pine-compat matrix [--format text|json]".to_owned()
 }
 
 #[cfg(test)]

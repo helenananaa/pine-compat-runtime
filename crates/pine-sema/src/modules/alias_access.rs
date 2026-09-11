@@ -84,6 +84,14 @@ pub(super) fn validate_alias_access(
                     }
                 }
             }
+            // An import can extend a builtin namespace. Exported symbols win;
+            // names absent from the public export surface retain builtin meaning.
+            let qualified = parts.join(".");
+            if pine_builtins::get_phase_1_builtin(&qualified).is_some()
+                || crate::symbols::initial_symbol(&qualified).is_some()
+            {
+                return;
+            }
             if module.private_symbols.contains(symbol) {
                 diagnostics.push(Diagnostic::error(
                     "E_IMPORT_PRIVATE_SYMBOL",

@@ -1,0 +1,4 @@
+//@version=6
+library("outer")
+import user/transitive_inner/1 as inner
+export value(series float source) => inner.accumulate(source)

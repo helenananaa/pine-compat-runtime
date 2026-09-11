@@ -17,3 +17,7 @@ edition = "2024"
 license = "MIT"
 repository = "https://github.com/helenananaa/pine-compat-runtime"
 rust-version = "1.95"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

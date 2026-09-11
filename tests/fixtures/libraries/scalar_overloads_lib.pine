@@ -1,0 +1,18 @@
+//@version=6
+library("ScalarOverloads")
+export choose(series float source, simple int length, series bool anchor, simple bool enabled=true) => source + length + (anchor and enabled ? 1.0 : 0.0)
+export choose(series float source, simple int length, simple string timeframe, simple bool enabled=true) => source + length + (enabled ? str.length(timeframe) : 0)
+export qualified(series float source) => source + 2
+export qualified(simple float source) => source + 1
+export numeric(series float source) => source + 200
+export numeric(series int source) => source + 100
+export crossed(series float x, series int y) => x + y + 200
+export crossed(series int x, series float y) => x + y + 100
+export accumulate(series float source) =>
+    var float total = 0
+    total += source
+    total
+export accumulate(simple string source) =>
+    var float total = 0
+    total += str.length(source)
+    total

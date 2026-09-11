@@ -93,6 +93,8 @@ fn returned_expr_param_index_with_aliases(
             let function = functions.get(&callee_name)?;
             let returned_param_index =
                 returned_udf_param_index(&function.body, &function.params, functions, depth + 1)?;
+            let completed_args = function.complete_args(args, expr.span).ok()?;
+            let args = completed_args.as_ref();
             let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
             let arg_index = arg_indices
                 .iter()

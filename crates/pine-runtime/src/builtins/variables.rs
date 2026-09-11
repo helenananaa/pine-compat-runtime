@@ -100,6 +100,24 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn eval_builtin_value(&mut self, name: &str) -> PineValue {
+        match name {
+            "syminfo.mintick" => {
+                return PineValue::Float(self.request_environment.chart().min_tick());
+            }
+            "syminfo.mincontract" => {
+                return PineValue::Float(self.request_environment.chart().min_contract());
+            }
+            "syminfo.pointvalue" => {
+                return PineValue::Float(self.request_environment.chart().point_value());
+            }
+            "syminfo.minmove" => {
+                return PineValue::Int(i64::from(self.request_environment.chart().min_move()));
+            }
+            "syminfo.pricescale" => {
+                return PineValue::Int(i64::from(self.request_environment.chart().price_scale()));
+            }
+            _ => {}
+        }
         if name == "barstate.isfirst" {
             return PineValue::Bool(self.bars == 0);
         }
@@ -360,6 +378,18 @@ impl<'a> HistoricalRuntime<'a> {
             return self
                 .strategy_broker
                 .margin_liquidation_price()
+                .map(|price| {
+                    let tick = self.request_environment.chart().min_tick();
+                    let units = price / tick;
+                    if !units.is_finite() {
+                        return price;
+                    }
+                    if self.strategy_broker.position_size() > 0.0 {
+                        units.floor() * tick
+                    } else {
+                        units.ceil() * tick
+                    }
+                })
                 .map_or(PineValue::Na, PineValue::Float);
         }
         if name == "strategy.openprofit" {
@@ -375,7 +405,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
         if name == "strategy.netprofit" {
-            return PineValue::Float(self.strategy_broker.realized_profit());
+            return PineValue::Float(self.strategy_broker.net_profit());
         }
         if name == "strategy.netprofit_percent" {
             return PineValue::Float(self.strategy_broker.realized_profit_percent());

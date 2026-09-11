@@ -117,6 +117,12 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_FUNCTION_ARG_DUPLICATE`: user-defined function argument was provided more
   than once.
 - `E_FUNCTION_ARG_NAME`: unknown user-defined function named argument.
+- `E_FUNCTION_DEFAULT`: unsupported function default expression; defaults are
+  limited to scalar literals, signed numeric literals, supported built-in input
+  variables and named constants, without calls, user variables or calculations.
+- `E_FUNCTION_DEFAULT_TYPE`: function default is incompatible with its declared
+  scalar type, uses untyped na, uses v6 bool na, defaults a reference parameter, or resolves
+  an omitted default to a reference value in the caller.
 - `E_FUNCTION_ARG_ORDER`: positional argument followed a named argument in a
   user-defined function call.
 - `E_FUNCTION_ARG_TYPE`: user-defined function argument type does not match the
@@ -262,3 +268,28 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_SESSION_COVERAGE`: session window input is missing a required chart barIndex.
 - `E_SESSION_HISTORY_CHANGED`: session window replacement/extension changes an executed confirmed or forming bar's ids, or enables host-window mode after UTC execution.
   uses that bar's standard OHLC path.
+
+
+## Streaming replica
+
+These errors reject an incoming delta without mutating the consumer result or
+revision. They do not change the existing runtime output schema.
+
+- `E_STREAM_SCHEMA`: changes schema is unsupported; schema 2 and 3 are accepted.
+- `E_STREAM_REVISION`: revision does not immediately follow baseRevision.
+- `E_STREAM_STALE`: change revision precedes the consumer's current revision.
+- `E_STREAM_CONFLICT`: the current revision has a different payload, or was
+  installed from a snapshot without a known last payload. Only an identical
+  retransmission of the last applied delta is a no-op.
+- `E_STREAM_GAP`: baseRevision does not match the consumer cursor; restore an
+  authoritative snapshot with its revision before continuing.
+- `E_STREAM_ORIGIN`: `retainedFrom` moved earlier than the consumer window;
+  restore an authoritative snapshot that includes `retainedFrom`.
+- `E_REQUEST_FEED_TIME`: a requested-context bar is duplicate, stale, or out of
+  order relative to provider and confirmed request history.
+- `E_REQUEST_FEED_FORMING`: a requested-context historical append arrived while
+  a forming request bar is open, or a confirm/replace time does not match.
+- `E_HISTORY_CORRECT`: historical correction `from_time` is after confirmed
+  history, or the replacement bars do not follow the retained prefix.
+- `E_HISTORY_CLOCK`: historical correction mixed execution timestamps with a
+  prefix recorded without them, or omitted timestamps when the prefix has them.

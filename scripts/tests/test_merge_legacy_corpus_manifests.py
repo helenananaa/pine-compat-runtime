@@ -69,9 +69,12 @@ class MergeLegacyCorpusManifestTests(unittest.TestCase):
             )
 
             self.assertEqual([row["id"] for row in rows], ["a", "b"])
-            self.assertEqual(Path(rows[0]["source_path"]), root / "a" / "a.pine")
             self.assertEqual(
-                Path(rows[1]["chart_bars_path"]), root / "b" / "bars.csv"
+                Path(rows[0]["source_path"]), (root / "a" / "a.pine").resolve()
+            )
+            self.assertEqual(
+                Path(rows[1]["chart_bars_path"]),
+                (root / "b" / "bars.csv").resolve(),
             )
 
     def test_merge_rebases_nested_request_data_paths_into_sidecars(self) -> None:
@@ -102,10 +105,10 @@ class MergeLegacyCorpusManifestTests(unittest.TestCase):
             )
 
             rebased = Path(merged[0]["request_data_manifest"])
-            self.assertEqual(rebased, sidecar / "requests.json")
+            self.assertEqual(rebased, (sidecar / "requests.json").resolve())
             self.assertEqual(
                 json.loads(rebased.read_text(encoding="utf-8")),
-                {"TEST:60": str(request_bars)},
+                {"TEST:60": str(request_bars.resolve())},
             )
 
     def test_merge_refuses_to_overwrite_request_data_sidecars(self) -> None:
@@ -181,7 +184,8 @@ class MergeLegacyCorpusManifestTests(unittest.TestCase):
             )
 
             self.assertEqual(
-                Path(rows[0]["source_path"]), external_root / "rooted.pine"
+                Path(rows[0]["source_path"]),
+                (external_root / "rooted.pine").resolve(),
             )
 
     def test_explicit_root_count_must_match_manifest_count(self) -> None:

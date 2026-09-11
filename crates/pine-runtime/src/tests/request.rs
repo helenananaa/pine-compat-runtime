@@ -251,22 +251,28 @@ fn request_security_same_context_returns_tuple_expression() {
     let program = compile_program(
         "indicator(\"request tuple\")\n[macd, signal, hist] = request.security(syminfo.tickerid, timeframe.period, ta.macd(close, 2, 3, 2))\nplot(macd)\nplot(signal)\nplot(hist)\n",
     );
-    let result = run_historical(&program, &[bar(1.0), bar(2.0), bar(3.0)])
+    let result = run_historical(&program, &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)])
         .expect("same-context tuple request.security expression should run");
 
     assert_eq!(result.plots.len(), 3);
-    assert_values_close(
-        &result.plots[0].values,
-        &[0.0, 0.16666666666666674, 0.30555555555555536],
+    assert!(
+        result.plots[0].values[..2]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[0.0, 0.11111111111111116, 0.24074074074074063],
+    assert_values_close(&result.plots[0].values[2..], &[0.5, 0.5]);
+    assert!(
+        result.plots[1].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[2].values,
-        &[0.0, 0.05555555555555558, 0.06481481481481474],
+    assert_values_close(&result.plots[1].values[3..], &[0.5]);
+    assert!(
+        result.plots[2].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
+    assert_values_close(&result.plots[2].values[3..], &[0.0]);
 }
 
 #[test]
@@ -875,36 +881,24 @@ fn request_security_evaluates_provider_macd_tuple_in_requested_context() {
         .expect("provider ta.macd tuple expression should run");
 
     assert_eq!(result.plots.len(), 3);
-    assert_values_close(
-        &result.plots[0].values,
-        &[
-            0.0,
-            0.16666666666666785,
-            0.30555555555555713,
-            0.39351851851851904,
-            0.4436728395061713,
-        ],
+    assert!(
+        result.plots[0].values[..2]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[1].values,
-        &[
-            0.0,
-            0.1111111111111119,
-            0.24074074074074136,
-            0.3425925925925929,
-            0.409_979_423_868_311_8,
-        ],
+    assert_values_close(&result.plots[0].values[2..], &[0.5, 0.5, 0.5]);
+    assert!(
+        result.plots[1].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_values_close(
-        &result.plots[2].values,
-        &[
-            0.0,
-            0.05555555555555595,
-            0.06481481481481577,
-            0.05092592592592615,
-            0.033_693_415_637_859_46,
-        ],
+    assert_values_close(&result.plots[1].values[3..], &[0.5, 0.5]);
+    assert!(
+        result.plots[2].values[..3]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
+    assert_values_close(&result.plots[2].values[3..], &[0.0, 0.0]);
 }
 
 #[test]
@@ -915,7 +909,12 @@ fn request_security_aligns_provider_higher_timeframe_macd_tuple() {
     let environment = external_symbol_environment_with_timeframe(
         "NYSE:IBM",
         "5",
-        vec![timed_bar(0, 100.0), timed_bar(300_000, 200.0)],
+        vec![
+            timed_bar(0, 100.0),
+            timed_bar(300_000, 200.0),
+            timed_bar(600_000, 300.0),
+            timed_bar(900_000, 400.0),
+        ],
     );
     let result = HistoricalRuntime::with_request_environment(&program, environment)
         .run(&[
@@ -924,25 +923,32 @@ fn request_security_aligns_provider_higher_timeframe_macd_tuple() {
             timed_bar(240_000, 3.0),
             timed_bar(300_000, 4.0),
             timed_bar(540_000, 5.0),
+            timed_bar(600_000, 6.0),
+            timed_bar(840_000, 7.0),
+            timed_bar(900_000, 8.0),
+            timed_bar(1_140_000, 9.0),
         ])
         .expect("higher timeframe provider ta.macd tuple request should run");
 
     assert_eq!(result.plots.len(), 3);
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[0].values[2..],
-        &[0.0, 0.0, 16.666666666666657],
+    assert!(
+        result.plots[0].values[..6]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[1].values[2..],
-        &[0.0, 0.0, 11.111111111111105],
+    assert_values_close(&result.plots[0].values[6..], &[50.0, 50.0, 50.0]);
+    assert!(
+        result.plots[1].values[..8]
+            .iter()
+            .all(|v| *v == PineValue::Na)
     );
-    assert_eq!(result.plots[2].values[0], PineValue::Na);
-    assert_eq!(result.plots[2].values[1], PineValue::Na);
-    assert_values_close(&result.plots[2].values[2..], &[0.0, 0.0, 5.555555555555552]);
+    assert_values_close(&result.plots[1].values[8..], &[50.0]);
+    assert!(
+        result.plots[2].values[..8]
+            .iter()
+            .all(|v| *v == PineValue::Na)
+    );
+    assert_values_close(&result.plots[2].values[8..], &[0.0]);
 }
 
 #[test]
@@ -1790,10 +1796,8 @@ fn request_security_evaluates_provider_tuple_literal_ta_core_momentum_in_request
         .expect("provider tuple literal ta.ema/ta.rsi request.security expression should run");
 
     assert_eq!(result.plots.len(), 2);
-    assert_values_close(
-        &result.plots[0].values,
-        &[20.0, 20.666_666_666_666_668, 21.555_555_555_555_557],
-    );
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[20.5, 21.5]);
     assert_eq!(result.plots[1].values[0], PineValue::Na);
     assert_values_close(&result.plots[1].values[1..], &[100.0, 100.0]);
 }
@@ -3411,10 +3415,9 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_core_momen
     assert_eq!(result.plots.len(), 2);
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(
-        &result.plots[0].values[2..],
-        &[100.0, 100.0, 166.666_666_666_666_66],
-    );
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_eq!(result.plots[0].values[3], PineValue::Na);
+    assert_values_close(&result.plots[0].values[4..], &[150.0]);
     for value in &result.plots[1].values[..4] {
         assert_eq!(*value, PineValue::Na);
     }
@@ -6276,10 +6279,8 @@ fn request_security_evaluates_provider_ema_in_requested_context() {
         ])
         .expect("provider ema expression should run");
 
-    assert_values_close(
-        &result.plots[0].values,
-        &[20.0, 22.0, 24.666_666_666_666_668],
-    );
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[21.5, 24.5]);
 }
 
 #[test]
@@ -6647,4 +6648,103 @@ fn realtime_request_security_reuses_immutable_provider_data_during_rollback() {
 
     assert_values_close(&first_forming.plots[0].values, &[20.0, 21.0]);
     assert_values_close(&second_forming.plots[0].values, &[20.0, 21.0]);
+}
+
+#[test]
+fn request_feed_interleaves_with_chart_updates_without_leaking_unconfirmed_request_bars() {
+    let program = compile_program(
+        "indicator(\"request feed\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::default());
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment("NYSE:IBM", vec![timed_bar(0, 20.0)]),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 5.0)))
+        .expect("chart seed");
+    assert!(
+        runtime
+            .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(60_000, 99.0)))
+            .expect("request forming before chart forming")
+            .is_none()
+    );
+    let forming = runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 6.0)))
+        .expect("chart forming");
+    assert_values_close(&forming.plots[0].values, &[20.0, 99.0]);
+    assert_values_close(&runtime.confirmed_result().plots[0].values, &[20.0]);
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::confirmed(timed_bar(60_000, 99.0)))
+        .expect("request confirm");
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(timed_bar(60_000, 6.0)))
+        .expect("chart confirm");
+    assert_values_close(&confirmed.plots[0].values, &[20.0, 99.0]);
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(120_000, 50.0)))
+        .expect("next request forming");
+    let preview = runtime
+        .update(BarUpdate::forming(timed_bar(120_000, 7.0)))
+        .expect("next chart forming");
+    assert_values_close(&preview.plots[0].values, &[20.0, 99.0, 50.0]);
+    let committed = runtime
+        .update(BarUpdate::confirmed(timed_bar(120_000, 7.0)))
+        .expect("chart confirm ignores unconfirmed request bar");
+    assert_values_close(&committed.plots[0].values, &[20.0, 99.0, 99.0]);
+}
+
+#[test]
+fn request_feed_failure_restores_prior_chart_forming_result() {
+    let program = compile_program(
+        "indicator(\"request feed rollback\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::default());
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment("NYSE:IBM", vec![timed_bar(0, 20.0)]),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 5.0)))
+        .expect("chart seed");
+    runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 6.0)))
+        .expect("chart forming");
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(60_000, 21.0)))
+        .expect("request forming");
+    let before = runtime.result();
+    let revision = runtime.revision();
+    let error = runtime
+        .apply_request_update(key, BarUpdate::forming(timed_bar(120_000, 30.0)))
+        .expect_err("mismatched forming time");
+    assert!(error.message.contains("E_REQUEST_FEED_FORMING"));
+    assert_eq!(runtime.revision(), revision);
+    assert_eq!(runtime.result(), before);
+}
+
+#[test]
+fn request_feed_higher_timeframe_forming_does_not_leak_before_close() {
+    let program = compile_program(
+        "indicator(\"request htf feed\")\nplot(request.security(\"NYSE:IBM\", \"5\", close))\n",
+    );
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::parse("5").expect("5"));
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment_with_timeframe("NYSE:IBM", "5", vec![timed_bar(0, 100.0)]),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 1.0)))
+        .expect("chart seed");
+    runtime
+        .update(BarUpdate::forming(timed_bar(240_000, 2.0)))
+        .expect("chart forming");
+    runtime
+        .apply_request_update(key, BarUpdate::forming(timed_bar(300_000, 200.0)))
+        .expect("htf forming");
+    let preview = runtime.result();
+    assert_eq!(preview.plots[0].values[0], PineValue::Na);
+    assert_values_close(&preview.plots[0].values[1..], &[100.0]);
 }

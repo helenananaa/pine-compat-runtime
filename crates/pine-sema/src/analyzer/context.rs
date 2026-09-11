@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 mod const_eval;
 mod history_offsets;
+mod provenance;
 
 use pine_ir::{
     CallSiteId, DrawingSettings, PersistenceKind, PineType, Qualifier, ScriptMode, SeriesId,
@@ -50,6 +51,8 @@ pub(crate) struct Analyzer {
     pub(crate) legacy: LegacyFrontEnd,
     pub(crate) source_context_id: Cell<SourceContextId>,
     pub(crate) source_context_depth: Cell<usize>,
+    pub(crate) source_context_origins: HashMap<SourceContextId, (SourceId, Option<String>)>,
+    pub(crate) call_site_sources: Vec<pine_ir::HirCallSiteSource>,
     pub(crate) scope: ScopeResolver,
     pub(crate) bindings: HashMap<BindingKey, SymbolInfo>,
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
@@ -130,18 +133,46 @@ struct HistoryOffsetIntEnv {
 
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionInfo {
+    pub(crate) overloads: Vec<FunctionInfo>,
+    pub(crate) display_name: String,
     pub(crate) source_id: SourceId,
     pub(crate) source_context_id: SourceContextId,
     pub(crate) params: Vec<String>,
     pub(crate) param_types: Vec<Option<FunctionParamInfo>>,
+    pub(crate) default_values: Vec<Option<Expr>>,
     pub(crate) body: FunctionBody,
     pub(crate) span: Span,
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionParamInfo {
     pub(crate) pine_type: PineType,
+    pub(crate) explicit_series: bool,
+    pub(crate) explicit_simple: bool,
     pub(crate) user_type_name: Option<String>,
     pub(crate) span: Span,
+}
+
+impl FunctionParamInfo {
+    pub(crate) fn bound_type(&self, argument: PineType) -> PineType {
+        if self.explicit_series || self.explicit_simple {
+            self.pine_type
+        } else if (argument.kind == pine_ir::ValueKind::Int
+            && self.pine_type.kind == pine_ir::ValueKind::Float)
+            || (argument.kind == pine_ir::ValueKind::Na
+                && matches!(
+                    self.pine_type.kind,
+                    pine_ir::ValueKind::Int
+                        | pine_ir::ValueKind::Float
+                        | pine_ir::ValueKind::Bool
+                        | pine_ir::ValueKind::String
+                        | pine_ir::ValueKind::Color
+                ))
+        {
+            PineType::new(argument.qualifier, self.pine_type.kind)
+        } else {
+            argument
+        }
+    }
 }
 #[derive(Debug, Clone)]
 pub(crate) struct MethodInfo {

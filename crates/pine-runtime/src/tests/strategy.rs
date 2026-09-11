@@ -32,9 +32,9 @@ plot(close)
     assert!(strategy.position.is_empty());
     assert_eq!(strategy.equity.len(), 2);
     assert_eq!(strategy.equity[0].bar_index, 0);
-    assert_eq!(strategy.equity[0].cash, 100_000.0);
+    assert_eq!(strategy.equity[0].cash, 1000000.0);
     assert_eq!(strategy.equity[0].market_value, 0.0);
-    assert_eq!(strategy.equity[0].equity, 100_000.0);
+    assert_eq!(strategy.equity[0].equity, 1000000.0);
     assert_eq!(strategy.equity[0].net_profit, 0.0);
     assert!(strategy.diagnostics.is_empty());
     assert_eq!(
@@ -170,9 +170,9 @@ plot(close)
     assert_eq!(strategy.position[0].bar_index, 2);
     assert_eq!(strategy.position[0].size, 2.0);
     assert_eq!(strategy.position[0].avg_price, Some(3.0));
-    assert_eq!(strategy.equity[2].cash, 99_994.0);
+    assert_eq!(strategy.equity[2].cash, 999994.0);
     assert_eq!(strategy.equity[2].market_value, 6.0);
-    assert_eq!(strategy.equity[2].equity, 100_000.0);
+    assert_eq!(strategy.equity[2].equity, 1000000.0);
 }
 
 #[test]
@@ -234,9 +234,9 @@ plot(strategy.max_contracts_held_short)
     assert_eq!(strategy.position[0].bar_index, 2);
     assert_eq!(strategy.position[0].size, -2.0);
     assert_eq!(strategy.position[0].avg_price, Some(3.0));
-    assert_eq!(strategy.equity[2].cash, 100_006.0);
+    assert_eq!(strategy.equity[2].cash, 1000006.0);
     assert_eq!(strategy.equity[2].market_value, -6.0);
-    assert_eq!(strategy.equity[2].equity, 100_000.0);
+    assert_eq!(strategy.equity[2].equity, 1000000.0);
     assert_eq!(
         result.plots[0].values,
         vec![
@@ -326,7 +326,7 @@ plot(strategy.netprofit)
         strategy.position.last().map(|position| position.size),
         Some(0.0)
     );
-    assert_eq!(strategy.equity[3].cash, 99_998.0);
+    assert_eq!(strategy.equity[3].cash, 999998.0);
     assert_eq!(strategy.equity[3].net_profit, -2.0);
 }
 
@@ -3433,8 +3433,8 @@ plot(strategy.opentrades.size(1))
     assert_eq!(
         result.plots[5].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(3.0),
             PineValue::Float(3.0),
         ]
@@ -7965,7 +7965,7 @@ if bar_index == 1
             .as_ref()
             .unwrap()
             .strategy_settings
-            .default_entry_qty(100_000.0, 2.0),
+            .default_entry_qty(1000000.0, 2.0),
         Some(3.0)
     );
 
@@ -7978,11 +7978,11 @@ if bar_index == 1
     assert_eq!(strategy.orders[0].qty, 3.0);
     assert_eq!(strategy.orders[0].price, 4.0);
     assert_eq!(strategy.position[0].size, 3.0);
-    assert_eq!(strategy.equity[0].cash, 100_000.0);
+    assert_eq!(strategy.equity[0].cash, 1000000.0);
     assert_eq!(strategy.equity[0].market_value, 0.0);
-    assert_eq!(strategy.equity[1].cash, 99_988.0);
+    assert_eq!(strategy.equity[1].cash, 999988.0);
     assert_eq!(strategy.equity[1].market_value, 12.0);
-    assert_eq!(strategy.equity[1].equity, 100_000.0);
+    assert_eq!(strategy.equity[1].equity, 1000000.0);
 }
 
 #[test]
@@ -8356,7 +8356,7 @@ if bar_index == 0
     assert_eq!(strategy.orders[0].id, "E");
     assert_eq!(strategy.orders[0].qty, 5.0);
     assert_eq!(strategy.position[0].size, 5.0);
-    assert_eq!(strategy.equity[1].cash, 99_985.0);
+    assert_eq!(strategy.equity[1].cash, 999985.0);
 }
 
 #[test]
@@ -8428,10 +8428,10 @@ if bar_index == 2
         strategy.position.last().map(|snapshot| snapshot.size),
         Some(0.0)
     );
-    assert_eq!(strategy.equity[2].cash, 99_994.0);
-    assert_eq!(strategy.equity[3].cash, 100_002.0);
+    assert_eq!(strategy.equity[2].cash, 999994.0);
+    assert_eq!(strategy.equity[3].cash, 1000002.0);
     assert_eq!(strategy.equity[3].market_value, 0.0);
-    assert_eq!(strategy.equity[3].equity, 100_002.0);
+    assert_eq!(strategy.equity[3].equity, 1000002.0);
 }
 
 #[test]
@@ -8701,9 +8701,9 @@ plot(strategy.opentrades)
         strategy.position.last().map(|snapshot| snapshot.size),
         Some(0.0)
     );
-    assert_eq!(strategy.equity[3].cash, 100_004.0);
+    assert_eq!(strategy.equity[3].cash, 1000004.0);
     assert_eq!(strategy.equity[3].market_value, 0.0);
-    assert_eq!(strategy.equity[3].equity, 100_004.0);
+    assert_eq!(strategy.equity[3].equity, 1000004.0);
     assert_eq!(strategy.equity[3].net_profit, 4.0);
 }
 
@@ -8928,7 +8928,7 @@ if bar_index == 0
     assert_eq!(strategy.trades[0].profit, -4.0);
     assert_eq!(strategy.position.len(), 2);
     assert_eq!(strategy.position[1].size, 0.0);
-    assert_eq!(strategy.equity[1].cash, 99_996.0);
+    assert_eq!(strategy.equity[1].cash, 999996.0);
     assert_eq!(strategy.equity[1].market_value, 0.0);
     assert_eq!(strategy.equity[1].net_profit, -4.0);
     assert!(strategy.diagnostics.is_empty());
@@ -9416,7 +9416,7 @@ if bar_index == 0
     assert_eq!(strategy.trades[0].exit_price, 12.0);
     assert_eq!(strategy.trades[0].profit, 2.0);
     assert_eq!(strategy.position[1].size, 0.0);
-    assert_eq!(strategy.equity[1].cash, 100_002.0);
+    assert_eq!(strategy.equity[1].cash, 1000002.0);
 }
 
 #[test]
@@ -10496,18 +10496,18 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(1.0),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
         ]
     );
@@ -10515,26 +10515,26 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-1.0),
+            PineValue::Float(-1.0),
             PineValue::Float(2.0),
         ]
     );
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_999.0),
-            PineValue::Float(100_001.0),
-            PineValue::Float(100_002.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999999.0),
+            PineValue::Float(1000001.0),
+            PineValue::Float(1000002.0),
         ]
     );
 
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.trades[0].profit, 2.0);
-    assert_eq!(strategy.equity[1].cash, 99_995.0);
-    assert_eq!(strategy.equity[1].equity, 99_999.0);
-    assert_eq!(strategy.equity[3].cash, 100_002.0);
+    assert_eq!(strategy.equity[1].cash, 999995.0);
+    assert_eq!(strategy.equity[1].equity, 999999.0);
+    assert_eq!(strategy.equity[3].cash, 1000002.0);
 }
 
 #[test]
@@ -10605,18 +10605,18 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(1.5),
             PineValue::Float(1.5),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(3.0),
         ]
     );
@@ -10624,26 +10624,26 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-1.5),
+            PineValue::Float(-1.5),
             PineValue::Float(1.0),
         ]
     );
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_998.5),
-            PineValue::Float(100_000.5),
-            PineValue::Float(100_001.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999998.5),
+            PineValue::Float(1000000.5),
+            PineValue::Float(1000001.0),
         ]
     );
 
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.trades[0].profit, 1.0);
-    assert_eq!(strategy.equity[1].cash, 99_994.5);
-    assert_eq!(strategy.equity[1].equity, 99_998.5);
-    assert_eq!(strategy.equity[3].cash, 100_001.0);
+    assert_eq!(strategy.equity[1].cash, 999994.5);
+    assert_eq!(strategy.equity[1].equity, 999998.5);
+    assert_eq!(strategy.equity[3].cash, 1000001.0);
 }
 
 #[test]
@@ -10681,18 +10681,18 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(0.4),
             PineValue::Float(0.4),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.4 + 0.8),
         ]
     );
@@ -10700,8 +10700,8 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-0.4),
+            PineValue::Float(-0.4),
             PineValue::Float(4.0 - (0.4 + 0.8)),
         ]
     );
@@ -10745,18 +10745,18 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[0].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(0.4),
             PineValue::Float(0.4),
-            PineValue::Na,
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.4 + 0.8),
         ]
     );
@@ -10764,26 +10764,27 @@ plot(strategy.equity)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-0.4),
+            PineValue::Float(-0.4),
             PineValue::Float(4.0 - (0.4 + 0.8)),
         ]
     );
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_999.6),
-            PineValue::Float(100_001.6),
-            PineValue::Float(100_000.0 + 4.0 - (0.4 + 0.8)),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999999.6),
+            PineValue::Float(1000001.6),
+            // Cash records the entry cost/fee and exit proceeds/fee separately.
+            PineValue::Float(1000000.0 - 4.0 - 0.4 + 8.0 - 0.8),
         ]
     );
 
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.trades[0].profit, 4.0 - (0.4 + 0.8));
-    assert_eq!(strategy.equity[1].cash, 99_995.6);
-    assert_eq!(strategy.equity[1].equity, 99_999.6);
-    assert_eq!(strategy.equity[3].cash, 100_000.0 + 4.0 - (0.4 + 0.8));
+    assert_eq!(strategy.equity[1].cash, 999995.6);
+    assert_eq!(strategy.equity[1].equity, 999999.6);
+    assert_eq!(strategy.equity[3].cash, 1000000.0 - 4.0 - 0.4 + 8.0 - 0.8);
 }
 
 #[test]
@@ -10877,19 +10878,19 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[2].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[3].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_998.0),
-            PineValue::Float(100_000.0),
-            PineValue::Float(100_000.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999998.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(1000000.0),
         ]
     );
 
@@ -10971,8 +10972,8 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(-2.0),
             PineValue::Float(-2.0),
         ]
@@ -10980,10 +10981,10 @@ plot(strategy.equity)
     assert_eq!(
         result.plots[2].values,
         vec![
-            PineValue::Float(100_000.0),
-            PineValue::Float(99_998.0),
-            PineValue::Float(99_998.0),
-            PineValue::Float(99_998.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(999998.0),
+            PineValue::Float(999998.0),
+            PineValue::Float(999998.0),
         ]
     );
 
@@ -11137,8 +11138,8 @@ plot(strategy.closedtrades.profit(0))
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
             PineValue::Float(2.0),
         ]
@@ -11615,8 +11616,8 @@ plot(strategy.margin_liquidation_price)
             PineValue::Float(after_call),
             PineValue::Float(later),
         ] => {
-            assert!((after_call - 660.0 / 126.0).abs() < 1e-10);
-            assert!((later - 660.0 / 126.0).abs() < 1e-10);
+            assert!((after_call - 5.24).abs() < 1e-10);
+            assert!((later - 5.24).abs() < 1e-10);
         }
         other => panic!("unexpected liquidation-price plots: {other:?}"),
     }
@@ -12034,17 +12035,22 @@ plot(strategy.closedtrades.max_drawdown_percent(0.5))
         result.plots[7].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Int(30)]
     );
-    assert_eq!(
-        result.plots[8].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(0.0)]
-    );
+    assert_eq!(result.plots[8].values, vec![PineValue::Float(0.0); 3]);
     assert_eq!(
         result.plots[9].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0)]
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0)
+        ]
     );
     assert_eq!(
         result.plots[10].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(4.0)]
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(4.0)
+        ]
     );
     assert_eq!(
         result.plots[11].values,
@@ -12221,10 +12227,10 @@ plot(strategy.opentrades.max_drawdown_percent(0.5))
     assert_eq!(
         result.plots[4].values,
         vec![
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
             PineValue::Float(2.0),
-            PineValue::Na
+            PineValue::Float(0.0)
         ]
     );
     assert_eq!(
@@ -12239,10 +12245,10 @@ plot(strategy.opentrades.max_drawdown_percent(0.5))
     assert_eq!(
         result.plots[6].values,
         vec![
-            PineValue::Na,
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Na
+            PineValue::Float(0.0),
+            PineValue::Float(0.0)
         ]
     );
     assert_eq!(
@@ -12267,11 +12273,13 @@ plot(strategy.opentrades.max_drawdown_percent(0.5))
         result.plots[9].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na]
     );
-    for plot in &result.plots[10..37] {
-        assert_eq!(
-            plot.values,
-            vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na]
-        );
+    for (index, plot) in result.plots.iter().enumerate().take(37).skip(10) {
+        let expected = if matches!(index, 14 | 16 | 23 | 25) {
+            PineValue::Float(0.0)
+        } else {
+            PineValue::Na
+        };
+        assert_eq!(plot.values, vec![expected; 4]);
     }
     assert_eq!(
         result.plots[37].values,
@@ -14669,7 +14677,7 @@ plot(close)
 }
 
 #[test]
-fn calc_on_every_tick_false_does_not_execute_strategy_on_forming_updates() {
+fn calc_on_every_tick_false_waits_for_observed_limit_price() {
     let hir = analyze_strategy(
         r#"
 strategy("default ticks")
@@ -14691,11 +14699,16 @@ plot(close)
     let confirmed = runtime
         .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("confirmed executes");
-    assert_eq!(confirmed.strategy.expect("strategy").orders.len(), 1);
+    assert!(confirmed.strategy.expect("strategy").orders.is_empty());
+    let filled = runtime
+        .update(BarUpdate::forming(bar(89.0)))
+        .expect("observed limit price");
+    assert_eq!(filled.strategy.expect("strategy").orders.len(), 1);
+    assert_eq!(filled.plots[0].values.len(), 2);
 }
 
 #[test]
-fn calc_on_every_tick_true_executes_strategy_on_forming_and_rolls_back() {
+fn calc_on_every_tick_true_does_not_replay_cumulative_extremes() {
     let hir = analyze_strategy(
         r#"
 strategy("every tick", calc_on_every_tick=true)
@@ -14711,7 +14724,7 @@ plot(close)
     let forming = runtime
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("forming fill");
-    assert_eq!(forming.strategy.expect("strategy").orders.len(), 1);
+    assert!(forming.strategy.expect("strategy").orders.is_empty());
     assert_eq!(forming.plots[0].values.len(), 2);
 
     let replaced = runtime
@@ -15058,7 +15071,7 @@ plot(close)
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_limit_fill() {
+fn forming_bar_broker_does_not_infer_limit_fill_from_past_low() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"
@@ -15083,7 +15096,7 @@ plot(close)
     let forming = runtime
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("forming fill");
-    assert_eq!(forming.strategy.expect("strategy").orders.len(), 1);
+    assert!(forming.strategy.expect("strategy").orders.is_empty());
 
     let replaced = runtime
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
@@ -15105,7 +15118,7 @@ plot(close)
 }
 
 #[test]
-fn forming_bar_broker_commit_keeps_confirmed_limit_fill() {
+fn forming_bar_broker_commit_preserves_pending_limit_until_observed_price() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"
@@ -15132,7 +15145,10 @@ plot(close)
     let confirmed = runtime
         .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("confirmed fill");
-    assert_eq!(confirmed.strategy.expect("strategy").orders.len(), 1);
+    assert!(confirmed.strategy.expect("strategy").orders.is_empty());
+    runtime
+        .update(BarUpdate::confirmed(bar(89.0)))
+        .expect("observed limit fill");
     assert_eq!(
         runtime
             .confirmed_result()
@@ -15145,7 +15161,7 @@ plot(close)
 }
 
 #[test]
-fn strategy_fill_path_realtime_stop_limit_rollback() {
+fn strategy_fill_path_realtime_stop_limit_requires_observed_activation() {
     let hir = analyze_source(&SourceFile::new(
         "strategy_fill_path_realtime_stop_limit_rollback.pine",
         include_str!(
@@ -15163,8 +15179,8 @@ fn strategy_fill_path_realtime_stop_limit_rollback() {
         .expect("forming fill");
     assert_eq!(
         forming_fill.strategy.expect("strategy").orders.len(),
-        1,
-        "high-first forming bar should fill the activated long stop-limit"
+        0,
+        "cumulative extremes are not observed stop-limit ticks"
     );
     runtime
         .update(BarUpdate::forming(bar(10.0)))
@@ -15179,6 +15195,19 @@ fn strategy_fill_path_realtime_stop_limit_rollback() {
             .expect("strategy")
             .orders
             .is_empty()
+    );
+    runtime
+        .update(BarUpdate::forming(bar(11.0)))
+        .expect("observed stop activation");
+    let filled = runtime
+        .update(BarUpdate::forming(bar(8.0)))
+        .expect("observed limit fill");
+    assert_eq!(filled.strategy.as_ref().unwrap().orders.len(), 1);
+    assert_eq!(filled.strategy.as_ref().unwrap().orders[0].price, 8.0);
+    let confirmed = runtime.update(BarUpdate::confirmed(bar(10.0))).unwrap();
+    assert_eq!(
+        confirmed.strategy.unwrap().orders,
+        filled.strategy.unwrap().orders
     );
 }
 
@@ -15220,7 +15249,7 @@ fn strategy_fill_path_realtime_trailing_rollback() {
 }
 
 #[test]
-fn strategy_fill_path_realtime_margin_rollback() {
+fn strategy_fill_path_realtime_margin_requires_observed_adverse_price() {
     let hir = analyze_source(&SourceFile::new(
         "strategy_fill_path_realtime_margin_rollback.pine",
         include_str!(
@@ -15237,7 +15266,7 @@ fn strategy_fill_path_realtime_margin_rollback() {
         .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
         .expect("forming margin");
     assert!(
-        forming
+        !forming
             .strategy
             .expect("strategy")
             .orders
@@ -15259,6 +15288,13 @@ fn strategy_fill_path_realtime_margin_rollback() {
             .iter()
             .any(|order| order.id == "Margin Call")
     );
+    let adverse = runtime
+        .update(BarUpdate::forming(bar(1.0)))
+        .expect("observed adverse price");
+    let margin_orders = adverse.strategy.unwrap().orders;
+    assert!(margin_orders.iter().any(|order| order.id == "Margin Call"));
+    let recovered = runtime.update(BarUpdate::confirmed(bar(10.0))).unwrap();
+    assert_eq!(recovered.strategy.unwrap().orders, margin_orders);
 }
 
 fn analyze_strategy(source: &str) -> pine_ir::HirProgram {
@@ -15273,7 +15309,7 @@ fn analyze_strategy(source: &str) -> pine_ir::HirProgram {
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_order_placement() {
+fn forming_bar_broker_preserves_order_placement_across_updates() {
     let hir = analyze_strategy(
         r#"
 strategy("forming place", calc_on_every_tick=true)
@@ -15300,19 +15336,22 @@ plot(close)
     let later = runtime
         .update(BarUpdate::historical(bar(110.0)))
         .expect("next bar");
-    assert!(later.strategy.expect("strategy").orders.is_empty());
+    let orders = later.strategy.expect("strategy").orders;
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0].price, 100.0);
     assert!(
         runtime
             .confirmed_result()
             .strategy
             .expect("strategy")
             .orders
-            .is_empty()
+            .len()
+            == 1
     );
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_cancel() {
+fn forming_bar_cancel_cannot_undo_fill_on_current_observed_price() {
     let hir = analyze_strategy(
         r#"
 strategy("forming cancel", calc_on_every_tick=true)
@@ -15330,7 +15369,9 @@ plot(close)
     let cancelled = runtime
         .update(BarUpdate::forming(bar_ohlc(96.0, 96.0, 96.0, 40.0)))
         .expect("forming cancel");
-    assert!(cancelled.strategy.expect("strategy").orders.is_empty());
+    let orders = cancelled.strategy.expect("strategy").orders;
+    assert_eq!(orders.len(), 1);
+    assert_eq!(orders[0].price, 40.0);
 
     runtime
         .update(BarUpdate::forming(bar_ohlc(96.0, 96.0, 96.0, 96.0)))
@@ -15374,7 +15415,7 @@ plot(close)
 }
 
 #[test]
-fn forming_bar_broker_rollback_discards_abandoned_fill_alerts() {
+fn forming_bar_fill_alerts_require_observed_fill_not_cumulative_low() {
     let hir = analyze_strategy(
         r#"
 strategy("forming alerts", calc_on_every_tick=true)
@@ -15393,8 +15434,8 @@ plot(close)
         .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
         .expect("forming fill");
     let forming_strategy = forming.strategy.expect("strategy");
-    assert_eq!(forming_strategy.orders.len(), 1);
-    assert_eq!(forming_strategy.alerts.len(), 1);
+    assert!(forming_strategy.orders.is_empty());
+    assert!(forming_strategy.alerts.is_empty());
     assert_eq!(forming.alerts.len(), 1);
 
     let replaced = runtime
@@ -15423,7 +15464,7 @@ plot(close)
 }
 
 #[test]
-fn forming_confirmed_strategy_matches_equivalent_historical_batch() {
+fn forming_observations_and_historical_ohlc_have_distinct_fill_inputs() {
     let hir = analyze_strategy(
         r#"
 strategy("parity", calc_on_every_tick=true)
@@ -15447,10 +15488,18 @@ plot(close)
     let confirmed = realtime
         .update(BarUpdate::historical(bars[2]))
         .expect("bar 2");
-    assert_eq!(
-        confirmed.strategy.as_ref().expect("strategy").orders,
-        historical.strategy.as_ref().expect("strategy").orders
+    assert!(
+        confirmed
+            .strategy
+            .as_ref()
+            .expect("strategy")
+            .orders
+            .is_empty()
     );
+    let historical_orders = &historical.strategy.as_ref().expect("strategy").orders;
+    assert_eq!(historical_orders.len(), 1);
+    assert_eq!(historical_orders[0].price, 90.0);
+    assert_eq!(confirmed.plots, historical.plots);
 }
 
 #[test]

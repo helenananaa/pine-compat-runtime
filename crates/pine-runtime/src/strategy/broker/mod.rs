@@ -21,7 +21,9 @@ mod pending_closes;
 mod pending_entries;
 mod pending_entry_fills;
 mod pending_exits;
+mod realtime;
 mod risk;
+mod shared_history;
 mod state;
 mod stop_profit_brackets;
 mod types;
@@ -48,6 +50,7 @@ use pending_exits::{
     PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
 pub(crate) use pending_exits::{TrailPointsExitSpec, TrailPriceExitSpec};
+use shared_history::SharedHistory;
 pub(crate) use stop_profit_brackets::StopProfitBracketSpec;
 use types::ClosedTradeMetrics;
 pub(crate) use types::{StrategyExitMetadata, StrategyOrderFillAlertEvent, StrategyOrderMetadata};
@@ -65,10 +68,12 @@ pub struct BrokerState {
     close_entries_rule: StrategyCloseEntriesRule,
     margin_long: StrategyMarginSetting,
     margin_short: StrategyMarginSetting,
+    quantity_scale: u32,
     open_entry_commission: f64,
     slippage_price_offset: f64,
     limit_verification_price_offset: f64,
     cash: f64,
+    realized_profit_sum: f64,
     position_size: f64,
     avg_price: f64,
     next_close_metadata: StrategyOrderMetadata,
@@ -91,12 +96,12 @@ pub struct BrokerState {
     max_drawdown_percent: f64,
     max_contracts_held_long: f64,
     max_contracts_held_short: f64,
-    orders: Vec<StrategyOrderEvent>,
-    order_fill_alerts: Vec<StrategyOrderFillAlertEvent>,
-    trades: Vec<StrategyTrade>,
-    closed_trade_metrics: Vec<ClosedTradeMetrics>,
-    position: Vec<StrategyPositionSnapshot>,
-    equity: Vec<StrategyEquitySnapshot>,
+    orders: SharedHistory<StrategyOrderEvent>,
+    order_fill_alerts: SharedHistory<StrategyOrderFillAlertEvent>,
+    trades: SharedHistory<StrategyTrade>,
+    closed_trade_metrics: SharedHistory<ClosedTradeMetrics>,
+    position: SharedHistory<StrategyPositionSnapshot>,
+    equity: SharedHistory<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,
     order_book: OrderBook,
     trade_ledger: TradeLedger,
@@ -741,6 +746,25 @@ impl BrokerState {
             metadata,
             |this, id, qty, created_bar_index, metadata| {
                 if !this.can_place_long_entry() {
+                    return;
+                }
+                // A new same-side stop cannot rely on margin released by a
+                // future exit. Native controls reject it before its trigger,
+                // including when the existing position closes on an earlier
+                // bar. Assess the combined exposure at the stop price.
+                // Keep reversal and invalid-input handling on their existing
+                // paths; they have separate contracts.
+                if this.position_size > 0.0
+                    && stop.is_finite()
+                    && qty.is_finite()
+                    && qty > 0.0
+                    && !this.can_afford_long_entry(this.position_size + qty, stop)
+                {
+                    this.diagnostics.push(RuntimeDiagnostic {
+                        code: "E_STRATEGY_MARGIN".to_owned(),
+                        message: "`strategy.entry` requires more margin than available equity"
+                            .to_owned(),
+                    });
                     return;
                 }
                 let diagnostics = &mut this.diagnostics;

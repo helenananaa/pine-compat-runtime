@@ -1,5 +1,6 @@
 use pine_ir::{HirCallArg, HirExpr};
 
+use crate::runtime::drawing_history::RuntimeLineFill;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -50,16 +51,16 @@ impl<'a> HistoricalRuntime<'a> {
                 .ok_or_else(|| RuntimeError {
                     message: "linefill id limit exceeded".to_owned(),
                 })?;
-        self.line_fills.push(LineFillOutput {
+        self.line_fills.push(RuntimeLineFill::from_snapshot(
             id,
-            snapshots: vec![LineFillSnapshot {
+            LineFillSnapshot {
                 bar_index: self.bars,
                 exists: true,
                 line1,
                 line2,
                 color,
-            }],
-        });
+            },
+        ));
         Ok(PineValue::LineFill(id))
     }
 
@@ -245,7 +246,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 }
 
-fn linefill_active_same_pair(line_fill: &LineFillOutput, line1: u32, line2: u32) -> bool {
+fn linefill_active_same_pair(line_fill: &RuntimeLineFill, line1: u32, line2: u32) -> bool {
     let Some(latest) = line_fill.snapshots.last() else {
         return false;
     };

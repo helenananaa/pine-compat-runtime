@@ -6,6 +6,12 @@ use crate::analyzer::user_types::{
 use crate::prelude::*;
 use crate::source_graph::{SourceContextId, SourceId};
 
+mod defaults;
+mod local_arrays;
+mod overloads;
+pub(crate) use defaults::{function_default_values, record_default_shadowing};
+pub(crate) use local_arrays::local_array_mutation_spans;
+
 pub(crate) fn function_param_names(params: &[FunctionParam]) -> Vec<String> {
     params.iter().map(|param| param.name.clone()).collect()
 }
@@ -13,6 +19,14 @@ pub(crate) fn function_param_names(params: &[FunctionParam]) -> Vec<String> {
 pub(crate) fn resolve_udf_arg_indices(
     params: &[String],
     args: &[CallArg],
+) -> Result<Vec<usize>, UdfArgError> {
+    resolve_udf_arg_indices_with_defaults(params, args, &[])
+}
+
+fn resolve_udf_arg_indices_with_defaults(
+    params: &[String],
+    args: &[CallArg],
+    defaults: &[Option<Expr>],
 ) -> Result<Vec<usize>, UdfArgError> {
     let mut used = vec![false; params.len()];
     let mut indices = Vec::with_capacity(args.len());
@@ -52,7 +66,11 @@ pub(crate) fn resolve_udf_arg_indices(
         }
     }
 
-    if let Some(missing_index) = used.iter().position(|used| !*used) {
+    if let Some(missing_index) = used
+        .iter()
+        .enumerate()
+        .position(|(index, used)| !*used && defaults.get(index).is_none_or(Option::is_none))
+    {
         return Err(UdfArgError::Missing {
             param: params[missing_index].clone(),
         });
@@ -271,6 +289,25 @@ impl Analyzer {
         type_name: &str,
         span: Span,
     ) -> Option<FunctionParamInfo> {
+        let explicit_series = type_name.starts_with("series ");
+        let explicit_simple = type_name.starts_with("simple ");
+        let type_name = type_name
+            .strip_prefix("series ")
+            .or_else(|| type_name.strip_prefix("simple "))
+            .unwrap_or(type_name);
+        if explicit_simple && !matches!(type_name, "int" | "float" | "bool" | "string" | "color") {
+            self.diagnostics.push(Diagnostic::error(
+                "E_FUNCTION_PARAM_TYPE",
+                format!("function parameter type `{type_name}` is not supported"),
+                span,
+            ));
+            return None;
+        }
+        let qualifier = if explicit_simple {
+            Qualifier::Simple
+        } else {
+            Qualifier::Series
+        };
         let (pine_type, user_type_name) =
             match type_name {
                 _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
@@ -299,11 +336,11 @@ impl Analyzer {
                         return None;
                     }
                 }
-                "int" => (PineType::new(Qualifier::Series, ValueKind::Int), None),
-                "float" => (PineType::new(Qualifier::Series, ValueKind::Float), None),
-                "bool" => (PineType::new(Qualifier::Series, ValueKind::Bool), None),
-                "string" => (PineType::new(Qualifier::Series, ValueKind::String), None),
-                "color" => (PineType::new(Qualifier::Series, ValueKind::Color), None),
+                "int" => (PineType::new(qualifier, ValueKind::Int), None),
+                "float" => (PineType::new(qualifier, ValueKind::Float), None),
+                "bool" => (PineType::new(qualifier, ValueKind::Bool), None),
+                "string" => (PineType::new(qualifier, ValueKind::String), None),
+                "color" => (PineType::new(qualifier, ValueKind::Color), None),
                 "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
                 "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
                 "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
@@ -333,14 +370,18 @@ impl Analyzer {
             };
         Some(FunctionParamInfo {
             pine_type,
+            explicit_series,
+            explicit_simple,
             user_type_name,
             span,
         })
     }
 
     pub(crate) fn register_functions(&mut self, program: &Program) {
+        let mut default_shadowed_names = HashSet::new();
         for statement in &program.statements {
             let StmtKind::Function { name, params, body } = &statement.kind else {
+                record_default_shadowing(statement, &mut default_shadowed_names);
                 continue;
             };
             if self.functions.contains_key(name) {
@@ -389,13 +430,22 @@ impl Analyzer {
             if !valid {
                 continue;
             }
+            let default_values = function_default_values(
+                params,
+                program.version.map_or(1, |version| version.version),
+                &default_shadowed_names,
+                &mut self.diagnostics,
+            );
             self.functions.insert(
                 name.clone(),
                 FunctionInfo {
+                    overloads: Vec::new(),
+                    display_name: name.clone(),
                     source_id: SourceId::root(),
                     source_context_id: SourceContextId::root(),
                     params: param_names,
                     param_types,
+                    default_values,
                     body: body.clone(),
                     span: statement.span,
                 },
@@ -411,11 +461,29 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<PineType> {
-        let function = self.functions.get(name)?.clone();
+        let group = self.functions.get(name)?;
+        let is_overloaded = !group.overloads.is_empty();
+        let function = match group.select_overload(args, arg_types) {
+            Some(function) => function.clone(),
+            None => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARG_TYPE",
+                    format!(
+                        "no supported overload of `{}` matches these arguments",
+                        group.display_name
+                    ),
+                    span,
+                ));
+                return None;
+            }
+        };
         if self.function_stack.iter().any(|active| active == name) {
             self.diagnostics.push(Diagnostic::error(
                 "E_RECURSIVE_FUNCTION",
-                format!("recursive function `{name}` is not supported"),
+                format!(
+                    "recursive function `{}` is not supported",
+                    function.display_name
+                ),
                 span,
             ));
             return None;
@@ -429,7 +497,16 @@ impl Analyzer {
             return None;
         }
         for arg in args {
-            if contains_output_or_declaration_call(&arg.value) {
+            // A direct input at global callsite is evaluated in the caller
+            // before inlining, just like an input assigned to a global variable.
+            // Keep effects inside its arguments and inside function bodies gated.
+            let direct_global_input = self.legacy.dialect().version() >= 5
+                && self.function_depth == 0
+                && self.block_depth == 0
+                && matches!(&arg.value.kind, ExprKind::Call { callee, args }
+                    if expr_name(callee).is_some_and(|name| name.starts_with("input."))
+                        && args.iter().all(|arg| !contains_output_or_declaration_call(&arg.value)));
+            if !direct_global_input && contains_output_or_declaration_call(&arg.value) {
                 self.unsupported(
                     "function_side_effect",
                     "side-effecting calls cannot be passed as user-defined function arguments",
@@ -437,10 +514,31 @@ impl Analyzer {
                 );
             }
         }
+        let explicit_count = args.len();
+        let completed_args = match function.complete_args(args, call_span) {
+            Ok(args) => args,
+            Err(error) => {
+                self.report_udf_arg_error(
+                    &function.display_name,
+                    span,
+                    function.params.len(),
+                    args.len(),
+                    error,
+                );
+                return None;
+            }
+        };
+        let args = completed_args.as_ref();
         let arg_indices = match resolve_udf_arg_indices(&function.params, args) {
             Ok(arg_indices) => arg_indices,
             Err(error) => {
-                self.report_udf_arg_error(name, span, function.params.len(), args.len(), error);
+                self.report_udf_arg_error(
+                    &function.display_name,
+                    span,
+                    function.params.len(),
+                    args.len(),
+                    error,
+                );
                 return None;
             }
         };
@@ -455,6 +553,32 @@ impl Analyzer {
         let mut resolved_arg_map_infos = vec![None; function.params.len()];
         let mut resolved_arg_const_switch_keys = vec![None; function.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
+            if arg_index >= explicit_count {
+                let value = &args[arg_index].value;
+                resolved_arg_types[param_index] = self.analyze_expr(value);
+                if resolved_arg_types[param_index].is_some_and(|t| {
+                    !matches!(
+                        t.kind,
+                        ValueKind::Int
+                            | ValueKind::Float
+                            | ValueKind::Bool
+                            | ValueKind::String
+                            | ValueKind::Color
+                            | ValueKind::Na
+                    )
+                }) {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_FUNCTION_DEFAULT_TYPE",
+                        "defaults that resolve to reference values in the caller are not supported",
+                        call_span,
+                    ));
+                }
+                if matches!(value.kind, ExprKind::Literal(_)) {
+                    resolved_arg_const_switch_keys[param_index] =
+                        self.known_const_switch_key(value);
+                }
+                continue;
+            }
             let resolved_arg_type = arg_types.get(arg_index).copied().flatten();
             resolved_arg_types[param_index] = resolved_arg_type;
             resolved_arg_user_types[param_index] = args
@@ -488,7 +612,10 @@ impl Analyzer {
                 .zip(resolved_arg_const_switch_keys),
         ) {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
-            let symbol = self.define_local_symbol(param, arg_type, None, false);
+            let bound_type = expected_type
+                .as_ref()
+                .map_or(arg_type, |expected| expected.bound_type(arg_type));
+            let symbol = self.define_local_symbol(param, bound_type, None, false);
             param_symbols.insert(symbol.id);
             if let Some(key) = arg_const_switch_key.as_ref() {
                 self.record_symbol_const_switch_key(symbol, key);
@@ -646,6 +773,26 @@ impl Analyzer {
             self.mark_expr_map(span, info);
         }
 
+        if is_overloaded
+            && return_type.is_some_and(|value| {
+                !matches!(
+                    value.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                        | ValueKind::Na
+                )
+            })
+        {
+            self.unsupported(
+                "function_overload_result",
+                "imported overloads currently require scalar results",
+                call_span,
+            );
+            return None;
+        }
         return_type
     }
 

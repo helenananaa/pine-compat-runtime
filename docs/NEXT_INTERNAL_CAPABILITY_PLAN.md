@@ -1,13 +1,22 @@
 # Next Internal Capability Plan
 
-Status: active planning document, refreshed on 2026-09-06 after mixed-family
-OCA, host-neutral session window, and ordinary-chart inter-bar gap closeout.
-Stage D has only a preliminary fixture inventory: the per-sample manifest,
-deduplication report and measured stage outcomes remain unfinished. New
-accepted-but-wrong behavior work lacks independent reference outputs, but that
-does not block completing the inventory and measurements.
-Strategy broker accuracy remains the selected direction while further
-source-version expansion is paused.
+> 2026-09-10 current-status correction: TechnicalRating/3 with its complete
+> dependencies passed 63,399 independent reference values; earlier ta/9 and
+> export/default-parameter blockers below are historical. Native realtime
+> comparisons and observable B1 controls also passed on the repaired final
+> wheels. Use [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md) for current work and
+> acceptance; the original r1 synthetic denominator remains separate.
+
+2026-09-10：TechnicalRating v3 完整依赖链已通过独立参考验收，见
+[SMA_ROLLING_SUM_AUDIT.md](SMA_ROLLING_SUM_AUDIT.md)。2026-09-08 的默认参数、
+ta/9 与导出函数阻塞均为历史过程，不再作为当前待办。
+
+Status: capability backlog, reconciled on 2026-09-10. The current delivery
+sequence is tracked only in [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md).
+The v5/v6 r1 manifest and staged measurements remain frozen; original synthetic
+reference coverage and new native-data companions have separate denominators.
+Source-version expansion remains paused. The directions below are candidate
+work areas, not a claim that historical next slices are still open.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -73,7 +82,7 @@ Keep out of scope until separately designed and fixture-backed:
 - Series `oca_name`.
 - Omitted `qty` for remaining unsupported `strategy.short` order forms outside
   the fixture-backed market `strategy.order` default-quantity subset.
-- Currency conversion, symbol precision, and richer account constraints.
+- Currency conversion, contract multipliers, cross-symbol metadata and richer account constraints. Main-chart price-grid input is already implemented.
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - External strategy alert delivery before the host-owned restart-safe durable
@@ -81,11 +90,12 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice: complete the frozen v5/v6 manifest, deduplication and
-stage measurements; then select one evidenced root cause. Language blockers
-have a separate implementation path; accepted-but-wrong fill fixes require
-frozen bars and independent expected behavior. The Stage D
-blocker record is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`. The closed
+Current next slice: select work from the delivery ledger and fresh complete-script
+failure measurements. Explicit series scalar parameters, default parameters and
+the selected TechnicalRating dependency graph are already closed. Retain original
+r1 scenario identities when adding separately counted native references.
+The historical Stage D inventory is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`;
+current results are tracked by the Next Cycle Audit. The closed
 ordinary-chart gap record is
 `docs/STRATEGY_INTERBAR_GAP_BEHAVIOR_AUDIT.md`.
 Omitted `from_entry` allocation remains FIFO and `strategy.close_all()`

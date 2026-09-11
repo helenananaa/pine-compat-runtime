@@ -16,6 +16,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[test]
+fn package_version_is_the_coordinated_prerelease_identity() {
+    assert_eq!(crate::package_version(), "0.3.0-rc.1");
+    assert_eq!(crate::package_version_line(), "pine-compat 0.3.0-rc.1");
+    assert!(crate::usage().contains("pine-compat --version"));
+}
+
 fn strategy_orders_segment(output: &str) -> &str {
     let start = output.find(r#""orders":["#).expect("strategy orders start");
     let tail = &output[start..];
@@ -1450,6 +1457,14 @@ fn assert_snapshot(name: &str, actual: &str) {
     }
     let expected = fs::read_to_string(&snapshot_path)
         .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
+    if name == "runtime_math.json" {
+        let actual: serde_json::Value =
+            serde_json::from_str(actual).unwrap_or_else(|err| panic!("invalid {name}: {err}"));
+        let expected: serde_json::Value = serde_json::from_str(&expected)
+            .unwrap_or_else(|err| panic!("invalid {}: {err}", snapshot_path.display()));
+        crate::test_support::assert_json_approximately_equal(&actual, &expected, name);
+        return;
+    }
     assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
 }
 fn workspace_dir() -> PathBuf {

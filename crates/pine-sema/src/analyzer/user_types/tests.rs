@@ -71,6 +71,8 @@ fn analyzer() -> Analyzer {
         legacy: crate::legacy::LegacyFrontEnd::new(crate::PineDialect::V5),
         source_context_id: Cell::new(SourceContextId::root()),
         source_context_depth: Cell::new(0),
+        source_context_origins: HashMap::new(),
+        call_site_sources: Vec::new(),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),

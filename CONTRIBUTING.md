@@ -23,6 +23,12 @@ python3 scripts/check_structure.py
 cargo check -p pine-wasm --target wasm32-unknown-unknown
 ```
 
+Windows contributors can run the equivalent full gate with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1 -Python python
+```
+
 Python binding changes should also be checked in an active virtual environment
 where the extension module can be installed:
 

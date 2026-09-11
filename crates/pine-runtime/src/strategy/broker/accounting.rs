@@ -19,13 +19,22 @@ impl BrokerState {
         let market_value = self.position_size * close;
         let equity = self.cash + market_value;
         let net_profit = normalize_zero(equity - self.initial_capital);
-        self.equity.push(StrategyEquitySnapshot {
+        let snapshot = StrategyEquitySnapshot {
             bar_index,
             cash: self.cash,
             market_value,
             equity,
             net_profit,
-        });
+        };
+        if self
+            .equity
+            .last()
+            .is_some_and(|last| last.bar_index == bar_index)
+        {
+            *self.equity.last_mut().expect("same-bar equity row exists") = snapshot;
+        } else {
+            self.equity.push(snapshot);
+        }
     }
 
     pub(crate) fn update_open_trade_extremes(&mut self, high: f64, low: f64) {
@@ -184,12 +193,27 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn realized_profit(&self) -> f64 {
-        normalize_zero(self.trades.iter().map(|trade| trade.profit).sum())
+        normalize_zero(self.realized_profit_sum)
+    }
+
+    #[must_use]
+    pub(crate) fn net_profit(&self) -> f64 {
+        // Closed trades include allocated fees; subtract only fees still held
+        // by open exposure to account for entry commission exactly once.
+        normalize_zero(
+            self.realized_profit()
+                - self
+                    .trade_ledger
+                    .open_trades()
+                    .iter()
+                    .map(|trade| trade.entry_commission)
+                    .sum::<f64>(),
+        )
     }
 
     #[must_use]
     pub(crate) fn realized_profit_percent(&self) -> f64 {
-        self.initial_capital_percent(self.realized_profit())
+        self.initial_capital_percent(self.net_profit())
     }
 
     #[must_use]
@@ -659,5 +683,48 @@ impl BrokerState {
         self.position_entry_name
             .as_ref()
             .map_or(PineValue::Na, |name| PineValue::String(name.clone()))
+    }
+}
+
+impl super::BrokerState {
+    pub(super) fn margin_call_quantity(&self, current_price: f64) -> Option<f64> {
+        if !current_price.is_finite() || current_price <= 0.0 {
+            return None;
+        }
+        if self.position_size > 0.0 && self.margin_long.is_active() {
+            let margin_ratio = self.margin_long.value_percent / 100.0;
+            if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
+                return None;
+            }
+            let margin_required = self.position_size * current_price * margin_ratio;
+            let available_funds = self.equity_value(current_price) - margin_required;
+            if !available_funds.is_finite() || available_funds >= 0.0 {
+                return None;
+            }
+            let cover_amount = ((available_funds / margin_ratio / current_price)
+                * f64::from(self.quantity_scale))
+            .trunc()
+                / f64::from(self.quantity_scale);
+            let qty = (cover_amount * 4.0).abs().min(self.position_size);
+            return (qty.is_finite() && qty > 0.0).then_some(qty);
+        }
+        if self.position_size < 0.0 && self.margin_short.is_active() {
+            let margin_ratio = self.margin_short.value_percent / 100.0;
+            if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
+                return None;
+            }
+            let margin_required = self.margin_required_for_position(current_price)?;
+            let available_funds = self.equity_value(current_price) - margin_required;
+            if !available_funds.is_finite() || available_funds >= 0.0 {
+                return None;
+            }
+            let cover_amount = ((available_funds / margin_ratio / current_price)
+                * f64::from(self.quantity_scale))
+            .trunc()
+                / f64::from(self.quantity_scale);
+            let qty = (cover_amount * 4.0).abs().min(self.position_size.abs());
+            return (qty.is_finite() && qty > 0.0).then_some(qty);
+        }
+        None
     }
 }

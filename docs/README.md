@@ -4,6 +4,10 @@ This directory contains current runtime contracts, active roadmaps, design
 gates, and completed phase records. Use the hierarchy below so that an older
 plan is not mistaken for a current compatibility claim.
 
+Current delivery status has one entry point: [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md).
+[DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json) binds current local wheel identities.
+Older candidate checklists and phase audits retain historical results.
+
 ## Source-Of-Truth Order
 
 1. [`tests/fixtures/conformance.tsv`](../tests/fixtures/conformance.tsv), its
@@ -31,6 +35,9 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Current Project Documents
 
+- [Streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md): Rust/Python replica,
+  incremental output, resource results and [local artifact](STREAMING_ARTIFACTS.json).
+
 - [Architecture](ARCHITECTURE.md): crate boundaries and host-neutral
   architecture.
 - [Language Scope](LANGUAGE_SCOPE.md): supported language shape and explicit
@@ -55,11 +62,15 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Status And Roadmap Documents
 
+- [Modern Function Default Parameters](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md): scalar optional arguments, caller scope, v5/v6 reference validation and the next TechnicalRating blockers.
+
+- [Modern Strategy Next Cycle](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md): current G3 worktree closeout, real-strategy reference expansion, and explicit series parameter slice.
+
 - [Strategy G5 Baseline Review](STRATEGY_MODERN_G5_BASELINE_REVIEW_AUDIT.md):
   corrected true-append/realtime timings, release probe, resource measurements
   and remaining optimization gates.
 - [Remaining Modern Strategy Blockers](STRATEGY_MODERN_REMAINING_BLOCKERS_REVIEW.md):
-  dependency/version/template probes and the input package still needed for G3.
+  historical dependency/version/template probes; current G3 evidence and the next TechnicalRating blocker are linked in its dated updates.
 
 - [Modern Strategy Five-Stage Execution Plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md):
   detailed Chinese execution steps for frozen corpus measurements, language
@@ -70,9 +81,9 @@ cargo run -p pine-cli -- matrix --format json
 - [Strategy Accuracy Next Execution Plan](STRATEGY_ACCURACY_NEXT_EXECUTION_PLAN.md):
   step-by-step Chinese plan for mixed-family OCA, host-neutral session risk
   windows, standard inter-bar gaps, and corpus-driven follow-up, with explicit
-  evidence gates and stop conditions. Stages A–C are closed; D1 still needs
-  frozen manifests and measurements, while D2 lacks an independent reference
-  for a behavioral slice. The five-stage plan continues that work.
+  evidence gates and stop conditions. Stages A–C are closed. The later five-stage plan completed the r1
+  inventory and a separate six-case G3 reference batch; r1 itself still lacks
+  independent references. Earlier blocker wording is historical.
 - [Task Breakdown](TASK_BREAKDOWN.md): high-level baseline and ongoing work
   status.
 - [Next Internal Capability Plan](NEXT_INTERNAL_CAPABILITY_PLAN.md): recommended
@@ -204,3 +215,5 @@ Python binding tests.
 
 - [G3 参考输入接收审计](STRATEGY_MODERN_G3_REFERENCE_INTAKE_AUDIT.md)：下载导出核验与 Chrome 登录阻塞。
 - [G5 checkpoint 优化审计](STRATEGY_MODERN_G5_CHECKPOINT_OPTIMIZATION_AUDIT.md)：单热点优化、交替 A/B、资源与回归证据。
+
+- [G3 独立参考扩展与修复验收](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md)

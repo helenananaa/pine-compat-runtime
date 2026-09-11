@@ -266,12 +266,18 @@ impl Analyzer {
                         param_types,
                     )
                 } else {
-                    let function = self.functions.get(&name)?;
+                    let function = self.function_for_call_with_params(&name, args, param_types)?;
+                    let completed_args = function.complete_args(args, expr.span).ok()?;
+                    let args = completed_args.as_ref();
                     let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
                     let mut nested_param_types = HashMap::new();
-                    for (arg_type, param_index) in arg_types.into_iter().zip(arg_indices) {
+                    for (arg, param_index) in args.iter().zip(arg_indices) {
+                        let arg_type = self.type_of_expr_with_params(&arg.value, param_types)?;
+                        let arg_type = function.param_types[param_index]
+                            .as_ref()
+                            .map_or(arg_type, |expected| expected.bound_type(arg_type));
                         let param = &function.params[param_index];
-                        nested_param_types.insert(param.clone(), arg_type?);
+                        nested_param_types.insert(param.clone(), arg_type);
                     }
                     self.with_source_context_ref(function.source_context_id, |analyzer| {
                         analyzer
@@ -821,7 +827,11 @@ impl Analyzer {
                 {
                     return Some(types);
                 }
-                let function = self.functions.get(&name)?;
+                let function =
+                    self.function_for_call_with_params(&name, args, context.param_types)?;
+                let explicit_count = args.len();
+                let completed_args = function.complete_args(args, expr.span).ok()?;
+                let args = completed_args.as_ref();
                 let arg_types: Vec<_> = args
                     .iter()
                     .map(|arg| self.type_of_expr_with_params(&arg.value, context.param_types))
@@ -830,11 +840,18 @@ impl Analyzer {
                 let mut nested_param_types = HashMap::new();
                 let mut nested_param_user_types = HashMap::new();
                 let nested_tuple_aliases = HashMap::new();
-                for ((arg, arg_type), param_index) in args.iter().zip(arg_types).zip(arg_indices) {
+                for (arg_index, ((arg, arg_type), param_index)) in
+                    args.iter().zip(arg_types).zip(arg_indices).enumerate()
+                {
                     let param = &function.params[param_index];
-                    nested_param_types.insert(param.clone(), arg_type?);
-                    if let Some(type_name) =
-                        self.user_type_name_of_expr_with_tuple_context(&arg.value, context)
+                    let arg_type = arg_type?;
+                    let arg_type = function.param_types[param_index]
+                        .as_ref()
+                        .map_or(arg_type, |expected| expected.bound_type(arg_type));
+                    nested_param_types.insert(param.clone(), arg_type);
+                    if arg_index < explicit_count
+                        && let Some(type_name) =
+                            self.user_type_name_of_expr_with_tuple_context(&arg.value, context)
                     {
                         nested_param_user_types.insert(param.clone(), type_name);
                     }

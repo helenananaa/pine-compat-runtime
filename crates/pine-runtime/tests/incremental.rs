@@ -315,7 +315,30 @@ fn assert_fixture_matches_incremental_append_execution(fixture: &str, bars: &[Ba
 
 fn analyze_fixture(path: &Path, text: String) -> Analysis {
     let source = SourceFile::new(path.display().to_string(), text.clone());
-    let library = if text.contains("import user/lib/1") {
+    if text.contains("import user/transitive_outer/1") {
+        let libraries = ["inner", "outer"]
+            .into_iter()
+            .map(|name| {
+                let path = workspace_fixture(&format!(
+                    "tests/fixtures/libraries/transitive_{name}_lib.pine"
+                ));
+                (
+                    format!("user/transitive_{name}/1"),
+                    SourceFile::new(
+                        path.display().to_string(),
+                        fs::read_to_string(path).unwrap(),
+                    ),
+                )
+            })
+            .collect();
+        return analyze_input(&AnalysisInput::with_library_sources(source, libraries).unwrap());
+    }
+    let library = if text.contains("import test/scalar_overloads/1") {
+        Some((
+            "test/scalar_overloads/1",
+            "tests/fixtures/libraries/scalar_overloads_lib.pine",
+        ))
+    } else if text.contains("import user/lib/1") {
         Some(("user/lib/1", "tests/fixtures/libraries/import_lib.pine"))
     } else if text.contains("import user/udt_array_returns/1") {
         Some((

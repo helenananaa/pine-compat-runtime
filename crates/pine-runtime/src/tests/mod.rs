@@ -19,13 +19,18 @@ mod matrices;
 mod methods;
 mod outputs;
 mod realtime;
+mod realtime_market_extremes;
+mod realtime_opening_context;
 mod request;
 mod runtime_const_history;
 mod runtime_control_flow;
 mod runtime_core;
 mod runtime_history;
 mod strategy;
+mod strategy_margin_admission;
+mod strategy_native_defaults;
 mod strategy_regressions;
+mod strategy_versioned_margin;
 mod user_types;
 mod versioned_arithmetic;
 

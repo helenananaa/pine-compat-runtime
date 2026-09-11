@@ -1,0 +1,8 @@
+{
+  "scope": "Windows optimized installed wheel; plots, per-bar alerts, bounded 32-element collection; 1024/16384/100000 history, 128 updates and 3 forming replacements per bar; frozen before acceptance",
+  "producerP95Ms": 5.0,
+  "replicaP95Ms": 1.0,
+  "confirmP95Ms": 5.0,
+  "peakRssBytes": 536870912,
+  "maxP50GrowthRatio": 4.0
+}

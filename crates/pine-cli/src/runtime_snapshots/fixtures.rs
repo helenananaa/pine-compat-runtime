@@ -51,6 +51,28 @@ pub(crate) type RuntimeLibrarySnapshotFixture = (
 
 pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixture] = &[
     (
+        "runtime_scalar_overloads.json",
+        "tests/fixtures/runtime/scalar_overloads.pine",
+        &[(
+            "test/scalar_overloads/1",
+            "tests/fixtures/libraries/scalar_overloads_lib.pine",
+        )],
+    ),
+    (
+        "runtime_transitive_imports.json",
+        "tests/fixtures/runtime/transitive_imports.pine",
+        &[
+            (
+                "user/transitive_outer/1",
+                "tests/fixtures/libraries/transitive_outer_lib.pine",
+            ),
+            (
+                "user/transitive_inner/1",
+                "tests/fixtures/libraries/transitive_inner_lib.pine",
+            ),
+        ],
+    ),
+    (
         "runtime_import.json",
         "tests/fixtures/runtime/import.pine",
         &[("user/lib/1", "tests/fixtures/libraries/import_lib.pine")],

@@ -2905,7 +2905,7 @@ fn pending_market_short_order_metadata_records_reduce_alert_and_exit_comment() {
     assert_eq!(broker.closed_trade_count(), 1);
     assert_eq!(broker.closed_trade_exit_comment(0), Some("reduce comment"));
     assert_eq!(
-        broker.order_fill_alerts,
+        broker.order_fill_alerts.to_vec(),
         vec![StrategyOrderFillAlertEvent {
             id: "R".to_owned(),
             bar_index: 2,
@@ -5448,7 +5448,7 @@ fn entry_metadata_records_internal_order_fill_alert_without_public_output() {
     assert!(broker.entry_long_with_metadata("L".to_owned(), 1, 20, 100.0, 2.0, metadata));
 
     assert_eq!(
-        broker.order_fill_alerts,
+        broker.order_fill_alerts.to_vec(),
         vec![StrategyOrderFillAlertEvent {
             id: "L".to_owned(),
             bar_index: 1,
@@ -5488,7 +5488,7 @@ fn close_metadata_records_internal_order_fill_alerts() {
     });
 
     assert_eq!(
-        close_broker.order_fill_alerts,
+        close_broker.order_fill_alerts.to_vec(),
         vec![StrategyOrderFillAlertEvent {
             id: "L".to_owned(),
             bar_index: 1,

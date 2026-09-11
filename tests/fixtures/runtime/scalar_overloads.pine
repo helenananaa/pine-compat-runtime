@@ -1,0 +1,12 @@
+//@version=6
+import test/scalar_overloads/1 as lib
+indicator("Scalar library overloads")
+plot(lib.choose(1.0, 2, true), "bool")
+plot(lib.choose(timeframe="15", source=1.0, length=2), "string named default")
+plot(lib.qualified(10.0), "simple")
+plot(lib.qualified(close), "series")
+plot(lib.numeric(1), "int")
+plot(lib.numeric(1.0), "float")
+plot(lib.crossed(1, 1), "crossed first")
+plot(lib.accumulate(close), "numeric state")
+plot(lib.accumulate("ab"), "string state")

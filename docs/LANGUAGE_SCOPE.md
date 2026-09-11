@@ -1,5 +1,12 @@
 # Language Scope
 
+Modern v5/v6 scalar UDF parameters additionally accept explicit `simple`
+qualifiers. Const/input/simple actuals are accepted and remain bound as Simple;
+series actuals and series defaults are rejected. Local and host-provided
+imported functions share these rules. Direct `input.*` arguments at global UDF
+calls are admitted; method/reference qualifiers remain outside this slice.
+See [simple parameter evidence](SIMPLE_PARAMETERS_AUDIT.md).
+
 The project should start with an indicator-focused subset. Scope discipline is
 more important than broad, incomplete support.
 
@@ -21,8 +28,8 @@ A missing directive selects v1 with origin `implicit`; it is not treated as the
 latest language. Leading comments, blank lines, and indentation before the
 directive are accepted. Horizontal whitespace before or after `=` and trailing
 whitespace are accepted, including the corpus-proven `//@version = 4`
-spelling. The `//@version` prefix remains exact, so `// @version=6` is an
-ordinary comment. A second recognized directive or a recognized directive
+spelling. ASCII horizontal spaces/tabs between `//` and `@version` are also
+accepted, including `// @version=6`. A second recognized directive or a recognized directive
 after a source statement is rejected before ordinary semantic analysis.
 Versions outside v1-v6 and root/library version mismatches are also rejected
 before lowering.
@@ -184,16 +191,18 @@ Phase 1 executable subset:
   `syminfo.currency`, omitted `commission_type` with explicit
   `commission_value` defaulting to `strategy.commission.percent`, and Phase L fixed default
   quantity settings through `default_qty_type=strategy.fixed` plus positive
-  const numeric `default_qty_value`, plus positive integer const `pyramiding`
+  const numeric `default_qty_value`, plus non-negative integer const `pyramiding` (0 means no adding to a position)
   for the accepted same-direction long market-entry subset; const bool
   `calc_on_order_fills` re-executes the script after historical fills, resumes
   the current bar's remaining open-high-low-close or open-low-high-close path
   from the fill mark, and can fill later price ticks on the same bar;
   historical execution remains one script pass per bar when that flag is false,
   with internal scheduler bar/tick/pass identity, profile pass counts, and a
-  bounded extra-pass guardrail; forming-bar realtime updates restore the
-  confirmed broker checkpoint so abandoned intrabar orders, cancellations,
-  activations, fills, and alerts do not leak; const bool `calc_on_every_tick`
+  bounded extra-pass guardrail; forming-bar realtime updates preserve successful
+  broker orders, cancellations, activations, fills, and fill alerts independently
+  of user-state rollback, using each supplied close as an observed price tick;
+  fill-triggered realtime execution replaces the ordinary pass for that update;
+  const bool `calc_on_every_tick`
   executes strategy code on each host-provided forming update with `var`
   rollback and `varip` persistence and does not change historical bars;
   host-owned bar-magnifier lower-timeframe input is keyed by chart bar with
@@ -738,3 +747,38 @@ records also expose compile-time `default`, `min`, `max`, `step`, and `options`
 metadata when those values are present in the supported input signature. The
 optional `legacyPolicy` rejection switch and source migration preview are not
 part of the current API or compatibility claims.
+
+## Explicit Series Function Parameters
+
+The fixture-backed v5/v6 function subset accepts `series int`, `series float`,
+`series bool`, `series string`, and `series color` parameters in local and
+host-provided imported UDFs. The qualifier is preserved through analysis and
+inlining, including when the caller supplies a literal or input value. A value
+returned through such a parameter cannot satisfy a builtin's simple-only
+argument. Type checks, numeric promotion, callsite history and realtime rollback
+remain enforced. Explicit series reference annotations are also parsed and
+reuse the existing reference-family type checks, including scalar-tree UDT
+reads. This does not enable unsupported reference families or qualified method
+execution. Simple scalar parameters are covered by the current contract above;
+const/input parameter annotations remain outside the subset. Function defaults
+are covered below. See [library declaration qualification](LIBRARY_CHAIN_AUDIT.md)
+and [the original scalar-series audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
+
+Collection-typed UDT fields such as `array<float> data` are represented by the
+parser for complete library intake. Runtime collection-bearing UDT support is
+not implied: unsupported use still receives a semantic diagnostic. Inline
+switch-arm reassignment uses the existing block scope and effect rules.
+
+## Modern Function Default Arguments
+
+The v5/v6 local and imported function subset accepts optional scalar parameters
+with literal, signed numeric, named built-in constant, and predeclared input
+defaults. Required parameters may follow optional parameters; omission and
+named-argument mapping preserve existing binding errors and argument order.
+Defaults are checked at declaration even when overridden or unused. Untyped na,
+v6 bool na, method/reference defaults, computed/call/user-variable defaults and
+dynamic dotted built-in defaults remain rejected. A name must still denote a
+built-in at definition time; an omitted built-in-name argument then resolves in
+the caller scope, with independent bindings for different calls. Typed scalar
+parameters retain numeric promotion and typed-na kinds; explicit series remains
+series. See [the default parameter audit](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md).

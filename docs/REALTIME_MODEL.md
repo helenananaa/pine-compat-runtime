@@ -25,8 +25,7 @@ reset risk counters, discard a forming result or change lifecycle timestamps.
 Rust `HistoricalRuntime` and `RealtimeRuntime` expose the same extension operation.
 Their replacement builder `with_session_windows` now returns `Result<Self, RuntimeError>`.
 
-This document defines the realtime bar model before implementation of rollback
-semantics.
+This document defines the implemented realtime bar model and its state partitions.
 
 The historical runtime executes only closed bars. Realtime execution adds the
 concept of a forming bar: the latest bar may be evaluated multiple times before
@@ -48,8 +47,9 @@ enum BarUpdateKind {
 existing `HistoricalRuntime::append_bar` behavior.
 
 `Forming` means an intrabar update for the current open bar. A forming update
-must not commit series history. Each new forming update discards effects from
-the previous forming update before re-executing the script.
+must not commit series history. Before script execution, ordinary user state and output roll back to the
+confirmed checkpoint; `varip` and successful broker events persist. An update
+that does not execute the script retains its latest user state and output.
 
 `Confirmed` means the final update for a realtime bar. Confirmed updates execute
 like forming updates, then commit current series values to historical buffers.
@@ -63,7 +63,8 @@ Realtime execution needs explicit state partitions:
 - output side effects for committed bars
 - temporary output side effects for the forming bar
 - persistent `var` state
-- future intrabar `varip` state
+- intrabar `varip` state
+- live broker order, fill, position, risk and cash state
 - callsite state for TA functions
 - immutable request provider data
 - deterministic request result cache
@@ -93,12 +94,65 @@ runtime.update(BarUpdate::forming(updated_partial_bar))?;
 runtime.update(BarUpdate::confirmed(final_bar))?;
 ```
 
+Those methods still return a complete `RuntimeResult`. A streaming path applies the same forming/confirmed lifecycle without constructing that snapshot:
+
+```rust
+let mut replica = runtime.replica();
+let changes = runtime.apply_update(BarUpdate::forming(partial_bar))?;
+replica.apply(&changes)?;
+assert_eq!(replica.result(), &runtime.result());
+```
+
+`RuntimeChanges` schema 2 carries this-update series append/current-bar replace,
+drawing tails and deletion, order/fill/alert changes, preview/confirmed visibility,
+`baseRevision` and `revision`. A cursor-bearing `RuntimeReplica` applies changes
+in place. Identical retransmission returns false; stale, conflicting, wrong-schema
+and missing revisions fail before mutation. After a gap, capture a producer
+snapshot with its revision and reset the consumer; do not infer a missing base.
+Hosts bind replicas to one stream and own cross-session routing/identity.
+
+Python uses `session.replica()`, `apply_forming` / `apply_confirmed`, then
+`replica.apply(changes)`. `apply_runtime_changes(replica, changes)` is the same
+in-place operation and returns a bool; the unreleased dictionary-to-dictionary
+helper is replaced. `session.stream_snapshot()` atomically captures a result and
+revision for `RuntimeReplica(result, revision=...)` or `replica.reset(...)`.
+Only explicit `replica.result()` constructs a complete Python dictionary.
+Existing `update_forming`, `update_confirmed`, `result()` and `confirmed_result()`
+retain their complete snapshot contracts (runtime output schema 8 unchanged).
+
+A host-owned historical correction is `correct_historical(from_time, bars)` /
+Python `session.correct(from_time, bars)` / WASM `correct(fromTime, barsCsv)`.
+The session keeps confirmed bars with `time < from_time` and re-executes that
+prefix plus the supplied suffix from a blank runtime that preserves the same
+program, inputs, request environment, request feed, magnifier and session
+windows, then discards forming state. Confirmed request-feed extras that close
+after the new last confirmed chart bar are dropped so replay cannot see
+`barstate.islast` or HTF close times from a discarded tail. Later forming
+request extras are kept for the next chart forming bar. An empty suffix
+truncates from `from_time`.
+`replay_historical` / `session.replay` still replaces the entire confirmed
+history when the host already has the combined list. Failed correct/replay
+restores the previous confirmed/forming snapshots, retained bars, clocks and
+revision. Neither operation is a linear change; `last_changes` is cleared and
+replicas must `reset` from the new snapshot.
+
+Ordinary plot values/colors and alert history use a persistent append tree;
+checkpoint updates copy a bounded leaf plus a logarithmic branch path. Drawing
+deltas retain the entire mutable bar's suffix, since multiple snapshots can
+exist on one bar. Alert differences retain occurrence counts for identical
+`alert.freq_all` events. Source execution still rolls back and runs the current
+bar; the output optimization does not change Pine execution scheduling.
+Other output families, broker records and user-owned collections can still
+incur copies; finite measured workloads do not establish indefinite bounded
+retention. See [streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md).
+
 `RealtimeRuntime` internally keeps:
 
 - a confirmed `HistoricalRuntime` snapshot
 - an optional forming `HistoricalRuntime` snapshot
 
-Each forming update starts from the confirmed snapshot. This rolls back:
+Each forming script execution restores ordinary user state from the confirmed
+snapshot, while inheriting successful live broker state and `varip`. This rolls back:
 
 - current update values
 - uncommitted series values
@@ -112,12 +166,13 @@ Each forming update starts from the confirmed snapshot. This rolls back:
 - request cache entries and requested-context runtime state created during the
   previous forming execution
 
-Request provider data is immutable and shared through the runtime request
-environment. Repeated forming updates may reuse the same provider object, but
-requested-context evaluation and cache population are part of the runtime state
-that rolls back with the forming snapshot. This keeps provider-backed
-`request.security` deterministic across historical, forming, and confirmed
-updates.
+Request provider data is the immutable historical seed. A live session may also
+append, replace, or confirm bars on a `RequestKey` through `apply_request_update`.
+Forming requested bars are visible only while the chart bar itself is forming;
+confirmed chart evaluation ignores them. Alignment still uses the existing
+lookahead/gaps close rules, so a higher-timeframe forming bar cannot appear
+before it closes. A failed request-feed update restores the previous feed,
+cache, forming snapshot, and revision.
 
 Confirmed and historical updates replace the confirmed snapshot and clear the
 forming snapshot.
@@ -188,3 +243,25 @@ from confirmed history during forming updates.
 Next work:
 
 - broaden realtime fixtures for more stateful built-ins and nested scopes
+
+## Observed realtime broker ticks
+
+A forming or confirmed update supplies one observed price at `bar.close`. The
+OHLC fields remain available to the script but are not replayed as historical
+price paths. Supply every required price observation through the host adapter;
+the core cannot reconstruct unobserved fills from candle summaries. Pending
+orders may execute even when `calc_on_every_tick=false`. A fill-triggered script
+execution replaces the ordinary pass for that observation. `process_orders_on_close`
+uses a confirmed closing update, not every forming update. Native multi-order
+coverage and remaining limitations are recorded in LIVE_TICK_REFERENCE_AUDIT.md.
+
+
+## Retention and requested-context qualification
+
+Physical display pruning uses storage-relative indexes while Pine and delta bar
+indexes remain absolute. Growing or clearing a retention limit does not move
+an already pruned origin backwards; use replay plus snapshot reset to recover
+expired output. Eligible requested expressions reuse a checkpoint before the
+terminal requested bar; complex and dataset-end-dependent expressions retain
+full evaluation. See [streaming expansion](STREAMING_EXPANSION_AUDIT.md) for
+current verification, measured workloads and explicit remaining boundaries.

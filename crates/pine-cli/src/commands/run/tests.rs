@@ -1,5 +1,107 @@
 use super::*;
+
+#[test]
+fn candidate_macd_batch_incremental_and_realtime_history_match() {
+    let options = RunOptions {
+        path: workspace_path("tests/fixtures/runtime/macd.pine"),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
+        session_windows_path: None,
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+    let batch = run_json_with_options(&options).expect("batch");
+    let incremental =
+        run_json_with_options_in_mode(&options, ExecutionMode::Incremental).expect("incremental");
+    let realtime = run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
+        .expect("realtime history");
+    assert_eq!(batch, incremental);
+    assert_eq!(batch, realtime);
+    assert!(batch.contains("\"schemaVersion\":8"));
+    let expected = fs::read_to_string(workspace_path("tests/snapshots/runtime_macd.json"))
+        .expect("macd snapshot");
+    let actual: serde_json::Value = serde_json::from_str(&batch).expect("batch json");
+    let expected: serde_json::Value = serde_json::from_str(&expected).expect("snapshot json");
+    assert_eq!(actual["plots"][0]["values"], expected["plots"][0]["values"]);
+}
+
+#[test]
+fn explicit_point_value_cli_rejects_unsupported_or_invalid_profiles() {
+    for value in ["0", "-1", "0.5", "5", "1.0000000001", "NaN", "inf", "true"] {
+        let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", value].map(str::to_owned);
+        assert!(
+            parse_options(&args).unwrap_err().contains("pointValue"),
+            "{value}"
+        );
+    }
+    let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", "1.0"].map(str::to_owned);
+    assert_eq!(
+        parse_options(&args).unwrap().chart_context.point_value(),
+        1.0
+    );
+}
+
+#[test]
+fn quantity_precision_fixture_matches_installed_host_contract() {
+    let args = vec![
+        workspace_path("tests/fixtures/runtime/quantity_precision.pine"),
+        "--bars".to_owned(),
+        workspace_path("tests/fixtures/runtime/quantity_precision_bars.csv"),
+        "--chart-price-grid".to_owned(),
+        "1/10".to_owned(),
+        "--chart-quantity-precision".to_owned(),
+        "6".to_owned(),
+        "--chart-point-value".to_owned(),
+        "1".to_owned(),
+    ];
+    let options = parse_options(&args).unwrap();
+    let output = run_json_with_options(&options).unwrap();
+    assert_snapshot("runtime_quantity_precision.json", &output);
+}
+
+#[test]
+fn chart_quantity_precision_cli_validates_the_explicit_profile() {
+    for value in ["-1", "1.5", "true", "10", "4294967296"] {
+        let args = [
+            "a.pine",
+            "--bars",
+            "a.csv",
+            "--chart-quantity-precision",
+            value,
+        ]
+        .map(str::to_owned);
+        assert!(parse_options(&args).is_err(), "{value}");
+    }
+    let args = [
+        "a.pine",
+        "--bars",
+        "a.csv",
+        "--chart-quantity-precision",
+        "6",
+    ]
+    .map(str::to_owned);
+    assert_eq!(
+        parse_options(&args).unwrap().chart_context.min_contract(),
+        0.000001
+    );
+}
 use std::path::PathBuf;
+
+#[test]
+fn chart_price_grid_cli_rejects_invalid_metadata() {
+    for grid in ["0/10", "1/0", "-1/10", "1/1.5", "10", "1/10/20"] {
+        let args = ["a.pine", "--bars", "a.csv", "--chart-price-grid", grid].map(str::to_owned);
+        assert!(parse_options(&args).is_err(), "{grid}");
+    }
+    let args = ["a.pine", "--bars", "a.csv", "--chart-price-grid", "1/10"].map(str::to_owned);
+    assert_eq!(parse_options(&args).unwrap().chart_context.min_tick(), 0.1);
+}
 
 fn workspace_path(path: &str) -> String {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -416,7 +518,7 @@ fn builds_request_environment_from_csv_specs() {
     let path = std::env::temp_dir().join(format!(
         "pine-request-bars-{}-{}.csv",
         std::process::id(),
-        std::thread::current().name().unwrap_or("test")
+        line!()
     ));
     fs::write(&path, "time,open,high,low,close,volume\n0,10,11,9,12,100\n")
         .expect("write request bars");
@@ -1913,9 +2015,18 @@ fn runs_request_bars_integration_fixture() {
         "\"values\":[null,null,0.10033467208545055,0.10033467208545055,0.10033467208545055]"
     ));
     assert!(output.contains("\"values\":[null,null,1,1,4]"));
-    assert!(output.contains(
-        "\"values\":[null,null,1.3453624047073711,1.3453624047073711,2.7586228448267445]"
-    ));
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    crate::test_support::assert_json_approximately_equal(
+        &parsed["plots"][260]["values"],
+        &serde_json::json!([
+            null,
+            null,
+            1.3453624047073711,
+            1.3453624047073711,
+            2.7586228448267445
+        ]),
+        "request.security math plot",
+    );
     assert!(
         output.contains(
             "\"values\":[null,null,4.605170185988092,4.605170185988092,5.298317366548036]"
@@ -1984,9 +2095,17 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains(
             "\"values\":[0.1001674211615598,0.10519390104038849,0.11022304998774664,0.1152549996675776,0.12028988239478806]"
         ));
-    assert!(output.contains(
-            "\"values\":[0.19739555984988078,0.206992194219821,0.21655030497608926,0.22606838799388393,0.23554498072086333]"
-        ));
+    crate::test_support::assert_json_approximately_equal(
+        &parsed["plots"][286]["values"],
+        &serde_json::json!([
+            0.19739555984988078,
+            0.206992194219821,
+            0.21655030497608926,
+            0.22606838799388393,
+            0.23554498072086333
+        ]),
+        "request.security atan plot",
+    );
     assert!(output.contains("\"values\":[12.5,13.5,14.5,15.5,16.5]"));
     assert!(output.contains("\"values\":[6,7,7,7,8]"));
     assert!(output.contains("\"values\":[1,1,1,1,1]"));
@@ -2222,15 +2341,9 @@ fn runs_request_bars_integration_fixture() {
             >= 2
     );
     assert!(output.matches("\"values\":[500,500,500,500,500]").count() >= 2);
-    assert!(output.contains(
-            "\"values\":[0,0.16666666666666785,0.30555555555555713,0.39351851851851904,0.4436728395061742]"
-        ));
-    assert!(output.contains(
-            "\"values\":[0,0.1111111111111119,0.24074074074074206,0.3425925925925934,0.40997942386831393]"
-        ));
-    assert!(output.contains(
-            "\"values\":[0,0.055555555555555955,0.06481481481481507,0.05092592592592565,0.03369341563786027]"
-        ));
+    assert!(output.contains("\"values\":[null,null,0.5,0.5,0.5]"));
+    assert!(output.contains("\"values\":[null,null,null,0.5,0.5]"));
+    assert!(output.contains("\"values\":[null,null,null,0,0]"));
     assert!(output.contains("\"values\":[null,null,21,22,23]"));
     assert!(output.contains(
         "\"values\":[null,null,22.632993161855453,23.632993161855453,24.632993161855453]"
@@ -2262,7 +2375,12 @@ fn runs_request_bars_integration_fixture() {
         )
     );
     assert!(output.contains("\"values\":[null,null,101,101,201]"));
-    assert!(output.contains("\"values\":[null,null,0,0,16.666666666666657]"));
+    for index in 94..=96 {
+        assert_eq!(
+            parsed["plots"][index]["values"],
+            serde_json::json!([null, null, null, null, null])
+        );
+    }
     assert!(output.contains("\"values\":[null,null,null,null,150]"));
     assert!(output.contains("\"values\":[null,null,null,null,250]"));
     assert!(output.contains("\"values\":[null,null,null,null,50]"));
@@ -2346,9 +2464,7 @@ fn runs_request_bars_integration_fixture() {
             .count()
             >= 2
     );
-    assert!(output.contains(
-        "\"values\":[20,20.666666666666668,21.555555555555557,22.51851851851852,23.506172839506174]"
-    ));
+    assert!(output.contains("\"values\":[null,20.5,21.5,22.5,23.5]"));
     assert!(output.matches("\"values\":[null,100,100,100,100]").count() >= 1);
     assert!(output.contains(
             "\"values\":[null,0.0975609756097561,0.09302325581395349,0.08888888888888889,0.0851063829787234]"
@@ -2459,7 +2575,7 @@ fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
     let base = std::env::temp_dir().join(format!(
         "pine-cli-wrong-entry-{}-{}",
         std::process::id(),
-        std::thread::current().name().unwrap_or("test")
+        line!()
     ));
     let bars_path = base.with_extension("csv");
     fs::write(

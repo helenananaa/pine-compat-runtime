@@ -6,6 +6,13 @@ use std::{
 
 use pine_ir::{HirProgram, ScriptMode};
 
+use super::drawing_history::{
+    RuntimeBox, RuntimeLabel, RuntimeLine, RuntimeLineFill, RuntimePolyline, RuntimeTable,
+};
+use super::plot_history::{
+    RuntimeColorSeries, RuntimeFill, RuntimePlotArrow, RuntimePlotBar, RuntimePlotCandle,
+    RuntimePlotChar, RuntimePlotShape,
+};
 use crate::*;
 
 #[derive(Clone)]
@@ -91,7 +98,11 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) chart_visible_right_time: Option<i64>,
     pub(crate) first_bar_close: Option<f64>,
     pub(crate) request_environment: RequestEnvironment,
-    pub(crate) request_cache: HashMap<RequestCacheKey, Vec<(i64, PineValue)>>,
+    pub(crate) request_feed: crate::request::RequestFeed,
+    pub(crate) request_cache:
+        HashMap<RequestCacheKey, super::append_history::AppendHistory<(i64, PineValue)>>,
+    pub(crate) request_evaluations:
+        HashMap<RequestCacheKey, Arc<crate::builtins::request_incremental::RequestEvaluation<'a>>>,
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) series_store: SeriesStore,
@@ -142,23 +153,25 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) wad_state: PineValue,
     pub(crate) wad_current: PineValue,
     pub(crate) wvad_current: PineValue,
-    pub(crate) plots: Vec<PlotSeries>,
-    pub(crate) plot_chars: Vec<PlotCharSeries>,
-    pub(crate) plot_shapes: Vec<PlotShapeSeries>,
-    pub(crate) plot_arrows: Vec<PlotArrowSeries>,
-    pub(crate) plot_bars: Vec<PlotBarSeries>,
-    pub(crate) plot_candles: Vec<PlotCandleSeries>,
-    pub(crate) bg_colors: Vec<ColorSeries>,
-    pub(crate) bar_colors: Vec<ColorSeries>,
+    pub(crate) plots: Arc<Vec<super::plot_history::RuntimePlot>>,
+    pub(crate) plot_chars: Vec<RuntimePlotChar>,
+    pub(crate) plot_shapes: Vec<RuntimePlotShape>,
+    pub(crate) plot_arrows: Vec<RuntimePlotArrow>,
+    pub(crate) plot_bars: Vec<RuntimePlotBar>,
+    pub(crate) plot_candles: Vec<RuntimePlotCandle>,
+    pub(crate) bg_colors: Vec<RuntimeColorSeries>,
+    pub(crate) bar_colors: Vec<RuntimeColorSeries>,
     pub(crate) hlines: Vec<HLineOutput>,
-    pub(crate) fills: Vec<FillOutput>,
-    pub(crate) labels: Vec<LabelOutput>,
-    pub(crate) lines: Vec<LineOutput>,
-    pub(crate) line_fills: Vec<LineFillOutput>,
-    pub(crate) polylines: Vec<PolylineOutput>,
-    pub(crate) boxes: Vec<BoxOutput>,
-    pub(crate) tables: Vec<TableOutput>,
-    pub(crate) alerts: Vec<AlertEvent>,
+    pub(crate) fills: Vec<RuntimeFill>,
+    pub(crate) labels: Vec<RuntimeLabel>,
+    pub(crate) lines: Vec<RuntimeLine>,
+    pub(crate) line_fills: Vec<RuntimeLineFill>,
+    pub(crate) polylines: Vec<RuntimePolyline>,
+    pub(crate) boxes: Vec<RuntimeBox>,
+    pub(crate) tables: Vec<RuntimeTable>,
+    pub(crate) display_origin: usize,
+    pub(crate) stored_origin: usize,
+    pub(crate) alerts: super::append_history::AppendHistory<AlertEvent>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
@@ -310,17 +323,24 @@ impl<'a> HistoricalRuntime<'a> {
         request_environment: RequestEnvironment,
     ) -> Self {
         let series_retention = SeriesRetention::from_program(&program);
+        let strategy_settings = if program.script_mode == ScriptMode::Strategy {
+            program
+                .strategy_settings
+                .with_language_defaults(program.language_version)
+        } else {
+            program.strategy_settings
+        };
         let strategy_broker = BrokerState::new_with_account_settings_and_pyramiding(
             program.strategy_settings.initial_capital,
             program.strategy_settings.commission,
-            program.strategy_settings.slippage_ticks
-                * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
+            program.strategy_settings.slippage_ticks * request_environment.chart().min_tick(),
             program.strategy_settings.backtest_fill_limit_ticks
-                * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
-            program.strategy_settings.margin_long,
-            program.strategy_settings.margin_short,
+                * request_environment.chart().min_tick(),
+            strategy_settings.margin_long,
+            strategy_settings.margin_short,
             program.strategy_settings.pyramiding_limit,
         )
+        .with_quantity_scale(request_environment.chart().quantity_scale())
         .with_close_entries_rule(program.strategy_settings.close_entries_rule)
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
         Self {
@@ -341,7 +361,9 @@ impl<'a> HistoricalRuntime<'a> {
             chart_visible_right_time: None,
             first_bar_close: None,
             request_environment,
+            request_feed: crate::request::RequestFeed::default(),
             request_cache: HashMap::new(),
+            request_evaluations: HashMap::new(),
             legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
             series_store: SeriesStore::new(),
@@ -390,7 +412,7 @@ impl<'a> HistoricalRuntime<'a> {
             wad_state: PineValue::Na,
             wad_current: PineValue::Na,
             wvad_current: PineValue::Na,
-            plots: Vec::new(),
+            plots: Arc::new(Vec::new()),
             plot_chars: Vec::new(),
             plot_shapes: Vec::new(),
             plot_arrows: Vec::new(),
@@ -406,7 +428,9 @@ impl<'a> HistoricalRuntime<'a> {
             polylines: Vec::new(),
             boxes: Vec::new(),
             tables: Vec::new(),
-            alerts: Vec::new(),
+            display_origin: 0,
+            stored_origin: 0,
+            alerts: Default::default(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
@@ -487,6 +511,36 @@ impl<'a> HistoricalRuntime<'a> {
         &self.session_windows
     }
 
+    pub fn apply_request_update(
+        &mut self,
+        key: RequestKey,
+        update: BarUpdate,
+    ) -> Result<(), RuntimeError> {
+        let provider_last = self.provider_last_time(&key)?;
+        self.request_feed
+            .apply(key.clone(), update, provider_last)
+            .map_err(crate::request::RequestFeedError::runtime_error)?;
+        self.invalidate_request_cache(&key);
+        Ok(())
+    }
+
+    fn provider_last_time(&self, key: &RequestKey) -> Result<Option<i64>, RuntimeError> {
+        match self.request_environment.provider().bars(key) {
+            Ok(bars) => Ok(bars.last().map(|bar| bar.time)),
+            Err(RequestDataError::MissingData { .. }) => Ok(None),
+            Err(error) => Err(RuntimeError {
+                message: error.to_string(),
+            }),
+        }
+    }
+
+    fn invalidate_request_cache(&mut self, key: &RequestKey) {
+        let symbol = key.symbol();
+        let timeframe = key.timeframe().value();
+        self.request_cache
+            .retain(|cache_key, _| cache_key.context() != (symbol, timeframe));
+    }
+
     /// Validate the complete chart range before using the one-bar streaming API.
     ///
     /// Batch APIs derive this value from their complete input slice. Streaming
@@ -521,6 +575,18 @@ impl<'a> HistoricalRuntime<'a> {
         request_environment: RequestEnvironment,
     ) -> Self {
         Self::with_runtime_program(self.program.clone(), request_environment)
+    }
+
+    /// Empty runtime with the same program, host inputs and request feed.
+    /// Chart history, caches and broker state start over.
+    pub(crate) fn blank_for_replay(&self) -> Self {
+        let mut runtime =
+            Self::with_runtime_program(self.program.clone(), self.request_environment.clone());
+        runtime.input_overrides = self.input_overrides.clone();
+        runtime.magnifier_input = self.magnifier_input.clone();
+        runtime.session_windows = self.session_windows.clone();
+        runtime.request_feed = self.request_feed.clone();
+        runtime
     }
 
     pub(crate) fn run(mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
@@ -706,13 +772,35 @@ impl<'a> HistoricalRuntime<'a> {
         {
             self.snapshot_strategy_eval_checkpoint();
         }
+        let passes_before_tick = self.strategy_scheduler.script_passes();
         self.run_pre_script_strategy_phases(bar_index, bar)?;
+        let skip_normal_strategy_pass = self.program.script_mode == ScriptMode::Strategy
+            && ((update_kind == BarUpdateKind::Forming
+                && !self.program.strategy_settings.calc_on_every_tick)
+                // A realtime observation with fills has already executed the
+                // strategy. Do not execute it again for the same feed update.
+                // Historical path ticks retain their separate closing pass.
+                || (update_kind != BarUpdateKind::Historical
+                    && self.strategy_scheduler.script_passes() > passes_before_tick));
+        if skip_normal_strategy_pass
+            && self.strategy_scheduler.script_passes() == passes_before_tick
+        {
+            self.strategy_broker.record_equity(bar_index, bar.close);
+            self.strategy_eval_checkpoint = None;
+            self.current_bar_update_kind = BarUpdateKind::Historical;
+            self.current_bar_is_new = true;
+            self.current_bar = None;
+            self.current_execution_time = None;
+            return Ok(());
+        }
         if self.program.script_mode == ScriptMode::Strategy {
             self.trace_strategy_phase(
                 crate::runtime::strategy_scheduler::StrategyBarPhase::BuiltinRefresh,
             );
-            let filled = self.run_strategy_script_pass()?;
-            self.recalculate_after_fill(filled)?;
+            if !skip_normal_strategy_pass {
+                let filled = self.run_strategy_script_pass()?;
+                self.recalculate_after_fill(filled)?;
+            }
         } else {
             let program = self.program.clone();
             for statement in &program.statements {
@@ -749,31 +837,68 @@ impl<'a> HistoricalRuntime<'a> {
 
     #[must_use]
     pub fn result(&self) -> RuntimeResult {
+        let skip = self.display_skip();
         RuntimeResult {
-            plots: self.plots.clone(),
-            plot_chars: self.plot_chars.clone(),
-            plot_shapes: self.plot_shapes.clone(),
-            plot_arrows: self.plot_arrows.clone(),
-            plot_bars: self.plot_bars.clone(),
-            plot_candles: self.plot_candles.clone(),
-            bg_colors: self.bg_colors.clone(),
-            bar_colors: self.bar_colors.clone(),
+            plots: self
+                .plots
+                .iter()
+                .map(|plot| plot.snapshot_from(skip))
+                .collect(),
+            plot_chars: self
+                .plot_chars
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
+            plot_shapes: self
+                .plot_shapes
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
+            plot_arrows: self
+                .plot_arrows
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
+            plot_bars: self
+                .plot_bars
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
+            plot_candles: self
+                .plot_candles
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
+            bg_colors: self
+                .bg_colors
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
+            bar_colors: self
+                .bar_colors
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
             hlines: self.hlines.clone(),
-            fills: self.fills.clone(),
-            labels: self.labels.clone(),
-            lines: self.lines.clone(),
-            line_fills: self.line_fills.clone(),
-            polylines: self.polylines.clone(),
-            boxes: self.boxes.clone(),
-            tables: self.tables.clone(),
-            alerts: self.alerts.clone(),
+            fills: self
+                .fills
+                .iter()
+                .map(|item| item.snapshot_from(skip))
+                .collect(),
+            labels: self.display_labels(),
+            lines: self.display_lines(),
+            line_fills: self.display_line_fills(),
+            polylines: self.display_polylines(),
+            boxes: self.display_boxes(),
+            tables: self.display_tables(),
+            alerts: self.display_alerts(),
             strategy: (self.program.script_mode == ScriptMode::Strategy)
                 .then(|| self.strategy_broker.result()),
             diagnostics: self.runtime_diagnostics(),
         }
     }
 
-    fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
+    pub(crate) fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
         let mut diagnostics = self.magnifier_diagnostics.clone();
         let mut lookahead = self
             .legacy_security_repaint_warnings
@@ -816,371 +941,6 @@ impl<'a> HistoricalRuntime<'a> {
             ),
         });
         diagnostics
-    }
-
-    #[must_use]
-    pub fn profile(&self) -> RuntimeProfile {
-        let request_cache_contexts = self
-            .request_cache
-            .keys()
-            .map(RequestCacheKey::context)
-            .collect::<HashSet<_>>()
-            .len();
-        let request_cache_values = self.request_cache.values().map(Vec::len).sum::<usize>();
-        let request_cache_value_capacity = self
-            .request_cache
-            .values()
-            .map(Vec::capacity)
-            .sum::<usize>();
-        let series_buffers = self.series_store.buffers.len();
-        let series_values = self
-            .series_store
-            .buffers
-            .values()
-            .map(Vec::len)
-            .sum::<usize>();
-        let series_capacity = self
-            .series_store
-            .buffers
-            .values()
-            .map(Vec::capacity)
-            .sum::<usize>();
-        let plot_values = self
-            .plots
-            .iter()
-            .map(|plot| plot.values.len())
-            .sum::<usize>();
-        let plot_capacity = self
-            .plots
-            .iter()
-            .map(|plot| plot.values.capacity())
-            .sum::<usize>();
-        let plot_char_values = self
-            .plot_chars
-            .iter()
-            .map(|plot_char| plot_char.values.len())
-            .sum::<usize>();
-        let plot_char_capacity = self
-            .plot_chars
-            .iter()
-            .map(|plot_char| {
-                plot_char.values.capacity()
-                    + plot_char.chars.capacity()
-                    + plot_char.colors.capacity()
-            })
-            .sum::<usize>();
-        let plot_shape_values = self
-            .plot_shapes
-            .iter()
-            .map(|plot_shape| plot_shape.values.len())
-            .sum::<usize>();
-        let plot_shape_capacity = self
-            .plot_shapes
-            .iter()
-            .map(|plot_shape| {
-                plot_shape.values.capacity()
-                    + plot_shape.styles.capacity()
-                    + plot_shape.locations.capacity()
-                    + plot_shape.colors.capacity()
-                    + plot_shape.texts.capacity()
-                    + plot_shape.text_colors.capacity()
-                    + plot_shape.sizes.capacity()
-            })
-            .sum::<usize>();
-        let plot_arrow_values = self
-            .plot_arrows
-            .iter()
-            .map(|plot_arrow| plot_arrow.values.len())
-            .sum::<usize>();
-        let plot_arrow_capacity = self
-            .plot_arrows
-            .iter()
-            .map(|plot_arrow| {
-                plot_arrow.values.capacity()
-                    + plot_arrow.color_ups.capacity()
-                    + plot_arrow.color_downs.capacity()
-                    + plot_arrow.min_heights.capacity()
-                    + plot_arrow.max_heights.capacity()
-            })
-            .sum::<usize>();
-        let plot_bar_values = self
-            .plot_bars
-            .iter()
-            .map(|plot_bar| plot_bar.opens.len())
-            .sum::<usize>();
-        let plot_bar_capacity = self
-            .plot_bars
-            .iter()
-            .map(|plot_bar| {
-                plot_bar.opens.capacity()
-                    + plot_bar.highs.capacity()
-                    + plot_bar.lows.capacity()
-                    + plot_bar.closes.capacity()
-                    + plot_bar.colors.capacity()
-            })
-            .sum::<usize>();
-        let plot_candle_values = self
-            .plot_candles
-            .iter()
-            .map(|plot_candle| plot_candle.opens.len())
-            .sum::<usize>();
-        let plot_candle_capacity = self
-            .plot_candles
-            .iter()
-            .map(|plot_candle| {
-                plot_candle.opens.capacity()
-                    + plot_candle.highs.capacity()
-                    + plot_candle.lows.capacity()
-                    + plot_candle.closes.capacity()
-                    + plot_candle.colors.capacity()
-                    + plot_candle.wick_colors.capacity()
-                    + plot_candle.border_colors.capacity()
-            })
-            .sum::<usize>();
-        let bg_color_values = self
-            .bg_colors
-            .iter()
-            .map(|colors| colors.values.len())
-            .sum::<usize>();
-        let bg_color_capacity = self
-            .bg_colors
-            .iter()
-            .map(|colors| colors.values.capacity())
-            .sum::<usize>();
-        let bar_color_values = self
-            .bar_colors
-            .iter()
-            .map(|colors| colors.values.len())
-            .sum::<usize>();
-        let bar_color_capacity = self
-            .bar_colors
-            .iter()
-            .map(|colors| colors.values.capacity())
-            .sum::<usize>();
-        let rolling_window_values = self
-            .rolling_windows
-            .values()
-            .map(|window| window.values.len())
-            .sum::<usize>();
-        let rolling_window_value_capacity = self
-            .rolling_windows
-            .values()
-            .map(|window| window.values.capacity())
-            .sum::<usize>();
-        let valuewhen_state_values = self
-            .valuewhen_state
-            .values()
-            .map(VecDeque::len)
-            .sum::<usize>();
-        let valuewhen_state_value_capacity = self
-            .valuewhen_state
-            .values()
-            .map(VecDeque::capacity)
-            .sum::<usize>();
-        let array_values = self.array_store.values().map(Vec::len).sum::<usize>();
-        let array_value_capacity = self.array_store.values().map(Vec::capacity).sum::<usize>();
-        let matrix_profile = self.matrix_store_profile();
-        let label_snapshots = self
-            .labels
-            .iter()
-            .map(|label| label.snapshots.len())
-            .sum::<usize>();
-        let label_snapshot_capacity = self
-            .labels
-            .iter()
-            .map(|label| label.snapshots.capacity())
-            .sum::<usize>();
-        let line_snapshots = self
-            .lines
-            .iter()
-            .map(|line| line.snapshots.len())
-            .sum::<usize>();
-        let line_snapshot_capacity = self
-            .lines
-            .iter()
-            .map(|line| line.snapshots.capacity())
-            .sum::<usize>();
-        let line_fill_snapshots = self
-            .line_fills
-            .iter()
-            .map(|line_fill| line_fill.snapshots.len())
-            .sum::<usize>();
-        let line_fill_snapshot_capacity = self
-            .line_fills
-            .iter()
-            .map(|line_fill| line_fill.snapshots.capacity())
-            .sum::<usize>();
-        let polyline_snapshots = self
-            .polylines
-            .iter()
-            .map(|polyline| polyline.snapshots.len())
-            .sum::<usize>();
-        let polyline_snapshot_capacity = self
-            .polylines
-            .iter()
-            .map(|polyline| polyline.snapshots.capacity())
-            .sum::<usize>();
-        let polyline_points = self
-            .polylines
-            .iter()
-            .flat_map(|polyline| polyline.snapshots.iter())
-            .map(|snapshot| snapshot.points.len())
-            .sum::<usize>();
-        let polyline_point_capacity = self
-            .polylines
-            .iter()
-            .flat_map(|polyline| polyline.snapshots.iter())
-            .map(|snapshot| snapshot.points.capacity())
-            .sum::<usize>();
-        let box_snapshots = self
-            .boxes
-            .iter()
-            .map(|box_output| box_output.snapshots.len())
-            .sum::<usize>();
-        let box_snapshot_capacity = self
-            .boxes
-            .iter()
-            .map(|box_output| box_output.snapshots.capacity())
-            .sum::<usize>();
-        let table_cells = self
-            .tables
-            .iter()
-            .flat_map(|table| table.snapshots.iter())
-            .map(|snapshot| snapshot.cells.len())
-            .sum::<usize>();
-        let table_snapshot_capacity = self
-            .tables
-            .iter()
-            .map(|table| table.snapshots.capacity())
-            .sum::<usize>();
-        let table_cell_capacity = self
-            .tables
-            .iter()
-            .flat_map(|table| table.snapshots.iter())
-            .map(|snapshot| snapshot.cells.capacity())
-            .sum::<usize>();
-
-        RuntimeProfile {
-            bars: self.bars,
-            series_buffers,
-            series_values,
-            series_capacity,
-            max_series_depth: self.series_store.max_depth(),
-            history_retention_mode: self.series_retention.mode(),
-            history_max_constant_offset: self.program.history.max_constant_offset,
-            history_max_bars_back: self.program.max_bars_back,
-            history_has_dynamic_offsets: self.program.history.has_dynamic_offsets,
-            history_dynamic_retention_misses: self.history_dynamic_retention_misses,
-            history_dynamic_retention_max_missed_offset: self
-                .history_dynamic_retention_max_missed_offset,
-            request_cache_entries: self.request_cache.len(),
-            request_cache_contexts,
-            request_cache_values,
-            request_cache_value_capacity,
-            symbol_slots: self.current_symbols.len(),
-            symbol_capacity: self.current_symbols.capacity(),
-            current_series_slots: self.current_series.len(),
-            current_series_capacity: self.current_series.capacity(),
-            var_slots: self.var_store.len(),
-            var_capacity: self.var_store.capacity(),
-            array_slots: self.array_store.len(),
-            array_capacity: self.array_store.capacity(),
-            array_values,
-            array_value_capacity,
-            matrix_slots: matrix_profile.slots,
-            matrix_capacity: matrix_profile.capacity,
-            matrix_cells: matrix_profile.cells,
-            matrix_cell_capacity: matrix_profile.cell_capacity,
-            call_state_slots: self.call_state.len(),
-            call_state_capacity: self.call_state.capacity(),
-            valuewhen_state_slots: self.valuewhen_state.len(),
-            valuewhen_state_capacity: self.valuewhen_state.capacity(),
-            valuewhen_state_values,
-            valuewhen_state_value_capacity,
-            rolling_window_slots: self.rolling_windows.len(),
-            rolling_window_capacity: self.rolling_windows.capacity(),
-            rolling_window_values,
-            rolling_window_value_capacity,
-            rsi_state_slots: self.rsi_state.len(),
-            rsi_state_capacity: self.rsi_state.capacity(),
-            macd_state_slots: self.macd_state.len(),
-            macd_state_capacity: self.macd_state.capacity(),
-            plots: self.plots.len(),
-            plot_values,
-            plot_capacity,
-            plot_chars: self.plot_chars.len(),
-            plot_char_values,
-            plot_char_capacity,
-            plot_shapes: self.plot_shapes.len(),
-            plot_shape_values,
-            plot_shape_capacity,
-            plot_arrows: self.plot_arrows.len(),
-            plot_arrow_values,
-            plot_arrow_capacity,
-            plot_bars: self.plot_bars.len(),
-            plot_bar_values,
-            plot_bar_capacity,
-            plot_candles: self.plot_candles.len(),
-            plot_candle_values,
-            plot_candle_capacity,
-            bg_colors: self.bg_colors.len(),
-            bg_color_values,
-            bg_color_capacity,
-            bar_colors: self.bar_colors.len(),
-            bar_color_values,
-            bar_color_capacity,
-            hlines: self.hlines.len(),
-            hline_capacity: self.hlines.capacity(),
-            fills: self.fills.len(),
-            fill_capacity: self.fills.capacity(),
-            labels: self.labels.len(),
-            label_snapshots,
-            label_capacity: self.labels.capacity(),
-            label_snapshot_capacity,
-            lines: self.lines.len(),
-            line_snapshots,
-            line_capacity: self.lines.capacity(),
-            line_snapshot_capacity,
-            line_fills: self.line_fills.len(),
-            line_fill_snapshots,
-            line_fill_capacity: self.line_fills.capacity(),
-            line_fill_snapshot_capacity,
-            polylines: self.polylines.len(),
-            polyline_snapshots,
-            polyline_points,
-            polyline_capacity: self.polylines.capacity(),
-            polyline_snapshot_capacity,
-            polyline_point_capacity,
-            boxes: self.boxes.len(),
-            box_snapshots,
-            box_capacity: self.boxes.capacity(),
-            box_snapshot_capacity,
-            tables: self.tables.len(),
-            table_cells,
-            table_capacity: self.tables.capacity(),
-            table_snapshot_capacity,
-            table_cell_capacity,
-            strategy_script_passes: if self.program.script_mode == ScriptMode::Strategy {
-                self.strategy_scheduler.script_passes()
-            } else {
-                0
-            },
-            strategy_recalculation_passes: if self.program.script_mode == ScriptMode::Strategy {
-                self.strategy_scheduler.recalculation_passes()
-            } else {
-                0
-            },
-            strategy_max_passes_on_bar: if self.program.script_mode == ScriptMode::Strategy {
-                self.strategy_scheduler.max_passes_on_bar() as usize
-            } else {
-                0
-            },
-            strategy_max_recalculation_passes: if self.program.script_mode == ScriptMode::Strategy {
-                self.strategy_scheduler.max_recalculation_passes() as usize
-            } else {
-                0
-            },
-        }
     }
 
     fn snapshot_strategy_eval_checkpoint(&mut self) {
@@ -1250,34 +1010,31 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(())
     }
 
+    #[cfg(test)]
     pub(crate) fn snapshot_strategy_broker(&self) -> BrokerState {
         self.strategy_broker.snapshot()
     }
 
+    #[cfg(test)]
     pub(crate) fn restore_strategy_broker(&mut self, snapshot: BrokerState) {
         self.strategy_broker.restore(snapshot);
     }
 
-    pub(crate) fn restore_strategy_checkpoint(&mut self, confirmed: &Self) {
-        self.restore_strategy_broker(confirmed.snapshot_strategy_broker());
-        self.strategy_scheduler = confirmed.strategy_scheduler.clone();
-        self.alerts.clone_from(&confirmed.alerts);
-    }
-
     pub(crate) fn finalize_series_outputs(&mut self) {
-        finalize_plot_values(&mut self.plots, self.bars);
-        finalize_bar_aligned_outputs(&mut self.plot_chars, self.bars);
-        finalize_bar_aligned_outputs(&mut self.plot_shapes, self.bars);
-        finalize_bar_aligned_outputs(&mut self.plot_arrows, self.bars);
-        finalize_bar_aligned_outputs(&mut self.plot_bars, self.bars);
-        finalize_bar_aligned_outputs(&mut self.plot_candles, self.bars);
-        finalize_series_values(&mut self.bg_colors, self.bars);
-        finalize_series_values(&mut self.bar_colors, self.bars);
+        let bar_index = self.bars - self.stored_origin;
+        finalize_plot_values(self.plots_mut().as_mut_slice(), bar_index);
+        finalize_bar_aligned_outputs(&mut self.plot_chars, self.bars - self.stored_origin);
+        finalize_bar_aligned_outputs(&mut self.plot_shapes, self.bars - self.stored_origin);
+        finalize_bar_aligned_outputs(&mut self.plot_arrows, self.bars - self.stored_origin);
+        finalize_bar_aligned_outputs(&mut self.plot_bars, self.bars - self.stored_origin);
+        finalize_bar_aligned_outputs(&mut self.plot_candles, self.bars - self.stored_origin);
+        finalize_series_values(&mut self.bg_colors, self.bars - self.stored_origin);
+        finalize_series_values(&mut self.bar_colors, self.bars - self.stored_origin);
         for fill in &mut self.fills {
-            while fill.colors.len() < self.bars {
+            while fill.colors.len() < self.bars - self.stored_origin {
                 fill.colors.push(PineValue::Na);
             }
-            if fill.colors.len() == self.bars {
+            if fill.colors.len() == self.bars - self.stored_origin {
                 fill.colors.push(PineValue::Na);
             }
         }
@@ -1339,10 +1096,10 @@ impl<'a> HistoricalRuntime<'a> {
             return;
         };
         if let Some(fill) = self.fills.iter_mut().find(|fill| fill.id == id) {
-            while fill.colors.len() < self.bars {
+            while fill.colors.len() < self.bars - self.stored_origin {
                 fill.colors.push(PineValue::Na);
             }
-            if fill.colors.len() == self.bars {
+            if fill.colors.len() == self.bars - self.stored_origin {
                 fill.colors.push(color);
             } else if let Some(current) = fill.colors.last_mut() {
                 *current = color;
@@ -1358,9 +1115,9 @@ impl<'a> HistoricalRuntime<'a> {
             fill.display = display;
             return;
         }
-        let mut colors = vec![PineValue::Na; self.bars];
+        let mut colors = super::plot_history::na_history(self.bars - self.stored_origin);
         colors.push(color);
-        self.fills.push(FillOutput {
+        self.fills.push(RuntimeFill {
             id,
             first_id,
             second_id,

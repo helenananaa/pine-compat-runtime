@@ -361,10 +361,10 @@ plot(close + x)
 }
 
 #[test]
-fn numeric_equality_uses_exact_pine_comparison() {
+fn numeric_equality_uses_native_pine_comparison() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("exact equality")
+        r#"indicator("native equality")
 plot(0.1 + 0.2 == 0.3 ? 99 : 1)
 plot(1 == 1.0 ? 1 : 0)
 plot(na(0 / 0) ? 1 : 0)
@@ -379,7 +379,7 @@ plot(na(0 / 0) ? 1 : 0)
 
     let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
 
-    assert_values_close(&result.plots[0].values, &[1.0]);
+    assert_values_close(&result.plots[0].values, &[99.0]);
     assert_values_close(&result.plots[1].values, &[1.0]);
     assert_values_close(&result.plots[2].values, &[1.0]);
 }
@@ -417,7 +417,8 @@ plot(ma)
     assert_eq!(profiled.profile.history_max_bars_back, None);
     assert!(!profiled.profile.history_has_dynamic_offsets);
     assert_eq!(profiled.profile.rolling_window_slots, 1);
-    assert_eq!(profiled.profile.rolling_window_values, 2);
+    // Two active samples plus one evicted sample retained for same-bar undo.
+    assert_eq!(profiled.profile.rolling_window_values, 3);
     assert!(
         profiled.profile.rolling_window_value_capacity >= profiled.profile.rolling_window_values
     );

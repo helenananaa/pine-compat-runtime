@@ -1,3 +1,4 @@
+use crate::runtime::drawing_history::RuntimeLabel;
 use crate::*;
 use pine_ir::{HirCallArg, HirExpr};
 
@@ -130,9 +131,9 @@ impl<'a> HistoricalRuntime<'a> {
             .ok_or_else(|| RuntimeError {
                 message: "label id limit exceeded".to_owned(),
             })?;
-        self.labels.push(LabelOutput {
+        self.labels.push(RuntimeLabel::from_snapshot(
             id,
-            snapshots: vec![LabelSnapshot {
+            LabelSnapshot {
                 bar_index: self.bars,
                 exists: true,
                 x: fields.x,
@@ -148,8 +149,8 @@ impl<'a> HistoricalRuntime<'a> {
                 text_align: fields.text_align,
                 text_font_family: fields.text_font_family,
                 text_formatting: fields.text_formatting,
-            }],
-        });
+            },
+        ));
         Ok(PineValue::Label(id))
     }
 
@@ -384,10 +385,8 @@ impl<'a> HistoricalRuntime<'a> {
             })?;
         let mut copied = latest;
         copied.bar_index = self.bars;
-        self.labels.push(LabelOutput {
-            id: copied_id,
-            snapshots: vec![copied],
-        });
+        self.labels
+            .push(RuntimeLabel::from_snapshot(copied_id, copied));
         Ok(PineValue::Label(copied_id))
     }
 

@@ -7,6 +7,7 @@ mod algorithms;
 mod bar;
 mod builtins;
 mod error;
+mod host_requirements;
 mod input_metadata;
 mod magnifier;
 mod output;
@@ -19,8 +20,13 @@ mod session_windows;
 mod strategy;
 mod value;
 
-pub use bar::{Bar, BarUpdate, BarUpdateKind};
+pub use bar::{Bar, BarUpdate, BarUpdateKind, RealtimeUpdateContext};
 pub use error::RuntimeError;
+pub use host_requirements::{
+    AccountInputContract, ChartInputContract, ChartInputDefaults, ExecutionInputContract,
+    HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements, HostSourceLocation,
+    RequestArgument, RequestRequirement, host_requirements, host_requirements_json,
+};
 pub use input_metadata::{InputCall, input_calls};
 pub use magnifier::{
     MAGNIFIER_SCHEMA_VERSION, MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback,
@@ -29,6 +35,12 @@ pub use magnifier::{
     magnifier_input_from_groups, magnifier_input_from_json, magnifier_input_from_v1,
 };
 pub use output::alerts::AlertEvent;
+pub use output::changes::{
+    DrawingAction, DrawingChange, DrawingFamily, DrawingObject, EventAction, EventChange,
+    FillAction, FillChange, HLineAction, HLineChange, ListSplice,
+    PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION, RuntimeChanges, SeriesChange, SeriesChangeOp,
+    SeriesFamily, SeriesFields, SeriesHeader, StrategyChanges, StreamingVisibility,
+};
 pub use output::delivery::{
     DeliveryAdapterRun, DeliveryAttemptRecord, DeliveryAttemptStatus, DeliveryAttemptStore,
     DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
@@ -50,13 +62,16 @@ pub use output::drawings::{
     LineOutput, LineSnapshot, PolylineOutput, PolylineSnapshot, TableCellSnapshot,
     TableMergedCellSnapshot, TableOutput, TableSnapshot,
 };
-pub use output::json::{public_runtime_profiled_result_json, public_runtime_result_json};
+pub use output::json::{
+    public_runtime_changes_json, public_runtime_profiled_result_json, public_runtime_result_json,
+};
 pub use output::model::{
     ColorSeries, FillOutput, HLineOutput, OutputMetadata, PUBLIC_MATRIX_SCHEMA_VERSION,
     PUBLIC_OUTPUT_SCHEMA_VERSION, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION,
     PlotArrowSeries, PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries,
     RuntimeDiagnostic, RuntimeResult,
 };
+pub use output::parse::{runtime_changes_from_json, runtime_result_from_json};
 pub use output::running_alerts::{
     RunningAlertConfig, RunningAlertEvaluationError, RunningAlertEventSelection,
     RunningAlertRealtimePolicy, render_strategy_order_fill_running_alert,
@@ -76,7 +91,7 @@ pub use request::{
     RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
     validate_requested_bars,
 };
-pub use retention::HistoryRetentionMode;
+pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::historical::{
     HistoricalRuntime, InputOverrides, run_historical, run_historical_profiled,
     run_historical_profiled_with_execution_times, run_historical_profiled_with_request_environment,
@@ -94,7 +109,9 @@ pub use session_windows::{
     session_window_input_from_bars, session_window_input_from_json, session_window_input_from_v1,
 };
 pub use strategy::BrokerState;
-pub use value::{PineValue, encode_color_literal, encode_color_rgba, is_valid_public_color};
+pub use value::{
+    ChartPointValue, PineValue, encode_color_literal, encode_color_rgba, is_valid_public_color,
+};
 
 use algorithms::numeric::finite_float_or_na;
 use algorithms::rolling_window::{
@@ -136,3 +153,5 @@ const DEFAULT_CHART_TIMEFRAME: &str = "1";
 
 #[cfg(test)]
 mod tests;
+
+pub use output::replica::RuntimeReplica;

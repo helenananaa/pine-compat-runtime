@@ -1,0 +1,9 @@
+{
+  "scope": "Windows optimized wheel, 3 workloads, 1024/8192/32768 bars, 128 appended bars with 3 forming observations, display window 256. Engineering targets frozen before acceptance; not a host SLA.",
+  "producerP95Ms": 10.0,
+  "replicaP95Ms": 5.0,
+  "confirmP95Ms": 10.0,
+  "requestP95Ms": 10.0,
+  "peakRssBytes": 1073741824,
+  "maxP50GrowthRatio": 6.0
+}

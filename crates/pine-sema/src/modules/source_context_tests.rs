@@ -81,11 +81,11 @@ method shift(Point self, float delta) => helper(self.x + delta)
     );
     let left_export = validation
         .imported_functions
-        .get("left.passthrough")
+        .get("@import:left.passthrough")
         .expect("left exported function");
     let left_private = validation
         .imported_functions
-        .get("__import_left_helper")
+        .get("@import:left.helper")
         .expect("left private function");
     let left_method = validation
         .imported_methods
@@ -93,16 +93,18 @@ method shift(Point self, float delta) => helper(self.x + delta)
         .expect("left imported method");
     let right_export = validation
         .imported_functions
-        .get("right.passthrough")
+        .get("@import:right.passthrough")
         .expect("right exported function");
     let right_private = validation
         .imported_functions
-        .get("__import_right_helper")
+        .get("@import:right.helper")
         .expect("right private function");
     let right_method = validation
         .imported_methods
         .get(&("right.Point".to_owned(), "shift".to_owned()))
         .expect("right imported method");
+    assert_eq!(left_export.display_name, "left.passthrough");
+    assert_eq!(left_private.display_name, "__import_left_helper");
 
     assert_eq!(
         left_export.source_context_id,

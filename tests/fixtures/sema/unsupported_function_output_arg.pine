@@ -1,0 +1,4 @@
+//@version=6
+indicator("Output call is not a scalar UDF argument")
+value(x) => x
+plot(value(plot(close)))

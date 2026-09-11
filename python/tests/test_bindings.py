@@ -47,23 +47,23 @@ EMPTY_STRATEGY_RESULT = {
 FLAT_EQUITY = [
     {
         "barIndex": 0,
-        "cash": 100000.0,
+        "cash": 1000000.0,
         "marketValue": 0.0,
-        "equity": 100000.0,
+        "equity": 1000000.0,
         "netProfit": 0.0,
     },
     {
         "barIndex": 1,
-        "cash": 100000.0,
+        "cash": 1000000.0,
         "marketValue": 0.0,
-        "equity": 100000.0,
+        "equity": 1000000.0,
         "netProfit": 0.0,
     },
     {
         "barIndex": 2,
-        "cash": 100000.0,
+        "cash": 1000000.0,
         "marketValue": 0.0,
-        "equity": 100000.0,
+        "equity": 1000000.0,
         "netProfit": 0.0,
     },
 ]
@@ -1176,6 +1176,77 @@ def test_run_script_returns_label_array_fixture_contract():
     )
 
     assert result == expected
+
+
+def test_run_script_returns_scalar_overloads_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/scalar_overloads.pine").read_text()
+    libraries = {"test/scalar_overloads/1": (ROOT / "tests/fixtures/libraries/scalar_overloads_lib.pine").read_text()}
+    expected = json.loads((ROOT / "tests/snapshots/runtime_scalar_overloads.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"), library_sources=libraries)
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_transitive_imports_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/transitive_imports.pine").read_text()
+    libraries = {
+        "user/transitive_outer/1": (ROOT / "tests/fixtures/libraries/transitive_outer_lib.pine").read_text(),
+        "user/transitive_inner/1": (ROOT / "tests/fixtures/libraries/transitive_inner_lib.pine").read_text(),
+    }
+    expected = json.loads((ROOT / "tests/snapshots/runtime_transitive_imports.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"), library_sources=libraries)
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_library_declaration_forms_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/library_declaration_forms.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_library_declaration_forms.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_simple_scalar_parameters_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/simple_scalar_parameters.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_simple_scalar_parameters.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_function_default_parameters_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/function_default_parameters.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_function_default_parameters.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_series_scalar_parameters_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/series_scalar_parameters.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_series_scalar_parameters.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_absent_trade_profit_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_absent_trade_profit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_absent_trade_profit.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_zero_pyramiding_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding_zero.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_pyramiding_zero.json").read_text()
+    )
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
 
 
 def test_run_script_returns_scalar_typed_declarations_fixture_contract():
@@ -2788,6 +2859,27 @@ def test_run_script_returns_dema_tema_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_numeric_comparison_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/numeric_comparison.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_numeric_comparison.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_sma_nearby_replacement_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/sma_nearby_replacement.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_sma_nearby_replacement.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/macd_edge_cases_bars.csv"))
+    assert_json_close(result, expected)
+
+
+def test_run_script_returns_quantity_precision_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/quantity_precision.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_quantity_precision.json").read_text())
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/quantity_precision_bars.csv"), request_bars={"$chart": {"minMove": 1, "priceScale": 10, "quantityPrecision": 6, "pointValue": 1}})
+    assert_json_close(result, expected)
+
+
 def test_run_script_returns_macd_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/macd.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_macd.json").read_text())
@@ -2815,9 +2907,13 @@ def test_run_script_returns_strings_fixture_contract():
 
 
 def test_run_script_returns_line_wrapped_strings_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/line_wrapped_strings.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/line_wrapped_strings.pine").read_text(
+        encoding="utf-8"
+    )
     expected = json.loads(
-        (ROOT / "tests/snapshots/runtime_line_wrapped_strings.json").read_text()
+        (ROOT / "tests/snapshots/runtime_line_wrapped_strings.json").read_text(
+            encoding="utf-8"
+        )
     )
 
     result = pine_compat.run_script(
@@ -3764,16 +3860,16 @@ def test_run_script_returns_strategy_entry_contract():
         FLAT_EQUITY[0],
         {
             "barIndex": 1,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 2,
-            "cash": 99994.0,
+            "cash": 999994.0,
             "marketValue": 6.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
     ]
@@ -5870,14 +5966,14 @@ def test_run_script_returns_strategy_cash_per_contract_commission_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 1.0, 1.0, None, None],
-        [None, None, None, 2.0, 2.0],
+        [0.0, 1.0, 1.0, 0.0, 0.0],
         [0.0, 0.0, 0.0, 2.0, 2.0],
-        [100000.0, 99999.0, 100001.0, 100002.0, 100002.0],
+        [0.0, -1.0, -1.0, 2.0, 2.0],
+        [1000000.0, 999999.0, 1000001.0, 1000002.0, 1000002.0],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 2.0
-    assert result["strategy"]["equity"][1]["cash"] == 99995.0
-    assert result["strategy"]["equity"][1]["equity"] == 99999.0
+    assert result["strategy"]["equity"][1]["cash"] == 999995.0
+    assert result["strategy"]["equity"][1]["equity"] == 999999.0
 
 
 def test_run_script_returns_strategy_cash_per_order_commission_plots():
@@ -5890,14 +5986,14 @@ def test_run_script_returns_strategy_cash_per_order_commission_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 1.5, 1.5, None, None],
-        [None, None, None, 3.0, 3.0],
-        [0.0, 0.0, 0.0, 1.0, 1.0],
-        [100000.0, 99998.5, 100000.5, 100001.0, 100001.0],
+        [0.0, 1.5, 1.5, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 3.0, 3.0],
+        [0.0, -1.5, -1.5, 1.0, 1.0],
+        [1000000.0, 999998.5, 1000000.5, 1000001.0, 1000001.0],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 1.0
-    assert result["strategy"]["equity"][1]["cash"] == 99994.5
-    assert result["strategy"]["equity"][1]["equity"] == 99998.5
+    assert result["strategy"]["equity"][1]["cash"] == 999994.5
+    assert result["strategy"]["equity"][1]["equity"] == 999998.5
 
 
 def test_run_script_returns_strategy_percent_commission_plots():
@@ -5908,14 +6004,18 @@ def test_run_script_returns_strategy_percent_commission_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 0.4, 0.4, None, None],
-        [None, None, None, 1.2000000000000002, 1.2000000000000002],
-        [0.0, 0.0, 0.0, 2.8, 2.8],
-        [100000.0, 99999.6, 100001.6, 100002.8, 100002.8],
+        [0.0, 0.4, 0.4, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.2000000000000002, 1.2000000000000002],
+        [0.0, -0.4, -0.4, 2.8, 2.8],
+        [
+            1000000.0, 999999.6, 1000001.6,
+            1000000.0 - 4.0 - 0.4 + 8.0 - 0.8,
+            1000000.0 - 4.0 - 0.4 + 8.0 - 0.8,
+        ],
     ]
     assert result["strategy"]["trades"][0]["profit"] == 2.8
-    assert result["strategy"]["equity"][1]["cash"] == 99995.6
-    assert result["strategy"]["equity"][1]["equity"] == 99999.6
+    assert result["strategy"]["equity"][1]["cash"] == 999995.6
+    assert result["strategy"]["equity"][1]["equity"] == 999999.6
 
 
 def test_run_script_returns_strategy_slippage_plots():
@@ -5928,8 +6028,8 @@ def test_run_script_returns_strategy_slippage_plots():
     assert [plot["values"] for plot in result["plots"]] == [
         [None, None, None, 3.0, 3.0],
         [None, None, None, 3.0, 3.0],
-        [None, None, None, 0.0, 0.0],
-        [100000.0, 99998.0, 100000.0, 100000.0, 100000.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0],
+        [1000000.0, 999998.0, 1000000.0, 1000000.0, 1000000.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
     assert result["strategy"]["trades"][0]["entryPrice"] == 3.0
@@ -5946,8 +6046,8 @@ def test_run_script_returns_strategy_exit_slippage_plots():
 
     assert [plot["values"] for plot in result["plots"]] == [
         [None, None, 2.0, 2.0],
-        [None, None, -2.0, -2.0],
-        [100000.0, 99998.0, 99998.0, 99998.0],
+        [0.0, 0.0, -2.0, -2.0],
+        [1000000.0, 999998.0, 999998.0, 999998.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
     assert result["strategy"]["orders"][1]["price"] == 2.0
@@ -5976,30 +6076,30 @@ def test_run_script_returns_strategy_limit_verification_entry_plots():
     assert result["strategy"]["equity"] == [
         {
             "barIndex": 0,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 1,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 2,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 3,
-            "cash": 100000.0,
+            "cash": 1000000.0,
             "marketValue": 0.0,
-            "equity": 100000.0,
+            "equity": 1000000.0,
             "netProfit": 0.0,
         },
     ]
@@ -6014,7 +6114,7 @@ def test_run_script_returns_strategy_limit_verification_exit_plots():
 
     assert [plot["values"] for plot in result["plots"]] == [
         [None, None, None, 4.0],
-        [None, None, None, 4.0],
+        [0.0, 0.0, 0.0, 4.0],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -11313,27 +11413,9 @@ def test_run_script_request_fixture_matches_cli_contract():
         18.65518539431583,
     ]
     assert result["plots"][70]["values"] == [500.0, 500.0, 500.0, 500.0, 500.0]
-    assert result["plots"][71]["values"] == [
-        0.0,
-        0.16666666666666785,
-        0.30555555555555713,
-        0.39351851851851904,
-        0.4436728395061742,
-    ]
-    assert result["plots"][72]["values"] == [
-        0.0,
-        0.1111111111111119,
-        0.24074074074074206,
-        0.3425925925925934,
-        0.40997942386831393,
-    ]
-    assert result["plots"][73]["values"] == [
-        0.0,
-        0.055555555555555955,
-        0.06481481481481507,
-        0.05092592592592565,
-        0.03369341563786027,
-    ]
+    assert result["plots"][71]["values"] == [None, None, 0.5, 0.5, 0.5]
+    assert result["plots"][72]["values"] == [None, None, None, 0.5, 0.5]
+    assert result["plots"][73]["values"] == [None, None, None, 0.0, 0.0]
     assert result["plots"][74]["values"] == [None, None, 21.0, 22.0, 23.0]
     assert result["plots"][75]["values"] == [
         None,
@@ -11378,27 +11460,9 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][91]["values"] == [None, None, 100.0, 100.0, 200.0]
     assert result["plots"][92]["values"] == [None, None, 101.0, 101.0, 201.0]
     assert result["plots"][93]["values"] == [None, None, 1.0, 1.0, 1.0]
-    assert result["plots"][94]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        16.666666666666657,
-    ]
-    assert result["plots"][95]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        11.111111111111104,
-    ]
-    assert result["plots"][96]["values"] == [
-        None,
-        None,
-        0.0,
-        0.0,
-        5.555555555555554,
-    ]
+    assert result["plots"][94]["values"] == [None, None, None, None, None]
+    assert result["plots"][95]["values"] == [None, None, None, None, None]
+    assert result["plots"][96]["values"] == [None, None, None, None, None]
     assert result["plots"][97]["values"] == [None, None, None, None, 150.0]
     assert result["plots"][98]["values"] == [None, None, None, None, 250.0]
     assert result["plots"][99]["values"] == [None, None, None, None, 50.0]
@@ -11684,9 +11748,9 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][243]["values"] == [
         None,
         None,
-        100.0,
-        100.0,
-        166.66666666666666,
+        None,
+        None,
+        150.0,
     ]
     assert result["plots"][244]["values"] == [None, None, None, None, 100.0]
     assert result["plots"][245]["values"] == [
@@ -11856,13 +11920,15 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.0529,
         0.0576,
     ]
-    assert result["plots"][281]["values"] == [
+    # The manylinux libm result differs by one ULP here. Keep the original
+    # expected values and use the existing cross-host floating-point contract.
+    assert_json_close(result["plots"][281]["values"], [
         0.223606797749979,
         0.23706539182259395,
         0.25059928172283336,
         0.2641968962724581,
         0.2778488797889961,
-    ]
+    ])
     assert result["plots"][282]["values"] == [
         2.995732273553991,
         3.044522437723423,
@@ -11933,11 +11999,11 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][298]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
     assert result["plots"][299]["values"] == [None, 0.5, 0.5, 0.5, 0.5]
     assert result["plots"][300]["values"] == [
-        20.0,
-        20.666666666666668,
-        21.555555555555557,
-        22.51851851851852,
-        23.506172839506174,
+        None,
+        20.5,
+        21.5,
+        22.5,
+        23.5,
     ]
     assert result["plots"][301]["values"] == [None, 100.0, 100.0, 100.0, 100.0]
     assert result["plots"][302]["values"] == [

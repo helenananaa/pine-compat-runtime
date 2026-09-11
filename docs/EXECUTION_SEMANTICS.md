@@ -136,12 +136,33 @@ as batch/realtime value parity.
 
 ## Strategy Mode
 
+Realtime Rust/Python callers can supply `RealtimeUpdateContext.opening_update`
+or the Python `opening_update` keyword to distinguish an opening observation
+from attachment to an already open bar. Omission preserves the existing
+first-observation inference. The flag does not synthesize earlier ticks or
+alter storage/commit boundaries. See [opening context](REALTIME_OPENING_CONTEXT_AUDIT.md).
+
 `strategy(...)` selects strategy mode for historical execution.
 Strategy-mode runtime results include a `strategy` object with `orders`,
 `trades`, `position`, `equity`, and `diagnostics` arrays. Indicator-mode
 runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
-cash value; when omitted, the runtime uses 100000.
+cash value; when omitted, the runtime uses 1000000, matching independently
+captured Pine v5/v6 defaults. Builds through the initial local 0.3.0-rc.1
+candidate used 100000; scripts requiring that amount should declare it explicitly.
+
+For integer indices, `strategy.opentrades.commission` returns zero when the
+trade is absent, including negative indices and reads while flat. Other
+identity fields retain their `na` behavior; non-integer/`na` commission indices
+are outside this captured correction.
+
+When an additional long stop entry is requested with an existing long position,
+its combined long exposure must fit available equity at the stop price under
+the configured margin. A later exit does not retroactively fund a rejected
+request. This occupied-long admission rule is independently qualified in
+[Long stop margin admission](STRATEGY_LONG_STOP_MARGIN_ADMISSION_AUDIT.md);
+it does not establish private same-price order precedence.
+
 With the currently supported default account-currency path (`currency.NONE` or
 same-symbol `currency.USD`),
 `strategy.account_currency` inherits the fixed `syminfo.currency` value,
@@ -194,7 +215,13 @@ fixed `syminfo.mintick` ticks past the limit price while preserving the limit
 fill price. Other commission modes and richer fill models remain unsupported.
 `strategy(..., margin_long=N, margin_short=N)` accepts finite non-negative
 const numeric declaration values and stores their explicit presence in the
-internal strategy settings. Stage 7 Margin Slice M2 uses explicit active
+internal strategy settings. Omitted margins resolve to 0 in v5 and 100 in v6.
+Explicit zero disables margin for that side in either version. The `explicit`
+flag records source provenance; a resolved v6 default is active without that
+flag. Both the analyzer and direct Rust runtime apply these version defaults.
+See [versioned margin reference](STRATEGY_VERSIONED_MARGIN_AUDIT.md).
+
+Stage 7 Margin Slice M2 uses active
 `margin_long` for long-only `strategy.opentrades.capital_held`; Stage 7 Margin
 Slice M3 also checks supported long entry affordability at the actual fill
 price. Stage 7 Margin Slice M5 implements the first long-only forced
@@ -298,7 +325,7 @@ positions are marked to the current bar close, `equity = cash + marketValue`,
 and the snapshot field `netProfit = equity - initial_capital`, so that public
 output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
-closed-trade profit only and excludes current open profit. The current subset
+closed-trade profit minus the entry fees still attached to open exposure; it excludes current open price profit. The current subset
 supports only `strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, `strategy.commission.percent`,
 fixed-tick slippage, and fixed-tick limit verification, and has no other
@@ -340,9 +367,9 @@ default broker starting capital unchanged on every bar, including through UDF
 and history reads, without expanding public strategy JSON. `strategy.openprofit`
 is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.openprofit_percent` divides that value by
-realized equity (`initial_capital + strategy.netprofit`) and multiplies by 100;
+realized equity (initial capital plus realized closed-trade profit) and multiplies by 100;
 it returns `na` when the realized-equity denominator is non-positive or
-non-finite. `strategy.netprofit` sums realized closed-trade profit.
+non-finite. `strategy.netprofit` sums realized closed-trade profit and subtracts entry fees still attached to open exposure.
 `strategy.grossprofit` sums only positive realized closed-trade profit, so
 losing, flat, and current open trades do not change it.
 `strategy.grossloss` sums realized closed-trade losses as positive values, so
@@ -350,7 +377,7 @@ winning, flat, and current open trades do not change it.
 `strategy.buy_and_hold_return_percent` returns the current close's percentage
 change from the first loaded bar close and returns `na` when that first close is
 zero or non-finite.
-`strategy.avg_trade` returns `strategy.netprofit / strategy.closedtrades` once
+`strategy.avg_trade` returns realized closed-trade profit divided by `strategy.closedtrades` once
 at least one trade is closed, and `na` before the first closed trade.
 `strategy.avg_winning_trade` returns the average realized profit among winning
 closed trades only, and `na` before the first winning closed trade.
@@ -517,11 +544,21 @@ new window's bar open, and permanently blocks later trades. Remaining
 undocumented `strategy.risk.*` calls stay rejected.
 Forming-bar realtime updates with `calc_on_every_tick=true` re-execute from
 the last confirmed checkpoint.
-After seeding `varip` from the previous forming update, the runtime restores
-the confirmed broker checkpoint (order book, OCA, reservations, ledger, cash,
-fill alerts, and script alerts) and commits broker plus output state only on
-the confirmed update. Abandoned forming placements, cancellations, stop-limit
-activations, fills, and alerts do not leak into the confirmed result.
+The runtime seeds `varip` and the broker from the previous successful forming
+update. Orders, cancellations, activations, fills and broker fill alerts survive
+user-state rollback. Failed updates remain atomic. Each supplied realtime close
+is an observed price tick. For pending market entries and closes, a same-bar
+update that expands exactly one cumulative extreme uses that new extreme as
+the fill price before the script executes. Repeated extremes use close, as do
+first observations and currently unqualified two-sided range expansions.
+Price-condition orders still evaluate the supplied close; this market-order
+rule does not introduce an interpolated path or additional script executions.
+Pending orders can execute even when normal strategy calculations wait for close.
+When a fill-triggered calculation executes, it replaces the ordinary calculation
+for that realtime update. A non-calculating update preserves the latest user
+state and visible output. Confirmation commits the resulting bar history;
+`confirmed_result()` remains the last committed snapshot until then.
+See LIVE_TICK_REFERENCE_AUDIT.md for native coverage and unresolved input limits.
 Historical price-based fills on a bar run through a deterministic fill-path:
 market closes and entries at open, then the selected open-high-low-close or
 open-low-high-close walk. Same-tick pyramiding still fills every eligible
@@ -3108,3 +3145,54 @@ reverse, clear, and array/slice history snapshots.
 A compiled program must produce the same result for the same bars and inputs.
 Host time, network access, randomness, and file system access should not exist
 in the core runtime.
+
+## G3 chart price grid and fee follow-up
+
+Positive integer minMove/priceScale can be supplied through ChartContext::with_price_grid,
+CLI --chart-price-grid MIN_MOVE/PRICE_SCALE, Python request_bars["$chart"]
+(with required minMove and priceScale and optional quantityPrecision/pointValue), or WASM $chart JSON. Missing input preserves
+the synthetic 1/100 default; no exchange lookup is performed. Same-symbol request
+contexts inherit the grid; other symbols retain the existing default metadata.
+Tick orders, slippage, limit verification, rounding and mintick scalar/collection
+formatting use this grid. Public output schema is unchanged.
+
+TradingView v5/v6 captures establish zero for absent closedtrades.commission
+and closedtrades.profit (including negative/out-of-range integer indices),
+exceptions to the general absent-trade na rule. An na index and absent identity
+fields retain na. Nonzero cash-per-order entry reversal uses the existing
+atomic netting transition and splits one transaction fee between old and new
+exposure. See STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md for evidence and limits.
+
+
+## Host quantity precision and margin rounding
+
+`ChartContext::with_quantity_precision(N)` supplies a decimal-power minimum
+contract of `10^-N`, for integer N from 0 through 9. Default N=0 preserves the
+synthetic integer profile. CLI uses `--chart-quantity-precision N`; Python uses
+`request_bars={"$chart":{"minMove":1,"priceScale":10,"quantityPrecision":6}}`;
+WASM accepts `quantityPrecision` in its existing `$chart` object. No symbol
+lookup occurs. `syminfo.mincontract` reflects host metadata at execution time,
+including metadata-dependent history offsets and simple function defaults.
+
+Margin cover truncates the calculated quantity at that precision before the
+four-times cover multiplier and position clamp. Script-visible
+`strategy.margin_liquidation_price` rounds down for longs and up for shorts on
+the chart price grid; internal candidate accounting retains its raw formula.
+This field alone does not specify a tick-level liquidation event threshold.
+The quantity profile does not impose general order-size rounding or implement
+arbitrary lot steps, non-unit point values, or account-currency conversion.
+
+Absent integer records for `strategy.closedtrades.size` and
+`strategy.opentrades.size` return zero, including negative indices. An `na`
+index selects record zero for these two size functions. Fractional invalid
+indices retain their existing rejection/result behavior. Other trade fields
+retain their own contracts. See [margin evidence](MARGIN_REFERENCE_AUDIT.md)
+for independent coverage, controls and remaining limits.
+
+
+Explicit point-value configuration accepts only the current unit profile:
+`ChartContext::with_point_value(1.0)`, CLI `--chart-point-value 1`, and optional
+Python/WASM `$chart.pointValue`. Non-unit/non-finite values and invalid host
+input types are rejected before execution. `syminfo.pointvalue` reads the
+validated chart profile and remains 1.0. This does not extend the broker to
+contract multipliers, inverse contracts or currency conversion.

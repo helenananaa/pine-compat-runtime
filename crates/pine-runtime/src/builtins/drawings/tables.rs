@@ -1,6 +1,8 @@
 use pine_ir::HirCallArg;
 
 use crate::builtins::args::call_arg_expr;
+use crate::runtime::append_history::AppendHistory;
+use crate::runtime::drawing_history::RuntimeTable;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -45,7 +47,14 @@ impl<'a> HistoricalRuntime<'a> {
             .ok_or_else(|| RuntimeError {
                 message: "table id limit exceeded".to_owned(),
             })?;
-        self.tables.push(TableOutput {
+        let mut snapshots = AppendHistory::default();
+        snapshots.push(TableSnapshot {
+            bar_index: self.bars,
+            exists: true,
+            cells: Vec::new(),
+            merged_cells: Vec::new(),
+        });
+        self.tables.push(RuntimeTable {
             id,
             position,
             bg_color,
@@ -55,12 +64,7 @@ impl<'a> HistoricalRuntime<'a> {
             border_width,
             columns,
             rows,
-            snapshots: vec![TableSnapshot {
-                bar_index: self.bars,
-                exists: true,
-                cells: Vec::new(),
-                merged_cells: Vec::new(),
-            }],
+            snapshots,
         });
         Ok(PineValue::Table(id))
     }

@@ -1,6 +1,147 @@
 # Release Notes
 
+## Unreleased streaming worktree
+
+- Separate streaming updates from complete result snapshots in Rust/Python.
+- Changes schema 2 adds a required base revision. `RuntimeReplica` consumes
+  changes in place, rejects stale/conflicting/gapped revisions atomically and
+  supports explicit snapshot recovery. Identical retransmissions are no-ops.
+- Replace the unreleased unversioned dictionary merge helper with
+  `apply_runtime_changes(replica, changes)`; existing complete-result session
+  methods and runtime schema 8 remain unchanged.
+- Share ordinary plot and alert history through a persistent append tree;
+  build drawing deltas from the whole mutable-bar suffix without copying
+  closed snapshots. Preserve repeated identical alert occurrences and explicit
+  `None` table attributes during Python roundtrips.
+- [Streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) records source,
+  validation and finite workload limits; older candidate artifacts do not
+  contain these changes.
+
+
 ## Unreleased
+
+- Pending realtime market entries and closes use a newly expanded high or low
+  when exactly one side of the same bar's range expands. Unchanged extremes
+  use the current close. This does not add script executions or alter historical
+  paths; two-sided expansion and price-condition order parity remain unqualified.
+
+- Rust realtime updates accept `RealtimeUpdateContext`; Python updates accept
+  optional `opening_update` metadata. An explicit false supports attaching to
+  an already open bar without spuriously reporting `barstate.isnew`. Existing
+  calls retain their inference, and invalid/repeated opening markers are
+  rejected before state changes.
+
+Local candidate identity is Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. This is
+not a GitHub release. The named live-tick price failures now pass unchanged
+after the realtime market-order correction. B1 `UNVERIFIED_INTERNAL_ORDER`
+and the original public r1 0/482 denominator remain separate boundaries; see
+`TRADINGVIEW_GOAL_ACCEPTANCE.md` for new native scenarios. Dynamic request
+arguments remain an engineering/host contract boundary.
+
+- Native-reference correction: omitted strategy initial capital is now
+  1,000,000 rather than 100,000. This changes default cash/equity and may change
+  sizing for scripts using equity percentages. Declare `initial_capital=100000`
+  explicitly when that starting amount is intended. Native v5/v6 captures and
+  an unmodified r1 commission script establish the corrected default.
+- Native-reference correction: absent integer-index open-trade commission
+  reads return zero rather than `na`; other trade identity fields are unchanged.
+- Occupied-long stop admission rejects requests whose combined margin cannot
+  be funded at the stop price, even if a later exit would release funds.
+- Omitted long/short margins now follow source-version defaults: v5 uses 0,
+  v6 uses 100. Explicit zero remains supported. This changes v6 affordability
+  and liquidation behavior for scripts that previously ran with disabled
+  margin checks; use explicit margins to select the intended account model.
+
+## 0.3.0-rc.1 - local candidate
+
+- Coordinated prerelease identity across Rust crates, CLI `--version`, Python
+  `pine_compat.__version__`, and WASM `packageVersion()`.
+- Four-surface capability list and embedding examples for compile →
+  requirements → historical / incremental / realtime → error → owned result.
+  WASM remains historical-only.
+- Long-session budget verifier accepts Magnifier historical-only plans; new
+  remaining D4 workloads are measured separately from the already-qualified
+  Windows trend 100k/10k result.
+
+## Unreleased (prior development)
+
+- Python realtime sessions accept explicit execution clocks on historical seed,
+  forming updates and confirmation. Rust adds timestamped historical seeding.
+  Existing calls and missing-clock errors remain valid; failed operations keep
+  session state unchanged. Native realtime broker compatibility is tracked
+  separately in the live tick audit.
+
+- Broker checkpoints share unchanged historical vectors and detach on mutation,
+  reducing confirmation copy work while preserving independently owned public
+  results. Full resource acceptance remains pending; see
+  [broker history sharing](BROKER_HISTORY_SHARING_AUDIT.md).
+
+- Release manifests classify prerelease/development versions correctly and
+  normalize equivalent Python wheel/RC tag versions. Candidate GitHub releases
+  are marked prerelease and are not promoted to latest by the release workflow.
+  Manifest tooling requires `scripts/requirements-release.txt`.
+
+- Removed a redundant confirmed broker/scheduler/alert copy during realtime
+  replay. Existing rollback and varip behavior is preserved. Full-scale
+  resource acceptance remains pending; see
+  [checkpoint copy audit](REALTIME_CHECKPOINT_COPY_AUDIT.md).
+
+- Hosts can explicitly supply unit `pointValue` through Rust ChartContext,
+  CLI `--chart-point-value` and Python/WASM chart metadata. Non-unit contract
+  multipliers and invalid/non-finite values return a configuration error.
+  Default behavior and runtime JSON are unchanged; fractional quantities
+  remain independent of point value. See [host contracts](HOST_REQUIREMENTS.md).
+
+- Added a versioned, side-effect-free host-input inventory for compiled programs:
+  Rust `host_requirements`, CLI `requirements`, Python `Program.host_requirements`
+  and WASM `Program.hostRequirements`. It covers executable library calls,
+  requested contexts, synthetic metadata/account assumptions, conditional
+  execution timestamps and optional Magnifier/session fallbacks. Existing
+  admission, analysis/output schemas and execution behavior are unchanged.
+  See [host input discovery](HOST_REQUIREMENTS.md).
+
+- Added host-owned decimal quantity precision (0 through 9), surfaced as
+  `syminfo.mincontract`, through Rust ChartContext, CLI and Python/WASM chart
+  metadata. Margin cover truncates at that precision; displayed liquidation
+  price rounds to the chart tick. Missing integer trade-size records return
+  zero and size(na) selects the first record. Simple numeric metadata remains
+  runtime-evaluated in history offsets and function defaults. Defaults and
+  public JSON schemas remain unchanged. This does not add arbitrary lot steps,
+  contract multipliers or currency conversion. See
+  [margin reference audit](MARGIN_REFERENCE_AUDIT.md).
+
+- Corrected EMA initialization to use the first length non-na executed-bar
+  samples, and SMA/EMA repeated calls to replace a bar's tentative sample.
+  This changes early values and loop results that depended on the old
+  first-value or per-call sampling behavior. Runtime/analysis JSON schemas are
+  unchanged; rolling-window profile totals include undo storage. Independent
+  v3-v6, missing-value, loop and request evidence accompanies this correction.
+
+- Added v5/v6 scalar default parameters in local and imported user-defined
+  functions, with named omission, caller-scope binding, typed na and numeric
+  promotion. Added E_FUNCTION_DEFAULT and E_FUNCTION_DEFAULT_TYPE diagnostics.
+  FunctionParam gains an optional Rust AST default_value field; public JSON
+  schemas remain unchanged. See [default parameter audit](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md).
+
+- Real-strategy reference expansion corrected two additional boundaries:
+  explicit `pyramiding=0` now permits a first entry while preventing additions,
+  and `strategy.closedtrades.profit` returns zero for missing integer trade
+  indices. Identity fields and na indices retain na. Frozen v5/v6 captures and
+  regression evidence are recorded in the next-cycle audit.
+
+- Added explicit v5/v6 `series int/float/bool/string/color` parameters for
+  local and imported user-defined functions. Qualifiers remain series even
+  for constant/input arguments, with history and realtime rollback coverage.
+  Default parameters and other explicit qualifiers remain outside this slice.
+  See [next-cycle audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
+
+- Added host-provided chart price grids through Rust, CLI, Python and WASM,
+  keeping the historical 0.01 default when absent. Tick orders and numeric
+  rounding/formatting use the configured grid. TradingView captures also
+  corrected cash-per-order reversal fee allocation, missing closed-trade
+  commission values, and immediate entry-fee accounting in Pine netprofit.
+  See [G3 reference audit](STRATEGY_MODERN_G3_CLOSEOUT_AUDIT.md) for evidence
+  and the unchanged B1 internal-order boundary. Public output schema is unchanged.
 
 - Corrected session-window validation to avoid repeated full-history scans and
   reject missing batch coverage before execution. Added atomic Rust/Python

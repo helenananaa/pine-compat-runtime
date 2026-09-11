@@ -42,6 +42,18 @@ application to a charting service.
 
 ## Quick Start
 
+The downloads below are the published `v0.2.0` release from July 20, 2026.
+This checkout is the local `0.3.0-rc.1` candidate (Python wheel `0.3.0rc1`).
+It is a locally qualified prerelease for the named scope, not a stable tag or
+full Pine compatibility. Current status and exact artifact identities are in
+[the delivery ledger](docs/DELIVERY_ROADMAP.md); older rc1 wheels share the version
+number and must not be confused with the repaired artifacts.
+Build this tree for host-input discovery, source provenance, realtime clocks,
+and the four-surface candidate artifacts. Do not install the published `v0.2.0`
+wheels and treat them as this candidate. See
+[delivery surfaces](docs/DELIVERY_SURFACES.md) and
+[releasing](docs/RELEASING.md).
+
 Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
 glibc Linux x86-64 and Windows x86-64. See the
 [latest release](https://github.com/helenananaa/pine-compat-runtime/releases/latest)
@@ -134,8 +146,8 @@ and its referenced fixtures are the source of truth. See
 | --- | --- | --- |
 | Python | notebooks, research services, data pipelines, application plugins | `run_script(...)`, reusable `Program`, or persistent `RealtimeSession` |
 | CLI | shell workflows, fixtures, compatibility checks, JSON generation | `pine-compat run`, `analyze`, `fmt-ast`, and `matrix` |
-| Rust | native applications and deeper runtime embedding | workspace crates under [`crates/`](crates) |
-| WASM | browser, Node.js, and sandboxed JavaScript hosts | `compileScript`, `analyzeScript`, `runScriptCsv`, and `Program.runCsv` |
+| Rust | native applications and deeper runtime embedding | workspace crates under [`crates/`](crates), [embedding walkthrough](docs/RUST_EMBEDDING.md) |
+| WASM | browser, Node.js, and sandboxed JavaScript hosts | `compileScript`, `analyzeScript`, `runScriptCsv`, `Program.runCsv`, and `Program.realtimeSession` |
 
 ### Python
 
@@ -157,6 +169,19 @@ program = pine_compat.compile_script(source)
 result = program.run(bars, input_overrides={length_id: 50})
 ```
 
+Current development builds can inspect a compiled program's potential host inputs
+before supplying data (this API is unreleased):
+
+```python
+requirements = program.host_requirements()
+```
+
+This reports chart/account assumptions, requested contexts, execution-clock
+usage and optional Magnifier/session-window fallbacks. It is a conservative
+inventory, not a dataset-readiness verdict. CLI `pine-compat requirements` and
+WASM `Program.hostRequirements()` expose the same versioned contract. See
+[host input discovery](docs/HOST_REQUIREMENTS.md).
+
 For a persistent realtime stream, create one session, seed its complete
 confirmed history once, replace the current forming bar as ticks arrive, and
 commit that same timestamp when the bar closes:
@@ -168,6 +193,33 @@ preview = session.update_forming(forming_bar)
 preview = session.update_forming(replacement_forming_bar)
 confirmed = session.update_confirmed(closed_bar)
 ```
+
+`update_forming` / `update_confirmed` still return a complete snapshot. To avoid constructing a complete returned snapshot on every tick, use the same lifecycle and consume this-update changes:
+
+```python
+session = program.realtime_session(input_overrides={length_id: 50})
+session.seed(confirmed_bars)
+replica = session.replica()
+changes = session.apply_forming(forming_bar)
+replica.apply(changes)
+# Request a complete Python dictionary only when needed.
+visible = replica.result()
+assert visible == session.result()
+```
+
+`apply_forming` / `apply_confirmed` return series append or current-bar replace, drawing add/modify/delete, order/fill/alert identity, preview vs confirmed visibility, and base/current revisions. A replica ignores an identical retransmission and rejects stale or missing revisions. Call `session.result()` when a complete snapshot is required.
+
+To correct confirmed history from time `T`, call `session.correct(T, suffix)` (Rust `correct_historical`, WASM `correct`). The session keeps bars with `time < T` and replays that prefix plus the suffix. `session.replay(...)` still replaces the entire confirmed list. Forming state is discarded. Replicas must `reset` from `stream_snapshot()`; neither operation is a linear change.
+
+Development builds also accept `seed(bars, execution_times=[...])` and
+`update_forming`/`update_confirmed(..., execution_time=...)` for scripts reading
+`timenow`. The clock is supplied by the host; it is never read from the machine
+inside the core.
+
+Development builds also accept `opening_update=False` on forming or confirmed
+updates when the host attaches to a bar that is already open. Omitting it
+retains first-observation inference. See the
+[opening-context contract](docs/REALTIME_OPENING_CONTEXT_AUDIT.md).
 
 `update_forming` rolls ordinary `var` state back to the last confirmed bar and
 preserves `varip` state across replacements. The session rejects updates before
@@ -238,8 +290,10 @@ cargo run -p pine-cli -- run script.pine --bars bars.csv \
 ### WASM
 
 The optional `pine-wasm` crate exposes thin, deterministic bindings for
-compile, analysis, CSV execution, request-bar injection, and library-source
-injection. Build and exercise the real generated JavaScript module with:
+compile, analysis, CSV execution, request-bar injection, library-source
+injection, and a persistent realtime session (`Program.realtimeSession()`,
+`applyForming` / `applyConfirmed`, `replica()`). Build and exercise the real
+generated JavaScript module with:
 
 ```bash
 rustup target add wasm32-unknown-unknown
@@ -248,6 +302,15 @@ scripts/check_wasm_node.sh
 
 For `timenow`, pass `{"$executionTimes":[...]}` in the request-host JSON used
 by a `*WithRequestBars` entry point, including compiled `Program` runs.
+Realtime hosts seed CSV history once, then apply JSON bars:
+
+```js
+const session = program.realtimeSession();
+session.seed(barsCsv);
+const replica = session.replica();
+const changes = JSON.parse(session.applyForming(barJson));
+replica.apply(JSON.stringify(changes));
+```
 
 See [Architecture](docs/ARCHITECTURE.md) for the host boundary and
 [Execution Semantics](docs/EXECUTION_SEMANTICS.md) for historical and realtime
@@ -255,8 +318,9 @@ behavior.
 
 ## Honest Compatibility
 
-`0.2.0` is a compatibility-focused release, not a full drop-in
-implementation of every Pine feature. Important current boundaries include:
+The published `0.2.0` tag and this `0.3.0-rc.1` candidate are
+compatibility-focused, not a full drop-in implementation of every Pine
+feature. Important current boundaries include:
 
 - the strategy broker model is still a partial side-aware long/short subset;
 - `request.*` support is limited and all requested data must be supplied by the
@@ -337,6 +401,16 @@ Before contributing or publishing, run the canonical release gate:
 
 ```bash
 scripts/verify.sh
+```
+
+On Windows, install the MSVC C++ Build Tools plus the WASM target, then run the
+PowerShell equivalent. The script initializes the Visual Studio developer
+environment automatically when necessary.
+
+```powershell
+rustup target add wasm32-unknown-unknown
+python -m pip install "maturin>=1.13,<2.0" pytest
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1 -Python python
 ```
 
 It covers Rust formatting, clippy, workspace tests, source-structure and host

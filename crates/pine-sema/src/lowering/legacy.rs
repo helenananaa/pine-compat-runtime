@@ -169,7 +169,10 @@ impl Analyzer {
             series_id,
             kind: HirExprKind::Call {
                 callee,
-                call_site_id: self.alloc_call_site(),
+                call_site_id: self.alloc_call_site_at(Span {
+                    start: source_span_start,
+                    end: source_span_end,
+                }),
                 args: lowered_args,
             },
         })

@@ -4,7 +4,6 @@
 # belongs here only when both host suites compare that fixture with its golden JSON.
 # Keep entries sorted; scripts/check_host_parity.py enforces registration and both
 # host assertions, and rejects paired assertions that are not recorded here.
-
 runtime_accdist.json
 runtime_alert.json
 runtime_alertcondition.json
@@ -100,6 +99,7 @@ runtime_for_in_stateful.json
 runtime_for_in_string.json
 runtime_for_in_zero_iteration.json
 runtime_for_stateful.json
+runtime_function_default_parameters.json
 runtime_generic_input.json
 runtime_generic_input_source.json
 runtime_global_series.json
@@ -108,6 +108,8 @@ runtime_hline_fill.json
 runtime_hma.json
 runtime_if.json
 runtime_iii.json
+runtime_import.json
+runtime_import_state.json
 runtime_inputs.json
 runtime_kc.json
 runtime_kcw.json
@@ -134,6 +136,7 @@ runtime_legacy_v4_security_provider.json
 runtime_legacy_v4_security_same_context.json
 runtime_legacy_v4_session_defaults.json
 runtime_legacy_v4_udf_line_setters.json
+runtime_library_declaration_forms.json
 runtime_line_array.json
 runtime_line_control_flow.json
 runtime_line_copy.json
@@ -172,6 +175,7 @@ runtime_mfi.json
 runtime_mode.json
 runtime_mom.json
 runtime_na.json
+runtime_numeric_comparison.json
 runtime_nvi.json
 runtime_object_array_typed_declarations.json
 runtime_obv.json
@@ -192,6 +196,7 @@ runtime_polyline_lifecycle.json
 runtime_polyline_new.json
 runtime_pvi.json
 runtime_pvt.json
+runtime_quantity_precision.json
 runtime_range.json
 runtime_request_security_barstate_flags.json
 runtime_request_security_barstate_islast.json
@@ -200,11 +205,16 @@ runtime_request_security_time_close.json
 runtime_request_security_time_function.json
 runtime_roc.json
 runtime_sar.json
+runtime_scalar_overloads.json
 runtime_scalar_typed_declarations.json
 runtime_series_history_offset.json
+runtime_series_scalar_parameters.json
 runtime_session.json
+runtime_simple_scalar_parameters.json
+runtime_sma_nearby_replacement.json
 runtime_stdev.json
 runtime_stoch.json
+runtime_strategy_absent_trade_profit.json
 runtime_strategy_box_call_result_set_right.json
 runtime_strategy_builtin_default_quantity.json
 runtime_strategy_calc_on_every_tick.json
@@ -513,6 +523,7 @@ runtime_strategy_pyramiding_exit_trail_points_from_entry.json
 runtime_strategy_pyramiding_limit_same_tick_limit_entries.json
 runtime_strategy_pyramiding_limit_same_tick_stop_entries.json
 runtime_strategy_pyramiding_limit_same_tick_stop_limit_entries.json
+runtime_strategy_pyramiding_zero.json
 runtime_strategy_risk_allow_entry_in_long.json
 runtime_strategy_risk_allow_entry_in_long_flat_noop.json
 runtime_strategy_risk_allow_entry_in_order_unaffected.json
@@ -559,6 +570,7 @@ runtime_table_new.json
 runtime_ticker.json
 runtime_time_components.json
 runtime_timeframe.json
+runtime_transitive_imports.json
 runtime_trend.json
 runtime_tsi.json
 runtime_udf.json

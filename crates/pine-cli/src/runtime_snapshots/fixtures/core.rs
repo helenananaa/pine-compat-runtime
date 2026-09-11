@@ -2,6 +2,30 @@ use super::RuntimeSnapshotFixture;
 
 pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
+        "runtime_library_declaration_forms.json",
+        "tests/fixtures/runtime/library_declaration_forms.pine",
+    ),
+    (
+        "runtime_simple_scalar_parameters.json",
+        "tests/fixtures/runtime/simple_scalar_parameters.pine",
+    ),
+    (
+        "runtime_function_default_parameters.json",
+        "tests/fixtures/runtime/function_default_parameters.pine",
+    ),
+    (
+        "runtime_strategy_absent_trade_profit.json",
+        "tests/fixtures/runtime/strategy_absent_trade_profit.pine",
+    ),
+    (
+        "runtime_strategy_pyramiding_zero.json",
+        "tests/fixtures/runtime/strategy_pyramiding_zero.pine",
+    ),
+    (
+        "runtime_series_scalar_parameters.json",
+        "tests/fixtures/runtime/series_scalar_parameters.pine",
+    ),
+    (
         "runtime_basic_plot.json",
         "tests/fixtures/runtime/snapshot_plot.pine",
     ),
@@ -583,6 +607,14 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/dema_tema_edge_cases.pine",
     ),
     ("runtime_macd.json", "tests/fixtures/runtime/macd.pine"),
+    (
+        "runtime_sma_nearby_replacement.json",
+        "tests/fixtures/runtime/sma_nearby_replacement.pine",
+    ),
+    (
+        "runtime_numeric_comparison.json",
+        "tests/fixtures/runtime/numeric_comparison.pine",
+    ),
     (
         "runtime_macd_edge_cases.json",
         "tests/fixtures/runtime/macd_edge_cases.pine",

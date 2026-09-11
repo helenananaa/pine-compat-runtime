@@ -817,6 +817,26 @@ impl<'a> HistoricalRuntime<'a> {
         self.update_rolling_window_key(RollingWindowKey::Single(call_site_id), source, length)
     }
 
+    // SMA/EMA consume one final input per executed bar. Other algorithms keep
+    // their existing update path until their own repeated-call contract is qualified.
+    pub(crate) fn update_rolling_window_for_bar(
+        &mut self,
+        call_site_id: CallSiteId,
+        source: PineValue,
+        length: usize,
+    ) -> &RollingWindowState {
+        let window = self
+            .rolling_windows
+            .entry(RollingWindowKey::Single(call_site_id))
+            .or_default();
+        window.push_for_bar(
+            source.as_f64().filter(|value| value.is_finite()),
+            length,
+            self.bars,
+        );
+        window
+    }
+
     pub(crate) fn update_mfi_windows(
         &mut self,
         call_site_id: CallSiteId,

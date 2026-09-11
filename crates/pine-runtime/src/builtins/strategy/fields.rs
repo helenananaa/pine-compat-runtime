@@ -12,11 +12,32 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(trade_num_expr) = call_arg_expr(args, 0, "trade_num") else {
             return Ok(PineValue::Na);
         };
-        let Some(trade_num) = self.eval_expr(trade_num_expr)?.as_i64() else {
-            return Ok(PineValue::Na);
+        let index_value = self.eval_expr(trade_num_expr)?;
+        let trade_num = match index_value.as_i64() {
+            Some(index) => index,
+            None if callee == "strategy.closedtrades.size" && index_value.is_na() => 0,
+            None => return Ok(PineValue::Na),
         };
+        // TradingView returns zero commission/profit for an absent trade,
+        // including negative and out-of-range indices. Identity fields remain na.
+        if callee == "strategy.closedtrades.commission" {
+            return Ok(PineValue::Float(
+                self.strategy_broker
+                    .closed_trade_commission(trade_num)
+                    .unwrap_or(0.0),
+            ));
+        }
         let Some(trade) = self.strategy_broker.closed_trade(trade_num) else {
-            return Ok(PineValue::Na);
+            return Ok(
+                if matches!(
+                    callee,
+                    "strategy.closedtrades.profit" | "strategy.closedtrades.size"
+                ) {
+                    PineValue::Float(0.0)
+                } else {
+                    PineValue::Na
+                },
+            );
         };
 
         Ok(match callee {
@@ -80,8 +101,11 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(trade_num_expr) = call_arg_expr(args, 0, "trade_num") else {
             return Ok(PineValue::Na);
         };
-        let Some(trade_num) = self.eval_expr(trade_num_expr)?.as_i64() else {
-            return Ok(PineValue::Na);
+        let index_value = self.eval_expr(trade_num_expr)?;
+        let trade_num = match index_value.as_i64() {
+            Some(index) => index,
+            None if callee == "strategy.opentrades.size" && index_value.is_na() => 0,
+            None => return Ok(PineValue::Na),
         };
 
         Ok(match callee {
@@ -111,7 +135,7 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.opentrades.size" => self
                 .strategy_broker
                 .open_trade_size(trade_num)
-                .map_or(PineValue::Na, PineValue::Float),
+                .map_or(PineValue::Float(0.0), PineValue::Float),
             "strategy.opentrades.profit" => {
                 let Some(bar) = self.current_bar else {
                     return Ok(PineValue::Na);
@@ -131,7 +155,7 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.opentrades.commission" => self
                 .strategy_broker
                 .open_trade_commission(trade_num)
-                .map_or(PineValue::Na, PineValue::Float),
+                .map_or(PineValue::Float(0.0), PineValue::Float),
             "strategy.opentrades.max_runup" => self
                 .strategy_broker
                 .open_trade_max_runup(trade_num)

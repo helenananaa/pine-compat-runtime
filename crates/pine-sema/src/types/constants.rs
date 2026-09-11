@@ -186,6 +186,11 @@ fn const_numeric_comparison(op: BinaryOp, left: &Expr, right: &Expr) -> Option<b
 }
 
 fn named_numeric_constant(name: &str) -> Option<f64> {
+    if pine_builtins::builtin_series_value_type(name)
+        .is_some_and(|ty| ty.qualifier != pine_ir::Qualifier::Const)
+    {
+        return None;
+    }
     pine_builtins::named_float_constant(name)
         .or_else(|| pine_builtins::named_int_constant(name).map(|value| value as f64))
 }

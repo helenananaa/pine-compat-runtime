@@ -110,7 +110,7 @@ fn eval_math_round_to_mintick(
     let Some(value) = args.value(context, 0, "number")?.as_f64() else {
         return Ok(PineValue::Na);
     };
-    let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+    let mintick = context.min_tick();
     if !value.is_finite() || mintick <= 0.0 || !mintick.is_finite() {
         return Ok(PineValue::Na);
     }

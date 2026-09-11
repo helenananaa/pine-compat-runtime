@@ -1,0 +1,29 @@
+//@version=6
+indicator("Function defaults")
+sum(x, series float strong=0.5, weak=-0.1) => x + strong + weak
+generic(x=1) => x
+requiredAfterOptional(x=2, y) => x + y
+feed(series float source=close, gain=2) => source * gain
+wrapper(close) => feed()
+maybe(float value=na) => value
+styled(string name="on", color tint=color.red, bool enabled=true) =>
+    [enabled ? name : "off", tint]
+half(float value=3) => value / 2
+total(series float source=close) =>
+    var float result=0
+    result += source
+    result
+[caption, tint]=styled()
+plot(sum(1), "omitted")
+plot(sum(1, weak=0.2), "named skip")
+plot(sum(1, 0.5, -0.1), "explicit")
+plot(generic(), "generic default")
+plot(generic(2.5), "generic override")
+plot(requiredAfterOptional(y=3), "required after optional")
+plot(wrapper(1000), "caller input")
+plot(na(maybe()) ? 1 : 0, "typed na")
+plot(caption == "on" ? 1 : 0, "tuple default", color=tint)
+plot(half(), "float promotion")
+plot(half(3), "explicit float promotion")
+plot(total(), "persistent default callsite")
+plot(total(1), "independent callsite")

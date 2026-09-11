@@ -512,10 +512,81 @@ impl Parser {
     }
 
     pub(super) fn parse_function_param(&mut self) -> Option<FunctionParam> {
+        let mut param = self.parse_function_param_head()?;
+        if self.at(TokenKind::Eq) {
+            if self.source_version < 5 {
+                self.error_here(
+                    "E_PARSE_FUNCTION",
+                    "default parameters require the modern function subset",
+                );
+                return None;
+            }
+            self.bump();
+            let value = self.parse_expr(0)?;
+            param.span = param.span.merge(value.span);
+            param.default_value = Some(value);
+        }
+        Some(param)
+    }
+
+    fn parse_function_param_head(&mut self) -> Option<FunctionParam> {
         let TokenKind::Identifier(first) = self.current().kind.clone() else {
             return None;
         };
         let start = self.current().span;
+
+        if first == "series" && self.source_version >= 5 {
+            self.bump();
+            if matches!(&self.current().kind, TokenKind::Identifier(name)
+                if matches!(name.as_str(), "series" | "simple" | "const" | "input"))
+            {
+                self.error_here("E_PARSE_FUNCTION", "expected type after `series`");
+                return None;
+            }
+            let mut param = self.parse_function_param_head()?;
+            let Some(type_name) = param.type_name else {
+                self.error_here(
+                    "E_PARSE_FUNCTION",
+                    "expected typed parameter after `series`",
+                );
+                return None;
+            };
+            param.type_name = Some(format!("series {type_name}"));
+            param.span = start.merge(param.span);
+            return Some(param);
+        }
+
+        // Keep the qualifier in the type spelling: removing it would let a
+        // constant argument silently weaken an explicitly series or simple parameter.
+        if first == "simple" && self.source_version >= 5 {
+            let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 1)?.kind.clone()
+            else {
+                return None;
+            };
+            if !matches!(
+                type_name.as_str(),
+                "int" | "float" | "bool" | "string" | "color"
+            ) {
+                self.error_here(
+                    "E_PARSE_FUNCTION",
+                    &format!("expected scalar type after `{first}`"),
+                );
+                return None;
+            }
+            let TokenKind::Identifier(name) = self.tokens.get(self.pos + 2)?.kind.clone() else {
+                return None;
+            };
+            let end = self.tokens.get(self.pos + 2)?.span;
+            for _ in 0..3 {
+                self.bump();
+            }
+            return Some(FunctionParam {
+                default_value: None,
+                type_name: Some(format!("{first} {type_name}")),
+                name,
+                span: start.merge(end),
+            });
+        }
 
         if first == "array" && self.nth_at(1, TokenKind::Lt) {
             if self.nth_at(3, TokenKind::Gt) {
@@ -533,6 +604,7 @@ impl Parser {
                     self.bump();
                 }
                 return Some(FunctionParam {
+                    default_value: None,
                     type_name: Some(format!("array<{element_type}>")),
                     name,
                     span: start.merge(end),
@@ -557,6 +629,7 @@ impl Parser {
                     self.bump();
                 }
                 return Some(FunctionParam {
+                    default_value: None,
                     type_name: Some(format!("array<{namespace}.{type_name}>")),
                     name,
                     span: start.merge(end),
@@ -573,6 +646,7 @@ impl Parser {
                 self.bump();
             }
             return Some(FunctionParam {
+                default_value: None,
                 type_name: Some(format!("array<{first}>")),
                 name,
                 span: start.merge(end),
@@ -595,6 +669,7 @@ impl Parser {
                 self.bump();
             }
             return Some(FunctionParam {
+                default_value: None,
                 type_name: Some(format!("array<{first}.{type_name}>")),
                 name,
                 span: start.merge(end),
@@ -614,6 +689,7 @@ impl Parser {
             self.bump();
             self.bump();
             return Some(FunctionParam {
+                default_value: None,
                 type_name: Some(format!("{first}.{second}")),
                 name,
                 span: start.merge(end),
@@ -627,6 +703,7 @@ impl Parser {
             self.bump();
             self.bump();
             return Some(FunctionParam {
+                default_value: None,
                 type_name: Some(first),
                 name,
                 span: start.merge(end),
@@ -635,6 +712,7 @@ impl Parser {
 
         self.bump();
         Some(FunctionParam {
+            default_value: None,
             type_name: None,
             name: first,
             span: start,

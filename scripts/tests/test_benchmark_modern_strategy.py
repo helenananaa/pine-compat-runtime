@@ -42,6 +42,12 @@ class BenchmarkModernStrategyTests(unittest.TestCase):
                                               'outputSerialization', 'realtimeSeed', 'formingInitial', 'formingReplace', 'formingConfirm')},
                    profile={'bars': 2}, confirmedRealtimeProfile={'bars': 2}, result={}, liveResult={}, orderCount=1, peakRssKiB=100)
         raw['timingsMs']['formingReplace'] = [1, 1]
+        for metric in ('peakRssKiB', 'peakCommitKiB'):
+            for peak in [0, -1, True, 1.5, float('nan')]:
+                broken = copy.deepcopy(raw)
+                broken[metric] = peak
+                with self.assertRaises(bench.BenchmarkError):
+                    bench.summarize_probe(broken, spec=spec, payload=payload)
         for key in raw['correctness']:
             broken = copy.deepcopy(raw)
             broken['correctness'][key] = False
@@ -69,6 +75,7 @@ class BenchmarkModernStrategyTests(unittest.TestCase):
                      peakRssKiB=None, profile={'seriesValues': n*2}) for n in (4, 8)]
         delta = bench.resource_growth(rows)[0]
         self.assertIsNone(delta['peakRssKiBDelta'])
+        self.assertIsNone(delta['peakCommitKiBDelta'])
         self.assertEqual(delta['outputBytesDelta'], 40)
         self.assertEqual(delta['profileDeltas']['seriesValues'], 8)
 

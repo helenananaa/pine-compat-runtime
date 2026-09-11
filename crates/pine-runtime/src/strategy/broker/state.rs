@@ -16,11 +16,13 @@ impl Default for BrokerState {
 }
 
 impl BrokerState {
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn snapshot(&self) -> Self {
         self.clone()
     }
 
+    #[cfg(test)]
     pub(crate) fn restore(&mut self, snapshot: Self) {
         *self = snapshot;
     }
@@ -118,9 +120,11 @@ impl BrokerState {
             margin_long,
             margin_short,
             open_entry_commission: 0.0,
+            quantity_scale: 1,
             slippage_price_offset,
             limit_verification_price_offset,
             cash: initial_capital,
+            realized_profit_sum: 0.0,
             position_size: 0.0,
             avg_price: 0.0,
             next_close_metadata: StrategyOrderMetadata::default(),
@@ -143,12 +147,12 @@ impl BrokerState {
             max_drawdown_percent: 0.0,
             max_contracts_held_long: 0.0,
             max_contracts_held_short: 0.0,
-            orders: Vec::new(),
-            order_fill_alerts: Vec::new(),
-            trades: Vec::new(),
-            closed_trade_metrics: Vec::new(),
-            position: Vec::new(),
-            equity: Vec::new(),
+            orders: Default::default(),
+            order_fill_alerts: Default::default(),
+            trades: Default::default(),
+            closed_trade_metrics: Default::default(),
+            position: Default::default(),
+            equity: Default::default(),
             diagnostics: Vec::new(),
             order_book: OrderBook::new(),
             trade_ledger: TradeLedger::default(),
@@ -174,6 +178,12 @@ impl BrokerState {
         self.order_book
             .exits_mut()
             .set_allow_same_bar_price_fills(calc_on_order_fills);
+        self
+    }
+
+    pub(crate) fn with_quantity_scale(mut self, scale: u32) -> Self {
+        debug_assert!(scale > 0);
+        self.quantity_scale = scale;
         self
     }
 
@@ -271,26 +281,70 @@ impl BrokerState {
     #[must_use]
     pub fn result(&self) -> StrategyResult {
         StrategyResult {
-            orders: self.orders.clone(),
-            trades: self.trades.clone(),
-            position: self.position.clone(),
-            equity: self.equity.clone(),
-            alerts: self
-                .order_fill_alerts
-                .iter()
-                .map(|event| StrategyOrderFillAlertOutput {
-                    id: event.id.clone(),
-                    bar_index: event.bar_index,
-                    time: event.time,
-                    direction: event.direction.clone(),
-                    qty: event.qty,
-                    price: event.price,
-                    entry_id: event.entry_id.clone(),
-                    exit_id: event.exit_id.clone(),
-                    message: event.message.clone(),
-                })
-                .collect(),
+            orders: self.orders.to_vec(),
+            trades: self.trades.to_vec(),
+            position: self.position.to_vec(),
+            equity: self.equity.to_vec(),
+            alerts: self.fill_alerts_from(0),
             diagnostics: self.diagnostics.clone(),
         }
+    }
+
+    pub(crate) fn order_len(&self) -> usize {
+        self.orders.len()
+    }
+
+    pub(crate) fn trade_len(&self) -> usize {
+        self.trades.len()
+    }
+
+    pub(crate) fn position_len(&self) -> usize {
+        self.position.len()
+    }
+
+    pub(crate) fn equity_len(&self) -> usize {
+        self.equity.len()
+    }
+
+    pub(crate) fn order_tail(&self, start: usize) -> Vec<crate::StrategyOrderEvent> {
+        self.orders.tail(start)
+    }
+
+    pub(crate) fn trade_tail(&self, start: usize) -> Vec<crate::StrategyTrade> {
+        self.trades.tail(start)
+    }
+
+    pub(crate) fn position_tail(&self, start: usize) -> Vec<crate::StrategyPositionSnapshot> {
+        self.position.tail(start)
+    }
+
+    pub(crate) fn equity_tail(&self, start: usize) -> Vec<crate::StrategyEquitySnapshot> {
+        self.equity.tail(start)
+    }
+
+    pub(crate) fn fill_alert_len(&self) -> usize {
+        self.order_fill_alerts.len()
+    }
+
+    pub(crate) fn diagnostics_slice(&self) -> &[crate::RuntimeDiagnostic] {
+        &self.diagnostics
+    }
+
+    pub(crate) fn fill_alerts_from(&self, start: usize) -> Vec<StrategyOrderFillAlertOutput> {
+        self.order_fill_alerts
+            .iter()
+            .skip(start)
+            .map(|event| StrategyOrderFillAlertOutput {
+                id: event.id.clone(),
+                bar_index: event.bar_index,
+                time: event.time,
+                direction: event.direction.clone(),
+                qty: event.qty,
+                price: event.price,
+                entry_id: event.entry_id.clone(),
+                exit_id: event.exit_id.clone(),
+                message: event.message.clone(),
+            })
+            .collect()
     }
 }

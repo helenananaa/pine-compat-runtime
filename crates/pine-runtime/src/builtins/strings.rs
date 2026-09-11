@@ -1,3 +1,6 @@
+mod collection_format;
+use collection_format::{stringify_array_with_mintick, stringify_matrix_with_mintick};
+
 use std::fmt::Write as _;
 
 use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
@@ -641,40 +644,6 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
     normalize_pine_regex_with_metadata(pattern).pattern
 }
 
-pub(crate) fn stringify_array(values: &[PineValue], format: &str) -> String {
-    let mut result = String::from("[");
-    for (index, value) in values.iter().enumerate() {
-        if index > 0 {
-            result.push_str(", ");
-        }
-        result.push_str(&stringify_array_element(value, format));
-    }
-    result.push(']');
-    result
-}
-
-pub(crate) fn stringify_matrix(
-    values: &[PineValue],
-    rows: usize,
-    columns: usize,
-    format: &str,
-) -> String {
-    let mut result = String::from("[");
-    for row in 0..rows {
-        if row > 0 {
-            result.push_str(", ");
-        }
-        let start = row.saturating_mul(columns);
-        let end = start.saturating_add(columns);
-        let Some(row_values) = values.get(start..end) else {
-            return "NaN".to_owned();
-        };
-        result.push_str(&stringify_array(row_values, format));
-    }
-    result.push(']');
-    result
-}
-
 pub(crate) fn stringify_array_element(value: &PineValue, format: &str) -> String {
     match value {
         PineValue::Int(value) => format_number(*value as f64, format),
@@ -907,12 +876,15 @@ pub(crate) fn format_volume_number(value: f64) -> String {
 }
 
 pub(crate) fn format_number(value: f64, format: &str) -> String {
+    format_number_with_mintick(value, format, 0.01)
+}
+
+fn format_number_with_mintick(value: f64, format: &str, mintick: f64) -> String {
     if !value.is_finite() {
         return "NaN".to_owned();
     }
 
     if format == "format.mintick" {
-        let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
         if !mintick.is_finite() || mintick <= 0.0 {
             return "NaN".to_owned();
         }
@@ -1418,20 +1390,42 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn stringify_value(&self, value: &PineValue, format: &str) -> String {
         match value {
-            PineValue::Int(value) => format_number(*value as f64, format),
-            PineValue::Float(value) => format_number(*value, format),
+            PineValue::Int(value) => format_number_with_mintick(
+                *value as f64,
+                format,
+                self.request_environment.chart().min_tick(),
+            ),
+            PineValue::Float(value) => format_number_with_mintick(
+                *value,
+                format,
+                self.request_environment.chart().min_tick(),
+            ),
             PineValue::Bool(value) => value.to_string(),
             PineValue::String(value) => value.clone(),
             PineValue::Array(id) => self
                 .array_values_clone(*id)
                 .ok()
                 .flatten()
-                .map(|values| stringify_array(&values, format))
+                .map(|values| {
+                    stringify_array_with_mintick(
+                        &values,
+                        format,
+                        self.request_environment.chart().min_tick(),
+                    )
+                })
                 .unwrap_or_else(|| "NaN".to_owned()),
             PineValue::Matrix(id) => self
                 .matrix_store
                 .get(id)
-                .map(|matrix| stringify_matrix(&matrix.values, matrix.rows, matrix.columns, format))
+                .map(|matrix| {
+                    stringify_matrix_with_mintick(
+                        &matrix.values,
+                        matrix.rows,
+                        matrix.columns,
+                        format,
+                        self.request_environment.chart().min_tick(),
+                    )
+                })
                 .unwrap_or_else(|| "NaN".to_owned()),
             PineValue::Na => "NaN".to_owned(),
             _ => "NaN".to_owned(),

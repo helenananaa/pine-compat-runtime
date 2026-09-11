@@ -4,6 +4,11 @@ use pine_sema::PUBLIC_ANALYSIS_SCHEMA_VERSION;
 use std::{collections::HashMap, env, fs, path::PathBuf};
 
 #[test]
+fn package_version_is_the_coordinated_prerelease_identity() {
+    assert_eq!(package_version(), "0.3.0-rc.1");
+}
+
+#[test]
 fn analyzes_script_to_json() {
     let output = analyze_script("//@version=6\nindicator(\"demo\")\nplot(close)\n");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
@@ -663,6 +668,66 @@ fn run_script_csv_serializes_non_finite_values_as_json_null() {
     assert_eq!(parsed["plots"][0]["values"][0], serde_json::Value::Null);
     assert!(!output.contains("NaN"));
     assert!(!output.contains("Infinity"));
+}
+
+#[test]
+fn run_script_csv_returns_series_scalar_parameters_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/series_scalar_parameters.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("series parameter fixture should run");
+    assert_snapshot("runtime_series_scalar_parameters.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_function_default_parameters_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/function_default_parameters.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("function defaults fixture should run");
+    assert_snapshot("runtime_function_default_parameters.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_simple_scalar_parameters_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/simple_scalar_parameters.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("simple parameter fixture should run");
+    assert_snapshot("runtime_simple_scalar_parameters.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_library_declaration_forms_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/library_declaration_forms.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("library forms fixture should run");
+    assert_snapshot("runtime_library_declaration_forms.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_zero_pyramiding_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_zero.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("zero pyramiding fixture should run");
+    assert_snapshot("runtime_strategy_pyramiding_zero.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_absent_trade_profit_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_absent_trade_profit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("absent trade profit fixture should run");
+    assert_snapshot("runtime_strategy_absent_trade_profit.json", &output);
 }
 
 #[test]
@@ -3219,6 +3284,37 @@ fn run_script_csv_returns_macd_fixture_contract() {
     .expect("MACD fixture should run");
 
     assert_snapshot("runtime_macd.json", &output);
+}
+
+#[test]
+fn quantity_precision_fixture_matches_cli_contract() {
+    let output = run_script_csv_with_request_bars(
+        include_str!("../../../../tests/fixtures/runtime/quantity_precision.pine"),
+        include_str!("../../../../tests/fixtures/runtime/quantity_precision_bars.csv"),
+        r#"{"$chart":{"minMove":1,"priceScale":10,"quantityPrecision":6,"pointValue":1}}"#,
+    )
+    .expect("fractional margin should run");
+    assert_snapshot("runtime_quantity_precision.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_sma_nearby_replacement_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/sma_nearby_replacement.pine"),
+        include_str!("../../../../tests/fixtures/runtime/macd_edge_cases_bars.csv"),
+    )
+    .expect("nearby SMA replacement runs");
+    assert_snapshot("runtime_sma_nearby_replacement.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_numeric_comparison_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/numeric_comparison.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("numeric comparisons run");
+    assert_snapshot("runtime_numeric_comparison.json", &output);
 }
 
 #[test]
@@ -9172,33 +9268,15 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][71]["values"],
-        serde_json::json!([
-            0,
-            0.16666666666666785,
-            0.30555555555555713,
-            0.39351851851851904,
-            0.4436728395061742
-        ])
+        serde_json::json!([null, null, 0.5, 0.5, 0.5])
     );
     assert_eq!(
         parsed["plots"][72]["values"],
-        serde_json::json!([
-            0,
-            0.1111111111111119,
-            0.2407407407407421,
-            0.3425925925925934,
-            0.40997942386831393
-        ])
+        serde_json::json!([null, null, null, 0.5, 0.5])
     );
     assert_eq!(
         parsed["plots"][73]["values"],
-        serde_json::json!([
-            0,
-            0.055555555555555955,
-            0.06481481481481507,
-            0.05092592592592565,
-            0.03369341563786027
-        ])
+        serde_json::json!([null, null, null, 0, 0])
     );
     assert_eq!(
         parsed["plots"][74]["values"],
@@ -9312,15 +9390,15 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][94]["values"],
-        serde_json::json!([null, null, 0, 0, 16.666666666666657])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][95]["values"],
-        serde_json::json!([null, null, 0, 0, 11.111111111111104])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][96]["values"],
-        serde_json::json!([null, null, 0, 0, 5.555555555555554])
+        serde_json::json!([null, null, null, null, null])
     );
     assert_eq!(
         parsed["plots"][97]["values"],
@@ -9978,7 +10056,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][243]["values"],
-        serde_json::json!([null, null, 100, 100, 166.66666666666666])
+        serde_json::json!([null, null, null, null, 150])
     );
     assert_eq!(
         parsed["plots"][244]["values"],
@@ -10076,15 +10154,16 @@ fn request_host_data_runs_through_direct_wasm_api() {
         parsed["plots"][259]["values"],
         serde_json::json!([null, null, 1, 1, 4])
     );
-    assert_eq!(
-        parsed["plots"][260]["values"],
-        serde_json::json!([
+    assert_json_approximately_equal(
+        &parsed["plots"][260]["values"],
+        &serde_json::json!([
             null,
             null,
             1.3453624047073711,
             1.3453624047073711,
             2.7586228448267445
-        ])
+        ]),
+        "request host math plot",
     );
     assert_eq!(
         parsed["plots"][261]["values"],
@@ -10369,16 +10448,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_plot_values_close(298, &[None, Some(1.0), Some(1.0), Some(1.0), Some(1.0)]);
     assert_plot_values_close(299, &[None, Some(0.5), Some(0.5), Some(0.5), Some(0.5)]);
-    assert_plot_values_close(
-        300,
-        &[
-            Some(20.0),
-            Some(20.666_666_666_666_668),
-            Some(21.555_555_555_555_557),
-            Some(22.518_518_518_518_52),
-            Some(23.506_172_839_506_174),
-        ],
-    );
+    assert_plot_values_close(300, &[None, Some(20.5), Some(21.5), Some(22.5), Some(23.5)]);
     assert_plot_values_close(
         301,
         &[None, Some(100.0), Some(100.0), Some(100.0), Some(100.0)],
@@ -10664,6 +10734,35 @@ fn library_source_json_runs_imported_function_subset() {
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
     assert_eq!(parsed["plots"][0]["values"], serde_json::json!([4, 6]));
+}
+
+#[test]
+fn library_source_json_returns_transitive_imports_fixture_contract() {
+    let libraries = serde_json::json!({
+        "user/transitive_outer/1":include_str!("../../../../tests/fixtures/libraries/transitive_outer_lib.pine"),
+        "user/transitive_inner/1":include_str!("../../../../tests/fixtures/libraries/transitive_inner_lib.pine"),
+    });
+    let output = run_script_csv_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/transitive_imports.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        &libraries.to_string(),
+    )
+    .expect("transitive imports should run");
+    assert_snapshot("runtime_transitive_imports.json", &output);
+}
+
+#[test]
+fn library_source_json_returns_scalar_overloads_fixture_contract() {
+    let libraries = serde_json::json!({
+        "test/scalar_overloads/1": include_str!("../../../../tests/fixtures/libraries/scalar_overloads_lib.pine"),
+    });
+    let output = run_script_csv_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/scalar_overloads.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        &libraries.to_string(),
+    )
+    .expect("scalar overloads should run");
+    assert_snapshot("runtime_scalar_overloads.json", &output);
 }
 
 #[test]
@@ -10982,7 +11081,87 @@ fn assert_snapshot(name: &str, actual: &str) {
 
     let expected = fs::read_to_string(&snapshot_path)
         .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
+    if name == "runtime_math.json" {
+        let actual: serde_json::Value =
+            serde_json::from_str(actual).unwrap_or_else(|err| panic!("invalid {name}: {err}"));
+        let expected: serde_json::Value = serde_json::from_str(&expected)
+            .unwrap_or_else(|err| panic!("invalid {}: {err}", snapshot_path.display()));
+        assert_json_approximately_equal(&actual, &expected, name);
+        return;
+    }
     assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
+}
+
+fn assert_json_approximately_equal(
+    actual: &serde_json::Value,
+    expected: &serde_json::Value,
+    context: &str,
+) {
+    fn compare(
+        actual: &serde_json::Value,
+        expected: &serde_json::Value,
+        path: &str,
+    ) -> Result<(), String> {
+        match (actual, expected) {
+            (serde_json::Value::Number(actual), serde_json::Value::Number(expected)) => {
+                if actual == expected {
+                    return Ok(());
+                }
+                let actual = actual
+                    .as_f64()
+                    .ok_or_else(|| format!("{path}: actual number is not representable as f64"))?;
+                let expected = expected.as_f64().ok_or_else(|| {
+                    format!("{path}: expected number is not representable as f64")
+                })?;
+                let difference = (actual - expected).abs();
+                let tolerance = 1e-12_f64.max(1e-12 * actual.abs().max(expected.abs()));
+                if difference <= tolerance {
+                    Ok(())
+                } else {
+                    Err(format!(
+                        "{path}: numeric mismatch: actual={actual}, expected={expected}, difference={difference}, tolerance={tolerance}"
+                    ))
+                }
+            }
+            (serde_json::Value::Array(actual), serde_json::Value::Array(expected)) => {
+                if actual.len() != expected.len() {
+                    return Err(format!(
+                        "{path}: array length mismatch: actual={}, expected={}",
+                        actual.len(),
+                        expected.len()
+                    ));
+                }
+                for (index, (actual, expected)) in actual.iter().zip(expected).enumerate() {
+                    compare(actual, expected, &format!("{path}[{index}]"))?;
+                }
+                Ok(())
+            }
+            (serde_json::Value::Object(actual), serde_json::Value::Object(expected)) => {
+                if actual.len() != expected.len() {
+                    return Err(format!(
+                        "{path}: object field count mismatch: actual={}, expected={}",
+                        actual.len(),
+                        expected.len()
+                    ));
+                }
+                for (key, expected) in expected {
+                    let actual = actual
+                        .get(key)
+                        .ok_or_else(|| format!("{path}: missing field {key:?}"))?;
+                    compare(actual, expected, &format!("{path}.{key}"))?;
+                }
+                Ok(())
+            }
+            _ if actual == expected => Ok(()),
+            _ => Err(format!(
+                "{path}: value mismatch: actual={actual}, expected={expected}"
+            )),
+        }
+    }
+
+    if let Err(message) = compare(actual, expected, "$") {
+        panic!("{context}: {message}");
+    }
 }
 
 fn assert_analysis_snapshot(name: &str, actual: &str) {
@@ -11029,3 +11208,32 @@ fn input_overrides_json(overrides: &[(u64, serde_json::Value)]) -> String {
 fn workspace_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
+#[test]
+fn compiled_host_requirements_match_shared_contract_without_data() {
+    let source = include_str!("../../../../tests/fixtures/host_requirements/strategy.pine");
+    let program = crate::compile_program(crate::analysis_input(source)).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&program.host_requirements()).unwrap();
+    let mut expected: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../tests/snapshots/host_requirements.json"
+    ))
+    .unwrap();
+    let spans: Vec<serde_json::Value> = serde_json::from_str(include_str!(
+        "../../../../tests/fixtures/host_requirements/source_spans.json"
+    ))
+    .unwrap();
+    expected["callSites"] = serde_json::Value::Array(
+        spans
+            .iter()
+            .map(|span| {
+                let text = span["text"].as_str().unwrap();
+                assert_eq!(source.matches(text).count(), 1);
+                let start = source.find(text).unwrap();
+                serde_json::json!({"callSiteId":span["callSiteId"],"source":{
+            "sourceId":0,"libraryKey":null,"start":start,"end":start+text.len()}})
+            })
+            .collect(),
+    );
+    assert_eq!(actual, expected);
+}
+
+mod realtime;

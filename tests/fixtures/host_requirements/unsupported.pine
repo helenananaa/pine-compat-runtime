@@ -1,0 +1,3 @@
+//@version=6
+indicator("Unsupported host capability")
+plot(request.financial("X", "Y", "FQ"))

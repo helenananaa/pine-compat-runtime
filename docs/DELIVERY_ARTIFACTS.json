@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "channel": "local-prerelease",
+  "cargoVersion": "0.3.0-rc.1",
+  "pythonVersion": "0.3.0rc1",
+  "artifactSourceCommit": "a2a1ba5fb0ca566e1de01a9cb8e886322df92b52",
+  "reviewedHead": "7ffcd6524",
+  "publication": "not-published-by-this-closeout",
+  "qualification": {
+    "windows": {
+      "scenarios": 19,
+      "values": 867418,
+      "mismatches": 0,
+      "rustTests": 6677,
+      "pythonTests": 717
+    },
+    "linux": {
+      "scenarios": 19,
+      "values": 867418,
+      "mismatches": 0,
+      "rustTests": 6677,
+      "pythonTests": 717
+    }
+  },
+  "evidenceIndex": {
+    "path": ".local/binance-directional-20260910/qualification.json",
+    "sha256": "2fbb426e4a6297399c6d354b6c4fa88c6e809de52e9b81927e8d0bd6f3db04d4",
+    "verifiedFiles": 85
+  },
+  "artifacts": [
+    {
+      "path": ".local/binance-directional-20260910/linux-wheels/pine_compat_runtime-0.3.0rc1-cp310-abi3-manylinux_2_35_x86_64.whl",
+      "bytes": 3421367,
+      "sha256": "aa78d7a48f97c5beb2e23e9d8506dc42878b0c9d391959bde45b53b205a4ac96"
+    },
+    {
+      "path": ".local/binance-directional-20260910/wheels/pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl",
+      "bytes": 3213922,
+      "sha256": "e14551452e1d81a6434253b529535295ade1a388b6b610740929a865ffc5034a"
+    }
+  ],
+  "limitations": [
+    "Local inventory, not an updater release manifest.",
+    "Version alone does not distinguish these wheels from older rc1 builds; use source identity and SHA-256.",
+    "Current Linux wheel targets manylinux_2_35; earlier manylinux2014 qualification does not apply.",
+    "Full platform gates include WASM; the two optimized wheels are the artifacts identified here.",
+    "Earlier resource and TechnicalRating qualifications retain their original source identities."
+  ]
+}

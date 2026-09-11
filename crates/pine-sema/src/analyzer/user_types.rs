@@ -309,7 +309,7 @@ impl Analyzer {
                 .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned()),
             ExprKind::QualifiedName(parts) => self.user_type_name_of_field_access(parts),
             ExprKind::Call { callee, args } => {
-                self.user_type_name_of_udf_passthrough(expr_name(callee)?.as_str(), args)
+                self.user_type_name_of_udf_passthrough(expr_name(callee)?.as_str(), args, expr.span)
             }
             ExprKind::Ternary {
                 then_expr,
@@ -739,14 +739,24 @@ impl Analyzer {
         &self,
         name: &str,
         args: &[CallArg],
+        call_span: Span,
     ) -> Option<String> {
         let function = self.functions.get(name)?;
+        if !function.overloads.is_empty() {
+            return None;
+        }
+        let explicit_count = args.len();
         let param_index =
             returned_udf_param_index(&function.body, &function.params, &self.functions, 0)?;
+        let completed_args = function.complete_args(args, call_span).ok()?;
+        let args = completed_args.as_ref();
         let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
         let arg_index = arg_indices
             .iter()
             .position(|mapped_param_index| *mapped_param_index == param_index)?;
+        if arg_index >= explicit_count {
+            return None;
+        }
         self.user_type_name_of_expr(&args[arg_index].value)
     }
 

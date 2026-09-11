@@ -1,5 +1,6 @@
 use pine_ir::{HirCallArg, HirExpr};
 
+use crate::runtime::drawing_history::RuntimeBox;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -129,9 +130,9 @@ impl<'a> HistoricalRuntime<'a> {
             .ok_or_else(|| RuntimeError {
                 message: "box id limit exceeded".to_owned(),
             })?;
-        self.boxes.push(BoxOutput {
+        self.boxes.push(RuntimeBox::from_snapshot(
             id,
-            snapshots: vec![BoxSnapshot {
+            BoxSnapshot {
                 bar_index: self.bars,
                 exists: true,
                 left: fields.left,
@@ -152,8 +153,8 @@ impl<'a> HistoricalRuntime<'a> {
                 text_wrap: fields.text_wrap,
                 text_font_family: fields.text_font_family,
                 text_formatting: fields.text_formatting,
-            }],
-        });
+            },
+        ));
         Ok(PineValue::Box(id))
     }
 
@@ -469,10 +470,8 @@ impl<'a> HistoricalRuntime<'a> {
             })?;
         let mut copied = latest;
         copied.bar_index = self.bars;
-        self.boxes.push(BoxOutput {
-            id: copied_id,
-            snapshots: vec![copied],
-        });
+        self.boxes
+            .push(RuntimeBox::from_snapshot(copied_id, copied));
         Ok(PineValue::Box(copied_id))
     }
 

@@ -1,0 +1,79 @@
+[
+  {
+    "now": 1789003981407.0,
+    "open": 78113.4,
+    "high": 78113.4,
+    "low": 78113.4,
+    "close": 78113.4,
+    "volume": 0.0016,
+    "position": 0.0,
+    "openTrades": 0.0,
+    "closedTrades": 0.0
+  },
+  {
+    "now": 1789003982881.0,
+    "open": 78113.4,
+    "high": 78113.4,
+    "low": 78113.3,
+    "close": 78113.3,
+    "volume": 0.0071026,
+    "position": 0.002,
+    "openTrades": 2.0,
+    "closedTrades": 0.0
+  },
+  {
+    "now": 1789003983795.0,
+    "open": 78113.4,
+    "high": 78113.4,
+    "low": 78105.5,
+    "close": 78105.5,
+    "volume": 1.05063027,
+    "position": 0.002,
+    "openTrades": 2.0,
+    "closedTrades": 0.0
+  },
+  {
+    "now": 1789003983897.0,
+    "open": 78113.4,
+    "high": 78113.4,
+    "low": 78105.2,
+    "close": 78105.2,
+    "volume": 1.05080485,
+    "position": 0.0,
+    "openTrades": 0.0,
+    "closedTrades": 2.0
+  },
+  {
+    "now": 1789003984988.0,
+    "open": 78113.4,
+    "high": 78113.4,
+    "low": 78083.4,
+    "close": 78085.6,
+    "volume": 4.24934299,
+    "position": 0.0,
+    "openTrades": 0.0,
+    "closedTrades": 2.0
+  },
+  {
+    "now": 1789003985923.0,
+    "open": 78113.4,
+    "high": 78113.4,
+    "low": 78083.4,
+    "close": 78085.6,
+    "volume": 4.26778741,
+    "position": 0.0,
+    "openTrades": 0.0,
+    "closedTrades": 2.0
+  },
+  {
+    "now": 1789003987064.0,
+    "open": 78113.4,
+    "high": 78113.4,
+    "low": 78083.4,
+    "close": 78085.6,
+    "volume": 4.71943419,
+    "position": 0.0,
+    "openTrades": 0.0,
+    "closedTrades": 2.0
+  }
+]

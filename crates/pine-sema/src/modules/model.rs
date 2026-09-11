@@ -5,10 +5,11 @@ use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Span};
 
 use crate::analyzer::context::{FunctionInfo, MethodInfo};
 use crate::legacy::SourcePolicy;
-use crate::source_graph::SourceId;
+use crate::source_graph::{SourceContextId, SourceId};
 
 #[derive(Debug)]
 pub(crate) struct ModuleValidation {
+    pub(crate) source_context_origins: HashMap<SourceContextId, (SourceId, Option<String>)>,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) root_program: Program,
     pub(crate) root_policy: SourcePolicy,

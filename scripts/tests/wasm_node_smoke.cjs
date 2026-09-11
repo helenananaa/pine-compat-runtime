@@ -11,9 +11,10 @@ if (process.argv.length !== 3) {
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
 
-for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript']) {
+for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript', 'packageVersion']) {
   assert.equal(typeof pine[name], 'function', `missing Wasm export ${name}`);
 }
+assert.equal(pine.packageVersion(), '0.3.0-rc.1');
 
 const source = '//@version=6\nindicator("node smoke")\nplot(close * 2)\n';
 const bars = [
@@ -46,11 +47,195 @@ assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
+const requirements = JSON.parse(program.hostRequirements());
+assert.equal(requirements.schemaVersion, 1);
+assert.equal(requirements.chart.bars, 'hostSuppliedStandardOhlcv');
+const compiledRun = JSON.parse(program.runCsv(bars));
+assert.deepEqual(compiledRun.plots[0].values, [2, 4, 6]);
+const owned = compiledRun.plots[0].values.slice();
+compiledRun.plots[0].values[0] = 999;
+assert.deepEqual(JSON.parse(program.runCsv(bars)).plots[0].values, owned);
+const rejected = (() => {
+  try {
+    pine.runScriptCsv('//@version=6\nindicator("bad")\nplot(unknown_name)\n', bars);
+    return null;
+  } catch (error) {
+    return String(error);
+  }
+})();
+assert.match(rejected, /unknown_name|unknown identifier/i);
+const quantitySource = require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/fixtures/runtime/quantity_precision.pine'), 'utf8');
+const quantityBars = require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/fixtures/runtime/quantity_precision_bars.csv'), 'utf8');
+const quantityExpected = JSON.parse(require('node:fs').readFileSync(path.resolve(__dirname, '../../tests/snapshots/runtime_quantity_precision.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(quantitySource, quantityBars,
+  JSON.stringify({$chart:{minMove:1,priceScale:10,quantityPrecision:6,pointValue:1}}))), quantityExpected);
+const simpleSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/simple_scalar_parameters.pine'), 'utf8');
+const simpleBars = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/bars.csv'), 'utf8');
+const simpleExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_simple_scalar_parameters.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(simpleSource, simpleBars)), simpleExpected);
+const macdSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/macd.pine'), 'utf8');
+const macdExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_macd.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(macdSource, simpleBars)), macdExpected);
+const nearbySource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/sma_nearby_replacement.pine'), 'utf8');
+const nearbyBars = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/macd_edge_cases_bars.csv'), 'utf8');
+const nearbyExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_sma_nearby_replacement.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(nearbySource, nearbyBars)), nearbyExpected);
+const comparisonSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/numeric_comparison.pine'), 'utf8');
+const comparisonExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_numeric_comparison.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(comparisonSource, simpleBars)), comparisonExpected);
+const libraryFormsSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/library_declaration_forms.pine'), 'utf8');
+const libraryFormsExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_library_declaration_forms.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsv(libraryFormsSource, simpleBars)), libraryFormsExpected);
+const transitiveSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/transitive_imports.pine'), 'utf8');
+const transitiveLibraries = Object.fromEntries(['inner', 'outer'].map(name => [
+  `user/transitive_${name}/1`, require('node:fs').readFileSync(
+    path.resolve(__dirname, `../../tests/fixtures/libraries/transitive_${name}_lib.pine`), 'utf8')
+]));
+const transitiveExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_transitive_imports.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsvWithLibraries(transitiveSource, simpleBars, JSON.stringify(transitiveLibraries))), transitiveExpected);
+const overloadSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/scalar_overloads.pine'), 'utf8');
+const overloadLibraries = { 'test/scalar_overloads/1': require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/libraries/scalar_overloads_lib.pine'), 'utf8') };
+const overloadExpected = JSON.parse(require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/snapshots/runtime_scalar_overloads.json'), 'utf8'));
+assert.deepEqual(JSON.parse(pine.runScriptCsvWithLibraries(overloadSource, simpleBars, JSON.stringify(overloadLibraries))), overloadExpected);
+const simpleRejection = JSON.parse(pine.analyzeScript(
+  '//@version=6\nindicator("simple")\nf(simple float x) => x\nplot(f(close))\n'));
+assert.equal(simpleRejection.executable, false);
+assert.ok(simpleRejection.diagnostics.some(d => d.code === 'E_FUNCTION_ARG_TYPE'));
+const gridSource = '//@version=6\nindicator("grid")\nplot(syminfo.mintick)\nplot(math.round_to_mintick(10.26))\n';
+const gridResult = JSON.parse(pine.runScriptCsvWithRequestBars(gridSource, bars,
+  JSON.stringify({ $chart: { minMove: 1, priceScale: 10 } })));
+assert.deepEqual(gridResult.plots[0].values, [0.1, 0.1, 0.1]);
+assert.ok(gridResult.plots[1].values.every(value => Math.abs(value - 10.3) < 1e-9));
+assert.throws(() => pine.runScriptCsvWithRequestBars(gridSource, bars,
+  JSON.stringify({ $chart: { minMove: 0, priceScale: 10 } })));
 assert.equal(typeof program.runCsv, 'function');
 const compiled = JSON.parse(program.runCsv(bars));
+const seriesSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/series_scalar_parameters.pine'), 'utf8');
+const seriesResult = JSON.parse(pine.runScriptCsv(seriesSource, bars));
+assert.deepEqual(seriesResult.plots[0].values, [null, 3, 3]);
+assert.deepEqual(seriesResult.plots[1].values, [null, 1, 2]);
+assert.deepEqual(seriesResult.plots[2].values, [1.5, 1.5, 1.5]);
+assert.deepEqual(seriesResult.plots[3].values, [1, 3, 6]);
+const defaultsSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/function_default_parameters.pine'), 'utf8');
+const defaultsResult = JSON.parse(pine.runScriptCsv(defaultsSource, bars));
+assert.deepEqual(defaultsResult.plots[0].values, [1.4, 1.4, 1.4]);
+assert.deepEqual(defaultsResult.plots[6].values, [2000, 2000, 2000]);
+assert.deepEqual(defaultsResult.plots[11].values, [1, 3, 6]);
+const invalidDefault = JSON.parse(pine.analyzeScript(
+  '//@version=6\nindicator("invalid")\nf(x=1+2) => x\nplot(f())\n'));
+assert.equal(invalidDefault.executable, false);
+assert.ok(invalidDefault.diagnostics.some(d => d.code === 'E_FUNCTION_DEFAULT'));
+const seriesRejection = JSON.parse(pine.analyzeScript(
+  '//@version=6\nindicator("series")\nf(series int n) => n\nplot(ta.ema(close,f(3)))\n'));
+assert.equal(seriesRejection.executable, false);
+assert.ok(seriesRejection.diagnostics.some(d => d.code === 'E_CALL_ARG_TYPE'));
+const zeroPyramidingSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/strategy_pyramiding_zero.pine'), 'utf8');
+const zeroPyramiding = JSON.parse(pine.runScriptCsv(zeroPyramidingSource, bars));
+assert.deepEqual(zeroPyramiding.plots[0].values, [0, 1, 1]);
+const absentProfitSource = require('node:fs').readFileSync(
+  path.resolve(__dirname, '../../tests/fixtures/runtime/strategy_absent_trade_profit.pine'), 'utf8');
+const absentProfit = JSON.parse(pine.runScriptCsv(absentProfitSource, bars));
+for (const index of [0, 1, 2]) assert.deepEqual(absentProfit.plots[index].values, [0, 0, 0]);
+assert.deepEqual(absentProfit.plots[3].values, [null, null, null]);
 assert.deepEqual(compiled.plots[0].values, [2, 4, 6]);
 assert.deepEqual(compiled, direct);
+
+assert.equal(typeof program.realtimeSession, 'function');
+assert.equal(pine.runtimeChangesSchemaVersion(), 3);
+assert.equal(pine.realtimeSessionSchemaVersion(), 1);
+const realtime = program.realtimeSession();
+const seededRealtime = JSON.parse(realtime.seed(bars));
+assert.deepEqual(seededRealtime.plots[0].values, [2, 4, 6]);
+const replica = realtime.replica();
+const forming = JSON.parse(realtime.applyForming(JSON.stringify({
+  time: 3, open: 4, high: 4, low: 4, close: 4, volume: 1,
+})));
+assert.equal(forming.visibility, 'preview');
+assert.equal(forming.schemaVersion, 3);
+assert.equal(replica.apply(JSON.stringify(forming)), true);
+assert.deepEqual(JSON.parse(replica.result()).plots[0].values, JSON.parse(realtime.result()).plots[0].values);
+assert.equal(replica.apply(JSON.stringify(forming)), false);
+const confirmed = JSON.parse(realtime.applyConfirmed(JSON.stringify({
+  time: 3, open: 4, high: 4, low: 4, close: 4, volume: 1,
+})));
+assert.equal(confirmed.visibility, 'confirmed');
+assert.equal(replica.apply(JSON.stringify(confirmed)), true);
+assert.deepEqual(JSON.parse(realtime.result()).plots[0].values, [2, 4, 6, 8]);
+const replayed = JSON.parse(realtime.replay(bars));
+assert.deepEqual(replayed.plots[0].values, [2, 4, 6]);
+assert.equal(realtime.formingTime, undefined);
+const corrected = JSON.parse(realtime.correct(1, [
+  'time,open,high,low,close,volume',
+  '1,2.5,2.5,2.5,2.5,20',
+  '2,3,3,3,3,30',
+  '',
+].join('\n')));
+assert.deepEqual(corrected.plots[0].values, [2, 5, 6]);
+realtime.free();
+replica.free();
 program.free();
+
+// Physical prefix pruning and alert retention through the real generated module.
+{
+  const code = '//@version=6\nindicator("bounded")\nalert("event", alert.freq_all)\nplot(close)';
+  const compiled = pine.compileScript(code);
+  const session = compiled.realtimeSession();
+  session.setOutputRetention(4);
+  const csv = 'time,open,high,low,close,volume\n' + Array.from({length: 400}, (_, i) =>
+    `${i * 60000},${i+100},${i+100},${i+100},${i+100},1`).join('\n') + '\n';
+  session.seed(csv);
+  const consumer = session.replica();
+  for (let i = 400; i < 412; ++i) {
+    const value = i + 100;
+    const update = JSON.stringify({time:i*60000, open:value, high:value, low:value, close:value, volume:1});
+    consumer.apply(session.applyConfirmed(update));
+    const result = JSON.parse(session.result());
+    assert.equal(result.plots[0].values.length, 4);
+    assert.equal(result.alerts.length, 4);
+    assert.deepStrictEqual(JSON.parse(consumer.result()), result);
+  }
+  session.clearOutputRetention();
+  assert.equal(session.displayOrigin, 408);
+  consumer.free(); session.free(); compiled.free();
+}
+
+// Stateful requested context: replacements reuse history but preserve results.
+{
+  const compiled = pine.compileScript('//@version=6\nindicator("feed")\nplot(request.security("B","5",ta.sma(close,3)))');
+  const makeBar = (time, value) => ({time,open:value,high:value,low:value,close:value,volume:1});
+  const session = compiled.realtimeSessionWithRequestBars(JSON.stringify({'B:5': [makeBar(0,1),makeBar(300000,2),makeBar(600000,3)]}));
+  session.seed('time,open,high,low,close,volume\n0,1,1,1,1,1\n');
+  const consumer = session.replica();
+  assert.equal(session.applyRequestForming('B','5',JSON.stringify(makeBar(900000,4))), 'null');
+  consumer.apply(session.applyForming(JSON.stringify(makeBar(1140000,99))));
+  assert.equal(JSON.parse(consumer.result()).plots[0].values.at(-1), 3);
+  consumer.apply(session.applyRequestForming('B','5',JSON.stringify(makeBar(900000,7))));
+  assert.equal(JSON.parse(consumer.result()).plots[0].values.at(-1), 4);
+  consumer.apply(session.applyRequestConfirmed('B','5',JSON.stringify(makeBar(900000,7))));
+  consumer.apply(session.applyConfirmed(JSON.stringify(makeBar(1140000,99))));
+  assert.deepStrictEqual(JSON.parse(consumer.result()), JSON.parse(session.result()));
+  consumer.free(); session.free(); compiled.free();
+}
 
 const implicitLegacy = JSON.parse(
   pine.analyzeScript('study("legacy")\nplot(close)\n'),
@@ -139,6 +324,40 @@ assert.throws(
     return true;
   },
 );
+
+
+
+const requirementsFs = require('node:fs');
+const requirementsRoot = path.resolve(__dirname, '../..');
+const requirementsSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/host_requirements/strategy.pine'), 'utf8');
+const requirementsProgram = pine.compileScript(requirementsSource);
+const requirementsExpected = JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/snapshots/host_requirements.json'), 'utf8'));
+const requirementsSpans = JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/host_requirements/source_spans.json'), 'utf8'));
+const requirementsBytes = Buffer.from(requirementsSource, 'utf8');
+requirementsExpected.callSites = requirementsSpans.map(({callSiteId, text}) => {
+  const bytes = Buffer.from(text, 'utf8');
+  const start = requirementsBytes.indexOf(bytes);
+  assert(start >= 0);
+  assert.equal(requirementsBytes.indexOf(bytes, start + 1), -1);
+  return {callSiteId, source: {sourceId: 0, libraryKey: null, start, end: start + bytes.length}};
+});
+assert.deepStrictEqual(JSON.parse(requirementsProgram.hostRequirements()), requirementsExpected);
+requirementsProgram.free();
+
+for (const newline of ['\n', '\r\n']) {
+  const expression = 'request.security("REMOTE","60",close)';
+  const original = ['//@version=6', '// 中文', 'indicator("origin")', `plot(${expression})`, ''].join(newline);
+  const compiled = pine.compileScript(original);
+  const report = JSON.parse(compiled.hostRequirements());
+  const start = Buffer.from(original, 'utf8').indexOf(Buffer.from(expression));
+  assert.deepStrictEqual(report.callSites, [{callSiteId: report.requests[0].callSiteId,
+    source: {sourceId: 0, libraryKey: null, start, end: start + Buffer.byteLength(expression)}}]);
+  compiled.free();
+}
+
+for (const pointValue of [0, -1, 0.5, 5, 1.0000000001, true, null, '1']) {
+  assert.throws(() => pine.runScriptCsvWithRequestBars(source, bars, JSON.stringify({$chart: {pointValue}})), /pointValue/);
+}
 
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',

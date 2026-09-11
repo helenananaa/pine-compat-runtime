@@ -108,13 +108,42 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
     let object = value
         .as_object()
         .ok_or_else(|| "request bars `$chart` must be an object".to_owned())?;
-    if let Some(field) = object
-        .keys()
-        .find(|field| !matches!(field.as_str(), "symbol" | "timeframe"))
-    {
+    if let Some(field) = object.keys().find(|field| {
+        !matches!(
+            field.as_str(),
+            "symbol" | "timeframe" | "minMove" | "priceScale" | "quantityPrecision" | "pointValue"
+        )
+    }) {
         return Err(format!("request bars `$chart` has unknown field `{field}`"));
     }
     let mut chart = ChartContext::default();
+    if let Some(value) = object.get("pointValue") {
+        let value = value
+            .as_f64()
+            .ok_or("request bars `$chart.pointValue` must be numeric")?;
+        chart = chart.with_point_value(value).map_err(str::to_owned)?;
+    }
+    if let Some(precision) = object.get("quantityPrecision") {
+        let precision = precision
+            .as_u64()
+            .and_then(|value| u32::try_from(value).ok())
+            .ok_or("request bars `$chart.quantityPrecision` must be an integer between 0 and 9")?;
+        chart = chart
+            .with_quantity_precision(precision)
+            .map_err(str::to_owned)?;
+    }
+    if object.contains_key("minMove") || object.contains_key("priceScale") {
+        let integer = |key: &str| -> Result<u32, String> {
+            object
+                .get(key)
+                .and_then(Value::as_u64)
+                .and_then(|v| u32::try_from(v).ok())
+                .ok_or_else(|| format!("request bars `$chart.{key}` must be a positive integer"))
+        };
+        chart = chart
+            .with_price_grid(integer("minMove")?, integer("priceScale")?)
+            .map_err(str::to_owned)?;
+    }
     if let Some(symbol) = object.get("symbol") {
         let symbol = symbol
             .as_str()
@@ -132,6 +161,85 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
         chart = chart.with_timeframe(timeframe);
     }
     Ok(chart)
+}
+
+#[cfg(test)]
+mod price_grid_tests {
+    use super::*;
+
+    #[test]
+    fn explicit_point_value_validates_the_supported_profile() {
+        for value in ["1", "1.0"] {
+            let environment =
+                request_environment_from_json(&format!(r#"{{"$chart":{{"pointValue":{value}}}}}"#))
+                    .unwrap();
+            assert_eq!(environment.chart().point_value(), 1.0);
+        }
+        for value in [
+            "0",
+            "-1",
+            "0.5",
+            "5",
+            "1.0000000001",
+            "true",
+            "null",
+            "\"1\"",
+        ] {
+            assert!(
+                request_environment_from_json(&format!(r#"{{"$chart":{{"pointValue":{value}}}}}"#))
+                    .err()
+                    .expect("invalid pointValue")
+                    .contains("pointValue"),
+                "{value}"
+            );
+        }
+    }
+
+    #[test]
+    fn quantity_precision_metadata_validates_and_preserves_default() {
+        let environment =
+            request_environment_from_json(r#"{"$chart":{"quantityPrecision":6}}"#).unwrap();
+        assert_eq!(environment.chart().min_contract(), 0.000001);
+        assert_eq!(
+            request_environment_from_json("{}")
+                .unwrap()
+                .chart()
+                .min_contract(),
+            1.0
+        );
+        for value in ["true", "-1", "1.5", "\"6\"", "10", "4294967296"] {
+            assert!(
+                request_environment_from_json(&format!(
+                    r#"{{"$chart":{{"quantityPrecision":{value}}}}}"#
+                ))
+                .is_err(),
+                "{value}"
+            );
+        }
+    }
+
+    #[test]
+    fn chart_price_grid_validates_metadata_without_affecting_default() {
+        let env =
+            request_environment_from_json(r#"{"$chart":{"minMove":1,"priceScale":10}}"#).unwrap();
+        assert_eq!(env.chart().min_tick(), 0.1);
+        assert_eq!(
+            request_environment_from_json("{}")
+                .unwrap()
+                .chart()
+                .min_tick(),
+            0.01
+        );
+        for grid in [
+            r#"{"minMove":0,"priceScale":10}"#,
+            r#"{"minMove":1,"priceScale":0}"#,
+            r#"{"minMove":true,"priceScale":10}"#,
+            r#"{"minMove":1,"priceScale":1.5}"#,
+            r#"{"minMove":1}"#,
+        ] {
+            assert!(request_environment_from_json(&format!(r#"{{"$chart":{grid}}}"#)).is_err());
+        }
+    }
 }
 
 fn deterministic_entries(object: &serde_json::Map<String, Value>) -> BTreeMap<&String, &Value> {
@@ -157,6 +265,21 @@ fn parse_bars(key: &str, value: &Value) -> Result<Vec<Bar>, String> {
         .enumerate()
         .map(|(index, bar)| parse_bar(key, index, bar))
         .collect()
+}
+
+pub(crate) fn bar_from_json(bar_json: &str) -> Result<Bar, String> {
+    let value: Value = serde_json::from_str(bar_json)
+        .map_err(|err| format!("realtime bar must be a JSON object: {err}"))?;
+    parse_bar("chart", 0, &value)
+}
+
+pub(crate) fn execution_times_from_json(json: &str) -> Result<Vec<i64>, String> {
+    parse_execution_times(Some(&serde_json::from_str(json).map_err(|err| {
+        format!("execution times must be a JSON array of integer millisecond timestamps: {err}")
+    })?))?
+    .ok_or_else(|| {
+        "execution times must be a JSON array of integer millisecond timestamps".to_owned()
+    })
 }
 
 fn parse_bar(key: &str, index: usize, value: &Value) -> Result<Bar, String> {

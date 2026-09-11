@@ -17,6 +17,10 @@ impl<'runtime, 'program> RuntimeCallContext<'runtime, 'program> {
         self.runtime.eval_expr(expr)
     }
 
+    pub(crate) fn min_tick(&self) -> f64 {
+        self.runtime.request_environment.chart().min_tick()
+    }
+
     pub(crate) fn update_rolling_window(
         &mut self,
         call_site_id: CallSiteId,

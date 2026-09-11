@@ -1,5 +1,18 @@
 # Modern strategy remaining blockers review
 
+> 2026-09-10 current-status correction: TechnicalRating/3 with its complete
+> dependencies passed 63,399 independent reference values; earlier ta/9 and
+> export/default-parameter blockers below are historical. Native realtime
+> comparisons and observable B1 controls also passed on the repaired final
+> wheels. Use [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md) for current work and
+> acceptance; the original r1 synthetic denominator remains separate.
+
+2026-09-10：TechnicalRating v3 完整依赖链已通过独立参考验收，见
+[SMA_ROLLING_SUM_AUDIT.md](SMA_ROLLING_SUM_AUDIT.md)。2026-09-08 的默认参数、
+ta/9 与导出函数阻塞均为历史过程，不再作为当前待办。
+
+2026-09-08 更新：G3 六组独立参考已于上一轮收口，旧 r1 仍无参考。本轮从官方 TechnicalRating v3 重现并排除了显式 series 标量参数阻塞；下一个首错是默认参数。见 [下一轮记录](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md)。下文保留历史探针及其当时分母，不代表当前全局阻塞状态。
+
 状态：reviewed；不修改冻结 r1 或核心支持范围。
 日期：2026-09-07。基线 HEAD：`31f16bb87`。
 

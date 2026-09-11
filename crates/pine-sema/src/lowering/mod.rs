@@ -918,7 +918,8 @@ impl Analyzer {
                 }
                 if self.functions.contains_key(&name) {
                     let pure_call_series_id =
-                        pure_series::pure_udf_call_series_key(self, &name, args).and(series_id);
+                        pure_series::pure_udf_call_series_key(self, &name, args, expr.span)
+                            .and(series_id);
                     let mut call =
                         self.lower_udf_call(&name, expr.span, args, param_exprs, param_types)?;
                     if let Some(series_id) = pure_call_series_id {
@@ -978,7 +979,7 @@ impl Analyzer {
                         param_exprs,
                         param_types,
                     )?;
-                    let call_site_id = self.alloc_call_site();
+                    let call_site_id = self.alloc_call_site_at(expr.span);
                     return self.finish_legacy_expr_coercion(
                         expr,
                         HirExpr {
@@ -992,7 +993,7 @@ impl Analyzer {
                         },
                     );
                 }
-                let call_site_id = self.alloc_call_site();
+                let call_site_id = self.alloc_call_site_at(expr.span);
                 let lowered_args =
                     self.lower_builtin_call_args(&name, args, param_exprs, param_types)?;
                 HirExprKind::Call {

@@ -471,11 +471,11 @@ syminfo.session -> const string
 syminfo.timezone -> const string
 syminfo.root -> const string
 syminfo.volumetype -> const string
-syminfo.mintick -> const float
-syminfo.mincontract -> const float
-syminfo.pointvalue -> const float
-syminfo.minmove -> const int
-syminfo.pricescale -> const int
+syminfo.mintick -> simple float
+syminfo.mincontract -> simple float
+syminfo.pointvalue -> simple float
+syminfo.minmove -> simple int
+syminfo.pricescale -> simple int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
 ticker.heikinashi(tickerid: simple string) -> simple string
@@ -495,7 +495,11 @@ prefix `NASDAQ`, stock type, `Electronic Technology` sector,
 `Telecommunications Equipment` industry, `US` country, `USD` currency/base
 currency, `regular` session, `Etc/UTC` timezone, `base` volume type,
 `mintick = 0.01`, `mincontract = 1.0`, `pointvalue = 1.0`, `minmove = 1`, and
-`pricescale = 100`.
+`pricescale = 100`. ChartContext overrides chart identity, price grid and
+optional decimal quantity precision; `mincontract = 10^-quantityPrecision`
+with precision 0 through 9. `pointvalue` remains 1.0. Numeric metadata has
+`simple` qualification and is not a compile-time synthetic constant. See
+[execution contracts](EXECUTION_SEMANTICS.md#host-quantity-precision-and-margin-rounding).
 `syminfo.prefix(symbol)` and `syminfo.ticker(symbol)` parse the supplied simple
 string directly. They split `PREFIX:TICKER` on the first `:`; symbols without a
 prefix return `""` from `syminfo.prefix()` and the whole symbol from
@@ -982,7 +986,7 @@ flat or already short. Short forced liquidation uses `bar.high` and whole-unit
 truncation. `strategy.margin_liquidation_price` also solves the short-margin
 crossing price for active `margin_short` positions. Symbol precision rounding
 remains unsupported.
-`strategy(..., pyramiding=N)` accepts positive integer const values and limits
+`strategy(..., pyramiding=N)` accepts non-negative integer const values and limits
 same-direction long `strategy.entry()` market entries to that many open trades
 for the current position. The default remains `1`. Fixture-backed market-long
 `strategy.order(id, strategy.long, qty=...)`, or omitted-qty long orders using
@@ -2533,3 +2537,7 @@ Current Phase 4 behavior:
   accept variadic numeric-or-`na` args. Const-or-series `na` inputs return `na`.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.
 - All selected math functions return `na` if any required numeric input is `na`.
+
+Explicit `pyramiding=0` uses an effective capacity of one entry: initial entries
+and reversals remain allowed, while same-direction additions are rejected.
+The core stores effective capacity, so both 0 and 1 map to `pyramiding_limit=1`.

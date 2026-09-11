@@ -40,6 +40,22 @@ impl PathEventOutcome {
 }
 
 impl BrokerState {
+    pub(super) fn take_next_realtime_event(
+        &mut self,
+        tick: EntryPathTick,
+    ) -> Option<PathEventOutcome> {
+        let winner = self
+            .collect_observed_price_candidates(
+                tick.bar_index,
+                tick.mark,
+                self.event_generation,
+                true,
+            )
+            .into_iter()
+            .find(|candidate| candidate.observed_generation == self.event_generation)?;
+        Some(self.apply_entry_path_candidate(&winner, tick))
+    }
+
     pub(crate) fn take_next_gap_event(
         &mut self,
         tick: EntryPathTick,

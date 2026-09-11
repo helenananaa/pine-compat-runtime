@@ -2,6 +2,39 @@ use std::collections::{HashMap, HashSet};
 
 use pine_ir::{HirProgram, SeriesId};
 
+/// Host-selected display window. Compute series, `var`/`varip`, collections and
+/// broker records that scripts can still read are not trimmed by this policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct OutputRetention {
+    keep_confirmed_bars: Option<usize>,
+}
+
+impl OutputRetention {
+    #[must_use]
+    pub fn unlimited() -> Self {
+        Self::default()
+    }
+
+    #[must_use]
+    pub fn keep_confirmed_bars(count: usize) -> Self {
+        Self {
+            keep_confirmed_bars: Some(count),
+        }
+    }
+
+    #[must_use]
+    pub fn confirmed_bar_limit(&self) -> Option<usize> {
+        self.keep_confirmed_bars
+    }
+
+    #[must_use]
+    pub fn origin(self, confirmed_bars: usize) -> usize {
+        self.keep_confirmed_bars
+            .map(|keep| confirmed_bars.saturating_sub(keep))
+            .unwrap_or(0)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HistoryRetentionMode {
     StaticTrimmed,

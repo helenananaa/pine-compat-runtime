@@ -1,0 +1,7 @@
+//@version=6
+import user/transitive_outer/1 as ta
+import user/transitive_outer/1 as second
+indicator("Transitive library calls")
+plot(ta.value(close), "first")
+plot(second.value(10), "second")
+plot(ta.sma(close, 2), "builtin fallback")

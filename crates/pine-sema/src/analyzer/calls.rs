@@ -407,6 +407,7 @@ impl Analyzer {
         if self.function_depth > 0
             && is_array_mutation_builtin(name)
             && !self.allows_udf_collection_mutation_side_effect(name)
+            && !self.allows_local_array_mutation(callee_span)
         {
             self.unsupported(
                 "function_side_effect",

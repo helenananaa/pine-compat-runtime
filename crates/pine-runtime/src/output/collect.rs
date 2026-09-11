@@ -1,9 +1,10 @@
 use crate::PineValue;
 
-use super::model::{PlotSeries, SeriesOutput};
+use super::model::SeriesOutput;
+use crate::runtime::plot_history::{RuntimePlot, na_history};
 
 pub(crate) fn push_plot_value(
-    outputs: &mut Vec<PlotSeries>,
+    outputs: &mut Vec<RuntimePlot>,
     current_bar: usize,
     id: u32,
     value: PineValue,
@@ -27,16 +28,14 @@ pub(crate) fn push_plot_value(
         }
     } else {
         let mut values = vec![PineValue::Na; current_bar];
-        let mut colors = vec![PineValue::Na; current_bar];
         values.push(value);
-        colors.push(color);
-        let mut output = PlotSeries::new(id, values);
-        output.colors = colors;
+        let mut output = RuntimePlot::new(id, values);
+        *output.colors.last_mut().expect("new plot has current bar") = color;
         outputs.push(output);
     }
 }
 
-pub(crate) fn finalize_plot_values(outputs: &mut [PlotSeries], current_bar: usize) {
+pub(crate) fn finalize_plot_values(outputs: &mut [RuntimePlot], current_bar: usize) {
     for output in outputs {
         while output.values.len() < current_bar {
             output.values.push(PineValue::Na);
@@ -66,7 +65,7 @@ pub(crate) fn push_series_value<T: SeriesOutput>(
             *current = value;
         }
     } else {
-        let mut values = vec![PineValue::Na; current_bar];
+        let mut values = na_history(current_bar);
         values.push(value);
         outputs.push(T::new(id, values));
     }

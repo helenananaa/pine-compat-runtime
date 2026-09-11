@@ -1,0 +1,14 @@
+//@version=6
+indicator("Library declaration forms")
+type Point
+    float x
+read(series Point p) => p.x
+latch(on, off) =>
+    var bool state = false
+    switch
+        on => state := true
+        off => state := false
+    state
+k = bar_index % 4
+plot(latch(k == 1, k == 3) ? 1 : 0, "latch")
+plot(read(Point.new(k)), "reference value")

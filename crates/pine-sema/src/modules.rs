@@ -2,18 +2,24 @@ use std::collections::{HashMap, HashSet};
 
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
-    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, FunctionParam, Program, Span,
-    Stmt, StmtKind, SwitchArmResult, UnaryOp, UserTypeField, parse_source,
+    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind,
+    SwitchArmResult, UnaryOp, UserTypeField, parse_source,
 };
 
-use crate::analyzer::context::{FunctionInfo, FunctionParamInfo, MethodInfo, MethodParamInfo};
+use crate::analyzer::context::{FunctionInfo, MethodInfo, MethodParamInfo};
 use crate::analyzer::functions::{
-    contains_output_or_declaration_call, function_param_names,
-    statement_contains_output_or_declaration_call,
+    contains_output_or_declaration_call, function_default_values, function_param_names,
+    record_default_shadowing, statement_contains_output_or_declaration_call,
 };
 use crate::legacy::SourcePolicy;
 use crate::source_graph::{AnalysisInput, SourceContextId, SourceId};
 use crate::types::array_kind_from_element_type_name;
+
+mod function_parameters;
+use function_parameters::{
+    imported_function_overloads, imported_function_param_types, module_function_param_types,
+    same_parameter_signature,
+};
 
 mod alias_access;
 mod imports;
@@ -118,6 +124,7 @@ fn validate_modules_inner(
     let root_program = rewrite_program(&root_program, &import_plan.root_rewrites);
 
     ModuleValidation {
+        source_context_origins: import_plan.source_context_origins,
         diagnostics,
         root_program,
         root_policy,
@@ -130,6 +137,7 @@ fn validate_modules_inner(
 
 fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<Diagnostic>) {
     let mut library_declarations = 0;
+    let mut default_shadowed_names = HashSet::new();
     // Temporarily move the statements out so we can iterate by reference
     // without cloning the entire AST; the loop only mutates other fields of
     // `module`, never `module.program.statements`.
@@ -144,37 +152,59 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     body,
                     span,
                 } => {
-                    register_export(
-                        module,
-                        name,
-                        ExportInfo::Function { span: *span },
-                        diagnostics,
-                    );
-                    if function_body_has_side_effect(body) {
+                    let param_types =
+                        module_function_param_types(module, params, None, diagnostics);
+                    let distinct_overload =
+                        module.functions.get(name).is_some_and(|previous| {
+                            std::iter::once(previous)
+                                .chain(previous.overloads.iter())
+                                .all(|candidate| {
+                                    !same_parameter_signature(&candidate.param_types, &param_types)
+                                })
+                        }) && matches!(module.exports.get(name), Some(ExportInfo::Function { .. }));
+                    if !distinct_overload {
+                        register_export(
+                            module,
+                            name,
+                            ExportInfo::Function { span: *span },
+                            diagnostics,
+                        );
+                    }
+                    if function_body_has_side_effect(body, &statements) {
                         diagnostics.push(Diagnostic::error(
                             "E_IMPORT_FUNCTION_SIDE_EFFECT",
                             format!("exported function `{name}` contains unsupported side effects"),
                             *span,
                         ));
                     }
-                    module.functions.insert(
-                        name.clone(),
-                        FunctionInfo {
-                            source_id: module.id,
-                            // Library declarations are re-contextualized for each root import
-                            // instance in `build_import_plan` before semantic analysis.
-                            source_context_id: SourceContextId::root(),
-                            params: function_param_names(params),
-                            param_types: module_function_param_types(
-                                module,
-                                params,
-                                None,
-                                diagnostics,
-                            ),
-                            body: body.clone(),
-                            span: *span,
-                        },
-                    );
+                    let function = FunctionInfo {
+                        overloads: Vec::new(),
+                        display_name: name.clone(),
+                        source_id: module.id,
+                        // Library declarations are re-contextualized for each root import
+                        // instance in `build_import_plan` before semantic analysis.
+                        source_context_id: SourceContextId::root(),
+                        params: function_param_names(params),
+                        default_values: function_default_values(
+                            params,
+                            module.program.version.map_or(1, |version| version.version),
+                            &default_shadowed_names,
+                            diagnostics,
+                        ),
+                        param_types,
+                        body: body.clone(),
+                        span: *span,
+                    };
+                    if distinct_overload {
+                        module
+                            .functions
+                            .get_mut(name)
+                            .unwrap()
+                            .overloads
+                            .push(function);
+                    } else {
+                        module.functions.insert(name.clone(), function);
+                    }
                 }
                 ExportItem::Const { name, value, span } => {
                     register_export(
@@ -217,11 +247,19 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                 module.functions.insert(
                     name.clone(),
                     FunctionInfo {
+                        overloads: Vec::new(),
+                        display_name: name.clone(),
                         source_id: module.id,
                         // Library declarations are re-contextualized for each root import
                         // instance in `build_import_plan` before semantic analysis.
                         source_context_id: SourceContextId::root(),
                         params: function_param_names(params),
+                        default_values: function_default_values(
+                            params,
+                            module.program.version.map_or(1, |version| version.version),
+                            &default_shadowed_names,
+                            diagnostics,
+                        ),
                         param_types: module_function_param_types(module, params, None, diagnostics),
                         body: body.clone(),
                         span: statement.span,
@@ -249,6 +287,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             StmtKind::Method(_) => {}
             _ => {}
         }
+        record_default_shadowing(statement, &mut default_shadowed_names);
     }
     for statement in &statements {
         let StmtKind::Method(method) = &statement.kind else {
@@ -349,6 +388,7 @@ fn register_export(
 
 #[derive(Default)]
 struct ImportPlan {
+    source_context_origins: HashMap<SourceContextId, (SourceId, Option<String>)>,
     root_rewrites: RewriteContext,
     imported_functions: HashMap<String, FunctionInfo>,
     imported_methods: HashMap<(String, String), MethodInfo>,
@@ -361,32 +401,75 @@ fn build_import_plan(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> ImportPlan {
     let mut plan = ImportPlan::default();
-    for (import_instance, import) in imports_in_program(&modules[0].program)
-        .into_iter()
+    plan.source_context_origins
+        .insert(SourceContextId::root(), (SourceId::root(), None));
+    let root_imports = imports_in_program(&modules[0].program);
+    let mut contexts = root_imports
+        .iter()
         .enumerate()
-    {
-        let source_context_id = SourceContextId::import_instance(import_instance);
-        let Some((alias, _)) = import.alias else {
-            continue;
-        };
-        let Some(module_index) = library_index.get(&import.key) else {
-            continue;
-        };
-        let module = &modules[*module_index];
-        let module_context = rewrite_context_for_module(&alias, module);
+        .filter_map(|(index, import)| {
+            Some((
+                import.alias.as_ref()?.0.clone(),
+                *library_index.get(&import.key)?,
+                SourceContextId::import_instance(index),
+                true,
+            ))
+        })
+        .collect::<Vec<_>>();
+    // One canonical context per dependency source, not one per path through
+    // the graph. Diamonds and cycles cannot cause recursive body expansion.
+    let dependency_indices: HashSet<_> = modules
+        .iter()
+        .skip(1)
+        .flat_map(|module| imports_in_program(&module.program))
+        .filter_map(|import| library_index.get(&import.key).copied())
+        .collect();
+    contexts.extend(
+        modules
+            .iter()
+            .enumerate()
+            .skip(1)
+            .filter(|(index, _)| dependency_indices.contains(index))
+            .map(|(index, module)| {
+                (
+                    dependency_namespace(module),
+                    index,
+                    SourceContextId::import_instance(root_imports.len() + index - 1),
+                    false,
+                )
+            }),
+    );
+    for (alias, module_index, source_context_id, is_root_import) in contexts {
+        let module = &modules[module_index];
+        plan.source_context_origins
+            .insert(source_context_id, (module.id, module.key.clone()));
+        let mut module_context = rewrite_context_for_module(&alias, module);
+        for import in imports_in_program(&module.program) {
+            let (Some((dependency_alias, _)), Some(index)) =
+                (import.alias, library_index.get(&import.key))
+            else {
+                continue;
+            };
+            add_dependency_bindings(&mut module_context, &dependency_alias, &modules[*index]);
+        }
 
         for (name, export) in &module.exports {
             match export {
                 ExportInfo::Const { value, .. } => {
-                    plan.root_rewrites.constants.insert(
-                        format!("{alias}.{name}"),
-                        rewrite_expr(value, &module_context),
-                    );
+                    if is_root_import {
+                        plan.root_rewrites.constants.insert(
+                            format!("{alias}.{name}"),
+                            rewrite_expr(value, &module_context),
+                        );
+                    }
                 }
                 ExportInfo::Function { .. } => {
-                    plan.root_rewrites
-                        .function_targets
-                        .insert(format!("{alias}.{name}"), format!("{alias}.{name}"));
+                    if is_root_import {
+                        plan.root_rewrites.function_targets.insert(
+                            format!("{alias}.{name}"),
+                            module_function_key(&alias, module, name),
+                        );
+                    }
                 }
                 ExportInfo::UserType {
                     identity,
@@ -425,9 +508,27 @@ fn build_import_plan(
                 plan.imported_functions.insert(
                     key,
                     FunctionInfo {
+                        overloads: imported_function_overloads(
+                            function,
+                            &alias,
+                            name,
+                            module,
+                            source_context_id,
+                            &module_context,
+                        ),
+                        display_name: if is_root_import {
+                            if name_is_exported_function(module, name) {
+                                format!("{alias}.{name}")
+                            } else {
+                                format!("__import_{alias}_{name}")
+                            }
+                        } else {
+                            format!("{}::{name}", module.key.as_deref().unwrap_or("library"))
+                        },
                         source_id: function.source_id,
                         source_context_id,
                         params: function.params.clone(),
+                        default_values: function.default_values.clone(),
                         param_types: imported_function_param_types(
                             &alias,
                             module,
@@ -447,7 +548,8 @@ fn build_import_plan(
         }
 
         for ((_, name), method) in &module.methods {
-            let Some(method_info) = imported_method_info(&alias, module, method, source_context_id)
+            let Some(method_info) =
+                imported_method_info(&alias, module, method, source_context_id, &module_context)
             else {
                 continue;
             };
@@ -472,6 +574,7 @@ fn imported_method_info(
     module: &ModuleInfo,
     method: &ModuleMethodInfo,
     source_context_id: SourceContextId,
+    module_context: &RewriteContext,
 ) -> Option<MethodInfo> {
     let identity = method.receiver_identity.as_ref()?;
     if !exported_user_type(module, &identity.name) {
@@ -483,14 +586,13 @@ fn imported_method_info(
         params.push(imported_method_param_info(alias, module, param)?);
     }
 
-    let module_context = rewrite_context_for_module(alias, module);
     Some(MethodInfo {
         source_id: identity.source_id,
         source_context_id,
         receiver_type: format!("{alias}.{}", identity.name),
         receiver_name: method.receiver_name.clone(),
         params,
-        body: rewrite_function_body(&method.body, &method.param_names, &module_context),
+        body: rewrite_function_body(&method.body, &method.param_names, module_context),
         span: method.span,
     })
 }
@@ -533,111 +635,6 @@ fn imported_method_param_info(
         pine_type: PineType::new(Qualifier::Series, ValueKind::UserType),
         user_type_name: Some(format!("{alias}.{}", param.type_name)),
     })
-}
-
-fn module_function_param_types(
-    module: &ModuleInfo,
-    params: &[FunctionParam],
-    alias: Option<&str>,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Vec<Option<FunctionParamInfo>> {
-    params
-        .iter()
-        .map(|param| {
-            let Some(type_name) = &param.type_name else {
-                return None;
-            };
-            module_function_param_type(module, type_name, alias, param.span, diagnostics)
-        })
-        .collect()
-}
-
-fn module_function_param_type(
-    module: &ModuleInfo,
-    type_name: &str,
-    alias: Option<&str>,
-    span: Span,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Option<FunctionParamInfo> {
-    let (pine_type, user_type_name) = match type_name {
-        _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
-            let element_type = &type_name["array<".len()..type_name.len() - 1];
-            if let Some(kind) = array_kind_from_element_type_name(element_type) {
-                (PineType::new(Qualifier::Series, kind), None)
-            } else if exported_scalar_tree_user_type(module, element_type) {
-                let type_name = alias
-                    .map(|alias| format!("{alias}.{element_type}"))
-                    .unwrap_or_else(|| element_type.to_owned());
-                (
-                    PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
-                    Some(type_name),
-                )
-            } else {
-                diagnostics.push(Diagnostic::error(
-                    "E_FUNCTION_PARAM_TYPE",
-                    format!("function parameter type `{type_name}` is not supported"),
-                    span,
-                ));
-                return None;
-            }
-        }
-        "int" => (PineType::new(Qualifier::Series, ValueKind::Int), None),
-        "float" => (PineType::new(Qualifier::Series, ValueKind::Float), None),
-        "bool" => (PineType::new(Qualifier::Series, ValueKind::Bool), None),
-        "string" => (PineType::new(Qualifier::Series, ValueKind::String), None),
-        "color" => (PineType::new(Qualifier::Series, ValueKind::Color), None),
-        "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
-        "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
-        "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
-        "polyline" => (PineType::new(Qualifier::Series, ValueKind::Polyline), None),
-        "box" => (PineType::new(Qualifier::Series, ValueKind::Box), None),
-        "table" => (PineType::new(Qualifier::Series, ValueKind::Table), None),
-        "chart.point" => (
-            PineType::new(Qualifier::Series, ValueKind::ChartPoint),
-            None,
-        ),
-        _ if module.user_types.contains_key(type_name) => {
-            let type_name = alias
-                .map(|alias| format!("{alias}.{type_name}"))
-                .unwrap_or_else(|| type_name.to_owned());
-            (
-                PineType::new(Qualifier::Series, ValueKind::UserType),
-                Some(type_name),
-            )
-        }
-        _ => {
-            diagnostics.push(Diagnostic::error(
-                "E_FUNCTION_PARAM_TYPE",
-                format!("function parameter type `{type_name}` is not supported"),
-                span,
-            ));
-            return None;
-        }
-    };
-    Some(FunctionParamInfo {
-        pine_type,
-        user_type_name,
-        span,
-    })
-}
-
-fn imported_function_param_types(
-    alias: &str,
-    module: &ModuleInfo,
-    params: &[Option<FunctionParamInfo>],
-) -> Vec<Option<FunctionParamInfo>> {
-    params
-        .iter()
-        .map(|param| {
-            let mut param = param.clone()?;
-            if let Some(type_name) = &param.user_type_name
-                && module.user_types.contains_key(type_name)
-            {
-                param.user_type_name = Some(format!("{alias}.{type_name}"));
-            }
-            Some(param)
-        })
-        .collect()
 }
 
 fn exported_scalar_tree_user_type(module: &ModuleInfo, type_name: &str) -> bool {
@@ -753,18 +750,11 @@ fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContex
     let mut context = RewriteContext::default();
     for (name, value) in &module.constants {
         context.constants.insert(name.clone(), value.clone());
-        context
-            .constants
-            .insert(format!("{alias}.{name}"), value.clone());
     }
     for name in module.functions.keys() {
         context
             .function_targets
             .insert(name.clone(), module_function_key(alias, module, name));
-        context.function_targets.insert(
-            format!("{alias}.{name}"),
-            module_function_key(alias, module, name),
-        );
     }
     for name in module
         .exports
@@ -774,18 +764,42 @@ fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContex
         context
             .type_targets
             .insert(name.clone(), format!("{alias}.{name}"));
-        context
-            .type_targets
-            .insert(format!("{alias}.{name}"), format!("{alias}.{name}"));
     }
     context
 }
 
-fn module_function_key(alias: &str, module: &ModuleInfo, name: &str) -> String {
-    if name_is_exported_function(module, name) {
-        format!("{alias}.{name}")
-    } else {
-        format!("__import_{alias}_{name}")
+fn module_function_key(alias: &str, _module: &ModuleInfo, name: &str) -> String {
+    // Not spellable by Pine source, so public aliases cannot capture builtin
+    // calls inside a library or collide with generated private function keys.
+    format!("@import:{alias}.{name}")
+}
+
+fn dependency_namespace(module: &ModuleInfo) -> String {
+    format!("@source{}", module.id.get())
+}
+
+fn add_dependency_bindings(context: &mut RewriteContext, alias: &str, module: &ModuleInfo) {
+    let namespace = dependency_namespace(module);
+    for (name, export) in &module.exports {
+        let source_name = format!("{alias}.{name}");
+        match export {
+            ExportInfo::Function { .. } => {
+                context
+                    .function_targets
+                    .insert(source_name, module_function_key(&namespace, module, name));
+            }
+            ExportInfo::Const { value, .. } => {
+                context.constants.insert(
+                    source_name,
+                    rewrite_expr(value, &rewrite_context_for_module(&namespace, module)),
+                );
+            }
+            ExportInfo::UserType { .. } => {
+                context
+                    .type_targets
+                    .insert(source_name, format!("{namespace}.{name}"));
+            }
+        }
     }
 }
 
@@ -859,333 +873,5 @@ fn const_qualified_type(name: &str) -> Option<PineType> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::analyzer::calls::expr_name;
-    use crate::source_graph::SourceId;
-    use pine_syntax::SourceFile;
-
-    fn parsed_program(text: &str) -> Program {
-        parse_source(&SourceFile::new("library.pine", text)).program
-    }
-
-    fn qualified_name(parts: &[&str]) -> Expr {
-        Expr {
-            kind: ExprKind::QualifiedName(parts.iter().map(|part| (*part).to_owned()).collect()),
-            span: Span::new(0, 0),
-        }
-    }
-
-    #[test]
-    fn exported_user_type_records_identity_and_fields() {
-        let mut module = ModuleInfo {
-            id: SourceId::library(7),
-            key: Some("user/identity/1".to_owned()),
-            program: parsed_program(
-                r#"
-library("identity")
-export type Point
-    float x
-"#,
-            ),
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut diagnostics = Vec::new();
-
-        collect_library_declarations(&mut module, &mut diagnostics);
-
-        assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        let ExportInfo::UserType {
-            identity, fields, ..
-        } = module.exports.get("Point").expect("exported UDT")
-        else {
-            panic!("Point should be a UDT export");
-        };
-        assert_eq!(identity.source_id, SourceId::library(7));
-        assert_eq!(identity.name, "Point");
-        assert_eq!(fields.len(), 1);
-        assert_eq!(fields[0].name, "x");
-        assert_eq!(fields[0].type_name, "float");
-        assert_eq!(
-            fields[0].pine_type,
-            Some(PineType::new(Qualifier::Series, ValueKind::Float))
-        );
-
-        let user_type = module.user_types.get("Point").expect("UDT table entry");
-        assert_eq!(user_type.identity, *identity);
-        assert_eq!(user_type.fields.len(), 1);
-        assert_eq!(user_type.fields[0].name, fields[0].name);
-        assert_eq!(user_type.fields[0].type_name, fields[0].type_name);
-        assert_eq!(user_type.fields[0].pine_type, fields[0].pine_type);
-        assert_eq!(user_type.fields[0].span, fields[0].span);
-    }
-
-    #[test]
-    fn import_plan_records_alias_qualified_user_type_metadata() {
-        let root = ModuleInfo {
-            id: SourceId::root(),
-            key: None,
-            program: parse_source(&SourceFile::new(
-                "root.pine",
-                r#"import user/identity/1 as lib
-"#,
-            ))
-            .program,
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut library = ModuleInfo {
-            id: SourceId::library(0),
-            key: Some("user/identity/1".to_owned()),
-            program: parsed_program(
-                r#"
-library("identity")
-export type Point
-    float x
-"#,
-            ),
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut diagnostics = Vec::new();
-        collect_library_declarations(&mut library, &mut diagnostics);
-        let modules = vec![root, library];
-        let library_index = HashMap::from([("user/identity/1".to_owned(), 1)]);
-
-        let plan = build_import_plan(&modules, &library_index, &mut diagnostics);
-
-        assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        let point = plan
-            .imported_user_types
-            .get("lib.Point")
-            .expect("alias-qualified imported UDT");
-        assert_eq!(point.identity.source_id, SourceId::library(0));
-        assert_eq!(point.identity.name, "Point");
-        assert_eq!(point.fields.len(), 1);
-        assert_eq!(point.fields[0].name, "x");
-        assert_eq!(point.fields[0].type_name, "float");
-        assert_eq!(
-            point.fields[0].pine_type,
-            Some(PineType::new(Qualifier::Series, ValueKind::Float))
-        );
-        assert_eq!(
-            point.span,
-            modules[1]
-                .user_types
-                .get("Point")
-                .expect("library UDT metadata")
-                .span
-        );
-    }
-
-    #[test]
-    fn import_plan_records_private_user_type_dependencies_for_exported_metadata() {
-        let root = ModuleInfo {
-            id: SourceId::root(),
-            key: None,
-            program: parse_source(&SourceFile::new(
-                "root.pine",
-                r#"import user/identity/1 as lib
-"#,
-            ))
-            .program,
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut library = ModuleInfo {
-            id: SourceId::library(0),
-            key: Some("user/identity/1".to_owned()),
-            program: parsed_program(
-                r#"
-library("identity")
-type Point
-    float x
-export type Wrapper
-    Point nested
-"#,
-            ),
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut diagnostics = Vec::new();
-        collect_library_declarations(&mut library, &mut diagnostics);
-        let modules = vec![root, library];
-        let library_index = HashMap::from([("user/identity/1".to_owned(), 1)]);
-
-        let plan = build_import_plan(&modules, &library_index, &mut diagnostics);
-
-        assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        let wrapper = plan
-            .imported_user_types
-            .get("lib.Wrapper")
-            .expect("exported wrapper metadata");
-        assert_eq!(wrapper.fields.len(), 1);
-        assert_eq!(wrapper.fields[0].name, "nested");
-        assert_eq!(wrapper.fields[0].type_name, "Point");
-        assert_eq!(wrapper.fields[0].pine_type, None);
-
-        let point = plan
-            .imported_user_types
-            .get("lib.Point")
-            .expect("private dependency metadata");
-        assert_eq!(point.identity.name, "Point");
-        assert_eq!(point.fields.len(), 1);
-        assert_eq!(point.fields[0].name, "x");
-        assert_eq!(
-            point.fields[0].pine_type,
-            Some(PineType::new(Qualifier::Series, ValueKind::Float))
-        );
-    }
-
-    #[test]
-    fn library_method_records_receiver_identity_metadata() {
-        let mut module = ModuleInfo {
-            id: SourceId::library(3),
-            key: Some("user/methods/1".to_owned()),
-            program: parsed_program(
-                r#"
-library("methods")
-export type Point
-    float x
-
-method shift(Point p, float delta) => p.x + delta
-"#,
-            ),
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut diagnostics = Vec::new();
-
-        collect_library_declarations(&mut module, &mut diagnostics);
-
-        assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        let method = module
-            .methods
-            .get(&("Point".to_owned(), "shift".to_owned()))
-            .expect("library method");
-        assert_eq!(method.receiver_type_name.as_deref(), Some("Point"));
-        assert_eq!(
-            method.receiver_identity,
-            Some(ModuleUserTypeIdentity {
-                source_id: SourceId::library(3),
-                name: "Point".to_owned(),
-            })
-        );
-    }
-
-    #[test]
-    fn library_method_metadata_allows_same_name_on_different_receivers() {
-        let mut module = ModuleInfo {
-            id: SourceId::library(3),
-            key: Some("user/methods/1".to_owned()),
-            program: parsed_program(
-                r#"
-library("methods")
-export type Point
-    float x
-export type Offset
-    int value
-
-method same(Point p) => p
-method same(Offset offset) => offset
-"#,
-            ),
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut diagnostics = Vec::new();
-
-        collect_library_declarations(&mut module, &mut diagnostics);
-
-        assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        assert!(
-            module
-                .methods
-                .contains_key(&("Point".to_owned(), "same".to_owned()))
-        );
-        assert!(
-            module
-                .methods
-                .contains_key(&("Offset".to_owned(), "same".to_owned()))
-        );
-    }
-
-    #[test]
-    fn rewrite_context_alias_qualifies_exported_user_type_constructors() {
-        let mut module = ModuleInfo {
-            id: SourceId::library(4),
-            key: Some("user/methods/1".to_owned()),
-            program: parsed_program(
-                r#"
-library("methods")
-export type Point
-    float x
-"#,
-            ),
-            exports: HashMap::new(),
-            private_symbols: HashSet::new(),
-            user_types: HashMap::new(),
-            methods: HashMap::new(),
-            functions: HashMap::new(),
-            constants: HashMap::new(),
-        };
-        let mut diagnostics = Vec::new();
-        collect_library_declarations(&mut module, &mut diagnostics);
-        assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        let context = rewrite_context_for_module("lib", &module);
-        let body = FunctionBody::Expr(qualified_name(&["Point", "new"]));
-
-        let rewritten = rewrite_function_body(&body, &[], &context);
-
-        let FunctionBody::Expr(expr) = rewritten else {
-            panic!("expression body expected");
-        };
-        assert_eq!(expr_name(&expr).as_deref(), Some("lib.Point.new"));
-    }
-
-    #[test]
-    fn rewrite_context_keeps_shadowed_user_type_constructor_names() {
-        let mut context = RewriteContext::default();
-        context
-            .type_targets
-            .insert("Point".to_owned(), "lib.Point".to_owned());
-        let body = FunctionBody::Expr(qualified_name(&["Point", "new"]));
-        let params = vec!["Point".to_owned()];
-
-        let rewritten = rewrite_function_body(&body, &params, &context);
-
-        let FunctionBody::Expr(expr) = rewritten else {
-            panic!("expression body expected");
-        };
-        assert_eq!(expr_name(&expr).as_deref(), Some("Point.new"));
-    }
-}
+#[path = "modules/tests.rs"]
+mod tests;

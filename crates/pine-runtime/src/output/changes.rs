@@ -13,7 +13,8 @@ use super::strategy::{
 };
 use crate::PineValue;
 
-pub const PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 2;
+pub const PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 3;
+pub const MIN_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StreamingVisibility {
@@ -341,6 +342,7 @@ pub struct RuntimeChanges {
     pub schema_version: u32,
     pub revision: u64,
     pub base_revision: u64,
+    pub retained_from: usize,
     pub visibility: StreamingVisibility,
     pub series: Vec<SeriesChange>,
     pub hlines: Vec<HLineChange>,
@@ -358,6 +360,7 @@ impl RuntimeChanges {
             schema_version: PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION,
             revision,
             base_revision: revision.saturating_sub(1),
+            retained_from: 0,
             visibility,
             series: Vec::new(),
             hlines: Vec::new(),
@@ -370,15 +373,21 @@ impl RuntimeChanges {
     }
 }
 
-pub(crate) fn apply_runtime_changes_in_place(result: &mut RuntimeResult, changes: &RuntimeChanges) {
+pub(crate) fn apply_runtime_changes_in_place(
+    result: &mut RuntimeResult,
+    changes: &RuntimeChanges,
+    previous_origin: usize,
+) {
+    let advance = changes.retained_from.saturating_sub(previous_origin);
+    drop_display_prefix(result, advance, changes.retained_from);
     for change in &changes.series {
-        apply_series_change(result, change);
+        apply_series_change(result, change, changes.retained_from);
     }
     for change in &changes.hlines {
         apply_hline_change(result, change);
     }
     for change in &changes.fills {
-        apply_fill_change(result, change);
+        apply_fill_change(result, change, changes.retained_from);
     }
     for change in &changes.drawings {
         apply_drawing_change(result, change);
@@ -421,16 +430,190 @@ fn apply_event_changes<T: Clone + PartialEq>(target: &mut Vec<T>, changes: &[Eve
     }
 }
 
-fn apply_series_change(result: &mut RuntimeResult, change: &SeriesChange) {
+fn local_start(absolute: usize, origin: usize) -> usize {
+    absolute.saturating_sub(origin)
+}
+
+pub(crate) fn drop_display_prefix(result: &mut RuntimeResult, advance: usize, origin: usize) {
+    if advance > 0 {
+        for plot in &mut result.plots {
+            drain_prefix(&mut plot.values, advance);
+            drain_prefix(&mut plot.colors, advance);
+        }
+        for item in &mut result.plot_chars {
+            drain_prefix(&mut item.values, advance);
+            drain_prefix(&mut item.chars, advance);
+            drain_prefix(&mut item.colors, advance);
+            drain_prefix(&mut item.locations, advance);
+            drain_prefix(&mut item.texts, advance);
+            drain_prefix(&mut item.text_colors, advance);
+            drain_prefix(&mut item.sizes, advance);
+        }
+        for item in &mut result.plot_shapes {
+            drain_prefix(&mut item.values, advance);
+            drain_prefix(&mut item.styles, advance);
+            drain_prefix(&mut item.locations, advance);
+            drain_prefix(&mut item.colors, advance);
+            drain_prefix(&mut item.texts, advance);
+            drain_prefix(&mut item.text_colors, advance);
+            drain_prefix(&mut item.sizes, advance);
+        }
+        for item in &mut result.plot_arrows {
+            drain_prefix(&mut item.values, advance);
+            drain_prefix(&mut item.color_ups, advance);
+            drain_prefix(&mut item.color_downs, advance);
+            drain_prefix(&mut item.min_heights, advance);
+            drain_prefix(&mut item.max_heights, advance);
+        }
+        for item in &mut result.plot_bars {
+            drain_prefix(&mut item.opens, advance);
+            drain_prefix(&mut item.highs, advance);
+            drain_prefix(&mut item.lows, advance);
+            drain_prefix(&mut item.closes, advance);
+            drain_prefix(&mut item.colors, advance);
+        }
+        for item in &mut result.plot_candles {
+            drain_prefix(&mut item.opens, advance);
+            drain_prefix(&mut item.highs, advance);
+            drain_prefix(&mut item.lows, advance);
+            drain_prefix(&mut item.closes, advance);
+            drain_prefix(&mut item.colors, advance);
+            drain_prefix(&mut item.wick_colors, advance);
+            drain_prefix(&mut item.border_colors, advance);
+        }
+        for item in &mut result.bg_colors {
+            drain_prefix(&mut item.values, advance);
+        }
+        for item in &mut result.bar_colors {
+            drain_prefix(&mut item.values, advance);
+        }
+        for item in &mut result.fills {
+            drain_prefix(&mut item.colors, advance);
+        }
+    }
+    if origin == 0 {
+        return;
+    }
+    for item in &mut result.labels {
+        trim_snapshots(&mut item.snapshots, origin);
+    }
+    result.labels.retain(|item| !item.snapshots.is_empty());
+    for item in &mut result.lines {
+        trim_snapshots(&mut item.snapshots, origin);
+    }
+    result.lines.retain(|item| !item.snapshots.is_empty());
+    for item in &mut result.line_fills {
+        trim_snapshots(&mut item.snapshots, origin);
+    }
+    result.line_fills.retain(|item| !item.snapshots.is_empty());
+    for item in &mut result.polylines {
+        trim_snapshots(&mut item.snapshots, origin);
+    }
+    result.polylines.retain(|item| !item.snapshots.is_empty());
+    for item in &mut result.boxes {
+        trim_snapshots(&mut item.snapshots, origin);
+    }
+    result.boxes.retain(|item| !item.snapshots.is_empty());
+    for item in &mut result.tables {
+        trim_snapshots(&mut item.snapshots, origin);
+    }
+    result.tables.retain(|item| !item.snapshots.is_empty());
+    result.alerts.retain(|event| event.bar_index >= origin);
+}
+
+fn drain_prefix<T>(values: &mut Vec<T>, count: usize) {
+    let count = count.min(values.len());
+    if count > 0 {
+        values.drain(..count);
+    }
+}
+
+fn trim_snapshots<T>(snapshots: &mut Vec<T>, origin: usize)
+where
+    T: SnapshotBarIndex,
+{
+    if snapshots.is_empty() {
+        return;
+    }
+    let keep_last = snapshots
+        .last()
+        .is_some_and(SnapshotBarIndex::keep_after_trim);
+    let mut first_kept = snapshots
+        .iter()
+        .position(|snapshot| snapshot.bar_index() >= origin)
+        .unwrap_or(snapshots.len());
+    if keep_last && first_kept == snapshots.len() {
+        first_kept = snapshots.len() - 1;
+    }
+    drain_prefix(snapshots, first_kept);
+}
+
+trait SnapshotBarIndex {
+    fn bar_index(&self) -> usize;
+    fn keep_after_trim(&self) -> bool;
+}
+
+impl SnapshotBarIndex for crate::LabelSnapshot {
+    fn bar_index(&self) -> usize {
+        self.bar_index
+    }
+    fn keep_after_trim(&self) -> bool {
+        self.exists
+    }
+}
+impl SnapshotBarIndex for crate::LineSnapshot {
+    fn bar_index(&self) -> usize {
+        self.bar_index
+    }
+    fn keep_after_trim(&self) -> bool {
+        self.exists
+    }
+}
+impl SnapshotBarIndex for crate::LineFillSnapshot {
+    fn bar_index(&self) -> usize {
+        self.bar_index
+    }
+    fn keep_after_trim(&self) -> bool {
+        self.exists
+    }
+}
+impl SnapshotBarIndex for crate::PolylineSnapshot {
+    fn bar_index(&self) -> usize {
+        self.bar_index
+    }
+    fn keep_after_trim(&self) -> bool {
+        self.exists
+    }
+}
+impl SnapshotBarIndex for crate::BoxSnapshot {
+    fn bar_index(&self) -> usize {
+        self.bar_index
+    }
+    fn keep_after_trim(&self) -> bool {
+        self.exists
+    }
+}
+impl SnapshotBarIndex for crate::TableSnapshot {
+    fn bar_index(&self) -> usize {
+        self.bar_index
+    }
+    fn keep_after_trim(&self) -> bool {
+        self.exists
+    }
+}
+
+fn apply_series_change(result: &mut RuntimeResult, change: &SeriesChange, origin: usize) {
+    let mut change = change.clone();
+    change.start = local_start(change.start, origin);
     match change.family {
-        SeriesFamily::Plot => apply_plot(result, change),
-        SeriesFamily::PlotChar => apply_plot_char(result, change),
-        SeriesFamily::PlotShape => apply_plot_shape(result, change),
-        SeriesFamily::PlotArrow => apply_plot_arrow(result, change),
-        SeriesFamily::PlotBar => apply_plot_bar(result, change),
-        SeriesFamily::PlotCandle => apply_plot_candle(result, change),
-        SeriesFamily::BgColor => apply_color_series(&mut result.bg_colors, change),
-        SeriesFamily::BarColor => apply_color_series(&mut result.bar_colors, change),
+        SeriesFamily::Plot => apply_plot(result, &change),
+        SeriesFamily::PlotChar => apply_plot_char(result, &change),
+        SeriesFamily::PlotShape => apply_plot_shape(result, &change),
+        SeriesFamily::PlotArrow => apply_plot_arrow(result, &change),
+        SeriesFamily::PlotBar => apply_plot_bar(result, &change),
+        SeriesFamily::PlotCandle => apply_plot_candle(result, &change),
+        SeriesFamily::BgColor => apply_color_series(&mut result.bg_colors, &change),
+        SeriesFamily::BarColor => apply_color_series(&mut result.bar_colors, &change),
     }
 }
 
@@ -694,7 +877,7 @@ fn apply_hline_change(result: &mut RuntimeResult, change: &HLineChange) {
     }
 }
 
-fn apply_fill_change(result: &mut RuntimeResult, change: &FillChange) {
+fn apply_fill_change(result: &mut RuntimeResult, change: &FillChange, origin: usize) {
     match &change.action {
         FillAction::Add(item) => {
             if let Some(existing) = result.fills.iter_mut().find(|fill| fill.id == change.id) {
@@ -706,7 +889,7 @@ fn apply_fill_change(result: &mut RuntimeResult, change: &FillChange) {
         FillAction::Delete => result.fills.retain(|item| item.id != change.id),
         FillAction::SetColors { start, values } => {
             if let Some(existing) = result.fills.iter_mut().find(|fill| fill.id == change.id) {
-                splice_values(&mut existing.colors, *start, values);
+                splice_values(&mut existing.colors, local_start(*start, origin), values);
             }
         }
     }
@@ -834,6 +1017,7 @@ pub(crate) fn series_change_from_lens(
     id: u32,
     old_len: Option<usize>,
     new_len: usize,
+    display_origin: usize,
     fields_from: impl Fn(usize) -> SeriesFields,
     header: Option<SeriesHeader>,
 ) -> Option<SeriesChange> {
@@ -841,10 +1025,12 @@ pub(crate) fn series_change_from_lens(
         return None;
     }
     let (op, start) = match old_len {
-        None => (SeriesChangeOp::Append, 0),
-        Some(old) if new_len > old => (SeriesChangeOp::Append, old),
-        Some(old) if new_len == old && new_len > 0 => (SeriesChangeOp::ReplaceLast, new_len - 1),
-        Some(_) => (SeriesChangeOp::Append, 0),
+        None => (SeriesChangeOp::Append, display_origin),
+        Some(old) if new_len > old => (SeriesChangeOp::Append, old.max(display_origin)),
+        Some(old) if new_len == old && new_len > display_origin => {
+            (SeriesChangeOp::ReplaceLast, new_len - 1)
+        }
+        Some(_) => (SeriesChangeOp::Append, display_origin),
     };
     Some(SeriesChange {
         family,

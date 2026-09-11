@@ -1,22 +1,30 @@
 use super::changes::{
-    PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION, RuntimeChanges, apply_runtime_changes_in_place,
+    MIN_RUNTIME_CHANGES_SCHEMA_VERSION, PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION, RuntimeChanges,
+    apply_runtime_changes_in_place,
 };
 use crate::{RuntimeError, RuntimeResult};
 
-/// A consumer bound to one host-selected stream. Snapshot and revision must be
-/// captured together; the host owns routing and stream identity across sessions.
+/// A consumer bound to one host-selected stream. Snapshot, revision and
+/// `retained_from` must be captured together; the host owns routing.
 pub struct RuntimeReplica {
     result: RuntimeResult,
     revision: u64,
+    origin: usize,
     last_changes: Option<RuntimeChanges>,
 }
 
 impl RuntimeReplica {
     #[must_use]
     pub fn new(result: RuntimeResult, revision: u64) -> Self {
+        Self::with_retained_from(result, revision, 0)
+    }
+
+    #[must_use]
+    pub fn with_retained_from(result: RuntimeResult, revision: u64, retained_from: usize) -> Self {
         Self {
             result,
             revision,
+            origin: retained_from,
             last_changes: None,
         }
     }
@@ -24,6 +32,11 @@ impl RuntimeReplica {
     #[must_use]
     pub fn revision(&self) -> u64 {
         self.revision
+    }
+
+    #[must_use]
+    pub fn retained_from(&self) -> usize {
+        self.origin
     }
 
     #[must_use]
@@ -36,12 +49,28 @@ impl RuntimeReplica {
         *self = Self::new(result, revision);
     }
 
+    pub fn reset_with_retained_from(
+        &mut self,
+        result: RuntimeResult,
+        revision: u64,
+        retained_from: usize,
+    ) {
+        *self = Self::with_retained_from(result, revision, retained_from);
+    }
+
     /// Returns false for an identical retransmission. Rejected updates cannot
     /// mutate result or cursor. Payloads must belong to this replica's stream.
     pub fn apply(&mut self, changes: &RuntimeChanges) -> Result<bool, RuntimeError> {
-        if changes.schema_version != PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION {
+        if changes.schema_version < MIN_RUNTIME_CHANGES_SCHEMA_VERSION
+            || changes.schema_version > PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION
+        {
             return Err(error("E_STREAM_SCHEMA: unsupported changes schema"));
         }
+        let retained_from = if changes.schema_version < 3 {
+            0
+        } else {
+            changes.retained_from
+        };
         if changes.base_revision.checked_add(1) != Some(changes.revision) {
             return Err(error(
                 "E_STREAM_REVISION: revision must follow baseRevision",
@@ -66,7 +95,15 @@ impl RuntimeReplica {
                 "E_STREAM_GAP: missing changes; restore an authoritative snapshot",
             ));
         }
-        apply_runtime_changes_in_place(&mut self.result, changes);
+        if retained_from < self.origin {
+            return Err(error(
+                "E_STREAM_ORIGIN: retainedFrom cannot move earlier; restore a snapshot",
+            ));
+        }
+        let mut payload = changes.clone();
+        payload.retained_from = retained_from;
+        apply_runtime_changes_in_place(&mut self.result, &payload, self.origin);
+        self.origin = retained_from;
         self.revision = changes.revision;
         self.last_changes = Some(changes.clone());
         Ok(true)

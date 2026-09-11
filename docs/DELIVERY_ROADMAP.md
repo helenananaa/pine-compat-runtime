@@ -1,5 +1,12 @@
 # Independent runtime delivery
 
+Current follow-up qualification: [streaming expansion](STREAMING_EXPANSION_AUDIT.md).
+Current Windows expansion: 6,715 Rust / 755 installed Python / 130 tool tests,
+actual WASM streaming and 18 frozen-budget cases pass. The
+[latest local artifact](STREAMING_EXPANSION_ARTIFACTS.json) is bound to its
+working-tree source digest; older tables below retain their own identities.
+Earlier artifact and resource tables below remain evidence for their recorded revisions.
+
 Updated 2026-09-10. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
 The demonstrated realtime-price failures have been repaired and qualified;
@@ -8,9 +15,11 @@ No stable release has been accepted or published by this closeout.
 
 ## Streaming worktree follow-up
 
-The local worktree now adds a Rust/Python streaming replica, changes schema 2,
-ordered in-place consumption, snapshot recovery, and persistent plot/alert
-history. These changes are **not** in the previously indexed a2a1ba5fb wheels.
+The local worktree now adds a Rust/Python streaming replica, changes schema 3
+with `retainedFrom`, ordered in-place consumption, snapshot recovery,
+persistent append-tree history, host-selected display retention, and live
+`request.security` context append/replace/confirm. These changes are **not** in
+the previously indexed a2a1ba5fb wheels.
 Current Windows streaming validation passes 6,686 Rust tests, 748 installed
 Python tests (debug and optimized), 130 tool tests, actual historical WASM and
 all nine frozen-budget cases. The new [streaming artifact](STREAMING_ARTIFACTS.json)
@@ -68,8 +77,9 @@ prove an inaccessible implementation.
 2. Define output retention, update latency and memory budgets for intended use;
    qualify those workloads and platforms before making long-session promises.
 3. Expand complete-script compatibility and independent reference coverage by
-   measured failures. WASM incremental/realtime exports and broader account
-   models remain explicit future capability work.
+   measured failures. Broader account models remain explicit future capability
+   work. WASM incremental/realtime session exports exist in this worktree and
+   still need the actual generated-module gate before a retained candidate.
 4. Keep version/schema upgrade notes, installation examples and checksums tied
    to the selected artifacts before any separately authorized publication.
 

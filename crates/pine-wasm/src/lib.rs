@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 mod analysis_json;
 mod input_overrides;
 mod library_sources;
+mod realtime;
 mod request_bars;
 mod run;
 mod strategy_alerts;
@@ -12,6 +13,10 @@ mod strategy_alerts;
 use analysis_json::json_escape;
 use analysis_json::{analysis_error_json, analyze_input_json, format_diagnostics};
 use library_sources::analysis_input_with_libraries;
+pub use realtime::{
+    WasmRealtimeSession, WasmRuntimeReplica, realtime_session_schema_version,
+    runtime_changes_schema_version,
+};
 pub use run::{
     WasmProgram, run_script_csv, run_script_csv_with_input_overrides,
     run_script_csv_with_libraries, run_script_csv_with_libraries_and_input_overrides,

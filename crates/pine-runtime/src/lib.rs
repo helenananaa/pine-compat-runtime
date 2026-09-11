@@ -62,13 +62,16 @@ pub use output::drawings::{
     LineOutput, LineSnapshot, PolylineOutput, PolylineSnapshot, TableCellSnapshot,
     TableMergedCellSnapshot, TableOutput, TableSnapshot,
 };
-pub use output::json::{public_runtime_profiled_result_json, public_runtime_result_json};
+pub use output::json::{
+    public_runtime_changes_json, public_runtime_profiled_result_json, public_runtime_result_json,
+};
 pub use output::model::{
     ColorSeries, FillOutput, HLineOutput, OutputMetadata, PUBLIC_MATRIX_SCHEMA_VERSION,
     PUBLIC_OUTPUT_SCHEMA_VERSION, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION,
     PlotArrowSeries, PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries,
     RuntimeDiagnostic, RuntimeResult,
 };
+pub use output::parse::{runtime_changes_from_json, runtime_result_from_json};
 pub use output::running_alerts::{
     RunningAlertConfig, RunningAlertEvaluationError, RunningAlertEventSelection,
     RunningAlertRealtimePolicy, render_strategy_order_fill_running_alert,
@@ -88,7 +91,7 @@ pub use request::{
     RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
     validate_requested_bars,
 };
-pub use retention::HistoryRetentionMode;
+pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::historical::{
     HistoricalRuntime, InputOverrides, run_historical, run_historical_profiled,
     run_historical_profiled_with_execution_times, run_historical_profiled_with_request_environment,

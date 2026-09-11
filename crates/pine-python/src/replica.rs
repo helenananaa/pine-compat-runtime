@@ -16,10 +16,19 @@ pub(crate) struct PyRuntimeReplica {
 #[pymethods]
 impl PyRuntimeReplica {
     #[new]
-    #[pyo3(signature = (result, *, revision))]
-    fn new(py: Python<'_>, result: &Bound<'_, PyAny>, revision: u64) -> PyResult<Self> {
+    #[pyo3(signature = (result, *, revision, retained_from=0))]
+    fn new(
+        py: Python<'_>,
+        result: &Bound<'_, PyAny>,
+        revision: u64,
+        retained_from: usize,
+    ) -> PyResult<Self> {
         Ok(Self {
-            inner: RuntimeReplica::new(runtime_result_from_py(py, result)?, revision),
+            inner: RuntimeReplica::with_retained_from(
+                runtime_result_from_py(py, result)?,
+                revision,
+                retained_from,
+            ),
         })
     }
 
@@ -36,15 +45,27 @@ impl PyRuntimeReplica {
         self.inner.revision()
     }
 
+    #[getter]
+    fn retained_from(&self) -> usize {
+        self.inner.retained_from()
+    }
+
     /// Full conversion is opt-in, never part of apply().
     fn result(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         runtime_result_to_py(py, self.inner.result())
     }
 
-    #[pyo3(signature = (result, *, revision))]
-    fn reset(&mut self, py: Python<'_>, result: &Bound<'_, PyAny>, revision: u64) -> PyResult<()> {
+    #[pyo3(signature = (result, *, revision, retained_from=0))]
+    fn reset(
+        &mut self,
+        py: Python<'_>,
+        result: &Bound<'_, PyAny>,
+        revision: u64,
+        retained_from: usize,
+    ) -> PyResult<()> {
         let result = runtime_result_from_py(py, result)?;
-        self.inner.reset(result, revision);
+        self.inner
+            .reset_with_retained_from(result, revision, retained_from);
         Ok(())
     }
 }

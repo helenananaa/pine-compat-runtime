@@ -147,7 +147,7 @@ and its referenced fixtures are the source of truth. See
 | Python | notebooks, research services, data pipelines, application plugins | `run_script(...)`, reusable `Program`, or persistent `RealtimeSession` |
 | CLI | shell workflows, fixtures, compatibility checks, JSON generation | `pine-compat run`, `analyze`, `fmt-ast`, and `matrix` |
 | Rust | native applications and deeper runtime embedding | workspace crates under [`crates/`](crates), [embedding walkthrough](docs/RUST_EMBEDDING.md) |
-| WASM | browser, Node.js, and sandboxed JavaScript hosts | `compileScript`, `analyzeScript`, `runScriptCsv`, and `Program.runCsv` |
+| WASM | browser, Node.js, and sandboxed JavaScript hosts | `compileScript`, `analyzeScript`, `runScriptCsv`, `Program.runCsv`, and `Program.realtimeSession` |
 
 ### Python
 
@@ -208,6 +208,8 @@ assert visible == session.result()
 ```
 
 `apply_forming` / `apply_confirmed` return series append or current-bar replace, drawing add/modify/delete, order/fill/alert identity, preview vs confirmed visibility, and base/current revisions. A replica ignores an identical retransmission and rejects stale or missing revisions. Call `session.result()` when a complete snapshot is required.
+
+To correct confirmed history from time `T`, call `session.correct(T, suffix)` (Rust `correct_historical`, WASM `correct`). The session keeps bars with `time < T` and replays that prefix plus the suffix. `session.replay(...)` still replaces the entire confirmed list. Forming state is discarded. Replicas must `reset` from `stream_snapshot()`; neither operation is a linear change.
 
 Development builds also accept `seed(bars, execution_times=[...])` and
 `update_forming`/`update_confirmed(..., execution_time=...)` for scripts reading
@@ -288,8 +290,10 @@ cargo run -p pine-cli -- run script.pine --bars bars.csv \
 ### WASM
 
 The optional `pine-wasm` crate exposes thin, deterministic bindings for
-compile, analysis, CSV execution, request-bar injection, and library-source
-injection. Build and exercise the real generated JavaScript module with:
+compile, analysis, CSV execution, request-bar injection, library-source
+injection, and a persistent realtime session (`Program.realtimeSession()`,
+`applyForming` / `applyConfirmed`, `replica()`). Build and exercise the real
+generated JavaScript module with:
 
 ```bash
 rustup target add wasm32-unknown-unknown
@@ -298,6 +302,15 @@ scripts/check_wasm_node.sh
 
 For `timenow`, pass `{"$executionTimes":[...]}` in the request-host JSON used
 by a `*WithRequestBars` entry point, including compiled `Program` runs.
+Realtime hosts seed CSV history once, then apply JSON bars:
+
+```js
+const session = program.realtimeSession();
+session.seed(barsCsv);
+const replica = session.replica();
+const changes = JSON.parse(session.applyForming(barJson));
+replica.apply(JSON.stringify(changes));
+```
 
 See [Architecture](docs/ARCHITECTURE.md) for the host boundary and
 [Execution Semantics](docs/EXECUTION_SEMANTICS.md) for historical and realtime

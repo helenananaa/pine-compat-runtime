@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "channel": "local-prerelease",
+  "cargoVersion": "0.3.0-rc.1",
+  "pythonVersion": "0.3.0rc1",
+  "changesSchemaVersion": 3,
+  "runtimeSchemaVersion": 8,
+  "baseCommit": "5f158f59c275b0bd6b501efa70906c6de79f061e",
+  "sourceState": "uncommitted worktree",
+  "sourceDigest": "7c9526d2ee904d7ee7e866d6d0a869b4296e03393ff7eb0ec4935dde1a30c0da",
+  "checks": {
+    "rustTests": 6715,
+    "pythonDebugInstalled": 755,
+    "pythonOptimizedInstalled": 755,
+    "toolTests": 130,
+    "actualWasmStreaming": true,
+    "expansionBudgetCases": 9,
+    "priorBudgetCases": 9,
+    "installedModuleMatchesWheel": true
+  },
+  "artifact": {
+    "path": ".local/streaming-expansion/optimized-wheels/pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl",
+    "bytes": 3485344,
+    "sha256": "675e21c96fc1e135a80c75c1d809db327a9df38e40e62188c08617c407e96e2f"
+  },
+  "evidenceIndex": {
+    "path": ".local/streaming-expansion/qualification.json",
+    "sha256": "8a6c65a5657d80fc14b9ad8637e093c0c96311a2f7d2cc73159cf16cbade415d"
+  },
+  "limitations": [
+    "Windows optimized wheel and actual WASM qualification; no Linux wheel rebuilt.",
+    "Finite named workloads, not indefinite retention or concurrency SLA.",
+    "Complex request expressions retain full evaluation; historical correction retains full replay.",
+    "Version alone does not identify this working-tree artifact; verify hashes."
+  ]
+}

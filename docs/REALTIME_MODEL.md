@@ -120,6 +120,22 @@ Only explicit `replica.result()` constructs a complete Python dictionary.
 Existing `update_forming`, `update_confirmed`, `result()` and `confirmed_result()`
 retain their complete snapshot contracts (runtime output schema 8 unchanged).
 
+A host-owned historical correction is `correct_historical(from_time, bars)` /
+Python `session.correct(from_time, bars)` / WASM `correct(fromTime, barsCsv)`.
+The session keeps confirmed bars with `time < from_time` and re-executes that
+prefix plus the supplied suffix from a blank runtime that preserves the same
+program, inputs, request environment, request feed, magnifier and session
+windows, then discards forming state. Confirmed request-feed extras that close
+after the new last confirmed chart bar are dropped so replay cannot see
+`barstate.islast` or HTF close times from a discarded tail. Later forming
+request extras are kept for the next chart forming bar. An empty suffix
+truncates from `from_time`.
+`replay_historical` / `session.replay` still replaces the entire confirmed
+history when the host already has the combined list. Failed correct/replay
+restores the previous confirmed/forming snapshots, retained bars, clocks and
+revision. Neither operation is a linear change; `last_changes` is cleared and
+replicas must `reset` from the new snapshot.
+
 Ordinary plot values/colors and alert history use a persistent append tree;
 checkpoint updates copy a bounded leaf plus a logarithmic branch path. Drawing
 deltas retain the entire mutable bar's suffix, since multiple snapshots can
@@ -150,12 +166,13 @@ snapshot, while inheriting successful live broker state and `varip`. This rolls 
 - request cache entries and requested-context runtime state created during the
   previous forming execution
 
-Request provider data is immutable and shared through the runtime request
-environment. Repeated forming updates may reuse the same provider object, but
-requested-context evaluation and cache population are part of the runtime state
-that rolls back with the forming snapshot. This keeps provider-backed
-`request.security` deterministic across historical, forming, and confirmed
-updates.
+Request provider data is the immutable historical seed. A live session may also
+append, replace, or confirm bars on a `RequestKey` through `apply_request_update`.
+Forming requested bars are visible only while the chart bar itself is forming;
+confirmed chart evaluation ignores them. Alignment still uses the existing
+lookahead/gaps close rules, so a higher-timeframe forming bar cannot appear
+before it closes. A failed request-feed update restores the previous feed,
+cache, forming snapshot, and revision.
 
 Confirmed and historical updates replace the confirmed snapshot and clear the
 forming snapshot.
@@ -237,3 +254,14 @@ orders may execute even when `calc_on_every_tick=false`. A fill-triggered script
 execution replaces the ordinary pass for that observation. `process_orders_on_close`
 uses a confirmed closing update, not every forming update. Native multi-order
 coverage and remaining limitations are recorded in LIVE_TICK_REFERENCE_AUDIT.md.
+
+
+## Retention and requested-context qualification
+
+Physical display pruning uses storage-relative indexes while Pine and delta bar
+indexes remain absolute. Growing or clearing a retention limit does not move
+an already pruned origin backwards; use replay plus snapshot reset to recover
+expired output. Eligible requested expressions reuse a checkpoint before the
+terminal requested bar; complex and dataset-end-dependent expressions retain
+full evaluation. See [streaming expansion](STREAMING_EXPANSION_AUDIT.md) for
+current verification, measured workloads and explicit remaining boundaries.

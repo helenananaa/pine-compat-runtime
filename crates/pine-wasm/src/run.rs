@@ -12,7 +12,7 @@ use crate::{analysis_input, compile_program};
 
 #[wasm_bindgen(js_name = Program)]
 pub struct WasmProgram {
-    hir: HirProgram,
+    pub(crate) hir: HirProgram,
 }
 
 impl WasmProgram {
@@ -421,7 +421,7 @@ impl WasmProgram {
     }
 }
 
-fn parse_bars_csv(text: &str) -> Result<Vec<Bar>, String> {
+pub(crate) fn parse_bars_csv(text: &str) -> Result<Vec<Bar>, String> {
     let mut bars = Vec::new();
     for (line_index, line) in text.lines().enumerate() {
         if line.trim().is_empty() {

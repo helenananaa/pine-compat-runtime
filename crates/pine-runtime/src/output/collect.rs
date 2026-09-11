@@ -1,7 +1,7 @@
 use crate::PineValue;
 
 use super::model::SeriesOutput;
-use crate::runtime::plot_history::RuntimePlot;
+use crate::runtime::plot_history::{RuntimePlot, na_history};
 
 pub(crate) fn push_plot_value(
     outputs: &mut Vec<RuntimePlot>,
@@ -65,7 +65,7 @@ pub(crate) fn push_series_value<T: SeriesOutput>(
             *current = value;
         }
     } else {
-        let mut values = vec![PineValue::Na; current_bar];
+        let mut values = na_history(current_bar);
         values.push(value);
         outputs.push(T::new(id, values));
     }

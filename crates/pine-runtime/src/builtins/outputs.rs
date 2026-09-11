@@ -200,7 +200,7 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String("format.inherit".to_owned()),
         )?;
         let precision = self.eval_output_arg(args, 13, "precision", PineValue::Na)?;
-        let bar_index = self.bars;
+        let bar_index = self.bars - self.stored_origin;
         let plots = self.plots_mut();
         push_plot_value(plots, bar_index, call_site_id.0, value, color);
         let output = plots
@@ -252,7 +252,7 @@ impl<'a> HistoricalRuntime<'a> {
         let metadata = self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11), None)?;
         push_bar_aligned_output(
             &mut self.plot_chars,
-            self.bars,
+            self.bars - self.stored_origin,
             call_site_id.0,
             PlotCharPoint {
                 value,
@@ -313,7 +313,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11), Some(12))?;
         push_bar_aligned_output(
             &mut self.plot_shapes,
-            self.bars,
+            self.bars - self.stored_origin,
             call_site_id.0,
             PlotShapePoint {
                 value,
@@ -367,7 +367,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_output_metadata(args, 1, Some(4), 7, Some(8), Some(9), Some(10))?;
         push_bar_aligned_output(
             &mut self.plot_arrows,
-            self.bars,
+            self.bars - self.stored_origin,
             call_site_id.0,
             PlotArrowPoint {
                 value,
@@ -421,7 +421,7 @@ impl<'a> HistoricalRuntime<'a> {
         let metadata = self.eval_output_metadata(args, 4, None, 6, Some(7), Some(8), None)?;
         push_bar_aligned_output(
             &mut self.plot_bars,
-            self.bars,
+            self.bars - self.stored_origin,
             call_site_id.0,
             PlotBarPoint {
                 open: open_value,
@@ -483,7 +483,7 @@ impl<'a> HistoricalRuntime<'a> {
         let metadata = self.eval_output_metadata(args, 4, None, 7, Some(8), Some(10), None)?;
         push_bar_aligned_output(
             &mut self.plot_candles,
-            self.bars,
+            self.bars - self.stored_origin,
             call_site_id.0,
             PlotCandlePoint {
                 open: open_value,
@@ -517,7 +517,12 @@ impl<'a> HistoricalRuntime<'a> {
         let transp = self.eval_legacy_transparency(args, Some(90))?;
         let value = Self::apply_legacy_transparency(value, transp);
         let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5), None)?;
-        push_series_value(&mut self.bg_colors, self.bars, call_site_id.0, value);
+        push_series_value(
+            &mut self.bg_colors,
+            self.bars - self.stored_origin,
+            call_site_id.0,
+            value,
+        );
         self.bg_colors
             .iter_mut()
             .find(|output| output.id == call_site_id.0)
@@ -538,7 +543,12 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let value = self.eval_expr(color_arg)?;
         let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5), None)?;
-        push_series_value(&mut self.bar_colors, self.bars, call_site_id.0, value);
+        push_series_value(
+            &mut self.bar_colors,
+            self.bars - self.stored_origin,
+            call_site_id.0,
+            value,
+        );
         self.bar_colors
             .iter_mut()
             .find(|output| output.id == call_site_id.0)

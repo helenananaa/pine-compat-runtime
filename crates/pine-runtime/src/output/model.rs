@@ -11,7 +11,7 @@ pub const PUBLIC_MATRIX_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = PUBLIC_RUNTIME_SCHEMA_VERSION;
 pub const PUBLIC_RENDER_METADATA_VERSION: u32 = 1;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct RuntimeResult {
     pub plots: Vec<PlotSeries>,
     pub plot_chars: Vec<PlotCharSeries>,
@@ -160,27 +160,9 @@ impl Default for OutputMetadata {
 }
 
 pub(crate) trait SeriesOutput: Sized {
-    fn new(id: u32, values: Vec<PineValue>) -> Self;
+    fn new(id: u32, values: crate::runtime::append_history::AppendHistory<PineValue>) -> Self;
     fn id(&self) -> u32;
-    fn values_mut(&mut self) -> &mut Vec<PineValue>;
-}
-
-impl SeriesOutput for ColorSeries {
-    fn new(id: u32, values: Vec<PineValue>) -> Self {
-        Self {
-            id,
-            values,
-            metadata: OutputMetadata::default(),
-        }
-    }
-
-    fn id(&self) -> u32 {
-        self.id
-    }
-
-    fn values_mut(&mut self) -> &mut Vec<PineValue> {
-        &mut self.values
-    }
+    fn values_mut(&mut self) -> &mut crate::runtime::append_history::AppendHistory<PineValue>;
 }
 
 #[derive(Debug, Clone, PartialEq)]

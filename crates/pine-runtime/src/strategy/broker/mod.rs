@@ -73,6 +73,7 @@ pub struct BrokerState {
     slippage_price_offset: f64,
     limit_verification_price_offset: f64,
     cash: f64,
+    realized_profit_sum: f64,
     position_size: f64,
     avg_price: f64,
     next_close_metadata: StrategyOrderMetadata,

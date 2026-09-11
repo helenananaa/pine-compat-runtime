@@ -275,7 +275,7 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 These errors reject an incoming delta without mutating the consumer result or
 revision. They do not change the existing runtime output schema.
 
-- `E_STREAM_SCHEMA`: changes schema is unsupported; use schema 2.
+- `E_STREAM_SCHEMA`: changes schema is unsupported; schema 2 and 3 are accepted.
 - `E_STREAM_REVISION`: revision does not immediately follow baseRevision.
 - `E_STREAM_STALE`: change revision precedes the consumer's current revision.
 - `E_STREAM_CONFLICT`: the current revision has a different payload, or was
@@ -283,3 +283,13 @@ revision. They do not change the existing runtime output schema.
   retransmission of the last applied delta is a no-op.
 - `E_STREAM_GAP`: baseRevision does not match the consumer cursor; restore an
   authoritative snapshot with its revision before continuing.
+- `E_STREAM_ORIGIN`: `retainedFrom` moved earlier than the consumer window;
+  restore an authoritative snapshot that includes `retainedFrom`.
+- `E_REQUEST_FEED_TIME`: a requested-context bar is duplicate, stale, or out of
+  order relative to provider and confirmed request history.
+- `E_REQUEST_FEED_FORMING`: a requested-context historical append arrived while
+  a forming request bar is open, or a confirm/replace time does not match.
+- `E_HISTORY_CORRECT`: historical correction `from_time` is after confirmed
+  history, or the replacement bars do not follow the retained prefix.
+- `E_HISTORY_CLOCK`: historical correction mixed execution timestamps with a
+  prefix recorded without them, or omitted timestamps when the prefix has them.

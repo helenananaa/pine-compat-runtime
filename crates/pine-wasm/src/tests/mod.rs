@@ -11235,3 +11235,5 @@ fn compiled_host_requirements_match_shared_contract_without_data() {
     );
     assert_eq!(actual, expected);
 }
+
+mod realtime;

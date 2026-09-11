@@ -7,6 +7,7 @@ use pine_ir::{
 
 use crate::builtins::args::call_arg_expr;
 use crate::builtins::time::calendar_timeframe_close;
+use crate::runtime::append_history::AppendHistory;
 use crate::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -172,15 +173,9 @@ impl<'a> HistoricalRuntime<'a> {
             })?;
 
         let cache_key = RequestCacheKey::new(call_site_id, key.symbol(), key.timeframe().value());
-        if !self.request_cache.contains_key(&cache_key) {
-            let requested_bars = self
-                .request_environment
-                .provider()
-                .bars(&key)
-                .map_err(|err| RuntimeError {
-                    message: err.to_string(),
-                })?
-                .to_vec();
+        let include_forming = self.current_bar_update_kind == BarUpdateKind::Forming
+            && self.request_feed.has_forming(&key);
+        if include_forming || !self.request_cache.contains_key(&cache_key) {
             let requested_chart = if key.symbol() == self.request_environment.chart().symbol() {
                 self.request_environment
                     .chart()
@@ -190,10 +185,26 @@ impl<'a> HistoricalRuntime<'a> {
                 ChartContext::new(key.symbol(), requested_timeframe.clone())
             };
             let requested_environment = self.request_environment.for_chart(requested_chart);
-            let requested_values =
-                self.evaluate_requested_values(&requested_bars, expression, requested_environment)?;
-            self.request_cache
-                .insert(cache_key.clone(), requested_values);
+            let requested_values = self.evaluate_request_incremental(
+                &key,
+                &cache_key,
+                expression,
+                requested_environment,
+                include_forming,
+            )?;
+            let aligned = align_requested_value(
+                &requested_values,
+                current_time,
+                &requested_timeframe,
+                chart_timeframe,
+                merge,
+                self.current_bar_update_kind,
+            );
+            if !include_forming {
+                self.request_cache
+                    .insert(cache_key.clone(), requested_values);
+            }
+            return Ok(aligned);
         }
 
         let requested_values = self
@@ -212,7 +223,44 @@ impl<'a> HistoricalRuntime<'a> {
         ))
     }
 
-    fn evaluate_requested_values(
+    pub(crate) fn resolved_request_bars_from(
+        &self,
+        key: &RequestKey,
+        start: usize,
+    ) -> Result<Vec<Bar>, RuntimeError> {
+        let provider_bars = match self.request_environment.provider().bars(key) {
+            Ok(bars) => bars,
+            Err(RequestDataError::MissingData { symbol, timeframe }) => {
+                if !self.request_feed.contains(key) {
+                    return Err(RuntimeError {
+                        message: RequestDataError::MissingData { symbol, timeframe }.to_string(),
+                    });
+                }
+                &[]
+            }
+            Err(error) => {
+                return Err(RuntimeError {
+                    message: error.to_string(),
+                });
+            }
+        };
+        let include_forming = self.current_bar_update_kind == BarUpdateKind::Forming;
+        let bars = self
+            .request_feed
+            .resolved_from(key, provider_bars, include_forming, start);
+        if bars.is_empty() {
+            return Err(RuntimeError {
+                message: RequestDataError::MissingData {
+                    symbol: key.symbol().to_owned(),
+                    timeframe: key.timeframe().value().to_owned(),
+                }
+                .to_string(),
+            });
+        }
+        Ok(bars)
+    }
+
+    pub(crate) fn evaluate_requested_values(
         &mut self,
         requested_bars: &[Bar],
         expression: &HirExpr,
@@ -244,7 +292,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(values)
     }
 
-    fn eval_requested_bar_expression(
+    pub(crate) fn eval_requested_bar_expression(
         &mut self,
         bar: Bar,
         expression: &HirExpr,
@@ -356,7 +404,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 }
 
-fn request_capture_values(
+pub(crate) fn request_capture_values(
     program: &pine_ir::HirProgram,
     expression: &HirExpr,
     current_symbols: &HashMap<SymbolId, PineValue>,
@@ -419,7 +467,9 @@ fn collect_request_capture_symbols(
     }
 }
 
-fn request_dependency_initializers(program: &pine_ir::HirProgram) -> HashMap<SymbolId, &HirExpr> {
+pub(crate) fn request_dependency_initializers(
+    program: &pine_ir::HirProgram,
+) -> HashMap<SymbolId, &HirExpr> {
     let mut initializers = HashMap::new();
     collect_request_stmt_initializers(&program.statements, &mut initializers);
     initializers
@@ -838,58 +888,53 @@ fn validate_provider_timeframe(
 }
 
 fn align_requested_value(
-    requested_values: &[(i64, PineValue)],
+    requested_values: &AppendHistory<(i64, PineValue)>,
     current_time: i64,
     requested_timeframe: &RequestTimeframe,
     chart_timeframe: &RequestTimeframe,
     merge: RequestMergePolicy,
     update_kind: BarUpdateKind,
 ) -> PineValue {
-    if requested_timeframe == chart_timeframe {
-        let matched = match merge.gaps {
-            RequestGaps::On => requested_values
-                .iter()
-                .find(|(time, _)| *time == current_time),
-            RequestGaps::Off => requested_values
-                .iter()
-                .take_while(|(time, _)| *time <= current_time)
-                .last(),
-        };
-        return matched
-            .map(|(_, value)| value.clone())
-            .unwrap_or(PineValue::Na);
-    }
-
-    let chart_close = request_bar_nominal_close(current_time, chart_timeframe);
-    let historical_lookahead =
-        merge.lookahead == RequestLookahead::On && update_kind == BarUpdateKind::Historical;
-    let matched = match (historical_lookahead, merge.gaps) {
-        (true, RequestGaps::On) => requested_values
-            .iter()
-            .find(|(time, _)| *time == current_time),
-        (true, RequestGaps::Off) => requested_values
-            .iter()
-            .take_while(|(time, _)| *time <= current_time)
-            .last(),
-        (false, RequestGaps::On) => requested_values
-            .iter()
-            .enumerate()
-            .find(|(index, _)| {
-                requested_bar_close(requested_values, *index, requested_timeframe) == chart_close
-            })
-            .map(|(_, value)| value),
-        (false, RequestGaps::Off) => requested_values
-            .iter()
-            .enumerate()
-            .take_while(|(index, _)| {
-                requested_bar_close(requested_values, *index, requested_timeframe) <= chart_close
-            })
-            .last()
-            .map(|(_, value)| value),
+    let by_open = requested_timeframe == chart_timeframe
+        || (merge.lookahead == RequestLookahead::On && update_kind == BarUpdateKind::Historical);
+    let target = if by_open {
+        current_time
+    } else {
+        request_bar_nominal_close(current_time, chart_timeframe)
     };
-    matched
-        .map(|(_, value)| value.clone())
-        .unwrap_or(PineValue::Na)
+    let stamp = |index| {
+        if by_open {
+            requested_values[index].0
+        } else {
+            requested_bar_close(requested_values, index, requested_timeframe)
+        }
+    };
+    let (mut lo, mut hi) = (0, requested_values.len());
+    while lo < hi {
+        let mid = lo + (hi - lo) / 2;
+        let before = if merge.gaps == RequestGaps::On {
+            stamp(mid) < target
+        } else {
+            stamp(mid) <= target
+        };
+        if before {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    let index = if merge.gaps == RequestGaps::On {
+        if lo == requested_values.len() || stamp(lo) != target {
+            return PineValue::Na;
+        }
+        lo
+    } else {
+        let Some(index) = lo.checked_sub(1) else {
+            return PineValue::Na;
+        };
+        index
+    };
+    requested_values[index].1.clone()
 }
 
 fn request_bar_nominal_close(open_time: i64, timeframe: &RequestTimeframe) -> i64 {
@@ -898,7 +943,7 @@ fn request_bar_nominal_close(open_time: i64, timeframe: &RequestTimeframe) -> i6
 }
 
 fn requested_bar_close(
-    requested_values: &[(i64, PineValue)],
+    requested_values: &AppendHistory<(i64, PineValue)>,
     index: usize,
     timeframe: &RequestTimeframe,
 ) -> i64 {

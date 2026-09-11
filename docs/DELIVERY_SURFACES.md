@@ -1,5 +1,10 @@
 # Delivery surfaces for the local 0.3.0-rc.1 candidate
 
+Latest local worktree qualification: [streaming expansion](STREAMING_EXPANSION_AUDIT.md)
+and [artifact identity](STREAMING_EXPANSION_ARTIFACTS.json). This includes actual
+WASM streaming tests and a Windows optimized wheel; the earlier platform matrix
+below is retained evidence, not a newly qualified Linux build.
+
 This is a locally qualified prerelease for the named scope, not a stable release
 or a claim of full Pine compatibility. [Current status](DELIVERY_ROADMAP.md) and
 [artifact hashes](DELIVERY_ARTIFACTS.json) identify the repaired build; version
@@ -12,18 +17,22 @@ them as this checkout.
 | Rust | path dependency on `crates/pine-runtime` plus `pine-syntax` / `pine-sema` | `CARGO_PKG_VERSION` = `0.3.0-rc.1` | `HistoricalRuntime` | per-bar `append_bar` | `RealtimeRuntime` seed/forming/confirm | `host_requirements` | Example: `crates/pine-runtime/examples/embed_runtime.rs` |
 | CLI | `cargo run -p pine-cli --locked --release` → `pine-compat` | `pine-compat --version` | `run` | `run-incremental` | `run-realtime-history`, `run-realtime-forming` | `requirements` | JSON schema 8 results; analysis schema 5 |
 | Python | maturin wheel `pine-compat-runtime==0.3.0rc1` (`pine_compat`) | `pine_compat.__version__` = `0.3.0-rc.1` | `compile_script` / `run_script` / `Program.run` | not a separate API; re-run batch or confirm bars on a session | `create_realtime_session` / `Program.realtime_session` | `Program.host_requirements` | Wheel version is PEP 440 `0.3.0rc1` |
-| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.0-rc.1` | `runScriptCsv` / `Program.runCsv` | not exported | not exported | `Program.hostRequirements` | Historical CSV/JSON only; no forming session |
+| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.0-rc.1` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 3; runtime snapshots schema 8 |
 
 ## Streaming worktree API
 
-Rust now exposes `RealtimeRuntime::apply_update` and `RuntimeReplica`; Python
-exposes `apply_forming`, `apply_confirmed`, `session.replica()`, and
-`session.stream_snapshot()`. Changes use schema 2 with `baseRevision` and
-`revision`; runtime snapshots remain schema 8. A replica applies deltas in place
-and materializes a full result only on request. See
+Rust now exposes `RealtimeRuntime::apply_update`, `replay_historical`,
+`correct_historical` and `RuntimeReplica`; Python exposes `apply_forming`,
+`apply_confirmed`, `session.replay()`, `session.correct()`, `session.replica()`,
+and `session.stream_snapshot()`; WASM exposes `Program.realtimeSession()`,
+`applyForming` / `applyConfirmed`, `replay()`, `correct()`, `replica()`, and
+`streamSnapshot()`. Changes use schema 3 with
+`baseRevision`, `revision` and `retainedFrom`; runtime snapshots remain schema
+8. A replica applies deltas in place and materializes a full result only on
+request. Historical replay is a snapshot discontinuity, not a linear delta. See
 [streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) for current validation.
 These interfaces require a build of this worktree; the retained a2a1ba5fb wheels
-above do not include them. WASM still has no streaming exports.
+above do not include them.
 
 ## Minimal examples
 

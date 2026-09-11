@@ -26,6 +26,21 @@ const historical = JSON.parse(program.runCsvWithRequestBars(
   bars,
   JSON.stringify({ $executionTimes: [1000, 2000] }),
 ));
+
+const session = program.realtimeSession();
+const seeded = JSON.parse(session.seedWithExecutionTimes(
+  bars,
+  JSON.stringify([1000, 2000]),
+));
+const replica = session.replica();
+const forming = JSON.parse(session.applyFormingWithContext(JSON.stringify({
+  time: 2, open: 12, high: 12, low: 12, close: 12, volume: 1,
+}), JSON.stringify({ executionTime: 3000 })));
+assert.equal(forming.visibility, 'preview');
+assert.equal(replica.apply(JSON.stringify(forming)), true);
+assert.deepEqual(JSON.parse(replica.result()).plots[0].values, JSON.parse(session.result()).plots[0].values);
+session.free();
+replica.free();
 program.free();
 
 let compileError = null;
@@ -39,5 +54,6 @@ process.stdout.write(`${JSON.stringify({
   version: pine.packageVersion(),
   clock: requirements.execution.clock,
   historicalScaled: historical.plots[0].values,
+  realtimeSeeded: seeded.plots[0].values,
   compileError,
 }, null, 2)}\n`);

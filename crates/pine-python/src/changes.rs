@@ -29,6 +29,7 @@ pub(crate) fn runtime_changes_to_py(
     output.set_item("schemaVersion", changes.schema_version)?;
     output.set_item("revision", changes.revision)?;
     output.set_item("baseRevision", changes.base_revision)?;
+    output.set_item("retainedFrom", changes.retained_from)?;
     output.set_item("visibility", changes.visibility.as_str())?;
     output.set_item("series", series_changes_to_py(py, &changes.series)?)?;
     output.set_item("hlines", hline_changes_to_py(py, &changes.hlines)?)?;
@@ -318,6 +319,12 @@ pub(crate) fn runtime_changes_from_py(
         .get_item("schemaVersion")?
         .ok_or_else(|| PyValueError::new_err("changes missing schemaVersion"))?
         .extract()?;
+    if changes.schema_version >= 3 {
+        changes.retained_from = dict
+            .get_item("retainedFrom")?
+            .ok_or_else(|| PyValueError::new_err("changes missing retainedFrom"))?
+            .extract()?;
+    }
     if let Some(series) = dict.get_item("series")? {
         changes.series = series_changes_from_py(py, &series)?;
     }

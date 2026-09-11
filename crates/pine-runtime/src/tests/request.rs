@@ -6649,3 +6649,102 @@ fn realtime_request_security_reuses_immutable_provider_data_during_rollback() {
     assert_values_close(&first_forming.plots[0].values, &[20.0, 21.0]);
     assert_values_close(&second_forming.plots[0].values, &[20.0, 21.0]);
 }
+
+#[test]
+fn request_feed_interleaves_with_chart_updates_without_leaking_unconfirmed_request_bars() {
+    let program = compile_program(
+        "indicator(\"request feed\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::default());
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment("NYSE:IBM", vec![timed_bar(0, 20.0)]),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 5.0)))
+        .expect("chart seed");
+    assert!(
+        runtime
+            .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(60_000, 99.0)))
+            .expect("request forming before chart forming")
+            .is_none()
+    );
+    let forming = runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 6.0)))
+        .expect("chart forming");
+    assert_values_close(&forming.plots[0].values, &[20.0, 99.0]);
+    assert_values_close(&runtime.confirmed_result().plots[0].values, &[20.0]);
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::confirmed(timed_bar(60_000, 99.0)))
+        .expect("request confirm");
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(timed_bar(60_000, 6.0)))
+        .expect("chart confirm");
+    assert_values_close(&confirmed.plots[0].values, &[20.0, 99.0]);
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(120_000, 50.0)))
+        .expect("next request forming");
+    let preview = runtime
+        .update(BarUpdate::forming(timed_bar(120_000, 7.0)))
+        .expect("next chart forming");
+    assert_values_close(&preview.plots[0].values, &[20.0, 99.0, 50.0]);
+    let committed = runtime
+        .update(BarUpdate::confirmed(timed_bar(120_000, 7.0)))
+        .expect("chart confirm ignores unconfirmed request bar");
+    assert_values_close(&committed.plots[0].values, &[20.0, 99.0, 99.0]);
+}
+
+#[test]
+fn request_feed_failure_restores_prior_chart_forming_result() {
+    let program = compile_program(
+        "indicator(\"request feed rollback\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::default());
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment("NYSE:IBM", vec![timed_bar(0, 20.0)]),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 5.0)))
+        .expect("chart seed");
+    runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 6.0)))
+        .expect("chart forming");
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(60_000, 21.0)))
+        .expect("request forming");
+    let before = runtime.result();
+    let revision = runtime.revision();
+    let error = runtime
+        .apply_request_update(key, BarUpdate::forming(timed_bar(120_000, 30.0)))
+        .expect_err("mismatched forming time");
+    assert!(error.message.contains("E_REQUEST_FEED_FORMING"));
+    assert_eq!(runtime.revision(), revision);
+    assert_eq!(runtime.result(), before);
+}
+
+#[test]
+fn request_feed_higher_timeframe_forming_does_not_leak_before_close() {
+    let program = compile_program(
+        "indicator(\"request htf feed\")\nplot(request.security(\"NYSE:IBM\", \"5\", close))\n",
+    );
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::parse("5").expect("5"));
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment_with_timeframe("NYSE:IBM", "5", vec![timed_bar(0, 100.0)]),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 1.0)))
+        .expect("chart seed");
+    runtime
+        .update(BarUpdate::forming(timed_bar(240_000, 2.0)))
+        .expect("chart forming");
+    runtime
+        .apply_request_update(key, BarUpdate::forming(timed_bar(300_000, 200.0)))
+        .expect("htf forming");
+    let preview = runtime.result();
+    assert_eq!(preview.plots[0].values[0], PineValue::Na);
+    assert_values_close(&preview.plots[0].values[1..], &[100.0]);
+}

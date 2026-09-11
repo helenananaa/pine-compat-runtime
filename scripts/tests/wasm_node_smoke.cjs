@@ -159,7 +159,83 @@ for (const index of [0, 1, 2]) assert.deepEqual(absentProfit.plots[index].values
 assert.deepEqual(absentProfit.plots[3].values, [null, null, null]);
 assert.deepEqual(compiled.plots[0].values, [2, 4, 6]);
 assert.deepEqual(compiled, direct);
+
+assert.equal(typeof program.realtimeSession, 'function');
+assert.equal(pine.runtimeChangesSchemaVersion(), 3);
+assert.equal(pine.realtimeSessionSchemaVersion(), 1);
+const realtime = program.realtimeSession();
+const seededRealtime = JSON.parse(realtime.seed(bars));
+assert.deepEqual(seededRealtime.plots[0].values, [2, 4, 6]);
+const replica = realtime.replica();
+const forming = JSON.parse(realtime.applyForming(JSON.stringify({
+  time: 3, open: 4, high: 4, low: 4, close: 4, volume: 1,
+})));
+assert.equal(forming.visibility, 'preview');
+assert.equal(forming.schemaVersion, 3);
+assert.equal(replica.apply(JSON.stringify(forming)), true);
+assert.deepEqual(JSON.parse(replica.result()).plots[0].values, JSON.parse(realtime.result()).plots[0].values);
+assert.equal(replica.apply(JSON.stringify(forming)), false);
+const confirmed = JSON.parse(realtime.applyConfirmed(JSON.stringify({
+  time: 3, open: 4, high: 4, low: 4, close: 4, volume: 1,
+})));
+assert.equal(confirmed.visibility, 'confirmed');
+assert.equal(replica.apply(JSON.stringify(confirmed)), true);
+assert.deepEqual(JSON.parse(realtime.result()).plots[0].values, [2, 4, 6, 8]);
+const replayed = JSON.parse(realtime.replay(bars));
+assert.deepEqual(replayed.plots[0].values, [2, 4, 6]);
+assert.equal(realtime.formingTime, undefined);
+const corrected = JSON.parse(realtime.correct(1, [
+  'time,open,high,low,close,volume',
+  '1,2.5,2.5,2.5,2.5,20',
+  '2,3,3,3,3,30',
+  '',
+].join('\n')));
+assert.deepEqual(corrected.plots[0].values, [2, 5, 6]);
+realtime.free();
+replica.free();
 program.free();
+
+// Physical prefix pruning and alert retention through the real generated module.
+{
+  const code = '//@version=6\nindicator("bounded")\nalert("event", alert.freq_all)\nplot(close)';
+  const compiled = pine.compileScript(code);
+  const session = compiled.realtimeSession();
+  session.setOutputRetention(4);
+  const csv = 'time,open,high,low,close,volume\n' + Array.from({length: 400}, (_, i) =>
+    `${i * 60000},${i+100},${i+100},${i+100},${i+100},1`).join('\n') + '\n';
+  session.seed(csv);
+  const consumer = session.replica();
+  for (let i = 400; i < 412; ++i) {
+    const value = i + 100;
+    const update = JSON.stringify({time:i*60000, open:value, high:value, low:value, close:value, volume:1});
+    consumer.apply(session.applyConfirmed(update));
+    const result = JSON.parse(session.result());
+    assert.equal(result.plots[0].values.length, 4);
+    assert.equal(result.alerts.length, 4);
+    assert.deepStrictEqual(JSON.parse(consumer.result()), result);
+  }
+  session.clearOutputRetention();
+  assert.equal(session.displayOrigin, 408);
+  consumer.free(); session.free(); compiled.free();
+}
+
+// Stateful requested context: replacements reuse history but preserve results.
+{
+  const compiled = pine.compileScript('//@version=6\nindicator("feed")\nplot(request.security("B","5",ta.sma(close,3)))');
+  const makeBar = (time, value) => ({time,open:value,high:value,low:value,close:value,volume:1});
+  const session = compiled.realtimeSessionWithRequestBars(JSON.stringify({'B:5': [makeBar(0,1),makeBar(300000,2),makeBar(600000,3)]}));
+  session.seed('time,open,high,low,close,volume\n0,1,1,1,1,1\n');
+  const consumer = session.replica();
+  assert.equal(session.applyRequestForming('B','5',JSON.stringify(makeBar(900000,4))), 'null');
+  consumer.apply(session.applyForming(JSON.stringify(makeBar(1140000,99))));
+  assert.equal(JSON.parse(consumer.result()).plots[0].values.at(-1), 3);
+  consumer.apply(session.applyRequestForming('B','5',JSON.stringify(makeBar(900000,7))));
+  assert.equal(JSON.parse(consumer.result()).plots[0].values.at(-1), 4);
+  consumer.apply(session.applyRequestConfirmed('B','5',JSON.stringify(makeBar(900000,7))));
+  consumer.apply(session.applyConfirmed(JSON.stringify(makeBar(1140000,99))));
+  assert.deepStrictEqual(JSON.parse(consumer.result()), JSON.parse(session.result()));
+  consumer.free(); session.free(); compiled.free();
+}
 
 const implicitLegacy = JSON.parse(
   pine.analyzeScript('study("legacy")\nplot(close)\n'),

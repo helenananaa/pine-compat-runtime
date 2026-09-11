@@ -25,7 +25,8 @@ pub(crate) struct OutputCursor {
     boxes: Vec<(u32, usize)>,
     tables: Vec<(u32, usize)>,
     alerts: Vec<crate::AlertEvent>,
-    alert_start: usize,
+    alert_bar: usize,
+    drawing_bar: usize,
     orders: usize,
     trades: usize,
     fill_alerts: usize,
@@ -43,48 +44,48 @@ impl OutputCursor {
             plots: runtime
                 .plots
                 .iter()
-                .map(|item| (item.id, item.values.len()))
+                .map(|item| (item.id, abs_len(runtime, item.values.len())))
                 .collect(),
             plot_chars: runtime
                 .plot_chars
                 .iter()
-                .map(|item| (item.id, item.values.len()))
+                .map(|item| (item.id, abs_len(runtime, item.values.len())))
                 .collect(),
             plot_shapes: runtime
                 .plot_shapes
                 .iter()
-                .map(|item| (item.id, item.values.len()))
+                .map(|item| (item.id, abs_len(runtime, item.values.len())))
                 .collect(),
             plot_arrows: runtime
                 .plot_arrows
                 .iter()
-                .map(|item| (item.id, item.values.len()))
+                .map(|item| (item.id, abs_len(runtime, item.values.len())))
                 .collect(),
             plot_bars: runtime
                 .plot_bars
                 .iter()
-                .map(|item| (item.id, item.closes.len()))
+                .map(|item| (item.id, abs_len(runtime, item.closes.len())))
                 .collect(),
             plot_candles: runtime
                 .plot_candles
                 .iter()
-                .map(|item| (item.id, item.closes.len()))
+                .map(|item| (item.id, abs_len(runtime, item.closes.len())))
                 .collect(),
             bg_colors: runtime
                 .bg_colors
                 .iter()
-                .map(|item| (item.id, item.values.len()))
+                .map(|item| (item.id, abs_len(runtime, item.values.len())))
                 .collect(),
             bar_colors: runtime
                 .bar_colors
                 .iter()
-                .map(|item| (item.id, item.values.len()))
+                .map(|item| (item.id, abs_len(runtime, item.values.len())))
                 .collect(),
             hlines: runtime.hlines.clone(),
             fills: runtime
                 .fills
                 .iter()
-                .map(|item| (item.id, item.colors.len()))
+                .map(|item| (item.id, abs_len(runtime, item.colors.len())))
                 .collect(),
             labels: runtime
                 .labels
@@ -153,12 +154,13 @@ impl OutputCursor {
                 })
                 .collect(),
             alerts: runtime.alerts.tail(alert_start),
-            alert_start,
-            orders: runtime.strategy_broker.order_events().len(),
-            trades: runtime.strategy_broker.trade_events().len(),
+            alert_bar: runtime.bars.saturating_sub(1),
+            drawing_bar: runtime.bars.saturating_sub(1),
+            orders: runtime.strategy_broker.order_len(),
+            trades: runtime.strategy_broker.trade_len(),
             fill_alerts: runtime.strategy_broker.fill_alert_len(),
-            position: runtime.strategy_broker.position_history().len(),
-            equity: runtime.strategy_broker.equity_history().len(),
+            position: runtime.strategy_broker.position_len(),
+            equity: runtime.strategy_broker.equity_len(),
             has_strategy: runtime.program.script_mode == pine_ir::ScriptMode::Strategy,
         }
     }
@@ -180,26 +182,52 @@ impl OutputCursor {
             &mut changes,
             SeriesFamily::BgColor,
             &self.bg_colors,
+            runtime,
             &runtime.bg_colors,
         );
         diff_color_series(
             &mut changes,
             SeriesFamily::BarColor,
             &self.bar_colors,
+            runtime,
             &runtime.bar_colors,
         );
         diff_hlines(&mut changes, &self.hlines, &runtime.hlines);
-        diff_fills(&mut changes, &self.fills, &runtime.fills);
-        diff_label_drawings(&mut changes, &self.labels, &runtime.labels);
-        diff_line_drawings(&mut changes, &self.lines, &runtime.lines);
-        diff_line_fill_drawings(&mut changes, &self.line_fills, &runtime.line_fills);
-        diff_polyline_drawings(&mut changes, &self.polylines, &runtime.polylines);
-        diff_box_drawings(&mut changes, &self.boxes, &runtime.boxes);
-        diff_table_drawings(&mut changes, &self.tables, &runtime.tables);
+        diff_fills(&mut changes, &self.fills, runtime);
+        diff_label_drawings(
+            &mut changes,
+            &self.labels,
+            &runtime.labels,
+            self.drawing_bar,
+        );
+        diff_line_drawings(&mut changes, &self.lines, &runtime.lines, self.drawing_bar);
+        diff_line_fill_drawings(
+            &mut changes,
+            &self.line_fills,
+            &runtime.line_fills,
+            self.drawing_bar,
+        );
+        diff_polyline_drawings(
+            &mut changes,
+            &self.polylines,
+            &runtime.polylines,
+            self.drawing_bar,
+        );
+        diff_box_drawings(&mut changes, &self.boxes, &runtime.boxes, self.drawing_bar);
+        diff_table_drawings(
+            &mut changes,
+            &self.tables,
+            &runtime.tables,
+            self.drawing_bar,
+        );
         diff_alerts(
             &mut changes,
             &self.alerts,
-            &runtime.alerts.tail(self.alert_start),
+            &runtime.alerts.tail(
+                runtime
+                    .alerts
+                    .partition_point(|event| event.bar_index < self.alert_bar),
+            ),
         );
         if runtime.program.script_mode == pine_ir::ScriptMode::Strategy {
             changes.strategy = Some(diff_strategy(self, runtime));
@@ -217,8 +245,16 @@ fn lens_get(items: &[(u32, usize)], id: u32) -> Option<usize> {
         .find_map(|(item_id, len)| (*item_id == id).then_some(*len))
 }
 
-fn slice_from(values: &[PineValue], start: usize) -> Vec<PineValue> {
-    values.get(start..).unwrap_or(&[]).to_vec()
+fn abs_len(runtime: &HistoricalRuntime<'_>, local: usize) -> usize {
+    runtime.stored_origin + local
+}
+
+fn slice_from(
+    values: &super::append_history::AppendHistory<PineValue>,
+    start: usize,
+    stored_origin: usize,
+) -> Vec<PineValue> {
+    values.tail(start.saturating_sub(stored_origin))
 }
 
 fn plot_header(plot: &super::plot_history::RuntimePlot) -> SeriesHeader {
@@ -251,10 +287,15 @@ fn diff_plots(
             SeriesFamily::Plot,
             plot.id,
             lens_get(cursor, plot.id),
-            plot.values.len(),
+            abs_len(runtime, plot.values.len()),
+            runtime.display_origin,
             |start| SeriesFields {
-                values: plot.values.tail(start),
-                colors: plot.colors.tail(start),
+                values: plot
+                    .values
+                    .tail(start.saturating_sub(runtime.stored_origin)),
+                colors: plot
+                    .colors
+                    .tail(start.saturating_sub(runtime.stored_origin)),
                 ..SeriesFields::default()
             },
             Some(plot_header(plot)),
@@ -274,15 +315,16 @@ fn diff_plot_chars(
             SeriesFamily::PlotChar,
             item.id,
             lens_get(cursor, item.id),
-            item.values.len(),
+            abs_len(runtime, item.values.len()),
+            runtime.display_origin,
             |start| SeriesFields {
-                values: slice_from(&item.values, start),
-                colors: slice_from(&item.colors, start),
-                chars: slice_from(&item.chars, start),
-                locations: slice_from(&item.locations, start),
-                texts: slice_from(&item.texts, start),
-                text_colors: slice_from(&item.text_colors, start),
-                sizes: slice_from(&item.sizes, start),
+                values: slice_from(&item.values, start, runtime.stored_origin),
+                colors: slice_from(&item.colors, start, runtime.stored_origin),
+                chars: slice_from(&item.chars, start, runtime.stored_origin),
+                locations: slice_from(&item.locations, start, runtime.stored_origin),
+                texts: slice_from(&item.texts, start, runtime.stored_origin),
+                text_colors: slice_from(&item.text_colors, start, runtime.stored_origin),
+                sizes: slice_from(&item.sizes, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
             Some(metadata_header(&item.metadata)),
@@ -302,15 +344,16 @@ fn diff_plot_shapes(
             SeriesFamily::PlotShape,
             item.id,
             lens_get(cursor, item.id),
-            item.values.len(),
+            abs_len(runtime, item.values.len()),
+            runtime.display_origin,
             |start| SeriesFields {
-                values: slice_from(&item.values, start),
-                styles: slice_from(&item.styles, start),
-                locations: slice_from(&item.locations, start),
-                colors: slice_from(&item.colors, start),
-                texts: slice_from(&item.texts, start),
-                text_colors: slice_from(&item.text_colors, start),
-                sizes: slice_from(&item.sizes, start),
+                values: slice_from(&item.values, start, runtime.stored_origin),
+                styles: slice_from(&item.styles, start, runtime.stored_origin),
+                locations: slice_from(&item.locations, start, runtime.stored_origin),
+                colors: slice_from(&item.colors, start, runtime.stored_origin),
+                texts: slice_from(&item.texts, start, runtime.stored_origin),
+                text_colors: slice_from(&item.text_colors, start, runtime.stored_origin),
+                sizes: slice_from(&item.sizes, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
             Some(metadata_header(&item.metadata)),
@@ -330,13 +373,14 @@ fn diff_plot_arrows(
             SeriesFamily::PlotArrow,
             item.id,
             lens_get(cursor, item.id),
-            item.values.len(),
+            abs_len(runtime, item.values.len()),
+            runtime.display_origin,
             |start| SeriesFields {
-                values: slice_from(&item.values, start),
-                color_ups: slice_from(&item.color_ups, start),
-                color_downs: slice_from(&item.color_downs, start),
-                min_heights: slice_from(&item.min_heights, start),
-                max_heights: slice_from(&item.max_heights, start),
+                values: slice_from(&item.values, start, runtime.stored_origin),
+                color_ups: slice_from(&item.color_ups, start, runtime.stored_origin),
+                color_downs: slice_from(&item.color_downs, start, runtime.stored_origin),
+                min_heights: slice_from(&item.min_heights, start, runtime.stored_origin),
+                max_heights: slice_from(&item.max_heights, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
             Some(metadata_header(&item.metadata)),
@@ -356,13 +400,14 @@ fn diff_plot_bars(
             SeriesFamily::PlotBar,
             item.id,
             lens_get(cursor, item.id),
-            item.closes.len(),
+            abs_len(runtime, item.closes.len()),
+            runtime.display_origin,
             |start| SeriesFields {
-                opens: slice_from(&item.opens, start),
-                highs: slice_from(&item.highs, start),
-                lows: slice_from(&item.lows, start),
-                closes: slice_from(&item.closes, start),
-                colors: slice_from(&item.colors, start),
+                opens: slice_from(&item.opens, start, runtime.stored_origin),
+                highs: slice_from(&item.highs, start, runtime.stored_origin),
+                lows: slice_from(&item.lows, start, runtime.stored_origin),
+                closes: slice_from(&item.closes, start, runtime.stored_origin),
+                colors: slice_from(&item.colors, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
             Some(metadata_header(&item.metadata)),
@@ -382,15 +427,16 @@ fn diff_plot_candles(
             SeriesFamily::PlotCandle,
             item.id,
             lens_get(cursor, item.id),
-            item.closes.len(),
+            abs_len(runtime, item.closes.len()),
+            runtime.display_origin,
             |start| SeriesFields {
-                opens: slice_from(&item.opens, start),
-                highs: slice_from(&item.highs, start),
-                lows: slice_from(&item.lows, start),
-                closes: slice_from(&item.closes, start),
-                colors: slice_from(&item.colors, start),
-                wick_colors: slice_from(&item.wick_colors, start),
-                border_colors: slice_from(&item.border_colors, start),
+                opens: slice_from(&item.opens, start, runtime.stored_origin),
+                highs: slice_from(&item.highs, start, runtime.stored_origin),
+                lows: slice_from(&item.lows, start, runtime.stored_origin),
+                closes: slice_from(&item.closes, start, runtime.stored_origin),
+                colors: slice_from(&item.colors, start, runtime.stored_origin),
+                wick_colors: slice_from(&item.wick_colors, start, runtime.stored_origin),
+                border_colors: slice_from(&item.border_colors, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
             Some(metadata_header(&item.metadata)),
@@ -404,16 +450,18 @@ fn diff_color_series(
     changes: &mut RuntimeChanges,
     family: SeriesFamily,
     cursor: &[(u32, usize)],
-    items: &[crate::ColorSeries],
+    runtime: &HistoricalRuntime<'_>,
+    items: &[super::plot_history::RuntimeColorSeries],
 ) {
     for item in items {
         if let Some(change) = series_change_from_lens(
             family,
             item.id,
             lens_get(cursor, item.id),
-            item.values.len(),
+            abs_len(runtime, item.values.len()),
+            runtime.display_origin,
             |start| SeriesFields {
-                values: slice_from(&item.values, start),
+                values: slice_from(&item.values, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
             Some(metadata_header(&item.metadata)),
@@ -451,16 +499,21 @@ fn diff_hlines(
     }
 }
 
-fn diff_fills(changes: &mut RuntimeChanges, cursor: &[(u32, usize)], items: &[crate::FillOutput]) {
-    for item in items {
+fn diff_fills(
+    changes: &mut RuntimeChanges,
+    cursor: &[(u32, usize)],
+    runtime: &HistoricalRuntime<'_>,
+) {
+    for item in &runtime.fills {
         match lens_get(cursor, item.id) {
             None => changes.fills.push(FillChange {
                 id: item.id,
-                action: FillAction::Add(item.clone()),
+                action: FillAction::Add(item.snapshot_from(runtime.display_skip())),
             }),
             Some(old_len) => {
-                let start = delta_start(old_len, item.colors.len());
-                let values = slice_from(&item.colors, start);
+                let new_len = abs_len(runtime, item.colors.len());
+                let start = delta_start(old_len, new_len).max(runtime.display_origin);
+                let values = slice_from(&item.colors, start, runtime.stored_origin);
                 if !values.is_empty() || start < old_len {
                     changes.fills.push(FillChange {
                         id: item.id,
@@ -471,7 +524,7 @@ fn diff_fills(changes: &mut RuntimeChanges, cursor: &[(u32, usize)], items: &[cr
         }
     }
     for (id, _) in cursor {
-        if !items.iter().any(|item| item.id == *id) {
+        if !runtime.fills.iter().any(|item| item.id == *id) {
             changes.fills.push(FillChange {
                 id: *id,
                 action: FillAction::Delete,
@@ -495,13 +548,13 @@ fn push_drawing(
     family: DrawingFamily,
     cursor: &[(u32, usize)],
     id: u32,
-    new_len: usize,
+    stable_len: usize,
     tail: impl FnOnce(usize) -> DrawingObject,
 ) {
     let action = match lens_get(cursor, id) {
         None => DrawingAction::Add(tail(0)),
-        Some(old_len) => {
-            let start = old_len.min(new_len);
+        Some(_) => {
+            let start = stable_len;
             DrawingAction::SetTail {
                 start,
                 object: tail(start),
@@ -531,7 +584,8 @@ fn delete_missing(
 fn diff_label_drawings(
     changes: &mut RuntimeChanges,
     cursor: &[(u32, usize)],
-    items: &[crate::LabelOutput],
+    items: &[super::drawing_history::RuntimeLabel],
+    bar: usize,
 ) {
     for item in items {
         push_drawing(
@@ -539,11 +593,12 @@ fn diff_label_drawings(
             DrawingFamily::Label,
             cursor,
             item.id,
-            item.snapshots.len(),
+            item.snapshots
+                .partition_point(|snapshot| snapshot.bar_index < bar),
             |start| {
                 DrawingObject::Label(crate::LabelOutput {
                     id: item.id,
-                    snapshots: item.snapshots[start..].to_vec(),
+                    snapshots: item.snapshots.tail(start),
                 })
             },
         );
@@ -556,7 +611,8 @@ fn diff_label_drawings(
 fn diff_line_drawings(
     changes: &mut RuntimeChanges,
     cursor: &[(u32, usize)],
-    items: &[crate::LineOutput],
+    items: &[super::drawing_history::RuntimeLine],
+    bar: usize,
 ) {
     for item in items {
         push_drawing(
@@ -564,11 +620,12 @@ fn diff_line_drawings(
             DrawingFamily::Line,
             cursor,
             item.id,
-            item.snapshots.len(),
+            item.snapshots
+                .partition_point(|snapshot| snapshot.bar_index < bar),
             |start| {
                 DrawingObject::Line(crate::LineOutput {
                     id: item.id,
-                    snapshots: item.snapshots[start..].to_vec(),
+                    snapshots: item.snapshots.tail(start),
                 })
             },
         );
@@ -581,7 +638,8 @@ fn diff_line_drawings(
 fn diff_line_fill_drawings(
     changes: &mut RuntimeChanges,
     cursor: &[(u32, usize)],
-    items: &[crate::LineFillOutput],
+    items: &[super::drawing_history::RuntimeLineFill],
+    bar: usize,
 ) {
     for item in items {
         push_drawing(
@@ -589,11 +647,12 @@ fn diff_line_fill_drawings(
             DrawingFamily::LineFill,
             cursor,
             item.id,
-            item.snapshots.len(),
+            item.snapshots
+                .partition_point(|snapshot| snapshot.bar_index < bar),
             |start| {
                 DrawingObject::LineFill(crate::LineFillOutput {
                     id: item.id,
-                    snapshots: item.snapshots[start..].to_vec(),
+                    snapshots: item.snapshots.tail(start),
                 })
             },
         );
@@ -606,7 +665,8 @@ fn diff_line_fill_drawings(
 fn diff_polyline_drawings(
     changes: &mut RuntimeChanges,
     cursor: &[(u32, usize)],
-    items: &[crate::PolylineOutput],
+    items: &[super::drawing_history::RuntimePolyline],
+    bar: usize,
 ) {
     for item in items {
         push_drawing(
@@ -614,11 +674,12 @@ fn diff_polyline_drawings(
             DrawingFamily::Polyline,
             cursor,
             item.id,
-            item.snapshots.len(),
+            item.snapshots
+                .partition_point(|snapshot| snapshot.bar_index < bar),
             |start| {
                 DrawingObject::Polyline(crate::PolylineOutput {
                     id: item.id,
-                    snapshots: item.snapshots[start..].to_vec(),
+                    snapshots: item.snapshots.tail(start),
                 })
             },
         );
@@ -631,7 +692,8 @@ fn diff_polyline_drawings(
 fn diff_box_drawings(
     changes: &mut RuntimeChanges,
     cursor: &[(u32, usize)],
-    items: &[crate::BoxOutput],
+    items: &[super::drawing_history::RuntimeBox],
+    bar: usize,
 ) {
     for item in items {
         push_drawing(
@@ -639,11 +701,12 @@ fn diff_box_drawings(
             DrawingFamily::Box,
             cursor,
             item.id,
-            item.snapshots.len(),
+            item.snapshots
+                .partition_point(|snapshot| snapshot.bar_index < bar),
             |start| {
                 DrawingObject::Box(crate::BoxOutput {
                     id: item.id,
-                    snapshots: item.snapshots[start..].to_vec(),
+                    snapshots: item.snapshots.tail(start),
                 })
             },
         );
@@ -656,7 +719,8 @@ fn diff_box_drawings(
 fn diff_table_drawings(
     changes: &mut RuntimeChanges,
     cursor: &[(u32, usize)],
-    items: &[crate::TableOutput],
+    items: &[super::drawing_history::RuntimeTable],
+    bar: usize,
 ) {
     for item in items {
         push_drawing(
@@ -664,11 +728,12 @@ fn diff_table_drawings(
             DrawingFamily::Table,
             cursor,
             item.id,
-            item.snapshots.len(),
+            item.snapshots
+                .partition_point(|snapshot| snapshot.bar_index < bar),
             |start| {
                 DrawingObject::Table(Box::new(crate::TableOutput {
                     id: item.id,
-                    snapshots: item.snapshots[start..].to_vec(),
+                    snapshots: item.snapshots.tail(start),
                     position: item.position.clone(),
                     bg_color: item.bg_color.clone(),
                     frame_color: item.frame_color.clone(),
@@ -714,30 +779,41 @@ fn diff_alerts(
 fn diff_strategy(cursor: &OutputCursor, runtime: &HistoricalRuntime<'_>) -> StrategyChanges {
     let broker = &runtime.strategy_broker;
     StrategyChanges {
-        orders: list_splice(cursor.orders, broker.order_events()),
-        trades: list_splice(cursor.trades, broker.trade_events()),
+        orders: list_splice(cursor.orders, broker.order_len(), |start| {
+            broker.order_tail(start)
+        }),
+        trades: list_splice(cursor.trades, broker.trade_len(), |start| {
+            broker.trade_tail(start)
+        }),
         alerts: fill_alert_splice(cursor.fill_alerts, broker),
-        position: list_splice(cursor.position, broker.position_history()),
-        equity: list_splice(cursor.equity, broker.equity_history()),
+        position: list_splice(cursor.position, broker.position_len(), |start| {
+            broker.position_tail(start)
+        }),
+        equity: list_splice(cursor.equity, broker.equity_len(), |start| {
+            broker.equity_tail(start)
+        }),
         diagnostics: Some(broker.diagnostics_slice().to_vec()),
     }
 }
 
-fn list_splice<T: Clone>(old_len: usize, items: &[T]) -> Option<ListSplice<T>> {
-    let new_len = items.len();
+fn list_splice<T: Clone>(
+    old_len: usize,
+    new_len: usize,
+    suffix: impl FnOnce(usize) -> Vec<T>,
+) -> Option<ListSplice<T>> {
     if new_len == old_len && new_len == 0 {
         return None;
     }
     if new_len > old_len {
         return Some(ListSplice {
             start: old_len,
-            items: items[old_len..].to_vec(),
+            items: suffix(old_len),
         });
     }
     if new_len == old_len {
         return Some(ListSplice {
             start: new_len - 1,
-            items: items[new_len - 1..].to_vec(),
+            items: suffix(new_len - 1),
         });
     }
     Some(ListSplice {

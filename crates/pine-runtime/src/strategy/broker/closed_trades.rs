@@ -73,6 +73,8 @@ pub(super) struct ClosedTradeFill {
 impl BrokerState {
     pub(super) fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
         self.record_window_realized_pnl(fill.profit);
+        // Preserve the trade-order left fold used by realized_profit(), once per close.
+        self.realized_profit_sum += fill.profit;
         self.trades.push(StrategyTrade {
             id: fill.entry_id,
             exit_id: fill.exit_id,

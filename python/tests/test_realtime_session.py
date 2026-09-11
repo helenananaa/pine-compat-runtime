@@ -316,7 +316,7 @@ def test_streaming_apply_returns_this_update_changes_not_full_history() -> None:
     )
     snapshot = session.seed([_bar(60_000, 10.0)])
     assert len(_plot_values(snapshot, 0)) == 1
-    assert pine_compat.RUNTIME_CHANGES_SCHEMA_VERSION == 2
+    assert pine_compat.RUNTIME_CHANGES_SCHEMA_VERSION == 3
 
     replica = session.replica()
     forming = session.apply_forming(_bar(120_000, 12.0))
@@ -465,7 +465,11 @@ def test_streaming_replica_stale_gap_conflict_and_recovery_are_atomic():
     with pytest.raises(ValueError, match="E_STREAM_GAP"):
         replica.apply(missed)
     snapshot = session.stream_snapshot()
-    replica.reset(snapshot["result"], revision=snapshot["revision"])
+    replica.reset(
+        snapshot["result"],
+        revision=snapshot["revision"],
+        retained_from=snapshot.get("retainedFrom", 0),
+    )
     confirmed = session.apply_confirmed(_bar(60000, 60.0))
     assert replica.apply(confirmed)
     assert replica.result() == session.result()
@@ -503,6 +507,69 @@ def test_streaming_identical_freq_all_events_keep_occurrence_counts():
     change = session.apply_confirmed(_bar(60000, 2.0))
     replica.apply(change)
     assert replica.result() == session.result()
+
+
+def test_realtime_replay_replaces_confirmed_history_and_discards_forming() -> None:
+    source = '//@version=6\nindicator("replay")\nplot(close)\n'
+    session = pine_compat.create_realtime_session(source)
+    session.seed([_bar(0, 10.0), _bar(60_000, 20.0)])
+    session.apply_forming(_bar(120_000, 30.0))
+    assert _plot_values(session.result(), 0) == [10.0, 20.0, 30.0]
+    replayed = session.replay([_bar(0, 11.0), _bar(60_000, 21.0)])
+    assert _plot_values(replayed, 0) == [11.0, 21.0]
+    assert session.forming_time is None
+    assert session.confirmed_bars == 2
+    control = pine_compat.create_realtime_session(source)
+    expected = control.seed([_bar(0, 11.0), _bar(60_000, 21.0)])
+    assert _plot_values(replayed, 0) == _plot_values(expected, 0)
+
+
+def test_realtime_replay_failure_is_atomic_and_replica_must_reset() -> None:
+    session = pine_compat.create_realtime_session(
+        '//@version=6\nindicator("replay fail")\nplot(timenow)\n'
+    )
+    session.seed([_bar(0, 10.0)], execution_times=[1000])
+    replica = session.replica()
+    forming = session.apply_forming(_bar(60_000, 11.0), execution_time=2000)
+    replica.apply(forming)
+    before = session.result()
+    revision = session.revision
+    with pytest.raises(ValueError, match="execution timestamp count"):
+        session.replay([_bar(0, 12.0)], execution_times=[1000, 2000])
+    assert session.result() == before
+    assert session.revision == revision
+    assert session.forming_time == 60_000
+    replayed = session.replay([_bar(0, 12.0)], execution_times=[3000])
+    assert _plot_values(replayed, 0) == [3000]
+    assert replica.revision != session.revision
+    assert replica.apply(forming) is False
+    nxt = session.apply_forming(_bar(60_000, 13.0), execution_time=4000)
+    with pytest.raises(ValueError, match="E_STREAM_GAP"):
+        replica.apply(nxt)
+    snapshot = session.stream_snapshot()
+    replica.reset(
+        snapshot["result"],
+        revision=snapshot["revision"],
+        retained_from=snapshot.get("retainedFrom", 0),
+    )
+    assert replica.result() == session.result()
+
+
+def test_realtime_correct_from_keeps_prefix_and_discards_forming() -> None:
+    source = '//@version=6\nindicator("correct")\nplot(close)\n'
+    session = pine_compat.create_realtime_session(source)
+    session.seed([_bar(0, 10.0), _bar(60_000, 20.0), _bar(120_000, 30.0)])
+    session.apply_forming(_bar(180_000, 40.0))
+    corrected = session.correct(60_000, [_bar(60_000, 21.0), _bar(120_000, 31.0)])
+    assert _plot_values(corrected, 0) == [10.0, 21.0, 31.0]
+    assert session.forming_time is None
+    assert session.confirmed_bars == 3
+    assert session.last_confirmed_time == 120_000
+    control = pine_compat.create_realtime_session(source)
+    expected = control.seed([_bar(0, 10.0), _bar(60_000, 21.0), _bar(120_000, 31.0)])
+    assert _plot_values(corrected, 0) == _plot_values(expected, 0)
+    with pytest.raises(ValueError, match="E_HISTORY_CORRECT"):
+        session.correct(240_000, [_bar(240_000, 50.0)])
 
 
 @pytest.mark.parametrize("name", [

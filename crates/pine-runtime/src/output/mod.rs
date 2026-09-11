@@ -6,6 +6,7 @@ pub mod delivery;
 pub mod drawings;
 pub mod json;
 pub mod model;
+pub mod parse;
 pub mod replica;
 pub mod running_alerts;
 pub mod strategy;

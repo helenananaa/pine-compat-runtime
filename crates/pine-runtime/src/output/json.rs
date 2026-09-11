@@ -3,6 +3,10 @@ use crate::{PineValue, RuntimeProfile};
 mod profile;
 
 use super::alerts::AlertEvent;
+use super::changes::{
+    DrawingAction, DrawingObject, FillAction, HLineAction, RuntimeChanges, SeriesChange,
+    SeriesHeader, StrategyChanges,
+};
 use super::drawings::{
     BoxOutput, LabelOutput, LineFillOutput, LineOutput, PolylineOutput, TableOutput,
 };
@@ -74,6 +78,399 @@ pub fn public_runtime_profiled_result_json(
     output.push_str(&profile_json(profile));
     output.push('}');
     output
+}
+
+pub fn public_runtime_changes_json(changes: &RuntimeChanges) -> String {
+    let mut output = format!(
+        "{{\"schemaVersion\":{},\"revision\":{},\"baseRevision\":{},\"retainedFrom\":{},\"visibility\":\"{}\",\"series\":",
+        changes.schema_version,
+        changes.revision,
+        changes.base_revision,
+        changes.retained_from,
+        changes.visibility.as_str()
+    );
+    output.push_str(&series_changes_json(&changes.series));
+    output.push_str(",\"hlines\":");
+    output.push_str(&hline_changes_json(&changes.hlines));
+    output.push_str(",\"fills\":");
+    output.push_str(&fill_changes_json(&changes.fills));
+    output.push_str(",\"drawings\":");
+    output.push_str(&drawing_changes_json(&changes.drawings));
+    output.push_str(",\"alerts\":");
+    output.push_str(&event_changes_json(&changes.alerts));
+    if let Some(strategy) = &changes.strategy {
+        output.push_str(",\"strategy\":");
+        output.push_str(&strategy_changes_json(strategy));
+    }
+    output.push_str(",\"diagnostics\":");
+    output.push_str(&runtime_diagnostics_json(&changes.diagnostics));
+    output.push('}');
+    output
+}
+
+fn series_changes_json(changes: &[SeriesChange]) -> String {
+    let mut output = String::from("[");
+    for (index, change) in changes.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"family\":\"{}\",\"id\":{},\"op\":\"{}\",\"start\":{}",
+            change.family.as_str(),
+            change.id,
+            change.op.as_str(),
+            change.start
+        ));
+        push_optional_values_field(&mut output, "values", &change.fields.values);
+        push_optional_values_field(&mut output, "colors", &change.fields.colors);
+        push_optional_values_field(&mut output, "chars", &change.fields.chars);
+        push_optional_values_field(&mut output, "locations", &change.fields.locations);
+        push_optional_values_field(&mut output, "texts", &change.fields.texts);
+        push_optional_values_field(&mut output, "textColors", &change.fields.text_colors);
+        push_optional_values_field(&mut output, "sizes", &change.fields.sizes);
+        push_optional_values_field(&mut output, "styles", &change.fields.styles);
+        push_optional_values_field(&mut output, "colorUps", &change.fields.color_ups);
+        push_optional_values_field(&mut output, "colorDowns", &change.fields.color_downs);
+        push_optional_values_field(&mut output, "minHeights", &change.fields.min_heights);
+        push_optional_values_field(&mut output, "maxHeights", &change.fields.max_heights);
+        push_optional_values_field(&mut output, "opens", &change.fields.opens);
+        push_optional_values_field(&mut output, "highs", &change.fields.highs);
+        push_optional_values_field(&mut output, "lows", &change.fields.lows);
+        push_optional_values_field(&mut output, "closes", &change.fields.closes);
+        push_optional_values_field(&mut output, "wickColors", &change.fields.wick_colors);
+        push_optional_values_field(&mut output, "borderColors", &change.fields.border_colors);
+        if let Some(header) = &change.header {
+            output.push_str(",\"header\":");
+            output.push_str(&series_header_json(header));
+        }
+        output.push('}');
+    }
+    output.push(']');
+    output
+}
+
+fn series_header_json(header: &SeriesHeader) -> String {
+    let mut output = String::from("{");
+    let defaults = SeriesHeader::default();
+    let mut first = true;
+    push_object_value(
+        &mut output,
+        &mut first,
+        "title",
+        &header.metadata.title,
+        &defaults.metadata.title,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "offset",
+        &header.metadata.offset,
+        &defaults.metadata.offset,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "editable",
+        &header.metadata.editable,
+        &defaults.metadata.editable,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "showLast",
+        &header.metadata.show_last,
+        &defaults.metadata.show_last,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "display",
+        &header.metadata.display,
+        &defaults.metadata.display,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "forceOverlay",
+        &header.metadata.force_overlay,
+        &defaults.metadata.force_overlay,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "linewidth",
+        &header.linewidth,
+        &defaults.linewidth,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "style",
+        &header.style,
+        &defaults.style,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "trackPrice",
+        &header.track_price,
+        &defaults.track_price,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "histBase",
+        &header.hist_base,
+        &defaults.hist_base,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "join",
+        &header.join,
+        &defaults.join,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "format",
+        &header.format,
+        &defaults.format,
+    );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "precision",
+        &header.precision,
+        &defaults.precision,
+    );
+    output.push('}');
+    output
+}
+
+fn push_object_value(
+    output: &mut String,
+    first: &mut bool,
+    name: &str,
+    value: &PineValue,
+    default: &PineValue,
+) {
+    if value == default {
+        return;
+    }
+    if !*first {
+        output.push(',');
+    }
+    *first = false;
+    output.push_str(&format!("\"{name}\":"));
+    output.push_str(&value_json(value));
+}
+
+fn push_optional_values_field(output: &mut String, name: &str, values: &[PineValue]) {
+    if !values.is_empty() {
+        push_values_field(output, name, values);
+    }
+}
+
+fn hline_changes_json(changes: &[super::changes::HLineChange]) -> String {
+    let mut output = String::from("[");
+    for (index, change) in changes.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"id\":{},\"action\":\"{}\"",
+            change.id,
+            match &change.action {
+                HLineAction::Add(_) => "add",
+                HLineAction::Replace(_) => "replace",
+                HLineAction::Delete => "delete",
+            }
+        ));
+        match &change.action {
+            HLineAction::Add(hline) | HLineAction::Replace(hline) => {
+                output.push_str(",\"object\":");
+                output.push_str(&first_object_json(&hlines_json(std::slice::from_ref(
+                    hline,
+                ))));
+            }
+            HLineAction::Delete => {}
+        }
+        output.push('}');
+    }
+    output.push(']');
+    output
+}
+
+fn fill_changes_json(changes: &[super::changes::FillChange]) -> String {
+    let mut output = String::from("[");
+    for (index, change) in changes.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"id\":{},\"action\":\"{}\"",
+            change.id,
+            match &change.action {
+                FillAction::Add(_) => "add",
+                FillAction::Delete => "delete",
+                FillAction::SetColors { .. } => "setColors",
+            }
+        ));
+        match &change.action {
+            FillAction::Add(fill) => {
+                output.push_str(",\"object\":");
+                output.push_str(&first_object_json(&fills_json(std::slice::from_ref(fill))));
+            }
+            FillAction::Delete => {}
+            FillAction::SetColors { start, values } => {
+                output.push_str(&format!(",\"start\":{start}"));
+                push_values_field(&mut output, "values", values);
+            }
+        }
+        output.push('}');
+    }
+    output.push(']');
+    output
+}
+
+fn drawing_changes_json(changes: &[super::changes::DrawingChange]) -> String {
+    let mut output = String::from("[");
+    for (index, change) in changes.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"family\":\"{}\",\"id\":{},\"action\":\"{}\"",
+            change.family.as_str(),
+            change.id,
+            change.action.as_str()
+        ));
+        match &change.action {
+            DrawingAction::Add(object) => {
+                output.push_str(",\"object\":");
+                output.push_str(&drawing_object_json(object));
+            }
+            DrawingAction::SetTail { start, object } => {
+                output.push_str(&format!(",\"start\":{start},\"object\":"));
+                output.push_str(&drawing_object_json(object));
+            }
+            DrawingAction::Delete => {}
+        }
+        output.push('}');
+    }
+    output.push(']');
+    output
+}
+
+fn drawing_object_json(object: &DrawingObject) -> String {
+    match object {
+        DrawingObject::Label(item) => first_object_json(&labels_json(std::slice::from_ref(item))),
+        DrawingObject::Line(item) => first_object_json(&lines_json(std::slice::from_ref(item))),
+        DrawingObject::LineFill(item) => {
+            first_object_json(&line_fills_json(std::slice::from_ref(item)))
+        }
+        DrawingObject::Polyline(item) => {
+            first_object_json(&polylines_json(std::slice::from_ref(item)))
+        }
+        DrawingObject::Box(item) => first_object_json(&boxes_json(std::slice::from_ref(item))),
+        DrawingObject::Table(item) => first_object_json(&tables_json(std::slice::from_ref(item))),
+    }
+}
+
+fn event_changes_json(changes: &[super::changes::EventChange<AlertEvent>]) -> String {
+    let mut output = String::from("[");
+    for (index, change) in changes.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"action\":\"{}\",\"event\":{}",
+            change.action.as_str(),
+            first_object_json(&alerts_json(std::slice::from_ref(&change.event)))
+        ));
+        output.push('}');
+    }
+    output.push(']');
+    output
+}
+
+fn strategy_changes_json(changes: &StrategyChanges) -> String {
+    let mut output = String::from("{");
+    let mut first = true;
+    push_splice(
+        &mut output,
+        &mut first,
+        "orders",
+        changes.orders.as_ref(),
+        strategy_orders_json,
+    );
+    push_splice(
+        &mut output,
+        &mut first,
+        "trades",
+        changes.trades.as_ref(),
+        strategy_trades_json,
+    );
+    push_splice(
+        &mut output,
+        &mut first,
+        "alerts",
+        changes.alerts.as_ref(),
+        strategy_order_fill_alerts_json,
+    );
+    push_splice(
+        &mut output,
+        &mut first,
+        "position",
+        changes.position.as_ref(),
+        strategy_position_json,
+    );
+    push_splice(
+        &mut output,
+        &mut first,
+        "equity",
+        changes.equity.as_ref(),
+        strategy_equity_json,
+    );
+    if let Some(diagnostics) = &changes.diagnostics {
+        if !first {
+            output.push(',');
+        }
+        output.push_str("\"diagnostics\":");
+        output.push_str(&runtime_diagnostics_json(diagnostics));
+    }
+    output.push('}');
+    output
+}
+
+fn push_splice<T>(
+    output: &mut String,
+    first: &mut bool,
+    name: &str,
+    splice: Option<&super::changes::ListSplice<T>>,
+    items_json: fn(&[T]) -> String,
+) {
+    let Some(splice) = splice else {
+        return;
+    };
+    if !*first {
+        output.push(',');
+    }
+    *first = false;
+    output.push_str(&format!(
+        "\"{name}\":{{\"start\":{},\"items\":{}}}",
+        splice.start,
+        items_json(&splice.items)
+    ));
+}
+
+fn first_object_json(array_json: &str) -> String {
+    let trimmed = array_json.trim();
+    match trimmed.strip_prefix('[') {
+        Some(rest) if rest.ends_with(']') => rest[..rest.len() - 1].to_owned(),
+        _ => trimmed.to_owned(),
+    }
 }
 
 fn plots_json(plots: &[PlotSeries]) -> String {
@@ -984,132 +1381,4 @@ fn json_escape(value: &str) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{
-        RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent,
-        StrategyOrderFillAlertOutput, StrategyPositionSnapshot, StrategyTrade,
-    };
-
-    fn empty_result() -> RuntimeResult {
-        RuntimeResult {
-            plots: Vec::new(),
-            plot_chars: Vec::new(),
-            plot_shapes: Vec::new(),
-            plot_arrows: Vec::new(),
-            plot_bars: Vec::new(),
-            plot_candles: Vec::new(),
-            bg_colors: Vec::new(),
-            bar_colors: Vec::new(),
-            hlines: Vec::new(),
-            fills: Vec::new(),
-            labels: Vec::new(),
-            lines: Vec::new(),
-            line_fills: Vec::new(),
-            polylines: Vec::new(),
-            boxes: Vec::new(),
-            tables: Vec::new(),
-            alerts: Vec::new(),
-            strategy: None,
-            diagnostics: Vec::new(),
-        }
-    }
-
-    #[test]
-    fn runtime_json_serializes_non_finite_plot_floats_as_null() {
-        let mut result = empty_result();
-        result.plots.push(PlotSeries::new(
-            1,
-            vec![
-                PineValue::Float(f64::NAN),
-                PineValue::Float(f64::INFINITY),
-                PineValue::Float(1.5),
-            ],
-        ));
-
-        let output = public_runtime_result_json(&result);
-
-        assert!(output.contains(r#""values":[null,null,1.5]"#));
-        assert!(!output.contains("NaN"));
-        assert!(!output.contains("inf"));
-    }
-
-    #[test]
-    fn runtime_json_serializes_top_level_diagnostics() {
-        let mut result = empty_result();
-        result.diagnostics.push(RuntimeDiagnostic {
-            code: "E_RUNTIME".to_owned(),
-            message: "runtime \"warning\"\nline".to_owned(),
-        });
-
-        let output = public_runtime_result_json(&result);
-
-        assert!(
-            output.contains(
-                r#""diagnostics":[{"code":"E_RUNTIME","message":"runtime \"warning\"\nline"}]"#
-            ),
-            "{output}"
-        );
-    }
-
-    #[test]
-    fn runtime_json_serializes_non_finite_strategy_floats_as_null() {
-        let mut result = empty_result();
-        result.strategy = Some(StrategyResult {
-            orders: vec![StrategyOrderEvent {
-                id: "O".to_owned(),
-                bar_index: 0,
-                time: 10,
-                direction: "long".to_owned(),
-                qty: f64::INFINITY,
-                price: f64::NAN,
-            }],
-            trades: vec![StrategyTrade {
-                id: "T".to_owned(),
-                exit_id: "X".to_owned(),
-                entry_bar_index: 0,
-                exit_bar_index: 1,
-                entry_time: 10,
-                exit_time: 20,
-                entry_price: f64::NAN,
-                exit_price: f64::NEG_INFINITY,
-                qty: 1.0,
-                profit: f64::INFINITY,
-            }],
-            position: vec![StrategyPositionSnapshot {
-                bar_index: 0,
-                size: f64::INFINITY,
-                avg_price: Some(f64::NAN),
-            }],
-            equity: vec![StrategyEquitySnapshot {
-                bar_index: 0,
-                cash: f64::NAN,
-                market_value: f64::INFINITY,
-                equity: f64::NEG_INFINITY,
-                net_profit: 2.0,
-            }],
-            alerts: vec![StrategyOrderFillAlertOutput {
-                id: "A".to_owned(),
-                bar_index: 0,
-                time: 10,
-                direction: "strategy.exit".to_owned(),
-                qty: f64::INFINITY,
-                price: f64::NAN,
-                entry_id: Some("T".to_owned()),
-                exit_id: None,
-                message: "message".to_owned(),
-            }],
-            diagnostics: Vec::new(),
-        });
-
-        let output = public_runtime_result_json(&result);
-
-        assert!(output.contains(r#""qty":null,"price":null"#));
-        assert!(output.contains(r#""entryPrice":null,"exitPrice":null,"qty":1,"profit":null"#));
-        assert!(output.contains(r#""size":null,"avgPrice":null"#));
-        assert!(output.contains(r#""cash":null,"marketValue":null,"equity":null,"netProfit":2"#));
-        assert!(output.contains(r#""qty":null,"price":null,"entryId":"T","exitId":null"#));
-        assert!(!output.contains("NaN"));
-        assert!(!output.contains("inf"));
-    }
-}
+mod tests;

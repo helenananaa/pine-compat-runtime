@@ -124,6 +124,7 @@ impl BrokerState {
             slippage_price_offset,
             limit_verification_price_offset,
             cash: initial_capital,
+            realized_profit_sum: 0.0,
             position_size: 0.0,
             avg_price: 0.0,
             next_close_metadata: StrategyOrderMetadata::default(),
@@ -289,20 +290,36 @@ impl BrokerState {
         }
     }
 
-    pub(crate) fn order_events(&self) -> &[crate::StrategyOrderEvent] {
-        &self.orders
+    pub(crate) fn order_len(&self) -> usize {
+        self.orders.len()
     }
 
-    pub(crate) fn trade_events(&self) -> &[crate::StrategyTrade] {
-        &self.trades
+    pub(crate) fn trade_len(&self) -> usize {
+        self.trades.len()
     }
 
-    pub(crate) fn position_history(&self) -> &[crate::StrategyPositionSnapshot] {
-        &self.position
+    pub(crate) fn position_len(&self) -> usize {
+        self.position.len()
     }
 
-    pub(crate) fn equity_history(&self) -> &[crate::StrategyEquitySnapshot] {
-        &self.equity
+    pub(crate) fn equity_len(&self) -> usize {
+        self.equity.len()
+    }
+
+    pub(crate) fn order_tail(&self, start: usize) -> Vec<crate::StrategyOrderEvent> {
+        self.orders.tail(start)
+    }
+
+    pub(crate) fn trade_tail(&self, start: usize) -> Vec<crate::StrategyTrade> {
+        self.trades.tail(start)
+    }
+
+    pub(crate) fn position_tail(&self, start: usize) -> Vec<crate::StrategyPositionSnapshot> {
+        self.position.tail(start)
+    }
+
+    pub(crate) fn equity_tail(&self, start: usize) -> Vec<crate::StrategyEquitySnapshot> {
+        self.equity.tail(start)
     }
 
     pub(crate) fn fill_alert_len(&self) -> usize {

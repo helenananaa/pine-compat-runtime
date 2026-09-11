@@ -267,6 +267,21 @@ fn parse_bars(key: &str, value: &Value) -> Result<Vec<Bar>, String> {
         .collect()
 }
 
+pub(crate) fn bar_from_json(bar_json: &str) -> Result<Bar, String> {
+    let value: Value = serde_json::from_str(bar_json)
+        .map_err(|err| format!("realtime bar must be a JSON object: {err}"))?;
+    parse_bar("chart", 0, &value)
+}
+
+pub(crate) fn execution_times_from_json(json: &str) -> Result<Vec<i64>, String> {
+    parse_execution_times(Some(&serde_json::from_str(json).map_err(|err| {
+        format!("execution times must be a JSON array of integer millisecond timestamps: {err}")
+    })?))?
+    .ok_or_else(|| {
+        "execution times must be a JSON array of integer millisecond timestamps".to_owned()
+    })
+}
+
 fn parse_bar(key: &str, index: usize, value: &Value) -> Result<Bar, String> {
     let object = value
         .as_object()

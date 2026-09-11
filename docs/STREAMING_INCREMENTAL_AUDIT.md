@@ -1,5 +1,8 @@
 # Streaming replica and incremental output acceptance
 
+Current follow-up qualification: [streaming expansion](STREAMING_EXPANSION_AUDIT.md).
+Earlier artifact and resource tables below remain evidence for their recorded revisions.
+
 Date: 2026-09-10. Scope: the local worktree based on `7ffcd6524`, not the retained
 pre-streaming wheels. No commit, tag, push or publication is implied.
 
@@ -10,7 +13,8 @@ without constructing a complete `RuntimeResult` on every update. Pine still
 executes the current bar from its confirmed checkpoint, preserving `varip` and
 the established broker lifecycle. Existing full-result APIs remain compatible.
 
-Changes schema **2** carries `baseRevision` and `revision`. A `RuntimeReplica`
+Changes schema **3** carries `baseRevision`, `revision` and `retainedFrom`.
+Schema 2 payloads are still accepted and treated as `retainedFrom = 0`. A `RuntimeReplica`
 owns the consumer result and revision. `apply()` mutates that native result in
 place and returns true; an identical retransmission of the last applied change
 returns false. Old revisions, gaps, conflicting payloads, inconsistent base
@@ -22,8 +26,10 @@ Replicas are bound to one host-selected stream. Hosts route session identities;
 revision numbers alone do not identify different producer sessions. After a gap,
 capture a fresh producer snapshot and its revision together, reset the replica,
 and continue with subsequent changes. The API does not reconstruct missing ticks
-or redeliver external alerts. Historical corrections and input/script changes
-require a separately rebuilt producer session.
+or redeliver external alerts. Historical bar corrections use
+`correct_historical(from_time, suffix)` on the existing producer session;
+`replay_historical` replaces the entire confirmed history. Input or script
+changes still require a separately rebuilt producer session.
 
 ```python
 session = program.realtime_session()
@@ -49,13 +55,16 @@ previous replica. Existing output JSON remains schema 8.
 
 ## Copies and correctness
 
-- Ordinary plot values/colors and alert histories use a persistent append tree
-  with 128-value leaves. Checkpoints share immutable branches. Tail modification
-  copies at most one leaf and a logarithmic path, verified with clone-count tests.
+- Ordinary plot values/colors, remaining series families (chars, shapes, arrows,
+  bars, candles, bgcolor, barcolor, fill colors), drawing snapshots, alert
+  histories, and broker order/trade/position/equity/fill-alert records use a
+  persistent append tree with 128-value leaves. Checkpoints share immutable
+  branches. Tail modification copies at most one leaf and a logarithmic path,
+  verified with clone-count tests.
 - Drawing changes copy the suffix beginning at the first mutable bar snapshot,
   including multiple snapshots on the same bar. Closed snapshots are not copied
-  merely to construct a delta. The underlying drawing store can still be copied
-  during runtime rollback.
+  merely to construct a delta. Runtime rollback no longer clones retained
+  drawing snapshot vectors or broker record vectors in full.
 - Alert differences operate on the mutable suffix and preserve the occurrence
   count of identical `alert.freq_all` events. Replica cursor checks provide
   retransmission protection without collapsing legitimate events.
@@ -141,14 +150,41 @@ corrected checks; their failures were resolved without relaxed thresholds.
 ## Remaining scope
 
 No universal constant-time or indefinite bounded-memory claim is made. Retained
-output still grows; other series/drawing families, broker records, requested
-context state and script-owned collections may still incur history-dependent
-costs. Arbitrary script loops inherently depend on script workload. The existing
-profile's plot capacity counts allocated value slots, not append-tree headers;
-peak process RSS is recorded independently.
+output still grows; requested context state, script-owned collections, and
+explicit full snapshots may still incur history-dependent costs. Arbitrary
+script loops inherently depend on script workload. The existing profile's plot
+capacity counts allocated value slots, not append-tree headers; peak process
+RSS is recorded independently.
 
-Dynamic multi-context data update contracts, historical correction/replay,
-output retention policy, concurrency budgets and WASM streaming exports are
-separate future work. Existing historical WASM behavior must continue to pass
-its actual generated-module gate. Earlier native reference receipts are not
-silently relabeled as validation of this new worktree.
+A follow-up local slice extends the append tree to the remaining series
+families, drawing snapshots and broker records. Public result JSON remains
+schema 8. This follow-up is source-only until a later artifact qualification;
+the optimized-wheel budget table above is the earlier plot/alert/collection
+measurement, not a rerun of those nine cases.
+
+Hosts may set `OutputRetention::keep_confirmed_bars(n)` on a realtime session.
+That trims display plots, drawings, fills and alerts to a window whose first
+bar index is `retainedFrom`. Series `start` values stay absolute bar indexes;
+replicas drop the expired prefix, then splice at `start - retainedFrom`.
+Script series history, `var`/`varip`, collections and broker records that Pine
+can still read are not trimmed. `result()` is the display window; paginated
+reads are host slices of that window. Strategy public order/trade lists still
+grow with the session.
+
+Realtime sessions can append, replace, and confirm `request.security` context
+bars independently of the main chart. Forming request bars do not enter
+confirmed chart results; failed feed updates restore prior state.
+
+WASM `Program.realtimeSession()` now exports the same seed / forming / confirm
+lifecycle, request-feed updates, display retention, replica apply/reset, and
+JSON changes schema 3 as Rust and Python. Native `pine-wasm` tests compare one
+event sequence against `RealtimeRuntime` result and changes JSON. Actual
+generated-module Node smoke covers the same path when the wasm32 artifact is
+built. Historical correction is `correct_historical(from_time, suffix)` /
+`session.correct` / WASM `correct`: the session retains confirmed bars before
+`from_time`, re-executes prefix plus suffix atomically, and replicas reset from
+the new snapshot. `replay_historical` still replaces the whole confirmed list.
+Concurrency budgets remain separate future work. Existing historical WASM
+behavior must continue to pass its actual generated-module gate. Earlier native
+reference receipts are not silently relabeled as validation of this new
+worktree.

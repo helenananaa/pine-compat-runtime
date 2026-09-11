@@ -1,5 +1,6 @@
 use pine_ir::{HirCallArg, HirExpr};
 
+use crate::runtime::drawing_history::RuntimePolyline;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -30,9 +31,9 @@ impl<'a> HistoricalRuntime<'a> {
                 .ok_or_else(|| RuntimeError {
                     message: "polyline id limit exceeded".to_owned(),
                 })?;
-        self.polylines.push(PolylineOutput {
+        self.polylines.push(RuntimePolyline::from_snapshot(
             id,
-            snapshots: vec![PolylineSnapshot {
+            PolylineSnapshot {
                 bar_index: self.bars,
                 exists: true,
                 points,
@@ -44,8 +45,8 @@ impl<'a> HistoricalRuntime<'a> {
                 line_style,
                 line_width,
                 force_overlay,
-            }],
-        });
+            },
+        ));
         Ok(PineValue::Polyline(id))
     }
 

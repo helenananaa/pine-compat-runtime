@@ -46,7 +46,9 @@ The downloads below are the published `v0.2.0` release from July 20, 2026.
 This checkout is the local `0.3.0-rc.1` candidate (Python wheel `0.3.0rc1`).
 It is a locally qualified prerelease for the named scope, not a stable tag or
 full Pine compatibility. Current status and exact artifact identities are in
-[the delivery ledger](docs/DELIVERY_ROADMAP.md); older rc1 wheels share the version
+[the delivery ledger](docs/DELIVERY_ROADMAP.md) and
+[latest streaming inventory](docs/STREAMING_EXPANSION_ARTIFACTS.json);
+older rc1 wheels share the version
 number and must not be confused with the repaired artifacts.
 Build this tree for host-input discovery, source provenance, realtime clocks,
 and the four-surface candidate artifacts. Do not install the published `v0.2.0`
@@ -99,8 +101,9 @@ partial strategy broker output — all without requiring a chart UI.
 
 ## What Works Today
 
-The current release focuses on a broad indicator runtime and a deliberately
-bounded strategy runtime.
+The current source tree provides a broad indicator runtime and a deliberately
+bounded strategy runtime. Features below describe this checkout; the `v0.2.0`
+downloads above do not include the later candidate and streaming additions.
 
 | Area | Current executable subset |
 | --- | --- |
@@ -145,7 +148,7 @@ and its referenced fixtures are the source of truth. See
 | Surface | Best for | Entry point |
 | --- | --- | --- |
 | Python | notebooks, research services, data pipelines, application plugins | `run_script(...)`, reusable `Program`, or persistent `RealtimeSession` |
-| CLI | shell workflows, fixtures, compatibility checks, JSON generation | `pine-compat run`, `analyze`, `fmt-ast`, and `matrix` |
+| CLI | shell workflows, fixtures, compatibility checks, JSON generation | `pine-compat run`, `run-incremental`, `run-realtime-history`, `run-realtime-forming`, `analyze`, `requirements`, `fmt-ast`, and `matrix` |
 | Rust | native applications and deeper runtime embedding | workspace crates under [`crates/`](crates), [embedding walkthrough](docs/RUST_EMBEDDING.md) |
 | WASM | browser, Node.js, and sandboxed JavaScript hosts | `compileScript`, `analyzeScript`, `runScriptCsv`, `Program.runCsv`, and `Program.realtimeSession` |
 
@@ -207,7 +210,24 @@ visible = replica.result()
 assert visible == session.result()
 ```
 
-`apply_forming` / `apply_confirmed` return series append or current-bar replace, drawing add/modify/delete, order/fill/alert identity, preview vs confirmed visibility, and base/current revisions. A replica ignores an identical retransmission and rejects stale or missing revisions. Call `session.result()` when a complete snapshot is required.
+`apply_forming` / `apply_confirmed` return changes schema 3: series append or
+current-bar replace, drawing add/modify/delete, order/fill/alert identity,
+preview vs confirmed visibility, base/current revisions, and `retainedFrom`.
+A replica ignores an identical retransmission and rejects stale or missing
+revisions. Complete results remain runtime schema 8.
+
+Limit retained display output with `session.set_output_retention(256)`;
+`None` removes the limit for future updates. This does not prune input bars,
+compute history, script collections or script-readable broker records.
+Increasing the window cannot restore discarded output; replay and reset the
+replica to rebuild it. Full `result()` calls still materialize retained results.
+
+For live requested contexts, supply bars through
+`session.apply_request_forming(symbol, timeframe, bar)` and
+`session.apply_request_confirmed(symbol, timeframe, bar)` before the chart
+update that consumes them. Data acquisition and feed ordering belong to the
+host. See [Realtime Model](docs/REALTIME_MODEL.md) for lifecycle and recovery,
+and [streaming expansion](docs/STREAMING_EXPANSION_AUDIT.md) for measured scope.
 
 To correct confirmed history from time `T`, call `session.correct(T, suffix)` (Rust `correct_historical`, WASM `correct`). The session keeps bars with `time < T` and replays that prefix plus the suffix. `session.replay(...)` still replaces the entire confirmed list. Forming state is discarded. Replicas must `reset` from `stream_snapshot()`; neither operation is a linear change.
 
@@ -371,6 +391,10 @@ owns language semantics and normalized output.
   argument subsets
 - [Execution Semantics](docs/EXECUTION_SEMANTICS.md) — bar, history, state, and
   broker behavior
+- [Realtime Model](docs/REALTIME_MODEL.md) — streaming changes, replicas,
+  retention, requested contexts, and historical correction
+- [Delivery Surfaces](docs/DELIVERY_SURFACES.md) — Rust, CLI, Python and WASM
+  entry points, schemas, and platform qualification
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md) — stable diagnostic reference
 - [Release Notes](docs/RELEASE_NOTES.md) — changes in each release
 - [Releasing Binary Wheels](docs/RELEASING.md) — wheel matrix, checksums, and

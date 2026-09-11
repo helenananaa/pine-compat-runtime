@@ -4,6 +4,10 @@ This directory contains current runtime contracts, active roadmaps, design
 gates, and completed phase records. Use the hierarchy below so that an older
 plan is not mistaken for a current compatibility claim.
 
+Current delivery status has one entry point: [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md).
+[DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json) binds current local wheel identities.
+Older candidate checklists and phase audits retain historical results.
+
 ## Source-Of-Truth Order
 
 1. [`tests/fixtures/conformance.tsv`](../tests/fixtures/conformance.tsv), its
@@ -30,6 +34,9 @@ cargo run -p pine-cli -- matrix --format json
 ```
 
 ## Current Project Documents
+
+- [Streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md): Rust/Python replica,
+  incremental output, resource results and [local artifact](STREAMING_ARTIFACTS.json).
 
 - [Architecture](ARCHITECTURE.md): crate boundaries and host-neutral
   architecture.

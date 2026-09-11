@@ -3,7 +3,7 @@ use std::error::Error;
 
 use pine_runtime::{
     Bar, BarUpdate, ChartContext, HistoricalRuntime, RealtimeRuntime, RequestEnvironment,
-    RequestTimeframe, host_requirements_json, public_runtime_result_json,
+    RequestTimeframe, RuntimeReplica, host_requirements_json, public_runtime_result_json,
 };
 use pine_sema::{AnalysisInput, analyze_input};
 use pine_syntax::SourceFile;
@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         historical_json
     );
 
-    let mut live = RealtimeRuntime::with_request_environment(&hir, environment);
+    let mut live = RealtimeRuntime::with_request_environment(&hir, environment.clone());
     live.seed_historical_with_execution_times(&history, &clocks)
         .map_err(|error| error.message)?;
     let forming = bar(120_000, 12.0);
@@ -120,6 +120,47 @@ fn main() -> Result<(), Box<dyn Error>> {
         volume: 3.0,
         ..forming
     };
+    let mut streaming = RealtimeRuntime::with_request_environment(&hir, environment.clone());
+    let visible = streaming
+        .seed_historical_with_execution_times(&history, &clocks)
+        .map_err(|error| error.message)?;
+    let forming_changes = streaming
+        .apply_update_with_execution_time(BarUpdate::forming(forming), 120_100)
+        .map_err(|error| error.message)?;
+    let mut replica = RuntimeReplica::new(visible, forming_changes.base_revision);
+    replica
+        .apply(&forming_changes)
+        .map_err(|error| error.message)?;
+    let replacement_changes = streaming
+        .apply_update_with_execution_time(BarUpdate::forming(replacement), 120_200)
+        .map_err(|error| error.message)?;
+    replica
+        .apply(&replacement_changes)
+        .map_err(|error| error.message)?;
+    let visible = replica.result();
+    assert_eq!(
+        visible.plots[0]
+            .values
+            .last()
+            .and_then(|value| value.as_f64()),
+        Some(28.0)
+    );
+    let confirmed_changes = streaming
+        .apply_update_with_execution_time(BarUpdate::confirmed(closed), 179_999)
+        .map_err(|error| error.message)?;
+    replica
+        .apply(&confirmed_changes)
+        .map_err(|error| error.message)?;
+    let visible = replica.result();
+    assert_eq!(visible.plots, streaming.result().plots);
+    assert_eq!(
+        visible.plots[0]
+            .values
+            .last()
+            .and_then(|value| value.as_f64()),
+        Some(26.0)
+    );
+
     let result = live
         .update_with_execution_time(BarUpdate::confirmed(closed), 179_999)
         .map_err(|error| error.message)?;
@@ -153,6 +194,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             "example":"host-neutral-rust-embedding", "syntheticInputs":true,
             "packageVersion": env!("CARGO_PKG_VERSION"),
             "historicalEqualsIncremental":true, "failedUpdatePreservedState":true,
+            "streamingApplyMatchedSnapshot":true,
             "missingClockError":rejected.message, "requirements":requirements, "result":result,
         }))?
     );

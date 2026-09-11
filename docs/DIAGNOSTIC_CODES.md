@@ -268,3 +268,18 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_SESSION_COVERAGE`: session window input is missing a required chart barIndex.
 - `E_SESSION_HISTORY_CHANGED`: session window replacement/extension changes an executed confirmed or forming bar's ids, or enables host-window mode after UTC execution.
   uses that bar's standard OHLC path.
+
+
+## Streaming replica
+
+These errors reject an incoming delta without mutating the consumer result or
+revision. They do not change the existing runtime output schema.
+
+- `E_STREAM_SCHEMA`: changes schema is unsupported; use schema 2.
+- `E_STREAM_REVISION`: revision does not immediately follow baseRevision.
+- `E_STREAM_STALE`: change revision precedes the consumer's current revision.
+- `E_STREAM_CONFLICT`: the current revision has a different payload, or was
+  installed from a snapshot without a known last payload. Only an identical
+  retransmission of the last applied delta is a no-op.
+- `E_STREAM_GAP`: baseRevision does not match the consumer cursor; restore an
+  authoritative snapshot with its revision before continuing.

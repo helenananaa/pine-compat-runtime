@@ -1,8 +1,15 @@
 # 现代策略驱动的解释器五阶段执行计划
 
-2026-09-08 后续：显式默认参数绑定切片已完成本轮验收；TechnicalRating v3
-现在完整解析，整库仍受 ta/9 缺失和 calcRatingAll 导出副作用限制阻塞。见
-[默认参数验收](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md)。旧默认参数阻塞描述为历史状态。
+> 2026-09-10 current-status correction: TechnicalRating/3 with its complete
+> dependencies passed 63,399 independent reference values; earlier ta/9 and
+> export/default-parameter blockers below are historical. Native realtime
+> comparisons and observable B1 controls also passed on the repaired final
+> wheels. Use [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md) for current work and
+> acceptance; the original r1 synthetic denominator remains separate.
+
+2026-09-10：TechnicalRating v3 完整依赖链已通过独立参考验收，见
+[SMA_ROLLING_SUM_AUDIT.md](SMA_ROLLING_SUM_AUDIT.md)。2026-09-08 的默认参数、
+ta/9 与导出函数阻塞均为历史过程，不再作为当前待办。
 
 2026-09-08 后续：开始 G3 工作区收口、真实策略新参考批次，以及由
 TechnicalRating v3 复现驱动的显式 series 标量参数切片。当前结果与下一层

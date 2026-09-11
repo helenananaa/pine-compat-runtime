@@ -1,5 +1,11 @@
 # TradingView reference closure
 
+> Historical capture/progress record. Later a2a1ba5fb optimized wheels pass the
+> original and subsequent named realtime references on Windows and Linux.
+> See [final acceptance](TRADINGVIEW_GOAL_ACCEPTANCE.md) and the
+> [current delivery ledger](DELIVERY_ROADMAP.md). Failed results below remain
+> evidence of earlier builds, not current unresolved failures.
+
 Current acceptance: `TRADINGVIEW_GOAL_ACCEPTANCE.md`. At source `a2a1ba5fb`,
 the named realtime failures are resolved; observable B1 and the new r1 native
 companion pass final Windows/Linux optimized-wheel replays. Each platform

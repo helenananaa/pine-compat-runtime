@@ -37,7 +37,7 @@ pub(crate) fn runtime_result_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn strategy_result_to_py(
+pub(crate) fn strategy_result_to_py(
     py: Python<'_>,
     strategy: &pine_runtime::StrategyResult,
 ) -> PyResult<Py<PyAny>> {
@@ -57,7 +57,7 @@ fn strategy_result_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn strategy_order_fill_alerts_to_py(
+pub(crate) fn strategy_order_fill_alerts_to_py(
     py: Python<'_>,
     alerts: &[pine_runtime::StrategyOrderFillAlertOutput],
 ) -> PyResult<Py<PyAny>> {
@@ -84,7 +84,7 @@ fn strategy_order_fill_alerts_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn runtime_diagnostics_to_py(
+pub(crate) fn runtime_diagnostics_to_py(
     py: Python<'_>,
     diagnostics: &[pine_runtime::RuntimeDiagnostic],
 ) -> PyResult<Py<PyAny>> {
@@ -98,7 +98,7 @@ fn runtime_diagnostics_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn strategy_trades_to_py(
+pub(crate) fn strategy_trades_to_py(
     py: Python<'_>,
     trades: &[pine_runtime::StrategyTrade],
 ) -> PyResult<Py<PyAny>> {
@@ -119,7 +119,7 @@ fn strategy_trades_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn strategy_orders_to_py(
+pub(crate) fn strategy_orders_to_py(
     py: Python<'_>,
     orders: &[pine_runtime::StrategyOrderEvent],
 ) -> PyResult<Py<PyAny>> {
@@ -137,7 +137,7 @@ fn strategy_orders_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn strategy_position_to_py(
+pub(crate) fn strategy_position_to_py(
     py: Python<'_>,
     position: &[pine_runtime::StrategyPositionSnapshot],
 ) -> PyResult<Py<PyAny>> {
@@ -152,7 +152,7 @@ fn strategy_position_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn strategy_equity_to_py(
+pub(crate) fn strategy_equity_to_py(
     py: Python<'_>,
     equity: &[pine_runtime::StrategyEquitySnapshot],
 ) -> PyResult<Py<PyAny>> {
@@ -325,7 +325,10 @@ fn plot_candles_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn hlines_to_py(py: Python<'_>, hlines: &[pine_runtime::HLineOutput]) -> PyResult<Py<PyAny>> {
+pub(crate) fn hlines_to_py(
+    py: Python<'_>,
+    hlines: &[pine_runtime::HLineOutput],
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for hline in hlines {
         let item = PyDict::new(py);
@@ -372,7 +375,10 @@ fn hlines_to_py(py: Python<'_>, hlines: &[pine_runtime::HLineOutput]) -> PyResul
     Ok(output.into_any().unbind())
 }
 
-fn fills_to_py(py: Python<'_>, fills: &[pine_runtime::FillOutput]) -> PyResult<Py<PyAny>> {
+pub(crate) fn fills_to_py(
+    py: Python<'_>,
+    fills: &[pine_runtime::FillOutput],
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for fill in fills {
         let item = PyDict::new(py);
@@ -416,7 +422,7 @@ fn fills_to_py(py: Python<'_>, fills: &[pine_runtime::FillOutput]) -> PyResult<P
     Ok(output.into_any().unbind())
 }
 
-fn set_non_default_value(
+pub(crate) fn set_non_default_value(
     py: Python<'_>,
     item: &Bound<'_, PyDict>,
     name: &str,
@@ -429,7 +435,7 @@ fn set_non_default_value(
     Ok(())
 }
 
-fn set_output_metadata(
+pub(crate) fn set_output_metadata(
     py: Python<'_>,
     item: &Bound<'_, PyDict>,
     metadata: &pine_runtime::OutputMetadata,
@@ -466,7 +472,10 @@ fn set_output_metadata(
     )
 }
 
-fn labels_to_py(py: Python<'_>, labels: &[pine_runtime::LabelOutput]) -> PyResult<Py<PyAny>> {
+pub(crate) fn labels_to_py(
+    py: Python<'_>,
+    labels: &[pine_runtime::LabelOutput],
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for label in labels {
         let item = PyDict::new(py);
@@ -512,7 +521,10 @@ fn label_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn lines_to_py(py: Python<'_>, lines: &[pine_runtime::LineOutput]) -> PyResult<Py<PyAny>> {
+pub(crate) fn lines_to_py(
+    py: Python<'_>,
+    lines: &[pine_runtime::LineOutput],
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for line in lines {
         let item = PyDict::new(py);
@@ -548,7 +560,7 @@ fn line_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn line_fills_to_py(
+pub(crate) fn line_fills_to_py(
     py: Python<'_>,
     line_fills: &[pine_runtime::LineFillOutput],
 ) -> PyResult<Py<PyAny>> {
@@ -584,7 +596,7 @@ fn line_fill_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn polylines_to_py(
+pub(crate) fn polylines_to_py(
     py: Python<'_>,
     polylines: &[pine_runtime::PolylineOutput],
 ) -> PyResult<Py<PyAny>> {
@@ -626,7 +638,10 @@ fn polyline_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn boxes_to_py(py: Python<'_>, boxes: &[pine_runtime::BoxOutput]) -> PyResult<Py<PyAny>> {
+pub(crate) fn boxes_to_py(
+    py: Python<'_>,
+    boxes: &[pine_runtime::BoxOutput],
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for box_output in boxes {
         let item = PyDict::new(py);
@@ -677,7 +692,10 @@ fn box_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn alerts_to_py(py: Python<'_>, alerts: &[pine_runtime::AlertEvent]) -> PyResult<Py<PyAny>> {
+pub(crate) fn alerts_to_py(
+    py: Python<'_>,
+    alerts: &[pine_runtime::AlertEvent],
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for alert in alerts {
         let item = PyDict::new(py);
@@ -691,7 +709,7 @@ fn alerts_to_py(py: Python<'_>, alerts: &[pine_runtime::AlertEvent]) -> PyResult
     Ok(output.into_any().unbind())
 }
 
-fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
+pub(crate) fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for value in values {
         output.append(value_to_py(py, value)?)?;

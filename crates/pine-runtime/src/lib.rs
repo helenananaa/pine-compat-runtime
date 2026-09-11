@@ -35,6 +35,12 @@ pub use magnifier::{
     magnifier_input_from_groups, magnifier_input_from_json, magnifier_input_from_v1,
 };
 pub use output::alerts::AlertEvent;
+pub use output::changes::{
+    DrawingAction, DrawingChange, DrawingFamily, DrawingObject, EventAction, EventChange,
+    FillAction, FillChange, HLineAction, HLineChange, ListSplice,
+    PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION, RuntimeChanges, SeriesChange, SeriesChangeOp,
+    SeriesFamily, SeriesFields, SeriesHeader, StrategyChanges, StreamingVisibility,
+};
 pub use output::delivery::{
     DeliveryAdapterRun, DeliveryAttemptRecord, DeliveryAttemptStatus, DeliveryAttemptStore,
     DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
@@ -100,7 +106,9 @@ pub use session_windows::{
     session_window_input_from_bars, session_window_input_from_json, session_window_input_from_v1,
 };
 pub use strategy::BrokerState;
-pub use value::{PineValue, encode_color_literal, encode_color_rgba, is_valid_public_color};
+pub use value::{
+    ChartPointValue, PineValue, encode_color_literal, encode_color_rgba, is_valid_public_color,
+};
 
 use algorithms::numeric::finite_float_or_na;
 use algorithms::rolling_window::{
@@ -142,3 +150,5 @@ const DEFAULT_CHART_TIMEFRAME: &str = "1";
 
 #[cfg(test)]
 mod tests;
+
+pub use output::replica::RuntimeReplica;

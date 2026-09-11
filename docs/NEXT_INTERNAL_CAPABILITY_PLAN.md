@@ -1,17 +1,22 @@
 # Next Internal Capability Plan
 
-2026-09-08 后续：显式默认参数绑定切片已完成本轮验收；TechnicalRating v3
-现在完整解析，整库仍受 ta/9 缺失和 calcRatingAll 导出副作用限制阻塞。见
-[默认参数验收](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md)。旧默认参数阻塞描述为历史状态。
+> 2026-09-10 current-status correction: TechnicalRating/3 with its complete
+> dependencies passed 63,399 independent reference values; earlier ta/9 and
+> export/default-parameter blockers below are historical. Native realtime
+> comparisons and observable B1 controls also passed on the repaired final
+> wheels. Use [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md) for current work and
+> acceptance; the original r1 synthetic denominator remains separate.
 
-Status: active planning document, refreshed on 2026-09-08. The v5/v6 r1
-manifest, deduplication and stage measurements are complete. The separate
-six-case g3-chrome-r2 reference batch is closed; r1 independent-reference
-coverage remains 0/482. Current work closes the existing G3 worktree, expands
-real-strategy references, and removes one evidenced language blocker. See
-[Next Cycle Audit](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md).
-Strategy broker accuracy remains selected; further source-version expansion
-is paused.
+2026-09-10：TechnicalRating v3 完整依赖链已通过独立参考验收，见
+[SMA_ROLLING_SUM_AUDIT.md](SMA_ROLLING_SUM_AUDIT.md)。2026-09-08 的默认参数、
+ta/9 与导出函数阻塞均为历史过程，不再作为当前待办。
+
+Status: capability backlog, reconciled on 2026-09-10. The current delivery
+sequence is tracked only in [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md).
+The v5/v6 r1 manifest and staged measurements remain frozen; original synthetic
+reference coverage and new native-data companions have separate denominators.
+Source-version expansion remains paused. The directions below are candidate
+work areas, not a claim that historical next slices are still open.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -85,10 +90,10 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Current next slice: expand independently comparable real-strategy scenarios
-in a new revision while retaining the r1 denominator, and close explicit series
-scalar function parameters found in TechnicalRating v3. Language blockers have
-a separate path; fill fixes require frozen bars and independent expectations.
+Current next slice: select work from the delivery ledger and fresh complete-script
+failure measurements. Explicit series scalar parameters, default parameters and
+the selected TechnicalRating dependency graph are already closed. Retain original
+r1 scenario identities when adding separately counted native references.
 The historical Stage D inventory is `docs/STRATEGY_MODERN_CORPUS_BEHAVIOR_AUDIT.md`;
 current results are tracked by the Next Cycle Audit. The closed
 ordinary-chart gap record is

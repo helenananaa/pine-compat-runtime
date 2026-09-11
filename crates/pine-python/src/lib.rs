@@ -13,10 +13,13 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyDict, PyList, PyModule, PySequence};
 mod alerts;
+mod changes;
 mod chart_metadata;
 mod diagnostics;
 mod outputs;
 mod realtime;
+mod replica;
+mod result_parse;
 mod tables;
 #[cfg(test)]
 mod tests;
@@ -204,6 +207,7 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("RENDER_METADATA_VERSION", PUBLIC_RENDER_METADATA_VERSION)?;
     module.add_class::<PyProgram>()?;
     realtime::register(module)?;
+    changes::register(module)?;
     module.add_function(wrap_pyfunction!(compile_script, module)?)?;
     module.add_function(wrap_pyfunction!(analyze_script, module)?)?;
     module.add_function(wrap_pyfunction!(run_script, module)?)?;

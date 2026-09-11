@@ -1,10 +1,14 @@
 use pine_ir::HirProgram;
 
+use super::streaming::OutputCursor;
 use crate::*;
 
 pub struct RealtimeRuntime<'a> {
     confirmed: HistoricalRuntime<'a>,
     forming: Option<HistoricalRuntime<'a>>,
+    revision: u64,
+    cursor: OutputCursor,
+    last_changes: Option<RuntimeChanges>,
 }
 impl<'a> RealtimeRuntime<'a> {
     #[must_use]
@@ -20,6 +24,9 @@ impl<'a> RealtimeRuntime<'a> {
         Self {
             confirmed: HistoricalRuntime::with_request_environment(program, request_environment),
             forming: None,
+            revision: 0,
+            cursor: OutputCursor::default(),
+            last_changes: None,
         }
     }
 
@@ -36,6 +43,9 @@ impl<'a> RealtimeRuntime<'a> {
                 input_overrides,
             ),
             forming: None,
+            revision: 0,
+            cursor: OutputCursor::default(),
+            last_changes: None,
         }
     }
 
@@ -100,7 +110,7 @@ impl<'a> RealtimeRuntime<'a> {
     }
 
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, RealtimeUpdateContext::default())
+        self.update_and_snapshot(update, RealtimeUpdateContext::default())
     }
 
     pub fn update_with_execution_time(
@@ -108,7 +118,7 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         execution_time: i64,
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(
+        self.update_and_snapshot(
             update,
             RealtimeUpdateContext {
                 execution_time: Some(execution_time),
@@ -122,14 +132,78 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         context: RealtimeUpdateContext,
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, context)
+        self.update_and_snapshot(update, context)
+    }
+
+    /// Capture a result and its cursor in one call. Hosts bind the replica to
+    /// this stream; create a new replica when replacing the producer session.
+    #[must_use]
+    pub fn replica(&self) -> RuntimeReplica {
+        RuntimeReplica::new(self.result(), self.revision)
+    }
+
+    pub fn apply_update(&mut self, update: BarUpdate) -> Result<RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context(update, RealtimeUpdateContext::default())
+    }
+
+    pub fn apply_update_with_execution_time(
+        &mut self,
+        update: BarUpdate,
+        execution_time: i64,
+    ) -> Result<RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context(
+            update,
+            RealtimeUpdateContext {
+                execution_time: Some(execution_time),
+                opening_update: None,
+            },
+        )
+    }
+
+    pub fn apply_update_with_context(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<RuntimeChanges, RuntimeError> {
+        let kind = update.kind;
+        self.update_inner(update, context)?;
+        self.revision += 1;
+        let visibility = if kind == BarUpdateKind::Forming {
+            StreamingVisibility::Preview
+        } else {
+            StreamingVisibility::Confirmed
+        };
+        let changes = self.cursor.diff(self.live(), self.revision, visibility);
+        self.sync_cursor();
+        self.last_changes = Some(changes.clone());
+        Ok(changes)
+    }
+
+    fn update_and_snapshot(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.update_inner(update, context)?;
+        self.revision += 1;
+        self.sync_cursor();
+        self.last_changes = None;
+        Ok(self.result())
+    }
+
+    fn live(&self) -> &HistoricalRuntime<'a> {
+        self.forming.as_ref().unwrap_or(&self.confirmed)
+    }
+
+    fn sync_cursor(&mut self) {
+        self.cursor = OutputCursor::capture(self.live());
     }
 
     fn update_inner(
         &mut self,
         update: BarUpdate,
         context: RealtimeUpdateContext,
-    ) -> Result<RuntimeResult, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         if update.kind == BarUpdateKind::Historical && context.opening_update == Some(false) {
             return Err(RuntimeError {
                 message: "historical bars always have an opening update".to_owned(),
@@ -164,19 +238,18 @@ impl<'a> RealtimeRuntime<'a> {
                 runtime.append_bar_with_context(update.bar, update.kind, true, execution_time)?;
                 self.confirmed = runtime;
                 self.forming = None;
-                Ok(self.confirmed.result())
+                Ok(())
             }
             BarUpdateKind::Confirmed => {
                 let runtime = self.replay_from_confirmed(update, context)?;
                 self.confirmed = runtime;
                 self.forming = None;
-                Ok(self.confirmed.result())
+                Ok(())
             }
             BarUpdateKind::Forming => {
                 let runtime = self.replay_from_confirmed(update, context)?;
-                let result = runtime.result();
                 self.forming = Some(runtime);
-                Ok(result)
+                Ok(())
             }
         }
     }
@@ -257,17 +330,30 @@ impl<'a> RealtimeRuntime<'a> {
         }
         self.confirmed = runtime;
         self.forming = None;
+        self.revision += 1;
+        self.sync_cursor();
+        self.last_changes = None;
         Ok(self.confirmed.result())
     }
 
     #[must_use]
     pub fn result(&self) -> RuntimeResult {
-        self.forming.as_ref().unwrap_or(&self.confirmed).result()
+        self.live().result()
     }
 
     #[must_use]
     pub fn confirmed_result(&self) -> RuntimeResult {
         self.confirmed.result()
+    }
+
+    #[must_use]
+    pub fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    #[must_use]
+    pub fn last_changes(&self) -> Option<&RuntimeChanges> {
+        self.last_changes.as_ref()
     }
 
     #[must_use]
@@ -305,6 +391,9 @@ impl RealtimeRuntime<'static> {
                     input_overrides,
                 ),
             forming: None,
+            revision: 0,
+            cursor: OutputCursor::default(),
+            last_changes: None,
         }
     }
 }

@@ -1,5 +1,11 @@
 # Long stop margin admission: native reference slice
 
+> Historical capture/progress record. Later a2a1ba5fb optimized wheels pass the
+> original and subsequent named realtime references on Windows and Linux.
+> See [final acceptance](TRADINGVIEW_GOAL_ACCEPTANCE.md) and the
+> [current delivery ledger](DELIVERY_ROADMAP.md). Failed results below remain
+> evidence of earlier builds, not current unresolved failures.
+
 Status: scoped Windows development-artifact qualification passed, 2026-09-10.
 Base: `c292e5ef591a43c42260423f4a6b1f92d768d680`.
 

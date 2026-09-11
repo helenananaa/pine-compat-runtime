@@ -1,5 +1,11 @@
 # Native real-update reference
 
+> Historical capture/progress record. Later a2a1ba5fb optimized wheels pass the
+> original and subsequent named realtime references on Windows and Linux.
+> See [final acceptance](TRADINGVIEW_GOAL_ACCEPTANCE.md) and the
+> [current delivery ledger](DELIVERY_ROADMAP.md). Failed results below remain
+> evidence of earlier builds, not current unresolved failures.
+
 This independent reference uses the unmodified original
 `Realtime Four Update Reference` strategy on OKX:BTCUSDT, one-minute bars.
 Its source, capture window, first-four-update policy, quantity, price grid and

@@ -1,5 +1,11 @@
 # Remaining realtime price evidence boundary
 
+> Historical capture/progress record. Later a2a1ba5fb optimized wheels pass the
+> original and subsequent named realtime references on Windows and Linux.
+> See [final acceptance](TRADINGVIEW_GOAL_ACCEPTANCE.md) and the
+> [current delivery ledger](DELIVERY_ROADMAP.md). Failed results below remain
+> evidence of earlier builds, not current unresolved failures.
+
 2026-09-10 follow-up: the user-authorized Binance source supplied continuous
 trade data and directional native controls. The scoped market-order repair in
 `REALTIME_MARKET_EXTREME_AUDIT.md` passes both original OKX failures unchanged

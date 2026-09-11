@@ -284,22 +284,50 @@ impl BrokerState {
             trades: self.trades.to_vec(),
             position: self.position.to_vec(),
             equity: self.equity.to_vec(),
-            alerts: self
-                .order_fill_alerts
-                .iter()
-                .map(|event| StrategyOrderFillAlertOutput {
-                    id: event.id.clone(),
-                    bar_index: event.bar_index,
-                    time: event.time,
-                    direction: event.direction.clone(),
-                    qty: event.qty,
-                    price: event.price,
-                    entry_id: event.entry_id.clone(),
-                    exit_id: event.exit_id.clone(),
-                    message: event.message.clone(),
-                })
-                .collect(),
+            alerts: self.fill_alerts_from(0),
             diagnostics: self.diagnostics.clone(),
         }
+    }
+
+    pub(crate) fn order_events(&self) -> &[crate::StrategyOrderEvent] {
+        &self.orders
+    }
+
+    pub(crate) fn trade_events(&self) -> &[crate::StrategyTrade] {
+        &self.trades
+    }
+
+    pub(crate) fn position_history(&self) -> &[crate::StrategyPositionSnapshot] {
+        &self.position
+    }
+
+    pub(crate) fn equity_history(&self) -> &[crate::StrategyEquitySnapshot] {
+        &self.equity
+    }
+
+    pub(crate) fn fill_alert_len(&self) -> usize {
+        self.order_fill_alerts.len()
+    }
+
+    pub(crate) fn diagnostics_slice(&self) -> &[crate::RuntimeDiagnostic] {
+        &self.diagnostics
+    }
+
+    pub(crate) fn fill_alerts_from(&self, start: usize) -> Vec<StrategyOrderFillAlertOutput> {
+        self.order_fill_alerts
+            .iter()
+            .skip(start)
+            .map(|event| StrategyOrderFillAlertOutput {
+                id: event.id.clone(),
+                bar_index: event.bar_index,
+                time: event.time,
+                direction: event.direction.clone(),
+                qty: event.qty,
+                price: event.price,
+                entry_id: event.entry_id.clone(),
+                exit_id: event.exit_id.clone(),
+                message: event.message.clone(),
+            })
+            .collect()
     }
 }

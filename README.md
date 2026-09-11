@@ -44,7 +44,10 @@ application to a charting service.
 
 The downloads below are the published `v0.2.0` release from July 20, 2026.
 This checkout is the local `0.3.0-rc.1` candidate (Python wheel `0.3.0rc1`).
-It is a TV-blocked prerelease, not a stable tag and not full Pine compatibility.
+It is a locally qualified prerelease for the named scope, not a stable tag or
+full Pine compatibility. Current status and exact artifact identities are in
+[the delivery ledger](docs/DELIVERY_ROADMAP.md); older rc1 wheels share the version
+number and must not be confused with the repaired artifacts.
 Build this tree for host-input discovery, source provenance, realtime clocks,
 and the four-surface candidate artifacts. Do not install the published `v0.2.0`
 wheels and treat them as this candidate. See
@@ -190,6 +193,21 @@ preview = session.update_forming(forming_bar)
 preview = session.update_forming(replacement_forming_bar)
 confirmed = session.update_confirmed(closed_bar)
 ```
+
+`update_forming` / `update_confirmed` still return a complete snapshot. To avoid constructing a complete returned snapshot on every tick, use the same lifecycle and consume this-update changes:
+
+```python
+session = program.realtime_session(input_overrides={length_id: 50})
+session.seed(confirmed_bars)
+replica = session.replica()
+changes = session.apply_forming(forming_bar)
+replica.apply(changes)
+# Request a complete Python dictionary only when needed.
+visible = replica.result()
+assert visible == session.result()
+```
+
+`apply_forming` / `apply_confirmed` return series append or current-bar replace, drawing add/modify/delete, order/fill/alert identity, preview vs confirmed visibility, and base/current revisions. A replica ignores an identical retransmission and rejects stale or missing revisions. Call `session.result()` when a complete snapshot is required.
 
 Development builds also accept `seed(bars, execution_times=[...])` and
 `update_forming`/`update_confirmed(..., execution_time=...)` for scripts reading

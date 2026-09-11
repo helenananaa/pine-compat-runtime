@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "channel": "local-prerelease",
+  "baseCommit": "7ffcd652453da20c54478a35c75eed9d0a3096eb",
+  "sourceState": "uncommitted worktree",
+  "sourceDigest": "b447165a5f13661d67dfea2e33b10adea795dfe89230441f922a3ec58044329a",
+  "cargoVersion": "0.3.0-rc.1",
+  "pythonVersion": "0.3.0rc1",
+  "changesSchemaVersion": 2,
+  "runtimeSchemaVersion": 8,
+  "artifact": {
+    "path": ".local/streaming-hardening/wheels-release/pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl",
+    "bytes": 3410860,
+    "sha256": "aff6c8c52c08a48d0972988fa19c29c498b9edc156d225f755f2a3840719b536"
+  },
+  "evidenceIndex": {
+    "path": ".local/streaming-hardening/qualification.json",
+    "sha256": "5f47fa6a085b4d5ae325e36b92ea19788882517a7f7fe885797205e9d49bf7df"
+  },
+  "checks": {
+    "rustWorkspace": 6686,
+    "pythonDebugInstalled": 748,
+    "pythonOptimizedInstalled": 748,
+    "toolTests": 130,
+    "actualWasmNode": true,
+    "clippyFormatStructure": true,
+    "optimizedBudgetCases": 9,
+    "installedNativeModuleMatchesWheel": true
+  },
+  "limitations": [
+    "Windows qualification only; no newly built Linux wheel.",
+    "WASM historical execution checked; streaming exports remain absent.",
+    "Finite workload budgets do not imply bounded indefinite retention or concurrency.",
+    "Same rc1 version as older wheels; select by source digest and artifact hash."
+  ]
+}

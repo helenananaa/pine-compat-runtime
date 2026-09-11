@@ -1,38 +1,63 @@
+use super::{append_history::AppendHistory, historical::HistoricalRuntime};
+use crate::{OutputMetadata, PineValue, PlotSeries};
 use std::sync::Arc;
 
-use super::historical::HistoricalRuntime;
-use crate::{PineValue, PlotSeries};
-
-fn copy_with_next_value(values: &[PineValue]) -> Vec<PineValue> {
-    let mut copy = Vec::with_capacity(values.len().saturating_add(1));
-    copy.extend_from_slice(values);
-    copy
+#[derive(Debug, Clone)]
+pub(crate) struct RuntimePlot {
+    pub(crate) id: u32,
+    pub(crate) values: AppendHistory<PineValue>,
+    pub(crate) colors: AppendHistory<PineValue>,
+    pub(crate) metadata: OutputMetadata,
+    pub(crate) linewidth: PineValue,
+    pub(crate) style: PineValue,
+    pub(crate) track_price: PineValue,
+    pub(crate) hist_base: PineValue,
+    pub(crate) join: PineValue,
+    pub(crate) format: PineValue,
+    pub(crate) precision: PineValue,
 }
-
-fn copy_for_next_bar(plot: &PlotSeries) -> PlotSeries {
-    PlotSeries {
-        id: plot.id,
-        values: copy_with_next_value(&plot.values),
-        colors: copy_with_next_value(&plot.colors),
-        metadata: plot.metadata.clone(),
-        linewidth: plot.linewidth.clone(),
-        style: plot.style.clone(),
-        track_price: plot.track_price.clone(),
-        hist_base: plot.hist_base.clone(),
-        join: plot.join.clone(),
-        format: plot.format.clone(),
-        precision: plot.precision.clone(),
+impl RuntimePlot {
+    pub(crate) fn new(id: u32, values: Vec<PineValue>) -> Self {
+        let public = PlotSeries::new(id, values);
+        Self {
+            id: public.id,
+            values: history(public.values),
+            colors: history(public.colors),
+            metadata: public.metadata,
+            linewidth: public.linewidth,
+            style: public.style,
+            track_price: public.track_price,
+            hist_base: public.hist_base,
+            join: public.join,
+            format: public.format,
+            precision: public.precision,
+        }
+    }
+    pub(crate) fn snapshot(&self) -> PlotSeries {
+        PlotSeries {
+            id: self.id,
+            values: self.values.to_vec(),
+            colors: self.colors.to_vec(),
+            metadata: self.metadata.clone(),
+            linewidth: self.linewidth.clone(),
+            style: self.style.clone(),
+            track_price: self.track_price.clone(),
+            hist_base: self.hist_base.clone(),
+            join: self.join.clone(),
+            format: self.format.clone(),
+            precision: self.precision.clone(),
+        }
     }
 }
-
+fn history(values: Vec<PineValue>) -> AppendHistory<PineValue> {
+    let mut result = AppendHistory::default();
+    for value in values {
+        result.push(value);
+    }
+    result
+}
 impl HistoricalRuntime<'_> {
-    pub(crate) fn plots_mut(&mut self) -> &mut Vec<PlotSeries> {
-        if Arc::get_mut(&mut self.plots).is_none() {
-            // A normal Vec clone has no guaranteed spare capacity. Detach once
-            // with room for the pending bar, avoiding another allocation/copy
-            // when the first plot statement appends its value and color.
-            self.plots = Arc::new(self.plots.iter().map(copy_for_next_bar).collect());
-        }
-        Arc::get_mut(&mut self.plots).expect("plot history was detached")
+    pub(crate) fn plots_mut(&mut self) -> &mut Vec<RuntimePlot> {
+        Arc::make_mut(&mut self.plots)
     }
 }

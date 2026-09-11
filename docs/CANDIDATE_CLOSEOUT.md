@@ -1,4 +1,44 @@
-# Local 0.3.0-rc.1 closeout
+# Local delivery closeout — 2026-09-10
+
+Current status: locally qualified prerelease for named scenarios; no stable
+publication. The single current status ledger is [Independent runtime delivery](DELIVERY_ROADMAP.md).
+
+## Completed in this closeout
+
+- Reconciled README, delivery surfaces, release instructions and active-plan
+  notices with the final native-reference acceptance.
+- Bound current Windows/Linux optimized wheels to implementation
+  `a2a1ba5fb0ca566e1de01a9cb8e886322df92b52` in
+  [DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json), with sizes and SHA-256.
+- Verified all 85 retained evidence-index entries, including both wheels.
+  The reviewed HEAD `7ffcd6524` differs from the implementation only in docs.
+- Preserved earlier candidate results and source identities below; current
+  fixes do not relabel older binaries or certify current manylinux2014 support.
+
+The retained final gates and independent comparisons are detailed in
+[TRADINGVIEW_GOAL_ACCEPTANCE.md](TRADINGVIEW_GOAL_ACCEPTANCE.md). They were
+inspected during this closeout, not rerun. Current known evidence boundaries,
+resource limits and remaining distribution work are in the current ledger.
+
+## Closeout verification
+
+Fresh reconciliation passed: 85 evidence files matched their indexed size and
+SHA-256; both wheels have the expected package metadata; the installed Windows
+native module is byte-identical to the retained optimized wheel; all 140 local
+links in the changed Markdown files resolve. `git diff --check` passed.
+The installed Windows environment ran `docs/examples/python_embed.py`: historical
+values `[20, 22]`, forming `[20, 22, 24]`, confirmed `[20, 22, 26]`, and the
+expected missing-execution-clock error. No runtime code changed and no full
+execution gate was rerun. Local reconciliation receipt:
+`.local/delivery-closeout-20260910/verification.json`.
+
+## Historical candidate closeout
+
+The following is the older b9cae7ea5 / 2792a0950 candidate record. Its failures,
+TV-blocked label and task-specific collection restrictions apply to that record,
+not the repaired implementation. Preserve it for provenance and rollback review.
+
+### Original local 0.3.0-rc.1 closeout
 
 This is a TV-blocked candidate, not a stable release and not full Pine
 compatibility. Nothing was pushed, tagged, or published.

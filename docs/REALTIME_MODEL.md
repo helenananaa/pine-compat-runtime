@@ -94,6 +94,42 @@ runtime.update(BarUpdate::forming(updated_partial_bar))?;
 runtime.update(BarUpdate::confirmed(final_bar))?;
 ```
 
+Those methods still return a complete `RuntimeResult`. A streaming path applies the same forming/confirmed lifecycle without constructing that snapshot:
+
+```rust
+let mut replica = runtime.replica();
+let changes = runtime.apply_update(BarUpdate::forming(partial_bar))?;
+replica.apply(&changes)?;
+assert_eq!(replica.result(), &runtime.result());
+```
+
+`RuntimeChanges` schema 2 carries this-update series append/current-bar replace,
+drawing tails and deletion, order/fill/alert changes, preview/confirmed visibility,
+`baseRevision` and `revision`. A cursor-bearing `RuntimeReplica` applies changes
+in place. Identical retransmission returns false; stale, conflicting, wrong-schema
+and missing revisions fail before mutation. After a gap, capture a producer
+snapshot with its revision and reset the consumer; do not infer a missing base.
+Hosts bind replicas to one stream and own cross-session routing/identity.
+
+Python uses `session.replica()`, `apply_forming` / `apply_confirmed`, then
+`replica.apply(changes)`. `apply_runtime_changes(replica, changes)` is the same
+in-place operation and returns a bool; the unreleased dictionary-to-dictionary
+helper is replaced. `session.stream_snapshot()` atomically captures a result and
+revision for `RuntimeReplica(result, revision=...)` or `replica.reset(...)`.
+Only explicit `replica.result()` constructs a complete Python dictionary.
+Existing `update_forming`, `update_confirmed`, `result()` and `confirmed_result()`
+retain their complete snapshot contracts (runtime output schema 8 unchanged).
+
+Ordinary plot values/colors and alert history use a persistent append tree;
+checkpoint updates copy a bounded leaf plus a logarithmic branch path. Drawing
+deltas retain the entire mutable bar's suffix, since multiple snapshots can
+exist on one bar. Alert differences retain occurrence counts for identical
+`alert.freq_all` events. Source execution still rolls back and runs the current
+bar; the output optimization does not change Pine execution scheduling.
+Other output families, broker records and user-owned collections can still
+incur copies; finite measured workloads do not establish indefinite bounded
+retention. See [streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md).
+
 `RealtimeRuntime` internally keeps:
 
 - a confirmed `HistoricalRuntime` snapshot

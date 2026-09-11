@@ -1,10 +1,12 @@
 pub mod alerts;
 pub(crate) mod align;
+pub mod changes;
 pub(crate) mod collect;
 pub mod delivery;
 pub mod drawings;
 pub mod json;
 pub mod model;
+pub mod replica;
 pub mod running_alerts;
 pub mod strategy;
 pub mod strategy_alert_templates;

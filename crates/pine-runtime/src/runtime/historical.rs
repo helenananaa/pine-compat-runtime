@@ -142,7 +142,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) wad_state: PineValue,
     pub(crate) wad_current: PineValue,
     pub(crate) wvad_current: PineValue,
-    pub(crate) plots: Arc<Vec<PlotSeries>>,
+    pub(crate) plots: Arc<Vec<super::plot_history::RuntimePlot>>,
     pub(crate) plot_chars: Vec<PlotCharSeries>,
     pub(crate) plot_shapes: Vec<PlotShapeSeries>,
     pub(crate) plot_arrows: Vec<PlotArrowSeries>,
@@ -158,7 +158,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) polylines: Vec<PolylineOutput>,
     pub(crate) boxes: Vec<BoxOutput>,
     pub(crate) tables: Vec<TableOutput>,
-    pub(crate) alerts: Vec<AlertEvent>,
+    pub(crate) alerts: super::append_history::AppendHistory<AlertEvent>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
@@ -413,7 +413,7 @@ impl<'a> HistoricalRuntime<'a> {
             polylines: Vec::new(),
             boxes: Vec::new(),
             tables: Vec::new(),
-            alerts: Vec::new(),
+            alerts: Default::default(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
@@ -779,7 +779,7 @@ impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn result(&self) -> RuntimeResult {
         RuntimeResult {
-            plots: self.plots.as_ref().clone(),
+            plots: self.plots.iter().map(|plot| plot.snapshot()).collect(),
             plot_chars: self.plot_chars.clone(),
             plot_shapes: self.plot_shapes.clone(),
             plot_arrows: self.plot_arrows.clone(),
@@ -795,14 +795,14 @@ impl<'a> HistoricalRuntime<'a> {
             polylines: self.polylines.clone(),
             boxes: self.boxes.clone(),
             tables: self.tables.clone(),
-            alerts: self.alerts.clone(),
+            alerts: self.alerts.to_vec(),
             strategy: (self.program.script_mode == ScriptMode::Strategy)
                 .then(|| self.strategy_broker.result()),
             diagnostics: self.runtime_diagnostics(),
         }
     }
 
-    fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
+    pub(crate) fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
         let mut diagnostics = self.magnifier_diagnostics.clone();
         let mut lookahead = self
             .legacy_security_repaint_warnings

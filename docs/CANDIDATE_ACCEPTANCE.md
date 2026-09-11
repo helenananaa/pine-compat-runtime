@@ -1,4 +1,9 @@
-# Candidate acceptance checklist (`0.3.0-rc.1`)
+# Historical candidate acceptance checklist (`0.3.0-rc.1`)
+
+This record binds the older b9cae7ea5 / 2792a0950 artifacts only. For the repaired
+implementation and current artifact inventory, use [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md).
+The failures and TV-blocked classification below are historical; original evidence
+and missing-log disclosures are preserved. Resource limits still constrain claims.
 
 TV-blocked local prerelease; not a stable release or full Pine compatibility.
 No tag, push or publication is authorized by this checklist.

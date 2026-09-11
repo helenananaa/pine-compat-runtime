@@ -1,5 +1,23 @@
 # Release Notes
 
+## Unreleased streaming worktree
+
+- Separate streaming updates from complete result snapshots in Rust/Python.
+- Changes schema 2 adds a required base revision. `RuntimeReplica` consumes
+  changes in place, rejects stale/conflicting/gapped revisions atomically and
+  supports explicit snapshot recovery. Identical retransmissions are no-ops.
+- Replace the unreleased unversioned dictionary merge helper with
+  `apply_runtime_changes(replica, changes)`; existing complete-result session
+  methods and runtime schema 8 remain unchanged.
+- Share ordinary plot and alert history through a persistent append tree;
+  build drawing deltas from the whole mutable-bar suffix without copying
+  closed snapshots. Preserve repeated identical alert occurrences and explicit
+  `None` table attributes during Python roundtrips.
+- [Streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) records source,
+  validation and finite workload limits; older candidate artifacts do not
+  contain these changes.
+
+
 ## Unreleased
 
 - Pending realtime market entries and closes use a newly expanded high or low

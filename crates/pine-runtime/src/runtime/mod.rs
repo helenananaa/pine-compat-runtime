@@ -1,3 +1,4 @@
+mod append_history;
 pub(crate) mod call_context;
 pub(crate) mod calls;
 pub(crate) mod context;
@@ -5,8 +6,9 @@ pub(crate) mod expressions;
 pub(crate) mod historical;
 pub(crate) mod history;
 pub(crate) mod persistence;
-mod plot_history;
+pub(crate) mod plot_history;
 pub(crate) mod realtime;
 pub(crate) mod statements;
 pub(crate) mod strategy_path;
 pub(crate) mod strategy_scheduler;
+pub(crate) mod streaming;

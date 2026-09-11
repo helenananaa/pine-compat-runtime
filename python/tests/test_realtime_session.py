@@ -300,3 +300,232 @@ def test_realtime_session_rejects_ambiguous_or_regressive_lifecycle_updates() ->
     session.update_confirmed(_bar(120_000, 2.0))
     with pytest.raises(ValueError, match="must be later than confirmed time"):
         session.update_confirmed(_bar(120_000, 2.0))
+
+
+def _assert_series_is_delta(changes: dict) -> None:
+    assert "plots" not in changes
+    for item in changes["series"]:
+        value_len = len(item.get("values") or item.get("closes") or [])
+        assert value_len <= 1
+        assert item["op"] in ("append", "replaceLast")
+
+
+def test_streaming_apply_returns_this_update_changes_not_full_history() -> None:
+    session = pine_compat.create_realtime_session(
+        '//@version=6\nindicator("stream")\nplot(close)\n'
+    )
+    snapshot = session.seed([_bar(60_000, 10.0)])
+    assert len(_plot_values(snapshot, 0)) == 1
+    assert pine_compat.RUNTIME_CHANGES_SCHEMA_VERSION == 2
+
+    replica = session.replica()
+    forming = session.apply_forming(_bar(120_000, 12.0))
+    assert forming["visibility"] == "preview"
+    assert forming["revision"] == session.revision
+    _assert_series_is_delta(forming)
+    assert forming["series"][0]["op"] == "append"
+    assert forming["series"][0]["values"] == [12.0]
+    assert pine_compat.apply_runtime_changes(replica, forming)
+    applied = replica.result()
+    assert applied == session.result()
+    assert not pine_compat.apply_runtime_changes(replica, forming)
+    again = replica.result()
+    assert again == session.result()
+
+    replacement = session.apply_forming(_bar(120_000, 13.0))
+    assert replacement["series"][0]["op"] == "replaceLast"
+    assert replacement["series"][0]["values"] == [13.0]
+    assert replica.apply(replacement)
+    applied = replica.result()
+    assert applied == session.result()
+
+    confirmed = session.apply_confirmed(_bar(120_000, 13.0))
+    assert confirmed["visibility"] == "confirmed"
+    assert replica.apply(confirmed)
+    applied = replica.result()
+    assert applied == session.result() == session.confirmed_result()
+
+
+def test_streaming_old_update_methods_still_return_complete_snapshots() -> None:
+    session = pine_compat.create_realtime_session(
+        '//@version=6\nindicator("compat")\nplot(close)\n'
+    )
+    seeded = session.seed([_bar(60_000, 10.0)])
+    assert len(_plot_values(seeded, 0)) == 1
+    forming = session.update_forming(_bar(120_000, 12.0))
+    assert len(_plot_values(forming, 0)) == 2
+    assert session.last_changes() is None
+    confirmed = session.update_confirmed(_bar(120_000, 13.0))
+    assert len(_plot_values(confirmed, 0)) == 2
+    assert confirmed == session.result()
+
+
+def test_streaming_alerts_are_not_duplicated_when_rereading_revision() -> None:
+    session = pine_compat.create_realtime_session(
+        '''//@version=6
+indicator("alerts")
+if close > 2
+    alert("high")
+plot(close)
+'''
+    )
+    snapshot = session.seed([_bar(60_000, 1.0)])
+    replica = session.replica()
+    forming = session.apply_forming(_bar(120_000, 3.0))
+    assert any(change["action"] == "add" for change in forming["alerts"])
+    assert pine_compat.apply_runtime_changes(replica, forming)
+    applied = replica.result()
+    assert len(applied["alerts"]) == 1
+    reread = session.last_changes()
+    assert not replica.apply(reread)
+    applied = replica.result()
+    assert len(applied["alerts"]) == 1
+    assert applied == session.result()
+
+
+def test_streaming_polyline_chart_points_roundtrip_through_apply_changes() -> None:
+    session = pine_compat.create_realtime_session(
+        '''//@version=6
+indicator("stream polyline")
+points = array.from(chart.point.from_index(bar_index, close))
+polyline.new(points, line_color=color.red)
+plot(close)
+'''
+    )
+    snapshot = session.seed([_bar(60_000, 1.0)])
+    assert snapshot["polylines"]
+    point = snapshot["polylines"][0]["snapshots"][0]["points"][0]
+    assert isinstance(point, dict)
+    assert set(point) >= {"time", "index", "price"}
+
+    replica = session.replica()
+    forming = session.apply_forming(_bar(120_000, 2.0))
+    assert pine_compat.apply_runtime_changes(replica, forming)
+    applied = replica.result()
+    assert applied == session.result()
+    applied_point = applied["polylines"][0]["snapshots"][-1]["points"][0]
+    assert isinstance(applied_point, dict)
+    assert applied_point == session.result()["polylines"][0]["snapshots"][-1]["points"][0]
+
+
+def test_streaming_new_series_header_roundtrips_after_empty_seed() -> None:
+    session = pine_compat.create_realtime_session(
+        '''//@version=6
+indicator("stream header")
+plot(close, title="live", linewidth=2)
+'''
+    )
+    snapshot = session.seed([])
+    assert snapshot["plots"] == []
+
+    replica = session.replica()
+    forming = session.apply_forming(_bar(60_000, 10.0))
+    headers = [item.get("header") for item in forming["series"] if item.get("header")]
+    assert headers
+    assert headers[0]["title"] == "live"
+    assert headers[0]["linewidth"] == 2
+
+    assert pine_compat.apply_runtime_changes(replica, forming)
+    applied = replica.result()
+    assert applied == session.result()
+    assert applied["plots"][0]["title"] == "live"
+    assert applied["plots"][0]["linewidth"] == 2
+
+
+def test_streaming_replica_stale_gap_conflict_and_recovery_are_atomic():
+    import copy
+    session = pine_compat.create_realtime_session('//@version=6\nindicator("cursor")\nplot(close)')
+    session.seed([_bar(0, 10.0)])
+    replica = session.replica()
+    a = session.apply_forming(_bar(60000, 20.0))
+    b = session.apply_forming(_bar(60000, 30.0))
+    before = replica.result()
+    with pytest.raises(ValueError, match="E_STREAM_GAP"):
+        replica.apply(b)
+    assert replica.result() == before
+    assert replica.apply(a)
+    assert not replica.apply(a)
+    assert replica.apply(b)
+    before = replica.result()
+    with pytest.raises(ValueError, match="E_STREAM_STALE"):
+        replica.apply(a)
+    conflict = copy.deepcopy(b)
+    conflict["series"] = []
+    with pytest.raises(ValueError, match="E_STREAM_CONFLICT"):
+        replica.apply(conflict)
+    invalid = copy.deepcopy(b)
+    invalid["schemaVersion"] = 100
+    with pytest.raises(ValueError, match="E_STREAM_SCHEMA"):
+        replica.apply(invalid)
+    assert replica.result() == before
+    assert replica.revision == b["revision"]
+    old_snapshot = replica.result()
+    session.apply_forming(_bar(60000, 40.0))
+    missed = session.apply_forming(_bar(60000, 50.0))
+    with pytest.raises(ValueError, match="E_STREAM_GAP"):
+        replica.apply(missed)
+    snapshot = session.stream_snapshot()
+    replica.reset(snapshot["result"], revision=snapshot["revision"])
+    confirmed = session.apply_confirmed(_bar(60000, 60.0))
+    assert replica.apply(confirmed)
+    assert replica.result() == session.result()
+    assert old_snapshot["plots"][0]["values"] == [10.0, 30.0]
+    # Unversioned results can no longer silently accept stale changes.
+    with pytest.raises(TypeError):
+        pine_compat.apply_runtime_changes(old_snapshot, a)
+
+
+def test_streaming_replica_requires_explicit_wire_schema_and_base_revision():
+    session = pine_compat.create_realtime_session('//@version=6\nindicator("cursor")\nplot(close)')
+    session.seed([])
+    replica = session.replica()
+    update = session.apply_forming(_bar(0, 1.0))
+    before = replica.result()
+    for field in ("schemaVersion", "baseRevision"):
+        invalid = dict(update)
+        del invalid[field]
+        with pytest.raises(ValueError, match="missing"):
+            replica.apply(invalid)
+        assert replica.result() == before and replica.revision == 1
+    assert replica.apply(update)
+
+
+def test_streaming_identical_freq_all_events_keep_occurrence_counts():
+    session = pine_compat.create_realtime_session('//@version=6\nindicator("occurrences")\nfor i = 0 to int(close) - 1\n    alert("same", alert.freq_all)\nplot(close)')
+    session.seed([_bar(0, 1.0)])
+    replica = session.replica()
+    for value in (3.0, 2.0, 4.0):
+        change = session.apply_forming(_bar(60000, value))
+        assert replica.apply(change)
+        assert replica.result() == session.result()
+        assert len(replica.result()["alerts"]) == 1 + int(value)
+        assert not replica.apply(change)
+    change = session.apply_confirmed(_bar(60000, 2.0))
+    replica.apply(change)
+    assert replica.result() == session.result()
+
+
+@pytest.mark.parametrize("name", [
+    "plotchar", "plotshape", "plotarrow", "plotbar", "plotcandle",
+    "line_mutation", "linefill_new", "box_mutation", "box_delete",
+    "table_cell", "table_merge_cells", "table_clear", "table_delete",
+    "polyline_new", "label_options", "fill_transp",
+    "strategy_calc_on_every_tick", "strategy_calc_on_order_fills",
+    "strategy_calc_on_order_fills_exit_avg", "strategy_process_orders_on_close",
+    "strategy_process_orders_on_close_immediately",
+    "strategy_margin_entry_affordability_short", "strategy_margin_entry_affordability_long",
+])
+def test_streaming_all_output_families_match_snapshot_on_replacements(name):
+    from pathlib import Path
+    source = (Path(__file__).resolve().parents[2] / "tests/fixtures/runtime" / (name + ".pine")).read_text()
+    session = pine_compat.create_realtime_session(source)
+    session.seed([_bar(0, 10.0)])
+    replica = session.replica()
+    for index in range(1, 5):
+        for value in (10.0 + index, 12.0 + index, 9.0 + index):
+            change = session.apply_forming(_bar(index * 60000, value))
+            replica.apply(change)
+            assert replica.result() == session.result(), (name, index, value)
+        change = session.apply_confirmed(_bar(index * 60000, 11.0 + index))
+        replica.apply(change)
+        assert replica.result() == session.confirmed_result(), (name, index)

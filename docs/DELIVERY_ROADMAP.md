@@ -1,5 +1,91 @@
 # Independent runtime delivery
 
+Updated 2026-09-10. This is the single current delivery-status entry point.
+Current classification: **locally qualified prerelease for the named scope**.
+The demonstrated realtime-price failures have been repaired and qualified;
+"TV-blocked" describes the older retained candidate, not current implementation.
+No stable release has been accepted or published by this closeout.
+
+## Streaming worktree follow-up
+
+The local worktree now adds a Rust/Python streaming replica, changes schema 2,
+ordered in-place consumption, snapshot recovery, and persistent plot/alert
+history. These changes are **not** in the previously indexed a2a1ba5fb wheels.
+Current Windows streaming validation passes 6,686 Rust tests, 748 installed
+Python tests (debug and optimized), 130 tool tests, actual historical WASM and
+all nine frozen-budget cases. The new [streaming artifact](STREAMING_ARTIFACTS.json)
+is Windows-only; this slice does not rebuild Linux. Details are tracked in
+[STREAMING_INCREMENTAL_AUDIT.md](STREAMING_INCREMENTAL_AUDIT.md); earlier native
+reference and resource receipts retain their recorded identities. The source
+and artifact table below describes the retained pre-streaming qualification.
+
+## Source, artifacts and evidence
+
+- Implementation / optimized-wheel source: `a2a1ba5fb0ca566e1de01a9cb8e886322df92b52`.
+- Reviewed HEAD: `7ffcd6524`; changes after the implementation are documentation only.
+- Cargo `0.3.0-rc.1`, Python `0.3.0rc1`. Older artifacts have the same version;
+  select by source identity and SHA-256, never version alone.
+- [Artifact inventory](DELIVERY_ARTIFACTS.json) identifies the two current local
+  optimized wheels and the retained evidence index. This is not an updater manifest.
+- [Native acceptance](TRADINGVIEW_GOAL_ACCEPTANCE.md) records 19 scenarios and
+  867,418 values per platform, zero mismatches, on Windows and Linux optimized wheels.
+  Retained full gates pass 6,677 Rust and 717 installed Python tests plus actual
+  WASM. Windows passes 130 tool tests; Linux passes 129 and skips one Windows-only
+  probe. Each optimized wheel separately passes 717 Python tests.
+- This documentation closeout rechecks all 85 indexed files by size and SHA-256;
+  it does not rerun or relabel those execution receipts.
+- Current Linux artifact: `manylinux_2_35_x86_64`. The earlier
+  `manylinux_2_17_x86_64` candidate has older semantics and is historical evidence.
+
+## Product scope and current ledger
+
+The first stable scope is standard-candle v5/v6 indicators and strategies,
+explicit host-supplied data/libraries and price grid, same-currency linear
+accounting with unit point value, and the documented execution lifecycle.
+Legacy preview/experimental labels remain unchanged. Full Pine parity is not a gate.
+Market acquisition, services, persistence and concrete adapters belong to hosts.
+
+| ID | Current result | Remaining acceptance |
+| --- | --- | --- |
+| D0 Identity | Current source and two optimized wheels identified; local evidence hashes verified | A future distribution must preserve this source/artifact binding |
+| D1 Complete scripts | TechnicalRating/3 complete dependencies and 63,399 independent values passed in retained earlier receipts; see SMA_ROLLING_SUM_AUDIT.md | Broader real-script compatibility; do not relabel earlier workload receipts as reruns on a2a1ba5fb |
+| D2 Execution | Original 896-value and later 1,856-value realtime comparisons pass; independent observable B1 controls and separate r1 native companion pass on final wheels | Simultaneous high/low expansion, unobserved price-condition paths and arbitrary feed/clock alignment remain unqualified |
+| D3 Host contract | Versioned conservative requirements, source provenance and reached-input errors exist across the documented surfaces | Dynamic request admission/resolution, provider readiness, broader market/account profiles |
+| D4 Resources | Retained Windows trend 100k/10k and other named workloads 10k+1k passed at their recorded commits | Linux resource budgets, concurrency, indefinite output retention and embedding-specific SLA; no new performance qualification in this closeout |
+| D5 Delivery | Windows and native Linux optimized wheels locally qualified; full gates include actual WASM; four integration surfaces documented | Latest-fix manylinux2014 build if that distribution floor is retained; matching final distribution and release acceptance |
+
+The original frozen r1 synthetic reference coverage remains 0/482; the unchanged
+source's native-data companion is counted separately. This is missing coverage,
+not 482 failed comparisons. B1 observable behavior has independent evidence;
+private sequencing remains `UNVERIFIED_INTERNAL_ORDER`, not a requirement to
+prove an inaccessible implementation.
+
+## Next delivery work
+
+1. Select the final distribution floor and qualify all shipped artifacts from
+   one implementation revision, including retained reference workloads relevant
+   to the release scope. Do not ship the older manylinux2014 wheel as the fix.
+2. Define output retention, update latency and memory budgets for intended use;
+   qualify those workloads and platforms before making long-session promises.
+3. Expand complete-script compatibility and independent reference coverage by
+   measured failures. WASM incremental/realtime exports and broader account
+   models remain explicit future capability work.
+4. Keep version/schema upgrade notes, installation examples and checksums tied
+   to the selected artifacts before any separately authorized publication.
+
+Use [delivery surfaces](DELIVERY_SURFACES.md), [closeout](CANDIDATE_CLOSEOUT.md)
+and [releasing](RELEASING.md) for consumption details. The earlier candidate's
+[acceptance record](CANDIDATE_ACCEPTANCE.md) remains historical and retains its
+failed comparisons and missing original logs. Those results are not current failures.
+
+## Historical audit log
+
+Everything below is the original delivery record at its stated source identity.
+Its headings, next actions and TV-blocked labels are historical, even where they
+originally called themselves authoritative. The current ledger above supersedes them.
+
+# Original delivery record
+
 Owner: Codex, directly responsible for implementation, review and validation. Started 2026-09-09. Status: active, no stable release accepted yet.
 
 ## Candidate scope and acceptance
@@ -43,10 +129,10 @@ commit/artifact/docs/evidence. Internal golden agreement is not an oracle.
 | D4 | Long-session resources | Codex measurement and acceptance | Windows trend 100k/10k reused (3ca746976). Remaining named workloads passed at 10k+1k on b9cae7ea5 with freeze-then-accept receipts; over-limit/atomicity/independence tests pass | Remaining workloads are not a 100k/10k claim; pilot-derived regression budgets are not an embedding SLA |
 | D5 | Candidate from a known commit | Codex | Local `0.3.0-rc.1` / `0.3.0rc1` TV-blocked candidate. Windows+Linux native gates 6668/715/122 + WASM. Frozen refs revalidated. Not published | manylinux2014 rebuilt offline at 2792a0950: auditwheel and 715 installed tests pass; original goal raw gate logs missing; GitHub release not authorized |
 
-## Current candidate status (authoritative)
+## Original candidate status (superseded)
 
-This file is the only current delivery-status table. Paragraphs after
-**Historical audit log** are citations, not competing status.
+This was the delivery-status table for the original candidate. The current
+ledger at the top of this file supersedes this historical table.
 
 - Identity: Cargo `0.3.0-rc.1`, Python `0.3.0rc1`, not `0.2.0`, not a stable tag.
 - Classification: TV-blocked local candidate. Not full Pine compatibility.

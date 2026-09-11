@@ -6,6 +6,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyModule};
 
+use crate::changes::runtime_changes_to_py;
 use crate::outputs::runtime_result_to_py;
 use crate::{compile_script, parse_bar, parse_bars, parse_execution_times};
 
@@ -200,6 +201,71 @@ impl PyRealtimeSession {
         runtime_result_to_py(py, &result)
     }
 
+    #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
+    fn apply_forming(
+        &mut self,
+        py: Python<'_>,
+        bar: &Bound<'_, PyAny>,
+        execution_time: Option<&Bound<'_, PyAny>>,
+        opening_update: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
+        self.require_seeded()?;
+        let bar = parse_bar(bar)?;
+        self.validate_next_bar(&bar, true)?;
+        let changes = self
+            .runtime
+            .apply_update_with_context(
+                BarUpdate::forming(bar),
+                RealtimeUpdateContext {
+                    execution_time: execution_timestamp(execution_time)?,
+                    opening_update: opening_update_flag(opening_update)?,
+                },
+            )
+            .map_err(|err| PyValueError::new_err(err.message))?;
+        self.forming_time = Some(bar.time);
+        runtime_changes_to_py(py, &changes)
+    }
+
+    #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
+    fn apply_confirmed(
+        &mut self,
+        py: Python<'_>,
+        bar: &Bound<'_, PyAny>,
+        execution_time: Option<&Bound<'_, PyAny>>,
+        opening_update: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
+        self.require_seeded()?;
+        let bar = parse_bar(bar)?;
+        self.validate_next_bar(&bar, false)?;
+        let changes = self
+            .runtime
+            .apply_update_with_context(
+                BarUpdate::confirmed(bar),
+                RealtimeUpdateContext {
+                    execution_time: execution_timestamp(execution_time)?,
+                    opening_update: opening_update_flag(opening_update)?,
+                },
+            )
+            .map_err(|err| PyValueError::new_err(err.message))?;
+        self.confirmed_bars += 1;
+        self.last_confirmed_time = Some(bar.time);
+        self.forming_time = None;
+        runtime_changes_to_py(py, &changes)
+    }
+
+    fn replica(&self) -> crate::replica::PyRuntimeReplica {
+        crate::replica::PyRuntimeReplica {
+            inner: self.runtime.replica(),
+        }
+    }
+
+    fn stream_snapshot(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let envelope = pyo3::types::PyDict::new(py);
+        envelope.set_item("revision", self.runtime.revision())?;
+        envelope.set_item("result", runtime_result_to_py(py, &self.runtime.result())?)?;
+        Ok(envelope.into_any().unbind())
+    }
+
     fn result(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         runtime_result_to_py(py, &self.runtime.result())
     }
@@ -231,6 +297,18 @@ impl PyRealtimeSession {
     #[getter]
     fn forming_time(&self) -> Option<i64> {
         self.forming_time
+    }
+
+    #[getter]
+    fn revision(&self) -> u64 {
+        self.runtime.revision()
+    }
+
+    fn last_changes(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        match self.runtime.last_changes() {
+            Some(changes) => runtime_changes_to_py(py, changes),
+            None => Ok(py.None()),
+        }
     }
 }
 

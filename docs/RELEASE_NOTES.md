@@ -1,9 +1,10 @@
 # Release Notes
 
-## Unreleased streaming worktree
+## Unreleased streaming additions (integrated 2026-09-11)
 
-- Separate streaming updates from complete result snapshots in Rust/Python.
-- Changes schema 2 adds a required base revision. `RuntimeReplica` consumes
+- Separate streaming updates from complete result snapshots in Rust/Python/WASM.
+- Changes schema 3 adds `retainedFrom` to the revisioned protocol introduced in
+  schema 2. Runtime snapshots remain schema 8. `RuntimeReplica` consumes
   changes in place, rejects stale/conflicting/gapped revisions atomically and
   supports explicit snapshot recovery. Identical retransmissions are no-ops.
 - Replace the unreleased unversioned dictionary merge helper with
@@ -13,9 +14,21 @@
   build drawing deltas from the whole mutable-bar suffix without copying
   closed snapshots. Preserve repeated identical alert occurrences and explicit
   `None` table attributes during Python roundtrips.
-- [Streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) records source,
-  validation and finite workload limits; older candidate artifacts do not
-  contain these changes.
+- Add host-selected display retention with absolute delta indexes and physical
+  pruning; increasing the window only retains future output. Input history,
+  collections and script-readable broker records remain outside this policy.
+- Add live requested-context forming/confirmed updates and conservative
+  incremental evaluation for eligible expressions; complex expressions retain
+  full evaluation. Historical correction rebuilds history and requires a
+  replica snapshot reset.
+- WASM exposes persistent sessions, replicas, retention and requested-context
+  updates through the actual generated JavaScript module.
+- These changes are integrated in `5f158f59c` and `f368ab96e`, included in main
+  by `7b70095f6`. [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records
+  Windows installed-wheel and actual WASM checks plus 18 finite budget cases.
+  Its retained artifact is bound to a pre-commit source digest; it is not a
+  newly built main-commit or Linux artifact. Earlier
+  [streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) retains its own scope.
 
 
 ## Unreleased
@@ -58,7 +71,8 @@ arguments remain an engineering/host contract boundary.
   `pine_compat.__version__`, and WASM `packageVersion()`.
 - Four-surface capability list and embedding examples for compile →
   requirements → historical / incremental / realtime → error → owned result.
-  WASM remains historical-only.
+  At that candidate checkpoint WASM was historical-only; the later streaming
+  additions above add persistent realtime sessions.
 - Long-session budget verifier accepts Magnifier historical-only plans; new
   remaining D4 workloads are measured separately from the already-qualified
   Windows trend 100k/10k result.

@@ -5,7 +5,10 @@ gates, and completed phase records. Use the hierarchy below so that an older
 plan is not mistaken for a current compatibility claim.
 
 Current delivery status has one entry point: [DELIVERY_ROADMAP.md](DELIVERY_ROADMAP.md).
-[DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json) binds current local wheel identities.
+[STREAMING_EXPANSION_ARTIFACTS.json](STREAMING_EXPANSION_ARTIFACTS.json) binds
+the latest retained Windows streaming wheel to its source digest.
+[DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json) binds the earlier Windows/Linux
+native-reference wheels; those artifacts do not include streaming additions.
 Older candidate checklists and phase audits retain historical results.
 
 ## Source-Of-Truth Order
@@ -21,7 +24,8 @@ Older candidate checklists and phase audits retain historical results.
    [Long-Term Execution Plan](LONG_TERM_EXECUTION_PLAN.md) track current
    maintenance and future work. The
    [Modern Strategy Five-Stage Execution Plan](MODERN_STRATEGY_FIVE_STAGE_EXECUTION_PLAN.md)
-   is the active step-by-step order when strategy work is selected.
+   records that strategy work cycle; use the delivery ledger and latest subsystem
+   audit to determine which follow-up remains current.
 4. Phase plans, phase audits, design gates, and historical review documents
    record how a slice was designed or closed. They remain useful evidence, but
    their roadmap wording does not override the conformance matrix.
@@ -35,8 +39,16 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Current Project Documents
 
-- [Streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md): Rust/Python replica,
-  incremental output, resource results and [local artifact](STREAMING_ARTIFACTS.json).
+- [Delivery Surfaces](DELIVERY_SURFACES.md): current Rust/CLI/Python/WASM APIs,
+  schemas, examples, and per-artifact platform boundaries.
+- [Host Requirements](HOST_REQUIREMENTS.md): conservative input discovery,
+  source provenance, and host-owned data contracts.
+- [Rust Embedding](RUST_EMBEDDING.md): executable native integration example.
+- [Streaming Expansion](STREAMING_EXPANSION_AUDIT.md): Rust/Python/WASM
+  streaming, display retention, live request updates, 18 frozen budget cases,
+  and the [latest retained artifact](STREAMING_EXPANSION_ARTIFACTS.json).
+- [Streaming Acceptance](STREAMING_INCREMENTAL_AUDIT.md): earlier replica and
+  incremental-output qualification, with its [own artifact](STREAMING_ARTIFACTS.json).
 
 - [Architecture](ARCHITECTURE.md): crate boundaries and host-neutral
   architecture.
@@ -62,7 +74,7 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Status And Roadmap Documents
 
-- [Modern Function Default Parameters](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md): scalar optional arguments, caller scope, v5/v6 reference validation and the next TechnicalRating blockers.
+- [Modern Function Default Parameters](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md): scalar optional arguments, caller scope and v5/v6 reference validation; its next-blocker wording is historical.
 
 - [Modern Strategy Next Cycle](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md): current G3 worktree closeout, real-strategy reference expansion, and explicit series parameter slice.
 
@@ -208,8 +220,8 @@ latest audit before changing compatibility claims.
 
 ## Release Gate
 
-[`scripts/verify.sh`](../scripts/verify.sh) is the canonical local and CI
-release gate. It checks Rust formatting and linting, all workspace tests,
+[`scripts/verify.sh`](../scripts/verify.sh) and the Windows equivalent
+[`scripts/verify.ps1`](../scripts/verify.ps1) are the full local gates. They check Rust formatting and linting, all workspace tests,
 source structure, host parity, the real WASM/Node path, the Python wheel, and
 Python binding tests.
 

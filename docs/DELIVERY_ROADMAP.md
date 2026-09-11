@@ -1,40 +1,47 @@
 # Independent runtime delivery
 
-Current follow-up qualification: [streaming expansion](STREAMING_EXPANSION_AUDIT.md).
-Current Windows expansion: 6,715 Rust / 755 installed Python / 130 tool tests,
-actual WASM streaming and 18 frozen-budget cases pass. The
-[latest local artifact](STREAMING_EXPANSION_ARTIFACTS.json) is bound to its
-working-tree source digest; older tables below retain their own identities.
-Earlier artifact and resource tables below remain evidence for their recorded revisions.
-
-Updated 2026-09-10. This is the single current delivery-status entry point.
+Updated 2026-09-11. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
-The demonstrated realtime-price failures have been repaired and qualified;
-"TV-blocked" describes the older retained candidate, not current implementation.
-No stable release has been accepted or published by this closeout.
+Streaming additions are integrated through `5f158f59c` and `f368ab96e`, included
+in main by `7b70095f6`. No stable publication is implied by integration.
 
-## Streaming worktree follow-up
+## Latest retained streaming qualification
 
-The local worktree now adds a Rust/Python streaming replica, changes schema 3
-with `retainedFrom`, ordered in-place consumption, snapshot recovery,
-persistent append-tree history, host-selected display retention, and live
-`request.security` context append/replace/confirm. These changes are **not** in
-the previously indexed a2a1ba5fb wheels.
-Current Windows streaming validation passes 6,686 Rust tests, 748 installed
-Python tests (debug and optimized), 130 tool tests, actual historical WASM and
-all nine frozen-budget cases. The new [streaming artifact](STREAMING_ARTIFACTS.json)
-is Windows-only; this slice does not rebuild Linux. Details are tracked in
-[STREAMING_INCREMENTAL_AUDIT.md](STREAMING_INCREMENTAL_AUDIT.md); earlier native
-reference and resource receipts retain their recorded identities. The source
-and artifact table below describes the retained pre-streaming qualification.
+[Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records 6,715 Rust / 755
+installed Python / 130 tool tests, actual generated WASM streaming, and 18
+frozen-budget cases on Windows. The
+[latest local artifact](STREAMING_EXPANSION_ARTIFACTS.json) retains its original
+pre-commit source digest. These are retained execution receipts, not fresh
+qualification of the merged main commit. No Linux streaming wheel was rebuilt.
 
-## Source, artifacts and evidence
+The integrated API includes Rust/Python/WASM sessions and replicas, changes
+schema 3 with `retainedFrom`, persistent append-tree histories, host-selected
+display retention, and live `request.security` context append/replace/confirm.
+Display retention does not bound input history, collections or script-readable
+broker records. Complex request expressions can still use full evaluation;
+historical correction performs full replay and requires replica snapshot reset.
+
+The earlier [streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) records
+6,686 Rust / 748 installed Python / 130 tool tests and nine budget cases for
+its own [Windows artifact](STREAMING_ARTIFACTS.json). Neither streaming slice
+is present in the a2a1ba5fb native-reference wheels below.
+
+## Retained pre-streaming platform qualification
+
+The demonstrated realtime-price failures were repaired and qualified;
+"TV-blocked" describes the older candidate, not the current implementation.
+The following source/artifact table and D0-D5 ledger summarize the September 10
+native-reference closeout. Their receipts keep their recorded source identities;
+the streaming results above supplement them without relabeling older artifacts.
+
+### Source, artifacts and evidence
 
 - Implementation / optimized-wheel source: `a2a1ba5fb0ca566e1de01a9cb8e886322df92b52`.
-- Reviewed HEAD: `7ffcd6524`; changes after the implementation are documentation only.
+- HEAD reviewed in that closeout: `7ffcd6524`; at that point changes after the
+  implementation were documentation only. Later streaming commits change runtime code.
 - Cargo `0.3.0-rc.1`, Python `0.3.0rc1`. Older artifacts have the same version;
   select by source identity and SHA-256, never version alone.
-- [Artifact inventory](DELIVERY_ARTIFACTS.json) identifies the two current local
+- [Artifact inventory](DELIVERY_ARTIFACTS.json) identifies the two pre-streaming local
   optimized wheels and the retained evidence index. This is not an updater manifest.
 - [Native acceptance](TRADINGVIEW_GOAL_ACCEPTANCE.md) records 19 scenarios and
   867,418 values per platform, zero mismatches, on Windows and Linux optimized wheels.
@@ -78,8 +85,8 @@ prove an inaccessible implementation.
    qualify those workloads and platforms before making long-session promises.
 3. Expand complete-script compatibility and independent reference coverage by
    measured failures. Broader account models remain explicit future capability
-   work. WASM incremental/realtime session exports exist in this worktree and
-   still need the actual generated-module gate before a retained candidate.
+   work. WASM incremental/realtime exports now pass the actual generated-module
+   gate in streaming qualification; preserve that gate in final packaging.
 4. Keep version/schema upgrade notes, installation examples and checksums tied
    to the selected artifacts before any separately authorized publication.
 

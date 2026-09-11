@@ -13,9 +13,12 @@ free-threaded CPython remain outside the release matrix.
 The current checkout is local candidate `0.3.0-rc.1` (PEP 440 `0.3.0rc1`).
 Do not tag, push, or publish it as a GitHub Release. The tag commands below
 are the future publication recipe, not authorization for this candidate.
-Current repaired wheels are identified by source and SHA-256 in
-[DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json); see the single current
-[delivery ledger](DELIVERY_ROADMAP.md). The current Linux wheel is
+The latest retained Windows streaming wheel is identified by source digest and
+SHA-256 in [STREAMING_EXPANSION_ARTIFACTS.json](STREAMING_EXPANSION_ARTIFACTS.json).
+[DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json) identifies the earlier
+Windows/Linux native-reference wheels, which do not include streaming.
+See the single current [delivery ledger](DELIVERY_ROADMAP.md).
+The retained pre-streaming Linux wheel is
 `manylinux_2_35_x86_64`. The separately qualified manylinux2014 wheel under
 `.local/candidate-0.3.0-rc.1/linux/manylinux2014/` has older semantics and must
 not be shipped as the latest repair. If retaining the CI manylinux_2_17 floor,

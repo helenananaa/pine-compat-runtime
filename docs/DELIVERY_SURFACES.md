@@ -1,13 +1,15 @@
 # Delivery surfaces for the local 0.3.0-rc.1 candidate
 
-Latest local worktree qualification: [streaming expansion](STREAMING_EXPANSION_AUDIT.md)
+Latest retained streaming qualification: [streaming expansion](STREAMING_EXPANSION_AUDIT.md)
 and [artifact identity](STREAMING_EXPANSION_ARTIFACTS.json). This includes actual
 WASM streaming tests and a Windows optimized wheel; the earlier platform matrix
 below is retained evidence, not a newly qualified Linux build.
 
 This is a locally qualified prerelease for the named scope, not a stable release
 or a claim of full Pine compatibility. [Current status](DELIVERY_ROADMAP.md) and
-[artifact hashes](DELIVERY_ARTIFACTS.json) identify the repaired build; version
+[streaming artifact hashes](STREAMING_EXPANSION_ARTIFACTS.json) identify the
+latest retained Windows build; [earlier platform artifacts](DELIVERY_ARTIFACTS.json)
+identify the pre-streaming native-reference builds. Version
 0.3.0rc1 alone does not distinguish it from older retained candidates. Consume the local artifacts built from the
 matching commit; do not install the published `v0.2.0` GitHub wheels and treat
 them as this checkout.
@@ -19,7 +21,7 @@ them as this checkout.
 | Python | maturin wheel `pine-compat-runtime==0.3.0rc1` (`pine_compat`) | `pine_compat.__version__` = `0.3.0-rc.1` | `compile_script` / `run_script` / `Program.run` | not a separate API; re-run batch or confirm bars on a session | `create_realtime_session` / `Program.realtime_session` | `Program.host_requirements` | Wheel version is PEP 440 `0.3.0rc1` |
 | WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.0-rc.1` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 3; runtime snapshots schema 8 |
 
-## Streaming worktree API
+## Integrated streaming API
 
 Rust now exposes `RealtimeRuntime::apply_update`, `replay_historical`,
 `correct_historical` and `RuntimeReplica`; Python exposes `apply_forming`,
@@ -30,9 +32,11 @@ and `session.stream_snapshot()`; WASM exposes `Program.realtimeSession()`,
 `baseRevision`, `revision` and `retainedFrom`; runtime snapshots remain schema
 8. A replica applies deltas in place and materializes a full result only on
 request. Historical replay is a snapshot discontinuity, not a linear delta. See
-[streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) for current validation.
-These interfaces require a build of this worktree; the retained a2a1ba5fb wheels
-above do not include them.
+[streaming expansion](STREAMING_EXPANSION_AUDIT.md) for the latest retained
+validation. These interfaces are integrated through `f368ab96e` and included
+in main by `7b70095f6`; the retained a2a1ba5fb wheels do not include them.
+The streaming artifact inventory preserves its original pre-commit source
+digest and does not claim a fresh build of the merged main revision.
 
 ## Minimal examples
 

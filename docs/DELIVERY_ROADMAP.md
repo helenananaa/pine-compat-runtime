@@ -43,6 +43,14 @@ Both unchanged RSI suites still pass. Pivot Points has no parser or
 function-return diagnostics but remains blocked by collection/method/request
 semantics; native mutable UDT identity qualification is the next step.
 
+The [native UDT identity audit](UDT_IDENTITY_AUDIT.md) now confirms an open
+correctness defect: assignment/array aliases are copied by value. An executable
+two-plot isolation mismatches all 218 corresponding native reference values.
+The complete v5/v6 object control has 872 frozen values per version but still
+fails admission. Previous member/tuple test passes must not be read as general
+UDT reference compatibility. Runtime-owned object storage, shallow copy,
+field-level realtime persistence and graph transfer across requests need repair.
+
 ## Latest retained streaming qualification
 
 [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records 6,715 Rust / 755

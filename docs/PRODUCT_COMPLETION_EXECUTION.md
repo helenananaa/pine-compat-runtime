@@ -129,3 +129,12 @@ collection/method/request-related diagnostics. Next collect native UDT
 alias/copy/history controls before implementing reference-bearing arrays and
 matrices; simply loosening the scalar-tree guard is insufficient. Goal remains
 active and unified distribution is still outstanding.
+
+2026-09-12: [UDT identity controls](UDT_IDENTITY_AUDIT.md) are now frozen in
+v5/v6 (872 values each, identical confirmed results). The current full control
+has five admission errors; an executable assignment/array alias isolation has
+218/218 mismatches. This is a confirmed wrong-result baseline, not blocked
+reference collection. Next implementation must replace value-copy UDT storage
+with runtime-owned object identity and integrate rollback/varip, shallow copy,
+field paths, public materialization and cross-request graph boundaries. Keep
+the failing baseline and complete source; do not merely widen collection guards.

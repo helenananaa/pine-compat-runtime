@@ -266,6 +266,91 @@
       "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v6.pine",
       "bytes": 759,
       "sha256": "5579bdd9242a268a16081de8ab69d85c16805f066b049ab3c077f073eff8ce63"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-alias-isolation.pine",
+      "bytes": 252,
+      "sha256": "4788cfc1bcfaff4b227cb846525f6f7fb0efc7052d1c9b3cb7ae5b2f0ebf362f"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-baseline-analysis.json",
+      "bytes": 3019,
+      "sha256": "a921f1538fdf6cb46ddade0f85769bdf54b43b9c4a67d1810c28b002dc0c520d"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-control.pine",
+      "bytes": 765,
+      "sha256": "942a4aa2e34920a8fb3312957aae6b218e2b2266b8828c25ac0f0705913b026b"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v5-dom.txt",
+      "bytes": 14227,
+      "sha256": "cf474a6caca7de8826dfdc6f9cb1091f1eea3d2396614596603dd30e443c5106"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v5-expected.json",
+      "bytes": 7350,
+      "sha256": "0890e9d5d38ff427a67792a1861a16c78d0dde69e7e43526b8810f689f9dafff"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v5-manifest.json",
+      "bytes": 330,
+      "sha256": "067df24e8be02c11733af2750c2e5d08c98ddf7efd4d89346777839f1e238b86"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v5-raw.csv",
+      "bytes": 75290,
+      "sha256": "fa9620c1d73a8eb0699ae38e891437cbce5c6a9fc7b0657ac8c500c8d202945c"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v5.pine",
+      "bytes": 765,
+      "sha256": "21d9fb3e089ebf0ebd76c809d67a7e4f6e713a8c0fa73967288c1ff5dc6f0ff5"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v6-dom.txt",
+      "bytes": 14691,
+      "sha256": "59413472e0dddc641851b5e5cf7fc3597f4d2791ce4246a9ea19dd27214a95e9"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v6-expected.json",
+      "bytes": 7350,
+      "sha256": "0890e9d5d38ff427a67792a1861a16c78d0dde69e7e43526b8810f689f9dafff"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v6-manifest.json",
+      "bytes": 330,
+      "sha256": "42b0f27709dabdd946b1c2699a4509c3d9b01843abdfbf28a76fc6821444e78d"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v6-raw.csv",
+      "bytes": 75287,
+      "sha256": "95b8a167a2aca13b4ecb92d7292178822086ce116e37e383181d047ea84fa8b5"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-identity-v6.pine",
+      "bytes": 765,
+      "sha256": "942a4aa2e34920a8fb3312957aae6b218e2b2266b8828c25ac0f0705913b026b"
+    },
+    {
+      "path": ".local/product-completion-20260912/udt-alias-baseline-comparison.json",
+      "bytes": 702,
+      "sha256": "4bf4af0c4728dce2556602c612bc61ee9e64b29e3b4cd25c370d7f5898a2033c"
+    },
+    {
+      "path": ".local/product-completion-20260912/udt-alias-baseline-result.json",
+      "bytes": 2195,
+      "sha256": "3b0321efe63f8bb12cc707915101540a81cdd5b0f1bb658a84547a72c055b594"
+    },
+    {
+      "path": ".local/product-completion-20260912/freeze-udt-reference.py",
+      "bytes": 1467,
+      "sha256": "26cbcde757a60fed1cff4c48e7b62cccb6ce73d80451d819facd2be4bfb51158"
+    },
+    {
+      "path": ".local/product-completion-20260912/compare-udt-baseline.py",
+      "bytes": 933,
+      "sha256": "6f9563e79cdc11d3a61c1e03f0022f4dd93b1d2cbbd3875b4f20f2629827364e"
     }
   ],
   "gradientCommit": "f6339ec54",
@@ -279,7 +364,9 @@
     "memberV6": 654,
     "memberV5": 981,
     "tupleFinalV6": 1090,
-    "tupleFinalV5": 1090
+    "tupleFinalV5": 1090,
+    "udtIdentityV6": 872,
+    "udtIdentityV5": 872
   },
   "retainedArtifacts": {
     "gradient": {
@@ -411,8 +498,42 @@
       },
       "pythonModule": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\tuple-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
       "surfaceParity": "installed Python batch and streaming replica, four CLI modes, actual generated WASM full output"
+    },
+    "udtAliasBaseline": {
+      "status": "failed",
+      "scope": "two alias isolations compared to corresponding native full-control plots; not full-control execution",
+      "sourceCommit": "0606a9943",
+      "referenceValues": 218,
+      "mismatches": 218,
+      "firstMismatches": [
+        {
+          "plot": "UID alias",
+          "bar": 0,
+          "actual": 4724.89,
+          "expected": 4725.89
+        },
+        {
+          "plot": "UID alias",
+          "bar": 1,
+          "actual": 4378.51,
+          "expected": 4379.51
+        },
+        {
+          "plot": "UID alias",
+          "bar": 2,
+          "actual": 6463,
+          "expected": 6464.0
+        },
+        {
+          "plot": "UID alias",
+          "bar": 3,
+          "actual": 9838.96,
+          "expected": 9839.96
+        }
+      ]
     }
   },
   "memberCommit": "6e14f352e",
-  "tupleFinalCommit": "4407159cd"
+  "tupleFinalCommit": "4407159cd",
+  "udtIdentityStatus": "unrepaired: full native control has five admission errors; executable two-plot alias isolation mismatches 218/218 references"
 }

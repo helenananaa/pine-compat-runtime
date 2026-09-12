@@ -16,8 +16,8 @@ real-script adoption. Missing references remain unverified, not passed.
 
 | Work | Acceptance | State |
 | --- | --- | --- |
-| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | In progress: inventory and function/collection boundary |
-| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | Pending |
+| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | RSI default and Bollinger/divergence configurations accepted; Pivot Points Standard remains blocked |
+| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | Pivot null/tie correction qualified; broader request/realtime cases remain open |
 | Host capabilities | Describe supported input/account profiles and readiness checks precisely; implement deterministic capabilities demanded by frozen scripts | Pending |
 | Resources | Freeze finite workload, latency and memory budgets before acceptance; qualify Windows/Linux and multiple independent sessions; report full snapshots separately | Pending |
 | Unified local distribution | Build selected Rust/CLI/Python/WASM outputs from one committed implementation; run installed-wheel, actual-WASM and retained independent reference gates | Pending |
@@ -30,6 +30,16 @@ remain host responsibilities. Resource exhaustion must preserve the documented
 failure/atomicity contract rather than silently dropping script-visible history.
 
 ## First implementation slice
+
+Current checkpoint: `PIVOT_NA_AUDIT.md` records the complete Windows gate
+(6,730 Rust / 762 installed Python / 130 tools / actual WASM). The unchanged
+RSI default 218 values and separate Bollinger/divergence 852 values pass with
+cross-host full-output parity; the earlier 2/852 failure remains preserved.
+Runtime schema 9 and changes schema 4 apply to current source; earlier artifacts
+retain their original schema/source identities. Next prioritize the unchanged
+Pivot Points Standard blockers instead of replacing it with an easier script.
+
+The following slice notes preserve the chronology and are not current failures.
 
 Investigate modern UDF mutations of caller-owned arrays. The existing runtime
 supports array mutation and UDF `array.unshift`, while `array.push` on a UDF
@@ -87,3 +97,10 @@ The separately frozen SMA+BB/divergence configuration has 2/852 mismatches at
 the first RSI pivot high/low. Preserve that failed report while collecting the
 new `corpus/pivot-na-reference.pine` native control. Next work is the actual
 `eval_pivot` null-window behavior in `crates/pine-runtime/src/builtins/ta/pivots.rs`.
+
+That pivot defect is now repaired and qualified; see `PIVOT_NA_AUDIT.md`.
+Next continuation should inspect the original Pivot Points line 194 chained
+`.row(...).last().pivotLine.get_x2()` expression and its parser/semantic lowering,
+then continue through reference-bearing UDT arrays/matrices, method side effects,
+function-final tuple declarations and requested-context requirements. The source
+must remain unchanged; partial admission is not completion of that target.

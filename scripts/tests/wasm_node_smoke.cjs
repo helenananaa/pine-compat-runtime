@@ -400,6 +400,14 @@ gradientReplica.free();
 gradientSession.free();
 gradientProgram.free();
 
+const pivotNaSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/pivot_na_boundaries.pine'), 'utf8');
+const pivotNaExpected = JSON.parse(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/pivot_na_native_values.json'), 'utf8'));
+const pivotNaBars = 'time,open,high,low,close,volume\n' + Array.from({length: 109}, (_, i) => `${i * 60000},10,10,10,10,1`).join('\n') + '\n';
+for (const version of [5, 6]) {
+  const pivotNaResult = JSON.parse(pine.runScriptCsv(pivotNaSource.replace('version=6', `version=${version}`), pivotNaBars));
+  for (const plot of pivotNaResult.plots) assert.deepEqual(plot.values, pivotNaExpected[plot.title]);
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

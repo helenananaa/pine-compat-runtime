@@ -16,7 +16,7 @@ impl<'a> HistoricalRuntime<'a> {
         let rightbars = rightbars as usize;
         let length = leftbars + rightbars + 1;
         let window = self.update_rolling_window(call_site_id, source, length);
-        if !window.is_ready(length) {
+        if window.values.len() != length {
             return Ok(PineValue::Na);
         }
 
@@ -26,18 +26,30 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let is_pivot = window
+        // Native pivot comparisons stop at the nearest na on each side.
+        // The raw window must still exist, and an na candidate is never a pivot.
+        // A plateau belongs to its rightmost candidate: older equal values are
+        // allowed, but equal values on the confirmation side invalidate it.
+        let left_ok = window
             .values
             .iter()
-            .flatten()
-            .enumerate()
-            .all(|(index, value)| {
-                index == candidate_index
-                    || match mode {
-                        WindowExtreme::Highest => candidate > *value,
-                        WindowExtreme::Lowest => candidate < *value,
-                    }
+            .take(candidate_index)
+            .rev()
+            .map_while(|value| *value)
+            .all(|value| match mode {
+                WindowExtreme::Highest => candidate >= value,
+                WindowExtreme::Lowest => candidate <= value,
             });
+        let right_ok = window
+            .values
+            .iter()
+            .skip(candidate_index + 1)
+            .map_while(|value| *value)
+            .all(|value| match mode {
+                WindowExtreme::Highest => candidate > value,
+                WindowExtreme::Lowest => candidate < value,
+            });
+        let is_pivot = left_ok && right_ok;
         if !is_pivot {
             return Ok(PineValue::Na);
         }

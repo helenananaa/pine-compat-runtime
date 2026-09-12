@@ -23,6 +23,12 @@ and changes schema 4. A separate native Bollinger/divergence configuration
 reveals two initial-pivot discrepancies, which remain active work. These are
 Windows development receipts, not unified final distribution acceptance.
 
+The [pivot follow-up](PIVOT_NA_AUDIT.md) repairs those discrepancies. Current
+Windows qualification passes 6,730 Rust / 762 installed Python / 130 tools and
+actual WASM. Both unchanged RSI configurations now match their separate native
+references (218 and 852 values) and full cross-host output. Pivot Points
+Standard, broader capability/resource work and unified distribution remain open.
+
 ## Latest retained streaming qualification
 
 [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records 6,715 Rust / 755

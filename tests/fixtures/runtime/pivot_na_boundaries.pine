@@ -1,0 +1,11 @@
+//@version=6
+indicator("Pine completion pivot NA reference")
+values=array.from(float(na),float(na),5.,4.,3.,float(na),1.,2.,float(na),5.,5.,4.,float(na),3.,float(na),float(na))
+x=array.get(values,bar_index%16)
+edge=bar_index==0?100.:float(na)
+plot(x,"PNA source")
+plot(ta.pivothigh(x,2,2),"PNA high")
+plot(ta.pivotlow(x,2,2),"PNA low")
+plot(ta.pivothigh(edge,2,2),"PNA edge high")
+plot(ta.pivotlow(edge,2,2),"PNA edge low")
+plot(bar_index,"PNA index")

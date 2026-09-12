@@ -1,5 +1,11 @@
 # Execution Semantics
 
+For `ta.pivothigh`/`ta.pivotlow`, the complete raw left+right+1 history window
+must exist and the candidate must be non-null. Each directional comparison
+stops at its nearest null. Equal older values are allowed, while equal newer
+values prevent confirmation, so a plateau belongs to its rightmost candidate.
+See `PIVOT_NA_AUDIT.md` for independent v5/v6 controls and complete RSI evidence.
+
 Pine Compat Runtime should be designed around time-series execution, not around
 ordinary one-shot script execution.
 

@@ -1,3 +1,4 @@
+mod maps;
 use crate::analyzer::maps::map_kind_from_template_name;
 use crate::prelude::*;
 
@@ -623,7 +624,9 @@ impl Analyzer {
         branch: &[Stmt],
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
-        let last = branch.last()?;
+        let Some(last) = branch.last() else {
+            return Some(PineType::new(Qualifier::Const, ValueKind::Na));
+        };
         match &last.kind {
             StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
                 self.type_of_expr_with_params(expr, param_types)
@@ -681,6 +684,16 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
         match &statement.kind {
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => self.type_of_function_if_return_with_params(
+                condition,
+                then_branch,
+                else_branch,
+                param_types,
+            ),
             StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
                 self.type_of_expr_with_params(expr, param_types)
             }
@@ -805,7 +818,7 @@ impl Analyzer {
                     .legacy
                     .canonical_call_name(self.current_source_context_id(), callee.span)
                     .map_or(source_name, str::to_owned);
-                if name == "request.security" && args.len() == 3 {
+                if name == "request.security" && (3..=5).contains(&args.len()) {
                     return self.tuple_element_types_with_context(&args[2].value, context);
                 }
                 if is_ta_vwap_bands_call(&name, args) {
@@ -1442,49 +1455,6 @@ impl Analyzer {
             SwitchArmResult::Block(statements) => {
                 self.tuple_element_types_of_function_branch_return_with_params(statements, context)
             }
-        }
-    }
-
-    fn type_of_map_operation(
-        &self,
-        name: &str,
-        args: &[CallArg],
-        param_types: &HashMap<String, PineType>,
-    ) -> Option<PineType> {
-        match name {
-            "map.put" | "map.clear" | "map.remove" | "map.put_all" => {
-                Some(PineType::new(Qualifier::Series, ValueKind::Void))
-            }
-            "map.contains" => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
-            "map.copy" => Some(PineType::new(Qualifier::Simple, ValueKind::Map)),
-            "map.size" => Some(PineType::new(Qualifier::Simple, ValueKind::Int)),
-            "map.keys" | "map.values" => {
-                let first_arg = args.first()?;
-                let info = self.map_type_of_expr(&first_arg.value)?;
-                let element_kind = if name == "map.keys" {
-                    info.key_kind
-                } else {
-                    info.value_kind
-                };
-                Some(PineType::new(
-                    Qualifier::Simple,
-                    element_kind.array_kind_from_element_kind()?,
-                ))
-            }
-            "map.get" => {
-                let first_arg = args.first()?;
-                let info = self.map_type_of_expr(&first_arg.value).or_else(|| {
-                    let ExprKind::Identifier(name) = &first_arg.value.kind else {
-                        return None;
-                    };
-                    param_types
-                        .get(name)
-                        .filter(|pine_type| pine_type.kind == ValueKind::Map)?;
-                    None
-                })?;
-                Some(PineType::new(Qualifier::Series, info.value_kind))
-            }
-            _ => None,
         }
     }
 }

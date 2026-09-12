@@ -357,14 +357,11 @@ fn run_non_batch_with_options(
             runtime
                 .prepare_magnifier_chart_bar_count(bars.len())
                 .map_err(|err| format!("runtime failed: {}", err.message))?;
-            for (index, bar) in bars.iter().copied().enumerate() {
-                match execution_times.as_ref().map(|values| values[index]) {
-                    Some(execution_time) => runtime
-                        .update_with_execution_time(BarUpdate::historical(bar), execution_time),
-                    None => runtime.update(BarUpdate::historical(bar)),
-                }
-                .map_err(|err| format!("runtime failed: {}", err.message))?;
+            match execution_times.as_deref() {
+                Some(times) => runtime.seed_historical_with_execution_times(&bars, times),
+                None => runtime.seed_historical(&bars),
             }
+            .map_err(|err| format!("runtime failed: {}", err.message))?;
             Ok((runtime.confirmed_result(), runtime.confirmed_profile()))
         }
         ExecutionMode::RealtimeForming => {
@@ -387,14 +384,13 @@ fn run_non_batch_with_options(
             runtime
                 .prepare_magnifier_chart_bar_count(history.len())
                 .map_err(|err| format!("runtime failed: {}", err.message))?;
-            for (index, bar) in history.iter().copied().enumerate() {
-                match execution_times.as_ref().map(|values| values[index]) {
-                    Some(execution_time) => runtime
-                        .update_with_execution_time(BarUpdate::historical(bar), execution_time),
-                    None => runtime.update(BarUpdate::historical(bar)),
+            match execution_times.as_deref() {
+                Some(times) => {
+                    runtime.seed_historical_with_execution_times(history, &times[..history.len()])
                 }
-                .map_err(|err| format!("runtime failed: {}", err.message))?;
+                None => runtime.seed_historical(history),
             }
+            .map_err(|err| format!("runtime failed: {}", err.message))?;
             let confirmed_execution_time = execution_times
                 .as_ref()
                 .and_then(|values| values.last().copied());

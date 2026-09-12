@@ -88,49 +88,6 @@ fn pure_fixed_builtin_call_name(name: &str) -> bool {
     )
 }
 
-fn final_loop_statement_expr(statement: &Stmt) -> Option<Expr> {
-    match &statement.kind {
-        StmtKind::For {
-            counter,
-            from,
-            to,
-            step,
-            body,
-        } => Some(Expr {
-            span: statement.span,
-            kind: ExprKind::For {
-                counter: counter.to_owned(),
-                from: Box::new(from.clone()),
-                to: Box::new(to.clone()),
-                step: step.clone().map(Box::new),
-                body: body.to_vec(),
-            },
-        }),
-        StmtKind::ForIn {
-            index,
-            value,
-            iterable,
-            body,
-        } => Some(Expr {
-            span: statement.span,
-            kind: ExprKind::ForIn {
-                index: index.clone(),
-                value: value.to_owned(),
-                iterable: Box::new(iterable.clone()),
-                body: body.to_vec(),
-            },
-        }),
-        StmtKind::While { condition, body } => Some(Expr {
-            span: statement.span,
-            kind: ExprKind::While {
-                condition: Box::new(condition.clone()),
-                body: body.to_vec(),
-            },
-        }),
-        _ => None,
-    }
-}
-
 pub(crate) fn lower_unary_op(op: UnaryOp) -> HirUnaryOp {
     match op {
         UnaryOp::Plus => HirUnaryOp::Plus,
@@ -732,15 +689,6 @@ impl Analyzer {
                 body,
             } => {
                 let (last, prefix) = body.split_last()?;
-                let final_expr;
-                let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
-                        final_expr = final_loop_statement_expr(last)?;
-                        &final_expr
-                    }
-                    _ => return None,
-                };
                 HirExprKind::For {
                     counter: self.lower_decl_symbol(counter, expr.span)?.id,
                     from: Box::new(self.lower_expr_with_params(from, param_exprs, param_types)?),
@@ -759,11 +707,7 @@ impl Analyzer {
                             self.lower_stmt_with_params(statement, param_exprs, param_types)
                         })
                         .collect::<Option<_>>()?,
-                    result: Box::new(self.lower_expr_with_params(
-                        result,
-                        param_exprs,
-                        param_types,
-                    )?),
+                    result: Box::new(self.lower_loop_tail(last, param_exprs, param_types)?),
                 }
             }
             ExprKind::ForIn {
@@ -773,15 +717,6 @@ impl Analyzer {
                 body,
             } => {
                 let (last, prefix) = body.split_last()?;
-                let final_expr;
-                let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
-                        final_expr = final_loop_statement_expr(last)?;
-                        &final_expr
-                    }
-                    _ => return None,
-                };
                 let value_symbol = self.lower_decl_symbol(value, expr.span)?;
                 if let Some(type_name) =
                     self.user_type_array_name_of_expr_with_params(iterable, param_exprs)
@@ -805,24 +740,11 @@ impl Analyzer {
                             self.lower_stmt_with_params(statement, param_exprs, param_types)
                         })
                         .collect::<Option<_>>()?,
-                    result: Box::new(self.lower_expr_with_params(
-                        result,
-                        param_exprs,
-                        param_types,
-                    )?),
+                    result: Box::new(self.lower_loop_tail(last, param_exprs, param_types)?),
                 }
             }
             ExprKind::While { condition, body } => {
                 let (last, prefix) = body.split_last()?;
-                let final_expr;
-                let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
-                        final_expr = final_loop_statement_expr(last)?;
-                        &final_expr
-                    }
-                    _ => return None,
-                };
                 HirExprKind::While {
                     condition: Box::new(self.lower_expr_with_params(
                         condition,
@@ -835,11 +757,7 @@ impl Analyzer {
                             self.lower_stmt_with_params(statement, param_exprs, param_types)
                         })
                         .collect::<Option<_>>()?,
-                    result: Box::new(self.lower_expr_with_params(
-                        result,
-                        param_exprs,
-                        param_types,
-                    )?),
+                    result: Box::new(self.lower_loop_tail(last, param_exprs, param_types)?),
                 }
             }
             ExprKind::Tuple(items) => HirExprKind::Tuple(
@@ -850,6 +768,31 @@ impl Analyzer {
             ),
             ExprKind::Call { callee, args } => {
                 let name = expr_name(callee)?;
+                if self.udt_matrix_constructor_name(&name).is_some() {
+                    let values = self.udt_matrix_constructor_args(args, expr.span)?;
+                    let args = values
+                        .iter()
+                        .map(|value| {
+                            Some(HirCallArg {
+                                name: None,
+                                value: self.lower_expr_with_params(
+                                    value,
+                                    param_exprs,
+                                    param_types,
+                                )?,
+                            })
+                        })
+                        .collect::<Option<Vec<_>>>()?;
+                    return Some(HirExpr {
+                        pine_type: PineType::new(Qualifier::Series, ValueKind::UserTypeMatrix),
+                        series_id,
+                        kind: HirExprKind::Call {
+                            callee: name,
+                            call_site_id: self.alloc_call_site_at(expr.span),
+                            args,
+                        },
+                    });
+                }
                 if let Some(constructor) = self
                     .user_type_constructor_for_lowering(&name, args, param_types)
                     .or_else(|| {

@@ -56,8 +56,8 @@ pub(crate) struct UdtFieldMutation {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum UserTypeArrayElementInference {
-    SameScalarLocal(String),
-    SameScalarImported(String),
+    SameLocal(String),
+    SameImported(String),
     MixedLocal,
     UnsupportedFieldType(String),
     UnknownUserTypeName,
@@ -104,10 +104,8 @@ pub(crate) fn classify_user_type_array_element_names(
     let user_type = user_types.get(first)?;
     debug_assert_eq!(user_type.identity.source_id, SourceId::root());
     debug_assert_eq!(user_type.identity.name, *first);
-    if local_user_type_has_scalar_tree_fields(user_types, &user_type.name, &mut HashSet::new()) {
-        Some(UserTypeArrayElementInference::SameScalarLocal(
-            first.clone(),
-        ))
+    if local_user_type_has_array_fields(user_types, &user_type.name, &mut HashSet::new()) {
+        Some(UserTypeArrayElementInference::SameLocal(first.clone()))
     } else {
         Some(UserTypeArrayElementInference::UnsupportedFieldType(
             first.clone(),
@@ -115,7 +113,7 @@ pub(crate) fn classify_user_type_array_element_names(
     }
 }
 
-fn local_user_type_has_scalar_tree_fields(
+fn local_user_type_has_array_fields(
     user_types: &HashMap<String, UserTypeInfo>,
     type_name: &str,
     seen: &mut HashSet<String>,
@@ -128,18 +126,28 @@ fn local_user_type_has_scalar_tree_fields(
     };
     let supported = user_type.fields.iter().all(|field| {
         if let Some(field_type_name) = &field.user_type_name {
-            local_user_type_has_scalar_tree_fields(user_types, field_type_name, seen)
+            local_user_type_has_array_fields(user_types, field_type_name, seen)
         } else {
-            is_scalar_user_type_array_field(field)
+            is_supported_user_type_array_field(field)
         }
     });
     seen.remove(type_name);
     supported
 }
 
-fn is_scalar_user_type_array_field(field: &UserTypeFieldInfo) -> bool {
+fn is_supported_user_type_array_field(field: &UserTypeFieldInfo) -> bool {
     matches!(
         field.pine_type.kind,
-        ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::String | ValueKind::Color
+        ValueKind::Int
+            | ValueKind::Float
+            | ValueKind::Bool
+            | ValueKind::String
+            | ValueKind::Color
+            | ValueKind::Line
+            | ValueKind::Label
+            | ValueKind::LineFill
+            | ValueKind::Box
+            | ValueKind::Table
+            | ValueKind::Polyline
     )
 }

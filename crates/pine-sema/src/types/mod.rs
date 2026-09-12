@@ -225,6 +225,7 @@ fn can_assign_na_to_kind(kind: ValueKind) -> bool {
             | ValueKind::BoolMatrix
             | ValueKind::StringMatrix
             | ValueKind::ColorMatrix
+            | ValueKind::UserTypeMatrix
             | ValueKind::Map
     )
 }

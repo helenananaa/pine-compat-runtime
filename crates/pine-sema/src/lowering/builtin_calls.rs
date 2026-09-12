@@ -47,7 +47,31 @@ fn signature_accepts_lowered_args(signature: &BuiltinSignature, args: &[HirCallA
             }
         };
         parameter_index.is_some_and(|index| {
-            crate::types::accepts_type(signature.params[index].accepts, arg.value.pine_type)
+            let accepts = signature.params[index].accepts;
+            let matrix_type = |slot: usize| {
+                signature
+                    .params
+                    .get(slot)
+                    .and_then(|param| {
+                        args.iter()
+                            .find(|arg| arg.name.as_deref() == Some(param.name))
+                            .or_else(|| args.get(slot).filter(|arg| arg.name.is_none()))
+                    })
+                    .map(|arg| arg.value.pine_type)
+            };
+            match accepts {
+                pine_builtins::Accepts::MatrixElementCompatible(slot) => matrix_type(slot)
+                    .and_then(|ty| {
+                        crate::types::accepts_matrix_element_arg(ty, arg.value.pine_type)
+                    })
+                    .unwrap_or(false),
+                pine_builtins::Accepts::MatrixElementArray(slot) => matrix_type(slot)
+                    .and_then(|ty| {
+                        crate::types::accepts_matrix_element_array_arg(ty, arg.value.pine_type)
+                    })
+                    .unwrap_or(false),
+                _ => crate::types::accepts_type(accepts, arg.value.pine_type),
+            }
         })
     })
 }

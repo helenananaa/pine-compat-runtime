@@ -414,15 +414,20 @@ impl Analyzer {
             self.analyze_stmt(statement);
         }
         let pine_type = match &last.kind {
+            StmtKind::If { .. } if allow_void => {
+                self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span)
+            }
             StmtKind::Expr(expr) => {
                 let pine_type = self.analyze_expr(expr);
-                if matches!(
-                    pine_type,
-                    Some(PineType {
-                        kind: ValueKind::Void,
-                        ..
-                    })
-                ) {
+                if !allow_void
+                    && matches!(
+                        pine_type,
+                        Some(PineType {
+                            kind: ValueKind::Void,
+                            ..
+                        })
+                    )
+                {
                     self.diagnostics.push(Diagnostic::error(
                         "E_BRANCH_RETURN",
                         format!("{keyword} expression branches must end with a value-producing expression"),
@@ -496,6 +501,22 @@ impl Analyzer {
         allow_void: bool,
     ) -> Option<PineType> {
         match &last.kind {
+            StmtKind::If { .. } => {
+                let ty =
+                    self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span);
+                if !allow_void && ty.is_some_and(|ty| ty.kind == ValueKind::Void) {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_LOOP_RETURN",
+                        format!(
+                            "{keyword} expression body must end with a value-producing expression"
+                        ),
+                        last.span,
+                    ));
+                    None
+                } else {
+                    ty
+                }
+            }
             StmtKind::Expr(expr) => {
                 let pine_type = self.analyze_expr(expr);
                 if !allow_void
@@ -1123,6 +1144,9 @@ impl Analyzer {
                 self.analyze_stmt(statement);
             }
             match &last.kind {
+                StmtKind::If { .. } => {
+                    self.analyze_loop_expr_body_return(last, "for...in", allow_void)
+                }
                 StmtKind::Expr(expr) => {
                     let pine_type = self.analyze_expr(expr);
                     if !allow_void

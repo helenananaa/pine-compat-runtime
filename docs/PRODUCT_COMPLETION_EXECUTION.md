@@ -16,8 +16,8 @@ real-script adoption. Missing references remain unverified, not passed.
 
 | Work | Acceptance | State |
 | --- | --- | --- |
-| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | RSI default and Bollinger/divergence configurations accepted; Pivot Points Standard remains blocked |
-| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | Pivot null/tie correction qualified; broader request/realtime cases remain open |
+| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | RSI configurations accepted at the retained checkpoint; original Pivot now compiles/runs and its v6 Traditional/Auto snapshot matches 3161 native values; broader options, visual output and new artifact qualification remain open |
+| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | Request arrays/dependencies/local state and merge policies implemented with bounded controls; original Pivot batch/incremental/realtime-history agree; full-script forming-feed qualification remains open |
 | Host capabilities | Describe supported input/account profiles and readiness checks precisely; implement deterministic capabilities demanded by frozen scripts | Pending |
 | Resources | Freeze finite workload, latency and memory budgets before acceptance; qualify Windows/Linux and multiple independent sessions; report full snapshots separately | Pending |
 | Unified local distribution | Build selected Rust/CLI/Python/WASM outputs from one committed implementation; run installed-wheel, actual-WASM and retained independent reference gates | Pending |
@@ -31,7 +31,7 @@ failure/atomicity contract rather than silently dropping script-visible history.
 
 ## First implementation slice
 
-Current checkpoint: `PIVOT_NA_AUDIT.md` records the complete Windows gate
+Historical checkpoint: `PIVOT_NA_AUDIT.md` records the complete Windows gate
 (6,730 Rust / 762 installed Python / 130 tools / actual WASM). The unchanged
 RSI default 218 values and separate Bollinger/divergence 852 values pass with
 cross-host full-output parity; the earlier 2/852 failure remains preserved.
@@ -156,3 +156,16 @@ reference suites with complete cross-host and streaming parity. See
 to the original Pivot Points reference-bearing UDT arrays/matrices and method
 effects, followed by requested contexts. Its current diagnostic inventory is
 `corpus/pivot-after-udt-analysis.json` (42 diagnostics, no parse/return failures).
+
+The Pivot completion implementation now removes those original 42 diagnostics:
+drawing-bearing UDT arrays/matrices, local drawing/matrix effects, conditional
+loop tails, tuple-derived drawing styles and requested arrays/dependencies/state
+are integrated. The unchanged full script executes, and its v6 Traditional/Auto
+monthly historical observer matches 3161 native values. Batch, incremental and
+realtime-history outputs agree; observer plots do not alter its 99 lines/labels.
+See `REQUEST_CONTEXT_COMPLETION_AUDIT.md` for reference hashes and scope limits.
+The full Windows gate passes 6790 Rust / 771 installed Python / 130 tools and
+actual WASM; capability metadata reconciliation additionally passes 234 CLI tests.
+Next retain fresh commit-bound artifacts and qualify both complete RSI suites,
+Pivot and prior controls across them, then extend Pivot options/feed/visual checks
+and complete host/resource qualification. The overall goal remains active.

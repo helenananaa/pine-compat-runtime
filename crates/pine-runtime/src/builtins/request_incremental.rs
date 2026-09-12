@@ -1,5 +1,6 @@
 //! Reuse a checkpoint preceding the terminal requested bar. The old terminal
 //! bar is always replayed when a context grows, preserving endpoint semantics.
+use super::request_values::RequestedValue;
 use super::requests::{request_capture_values, request_dependency_initializers};
 use crate::request::RequestCacheKey;
 use crate::runtime::append_history::AppendHistory;
@@ -11,7 +12,7 @@ use std::{collections::HashMap, sync::Arc};
 
 #[derive(Clone)]
 pub(crate) struct RequestEvaluation<'a> {
-    prefix: AppendHistory<(i64, PineValue)>,
+    prefix: AppendHistory<(i64, RequestedValue)>,
     before_last: Arc<HistoricalRuntime<'a>>,
     captures: HashMap<SymbolId, PineValue>,
     provider_len: usize,
@@ -27,7 +28,7 @@ impl<'a> HistoricalRuntime<'a> {
         expression: &HirExpr,
         environment: RequestEnvironment,
         include_forming: bool,
-    ) -> Result<AppendHistory<(i64, PineValue)>, RuntimeError> {
+    ) -> Result<AppendHistory<(i64, RequestedValue)>, RuntimeError> {
         let initializers = request_dependency_initializers(&self.program);
         let captures = request_capture_values(
             &self.program,

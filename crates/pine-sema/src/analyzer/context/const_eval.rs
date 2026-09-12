@@ -1,6 +1,7 @@
 use super::*;
 use crate::constant_values::{ConstValue, eval_pure_const_call, exact_i64_from_numeric};
 use crate::legacy::PineDialect;
+mod tuple_projection;
 
 const MAX_STRING_VALUE_DOMAIN_DEPTH: u32 = 64;
 const MAX_STRING_VALUE_DOMAIN_VALUES: usize = 64;
@@ -675,13 +676,23 @@ impl Analyzer {
         match &expr.kind {
             pine_syntax::ExprKind::Identifier(name) => {
                 let symbol = self.const_lookup_symbol(name, expr.span)?;
-                if env.symbol_visiting.contains(&symbol.id) {
+                if env.symbol_visiting.contains(&symbol.id)
+                    || self.request_reassigned_names.contains(name)
+                {
                     return None;
                 }
                 env.symbol_visiting.push(symbol.id);
-                let domain = self.with_symbol_initializer(symbol.id, |analyzer, initializer| {
-                    analyzer.known_string_value_domain_inner(initializer, env, depth + 1)
-                });
+                let domain = self
+                    .with_symbol_initializer(symbol.id, |analyzer, initializer| {
+                        analyzer.known_string_value_domain_inner(initializer, env, depth + 1)
+                    })
+                    .or_else(|| {
+                        let (source, index) = self.symbol_tuple_value_sources.get(&symbol.id)?;
+                        let projected = tuple_projection::project(&source.expr, *index, 0)?;
+                        self.with_source_context_ref(source.source_context_id, |analyzer| {
+                            analyzer.known_string_value_domain_inner(&projected, env, depth + 1)
+                        })
+                    });
                 env.symbol_visiting.pop();
                 domain
             }
@@ -701,8 +712,8 @@ impl Analyzer {
                 self.known_string_value_domain_branch(then_branch, env, depth + 1)?,
                 self.known_string_value_domain_branch(else_branch, env, depth + 1)?,
             ),
-            pine_syntax::ExprKind::Switch { arms, .. } => {
-                self.known_string_value_domain_switch(arms, env, depth + 1)
+            pine_syntax::ExprKind::Switch { selector, arms } => {
+                self.known_string_value_domain_switch(selector.as_deref(), arms, env, depth + 1)
             }
             pine_syntax::ExprKind::Call { callee, args } => {
                 self.known_string_input_value_domain(callee, args, env, depth + 1)
@@ -727,6 +738,7 @@ impl Analyzer {
 
     fn known_string_value_domain_switch(
         &self,
+        selector: Option<&pine_syntax::Expr>,
         arms: &[pine_syntax::SwitchArm],
         env: &mut StringValueDomainEnv,
         depth: u32,
@@ -745,7 +757,18 @@ impl Analyzer {
             };
             domain = merge_string_value_domains(domain, arm_domain)?;
         }
-        (has_default && !domain.is_empty()).then_some(domain)
+        let exhaustive = has_default
+            || selector
+                .and_then(|selector| {
+                    let values = self.known_string_value_domain_inner(selector, env, depth)?;
+                    let keys = arms
+                        .iter()
+                        .map(|arm| self.known_const_string_value(arm.condition.as_ref()?))
+                        .collect::<Option<Vec<_>>>()?;
+                    Some(values.iter().all(|value| keys.contains(value)))
+                })
+                .unwrap_or(false);
+        (exhaustive && !domain.is_empty()).then_some(domain)
     }
 
     fn known_string_input_value_domain(

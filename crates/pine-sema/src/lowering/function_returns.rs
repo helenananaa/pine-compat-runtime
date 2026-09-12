@@ -145,6 +145,26 @@ fn implicit_na_result_expr(analyzer: &Analyzer) -> HirExpr {
 }
 
 impl Analyzer {
+    pub(super) fn lower_loop_tail(
+        &mut self,
+        last: &Stmt,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        match &last.kind {
+            StmtKind::Expr(expr) => self.lower_expr_with_params(expr, param_exprs, param_types),
+            StmtKind::If { .. } => self.lower_function_body(
+                &FunctionBody::Block(vec![last.clone()]),
+                param_exprs,
+                param_types,
+            ),
+            _ => self.lower_expr_with_params(
+                &final_loop_statement_expr(last)?,
+                param_exprs,
+                param_types,
+            ),
+        }
+    }
     pub(crate) fn lower_function_body(
         &mut self,
         body: &FunctionBody,

@@ -325,58 +325,27 @@ impl Analyzer {
         } else {
             Qualifier::Series
         };
-        let (pine_type, user_type_name) =
-            match type_name {
-                _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
-                    let element_type = &type_name["array<".len()..type_name.len() - 1];
-                    if let Some(kind) = array_kind_from_element_type_name(element_type) {
-                        (PineType::new(Qualifier::Series, kind), None)
-                    } else if matches!(
-                        classify_user_type_array_element_names(
-                            &self.user_types,
-                            &[element_type.to_owned()]
-                        ),
-                        Some(UserTypeArrayElementInference::SameScalarLocal(_))
-                    ) || self.imported_user_types.get(element_type).is_some_and(
-                        |user_type| self.imported_user_type_has_scalar_tree_fields(user_type),
-                    ) {
-                        (
-                            PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
-                            Some(element_type.to_owned()),
-                        )
-                    } else {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_FUNCTION_PARAM_TYPE",
-                            format!("function parameter type `{type_name}` is not supported"),
-                            span,
-                        ));
-                        return None;
-                    }
-                }
-                "int" => (PineType::new(qualifier, ValueKind::Int), None),
-                "float" => (PineType::new(qualifier, ValueKind::Float), None),
-                "bool" => (PineType::new(qualifier, ValueKind::Bool), None),
-                "string" => (PineType::new(qualifier, ValueKind::String), None),
-                "color" => (PineType::new(qualifier, ValueKind::Color), None),
-                "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
-                "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
-                "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
-                "polyline" => (PineType::new(Qualifier::Series, ValueKind::Polyline), None),
-                "box" => (PineType::new(Qualifier::Series, ValueKind::Box), None),
-                "table" => (PineType::new(Qualifier::Series, ValueKind::Table), None),
-                "chart.point" => (
-                    PineType::new(Qualifier::Series, ValueKind::ChartPoint),
-                    None,
-                ),
-                _ if self.user_types.contains_key(type_name) => (
-                    PineType::new(Qualifier::Series, ValueKind::UserType),
-                    Some(type_name.to_owned()),
-                ),
-                _ if self.imported_user_types.contains_key(type_name) => (
-                    PineType::new(Qualifier::Series, ValueKind::UserType),
-                    Some(type_name.to_owned()),
-                ),
-                _ => {
+        let (pine_type, user_type_name) = match type_name {
+            _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
+                let element_type = &type_name["array<".len()..type_name.len() - 1];
+                if let Some(kind) = array_kind_from_element_type_name(element_type) {
+                    (PineType::new(Qualifier::Series, kind), None)
+                } else if matches!(
+                    classify_user_type_array_element_names(
+                        &self.user_types,
+                        &[element_type.to_owned()]
+                    ),
+                    Some(UserTypeArrayElementInference::SameLocal(_))
+                ) || self
+                    .imported_user_types
+                    .get(element_type)
+                    .is_some_and(|_| self.imported_user_type_array_is_supported(element_type))
+                {
+                    (
+                        PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
+                        Some(element_type.to_owned()),
+                    )
+                } else {
                     self.diagnostics.push(Diagnostic::error(
                         "E_FUNCTION_PARAM_TYPE",
                         format!("function parameter type `{type_name}` is not supported"),
@@ -384,7 +353,39 @@ impl Analyzer {
                     ));
                     return None;
                 }
-            };
+            }
+            "int" => (PineType::new(qualifier, ValueKind::Int), None),
+            "float" => (PineType::new(qualifier, ValueKind::Float), None),
+            "bool" => (PineType::new(qualifier, ValueKind::Bool), None),
+            "string" => (PineType::new(qualifier, ValueKind::String), None),
+            "color" => (PineType::new(qualifier, ValueKind::Color), None),
+            "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
+            "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
+            "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
+            "polyline" => (PineType::new(Qualifier::Series, ValueKind::Polyline), None),
+            "box" => (PineType::new(Qualifier::Series, ValueKind::Box), None),
+            "table" => (PineType::new(Qualifier::Series, ValueKind::Table), None),
+            "chart.point" => (
+                PineType::new(Qualifier::Series, ValueKind::ChartPoint),
+                None,
+            ),
+            _ if self.user_types.contains_key(type_name) => (
+                PineType::new(Qualifier::Series, ValueKind::UserType),
+                Some(type_name.to_owned()),
+            ),
+            _ if self.imported_user_types.contains_key(type_name) => (
+                PineType::new(Qualifier::Series, ValueKind::UserType),
+                Some(type_name.to_owned()),
+            ),
+            _ => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_PARAM_TYPE",
+                    format!("function parameter type `{type_name}` is not supported"),
+                    span,
+                ));
+                return None;
+            }
+        };
         Some(FunctionParamInfo {
             pine_type,
             explicit_series,

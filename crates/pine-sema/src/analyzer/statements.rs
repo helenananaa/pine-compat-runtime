@@ -16,6 +16,8 @@ pub(crate) struct SymbolState {
     legacy_v3_pending_na_symbols: std::collections::HashSet<SymbolId>,
     non_scalar_udt_varip_symbols: std::collections::HashSet<SymbolId>,
     symbol_user_type_arrays: HashMap<SymbolId, String>,
+    symbol_user_type_matrices: HashMap<SymbolId, String>,
+    symbol_tuple_value_sources: HashMap<SymbolId, (SourcedExpr, usize)>,
     symbol_tuple_element_types: HashMap<SymbolId, Vec<PineType>>,
     symbol_tuple_user_type_arrays: HashMap<SymbolId, Vec<UserTypeArrayIdentityResult>>,
     symbol_maps: HashMap<SymbolId, MapTypeInfo>,
@@ -968,6 +970,7 @@ impl Analyzer {
                 self.unsupported(feature, unsupported_syntax_reason(feature), statement.span);
             }
         }
+        self.record_udt_matrix_statement(statement);
     }
 
     fn assignment_contextualized_type(&self, value_type: PineType) -> PineType {
@@ -1034,6 +1037,8 @@ impl Analyzer {
             legacy_v3_pending_na_symbols: self.legacy_v3_pending_na_symbols.clone(),
             non_scalar_udt_varip_symbols: self.non_scalar_udt_varip_symbols.clone(),
             symbol_user_type_arrays: self.symbol_user_type_arrays.clone(),
+            symbol_user_type_matrices: self.symbol_user_type_matrices.clone(),
+            symbol_tuple_value_sources: self.symbol_tuple_value_sources.clone(),
             symbol_tuple_element_types: self.symbol_tuple_element_types.clone(),
             symbol_tuple_user_type_arrays: self.symbol_tuple_user_type_arrays.clone(),
             symbol_maps: self.symbol_maps.clone(),
@@ -1055,6 +1060,8 @@ impl Analyzer {
         self.legacy_v3_pending_na_symbols = state.legacy_v3_pending_na_symbols;
         self.non_scalar_udt_varip_symbols = state.non_scalar_udt_varip_symbols;
         self.symbol_user_type_arrays = state.symbol_user_type_arrays;
+        self.symbol_user_type_matrices = state.symbol_user_type_matrices;
+        self.symbol_tuple_value_sources = state.symbol_tuple_value_sources;
         self.symbol_tuple_element_types = state.symbol_tuple_element_types;
         self.symbol_tuple_user_type_arrays = state.symbol_tuple_user_type_arrays;
         self.symbol_maps = state.symbol_maps;

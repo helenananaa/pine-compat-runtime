@@ -40,6 +40,7 @@ pub enum ValueKind {
     BoolMatrix,
     StringMatrix,
     ColorMatrix,
+    UserTypeMatrix,
     Map,
     UserType,
     Tuple,

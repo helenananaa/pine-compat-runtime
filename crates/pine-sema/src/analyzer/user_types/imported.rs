@@ -91,7 +91,7 @@ impl Analyzer {
             }
             self.imported_user_type_field_user_type(user_type, field)
                 .is_some_and(|nested| {
-                    self.imported_user_type_has_scalar_tree_fields_inner(nested, seen)
+                    self.imported_user_type_array_fields_are_supported(nested, seen)
                 })
         });
         seen.remove(&identity);
@@ -105,7 +105,47 @@ impl Analyzer {
     pub(crate) fn imported_user_type_array_is_supported(&self, type_name: &str) -> bool {
         self.imported_user_types
             .get(type_name)
-            .is_some_and(|user_type| self.imported_user_type_has_scalar_tree_fields(user_type))
+            .is_some_and(|user_type| {
+                self.imported_user_type_array_fields_are_supported(user_type, &mut HashSet::new())
+            })
+    }
+
+    fn imported_user_type_array_fields_are_supported(
+        &self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        seen: &mut HashSet<UserTypeIdentity>,
+    ) -> bool {
+        let identity = UserTypeIdentity {
+            source_id: user_type.identity.source_id,
+            name: user_type.identity.name.clone(),
+        };
+        if !seen.insert(identity.clone()) {
+            return false;
+        }
+        let supported = user_type.fields.iter().all(|field| {
+            if let Some(ty) = field.pine_type {
+                return matches!(
+                    ty.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                        | ValueKind::Line
+                        | ValueKind::Label
+                        | ValueKind::LineFill
+                        | ValueKind::Box
+                        | ValueKind::Table
+                        | ValueKind::Polyline
+                );
+            }
+            self.imported_user_type_field_user_type(user_type, field)
+                .is_some_and(|nested| {
+                    self.imported_user_type_array_fields_are_supported(nested, seen)
+                })
+        });
+        seen.remove(&identity);
+        supported
     }
 
     pub(crate) fn imported_user_type_constructor_arg_plan(

@@ -51,6 +51,7 @@ pub(crate) fn value_kind_name(kind: ValueKind) -> &'static str {
         ValueKind::BoolMatrix => "matrix<bool>",
         ValueKind::StringMatrix => "matrix<string>",
         ValueKind::ColorMatrix => "matrix<color>",
+        ValueKind::UserTypeMatrix => "matrix<UDT>",
         ValueKind::Map => "map",
         ValueKind::UserType => "UDT",
         ValueKind::Tuple => "tuple",

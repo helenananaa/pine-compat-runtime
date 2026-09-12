@@ -1,0 +1,24 @@
+//@version=6
+indicator("UDT matrix identity control")
+type Item
+    int value
+a = Item.new(1)
+values = matrix.new<Item>(1, 2, a)
+row = values.row(0)
+first = row.get(0)
+first.value := 2
+plot(values.get(0, 1).value, "UMI row alias")
+row.set(0, Item.new(3))
+plot(values.get(0, 0).value, "UMI row slot independent")
+copied = values.copy()
+copyItem = copied.get(0, 0)
+copyItem.value := 4
+plot(values.get(0, 1).value, "UMI copy alias")
+copied.set(0, 0, Item.new(5))
+plot(values.get(0, 0).value, "UMI copy slot independent")
+plot(copied.get(0, 0).value, "UMI replaced slot")
+empty = matrix.new<Item>()
+empty.add_row(0, array.from(a))
+plot(empty.rows(), "UMI rows")
+plot(empty.row(0).last().value, "UMI appended alias")
+plot(bar_index, "UMI index")

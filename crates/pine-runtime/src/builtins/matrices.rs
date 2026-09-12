@@ -10,6 +10,7 @@ mod arithmetic;
 mod linalg;
 mod linear_algebra;
 mod mutation;
+mod user_types;
 
 const MAX_MATRIX_CELLS: usize = 100_000;
 
@@ -20,6 +21,7 @@ pub(crate) enum MatrixElementKind {
     Bool,
     String,
     Color,
+    UserType(usize),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -46,6 +48,17 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Option<Result<PineValue, RuntimeError>> {
         if !callee.starts_with("matrix.") {
             return None;
+        }
+        if let Some(name) = callee
+            .strip_prefix("matrix.new<")
+            .and_then(|name| name.strip_suffix('>'))
+            && let Some(index) = self
+                .program
+                .user_types
+                .iter()
+                .position(|ty| ty.identity.type_name == name)
+        {
+            return Some(self.eval_udt_matrix_new(index, args));
         }
 
         Some(match callee {
@@ -523,7 +536,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(values) = self.matrix_row_values(id, row)? else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(matrix_array_element_kind(kind), values))
+        self.new_matrix_result_array(kind, values)
     }
 
     pub(crate) fn eval_matrix_col(
@@ -542,7 +555,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(values) = self.matrix_col_values(id, column)? else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(matrix_array_element_kind(kind), values))
+        self.new_matrix_result_array(kind, values)
     }
 
     pub(crate) fn new_matrix(
@@ -1099,6 +1112,10 @@ fn eval_matrix_value_for_kind(kind: MatrixElementKind, value: PineValue) -> Pine
         MatrixElementKind::Bool => eval_matrix_bool_value(value),
         MatrixElementKind::String => eval_matrix_string_value(value),
         MatrixElementKind::Color => eval_matrix_color_value(value),
+        MatrixElementKind::UserType(_) => match value {
+            PineValue::UserTypeRef(_) | PineValue::Na => value,
+            _ => PineValue::Na,
+        },
     }
 }
 
@@ -1109,6 +1126,7 @@ pub(crate) fn matrix_array_element_kind(kind: MatrixElementKind) -> ArrayElement
         MatrixElementKind::Bool => ArrayElementKind::Bool,
         MatrixElementKind::String => ArrayElementKind::String,
         MatrixElementKind::Color => ArrayElementKind::Color,
+        MatrixElementKind::UserType(_) => ArrayElementKind::UserType,
     }
 }
 

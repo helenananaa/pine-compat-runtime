@@ -93,6 +93,214 @@ fn external_symbol_environment_with_chart_timeframe(
 }
 
 #[test]
+fn modern_request_merge_policies_align_open_close_and_gap_events() {
+    let chart = (0..10)
+        .map(|i| timed_bar(i * 60000, 1.))
+        .collect::<Vec<_>>();
+    let cases = [
+        (
+            "off",
+            "off",
+            vec![
+                None,
+                None,
+                None,
+                None,
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(20.),
+            ],
+        ),
+        (
+            "off",
+            "on",
+            vec![
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(20.),
+                Some(20.),
+                Some(20.),
+                Some(20.),
+                Some(20.),
+            ],
+        ),
+        (
+            "on",
+            "off",
+            vec![
+                None,
+                None,
+                None,
+                None,
+                Some(10.),
+                None,
+                None,
+                None,
+                None,
+                Some(20.),
+            ],
+        ),
+        (
+            "on",
+            "on",
+            vec![
+                Some(10.),
+                None,
+                None,
+                None,
+                None,
+                Some(20.),
+                None,
+                None,
+                None,
+                None,
+            ],
+        ),
+    ];
+    for version in [5, 6] {
+        for (gaps, lookahead, expected) in &cases {
+            let program = compile_program(&format!(
+                "//@version={version}\nindicator(\"merge\")\nplot(request.security(\"B\",\"5\",close,lookahead=barmerge.lookahead_{lookahead},gaps=barmerge.gaps_{gaps}))\n"
+            ));
+            let environment = external_symbol_environment_with_chart_timeframe(
+                "B",
+                "5",
+                "1",
+                vec![timed_bar(0, 10.), timed_bar(300000, 20.)],
+            );
+            let result = HistoricalRuntime::with_request_environment(&program, environment)
+                .run(&chart)
+                .unwrap();
+            assert_eq!(
+                result.plots[0]
+                    .values
+                    .iter()
+                    .map(PineValue::as_f64)
+                    .collect::<Vec<_>>(),
+                *expected,
+                "v{version}, gaps {gaps}, lookahead {lookahead}"
+            );
+            assert!(result.diagnostics.is_empty());
+        }
+    }
+}
+
+#[test]
+fn requested_scalar_arrays_are_caller_owned_and_cached_samples_stay_immutable() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"request arrays\")\nown=array.from(999.0)\nvalues=request.security(\"B\",\"1\",array.from(close,close+1))\nplot(values.get(0))\nplot(own.get(0))\nvalues.set(0,777)\n[a,b,n]=request.security(\"B\",\"1\",[array.from(close),array.new_float(1,close+10),bar_index])\nplot(a.get(0))\nplot(b.get(0))\nplot(n)\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "B",
+        "1",
+        "1",
+        vec![timed_bar(0, 10.), timed_bar(60000, 20.)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.),
+            timed_bar(60000, 2.),
+            timed_bar(120000, 3.),
+        ])
+        .unwrap();
+    assert_values_close(&result.plots[0].values, &[10., 20., 20.]);
+    assert_values_close(&result.plots[1].values, &[999., 999., 999.]);
+    assert_values_close(&result.plots[2].values, &[10., 20., 20.]);
+    assert_values_close(&result.plots[3].values, &[20., 30., 30.]);
+    assert_values_close(&result.plots[4].values, &[0., 1., 1.]);
+}
+
+#[test]
+fn modern_request_udf_array_slots_are_independent() {
+    for version in [5, 6] {
+        let program = compile_program(&format!(
+            "//@version={version}\nindicator(\"alias\")\npair()=>\n    a=array.from(close)\n    [a,a]\n[a,b]=request.security(\"B\",\"1\",pair())\na.set(0,-123)\nplot(a.get(0))\nplot(b.get(0))\n"
+        ));
+        let environment = external_symbol_environment_with_chart_timeframe(
+            "B",
+            "1",
+            "1",
+            vec![timed_bar(0, 10.), timed_bar(60000, 20.)],
+        );
+        let result = HistoricalRuntime::with_request_environment(&program, environment)
+            .run(&[
+                timed_bar(0, 1.),
+                timed_bar(60000, 2.),
+                timed_bar(120000, 3.),
+            ])
+            .unwrap();
+        assert_values_close(&result.plots[0].values, &[-123., -123., -123.]);
+        assert_values_close(&result.plots[1].values, &[10., 20., 20.]);
+    }
+}
+
+#[test]
+fn modern_request_stateful_udf_and_dependencies_use_requested_bars() {
+    for version in [5, 6] {
+        let program = compile_program(&format!(
+            "//@version={version}\nindicator(\"counter\")\ncounter(bool condition)=>\n    var int n=0\n    if condition\n        n+=1\n    n\ndep=close+1\n[a,b]=request.security(\"B\",\"5\",[counter(close>15),dep],lookahead=barmerge.lookahead_on)\nplot(a)\nplot(b)\n"
+        ));
+        let environment = external_symbol_environment_with_chart_timeframe(
+            "B",
+            "5",
+            "1",
+            vec![
+                timed_bar(0, 10.),
+                timed_bar(300000, 20.),
+                timed_bar(600000, 30.),
+            ],
+        );
+        let chart = (0..15)
+            .map(|i| timed_bar(i * 60000, 100.))
+            .collect::<Vec<_>>();
+        let result = HistoricalRuntime::with_request_environment(&program, environment)
+            .run(&chart)
+            .unwrap();
+        assert_values_close(
+            &result.plots[0].values,
+            &[0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 2., 2., 2., 2., 2.],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[
+                11., 11., 11., 11., 11., 21., 21., 21., 21., 21., 31., 31., 31., 31., 31.,
+            ],
+        );
+    }
+}
+
+#[test]
+fn modern_request_conditional_initializer_runs_only_in_its_branch() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"conditional init\")\nbump()=>\n    var int n=0\n    n+=1\n    n\nrouted()=>\n    if close>15\n        value=bump()\n        value\n    else\n        0\nplot(request.security(\"B\",\"1\",routed()))\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "B",
+        "1",
+        "1",
+        vec![
+            timed_bar(0, 10.),
+            timed_bar(60000, 20.),
+            timed_bar(120000, 30.),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.),
+            timed_bar(60000, 100.),
+            timed_bar(120000, 100.),
+        ])
+        .unwrap();
+    assert_values_close(&result.plots[0].values, &[0., 1., 2.]);
+}
+
+#[test]
 fn request_timeframe_parses_supported_subset() {
     let default = RequestTimeframe::parse("").expect("default timeframe");
     assert_eq!(default.value(), "1");
@@ -6651,7 +6859,7 @@ fn realtime_request_security_reuses_immutable_provider_data_during_rollback() {
 }
 
 #[test]
-fn request_feed_interleaves_with_chart_updates_without_leaking_unconfirmed_request_bars() {
+fn request_feed_interleaves_realtime_values_without_leaking_into_historical_updates() {
     let program = compile_program(
         "indicator(\"request feed\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
     );
@@ -6692,8 +6900,12 @@ fn request_feed_interleaves_with_chart_updates_without_leaking_unconfirmed_reque
     assert_values_close(&preview.plots[0].values, &[20.0, 99.0, 50.0]);
     let committed = runtime
         .update(BarUpdate::confirmed(timed_bar(120_000, 7.0)))
-        .expect("chart confirm ignores unconfirmed request bar");
-    assert_values_close(&committed.plots[0].values, &[20.0, 99.0, 99.0]);
+        .expect("realtime chart confirmation retains the available developing request value");
+    assert_values_close(&committed.plots[0].values, &[20.0, 99.0, 50.0]);
+    let historical = runtime
+        .update(BarUpdate::historical(timed_bar(180_000, 8.0)))
+        .unwrap();
+    assert_values_close(&historical.plots[0].values, &[20.0, 99.0, 50.0, 99.0]);
 }
 
 #[test]
@@ -6747,4 +6959,38 @@ fn request_feed_higher_timeframe_forming_does_not_leak_before_close() {
     let preview = runtime.result();
     assert_eq!(preview.plots[0].values[0], PineValue::Na);
     assert_values_close(&preview.plots[0].values[1..], &[100.0]);
+}
+
+#[test]
+fn modern_realtime_merge_uses_available_developing_htf_values() {
+    for lookahead in ["off", "on"] {
+        for gaps in ["off", "on"] {
+            let program = compile_program(&format!(
+                "//@version=6\nindicator(\"live merge\")\nplot(request.security(\"B\",\"5\",close,gaps=barmerge.gaps_{gaps},lookahead=barmerge.lookahead_{lookahead}))\n"
+            ));
+            let environment = external_symbol_environment_with_chart_timeframe(
+                "B",
+                "5",
+                "1",
+                vec![timed_bar(0, 100.)],
+            );
+            let mut runtime = RealtimeRuntime::with_request_environment(&program, environment);
+            runtime
+                .update(BarUpdate::historical(timed_bar(240000, 1.)))
+                .unwrap();
+            runtime
+                .update(BarUpdate::forming(timed_bar(360000, 1.)))
+                .unwrap();
+            let key = RequestKey::new("B", RequestTimeframe::parse("5").unwrap());
+            runtime
+                .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(300000, 200.)))
+                .unwrap();
+            let expected = if gaps == "off" { Some(200.) } else { None };
+            assert_eq!(runtime.result().plots[0].values[1].as_f64(), expected);
+            runtime
+                .update(BarUpdate::confirmed(timed_bar(360000, 1.)))
+                .unwrap();
+            assert_eq!(runtime.result().plots[0].values[1].as_f64(), expected);
+        }
+    }
 }

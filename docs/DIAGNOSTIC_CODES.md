@@ -148,6 +148,7 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_UDT_FIELD_TYPE`: unsupported or unknown user-defined type field type.
 - `E_UDT_FIELD_DEFAULT`: a UDT field default is not a compatible literal or built-in variable.
 - `E_UDT_COPY_ARG`: UDT copy has invalid arguments or a mismatched object type.
+- `E_UDT_MATRIX_ARG`: UDT matrix construction has invalid argument binding, dimension types, or element identity.
 - `E_UDT_FIELD_MUTATION`: field reassignment targets a value that is not a
   supported local user-defined type.
 - `E_UDT_FIELD_HISTORY`: Pine v6 rejects history directly on a UDT field;

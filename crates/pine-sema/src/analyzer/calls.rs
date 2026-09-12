@@ -16,6 +16,10 @@ mod matrices;
 mod return_types;
 
 use legacy::FocusedLegacyCallAnalysis;
+use matrices::{
+    MatrixPairScalarPolicy, matrix_element_array_expected_type, matrix_element_expected_label,
+    matrix_pair_expected_label,
+};
 
 pub(crate) use helpers::{
     alias_qualified_method_name, arg_type_for_param_index, array_call_result_builtin_name,
@@ -139,6 +143,9 @@ impl Analyzer {
 
         if name.starts_with("request.") {
             return self.analyze_request_call(&name, callee.span, args);
+        }
+        if let Some(result) = self.analyze_udt_matrix_constructor(&name, args, span) {
+            return result;
         }
         if let Some(constructor) = self.user_type_constructor(&name, args, span) {
             return Some(constructor.pine_type);
@@ -404,10 +411,7 @@ impl Analyzer {
         self.validate_script_declaration_call(name, callee_span, args);
         self.validate_strategy_order_call(name, callee_span, args);
         self.validate_strategy_value_function_call(name, callee_span);
-        if self.function_depth > 0
-            && is_output_or_declaration_builtin(name)
-            && !self.allows_udf_output_or_declaration_side_effect(name)
-        {
+        if self.udf_output_is_forbidden(name) {
             self.unsupported(
                 "function_side_effect",
                 "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
@@ -432,8 +436,8 @@ impl Analyzer {
         }
         if name == "array.from"
             && let Some(
-                UserTypeArrayElementInference::SameScalarLocal(type_name)
-                | UserTypeArrayElementInference::SameScalarImported(type_name),
+                UserTypeArrayElementInference::SameLocal(type_name)
+                | UserTypeArrayElementInference::SameImported(type_name),
             ) = self.array_from_user_type_element_inference(args, arg_types)
         {
             let pine_type = PineType::new(Qualifier::Simple, ValueKind::UserTypeArray);
@@ -506,7 +510,7 @@ impl Analyzer {
             );
             return Some(None);
         };
-        if !self.local_user_type_has_scalar_tree_fields(&receiver_type_name)
+        if !self.local_user_type_array_is_supported(&receiver_type_name)
             && !self.imported_user_type_array_is_supported(&receiver_type_name)
         {
             self.unsupported(
@@ -559,7 +563,10 @@ impl Analyzer {
             );
             return Some(None);
         };
-        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+        if self.function_depth > 0
+            && is_array_mutation_builtin(builtin_name)
+            && !self.allows_udf_collection_mutation_side_effect(builtin_name)
+        {
             self.unsupported(
                 "function_side_effect",
                 &unsupported_collection_mutation_udf_reason(builtin_name),
@@ -853,7 +860,7 @@ impl Analyzer {
                 .expect("drawing method helper returned registered builtin");
             self.check_feature_name(&builtin_name, callee.span);
 
-            if self.function_depth > 0 && is_output_or_declaration_builtin(&builtin_name) {
+            if self.udf_output_is_forbidden(&builtin_name) {
                 self.unsupported(
                     "function_side_effect",
                     "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
@@ -1443,58 +1450,4 @@ fn call_arg_matrix_cross_param_expected_diagnostic(
         arg_type,
         span,
     ))
-}
-
-fn matrix_element_expected_label(matrix_type: PineType) -> Option<&'static str> {
-    match matrix_type.kind {
-        ValueKind::FloatMatrix => Some("numeric-compatible"),
-        ValueKind::IntMatrix => Some("integer-compatible"),
-        ValueKind::BoolMatrix => Some("bool-compatible"),
-        ValueKind::StringMatrix => Some("string-compatible"),
-        ValueKind::ColorMatrix => Some("color-compatible"),
-        _ => None,
-    }
-}
-
-fn matrix_element_array_expected_type(matrix_type: PineType) -> Option<PineType> {
-    let kind = match matrix_type.kind {
-        ValueKind::FloatMatrix => ValueKind::FloatArray,
-        ValueKind::IntMatrix => ValueKind::IntArray,
-        ValueKind::BoolMatrix => ValueKind::BoolArray,
-        ValueKind::StringMatrix => ValueKind::StringArray,
-        ValueKind::ColorMatrix => ValueKind::ColorArray,
-        _ => return None,
-    };
-    Some(PineType::new(Qualifier::Simple, kind))
-}
-
-#[derive(Clone, Copy)]
-enum MatrixPairScalarPolicy {
-    Numeric,
-    NumericOrNumericArray,
-}
-
-fn matrix_pair_expected_label(
-    signature: &BuiltinSignature,
-    args: &[CallArg],
-    arg_types: &[Option<PineType>],
-    counterpart_param_index: usize,
-    scalar_policy: MatrixPairScalarPolicy,
-) -> Option<&'static str> {
-    let counterpart_type =
-        arg_type_for_param_index(signature, args, arg_types, counterpart_param_index)?;
-    if !is_numeric_matrix_kind(counterpart_type.kind) {
-        if matches!(scalar_policy, MatrixPairScalarPolicy::NumericOrNumericArray)
-            && accepts_type(Accepts::NumericArray, counterpart_type)
-        {
-            return Some("numeric matrix or numeric array");
-        }
-        return Some("numeric matrix");
-    }
-    Some(match scalar_policy {
-        MatrixPairScalarPolicy::Numeric => "numeric matrix or numeric-compatible",
-        MatrixPairScalarPolicy::NumericOrNumericArray => {
-            "numeric matrix, numeric-compatible, or numeric array"
-        }
-    })
 }

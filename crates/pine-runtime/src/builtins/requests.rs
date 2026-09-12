@@ -1,3 +1,4 @@
+use super::request_values::RequestedValue;
 use std::collections::{HashMap, HashSet};
 
 use pine_ir::{
@@ -43,7 +44,41 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         let (merge, legacy) = match callee {
-            "request.security" => (RequestMergePolicy::MODERN, None),
+            "request.security" => {
+                let mut policy = RequestMergePolicy::MODERN;
+                for (index, name) in [(3, "gaps"), (4, "lookahead")] {
+                    if let Some(expr) = call_arg_expr(args, index, name) {
+                        let value = match self.eval_expr(expr) {
+                            Ok(value) => value,
+                            Err(error) => return Some(Err(error)),
+                        };
+                        match (name, value) {
+                            ("gaps", PineValue::String(value)) if value == "barmerge.gaps_off" => {
+                                policy.gaps = RequestGaps::Off
+                            }
+                            ("gaps", PineValue::String(value)) if value == "barmerge.gaps_on" => {
+                                policy.gaps = RequestGaps::On
+                            }
+                            ("lookahead", PineValue::String(value))
+                                if value == "barmerge.lookahead_off" =>
+                            {
+                                policy.lookahead = RequestLookahead::Off
+                            }
+                            ("lookahead", PineValue::String(value))
+                                if value == "barmerge.lookahead_on" =>
+                            {
+                                policy.lookahead = RequestLookahead::On
+                            }
+                            _ => {
+                                return Some(Err(RuntimeError {
+                                    message: format!("invalid request.security {name} policy"),
+                                }));
+                            }
+                        }
+                    }
+                }
+                (policy, None)
+            }
             "$legacy.security.gaps_off.lookahead_off" => (
                 RequestMergePolicy {
                     gaps: RequestGaps::Off,
@@ -74,7 +109,7 @@ impl<'a> HistoricalRuntime<'a> {
             ),
             _ => return None,
         };
-        if merge.lookahead == RequestLookahead::On {
+        if callee != "request.security" && merge.lookahead == RequestLookahead::On {
             self.legacy_security_repaint_warnings
                 .entry(call_site_id)
                 .or_insert(legacy.unwrap_or((0, 0)));
@@ -141,7 +176,9 @@ impl<'a> HistoricalRuntime<'a> {
         let chart_timeframe = chart.timeframe().clone();
 
         if symbol == chart_symbol && requested_timeframe == chart_timeframe {
-            return self.eval_expr(expression);
+            let value = self.eval_expr(expression)?;
+            let snapshot = self.freeze_requested_value(&value)?;
+            return Ok(self.import_requested_value(&snapshot));
         }
 
         self.eval_provider_security(
@@ -173,7 +210,7 @@ impl<'a> HistoricalRuntime<'a> {
             })?;
 
         let cache_key = RequestCacheKey::new(call_site_id, key.symbol(), key.timeframe().value());
-        let include_forming = self.current_bar_update_kind == BarUpdateKind::Forming
+        let include_forming = self.current_bar_update_kind != BarUpdateKind::Historical
             && self.request_feed.has_forming(&key);
         if include_forming || !self.request_cache.contains_key(&cache_key) {
             let requested_chart = if key.symbol() == self.request_environment.chart().symbol() {
@@ -199,12 +236,13 @@ impl<'a> HistoricalRuntime<'a> {
                 chart_timeframe,
                 merge,
                 self.current_bar_update_kind,
+                include_forming,
             );
             if !include_forming {
                 self.request_cache
                     .insert(cache_key.clone(), requested_values);
             }
-            return Ok(aligned);
+            return Ok(self.import_requested_value(&aligned));
         }
 
         let requested_values = self
@@ -213,14 +251,16 @@ impl<'a> HistoricalRuntime<'a> {
             .ok_or_else(|| RuntimeError {
                 message: "request.security requested context cache was not populated".to_owned(),
             })?;
-        Ok(align_requested_value(
+        let aligned = align_requested_value(
             requested_values,
             current_time,
             &requested_timeframe,
             chart_timeframe,
             merge,
             self.current_bar_update_kind,
-        ))
+            false,
+        );
+        Ok(self.import_requested_value(&aligned))
     }
 
     pub(crate) fn resolved_request_bars_from(
@@ -244,7 +284,7 @@ impl<'a> HistoricalRuntime<'a> {
                 });
             }
         };
-        let include_forming = self.current_bar_update_kind == BarUpdateKind::Forming;
+        let include_forming = self.current_bar_update_kind != BarUpdateKind::Historical;
         let bars = self
             .request_feed
             .resolved_from(key, provider_bars, include_forming, start);
@@ -265,7 +305,7 @@ impl<'a> HistoricalRuntime<'a> {
         requested_bars: &[Bar],
         expression: &HirExpr,
         requested_environment: RequestEnvironment,
-    ) -> Result<Vec<(i64, PineValue)>, RuntimeError> {
+    ) -> Result<Vec<(i64, RequestedValue)>, RuntimeError> {
         let dependency_initializers = request_dependency_initializers(&self.program);
         let captures = request_capture_values(
             &self.program,
@@ -301,7 +341,7 @@ impl<'a> HistoricalRuntime<'a> {
         expression: &HirExpr,
         captures: &HashMap<SymbolId, PineValue>,
         dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-    ) -> Result<PineValue, RuntimeError> {
+    ) -> Result<RequestedValue, RuntimeError> {
         let bar_index = self.bars;
         self.current_bar_update_kind = BarUpdateKind::Historical;
         self.current_bar_is_new = true;
@@ -322,7 +362,7 @@ impl<'a> HistoricalRuntime<'a> {
         )?;
 
         let value = self.eval_expr(expression)?;
-        self.reject_request_object_graph(&value)?;
+        let value = self.freeze_requested_value(&value)?;
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;
@@ -892,13 +932,24 @@ fn validate_provider_timeframe(
 }
 
 fn align_requested_value(
-    requested_values: &AppendHistory<(i64, PineValue)>,
+    requested_values: &AppendHistory<(i64, RequestedValue)>,
     current_time: i64,
     requested_timeframe: &RequestTimeframe,
     chart_timeframe: &RequestTimeframe,
     merge: RequestMergePolicy,
     update_kind: BarUpdateKind,
-) -> PineValue {
+    includes_forming: bool,
+) -> RequestedValue {
+    let mut available = requested_values.len();
+    if includes_forming && available > 0 {
+        let (open, value) = &requested_values[available - 1];
+        if merge.gaps == RequestGaps::Off && *open <= current_time {
+            return value.clone();
+        }
+        // Gapped output requires confirmation. A future-open forming bar is
+        // unavailable even when the caller supplied it ahead of chart time.
+        available -= 1;
+    }
     let by_open = requested_timeframe == chart_timeframe
         || (merge.lookahead == RequestLookahead::On && update_kind == BarUpdateKind::Historical);
     let target = if by_open {
@@ -913,7 +964,7 @@ fn align_requested_value(
             requested_bar_close(requested_values, index, requested_timeframe)
         }
     };
-    let (mut lo, mut hi) = (0, requested_values.len());
+    let (mut lo, mut hi) = (0, available);
     while lo < hi {
         let mid = lo + (hi - lo) / 2;
         let before = if merge.gaps == RequestGaps::On {
@@ -928,13 +979,13 @@ fn align_requested_value(
         }
     }
     let index = if merge.gaps == RequestGaps::On {
-        if lo == requested_values.len() || stamp(lo) != target {
-            return PineValue::Na;
+        if lo == available || stamp(lo) != target {
+            return RequestedValue::Scalar(PineValue::Na);
         }
         lo
     } else {
         let Some(index) = lo.checked_sub(1) else {
-            return PineValue::Na;
+            return RequestedValue::Scalar(PineValue::Na);
         };
         index
     };
@@ -947,7 +998,7 @@ fn request_bar_nominal_close(open_time: i64, timeframe: &RequestTimeframe) -> i6
 }
 
 fn requested_bar_close(
-    requested_values: &AppendHistory<(i64, PineValue)>,
+    requested_values: &AppendHistory<(i64, RequestedValue)>,
     index: usize,
     timeframe: &RequestTimeframe,
 ) -> i64 {

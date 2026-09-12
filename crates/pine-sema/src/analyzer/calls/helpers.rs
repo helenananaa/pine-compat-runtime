@@ -36,7 +36,19 @@ impl Analyzer {
         if self.allows_legacy_v4_udf_reference_side_effect(name) {
             return true;
         }
-        self.legacy.dialect() >= crate::PineDialect::V5 && name == "box.new"
+        self.legacy.dialect() >= crate::PineDialect::V5
+            && name.split_once('.').is_some_and(|(namespace, _)| {
+                matches!(
+                    namespace,
+                    "line" | "label" | "linefill" | "box" | "table" | "polyline"
+                )
+            })
+    }
+
+    pub(super) fn udf_output_is_forbidden(&self, name: &str) -> bool {
+        self.function_depth > 0
+            && is_output_or_declaration_builtin(name)
+            && !self.allows_udf_output_or_declaration_side_effect(name)
     }
 
     pub(super) fn allows_udf_collection_mutation_side_effect(&self, name: &str) -> bool {
@@ -44,7 +56,7 @@ impl Analyzer {
             return true;
         }
         self.legacy.dialect() >= crate::PineDialect::V5
-            && matches!(name, "array.unshift" | "array.push")
+            && (matches!(name, "array.unshift" | "array.push") || name.starts_with("matrix."))
     }
 
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {

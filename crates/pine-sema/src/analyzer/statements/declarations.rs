@@ -101,7 +101,8 @@ impl Analyzer {
                     return (PersistenceKind::None, None);
                 }
                 if value_type.kind == ValueKind::UserTypeArray
-                    && declared_user_type_array_name.is_none()
+                    && !declared_user_type_array_name
+                        .is_some_and(|name| self.is_scalar_tree_user_type(name))
                 {
                     self.unsupported("varip", VARIP_UDT_ARRAY_UNSUPPORTED_REASON, span);
                     return (PersistenceKind::None, None);
@@ -173,7 +174,7 @@ impl Analyzer {
                     std::slice::from_ref(element_type),
                 ) {
                     match inference {
-                        UserTypeArrayElementInference::SameScalarLocal(_) => {
+                        UserTypeArrayElementInference::SameLocal(_) => {
                             Some(PineType::new(Qualifier::Series, ValueKind::UserTypeArray))
                         }
                         UserTypeArrayElementInference::UnsupportedFieldType(_) => {
@@ -199,8 +200,8 @@ impl Analyzer {
                             None
                         }
                     }
-                } else if let Some(user_type) = self.imported_user_types.get(element_type) {
-                    if self.imported_user_type_has_scalar_tree_fields(user_type) {
+                } else if self.imported_user_types.contains_key(element_type) {
+                    if self.imported_user_type_array_is_supported(element_type) {
                         Some(PineType::new(Qualifier::Series, ValueKind::UserTypeArray))
                     } else {
                         self.diagnostics.push(Diagnostic::error(
@@ -232,6 +233,11 @@ impl Analyzer {
                     "bool" => Some(PineType::new(Qualifier::Series, ValueKind::BoolMatrix)),
                     "string" => Some(PineType::new(Qualifier::Series, ValueKind::StringMatrix)),
                     "color" => Some(PineType::new(Qualifier::Series, ValueKind::ColorMatrix)),
+                    name if self.local_user_type_array_is_supported(name)
+                        || self.imported_user_type_array_is_supported(name) =>
+                    {
+                        Some(PineType::new(Qualifier::Series, ValueKind::UserTypeMatrix))
+                    }
                     _ => {
                         self.diagnostics.push(Diagnostic::error(
                             "E_DECL_TYPE",
@@ -290,13 +296,11 @@ impl Analyzer {
             &self.user_types,
             std::slice::from_ref(&element_type.to_owned()),
         ) {
-            Some(UserTypeArrayElementInference::SameScalarLocal(type_name)) => Some(type_name),
+            Some(UserTypeArrayElementInference::SameLocal(type_name)) => Some(type_name),
             _ if self
                 .imported_user_types
                 .get(element_type)
-                .is_some_and(|user_type| {
-                    self.imported_user_type_has_scalar_tree_fields(user_type)
-                }) =>
+                .is_some_and(|_| self.imported_user_type_array_is_supported(element_type)) =>
             {
                 Some(element_type.to_owned())
             }
@@ -459,6 +463,16 @@ impl Analyzer {
                 self.define_symbol(name, pine_type, None)
             };
             self.bind_symbol(name, statement.span, symbol);
+            self.symbol_tuple_value_sources.insert(
+                symbol.id,
+                (
+                    SourcedExpr {
+                        expr: value.clone(),
+                        source_context_id: self.current_source_context_id(),
+                    },
+                    index,
+                ),
+            );
             self.symbol_tuple_element_types.remove(&symbol.id);
             self.symbol_tuple_user_type_arrays.remove(&symbol.id);
             if pine_type.kind != ValueKind::UserTypeArray {

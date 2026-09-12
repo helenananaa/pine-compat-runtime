@@ -101,7 +101,9 @@ fn analyzer() -> Analyzer {
         v4_v5_series_output_offset_exprs: HashSet::new(),
         non_scalar_udt_varip_symbols: HashSet::new(),
         symbol_user_type_arrays: HashMap::new(),
+        symbol_user_type_matrices: HashMap::new(),
         symbol_tuple_element_types: HashMap::new(),
+        symbol_tuple_value_sources: HashMap::new(),
         symbol_tuple_user_type_arrays: HashMap::new(),
         symbol_maps: HashMap::new(),
         const_int_symbols: HashMap::new(),
@@ -112,6 +114,7 @@ fn analyzer() -> Analyzer {
         expr_user_types: HashMap::new(),
         expr_user_type_identities: HashMap::new(),
         expr_user_type_arrays: HashMap::new(),
+        expr_user_type_matrices: HashMap::new(),
         expr_maps: HashMap::new(),
         user_method_call_results: HashSet::new(),
         expr_types: HashMap::new(),
@@ -940,9 +943,7 @@ fn classifies_same_scalar_local_user_type_array_elements() {
             &user_types,
             &["Point".to_owned(), "Point".to_owned()],
         ),
-        Some(UserTypeArrayElementInference::SameScalarLocal(
-            "Point".to_owned()
-        ))
+        Some(UserTypeArrayElementInference::SameLocal("Point".to_owned()))
     );
 }
 
@@ -984,7 +985,7 @@ fn classifies_same_scalar_tree_local_user_type_array_elements() {
             &user_types,
             &["Wrapper".to_owned(), "Wrapper".to_owned()],
         ),
-        Some(UserTypeArrayElementInference::SameScalarLocal(
+        Some(UserTypeArrayElementInference::SameLocal(
             "Wrapper".to_owned()
         ))
     );

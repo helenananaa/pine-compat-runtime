@@ -99,8 +99,13 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) first_bar_close: Option<f64>,
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) request_feed: crate::request::RequestFeed,
-    pub(crate) request_cache:
-        HashMap<RequestCacheKey, super::append_history::AppendHistory<(i64, PineValue)>>,
+    pub(crate) request_cache: HashMap<
+        RequestCacheKey,
+        super::append_history::AppendHistory<(
+            i64,
+            crate::builtins::request_values::RequestedValue,
+        )>,
+    >,
     pub(crate) request_evaluations:
         HashMap<RequestCacheKey, Arc<crate::builtins::request_incremental::RequestEvaluation<'a>>>,
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,

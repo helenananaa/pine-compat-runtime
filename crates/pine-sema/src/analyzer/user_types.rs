@@ -21,6 +21,7 @@ mod defaults;
 pub(crate) use defaults::field_default_type;
 mod flow;
 mod imported;
+mod matrices;
 mod types;
 
 use self::flow::{
@@ -80,6 +81,12 @@ impl Analyzer {
     }
     pub(crate) fn local_user_type_has_scalar_tree_fields(&self, type_name: &str) -> bool {
         self.local_user_type_scalar_tree_fields_are_supported(type_name, &mut HashSet::new())
+    }
+    pub(crate) fn local_user_type_array_is_supported(&self, type_name: &str) -> bool {
+        matches!(
+            classify_user_type_array_element_names(&self.user_types, &[type_name.to_owned()]),
+            Some(UserTypeArrayElementInference::SameLocal(_))
+        )
     }
 
     pub(crate) fn local_user_type_history_is_supported(&self, type_name: &str) -> bool {

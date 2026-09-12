@@ -963,21 +963,17 @@ fn accepts_label_getter_methods() {
 }
 
 #[test]
-fn rejects_label_side_effects_inside_functions() {
+fn accepts_label_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = label.new(bar_index, price, \"High\")\n    copy = label.copy(id)\n    label.set_xloc(copy, time, xloc.bar_time)\n    label.set_yloc(copy, yloc.abovebar)\n    label.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1055,21 +1051,17 @@ fn rejects_unsupported_drawing_object_method_syntax() {
 }
 
 #[test]
-fn rejects_drawing_object_method_side_effects_inside_functions() {
+fn accepts_drawing_object_method_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = label.new(bar_index, price, \"start\")\n    id.set_text(\"method\")\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1292,21 +1284,17 @@ fn rejects_invalid_line_new_options() {
 }
 
 #[test]
-fn rejects_line_side_effects_inside_functions() {
+fn accepts_line_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = line.new(bar_index - 1, price, bar_index, price)\n    copy = line.copy(id)\n    line.set_xy1(copy, bar_index, low)\n    line.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1648,21 +1636,17 @@ fn rejects_invalid_box_new_options() {
 }
 
 #[test]
-fn rejects_box_side_effects_inside_functions() {
+fn accepts_box_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = box.new(bar_index, price, bar_index, low)\n    copy = box.copy(id)\n    box.set_lefttop(copy, bar_index, high)\n    box.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

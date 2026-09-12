@@ -1,6 +1,7 @@
 use crate::prelude::*;
+mod modern;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional gaps/lookahead are limited to barmerge.gaps_off and barmerge.lookahead_off, while lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "same-context and provider-backed same-or-higher-timeframe scalar expressions, immutable scalar dependencies, selected scalar-array results, tuples and admitted UDF-local state are supported with explicit gaps/lookahead policies; lower-timeframe requests, nested requests, recursive UDFs, external mutable or series-persistent captures, reference graph captures and drawing/output side effects remain unsupported";
 const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided same-or-higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases, const/input/simple captures, pure scalar UDF calls, and direct UDF-local immutable dependency graphs whose nested legacy requests use the same selector and merge policy; lower-timeframe requests, control-flow-local requests, different-selector nested requests, mutable or persistent UDF state, recursive UDFs, mutable captures, and side effects remain unsupported";
 const REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON: &str = "array-returning lower-timeframe request semantics and host output shape for request.security_lower_tf are not designed in the supported request runtime";
 
@@ -119,15 +120,14 @@ impl Analyzer {
             matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
         });
         let provider_symbol = literal_provider_symbol
-            || (legacy
-                && arg_types
-                    .first()
-                    .copied()
-                    .flatten()
-                    .is_some_and(|pine_type| {
-                        pine_type.kind == ValueKind::String
-                            && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
-                    }));
+            || (arg_types
+                .first()
+                .copied()
+                .flatten()
+                .is_some_and(|pine_type| {
+                    pine_type.kind == ValueKind::String
+                        && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
+                }));
         if !same_context_symbol && !provider_symbol {
             unsupported = true;
         }
@@ -138,15 +138,14 @@ impl Analyzer {
             matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
         });
         let provider_timeframe = literal_timeframe
-            || (legacy
-                && arg_types
-                    .get(1)
-                    .copied()
-                    .flatten()
-                    .is_some_and(|pine_type| {
-                        pine_type.kind == ValueKind::String
-                            && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
-                    }));
+            || (arg_types
+                .get(1)
+                .copied()
+                .flatten()
+                .is_some_and(|pine_type| {
+                    pine_type.kind == ValueKind::String
+                        && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
+                }));
         if !same_chart_timeframe && !provider_timeframe {
             unsupported = true;
         }
@@ -163,8 +162,15 @@ impl Analyzer {
             unsupported = true;
         }
         let supported_expression = args.get(2).is_some_and(|arg| {
+            if !legacy {
+                return self.modern_request_expression_supported(&arg.value);
+            }
             if same_context_request {
-                self.request_expression_is_same_context_value(&arg.value)
+                if legacy {
+                    self.request_expression_is_same_context_value(&arg.value)
+                } else {
+                    self.request_expression_is_modern_same_context_value(&arg.value)
+                }
             } else if expression_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple) {
                 if legacy {
                     legacy_request_context.is_some_and(|request_context| {
@@ -185,7 +191,7 @@ impl Analyzer {
                         )
                     })
                 } else {
-                    self.request_expression_is_provider_scalar(&arg.value)
+                    self.request_expression_is_provider_value(&arg.value)
                 }
             } else {
                 false
@@ -226,13 +232,19 @@ impl Analyzer {
         let mut supported = true;
         let signature = pine_builtins::get_phase_1_builtin("request.security")
             .expect("request.security signature must exist");
-        self.validate_label_string_arg(signature, args, 3, "gaps", &["barmerge.gaps_off"]);
+        self.validate_label_string_arg(
+            signature,
+            args,
+            3,
+            "gaps",
+            &["barmerge.gaps_off", "barmerge.gaps_on"],
+        );
         self.validate_label_string_arg(
             signature,
             args,
             4,
             "lookahead",
-            &["barmerge.lookahead_off"],
+            &["barmerge.lookahead_off", "barmerge.lookahead_on"],
         );
 
         for (index, arg) in args.iter().enumerate().skip(3) {
@@ -260,7 +272,7 @@ impl Analyzer {
             } else {
                 "barmerge.lookahead_off"
             };
-            if value != allowed_value {
+            if value != allowed_value && value != allowed_value.replace("_off", "_on") {
                 supported = false;
             }
         }
@@ -340,7 +352,7 @@ impl Analyzer {
         match &expr.kind {
             ExprKind::Tuple(items) => items
                 .iter()
-                .all(|item| self.request_expression_is_provider_scalar(item)),
+                .all(|item| self.request_expression_is_provider_value(item)),
             ExprKind::Call { callee, args } => {
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;
@@ -840,6 +852,55 @@ impl Analyzer {
                 .map_or(name, str::to_owned),
         )
     }
+
+    fn request_expression_is_provider_value(&self, expr: &Expr) -> bool {
+        self.request_expression_is_provider_scalar(expr)
+            || self.request_expression_is_provider_array(expr)
+    }
+
+    fn request_expression_is_modern_same_context_value(&self, expr: &Expr) -> bool {
+        match &expr.kind {
+            ExprKind::Tuple(items) => items
+                .iter()
+                .all(|item| self.request_expression_is_modern_same_context_value(item)),
+            _ => {
+                self.request_expression_is_provider_array(expr)
+                    || self.request_expression_is_same_context_value(expr)
+            }
+        }
+    }
+
+    fn request_expression_is_provider_array(&self, expr: &Expr) -> bool {
+        if !self
+            .type_of_expr_with_params(expr, &HashMap::new())
+            .is_some_and(|ty| crate::types::is_scalar_array_kind(ty.kind))
+        {
+            return false;
+        }
+        let ExprKind::Call { callee, args } = &expr.without_groups().kind else {
+            return false;
+        };
+        let Some(name) = self.request_expression_call_name(callee) else {
+            return false;
+        };
+        matches!(
+            name.as_str(),
+            "array.from"
+                | "array.new_float"
+                | "array.new_int"
+                | "array.new_bool"
+                | "array.new_string"
+                | "array.new_color"
+                | "array.new<float>"
+                | "array.new<int>"
+                | "array.new<bool>"
+                | "array.new<string>"
+                | "array.new<color>"
+                | "ta.pivot_point_levels"
+        ) && args
+            .iter()
+            .all(|arg| self.request_expression_is_provider_scalar(&arg.value))
+    }
 }
 
 fn series_request_type(pine_type: PineType) -> PineType {
@@ -859,11 +920,15 @@ fn is_request_scalar_type(pine_type: PineType) -> bool {
 }
 
 fn is_request_same_context_type(pine_type: PineType) -> bool {
-    is_request_scalar_type(pine_type) || pine_type.kind == ValueKind::Tuple
+    is_request_scalar_type(pine_type)
+        || pine_type.kind == ValueKind::Tuple
+        || crate::types::is_scalar_array_kind(pine_type.kind)
 }
 
 fn is_request_provider_type(pine_type: PineType) -> bool {
-    is_request_scalar_type(pine_type) || pine_type.kind == ValueKind::Tuple
+    is_request_scalar_type(pine_type)
+        || pine_type.kind == ValueKind::Tuple
+        || crate::types::is_scalar_array_kind(pine_type.kind)
 }
 
 fn request_tuple_call_is_supported(name: &str) -> bool {
@@ -891,6 +956,7 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "close"
             | "volume"
             | "time"
+            | "bar_index"
             | "barstate.isfirst"
             | "barstate.islast"
             | "barstate.islastconfirmedhistory"

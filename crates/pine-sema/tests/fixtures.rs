@@ -73,7 +73,7 @@ fn reports_unsupported_request_math_calls_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_request_math_calls.pine",
         "request.security",
-        "same-context request.security",
+        "drawing/output side effects",
     );
 }
 
@@ -88,12 +88,8 @@ fn accepts_supported_request_security_time_close_fixture() {
 }
 
 #[test]
-fn reports_unsupported_request_security_named_sma_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_request_security_named_sma.pine",
-        "request.security",
-        "same-context request.security",
-    );
+fn accepts_formerly_unsupported_request_security_named_sma_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_request_security_named_sma.pine");
 }
 
 #[test]
@@ -173,32 +169,8 @@ fn reports_unsupported_math_random_series_seed_fixture() {
 }
 
 #[test]
-fn reports_unsupported_request_merge_options_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_request_merge_options.pine",
-        "request.security",
-        "optional gaps/lookahead",
-    );
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_request_merge_options_named_const.pine",
-        "request.security",
-        "optional gaps/lookahead",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_request_merge_options.pine",
-        &["barmerge.gaps_off", "barmerge.lookahead_off"],
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_request_merge_options_named_const.pine",
-        &["barmerge.gaps_off", "barmerge.lookahead_off"],
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_request_security_merge_qualifier.pine",
-        &[
-            "`request.security` argument `gaps` expects simple string, got series string",
-            "`request.security` argument `lookahead` expects simple string, got series string",
-        ],
-    );
+fn accepts_formerly_unsupported_request_merge_options_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_request_merge_options.pine");
 }
 
 #[test]
@@ -5969,7 +5941,7 @@ fn reports_request_strategy_state_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_request_strategy_state.pine",
         "request.security",
-        "same-context request.security",
+        "drawing/output side effects",
     );
 }
 
@@ -8626,17 +8598,6 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
         &[
             "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
             "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
-            "`function_side_effect` is not supported: collection mutation via `matrix.set` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.fill` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.reverse` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.reshape` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.swap_rows` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.swap_columns` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.remove_row` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.remove_col` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.add_row` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.add_col` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.sort` is not supported inside user-defined functions",
             "`matrix.get` argument `row` expects simple int, got const string",
             "`matrix.get` argument `column` expects simple int, got const string",
             "`matrix.set` argument `row` expects simple int, got const string",
@@ -8673,8 +8634,8 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`matrix.swap_columns` expects at least 3 argument(s), got 2",
             "`matrix.remove_row` expects at least 2 argument(s), got 1",
             "`matrix.remove_col` expects at least 2 argument(s), got 1",
-            "`matrix.add_row` expects at least 3 argument(s), got 2",
-            "`matrix.add_col` expects at least 3 argument(s), got 2",
+            "`matrix.add_row` is missing argument `array_id`",
+            "`matrix.add_col` is missing argument `array_id`",
             "`matrix.sort` expects at most 3 argument(s), got 4",
             "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.set()`, `.fill()`, `.reverse()`, `.reshape()`, `.add_row()`, `.add_col()`, numeric-only `.sort()`, `.swap_rows()`, `.swap_columns()`, `.remove_row()`, `.remove_col()`, `.copy()`, `.diff()`, `.eigenvectors()`, `.inv()`, `.kron()`, `.mult()`, `.pinv()`, `.pow()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
             "`matrix.transpose` argument `id` expects matrix, got simple array<float>",
@@ -8787,7 +8748,7 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.set()`, `.fill()`, `.reverse()`, `.reshape()`, `.add_row()`, `.add_col()`, numeric-only `.sort()`, `.swap_rows()`, `.swap_columns()`, `.remove_row()`, `.remove_col()`, `.copy()`, `.diff()`, `.eigenvectors()`, `.inv()`, `.kron()`, `.mult()`, `.pinv()`, `.pow()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
         ],
     );
-    assert_diagnostic_count(path, 161);
+    assert_diagnostic_count(path, 150);
 }
 
 #[test]
@@ -8835,10 +8796,7 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.fill` expects at most 4 argument(s), got 5",
             "`array.from` expects one scalar-tree UDT identity, got mixed UDT identities",
             "`array.concat` argument `id2` expects UDT array `First`, got `Second`",
-            "`array.new<Nested>` does not support UDT arrays with non-scalar fields",
-            "`array.size` is not supported: direct UDT-array call-result methods require a known same-local or same-imported element identity",
             "`array.new<Missing>` requires a local or imported scalar-tree UDT",
-            "`array.size` is not supported: direct UDT-array call-result methods require a known same-local or same-imported element identity",
             "`array.from` expects one supported array element kind, got const na and const na",
             "`array.abs` argument `id` expects numeric array, got simple array<UDT>",
             "`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`",
@@ -9020,8 +8978,8 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`function_side_effect` is not supported: collection mutation via `array.sort` is not supported inside user-defined functions",
         ],
     );
-    // array.copy(values).push(...) is now admitted; all other diagnostics remain.
-    assert_diagnostic_count(path, 253);
+    // Call-result push and drawing-bearing UDT array construction are admitted.
+    assert_diagnostic_count(path, 251);
 }
 
 #[test]
@@ -15616,46 +15574,38 @@ fn reports_unsupported_imported_udt_array_new_method_return_qualifier_fixture() 
 }
 
 #[test]
-fn reports_unsupported_imported_udt_array_new_non_scalar_fixture() {
-    assert_import_diagnostic_messages_with_library(
+fn accepts_drawing_bearing_imported_udt_array_new_non_scalar_fixture() {
+    assert_import_ok_fixture_with_library(
         "tests/fixtures/sema/unsupported_imported_udt_array_new_non_scalar.pine",
         "user/non_scalar_udt/1",
         "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
-        &["`array.new<lib.Marker>` requires a local or imported scalar-tree UDT"],
     );
 }
 
 #[test]
-fn reports_unsupported_imported_udt_array_from_non_scalar_fixture() {
-    assert_import_diagnostic_messages_with_library(
+fn accepts_drawing_bearing_imported_udt_array_from_non_scalar_fixture() {
+    assert_import_ok_fixture_with_library(
         "tests/fixtures/sema/unsupported_imported_udt_array_from_non_scalar.pine",
         "user/non_scalar_udt/1",
         "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
-        &["`array.from` expects supported scalar-tree UDT values"],
     );
 }
 
 #[test]
-fn reports_unsupported_imported_udt_array_decl_non_scalar_fixture() {
-    assert_import_diagnostic_messages_with_library(
+fn accepts_drawing_bearing_imported_udt_array_decl_non_scalar_fixture() {
+    assert_import_ok_fixture_with_library(
         "tests/fixtures/sema/unsupported_imported_udt_array_decl_non_scalar.pine",
         "user/non_scalar_udt/1",
         "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
-        &[
-            "typed declaration `array<lib.Marker>` does not support imported UDT arrays with non-scalar, unresolved, or recursive fields",
-        ],
     );
 }
 
 #[test]
-fn reports_unsupported_imported_udt_array_alias_decl_non_scalar_fixture() {
-    assert_import_diagnostic_messages_with_library(
+fn accepts_drawing_bearing_imported_udt_array_alias_decl_non_scalar_fixture() {
+    assert_import_ok_fixture_with_library(
         "tests/fixtures/sema/unsupported_imported_udt_array_alias_decl_non_scalar.pine",
         "user/non_scalar_udt/1",
         "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
-        &[
-            "typed declaration `array<lib.Marker>` does not support imported UDT arrays with non-scalar, unresolved, or recursive fields",
-        ],
     );
 }
 
@@ -15666,7 +15616,7 @@ fn reports_unsupported_imported_udt_array_varip_decl_non_scalar_fixture() {
         "user/non_scalar_udt/1",
         "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
         &[
-            "typed declaration `array<lib.Marker>` does not support imported UDT arrays with non-scalar, unresolved, or recursive fields",
+            "`varip` is not supported: varip UDT arrays require same-local or same-imported scalar-tree element identity so the array backing store and UDT metadata can be handed off between forming updates",
         ],
     );
 }
@@ -15678,7 +15628,7 @@ fn reports_unsupported_imported_udt_array_varip_alias_decl_non_scalar_fixture() 
         "user/non_scalar_udt/1",
         "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
         &[
-            "typed declaration `array<lib.Marker>` does not support imported UDT arrays with non-scalar, unresolved, or recursive fields",
+            "`varip` is not supported: varip UDT arrays require same-local or same-imported scalar-tree element identity so the array backing store and UDT metadata can be handed off between forming updates",
         ],
     );
 }
@@ -17687,14 +17637,8 @@ fn reports_unsupported_matrix_concat_method_receiver_fixture() {
 }
 
 #[test]
-fn reports_unsupported_matrix_concat_udf_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_matrix_concat_udf.pine",
-        &[
-            "`function_side_effect` is not supported: collection mutation via `matrix.concat` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `matrix.concat` is not supported inside user-defined functions",
-        ],
-    );
+fn accepts_formerly_unsupported_matrix_concat_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_concat_udf.pine");
 }
 
 #[test]
@@ -20498,201 +20442,113 @@ fn reports_unsupported_matrix_submatrix_method_to_column_fixture() {
 }
 
 #[test]
-fn reports_unsupported_matrix_set_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_set_udf.pine",
-        "function_side_effect",
-        "collection mutation via `matrix.set`",
-    );
+fn accepts_formerly_unsupported_matrix_set_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_set_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_set_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_set_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via `matrix.set`",
-    );
+fn accepts_formerly_unsupported_matrix_set_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_set_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_fill_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_fill_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_fill_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_fill_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_fill_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_fill_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_fill_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_fill_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_reshape_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_reshape_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_reshape_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_reshape_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_reshape_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_reshape_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_reshape_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_reshape_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_reverse_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_reverse_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_reverse_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_reverse_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_reverse_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_reverse_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_reverse_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_reverse_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_add_row_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_add_row_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_add_row_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_add_row_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_add_row_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_add_row_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_add_row_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_add_row_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_add_col_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_add_col_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_add_col_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_add_col_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_add_col_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_add_col_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_add_col_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_add_col_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_remove_row_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_remove_row_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_remove_row_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_remove_row_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_remove_row_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_remove_row_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_remove_row_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_remove_row_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_remove_col_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_remove_col_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_remove_col_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_remove_col_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_remove_col_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_remove_col_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_remove_col_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_remove_col_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_swap_rows_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_swap_rows_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_swap_rows_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_swap_rows_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_swap_rows_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_swap_rows_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_swap_rows_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_swap_rows_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_swap_columns_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_swap_columns_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_swap_columns_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_swap_columns_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_swap_columns_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_swap_columns_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_swap_columns_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_swap_columns_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_sort_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_sort_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_sort_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_sort_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_matrix_sort_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_sort_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via",
-    );
+fn accepts_formerly_unsupported_matrix_sort_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_matrix_sort_method_udf.pine");
 }
 
 #[test]
@@ -20854,12 +20710,8 @@ fn reports_unsupported_box_call_result_set_left_fixture() {
 }
 
 #[test]
-fn reports_unsupported_udf_box_call_result_set_right_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_udf_box_call_result_set_right.pine",
-        "function_side_effect",
-        "inside user-defined functions",
-    );
+fn accepts_formerly_unsupported_udf_box_call_result_set_right_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_udf_box_call_result_set_right.pine");
 }
 
 #[test]
@@ -20872,12 +20724,8 @@ fn reports_unsupported_input_function_side_effect_fixture() {
 }
 
 #[test]
-fn reports_unsupported_drawing_function_side_effect_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_drawing_function_side_effect.pine",
-        "function_side_effect",
-        "inside user-defined functions",
-    );
+fn accepts_formerly_unsupported_drawing_function_side_effect_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_drawing_function_side_effect.pine");
 }
 
 #[test]

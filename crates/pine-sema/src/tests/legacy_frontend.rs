@@ -428,14 +428,11 @@ fn legacy_security_accepts_pure_udfs_and_keeps_mutable_state_fail_closed() {
         "//@version=6\nindicator(\"modern UDF request\")\ncalculate() => ta.sma(close, 2)\nplot(request.security(\"NYSE:IBM\", \"5\", calculate()))\n",
     );
     assert!(
-        modern_udf
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|item| item.feature == "request.security"),
+        modern_udf.diagnostics.is_empty(),
         "{:?}",
         modern_udf.diagnostics
     );
+    assert!(modern_udf.hir.is_some());
 }
 
 #[test]
@@ -4061,18 +4058,12 @@ fn v4_function_final_statements_and_reference_side_effects_are_supported() {
                     1,
                 ),
         );
-        assert_eq!(
-            modern
-                .compatibility
-                .unsupported
-                .iter()
-                .filter(|feature| feature.feature == "function_side_effect")
-                .count(),
-            3,
+        assert!(
+            modern.diagnostics.is_empty(),
             "v{version}: {:?}",
-            modern.compatibility.unsupported
+            modern.diagnostics
         );
-        assert!(modern.hir.is_none(), "v{version}");
+        assert!(modern.hir.is_some(), "v{version}");
     }
 
     let focused_boundary = analyze_production(include_str!(

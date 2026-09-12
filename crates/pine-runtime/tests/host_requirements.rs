@@ -141,8 +141,8 @@ fn legacy_runtime_request_arguments_are_not_mislabeled_as_literal_defaults() {
 #[test]
 fn discovery_does_not_expand_modern_request_admission() {
     for expr in [
-        "request.security(s, \"60\", close)",
-        "request.security(\"\", \"\", close)",
+        "request.security(s, \"60\", math.random(0, 1, 7))",
+        "request.security_lower_tf(s, \"30S\", close)",
     ] {
         let source = format!(
             "//@version=6\nindicator(\"boundary\")\ns=input.symbol(\"OTHER\")\nplot({expr})\n"
@@ -156,6 +156,17 @@ fn discovery_does_not_expand_modern_request_admission() {
                 .any(|d| d.code == "E_UNSUPPORTED_FEATURE")
         );
     }
+}
+
+#[test]
+fn modern_input_request_selector_remains_a_host_obligation() {
+    let hir = program(
+        "//@version=6\nindicator(\"selector\")\ns=input.symbol(\"OTHER\")\nplot(request.security(s,\"60\",close))\n",
+    );
+    assert_eq!(
+        host_requirements(&hir).requests[0].symbol,
+        RequestArgument::RuntimeExpression
+    );
 }
 
 #[test]

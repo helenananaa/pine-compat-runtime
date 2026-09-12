@@ -1,0 +1,6 @@
+//@version=6
+indicator("Historical boundary guard")
+if barstate.islastconfirmedhistory and bar_index < 2
+    runtime.error("Historical initialization ended too early")
+plot(close)
+plot(barstate.islastconfirmedhistory ? 1 : 0)

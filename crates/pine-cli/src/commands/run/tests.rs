@@ -1,6 +1,25 @@
 use super::*;
 
 #[test]
+fn realtime_cli_seeds_the_known_historical_boundary() {
+    let options = parse_options(&[
+        workspace_path("tests/fixtures/runtime/history_boundary_guard.pine"),
+        "--bars".to_owned(),
+        workspace_path("tests/fixtures/runtime/bars.csv"),
+    ])
+    .unwrap();
+    let batch = run_json_with_options(&options).unwrap();
+    let realtime = run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory).unwrap();
+    assert_eq!(batch, realtime);
+    let forming = run_json_with_options_in_mode(&options, ExecutionMode::RealtimeForming).unwrap();
+    let forming: serde_json::Value = serde_json::from_str(&forming).unwrap();
+    assert_eq!(
+        forming["plots"][1]["values"],
+        serde_json::json!([0, 0, 1, 0])
+    );
+}
+
+#[test]
 fn candidate_macd_batch_incremental_and_realtime_history_match() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/macd.pine"),

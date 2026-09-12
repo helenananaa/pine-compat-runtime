@@ -221,7 +221,7 @@ fn wasm_replica_gap_recovery_matches_session_snapshot() {
 }
 
 #[test]
-fn wasm_request_forming_does_not_leak_into_confirmed_chart() {
+fn wasm_request_developing_values_are_realtime_only() {
     let source = r#"//@version=6
 indicator("request stream")
 plot(request.security("NYSE:IBM", timeframe.period, close))
@@ -264,7 +264,17 @@ plot(request.security("NYSE:IBM", timeframe.period, close))
     );
     session
         .apply_confirmed(&bar_json(120_000, 7.0))
-        .expect("chart confirm ignores unconfirmed request bar");
+        .expect("realtime chart confirmation retains the available developing request value");
+    assert_eq!(
+        plot_values(&session.result()),
+        serde_json::json!([20, 99, 50])
+    );
+    session
+        .replay_internal(
+            &bars_csv(&[bar(0, 5.0), bar(60_000, 6.0), bar(120_000, 7.0)]),
+            None,
+        )
+        .expect("historical replay excludes unconfirmed requested bars");
     assert_eq!(
         plot_values(&session.result()),
         serde_json::json!([20, 99, 99])

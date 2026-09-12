@@ -250,7 +250,7 @@ const MATRIX_ADD_ROW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "row",
         accepts: Accepts::SimpleInt,
-        optional: false,
+        optional: true,
     },
     BuiltinParam {
         name: "array_id",
@@ -268,7 +268,7 @@ const MATRIX_ADD_COL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "column",
         accepts: Accepts::SimpleInt,
-        optional: false,
+        optional: true,
     },
     BuiltinParam {
         name: "array_id",
@@ -549,14 +549,14 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "matrix.remove_row",
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_REMOVE_ROW_PARAMS,
-        returns: ReturnSpec::Fixed(VOID),
+        returns: ReturnSpec::MatrixArray(0),
         variadic: false,
     },
     BuiltinSignature {
         name: "matrix.remove_col",
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_REMOVE_COL_PARAMS,
-        returns: ReturnSpec::Fixed(VOID),
+        returns: ReturnSpec::MatrixArray(0),
         variadic: false,
     },
     BuiltinSignature {

@@ -552,59 +552,27 @@ impl Analyzer {
     }
 
     fn method_param_type(&mut self, name: &str, span: Span) -> Option<(PineType, Option<String>)> {
-        let kind =
-            match name {
-                _ if name.starts_with("array<") && name.ends_with('>') => {
-                    let element_type = &name["array<".len()..name.len() - 1];
-                    if let Some(kind) = array_kind_from_element_type_name(element_type) {
-                        return Some((PineType::new(Qualifier::Series, kind), None));
-                    } else if matches!(
-                        classify_user_type_array_element_names(
-                            &self.user_types,
-                            &[element_type.to_owned()]
-                        ),
-                        Some(UserTypeArrayElementInference::SameScalarLocal(_))
-                    ) || self.imported_user_types.get(element_type).is_some_and(
-                        |user_type| self.imported_user_type_has_scalar_tree_fields(user_type),
-                    ) {
-                        return Some((
-                            PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
-                            Some(element_type.to_owned()),
-                        ));
-                    } else {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_METHOD_PARAM",
-                            format!("unsupported or unknown method parameter type `{name}`"),
-                            span,
-                        ));
-                        return None;
-                    }
-                }
-                "int" => ValueKind::Int,
-                "float" => ValueKind::Float,
-                "bool" => ValueKind::Bool,
-                "string" => ValueKind::String,
-                "color" => ValueKind::Color,
-                "label" => ValueKind::Label,
-                "line" => ValueKind::Line,
-                "linefill" => ValueKind::LineFill,
-                "polyline" => ValueKind::Polyline,
-                "box" => ValueKind::Box,
-                "table" => ValueKind::Table,
-                "chart.point" => ValueKind::ChartPoint,
-                _ if self.user_types.contains_key(name) => {
+        let kind = match name {
+            _ if name.starts_with("array<") && name.ends_with('>') => {
+                let element_type = &name["array<".len()..name.len() - 1];
+                if let Some(kind) = array_kind_from_element_type_name(element_type) {
+                    return Some((PineType::new(Qualifier::Series, kind), None));
+                } else if matches!(
+                    classify_user_type_array_element_names(
+                        &self.user_types,
+                        &[element_type.to_owned()]
+                    ),
+                    Some(UserTypeArrayElementInference::SameLocal(_))
+                ) || self
+                    .imported_user_types
+                    .get(element_type)
+                    .is_some_and(|_| self.imported_user_type_array_is_supported(element_type))
+                {
                     return Some((
-                        PineType::new(Qualifier::Series, ValueKind::UserType),
-                        Some(name.to_owned()),
+                        PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
+                        Some(element_type.to_owned()),
                     ));
-                }
-                _ if self.imported_user_types.contains_key(name) => {
-                    return Some((
-                        PineType::new(Qualifier::Series, ValueKind::UserType),
-                        Some(name.to_owned()),
-                    ));
-                }
-                _ => {
+                } else {
                     self.diagnostics.push(Diagnostic::error(
                         "E_METHOD_PARAM",
                         format!("unsupported or unknown method parameter type `{name}`"),
@@ -612,7 +580,40 @@ impl Analyzer {
                     ));
                     return None;
                 }
-            };
+            }
+            "int" => ValueKind::Int,
+            "float" => ValueKind::Float,
+            "bool" => ValueKind::Bool,
+            "string" => ValueKind::String,
+            "color" => ValueKind::Color,
+            "label" => ValueKind::Label,
+            "line" => ValueKind::Line,
+            "linefill" => ValueKind::LineFill,
+            "polyline" => ValueKind::Polyline,
+            "box" => ValueKind::Box,
+            "table" => ValueKind::Table,
+            "chart.point" => ValueKind::ChartPoint,
+            _ if self.user_types.contains_key(name) => {
+                return Some((
+                    PineType::new(Qualifier::Series, ValueKind::UserType),
+                    Some(name.to_owned()),
+                ));
+            }
+            _ if self.imported_user_types.contains_key(name) => {
+                return Some((
+                    PineType::new(Qualifier::Series, ValueKind::UserType),
+                    Some(name.to_owned()),
+                ));
+            }
+            _ => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_METHOD_PARAM",
+                    format!("unsupported or unknown method parameter type `{name}`"),
+                    span,
+                ));
+                return None;
+            }
+        };
         Some((PineType::new(Qualifier::Series, kind), None))
     }
 }

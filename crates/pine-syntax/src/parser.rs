@@ -884,6 +884,8 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                         method.as_str(),
                         "row"
                             | "col"
+                            | "remove_row"
+                            | "remove_col"
                             | "eigenvalues"
                             | "slice"
                             | "concat"
@@ -980,7 +982,10 @@ fn is_builtin_array_result_qualified_callee(namespace: &str, member: &str) -> bo
             (namespace, member),
             ("str", "split")
                 | ("ta", "pivot_point_levels")
-                | ("matrix", "eigenvalues" | "row" | "col")
+                | (
+                    "matrix",
+                    "eigenvalues" | "row" | "col" | "remove_row" | "remove_col"
+                )
                 | ("map", "keys" | "values")
         )
 }

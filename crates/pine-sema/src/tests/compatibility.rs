@@ -5,6 +5,29 @@ use pine_builtins::{Accepts, PHASE_1_BUILTINS, ReturnSpec};
 use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
+fn modern_requests_reject_unsafe_external_state_and_object_captures() {
+    for source in [
+        "var float saved=close\nplot(request.security(\"B\",\"5\",saved))",
+        "value=close\nvalue:=open\nplot(request.security(\"B\",\"5\",value))",
+        "a=array.from(close)\nb=request.security(\"B\",\"5\",a)",
+        "draw()=>label.new(bar_index,close)\na=request.security(\"B\",\"5\",draw())",
+    ] {
+        let analysis = analyze(&format!(
+            "//@version=6\nindicator(\"boundary\")\n{source}\n"
+        ));
+        assert!(analysis.hir.is_none(), "{source}");
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|d| d.code == "E_UNSUPPORTED_FEATURE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
 fn reports_supported_phase_1_calls() {
     let analysis = analyze("plot(ta.sma(close, 20))\n");
 
@@ -113,6 +136,8 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         "matrix.col",
         "matrix.eigenvalues",
         "matrix.mult",
+        "matrix.remove_col",
+        "matrix.remove_row",
         "matrix.row",
         "str.split",
         "ta.pivot_point_levels",
@@ -783,31 +808,33 @@ fn accepts_request_security_named_time_function_arguments() {
 }
 
 #[test]
-fn rejects_request_security_named_sma_arguments() {
+fn accepts_request_security_named_sma_arguments() {
     let analysis = analyze(
         "plot(request.security(syminfo.tickerid, timeframe.period, ta.sma(source=close, length=14)))\n",
     );
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_modern_provider_request_security_time_alias() {
+fn accepts_modern_provider_request_security_time_alias() {
     let analysis = analyze(
         "day_open = time(\"D\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, day_open))\n",
     );
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3286,57 +3313,59 @@ fn rejects_provider_request_security_unsupported_call() {
 }
 
 #[test]
-fn rejects_request_security_non_default_merge_args() {
+fn accepts_request_security_non_default_merge_args() {
     let analysis = analyze(
         "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_on))\nplot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on))\n",
     );
-    let codes = diagnostic_codes(&analysis);
-
-    assert!(codes.contains(&"E_CALL_ARG_VALUE"), "{codes:?}");
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "request.security")
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_provider_request_security_tuple_literal_with_local_alias_expression() {
+fn accepts_provider_request_security_tuple_literal_with_local_alias_expression() {
     let analysis = analyze(
         "src = close\n[first, second] = request.security(\"NYSE:IBM\", timeframe.period, [src, open])\n",
     );
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_provider_request_security_local_variable_expression() {
+fn accepts_provider_request_security_local_variable_expression() {
     let analysis =
         analyze("src = close\nx = request.security(\"NYSE:IBM\", timeframe.period, src)\n");
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_higher_timeframe_request_security_local_variable_expression() {
+fn accepts_higher_timeframe_request_security_local_variable_expression() {
     let analysis = analyze("src = close\nx = request.security(\"NYSE:IBM\", \"5\", src)\n");
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3352,7 +3381,7 @@ fn rejects_request_security_side_effect_expression() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("side-effecting requested expressions")
+            .contains("drawing/output side effects")
     );
 }
 
@@ -3370,7 +3399,7 @@ fn rejects_request_security_alertcondition_side_effect_expression() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("side-effecting requested expressions")
+            .contains("drawing/output side effects")
     );
 }
 
@@ -3387,7 +3416,7 @@ fn rejects_request_security_alert_side_effect_expression() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("side-effecting requested expressions")
+            .contains("drawing/output side effects")
     );
 }
 

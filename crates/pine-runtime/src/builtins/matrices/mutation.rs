@@ -39,11 +39,17 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
-        let row = matrix_insert_index_value("row", self.eval_expr(&args[1].value)?)?;
+        let row = crate::builtins::args::call_arg_expr(args, 1, "row")
+            .map(|expr| {
+                self.eval_expr(expr)
+                    .and_then(|value| matrix_insert_index_value("row", value))
+            })
+            .transpose()?;
         let array_id = self.eval_expr(&args[2].value)?;
         let PineValue::Matrix(id) = id else {
             return Ok(PineValue::Void);
         };
+        let row = row.unwrap_or_else(|| self.matrix_shape(id).map_or(0, |(rows, _)| rows as i64));
         let PineValue::Array(array_id) = array_id else {
             return Ok(PineValue::Void);
         };
@@ -59,7 +65,12 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
-        let column = matrix_insert_index_value("column", self.eval_expr(&args[1].value)?)?;
+        let column = crate::builtins::args::call_arg_expr(args, 1, "column")
+            .map(|expr| {
+                self.eval_expr(expr)
+                    .and_then(|value| matrix_insert_index_value("column", value))
+            })
+            .transpose()?;
         let array_id = self.eval_expr(&args[2].value)?;
         let PineValue::Matrix(id) = id else {
             return Ok(PineValue::Void);
@@ -70,6 +81,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(values) = self.array_values_clone(array_id)? else {
             return Ok(PineValue::Void);
         };
+        let column = column.unwrap_or_else(|| {
+            self.matrix_shape(id)
+                .map_or(0, |(_, columns)| columns as i64)
+        });
         self.matrix_add_col(id, column, values)?;
         Ok(PineValue::Void)
     }
@@ -83,8 +98,14 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Matrix(id) = id else {
             return Ok(PineValue::Void);
         };
+        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+            return Ok(PineValue::Na);
+        };
+        let Some(values) = self.matrix_row_values(id, row)? else {
+            return Ok(PineValue::Na);
+        };
         self.matrix_remove_row(id, row)?;
-        Ok(PineValue::Void)
+        self.new_matrix_result_array(kind, values)
     }
 
     pub(crate) fn eval_matrix_remove_col(
@@ -96,8 +117,14 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Matrix(id) = id else {
             return Ok(PineValue::Void);
         };
+        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+            return Ok(PineValue::Na);
+        };
+        let Some(values) = self.matrix_col_values(id, column)? else {
+            return Ok(PineValue::Na);
+        };
         self.matrix_remove_col(id, column)?;
-        Ok(PineValue::Void)
+        self.new_matrix_result_array(kind, values)
     }
 
     pub(crate) fn eval_matrix_swap_rows(
@@ -242,7 +269,12 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(());
         };
         let row = matrix_insert_index("row", row, matrix.rows)?;
-        if values.len() != matrix.columns {
+        let columns = if matrix.rows == 0 && matrix.columns == 0 {
+            values.len()
+        } else {
+            matrix.columns
+        };
+        if values.len() != columns {
             return Err(RuntimeError {
                 message: format!(
                     "matrix add_row array size {} must match column count {}",
@@ -252,7 +284,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
         let new_cells = (matrix.rows + 1)
-            .checked_mul(matrix.columns)
+            .checked_mul(columns)
             .ok_or_else(|| RuntimeError {
                 message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
             })?;
@@ -261,7 +293,7 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
             });
         }
-        let offset = row * matrix.columns;
+        let offset = row * columns;
         let kind = matrix.kind;
         matrix.values.splice(
             offset..offset,
@@ -270,6 +302,7 @@ impl<'a> HistoricalRuntime<'a> {
                 .map(|value| eval_matrix_value_for_kind(kind, value)),
         );
         matrix.rows += 1;
+        matrix.columns = columns;
         Ok(())
     }
 
@@ -283,7 +316,12 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(());
         };
         let column = matrix_insert_index("column", column, matrix.columns)?;
-        if values.len() != matrix.rows {
+        let rows = if matrix.rows == 0 && matrix.columns == 0 {
+            values.len()
+        } else {
+            matrix.rows
+        };
+        if values.len() != rows {
             return Err(RuntimeError {
                 message: format!(
                     "matrix add_col array size {} must match row count {}",
@@ -293,12 +331,9 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
         let new_columns = matrix.columns + 1;
-        let new_cells = matrix
-            .rows
-            .checked_mul(new_columns)
-            .ok_or_else(|| RuntimeError {
-                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
-            })?;
+        let new_cells = rows.checked_mul(new_columns).ok_or_else(|| RuntimeError {
+            message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
+        })?;
         if new_cells > MAX_MATRIX_CELLS {
             return Err(RuntimeError {
                 message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
@@ -310,7 +345,7 @@ impl<'a> HistoricalRuntime<'a> {
             .into_iter()
             .map(|value| eval_matrix_value_for_kind(kind, value));
         let mut next_values = Vec::with_capacity(new_cells);
-        for row in 0..matrix.rows {
+        for row in 0..rows {
             let start = row * matrix.columns;
             let insert_offset = start + column;
             next_values.extend_from_slice(&matrix.values[start..insert_offset]);
@@ -318,6 +353,7 @@ impl<'a> HistoricalRuntime<'a> {
             next_values.extend_from_slice(&matrix.values[insert_offset..start + matrix.columns]);
         }
         matrix.columns = new_columns;
+        matrix.rows = rows;
         matrix.values = next_values;
         Ok(())
     }

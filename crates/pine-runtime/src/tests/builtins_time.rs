@@ -535,16 +535,16 @@ plot(timeframe.in_seconds("12M"))
 plot(na(timeframe.in_seconds(na)) ? 1 : 0)
 plot(timeframe.from_seconds(60) == "1" ? 1 : 0)
 plot(timeframe.from_seconds(3600) == "60" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("1440")) == "D" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("7D")) == "W" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("30D")) == "M" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("1440")) == "1D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("7D")) == "1W" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("30D")) == "30D" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("45S")) == "45S" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("D")) == "D" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("W")) == "W" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("D")) == "1D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("W")) == "1W" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("2W")) == "2W" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("M")) == "M" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("M")) == "1M" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("3M")) == "3M" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("365D")) == "365D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("365D")) == "12M" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("52W")) == "52W" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("12M")) == "12M" ? 1 : 0)
 plot(na(timeframe.from_seconds(na)) ? 1 : 0)
@@ -577,11 +577,11 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1_209_600.0, 1_209_600.0]);
-    assert_values_close(&result.plots[12].values, &[7_776_000.0, 7_776_000.0]);
+    assert_values_close(&result.plots[12].values, &[7_884_009.0, 7_884_009.0]);
     assert_values_close(&result.plots[13].values, &[86_400.0, 86_400.0]);
     assert_values_close(&result.plots[14].values, &[31_536_000.0, 31_536_000.0]);
     assert_values_close(&result.plots[15].values, &[31_449_600.0, 31_449_600.0]);
-    assert_values_close(&result.plots[16].values, &[31_104_000.0, 31_104_000.0]);
+    assert_values_close(&result.plots[16].values, &[31_536_036.0, 31_536_036.0]);
     assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
@@ -878,7 +878,7 @@ plot(timeframe.in_seconds("1H"))
 }
 
 #[test]
-fn rejects_unsupported_timeframe_from_seconds_value() {
+fn rounds_nonstandard_timeframe_from_seconds_value() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("bad timeframe seconds")
@@ -892,13 +892,8 @@ plot(timeframe.from_seconds(46) == "" ? 1 : 0)
         analysis.diagnostics
     );
 
-    let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
-        .expect_err("expected timeframe error");
-    assert!(
-        err.message
-            .contains("timeframe.from_seconds unsupported seconds `46`"),
-        "unexpected error: {err:?}"
-    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).unwrap();
+    assert_values_close(&result.plots[0].values, &[0.0]);
 }
 
 #[test]

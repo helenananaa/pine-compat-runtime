@@ -919,7 +919,11 @@ fn validate_provider_timeframe(
             ),
         });
     }
-    if requested_timeframe.seconds() % chart_timeframe.seconds() != 0 {
+    // Calendar months do not have a fixed number of seconds. Their merge
+    // boundaries come from calendar opens/closes, not nominal-duration ratios.
+    let calendar_month =
+        requested_timeframe.value().ends_with('M') || chart_timeframe.value().ends_with('M');
+    if !calendar_month && requested_timeframe.seconds() % chart_timeframe.seconds() != 0 {
         return Err(RuntimeError {
             message: format!(
                 "request.security requested timeframe `{}` must be an integer multiple of chart timeframe `{}`",

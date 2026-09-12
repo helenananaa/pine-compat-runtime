@@ -92,52 +92,27 @@ fn fixed_timezone_short_name(offset: i32) -> String {
     format!("GMT{sign}{:02}:{:02}", offset / 3600, (offset % 3600) / 60)
 }
 
-pub(crate) fn timeframe_from_seconds(seconds: i64) -> Option<String> {
-    if seconds <= 0 {
-        return None;
-    }
-    if matches!(seconds, 1 | 5 | 10 | 15 | 30 | 45) {
-        return Some(format!("{seconds}S"));
-    }
-
-    if seconds % 2_592_000 == 0 {
-        let months = seconds / 2_592_000;
-        if (1..=12).contains(&months) {
-            return Some(if months == 1 {
-                "M".to_owned()
-            } else {
-                format!("{months}M")
-            });
+pub(crate) fn timeframe_from_seconds(seconds: i64) -> String {
+    // Native conversion clamps and rounds to a supported timeframe. Nominal
+    // months have their own exact duration; fixed days are not 30-day months.
+    for duration in [1, 5, 10, 15, 30, 45] {
+        if seconds <= duration {
+            return format!("{duration}S");
         }
+    }
+    if seconds >= 31_536_000 {
+        return "12M".to_owned();
+    }
+    if seconds % 2_628_003 == 0 {
+        return format!("{}M", seconds / 2_628_003);
     }
     if seconds % 604_800 == 0 {
-        let weeks = seconds / 604_800;
-        if (1..=52).contains(&weeks) {
-            return Some(if weeks == 1 {
-                "W".to_owned()
-            } else {
-                format!("{weeks}W")
-            });
-        }
+        return format!("{}W", seconds / 604_800);
     }
-    if seconds % 86_400 == 0 {
-        let days = seconds / 86_400;
-        if (1..=365).contains(&days) {
-            return Some(if days == 1 {
-                "D".to_owned()
-            } else {
-                format!("{days}D")
-            });
-        }
+    if seconds >= 86_400 {
+        return format!("{}D", (seconds + 86_399) / 86_400);
     }
-    if seconds % 60 == 0 {
-        let minutes = seconds / 60;
-        if (1..=1440).contains(&minutes) {
-            return Some(minutes.to_string());
-        }
-    }
-
-    None
+    ((seconds + 59) / 60).to_string()
 }
 
 pub(crate) fn timeframe_bucket(timestamp_ms: i64, seconds: i64) -> Option<i64> {
@@ -257,7 +232,9 @@ pub(crate) fn timeframe_seconds(timeframe: &str) -> Option<i64> {
         Some('S') if matches!(multiplier, 1 | 5 | 10 | 15 | 30 | 45) => Some(multiplier),
         Some('D') if (1..=365).contains(&multiplier) => multiplier.checked_mul(86_400),
         Some('W') if (1..=52).contains(&multiplier) => multiplier.checked_mul(604_800),
-        Some('M') if (1..=12).contains(&multiplier) => multiplier.checked_mul(2_592_000),
+        // Pine's nominal month conversion is 2,628,003 seconds. Calendar
+        // boundaries still use the month-aware bucket/close helpers.
+        Some('M') if (1..=12).contains(&multiplier) => multiplier.checked_mul(2_628_003),
         _ => None,
     }
 }
@@ -810,10 +787,14 @@ impl<'a> HistoricalRuntime<'a> {
                 _ => return Ok(PineValue::Na),
             }
         } else {
-            DEFAULT_CHART_TIMEFRAME.to_owned()
+            self.request_environment
+                .chart()
+                .timeframe()
+                .value()
+                .to_owned()
         };
         let timeframe = if timeframe.is_empty() {
-            DEFAULT_CHART_TIMEFRAME
+            self.request_environment.chart().timeframe().value()
         } else {
             timeframe.trim()
         };
@@ -838,13 +819,7 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Na => return Ok(PineValue::Na),
             _ => return Ok(PineValue::Na),
         };
-        let Some(timeframe) = timeframe_from_seconds(seconds) else {
-            return Err(RuntimeError {
-                message: format!("timeframe.from_seconds unsupported seconds `{seconds}`"),
-            });
-        };
-
-        Ok(PineValue::String(timeframe))
+        Ok(PineValue::String(timeframe_from_seconds(seconds)))
     }
 
     pub(crate) fn eval_timeframe_change(

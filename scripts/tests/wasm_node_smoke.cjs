@@ -462,6 +462,15 @@ udtVaripReplica.free(); udtVaripSession.free(); udtVaripProgram.free();
   consumer.free(); session.free(); precisionProgram.free();
 }
 
+{
+  const output = JSON.parse(pine.runScriptCsvWithRequestBars(
+    '//@version=6\nindicator("month context")\nplot(timeframe.in_seconds())\nplot(timeframe.in_seconds(""))\nplot(timeframe.in_seconds("12M"))\nplot(timeframe.from_seconds(2628003)=="1M"?1:0)\nplot(timeframe.from_seconds(61)=="2"?1:0)\n',
+    'time,open,high,low,close,volume\n1704067200000,1,1,1,1,1\n',
+    JSON.stringify({$chart:{symbol:'BTC',timeframe:'1M',minMove:1,priceScale:100}}),
+  ));
+  assert.deepEqual(output.plots.map(p=>p.values),[[2628003],[2628003],[31536036],[1],[1]]);
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

@@ -36,6 +36,13 @@ development artifacts. Pivot Points now parses but remains non-executable due
 to collection, function-result and request semantics. Broader UDT alias/history
 behavior is not covered by this member-read qualification.
 
+[Function-final tuple declarations](TUPLE_FINAL_DECLARATION_AUDIT.md) now pass
+6,748 Rust / 768 installed Python / 130 tools and actual WASM, matching 1,090
+native values per v5/v6 control suite on retained Windows debug artifacts.
+Both unchanged RSI suites still pass. Pivot Points has no parser or
+function-return diagnostics but remains blocked by collection/method/request
+semantics; native mutable UDT identity qualification is the next step.
+
 ## Latest retained streaming qualification
 
 [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records 6,715 Rust / 755

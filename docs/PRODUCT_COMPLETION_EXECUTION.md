@@ -119,3 +119,13 @@ declarations (including branch results and discarded bindings), then continue
 the remaining original Pivot Points reference-bearing array/matrix, method
 mutation and requested-context gaps. `corpus/pivot-member-analysis.json` has
 zero parser errors but remains non-executable. Goal is active.
+
+2026-09-12: [function-final tuple declarations](TUPLE_FINAL_DECLARATION_AUDIT.md)
+now pass 6,748 Rust / 768 installed Python / 130 tools and actual WASM.
+Retained artifacts match 1,090 native values in each v5/v6 suite, all full
+host outputs and streaming replicas agree, and both RSI suites remain green.
+The unchanged Pivot Points loses its function-return error but still has 42
+collection/method/request-related diagnostics. Next collect native UDT
+alias/copy/history controls before implementing reference-bearing arrays and
+matrices; simply loosening the scalar-tree guard is insufficient. Goal remains
+active and unified distribution is still outstanding.

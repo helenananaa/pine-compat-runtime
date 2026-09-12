@@ -396,7 +396,9 @@ impl Analyzer {
     ) -> Option<PineType> {
         let last = branch.last()?;
         match &last.kind {
-            StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.type_of_expr_with_params(expr, param_types)
+            }
             StmtKind::If {
                 condition,
                 then_branch,
@@ -532,7 +534,9 @@ impl Analyzer {
             FunctionBody::Block(statements) => {
                 let last = statements.last()?;
                 match &last.kind {
-                    StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+                    StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                        self.type_of_expr_with_params(expr, param_types)
+                    }
                     StmtKind::If {
                         condition,
                         then_branch,
@@ -621,7 +625,9 @@ impl Analyzer {
     ) -> Option<PineType> {
         let last = branch.last()?;
         match &last.kind {
-            StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.type_of_expr_with_params(expr, param_types)
+            }
             StmtKind::For {
                 from,
                 to,
@@ -675,7 +681,9 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
         match &statement.kind {
-            StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.type_of_expr_with_params(expr, param_types)
+            }
             StmtKind::For {
                 from,
                 to,
@@ -1355,7 +1363,9 @@ impl Analyzer {
         context: TupleTypeContext<'_>,
     ) -> Option<Vec<PineType>> {
         match &statement.kind {
-            StmtKind::Expr(expr) => self.tuple_element_types_with_context(expr, context),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.tuple_element_types_with_context(expr, context)
+            }
             StmtKind::For {
                 counter,
                 from,

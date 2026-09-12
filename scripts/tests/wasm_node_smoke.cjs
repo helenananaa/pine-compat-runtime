@@ -421,6 +421,14 @@ for (const version of [5, 6]) {
   assert.throws(() => pine.runScriptCsv(undefinedMemberSource, bars), /E_UDT_NA_FIELD/);
 }
 
+const tupleFinalSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/tuple_final_declaration.pine'), 'utf8');
+for (const version of [5, 6]) {
+  const result = JSON.parse(pine.runScriptCsv(tupleFinalSource.replace('version=6', `version=${version}`), bars));
+  assert.deepEqual(result.plots[4].values, [1,2,3]);
+  assert.deepEqual(result.plots[8].values, [1,2,3]);
+  assert.deepEqual(result.plots[9].values, [10,20,30]);
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

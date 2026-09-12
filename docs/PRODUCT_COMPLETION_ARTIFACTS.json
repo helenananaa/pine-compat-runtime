@@ -5,10 +5,10 @@
   "metadataCommit": "67862713f",
   "qualification": "pre-commit worktree gates; integration commits identify the implemented slices; no final distribution",
   "checks": {
-    "installedPython": 766,
+    "installedPython": 768,
     "tools": 130,
     "actualWasm": true,
-    "rust": 6745
+    "rust": 6748
   },
   "rsiReferenceStatus": "Default 218 and Bollinger/divergence 852 references pass on retained Windows development artifacts; Pivot Points Standard remains blocked",
   "files": [
@@ -196,6 +196,76 @@
       "path": ".local\\product-completion-20260912\\member-hosts\\qualification.json",
       "bytes": 921,
       "sha256": "c69983d0c373483d9a3c0aa4e1f4f40b9ee44beceaae92d71612868960efeaa6"
+    },
+    {
+      "path": ".local/product-completion-20260912/verify-tuple-final.log",
+      "bytes": 589557,
+      "sha256": "b3ec6e6cb5e63fc0f941a81704807a2f964c65eeb2d5a2dac555fa5c0c60043f"
+    },
+    {
+      "path": ".local/product-completion-20260912/tuple-final-hosts.log",
+      "bytes": 7649,
+      "sha256": "ae4d80ea1a014a29bb896ee7dcc9053198ae6ef0f465af02af682a225638ed3a"
+    },
+    {
+      "path": ".local/product-completion-20260912/corpus/pivot-tuple-analysis.json",
+      "bytes": 29666,
+      "sha256": "ec5956ace03a751a657e743fd430b5a51c8fa83732d65fff09be4b20b399328d"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-control.pine",
+      "bytes": 759,
+      "sha256": "5579bdd9242a268a16081de8ab69d85c16805f066b049ab3c077f073eff8ce63"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v5-dom.txt",
+      "bytes": 13692,
+      "sha256": "2f4036435bc23f50a5ef9d88d602399820c2956493ee4dae4f3d54e7d17fa6e9"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v5-expected.json",
+      "bytes": 10053,
+      "sha256": "5cb1a7b519419502a1380ce54f81eedba1ae73e78cd5f05dd103f5e9899933c8"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v5-manifest.json",
+      "bytes": 331,
+      "sha256": "97fda7abf1ee1774d7d2dab7067cf6d4a887fa1ca4ac2e1eef7209d510609900"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v5-raw.csv",
+      "bytes": 69583,
+      "sha256": "1dbb4076114143201855a6920448c64033f6cd73013d6f5572a1b5b7876c252e"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v5.pine",
+      "bytes": 759,
+      "sha256": "5e0e59e2661a01cd79ce57a56c836cef91f3d1fd965db9086d34903e51fdbc9b"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v6-dom.txt",
+      "bytes": 14528,
+      "sha256": "847085e48df5a64906b5ef5ea52fddf898004cb8f972549a079ea1d0cf7c8da2"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v6-expected.json",
+      "bytes": 10053,
+      "sha256": "5cb1a7b519419502a1380ce54f81eedba1ae73e78cd5f05dd103f5e9899933c8"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v6-manifest.json",
+      "bytes": 331,
+      "sha256": "3bd80b66583b803e4dc0d8a9a2f3b1420db62968187b46a701f28b15d9a90252"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v6-raw.csv",
+      "bytes": 69582,
+      "sha256": "899cf47970c80a0be075a56f144594cf0da261aba0aac0891954631e723aedcd"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\tuple-final-v6.pine",
+      "bytes": 759,
+      "sha256": "5579bdd9242a268a16081de8ab69d85c16805f066b049ab3c077f073eff8ce63"
     }
   ],
   "gradientCommit": "f6339ec54",
@@ -207,7 +277,9 @@
     "pivotV6": 654,
     "scope": "Separate frozen suites; all include initial nulls and exclude forming executions as documented",
     "memberV6": 654,
-    "memberV5": 981
+    "memberV5": 981,
+    "tupleFinalV6": 1090,
+    "tupleFinalV5": 1090
   },
   "retainedArtifacts": {
     "gradient": {
@@ -294,6 +366,50 @@
         "3": true
       },
       "pythonModule": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\member-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+      "surfaceParity": "installed Python batch and streaming replica, four CLI modes, actual generated WASM full output"
+    },
+    "tupleFinal": {
+      "status": "passed",
+      "scope": "Windows debug CLI, installed Python and actual WASM; full unchanged official RSI default monthly source; numerical native reference plus cross-host full-output and Python streaming parity",
+      "confirmedBars": 109,
+      "referenceValues": 218,
+      "mismatches": 0,
+      "skippedWarmup": 0,
+      "module": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\tuple-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+      "hashes": {
+        "pine-compat.exe": "38cbb348487da775ce600f48717ca855334650c412ad063405fbbf01ce0c8192",
+        "wheels\\pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl": "6e5a8030e240468cdd1f7ed8a9bef1161db511720237aed6ac12a4980078817b",
+        "wasm\\pine_wasm.js": "0b161f3108056527da485b5a399650194715925ea83b0d6441f59f537d1c8e50",
+        "wasm\\pine_wasm_bg.wasm": "63421f6ff380ee06d7a5b6be42d8ccf4c352e5b50d357ac45a1b64adafadaa75"
+      }
+    },
+    "tupleFinalControls": {
+      "status": "passed",
+      "suites": [
+        {
+          "version": 6,
+          "referenceValues": 1090,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        },
+        {
+          "version": 5,
+          "referenceValues": 1090,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        }
+      ]
+    },
+    "tupleFinalAlternate": {
+      "referenceValues": 852,
+      "nonNullReferences": 357,
+      "mismatches": 0,
+      "firstMismatches": [],
+      "inputOverrides": {
+        "23": "SMA + Bollinger Bands",
+        "3": true
+      },
+      "pythonModule": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\tuple-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
       "surfaceParity": "installed Python batch and streaming replica, four CLI modes, actual generated WASM full output"
     }
   },

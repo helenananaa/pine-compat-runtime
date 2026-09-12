@@ -12,6 +12,7 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
     match &statement.kind {
         StmtKind::Expr(_)
         | StmtKind::Decl { .. }
+        | StmtKind::TupleDecl { .. }
         | StmtKind::Reassign { .. }
         | StmtKind::For { .. }
         | StmtKind::ForIn { .. }
@@ -160,7 +161,9 @@ impl Analyzer {
             FunctionBody::Block(statements) => {
                 let (last, prefix) = statements.split_last()?;
                 let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
+                    // Final tuple bindings are function-local and have no later reader.
+                    // Return the RHS once, retaining every slot even when bound to `_`.
+                    StmtKind::Expr(result) | StmtKind::TupleDecl { value: result, .. } => result,
                     StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                         return self.lower_function_return_statement(
                             prefix,
@@ -318,7 +321,7 @@ impl Analyzer {
             .collect::<Option<Vec<_>>>()?;
         let expr;
         let result = match &last.kind {
-            StmtKind::Expr(result) => result,
+            StmtKind::Expr(result) | StmtKind::TupleDecl { value: result, .. } => result,
             StmtKind::If {
                 condition,
                 then_branch,
@@ -466,7 +469,7 @@ impl Analyzer {
             .collect::<Option<Vec<_>>>()?;
         let expr;
         let result = match &last.kind {
-            StmtKind::Expr(result) => {
+            StmtKind::Expr(result) | StmtKind::TupleDecl { value: result, .. } => {
                 self.lower_expr_with_params(result, param_exprs, param_types)?
             }
             StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {

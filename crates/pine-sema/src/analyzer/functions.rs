@@ -234,6 +234,7 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
     match &statement.kind {
         StmtKind::Expr(_)
         | StmtKind::Decl { .. }
+        | StmtKind::TupleDecl { .. }
         | StmtKind::Reassign { .. }
         | StmtKind::For { .. }
         | StmtKind::ForIn { .. }
@@ -833,6 +834,10 @@ impl Analyzer {
                 }
                 match &last.kind {
                     StmtKind::Expr(expr) => self.analyze_expr(expr),
+                    StmtKind::TupleDecl { value, .. } => {
+                        self.analyze_stmt(last);
+                        self.type_of_expr_with_params(value, &HashMap::new())
+                    }
                     StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                         self.analyze_function_symbol_statement_return(last, name)
                     }
@@ -1001,6 +1006,10 @@ impl Analyzer {
         }
         let pine_type = match &last.kind {
             StmtKind::Expr(expr) => self.analyze_expr(expr),
+            StmtKind::TupleDecl { value, .. } => {
+                self.analyze_stmt(last);
+                self.type_of_expr_with_params(value, &HashMap::new())
+            }
             StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                 self.analyze_function_symbol_statement_return(last, name)
             }

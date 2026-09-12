@@ -315,6 +315,7 @@ fn fill_changes_json(changes: &[super::changes::FillChange]) -> String {
                 FillAction::Add(_) => "add",
                 FillAction::Delete => "delete",
                 FillAction::SetColors { .. } => "setColors",
+                FillAction::SetGradient { .. } => "setGradient",
             }
         ));
         match &change.action {
@@ -326,6 +327,10 @@ fn fill_changes_json(changes: &[super::changes::FillChange]) -> String {
             FillAction::SetColors { start, values } => {
                 output.push_str(&format!(",\"start\":{start}"));
                 push_values_field(&mut output, "values", values);
+            }
+            FillAction::SetGradient { start, values } => {
+                output.push_str(&format!(",\"start\":{start},\"values\":"));
+                output.push_str(&serde_json::to_string(values).expect("finite gradient samples"));
             }
         }
         output.push('}');
@@ -791,6 +796,10 @@ fn fills_json(fills: &[FillOutput]) -> String {
             fill.id, fill.first_id, fill.second_id, fill.first_is_hline, fill.second_is_hline
         ));
         push_values_field(&mut output, "colors", &fill.colors);
+        if let Some(samples) = &fill.gradient {
+            output.push_str(",\"gradient\":");
+            output.push_str(&serde_json::to_string(samples).expect("finite gradient samples"));
+        }
         push_non_default_value_field(
             &mut output,
             "title",

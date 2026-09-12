@@ -10583,7 +10583,7 @@ fn run_csv_with_request_bars_accepts_reserved_magnifier_envelope() {
     let host_input = r#"{"$magnifier":{"schemaVersion":1,"chartBars":[]}}"#;
     let output = run_script_csv_with_request_bars(source, bars, host_input)
         .expect("empty magnifier envelope is valid");
-    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    assert!(output.contains("\"schemaVersion\":9"), "{output}");
     let invalid = run_script_csv_with_request_bars_internal(
         source,
         bars,
@@ -10600,7 +10600,7 @@ fn run_csv_with_request_bars_accepts_reserved_session_windows_envelope() {
     let host_input = r#"{"$sessionWindows":{"schemaVersion":1,"bars":[{"barIndex":0,"windowId":"eth","tradingDayId":"d1"}]}}"#;
     let output = run_script_csv_with_request_bars(source, bars, host_input)
         .expect("session window envelope is valid");
-    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    assert!(output.contains("\"schemaVersion\":9"), "{output}");
     let invalid = run_script_csv_with_request_bars_internal(
         source,
         bars,

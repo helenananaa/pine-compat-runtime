@@ -16,6 +16,7 @@ mod alerts;
 mod changes;
 mod chart_metadata;
 mod diagnostics;
+mod gradient;
 mod outputs;
 mod realtime;
 mod replica;

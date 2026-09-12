@@ -275,7 +275,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 These errors reject an incoming delta without mutating the consumer result or
 revision. They do not change the existing runtime output schema.
 
-- `E_STREAM_SCHEMA`: changes schema is unsupported; schema 2 and 3 are accepted.
+- `E_STREAM_SCHEMA`: changes schema is unsupported; schemas 2, 3 and 4 are
+  accepted, but gradient fill data requires schema 4.
+- `E_STREAM_GRADIENT`: a typed change has non-finite gradient values, invalid
+  color encodings, or a fill-add sample count inconsistent with its colors.
 - `E_STREAM_REVISION`: revision does not immediately follow baseRevision.
 - `E_STREAM_STALE`: change revision precedes the consumer's current revision.
 - `E_STREAM_CONFLICT`: the current revision has a different payload, or was

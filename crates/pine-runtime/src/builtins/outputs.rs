@@ -603,6 +603,12 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
+        if pine_builtins::is_gradient_fill_call(
+            args.iter()
+                .map(|arg| (arg.name.as_deref(), Some(arg.value.pine_type.kind))),
+        ) {
+            return self.eval_gradient_fill(call_site_id, args);
+        }
         let Some(first_arg) = call_arg_expr(args, 0, "plot1") else {
             return Err(RuntimeError {
                 message: "fill missing first output id".to_owned(),
@@ -654,3 +660,4 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 }
+mod gradient;

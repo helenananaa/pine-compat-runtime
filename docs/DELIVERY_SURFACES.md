@@ -17,9 +17,9 @@ them as this checkout.
 | Surface | Consumable entry | Version identity | Historical | Incremental | Realtime lifecycle | Host requirements | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Rust | path dependency on `crates/pine-runtime` plus `pine-syntax` / `pine-sema` | `CARGO_PKG_VERSION` = `0.3.0-rc.1` | `HistoricalRuntime` | per-bar `append_bar` | `RealtimeRuntime` seed/forming/confirm | `host_requirements` | Example: `crates/pine-runtime/examples/embed_runtime.rs` |
-| CLI | `cargo run -p pine-cli --locked --release` → `pine-compat` | `pine-compat --version` | `run` | `run-incremental` | `run-realtime-history`, `run-realtime-forming` | `requirements` | JSON schema 8 results; analysis schema 5 |
+| CLI | `cargo run -p pine-cli --locked --release` → `pine-compat` | `pine-compat --version` | `run` | `run-incremental` | `run-realtime-history`, `run-realtime-forming` | `requirements` | JSON schema 9 results; analysis schema 5 |
 | Python | maturin wheel `pine-compat-runtime==0.3.0rc1` (`pine_compat`) | `pine_compat.__version__` = `0.3.0-rc.1` | `compile_script` / `run_script` / `Program.run` | not a separate API; re-run batch or confirm bars on a session | `create_realtime_session` / `Program.realtime_session` | `Program.host_requirements` | Wheel version is PEP 440 `0.3.0rc1` |
-| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.0-rc.1` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 3; runtime snapshots schema 8 |
+| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.0-rc.1` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 4; runtime snapshots schema 9 |
 
 ## Integrated streaming API
 
@@ -28,9 +28,12 @@ Rust now exposes `RealtimeRuntime::apply_update`, `replay_historical`,
 `apply_confirmed`, `session.replay()`, `session.correct()`, `session.replica()`,
 and `session.stream_snapshot()`; WASM exposes `Program.realtimeSession()`,
 `applyForming` / `applyConfirmed`, `replay()`, `correct()`, `replica()`, and
-`streamSnapshot()`. Changes use schema 3 with
-`baseRevision`, `revision` and `retainedFrom`; runtime snapshots remain schema
-8. A replica applies deltas in place and materializes a full result only on
+`streamSnapshot()`. Changes use schema 4 with
+`baseRevision`, `revision` and `retainedFrom`; runtime snapshots use schema
+9. Gradient fills carry per-bar vertical stops and changes schema 4 adds
+`setGradient`. Older non-gradient snapshots and changes remain readable;
+gradient data labeled with old schemas is rejected. A replica applies deltas
+in place and materializes a full result only on
 request. Historical replay is a snapshot discontinuity, not a linear delta. See
 [streaming expansion](STREAMING_EXPANSION_AUDIT.md) for the latest retained
 validation. These interfaces are integrated through `f368ab96e` and included
@@ -47,7 +50,7 @@ digest and does not claim a fresh build of the merged main revision.
 
 ## Schema and platform matrix
 
-- Analysis JSON schema 5, runtime JSON schema 8, host-requirements schema 1,
+- Analysis JSON schema 5, runtime JSON schema 9, host-requirements schema 1,
   render metadata 1.
 - Qualified desktop targets (retained optimized wheels): Windows x86-64 (`win_amd64`) and native
   Ubuntu 22.04 (`manylinux_2_35_x86_64`), implementation a2a1ba5fb. Each passes

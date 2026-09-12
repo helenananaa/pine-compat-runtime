@@ -6,7 +6,7 @@ use super::drawings::{
 };
 use super::strategy::StrategyResult;
 
-pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 8;
+pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 9;
 pub const PUBLIC_MATRIX_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = PUBLIC_RUNTIME_SCHEMA_VERSION;
 pub const PUBLIC_RENDER_METADATA_VERSION: u32 = 1;
@@ -185,11 +185,35 @@ pub struct FillOutput {
     pub first_is_hline: bool,
     pub second_is_hline: bool,
     pub colors: Vec<PineValue>,
+    /// Per-bar vertical color stops, clipped by the two masking plot series.
+    pub gradient: Option<Vec<FillGradientSample>>,
     pub title: PineValue,
     pub editable: PineValue,
     pub show_last: PineValue,
     pub fill_gaps: PineValue,
     pub display: PineValue,
+}
+
+#[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FillGradientSample {
+    pub top_value: Option<f64>,
+    pub bottom_value: Option<f64>,
+    pub top_color: Option<u64>,
+    pub bottom_color: Option<u64>,
+}
+
+impl FillGradientSample {
+    pub fn is_valid(&self) -> bool {
+        [self.top_value, self.bottom_value]
+            .into_iter()
+            .flatten()
+            .all(f64::is_finite)
+            && [self.top_color, self.bottom_color]
+                .into_iter()
+                .flatten()
+                .all(crate::value::is_valid_public_color)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

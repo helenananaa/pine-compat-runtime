@@ -413,7 +413,7 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
 
 def test_schema_versions_and_input_constraints_are_public():
     assert pine_compat.ANALYSIS_SCHEMA_VERSION == 5
-    assert pine_compat.RUNTIME_SCHEMA_VERSION == 8
+    assert pine_compat.RUNTIME_SCHEMA_VERSION == 9
     assert pine_compat.RENDER_METADATA_VERSION == 1
 
     report = pine_compat.analyze_script(
@@ -597,7 +597,7 @@ def test_compile_script_returns_program_with_run_method():
     program = pine_compat.compile_script('//@version=5\nindicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
     assert result["lines"] == []
@@ -9101,7 +9101,7 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9183,7 +9183,7 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9247,7 +9247,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9291,7 +9291,7 @@ def test_run_script_returns_strategy_exit_active_entry_trail_points_attachment_c
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9355,7 +9355,7 @@ def test_run_script_returns_strategy_exit_active_entry_stop_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9419,7 +9419,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_limit_bracket_contra
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9483,7 +9483,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9547,7 +9547,7 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9715,7 +9715,7 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -10996,7 +10996,7 @@ def test_run_script_compiles_and_executes():
         BARS,
     )
 
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 

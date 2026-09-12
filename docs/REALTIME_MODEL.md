@@ -103,7 +103,7 @@ replica.apply(&changes)?;
 assert_eq!(replica.result(), &runtime.result());
 ```
 
-`RuntimeChanges` schema 3 carries this-update series append/current-bar replace,
+`RuntimeChanges` schema 4 carries this-update series append/current-bar replace,
 drawing tails and deletion, order/fill/alert changes, preview/confirmed visibility,
 `baseRevision`, `revision` and the absolute display origin `retainedFrom`.
 A cursor-bearing `RuntimeReplica` applies changes
@@ -130,7 +130,7 @@ replica.reset(
 
 Only explicit `replica.result()` constructs a complete Python dictionary.
 Existing `update_forming`, `update_confirmed`, `result()` and `confirmed_result()`
-retain their complete snapshot contracts (runtime output schema 8 unchanged).
+retain their complete snapshot contracts (runtime output schema 9).
 
 A host-owned historical correction is `correct_historical(from_time, bars)` /
 Python `session.correct(from_time, bars)` / WASM `correct(fromTime, barsCsv)`.

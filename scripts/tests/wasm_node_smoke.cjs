@@ -41,7 +41,7 @@ assert.ok(
 );
 
 const direct = JSON.parse(pine.runScriptCsv(source, bars));
-assert.equal(direct.schemaVersion, 8);
+assert.equal(direct.schemaVersion, 9);
 assert.equal(direct.renderMetadataVersion, 1);
 assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
@@ -161,7 +161,7 @@ assert.deepEqual(compiled.plots[0].values, [2, 4, 6]);
 assert.deepEqual(compiled, direct);
 
 assert.equal(typeof program.realtimeSession, 'function');
-assert.equal(pine.runtimeChangesSchemaVersion(), 3);
+assert.equal(pine.runtimeChangesSchemaVersion(), 4);
 assert.equal(pine.realtimeSessionSchemaVersion(), 1);
 const realtime = program.realtimeSession();
 const seededRealtime = JSON.parse(realtime.seed(bars));
@@ -171,7 +171,7 @@ const forming = JSON.parse(realtime.applyForming(JSON.stringify({
   time: 3, open: 4, high: 4, low: 4, close: 4, volume: 1,
 })));
 assert.equal(forming.visibility, 'preview');
-assert.equal(forming.schemaVersion, 3);
+assert.equal(forming.schemaVersion, 4);
 assert.equal(replica.apply(JSON.stringify(forming)), true);
 assert.deepEqual(JSON.parse(replica.result()).plots[0].values, JSON.parse(realtime.result()).plots[0].values);
 assert.equal(replica.apply(JSON.stringify(forming)), false);
@@ -373,6 +373,32 @@ const activeMetadataResult = JSON.parse(pine.runScriptCsv(activeMetadataSource, 
 assert.deepEqual(activeMetadataResult.plots.map(plot => plot.values[0]), [7, 2.5, 1]);
 assert.equal(activeMetadataResult.plots[0].editable, false);
 assert.equal(JSON.parse(pine.analyzeScript(activeMetadataSource.replace('version=6', 'version=5'))).executable, false);
+
+// Exercise the actual generated module through physical gradient pruning.
+const gradientSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/gradient_fill.pine'), 'utf8');
+const gradientProgram = pine.compileScript(gradientSource);
+const gradientSession = gradientProgram.realtimeSession();
+gradientSession.setOutputRetention(7);
+gradientSession.seed('time,open,high,low,close,volume\n0,10,10,10,10,1\n');
+const gradientReplica = gradientSession.replica();
+for (let i = 1; i < 270; i++) {
+  for (const [method, price] of [['applyForming', 20], ['applyForming', 30], ['applyConfirmed', 40]]) {
+    const encoded = gradientSession[method](JSON.stringify({time: i * 60000, open: price, high: price, low: price, close: price, volume: 1}));
+    gradientReplica.apply(encoded);
+    const result = JSON.parse(gradientSession.result());
+    assert.deepEqual(JSON.parse(gradientReplica.result()), result);
+    assert.ok(result.fills[0].gradient.length <= 8);
+    assert.equal(result.fills[0].gradient.at(-1).bottomValue, price - 1);
+    if (i === 1 && price === 20) {
+      const old = JSON.parse(encoded);
+      old.schemaVersion = 3;
+      assert.throws(() => gradientReplica.apply(JSON.stringify(old)), /schema/);
+    }
+  }
+}
+gradientReplica.free();
+gradientSession.free();
+gradientProgram.free();
 
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',

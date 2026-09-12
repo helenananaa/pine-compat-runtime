@@ -391,6 +391,7 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) -> Option<PineType> {
         self.check_feature_name(name, callee_span);
+        let signature = self.select_fill_signature(signature, args, arg_types);
         self.validate_script_declaration_call(name, callee_span, args);
         self.validate_strategy_order_call(name, callee_span, args);
         self.validate_strategy_value_function_call(name, callee_span);

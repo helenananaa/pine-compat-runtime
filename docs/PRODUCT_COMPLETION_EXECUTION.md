@@ -79,3 +79,11 @@ alternate smoothing/divergence inputs separately. Do not call the entire RSI
 capability qualified from only its default two numerical plots. Pivot Points,
 broader request/account contracts, resources and unified distribution remain
 open in the ledger above. Goal remains active.
+
+2026-09-12 gradient implementation is qualified for the default RSI source:
+218/218 native values and complete four-mode CLI/installed-Python/actual-WASM
+parity; 6,729 Rust / 760 Python / 130 tools. See `GRADIENT_FILL_AUDIT.md`.
+The separately frozen SMA+BB/divergence configuration has 2/852 mismatches at
+the first RSI pivot high/low. Preserve that failed report while collecting the
+new `corpus/pivot-na-reference.pine` native control. Next work is the actual
+`eval_pivot` null-window behavior in `crates/pine-runtime/src/builtins/ta/pivots.rs`.

@@ -473,7 +473,7 @@ leaves supplied magnifier input inert. Forming/live realtime bars never consume
 historical magnifier groups. `calc_on_every_history_tick` remains unimplemented
 and rejected.
 `fill_orders_on_standard_ohlc` remains unsupported. Public RuntimeResult
-schemaVersion stays 8. Python `REALTIME_SESSION_SCHEMA_VERSION` stays 1, with
+schemaVersion is now 9 following the gradient-fill extension. Python `REALTIME_SESSION_SCHEMA_VERSION` stays 1, with
 optional seed-only `magnifier_bars`.
 Internal broker state keeps `StrategyRiskRules` configuration separate from
 `StrategyRiskState` tripped/window state, with hooks before order admission,

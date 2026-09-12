@@ -388,6 +388,9 @@ pub(crate) fn fills_to_py(
         item.set_item("firstIsHLine", fill.first_is_hline)?;
         item.set_item("secondIsHLine", fill.second_is_hline)?;
         item.set_item("colors", values_to_py(py, &fill.colors)?)?;
+        if let Some(samples) = &fill.gradient {
+            item.set_item("gradient", crate::gradient::samples_to_py(py, samples)?)?;
+        }
         set_non_default_value(
             py,
             &item,

@@ -210,11 +210,11 @@ visible = replica.result()
 assert visible == session.result()
 ```
 
-`apply_forming` / `apply_confirmed` return changes schema 3: series append or
+`apply_forming` / `apply_confirmed` return changes schema 4: series append or
 current-bar replace, drawing add/modify/delete, order/fill/alert identity,
 preview vs confirmed visibility, base/current revisions, and `retainedFrom`.
 A replica ignores an identical retransmission and rejects stale or missing
-revisions. Complete results remain runtime schema 8.
+revisions. Complete results remain runtime schema 9.
 
 Limit retained display output with `session.set_output_retention(256)`;
 `None` removes the limit for future updates. This does not prune input bars,

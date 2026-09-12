@@ -77,6 +77,9 @@ impl HistoricalRuntime<'_> {
         }
         for item in &mut self.fills {
             item.colors.drop_prefix(skip);
+            if let Some(samples) = &mut item.gradient {
+                samples.drop_prefix(skip);
+            }
         }
         self.stored_origin += skip;
     }

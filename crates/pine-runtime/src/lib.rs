@@ -66,10 +66,10 @@ pub use output::json::{
     public_runtime_changes_json, public_runtime_profiled_result_json, public_runtime_result_json,
 };
 pub use output::model::{
-    ColorSeries, FillOutput, HLineOutput, OutputMetadata, PUBLIC_MATRIX_SCHEMA_VERSION,
-    PUBLIC_OUTPUT_SCHEMA_VERSION, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION,
-    PlotArrowSeries, PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries,
-    RuntimeDiagnostic, RuntimeResult,
+    ColorSeries, FillGradientSample, FillOutput, HLineOutput, OutputMetadata,
+    PUBLIC_MATRIX_SCHEMA_VERSION, PUBLIC_OUTPUT_SCHEMA_VERSION, PUBLIC_RENDER_METADATA_VERSION,
+    PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries, PlotBarSeries, PlotCandleSeries,
+    PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeDiagnostic, RuntimeResult,
 };
 pub use output::parse::{runtime_changes_from_json, runtime_result_from_json};
 pub use output::running_alerts::{

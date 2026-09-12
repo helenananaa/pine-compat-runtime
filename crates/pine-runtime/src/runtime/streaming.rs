@@ -520,6 +520,15 @@ fn diff_fills(
                         action: FillAction::SetColors { start, values },
                     });
                 }
+                if let Some(samples) = &item.gradient {
+                    changes.fills.push(FillChange {
+                        id: item.id,
+                        action: FillAction::SetGradient {
+                            start,
+                            values: samples.tail(start.saturating_sub(runtime.stored_origin)),
+                        },
+                    });
+                }
             }
         }
     }

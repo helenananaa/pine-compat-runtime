@@ -13,7 +13,7 @@ use super::strategy::{
 };
 use crate::PineValue;
 
-pub const PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 3;
+pub const PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 4;
 pub const MIN_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -319,6 +319,10 @@ pub enum FillAction {
         start: usize,
         values: Vec<PineValue>,
     },
+    SetGradient {
+        start: usize,
+        values: Vec<crate::FillGradientSample>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -489,6 +493,9 @@ pub(crate) fn drop_display_prefix(result: &mut RuntimeResult, advance: usize, or
         }
         for item in &mut result.fills {
             drain_prefix(&mut item.colors, advance);
+            if let Some(samples) = &mut item.gradient {
+                drain_prefix(samples, advance);
+            }
         }
     }
     if origin == 0 {
@@ -890,6 +897,13 @@ fn apply_fill_change(result: &mut RuntimeResult, change: &FillChange, origin: us
         FillAction::SetColors { start, values } => {
             if let Some(existing) = result.fills.iter_mut().find(|fill| fill.id == change.id) {
                 splice_values(&mut existing.colors, local_start(*start, origin), values);
+            }
+        }
+        FillAction::SetGradient { start, values } => {
+            if let Some(existing) = result.fills.iter_mut().find(|fill| fill.id == change.id) {
+                let samples = existing.gradient.get_or_insert_with(Vec::new);
+                let start = local_start(*start, origin);
+                splice_vec(samples, start, values);
             }
         }
     }

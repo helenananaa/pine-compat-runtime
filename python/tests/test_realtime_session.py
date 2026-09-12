@@ -316,7 +316,7 @@ def test_streaming_apply_returns_this_update_changes_not_full_history() -> None:
     )
     snapshot = session.seed([_bar(60_000, 10.0)])
     assert len(_plot_values(snapshot, 0)) == 1
-    assert pine_compat.RUNTIME_CHANGES_SCHEMA_VERSION == 3
+    assert pine_compat.RUNTIME_CHANGES_SCHEMA_VERSION == 4
 
     replica = session.replica()
     forming = session.apply_forming(_bar(120_000, 12.0))

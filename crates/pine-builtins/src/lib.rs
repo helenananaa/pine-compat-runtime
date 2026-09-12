@@ -24,3 +24,31 @@ pub use signature::{
     Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, QualifierBoundScalar, QualifierRelation,
     ReturnSpec, ScalarKind,
 };
+
+/// Select the vertical-gradient overload from source or normalized HIR args.
+pub fn is_gradient_fill_call<'a>(
+    args: impl IntoIterator<Item = (Option<&'a str>, Option<pine_ir::ValueKind>)>,
+) -> bool {
+    let args: Vec<_> = args.into_iter().collect();
+    args.iter().any(|(name, _)| {
+        matches!(
+            name,
+            Some("top_value" | "bottom_value" | "top_color" | "bottom_color")
+        )
+    }) || (args.len() >= 4
+        && [2, 3].into_iter().all(|index| {
+            args[index].0.is_none()
+                && matches!(
+                    args[index].1,
+                    Some(
+                        pine_ir::ValueKind::Int
+                            | pine_ir::ValueKind::Float
+                            | pine_ir::ValueKind::Na
+                    )
+                )
+        }))
+}
+
+pub fn gradient_fill_signature() -> &'static BuiltinSignature {
+    &namespaces::outputs::GRADIENT_FILL_SIGNATURE
+}

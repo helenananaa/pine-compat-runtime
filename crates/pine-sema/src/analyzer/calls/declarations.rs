@@ -1,6 +1,33 @@
 use crate::prelude::*;
 
 impl Analyzer {
+    pub(crate) fn select_fill_signature(
+        &mut self,
+        signature: &'static BuiltinSignature,
+        args: &[CallArg],
+        types: &[Option<PineType>],
+    ) -> &'static BuiltinSignature {
+        if signature.name == "fill"
+            && pine_builtins::is_gradient_fill_call(args.iter().enumerate().map(|(i, arg)| {
+                (
+                    arg.name.as_deref(),
+                    types.get(i).copied().flatten().map(|ty| ty.kind),
+                )
+            }))
+        {
+            if self.legacy.dialect() < crate::PineDialect::V5 {
+                self.unsupported(
+                    "fill.gradient",
+                    "vertical gradient fills require Pine v5 or v6",
+                    args.first().map_or(Span::default(), |arg| arg.span),
+                );
+            }
+            pine_builtins::gradient_fill_signature()
+        } else {
+            signature
+        }
+    }
+
     pub(crate) fn validate_versioned_input_output_metadata(
         &mut self,
         signature: &BuiltinSignature,

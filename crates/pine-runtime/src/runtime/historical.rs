@@ -1031,6 +1031,11 @@ impl<'a> HistoricalRuntime<'a> {
         finalize_series_values(&mut self.bg_colors, self.bars - self.stored_origin);
         finalize_series_values(&mut self.bar_colors, self.bars - self.stored_origin);
         for fill in &mut self.fills {
+            if let Some(samples) = &mut fill.gradient {
+                while samples.len() <= self.bars - self.stored_origin {
+                    samples.push(crate::FillGradientSample::default());
+                }
+            }
             while fill.colors.len() < self.bars - self.stored_origin {
                 fill.colors.push(PineValue::Na);
             }
@@ -1124,6 +1129,7 @@ impl<'a> HistoricalRuntime<'a> {
             first_is_hline,
             second_is_hline,
             colors,
+            gradient: None,
             title,
             editable,
             show_last,

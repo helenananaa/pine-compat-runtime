@@ -15,6 +15,14 @@ The subsequent [versioned metadata slice](INPUT_METADATA_AUDIT.md) passes 6,724
 Rust / 758 installed Python / 130 tool tests and actual WASM. RSI is reduced to
 six gradient-fill diagnostics; the full original script is not yet qualified.
 
+The [gradient-fill slice](GRADIENT_FILL_AUDIT.md) subsequently passes 6,729
+Rust / 760 installed Python / 130 tool tests and actual WASM. The unchanged
+official RSI default configuration matches 218 native values from origin and
+complete output agrees across CLI/Python/WASM. Runtime output is now schema 9
+and changes schema 4. A separate native Bollinger/divergence configuration
+reveals two initial-pivot discrepancies, which remain active work. These are
+Windows development receipts, not unified final distribution acceptance.
+
 ## Latest retained streaming qualification
 
 [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records 6,715 Rust / 755

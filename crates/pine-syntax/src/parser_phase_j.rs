@@ -344,7 +344,7 @@ impl Parser {
         end
     }
 
-    fn expect_identifier(&mut self, message: &str) -> Option<(String, Span)> {
+    pub(crate) fn expect_identifier(&mut self, message: &str) -> Option<(String, Span)> {
         match self.current().kind.clone() {
             TokenKind::Identifier(name) => {
                 let span = self.current().span;

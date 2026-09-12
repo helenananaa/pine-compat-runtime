@@ -158,9 +158,33 @@ fn runtime_fixture_files_are_referenced_by_rust_gates() {
         .collect::<Vec<_>>()
         .join("\n");
 
+    // The incremental gate executes the immutable originals as exact runtime
+    // errors and their guarded counterparts as successful programs.
+    let incremental_gate =
+        fs::read_to_string(workspace.join("crates/pine-runtime/tests/incremental.rs")).unwrap();
+    assert!(
+        incremental_gate
+            .contains("include_str!(\"../../../tests/fixtures/undefined_udt_access.tsv\")")
+    );
+    let catalog = include_str!("../../../tests/fixtures/undefined_udt_access.tsv");
+    let catalog_paths = catalog
+        .lines()
+        .skip(1)
+        .flat_map(|line| {
+            let (original, guarded) = line.split_once('\t').expect("undefined-object catalog row");
+            [original, guarded].map(|name| {
+                assert!(
+                    name.ends_with(".pine") && !name.contains(['/', '\\']),
+                    "catalog entries must be filenames"
+                );
+                format!("tests/fixtures/runtime/{name}")
+            })
+        })
+        .collect::<Vec<_>>();
+
     let untracked_fixtures: Vec<_> = fixture_paths
         .into_iter()
-        .filter(|fixture| !rust_sources.contains(fixture))
+        .filter(|fixture| !rust_sources.contains(fixture) && !catalog_paths.contains(fixture))
         .collect();
     assert!(
         untracked_fixtures.is_empty(),

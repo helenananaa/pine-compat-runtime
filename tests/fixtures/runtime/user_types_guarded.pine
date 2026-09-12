@@ -1,0 +1,289 @@
+//@version=5
+indicator("User-defined types")
+type Point
+    float x
+    float y
+type Wrapper
+    Point inner
+    float weight
+
+p = Point.new(close, open)
+plot((na(p) ? na : p.x) + (na(p) ? na : p.y))
+Point typed_point = na
+plot((na(typed_point) ? na : typed_point.x))
+typed_point := Point.new(high + 5, low)
+plot((na(typed_point) ? na : typed_point.x) + (na(typed_point) ? na : typed_point.y))
+Point typed_constructed = Point.new(high + 30, low)
+plot((na(typed_constructed) ? na : typed_constructed.x) + (na(typed_constructed) ? na : typed_constructed.y))
+typed_constructed := Point.new(high + 35, low)
+plot((na(typed_constructed) ? na : typed_constructed.x) + (na(typed_constructed) ? na : typed_constructed.y))
+Point typed_ternary = bar_index < 2 ? Point.new(high + 65, low) : Point.new(high + 70, low)
+plot((na(typed_ternary) ? na : typed_ternary.x) + (na(typed_ternary) ? na : typed_ternary.y))
+typed_ternary := bar_index == 3 ? Point.new(high + 75, low) : Point.new(high + 80, low)
+plot((na(typed_ternary) ? na : typed_ternary.x) + (na(typed_ternary) ? na : typed_ternary.y))
+Point typed_if = if bar_index < 2
+    Point.new(high + 270, low)
+else
+    Point.new(high + 275, low)
+plot((na(typed_if) ? na : typed_if.x) + (na(typed_if) ? na : typed_if.y))
+typed_if := if bar_index == 3
+    Point.new(high + 280, low)
+else
+    Point.new(high + 285, low)
+plot((na(typed_if) ? na : typed_if.x) + (na(typed_if) ? na : typed_if.y))
+Point typed_switch = switch bar_index
+    0 => Point.new(high + 120, low)
+    1 => Point.new(high + 125, low)
+    => Point.new(high + 130, low)
+plot((na(typed_switch) ? na : typed_switch.x) + (na(typed_switch) ? na : typed_switch.y))
+typed_switch := switch bar_index
+    3 => Point.new(high + 135, low)
+    => Point.new(high + 140, low)
+plot((na(typed_switch) ? na : typed_switch.x) + (na(typed_switch) ? na : typed_switch.y))
+Point typed_for = for typed_for_i = 0 to 1
+    Point.new(high + typed_for_i + 410, low)
+plot((na(typed_for) ? na : typed_for.x) + (na(typed_for) ? na : typed_for.y))
+typed_for := for typed_for_j = 0 to 1
+    Point.new(high + typed_for_j + 415, low)
+plot((na(typed_for) ? na : typed_for.x) + (na(typed_for) ? na : typed_for.y))
+var Point typed_var_point = na
+if bar_index == 0
+    typed_var_point := Point.new(high + 20, low)
+plot((na(typed_var_point) ? na : typed_var_point.x) + (na(typed_var_point) ? na : typed_var_point.y))
+var Point typed_var_constructed = Point.new(high + 45, low)
+if bar_index == 2
+    typed_var_constructed := Point.new(high + 50, low)
+plot((na(typed_var_constructed) ? na : typed_var_constructed.x) + (na(typed_var_constructed) ? na : typed_var_constructed.y))
+var Point typed_var_if = if bar_index == 0
+    Point.new(high + 350, low)
+else
+    Point.new(high + 355, low)
+if bar_index == 2
+    typed_var_if := Point.new(high + 360, low)
+plot((na(typed_var_if) ? na : typed_var_if.x) + (na(typed_var_if) ? na : typed_var_if.y))
+var Point typed_var_ternary = bar_index == 0 ? Point.new(high + 365, low) : Point.new(high + 370, low)
+if bar_index == 2
+    typed_var_ternary := Point.new(high + 375, low)
+plot((na(typed_var_ternary) ? na : typed_var_ternary.x) + (na(typed_var_ternary) ? na : typed_var_ternary.y))
+var Point typed_var_switch = switch bar_index
+    0 => Point.new(high + 380, low)
+    1 => Point.new(high + 385, low)
+    => Point.new(high + 390, low)
+if bar_index == 2
+    typed_var_switch := Point.new(high + 395, low)
+plot((na(typed_var_switch) ? na : typed_var_switch.x) + (na(typed_var_switch) ? na : typed_var_switch.y))
+var Point typed_var_for = for typed_var_i = 0 to 1
+    Point.new(high + typed_var_i + 400, low)
+if bar_index == 2
+    typed_var_for := Point.new(high + 405, low)
+plot((na(typed_var_for) ? na : typed_var_for.x) + (na(typed_var_for) ? na : typed_var_for.y))
+typed_var_values = array.from(0, 1)
+var Point typed_var_for_in = for value in typed_var_values
+    Point.new(high + value + 450, low)
+if bar_index == 2
+    typed_var_for_in := Point.new(high + 455, low)
+plot((na(typed_var_for_in) ? na : typed_var_for_in.x) + (na(typed_var_for_in) ? na : typed_var_for_in.y))
+typed_var_while_i = 0
+var Point typed_var_while = while typed_var_while_i < 2
+    typed_var_while_i := typed_var_while_i + 1
+    Point.new(high + typed_var_while_i + 460, low)
+if bar_index == 2
+    typed_var_while := Point.new(high + 465, low)
+plot((na(typed_var_while) ? na : typed_var_while.x) + (na(typed_var_while) ? na : typed_var_while.y))
+if bar_index >= 0
+    Point block_typed_point = na
+    block_typed_point := Point.new(high + 40, low)
+    plot((na(block_typed_point) ? na : block_typed_point.x) + (na(block_typed_point) ? na : block_typed_point.y))
+if bar_index >= 0
+    Point block_typed_constructed = Point.new(high + 55, low)
+    block_typed_constructed := Point.new(high + 60, low)
+    plot((na(block_typed_constructed) ? na : block_typed_constructed.x) + (na(block_typed_constructed) ? na : block_typed_constructed.y))
+if bar_index >= 0
+    Point block_typed_ternary = bar_index < 2 ? Point.new(high + 145, low) : Point.new(high + 150, low)
+    block_typed_ternary := bar_index == 3 ? Point.new(high + 155, low) : Point.new(high + 160, low)
+    plot((na(block_typed_ternary) ? na : block_typed_ternary.x) + (na(block_typed_ternary) ? na : block_typed_ternary.y))
+if bar_index >= 0
+    Point block_typed_if = if bar_index < 2
+        Point.new(high + 290, low)
+    else
+        Point.new(high + 295, low)
+    block_typed_if := if bar_index == 3
+        Point.new(high + 300, low)
+    else
+        Point.new(high + 305, low)
+    plot((na(block_typed_if) ? na : block_typed_if.x) + (na(block_typed_if) ? na : block_typed_if.y))
+if bar_index >= 0
+    Point block_typed_switch = switch bar_index
+        0 => Point.new(high + 165, low)
+        1 => Point.new(high + 170, low)
+        => Point.new(high + 175, low)
+    block_typed_switch := switch bar_index
+        3 => Point.new(high + 180, low)
+        => Point.new(high + 185, low)
+    plot((na(block_typed_switch) ? na : block_typed_switch.x) + (na(block_typed_switch) ? na : block_typed_switch.y))
+if bar_index >= 0
+    Point block_typed_for = for block_typed_for_i = 0 to 1
+        Point.new(high + block_typed_for_i + 420, low)
+    block_typed_for := for block_typed_for_j = 0 to 1
+        Point.new(high + block_typed_for_j + 425, low)
+    plot((na(block_typed_for) ? na : block_typed_for.x) + (na(block_typed_for) ? na : block_typed_for.y))
+loop_typed_sum = close > 0 ? 0.0 : 0.0
+for typed_i = 0 to 1
+    Point loop_typed_point = na
+    loop_typed_point := Point.new(high + typed_i, low)
+    loop_typed_sum := loop_typed_sum + (na(loop_typed_point) ? na : loop_typed_point.x) + (na(loop_typed_point) ? na : loop_typed_point.y)
+plot(loop_typed_sum)
+loop_typed_constructed_sum = close > 0 ? 0.0 : 0.0
+for typed_constructed_i = 0 to 1
+    Point loop_typed_constructed = Point.new(high + typed_constructed_i + 70, low)
+    loop_typed_constructed := Point.new(high + typed_constructed_i + 75, low)
+    loop_typed_constructed_sum := loop_typed_constructed_sum + (na(loop_typed_constructed) ? na : loop_typed_constructed.x) + (na(loop_typed_constructed) ? na : loop_typed_constructed.y)
+plot(loop_typed_constructed_sum)
+loop_typed_ternary_sum = close > 0 ? 0.0 : 0.0
+for typed_ternary_i = 0 to 1
+    Point loop_typed_ternary = typed_ternary_i == 0 ? Point.new(high + typed_ternary_i + 190, low) : Point.new(high + typed_ternary_i + 195, low)
+    loop_typed_ternary := typed_ternary_i == 1 ? Point.new(high + typed_ternary_i + 200, low) : Point.new(high + typed_ternary_i + 205, low)
+    loop_typed_ternary_sum := loop_typed_ternary_sum + (na(loop_typed_ternary) ? na : loop_typed_ternary.x) + (na(loop_typed_ternary) ? na : loop_typed_ternary.y)
+plot(loop_typed_ternary_sum)
+loop_typed_if_sum = close > 0 ? 0.0 : 0.0
+for typed_if_i = 0 to 1
+    Point loop_typed_if = if typed_if_i == 0
+        Point.new(high + typed_if_i + 310, low)
+    else
+        Point.new(high + typed_if_i + 315, low)
+    loop_typed_if := if typed_if_i == 1
+        Point.new(high + typed_if_i + 320, low)
+    else
+        Point.new(high + typed_if_i + 325, low)
+    loop_typed_if_sum := loop_typed_if_sum + (na(loop_typed_if) ? na : loop_typed_if.x) + (na(loop_typed_if) ? na : loop_typed_if.y)
+plot(loop_typed_if_sum)
+loop_typed_switch_sum = close > 0 ? 0.0 : 0.0
+for typed_switch_i = 0 to 1
+    Point loop_typed_switch = switch typed_switch_i
+        0 => Point.new(high + typed_switch_i + 230, low)
+        => Point.new(high + typed_switch_i + 235, low)
+    loop_typed_switch := switch typed_switch_i
+        1 => Point.new(high + typed_switch_i + 240, low)
+        => Point.new(high + typed_switch_i + 245, low)
+    loop_typed_switch_sum := loop_typed_switch_sum + (na(loop_typed_switch) ? na : loop_typed_switch.x) + (na(loop_typed_switch) ? na : loop_typed_switch.y)
+plot(loop_typed_switch_sum)
+loop_typed_for_sum = close > 0 ? 0.0 : 0.0
+for typed_for_i = 0 to 1
+    Point loop_typed_for = for typed_for_j = 0 to 1
+        Point.new(high + typed_for_i + typed_for_j + 430, low)
+    loop_typed_for := for typed_for_j = 0 to 1
+        Point.new(high + typed_for_i + typed_for_j + 435, low)
+    loop_typed_for_sum := loop_typed_for_sum + (na(loop_typed_for) ? na : loop_typed_for.x) + (na(loop_typed_for) ? na : loop_typed_for.y)
+plot(loop_typed_for_sum)
+while_typed_sum = close > 0 ? 0.0 : 0.0
+while_typed_i = 0
+while while_typed_i < 2
+    Point while_typed_point = na
+    while_typed_point := Point.new(high + while_typed_i + 10, low)
+    while_typed_sum := while_typed_sum + (na(while_typed_point) ? na : while_typed_point.x) + (na(while_typed_point) ? na : while_typed_point.y)
+    while_typed_i := while_typed_i + 1
+plot(while_typed_sum)
+while_typed_constructed_sum = close > 0 ? 0.0 : 0.0
+while_typed_constructed_i = 0
+while while_typed_constructed_i < 2
+    Point while_typed_constructed = Point.new(high + while_typed_constructed_i + 85, low)
+    while_typed_constructed := Point.new(high + while_typed_constructed_i + 90, low)
+    while_typed_constructed_sum := while_typed_constructed_sum + (na(while_typed_constructed) ? na : while_typed_constructed.x) + (na(while_typed_constructed) ? na : while_typed_constructed.y)
+    while_typed_constructed_i := while_typed_constructed_i + 1
+plot(while_typed_constructed_sum)
+while_typed_ternary_sum = close > 0 ? 0.0 : 0.0
+while_typed_ternary_i = 0
+while while_typed_ternary_i < 2
+    Point while_typed_ternary = while_typed_ternary_i == 0 ? Point.new(high + while_typed_ternary_i + 210, low) : Point.new(high + while_typed_ternary_i + 215, low)
+    while_typed_ternary := while_typed_ternary_i == 1 ? Point.new(high + while_typed_ternary_i + 220, low) : Point.new(high + while_typed_ternary_i + 225, low)
+    while_typed_ternary_sum := while_typed_ternary_sum + (na(while_typed_ternary) ? na : while_typed_ternary.x) + (na(while_typed_ternary) ? na : while_typed_ternary.y)
+    while_typed_ternary_i := while_typed_ternary_i + 1
+plot(while_typed_ternary_sum)
+while_typed_if_sum = close > 0 ? 0.0 : 0.0
+while_typed_if_i = 0
+while while_typed_if_i < 2
+    Point while_typed_if = if while_typed_if_i == 0
+        Point.new(high + while_typed_if_i + 330, low)
+    else
+        Point.new(high + while_typed_if_i + 335, low)
+    while_typed_if := if while_typed_if_i == 1
+        Point.new(high + while_typed_if_i + 340, low)
+    else
+        Point.new(high + while_typed_if_i + 345, low)
+    while_typed_if_sum := while_typed_if_sum + (na(while_typed_if) ? na : while_typed_if.x) + (na(while_typed_if) ? na : while_typed_if.y)
+    while_typed_if_i := while_typed_if_i + 1
+plot(while_typed_if_sum)
+while_typed_switch_sum = close > 0 ? 0.0 : 0.0
+while_typed_switch_i = 0
+while while_typed_switch_i < 2
+    Point while_typed_switch = switch while_typed_switch_i
+        0 => Point.new(high + while_typed_switch_i + 250, low)
+        => Point.new(high + while_typed_switch_i + 255, low)
+    while_typed_switch := switch while_typed_switch_i
+        1 => Point.new(high + while_typed_switch_i + 260, low)
+        => Point.new(high + while_typed_switch_i + 265, low)
+    while_typed_switch_sum := while_typed_switch_sum + (na(while_typed_switch) ? na : while_typed_switch.x) + (na(while_typed_switch) ? na : while_typed_switch.y)
+    while_typed_switch_i := while_typed_switch_i + 1
+plot(while_typed_switch_sum)
+while_typed_for_sum = close > 0 ? 0.0 : 0.0
+while_typed_for_i = 0
+while while_typed_for_i < 2
+    Point while_typed_for = for while_typed_for_j = 0 to 1
+        Point.new(high + while_typed_for_i + while_typed_for_j + 440, low)
+    while_typed_for := for while_typed_for_j = 0 to 1
+        Point.new(high + while_typed_for_i + while_typed_for_j + 445, low)
+    while_typed_for_sum := while_typed_for_sum + (na(while_typed_for) ? na : while_typed_for.x) + (na(while_typed_for) ? na : while_typed_for.y)
+    while_typed_for_i := while_typed_for_i + 1
+plot(while_typed_for_sum)
+p.x := high
+plot((na(p) ? na : p.x) + (na(p) ? na : p.y))
+branch = Point.new(close, open)
+if bar_index < 2
+    branch.x := (na(branch) ? na : branch.x) + 10
+else
+    branch.y := (na(branch) ? na : branch.y) + 20
+plot((na(branch) ? na : branch.x) + (na(branch) ? na : branch.y))
+loop_mutated = Point.new(close, open)
+for i = 0 to 1
+    loop_mutated.x := (na(loop_mutated) ? na : loop_mutated.x) + i
+plot((na(loop_mutated) ? na : loop_mutated.x) + (na(loop_mutated) ? na : loop_mutated.y))
+while_mutated = Point.new(close, open)
+while_i = 0
+while while_i < 2
+    while_mutated.y := (na(while_mutated) ? na : while_mutated.y) + while_i
+    while_i := while_i + 1
+plot((na(while_mutated) ? na : while_mutated.x) + (na(while_mutated) ? na : while_mutated.y))
+looped = for i = 0 to 1
+    Point.new((na(p) ? na : p.x) + i, (na(p) ? na : p.y))
+plot((na(looped) ? na : looped.x) + (na(looped) ? na : looped.y))
+Wrapper typed_wrapped = Wrapper.new(Point.new(high + 100, low), high)
+plot((na(typed_wrapped) ? na : na(typed_wrapped.inner) ? na : typed_wrapped.inner.x) + (na(typed_wrapped) ? na : na(typed_wrapped.inner) ? na : typed_wrapped.inner.y) + (na(typed_wrapped) ? na : typed_wrapped.weight))
+typed_wrapped := Wrapper.new(Point.new(high + 105, low), close)
+plot((na(typed_wrapped) ? na : na(typed_wrapped.inner) ? na : typed_wrapped.inner.x) + (na(typed_wrapped) ? na : na(typed_wrapped.inner) ? na : typed_wrapped.inner.y) + (na(typed_wrapped) ? na : typed_wrapped.weight))
+Wrapper typed_wrapped_na = na
+typed_wrapped_na := Wrapper.new(Point.new(high + 110, low), close)
+plot((na(typed_wrapped_na) ? na : na(typed_wrapped_na.inner) ? na : typed_wrapped_na.inner.x) + (na(typed_wrapped_na) ? na : na(typed_wrapped_na.inner) ? na : typed_wrapped_na.inner.y) + (na(typed_wrapped_na) ? na : typed_wrapped_na.weight))
+wrapped = Wrapper.new(p, high)
+plot((na(wrapped) ? na : na(wrapped.inner) ? na : wrapped.inner.x) + (na(wrapped) ? na : na(wrapped.inner) ? na : wrapped.inner.y) + (na(wrapped) ? na : wrapped.weight))
+inner = (na(wrapped) ? na : wrapped.inner)
+plot((na(inner) ? na : inner.x) + (na(inner) ? na : inner.y))
+nestedScore(w) => (na(w) ? na : na(w.inner) ? na : w.inner.x) + (na(w) ? na : na(w.inner) ? na : w.inner.y) + (na(w) ? na : w.weight)
+plot(nestedScore(wrapped))
+wrapped.inner := Point.new(high + 10, low)
+plot((na(wrapped) ? na : na(wrapped.inner) ? na : wrapped.inner.x) + (na(wrapped) ? na : na(wrapped.inner) ? na : wrapped.inner.y) + (na(wrapped) ? na : wrapped.weight))
+branch_wrapped = Wrapper.new(Point.new(close, open), high)
+if bar_index < 2
+    branch_wrapped.inner := Point.new(high + 20, low)
+else
+    branch_wrapped.inner := Point.new(high + 30, low)
+plot((na(branch_wrapped) ? na : na(branch_wrapped.inner) ? na : branch_wrapped.inner.x) + (na(branch_wrapped) ? na : na(branch_wrapped.inner) ? na : branch_wrapped.inner.y) + (na(branch_wrapped) ? na : branch_wrapped.weight))
+for_wrapped = Wrapper.new(Point.new(close, open), high)
+for i = 0 to 1
+    for_wrapped.inner := Point.new((na(for_wrapped) ? na : na(for_wrapped.inner) ? na : for_wrapped.inner.x) + i + 10, (na(for_wrapped) ? na : na(for_wrapped.inner) ? na : for_wrapped.inner.y) + i)
+plot((na(for_wrapped) ? na : na(for_wrapped.inner) ? na : for_wrapped.inner.x) + (na(for_wrapped) ? na : na(for_wrapped.inner) ? na : for_wrapped.inner.y) + (na(for_wrapped) ? na : for_wrapped.weight))
+while_wrapped = Wrapper.new(Point.new(close, open), high)
+while_i_nested = 0
+while while_i_nested < 2
+    while_wrapped.inner := Point.new((na(while_wrapped) ? na : na(while_wrapped.inner) ? na : while_wrapped.inner.x) + while_i_nested + 20, (na(while_wrapped) ? na : na(while_wrapped.inner) ? na : while_wrapped.inner.y) + while_i_nested)
+    while_i_nested := while_i_nested + 1
+plot((na(while_wrapped) ? na : na(while_wrapped.inner) ? na : while_wrapped.inner.x) + (na(while_wrapped) ? na : na(while_wrapped.inner) ? na : while_wrapped.inner.y) + (na(while_wrapped) ? na : while_wrapped.weight))

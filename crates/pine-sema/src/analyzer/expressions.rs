@@ -2,6 +2,7 @@ use crate::PineDialect;
 use crate::prelude::*;
 
 mod legacy_conversions;
+mod members;
 mod resolution;
 mod type_queries;
 mod type_validation;
@@ -94,6 +95,7 @@ impl Analyzer {
 
     fn analyze_expr_inner(&mut self, expr: &Expr) -> Option<PineType> {
         match &expr.kind {
+            ExprKind::Member { receiver, name } => self.analyze_member(expr, receiver, name),
             ExprKind::Literal(literal) => {
                 if matches!(literal, Literal::ColorHex(_)) {
                     self.compatibility.supported.push(FeatureUse {
@@ -119,6 +121,12 @@ impl Analyzer {
                 pine_type
             }
             ExprKind::QualifiedName(parts) => {
+                if let Some(member) = self.qualified_member_expression(expr) {
+                    if let Some(symbol) = self.scope.resolve(&parts[0]) {
+                        self.bind_symbol(&parts[0], expr.span, symbol);
+                    }
+                    return self.analyze_expr(&member);
+                }
                 if let Some(field_type) = self.resolve_chart_point_field_access(parts, expr.span) {
                     return Some(field_type);
                 }
@@ -243,6 +251,9 @@ impl Analyzer {
                 let value_type = self.analyze_expr(value_expr);
                 let offset_type = self.analyze_expr(offset);
                 self.validate_history_offset(offset, offset_type);
+                if self.reject_direct_udt_field_history(value_expr) {
+                    return None;
+                }
                 if matches!(
                     value_type.map(|pine_type| pine_type.kind),
                     Some(ValueKind::UserType)

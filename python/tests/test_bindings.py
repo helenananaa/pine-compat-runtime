@@ -2483,7 +2483,7 @@ def test_run_script_returns_varip_array_fixture_contract():
 
 
 def test_run_script_returns_user_type_varip_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_type_varip.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_type_varip_guarded.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_user_type_varip.json").read_text())
 
     result = pine_compat.run_script(
@@ -2575,7 +2575,7 @@ def test_run_script_returns_request_security_time_close_fixture_contract():
 
 
 def test_run_script_returns_user_types_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_types.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_types_guarded.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_user_types.json").read_text())
 
     result = pine_compat.run_script(
@@ -2587,7 +2587,7 @@ def test_run_script_returns_user_types_fixture_contract():
 
 
 def test_run_script_returns_user_type_functions_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_type_functions.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_type_functions_guarded.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_user_type_functions.json").read_text()
     )
@@ -2601,7 +2601,7 @@ def test_run_script_returns_user_type_functions_fixture_contract():
 
 
 def test_run_script_returns_user_methods_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_methods.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_methods_guarded.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_user_methods.json").read_text())
 
     result = pine_compat.run_script(

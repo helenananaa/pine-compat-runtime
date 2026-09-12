@@ -1,0 +1,39 @@
+//@version=6
+indicator("Local constructor method receiver")
+
+type Point
+    float x
+
+type Shifted
+    float x
+
+method shift(Point p, float delta) => (na(p) ? na : p.x) + delta
+method make(Point p, float value) => Point.new(value)
+method makeBlock(Point p, float value) =>
+    made = Point.new(value)
+    made
+method same(Point p) => p
+method read(Point p) => (na(p) ? na : p.x)
+method copy(Point p) => (na(p) ? na : p.x) + 10
+method makeShifted(Point p) => Shifted.new((na(p) ? na : p.x) + 20)
+method read(Shifted p) => (na(p) ? na : p.x)
+
+direct = Point.new(close).shift(5)
+named = Point.new(open).shift(delta=7)
+chained = Point.new(close).make(high + 9).same()
+prior = Point.new(close).make(close + 3)[1]
+scalarPrior = Point.new(close).shift(5)[1]
+methodResultScalarPrior = Point.new(close).make(open).read()[1]
+blockMethodResultScalarPrior = Point.new(close).makeBlock(open).read()[1]
+scalarMethodNamedCopy = Point.new(close).make(close + 1).copy()
+typeChangedMethodResult = Point.new(close).makeShifted().read()
+
+plot(direct, "direct")
+plot(named, "named")
+plot((na(chained) ? na : chained.x), "chained")
+plot((na(prior) ? na : prior.x), "prior")
+plot(scalarPrior, "scalarPrior")
+plot(methodResultScalarPrior, "methodResultScalarPrior")
+plot(blockMethodResultScalarPrior, "blockMethodResultScalarPrior")
+plot(scalarMethodNamedCopy, "scalarMethodNamedCopy")
+plot(typeChangedMethodResult, "typeChangedMethodResult")

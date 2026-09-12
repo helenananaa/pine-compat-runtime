@@ -21,6 +21,12 @@ impl Analyzer {
         expr: &Expr,
         param_exprs: &HashMap<String, HirExpr>,
     ) -> Option<String> {
+        if let ExprKind::Member { receiver, name } = &expr.without_groups().kind {
+            let identity = self.user_type_name_of_expr_with_params(receiver, param_exprs)?;
+            return self
+                .user_type_field_path(&identity, Qualifier::Series, std::slice::from_ref(name))?
+                .1;
+        }
         match self.user_type_result_with_params_and_aliases(
             expr,
             param_exprs,

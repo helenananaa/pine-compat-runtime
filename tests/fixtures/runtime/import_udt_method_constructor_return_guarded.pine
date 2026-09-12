@@ -1,0 +1,98 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT method constructor return")
+
+p = lib.Point.new(close)
+values = array.from(1, 2)
+q = p.make(close + 10)
+q_ternary = p.makeTernary(close + 15, bar_index % 2 == 0)
+q_nested = p.makeViaMethod(close + 18)
+ternaryPoint = p.makeTernary(close + 30, bar_index % 2 == 0)
+lib.Point typedTernary = p.makeTernary(open + 30, bar_index % 2 == 0)
+ifPoint = p.makeIf(close + 40, bar_index % 2 == 0)
+lib.Point typedIf = p.makeIf(open + 40, bar_index % 2 == 0)
+forPoint = p.makeFor(close + 50, 2)
+lib.Point typedFor = p.makeFor(open + 50, 2)
+forInPoint = p.makeForIn(close + 60, values)
+lib.Point typedForIn = p.makeForIn(open + 60, values)
+whilePoint = p.makeWhile(close + 70, 2)
+lib.Point typedWhile = p.makeWhile(open + 70, 2)
+switchPoint = p.makeSwitch(close + 80, bar_index % 2)
+lib.Point typedSwitch = p.makeSwitch(open + 80, bar_index % 2)
+wrapped = lib.Wrapper.new(p)
+wrapped_new = wrapped.makeWrapper(close + 20)
+wrapped_ternary = wrapped.makeWrapperTernary(close + 25, bar_index % 2 == 0)
+wrapped_nested = wrapped.makeWrapperViaMethod(close + 28)
+wrapped_if = wrapped.makeWrapperIf(close + 90, bar_index % 2 == 0)
+lib.Wrapper typedWrappedIf = wrapped.makeWrapperIf(open + 90, bar_index % 2 == 0)
+wrapped_for = wrapped.makeWrapperFor(close + 100, 2)
+lib.Wrapper typedWrappedFor = wrapped.makeWrapperFor(open + 100, 2)
+wrapped_for_in = wrapped.makeWrapperForIn(close + 110, values)
+lib.Wrapper typedWrappedForIn = wrapped.makeWrapperForIn(open + 110, values)
+wrapped_while = wrapped.makeWrapperWhile(close + 120, 2)
+lib.Wrapper typedWrappedWhile = wrapped.makeWrapperWhile(open + 120, 2)
+wrapped_switch = wrapped.makeWrapperSwitch(close + 130, bar_index % 2)
+lib.Wrapper typedWrappedSwitch = wrapped.makeWrapperSwitch(open + 130, bar_index % 2)
+q_prior = q[1]
+switchPoint_prior = switchPoint[1]
+wrapped_new_prior = wrapped_new[1]
+wrapped_switch_prior = wrapped_switch[1]
+dyn = bar_index == 0 ? na : 1
+q_dynamic = q[dyn]
+q_dynamic_sibling = q[dyn]
+float q_dynamic_x = na
+float q_dynamic_sibling_x_after_mutation = na
+q_nested_dynamic = q_nested[dyn]
+q_nested_dynamic_sibling = q_nested[dyn]
+float q_nested_dynamic_x = na
+float q_nested_dynamic_sibling_x_after_mutation = na
+wrapped_new_dynamic = wrapped_new[dyn]
+wrapped_new_dynamic_sibling = wrapped_new[dyn]
+float wrapped_new_dynamic_x = na
+float wrapped_new_dynamic_sibling_x_after_mutation = na
+wrapped_nested_dynamic = wrapped_nested[dyn]
+wrapped_nested_dynamic_sibling = wrapped_nested[dyn]
+float wrapped_nested_dynamic_x = na
+float wrapped_nested_dynamic_sibling_x_after_mutation = na
+if bar_index > 0
+    q_dynamic_x := (na(q_dynamic) ? na : q_dynamic.x)
+    q_dynamic.x := close + 700
+    q_dynamic_sibling_x_after_mutation := (na(q_dynamic_sibling) ? na : q_dynamic_sibling.x)
+    q_nested_dynamic_x := (na(q_nested_dynamic) ? na : q_nested_dynamic.x)
+    q_nested_dynamic.x := close + 900
+    q_nested_dynamic_sibling_x_after_mutation := (na(q_nested_dynamic_sibling) ? na : q_nested_dynamic_sibling.x)
+    wrapped_new_dynamic_x := (na(wrapped_new_dynamic) ? na : na(wrapped_new_dynamic.nested) ? na : wrapped_new_dynamic.nested.x)
+    wrapped_new_dynamic.nested := lib.Point.new(close + 800)
+    wrapped_new_dynamic_sibling_x_after_mutation := (na(wrapped_new_dynamic_sibling) ? na : na(wrapped_new_dynamic_sibling.nested) ? na : wrapped_new_dynamic_sibling.nested.x)
+    wrapped_nested_dynamic_x := (na(wrapped_nested_dynamic) ? na : na(wrapped_nested_dynamic.nested) ? na : wrapped_nested_dynamic.nested.x)
+    wrapped_nested_dynamic.nested := lib.Point.new(close + 1000)
+    wrapped_nested_dynamic_sibling_x_after_mutation := (na(wrapped_nested_dynamic_sibling) ? na : na(wrapped_nested_dynamic_sibling.nested) ? na : wrapped_nested_dynamic_sibling.nested.x)
+plot((na(q) ? na : q.x))
+plot((na(q_ternary) ? na : q_ternary.x))
+plot((na(q_nested) ? na : q_nested.x))
+plot((na(wrapped_new) ? na : na(wrapped_new.nested) ? na : wrapped_new.nested.x))
+plot((na(wrapped_ternary) ? na : na(wrapped_ternary.nested) ? na : wrapped_ternary.nested.x))
+plot((na(wrapped_nested) ? na : na(wrapped_nested.nested) ? na : wrapped_nested.nested.x))
+plot((na(ternaryPoint) ? na : ternaryPoint.x) + (na(typedTernary) ? na : typedTernary.x))
+plot((na(ifPoint) ? na : ifPoint.x) + (na(typedIf) ? na : typedIf.x))
+plot((na(forPoint) ? na : forPoint.x) + (na(typedFor) ? na : typedFor.x))
+plot((na(forInPoint) ? na : forInPoint.x) + (na(typedForIn) ? na : typedForIn.x))
+plot((na(whilePoint) ? na : whilePoint.x) + (na(typedWhile) ? na : typedWhile.x))
+plot((na(switchPoint) ? na : switchPoint.x) + (na(typedSwitch) ? na : typedSwitch.x))
+plot((na(wrapped_if) ? na : na(wrapped_if.nested) ? na : wrapped_if.nested.x) + (na(typedWrappedIf) ? na : na(typedWrappedIf.nested) ? na : typedWrappedIf.nested.x))
+plot((na(wrapped_for) ? na : na(wrapped_for.nested) ? na : wrapped_for.nested.x) + (na(typedWrappedFor) ? na : na(typedWrappedFor.nested) ? na : typedWrappedFor.nested.x))
+plot((na(wrapped_for_in) ? na : na(wrapped_for_in.nested) ? na : wrapped_for_in.nested.x) + (na(typedWrappedForIn) ? na : na(typedWrappedForIn.nested) ? na : typedWrappedForIn.nested.x))
+plot((na(wrapped_while) ? na : na(wrapped_while.nested) ? na : wrapped_while.nested.x) + (na(typedWrappedWhile) ? na : na(typedWrappedWhile.nested) ? na : typedWrappedWhile.nested.x))
+plot((na(wrapped_switch) ? na : na(wrapped_switch.nested) ? na : wrapped_switch.nested.x) + (na(typedWrappedSwitch) ? na : na(typedWrappedSwitch.nested) ? na : typedWrappedSwitch.nested.x))
+plot((na(q_prior) ? na : q_prior.x))
+plot((na(switchPoint_prior) ? na : switchPoint_prior.x))
+plot((na(wrapped_new_prior) ? na : na(wrapped_new_prior.nested) ? na : wrapped_new_prior.nested.x))
+plot((na(wrapped_switch_prior) ? na : na(wrapped_switch_prior.nested) ? na : wrapped_switch_prior.nested.x))
+plot(q_dynamic_x)
+plot(q_dynamic_sibling_x_after_mutation)
+plot(wrapped_new_dynamic_x)
+plot(wrapped_new_dynamic_sibling_x_after_mutation)
+plot(q_nested_dynamic_x)
+plot(q_nested_dynamic_sibling_x_after_mutation)
+plot(wrapped_nested_dynamic_x)
+plot(wrapped_nested_dynamic_sibling_x_after_mutation)

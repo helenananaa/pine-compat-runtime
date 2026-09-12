@@ -82,19 +82,23 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Call { callee, args } => {
             let name = expr_name(callee);
-            name.as_deref().is_some_and(|name| {
-                is_output_or_declaration_builtin(name)
-                    || is_array_mutation_builtin(name)
-                    || is_array_mutation_method_call_name(name)
-                    || is_map_mutation_builtin(name)
-                    || is_map_mutation_method_call_name(name)
-            }) || args
-                .iter()
-                .any(|arg| contains_output_or_declaration_call(&arg.value))
+            (matches!(&callee.kind, ExprKind::Member { name, .. } if member_method_may_have_side_effect(name)))
+                || name.as_deref().is_some_and(|name| {
+                    is_output_or_declaration_builtin(name)
+                        || is_array_mutation_builtin(name)
+                        || is_array_mutation_method_call_name(name)
+                        || is_map_mutation_builtin(name)
+                        || is_map_mutation_method_call_name(name)
+                })
+                || contains_output_or_declaration_call(callee)
+                || args
+                    .iter()
+                    .any(|arg| contains_output_or_declaration_call(&arg.value))
         }
-        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } | ExprKind::Group(expr) => {
-            contains_output_or_declaration_call(expr)
-        }
+        ExprKind::Unary { expr, .. }
+        | ExprKind::History { expr, .. }
+        | ExprKind::Group(expr)
+        | ExprKind::Member { receiver: expr, .. } => contains_output_or_declaration_call(expr),
         ExprKind::Binary { left, right, .. } => {
             contains_output_or_declaration_call(left) || contains_output_or_declaration_call(right)
         }
@@ -199,6 +203,18 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
         ExprKind::Tuple(items) => items.iter().any(contains_output_or_declaration_call),
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
     }
+}
+
+fn member_method_may_have_side_effect(method: &str) -> bool {
+    pine_builtins::PHASE_1_BUILTINS.iter().any(|signature| {
+        signature
+            .name
+            .rsplit_once('.')
+            .is_some_and(|(_, name)| name == method)
+            && (is_output_or_declaration_builtin(signature.name)
+                || is_array_mutation_builtin(signature.name)
+                || is_map_mutation_builtin(signature.name))
+    })
 }
 
 fn switch_arm_result_contains_output_or_declaration_call(result: &SwitchArmResult) -> bool {
@@ -505,8 +521,8 @@ impl Analyzer {
                 && self.block_depth == 0
                 && matches!(&arg.value.kind, ExprKind::Call { callee, args }
                     if expr_name(callee).is_some_and(|name| name.starts_with("input."))
-                        && args.iter().all(|arg| !contains_output_or_declaration_call(&arg.value)));
-            if !direct_global_input && contains_output_or_declaration_call(&arg.value) {
+                        && args.iter().all(|arg| !self.argument_has_side_effect(&arg.value)));
+            if !direct_global_input && self.argument_has_side_effect(&arg.value) {
                 self.unsupported(
                     "function_side_effect",
                     "side-effecting calls cannot be passed as user-defined function arguments",

@@ -765,6 +765,13 @@ impl Analyzer {
             FunctionBody::Expr(expr) => self.user_type_name_of_expr(expr),
             FunctionBody::Block(statements) => {
                 let last = statements.last()?;
+                if matches!(
+                    last.kind,
+                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. }
+                ) && let Some(name) = self.expr_user_types.get(&self.expr_key(last.span))
+                {
+                    return Some(name.clone());
+                }
                 match &last.kind {
                     StmtKind::Expr(expr) => self.user_type_name_of_expr(expr),
                     StmtKind::If {
@@ -848,7 +855,7 @@ impl Analyzer {
             .map(|(pine_type, _, _)| pine_type)
     }
 
-    fn resolve_user_type_field_path(
+    pub(crate) fn resolve_user_type_field_path(
         &mut self,
         type_name: &str,
         qualifier: Qualifier,
@@ -897,7 +904,7 @@ impl Analyzer {
         self.user_type_field_path(type_name, qualifier, field_names)
     }
 
-    fn user_type_field_path(
+    pub(crate) fn user_type_field_path(
         &self,
         type_name: &str,
         qualifier: Qualifier,

@@ -278,6 +278,7 @@ impl Analyzer {
 
     fn request_expression_is_pure_scalar(&self, expr: &Expr) -> bool {
         match &expr.kind {
+            ExprKind::Member { .. } => false,
             ExprKind::Literal(_) | ExprKind::Identifier(_) => true,
             ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()
@@ -404,6 +405,7 @@ impl Analyzer {
         allow_nested_legacy_security: bool,
     ) -> bool {
         match &expr.kind {
+            ExprKind::Member { .. } => false,
             ExprKind::Literal(_) => true,
             ExprKind::Identifier(name) => {
                 if local_names.contains(name) {
@@ -772,6 +774,7 @@ impl Analyzer {
 
     fn request_expression_is_provider_scalar(&self, expr: &Expr) -> bool {
         match &expr.kind {
+            ExprKind::Member { .. } => false,
             ExprKind::Literal(_) => true,
             ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()

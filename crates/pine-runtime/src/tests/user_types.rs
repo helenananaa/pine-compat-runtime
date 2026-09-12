@@ -92,7 +92,7 @@ type Point
     float x
 p = Point.new(close)
 prior = p[1]
-plot(prior.x)
+plot(na(prior) ? na : prior.x)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -121,7 +121,7 @@ type Point
     float x
 var Point p = Point.new(close)
 prior = p[1]
-plot(prior.x)
+plot(na(prior) ? na : prior.x)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -153,7 +153,7 @@ type Wrapper
 point = Point.new(close)
 wrapper = Wrapper.new(point)
 prior = wrapper[1]
-plot(prior.point.x)
+plot(na(prior) ? na : prior.point.x)
 "#,
     );
     let analysis = analyze_source(&source);

@@ -212,6 +212,10 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
     }
 
     let kind = match &expr.kind {
+        ExprKind::Member { receiver, name } => ExprKind::Member {
+            receiver: Box::new(rewrite_expr(receiver, context)),
+            name: name.clone(),
+        },
         ExprKind::Call { callee, args } => {
             let postfix_call_result_method =
                 postfix_call_result_method_parts(callee, args).is_some();

@@ -129,6 +129,13 @@ impl<'a> HistoricalRuntime<'a> {
             HirExprKind::FieldAccess { value, index } => match self.eval_expr(value)? {
                 PineValue::UserType(fields) => fields.get(*index).cloned().unwrap_or(PineValue::Na),
                 PineValue::ChartPoint(point) => point.field(*index),
+                PineValue::Na if value.pine_type.kind == pine_ir::ValueKind::UserType => {
+                    return Err(RuntimeError {
+                        message: format!(
+                            "E_UDT_NA_FIELD: cannot access field {index} of an undefined (na) user-defined object"
+                        ),
+                    });
+                }
                 PineValue::Na => PineValue::Na,
                 _ => {
                     return Err(RuntimeError {

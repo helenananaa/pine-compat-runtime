@@ -45,6 +45,9 @@ pub(crate) use model::{
 };
 use modules_rewrite::{RewriteContext, rewrite_expr, rewrite_function_body, rewrite_program};
 use side_effects::{first_statement_span, function_body_has_side_effect, visit_statement_exprs};
+pub(crate) fn visit_expression(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
+    side_effects::visit_expr(expr, visitor);
+}
 use version_policy::validate_language_versions;
 
 pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
@@ -124,6 +127,10 @@ fn validate_modules_inner(
     let root_program = rewrite_program(&root_program, &import_plan.root_rewrites);
 
     ModuleValidation {
+        source_texts: std::iter::once(graph.root())
+            .chain(graph.libraries())
+            .map(|source| (source.id(), source.source().text().to_owned()))
+            .collect(),
         source_context_origins: import_plan.source_context_origins,
         diagnostics,
         root_program,
@@ -809,6 +816,7 @@ fn name_is_exported_function(module: &ModuleInfo, name: &str) -> bool {
 
 fn is_const_import_expr(expr: &Expr) -> bool {
     match &expr.kind {
+        ExprKind::Member { .. } => false,
         ExprKind::Literal(_) => true,
         ExprKind::QualifiedName(parts) => const_qualified_type(&parts.join(".")).is_some(),
         ExprKind::Unary { op, expr } => {

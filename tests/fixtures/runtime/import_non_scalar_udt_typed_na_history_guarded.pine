@@ -1,0 +1,95 @@
+//@version=6
+import user/non_scalar_udt/1 as lib
+indicator("Imported non-scalar UDT typed-na history")
+
+pass(lib.Marker value) =>
+    value
+
+type Tool
+    int seed
+
+method keep(Tool tool, lib.Marker value) =>
+    value
+
+lib.Marker marker = na
+var lib.Marker sticky = na
+varip lib.Marker intrabar = na
+tool = Tool.new(1)
+prior = marker[1]
+sticky_prior = sticky[1]
+intrabar_prior = intrabar[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_prior = marker[dynamic_offset]
+dynamic_sticky_prior = sticky[dynamic_offset]
+dynamic_intrabar_prior = intrabar[dynamic_offset]
+ternary_choice = bar_index > 0 ? marker : na
+if_choice = if bar_index > 0
+    sticky
+else
+    na
+switch_choice = switch bar_index % 2
+    0 => marker
+    => na
+for_choice = for i = 0 to 1
+    marker
+for_in_choice = for value in array.from(1, 2)
+    marker
+count = 0
+while_choice = while count < 1
+    count := count + 1
+    marker
+udf_choice = pass(marker)
+method_choice = tool.keep(marker)
+exported_choice = lib.passMarker(marker)
+nested_exported_choice = lib.nestedPassMarker(marker)
+receiver_choice = marker.retain()
+nested_receiver_choice = marker.nestedRetain()
+alias_receiver_choice = lib.retain(marker)
+alias_nested_receiver_choice = lib.nestedRetain(marker)
+receiver_param_choice = marker.choose(marker)
+alias_param_choice = lib.choose(marker, other=marker)
+field = na(marker) ? na : marker.id
+field_prior = field[1]
+field_dynamic_prior = field[dynamic_offset]
+
+plot(na(prior) ? 1 : 0)
+plot(na(dynamic_prior) ? 1 : 0)
+plot(na(sticky_prior) ? 1 : 0)
+plot(na(dynamic_sticky_prior) ? 1 : 0)
+plot(na(intrabar_prior) ? 1 : 0)
+plot(na(dynamic_intrabar_prior) ? 1 : 0)
+plot(na(ternary_choice[1]) ? 1 : 0)
+plot(na(ternary_choice[dynamic_offset]) ? 1 : 0)
+plot(na(if_choice[1]) ? 1 : 0)
+plot(na(if_choice[dynamic_offset]) ? 1 : 0)
+plot(na(switch_choice[1]) ? 1 : 0)
+plot(na(switch_choice[dynamic_offset]) ? 1 : 0)
+plot(na(for_choice[1]) ? 1 : 0)
+plot(na(for_choice[dynamic_offset]) ? 1 : 0)
+plot(na(for_in_choice[1]) ? 1 : 0)
+plot(na(for_in_choice[dynamic_offset]) ? 1 : 0)
+plot(na(while_choice[1]) ? 1 : 0)
+plot(na(while_choice[dynamic_offset]) ? 1 : 0)
+plot(na(udf_choice[1]) ? 1 : 0)
+plot(na(udf_choice[dynamic_offset]) ? 1 : 0)
+plot(na(method_choice[1]) ? 1 : 0)
+plot(na(method_choice[dynamic_offset]) ? 1 : 0)
+plot(na(exported_choice[1]) ? 1 : 0)
+plot(na(exported_choice[dynamic_offset]) ? 1 : 0)
+plot(na(nested_exported_choice[1]) ? 1 : 0)
+plot(na(nested_exported_choice[dynamic_offset]) ? 1 : 0)
+plot(na(receiver_choice[1]) ? 1 : 0)
+plot(na(receiver_choice[dynamic_offset]) ? 1 : 0)
+plot(na(nested_receiver_choice[1]) ? 1 : 0)
+plot(na(nested_receiver_choice[dynamic_offset]) ? 1 : 0)
+plot(na(alias_receiver_choice[1]) ? 1 : 0)
+plot(na(alias_receiver_choice[dynamic_offset]) ? 1 : 0)
+plot(na(alias_nested_receiver_choice[1]) ? 1 : 0)
+plot(na(alias_nested_receiver_choice[dynamic_offset]) ? 1 : 0)
+plot(na(receiver_param_choice[1]) ? 1 : 0)
+plot(na(receiver_param_choice[dynamic_offset]) ? 1 : 0)
+plot(na(alias_param_choice[1]) ? 1 : 0)
+plot(na(alias_param_choice[dynamic_offset]) ? 1 : 0)
+plot(na(field) ? 1 : 0)
+plot(na(field_prior) ? 1 : 0)
+plot(na(field_dynamic_prior) ? 1 : 0)

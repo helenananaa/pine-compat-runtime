@@ -46,6 +46,7 @@ impl Default for LoweringLimits {
 }
 
 pub(crate) struct Analyzer {
+    pub(crate) source_texts: HashMap<SourceId, String>,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) compatibility: CompatibilityReport,
     pub(crate) legacy: LegacyFrontEnd,

@@ -1,0 +1,15 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT for expression")
+
+p = for i = 0 to 2
+    made = lib.Point.new(close + i)
+    made
+
+lib.Point typed = for i = 0 to 1
+    p
+
+p_prior = p[1]
+
+plot((na(p) ? na : p.x) + (na(typed) ? na : typed.x))
+plot((na(p_prior) ? na : p_prior.x))

@@ -191,6 +191,7 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_typed_declaration.pine",
     "tests/fixtures/runtime/import_udt_var.pine",
     "tests/fixtures/runtime/import_udt_varip.pine",
+    "tests/fixtures/runtime/import_udt_history_guarded.pine",
     "tests/fixtures/runtime/import_udt_history.pine",
     "tests/fixtures/runtime/import_udt_private_dependency_history.pine",
     "tests/fixtures/runtime/import_udt_array_from.pine",

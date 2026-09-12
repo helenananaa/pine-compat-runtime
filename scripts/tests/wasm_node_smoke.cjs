@@ -408,6 +408,19 @@ for (const version of [5, 6]) {
   for (const plot of pivotNaResult.plots) assert.deepEqual(plot.values, pivotNaExpected[plot.title]);
 }
 
+const memberAccessSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/member_access.pine'), 'utf8');
+for (const version of [5, 6]) {
+  const memberAccessResult = JSON.parse(pine.runScriptCsv(memberAccessSource.replace('version=6', `version=${version}`), bars));
+  assert.deepEqual(memberAccessResult.plots[0].values,[1,2,3]);
+  assert.deepEqual(memberAccessResult.plots[1].values,[1,2,3]);
+  assert.deepEqual(memberAccessResult.plots[2].values,[null,1,2]);
+  assert.deepEqual(memberAccessResult.plots[4].values,[1,2,3]);
+  assert.deepEqual(memberAccessResult.plots[5].values,[null,1,2]);
+  assert.equal(memberAccessResult.lines.length,3);
+  const undefinedMemberSource = `//@version=${version}\nindicator("undefined")\ntype Item\n    float value\nItem item=na\nplot(item.value)\n`;
+  assert.throws(() => pine.runScriptCsv(undefinedMemberSource, bars), /E_UDT_NA_FIELD/);
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

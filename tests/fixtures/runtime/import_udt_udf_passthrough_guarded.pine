@@ -1,0 +1,98 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT UDF passthrough")
+
+passthrough(p) => p
+readPoint(p) => (na(p) ? na : p.x)
+aliasBlock(p) =>
+    copy = p
+    copy
+aliasTernary(p, flip) =>
+    copy = p
+    flip ? copy : p
+aliasIf(p, flip) =>
+    if flip
+        copy = p
+        copy
+    else
+        copy = p
+        copy
+aliasFor(p, count) =>
+    for i = 0 to count
+        copy = p
+        copy
+aliasWhile(p) =>
+    active = true
+    while active
+        copy = p
+        active := false
+        copy
+aliasSwitch(p, selector) =>
+    switch selector
+        0 =>
+            copy = p
+            copy
+        =>
+            copy = p
+            copy
+aliasForIn(p, values) =>
+    for value in values
+        copy = p
+        copy
+
+steps = array.from(1, 2)
+p = passthrough(lib.Point.new(close))
+lib.Point typed = passthrough(lib.Point.new(open))
+exportedFunctionScalarPrior = readPoint(lib.typedPoint(lib.Point.new(close)))[1]
+p_prior = p[1]
+blockPoint = aliasBlock(lib.Point.new(close + 5))
+lib.Point typedBlock = aliasBlock(lib.Point.new(open + 5))
+ternaryPoint = aliasTernary(lib.Point.new(close + 2), bar_index % 2 == 0)
+lib.Point typedTernary = aliasTernary(lib.Point.new(open + 2), bar_index % 2 == 0)
+ifPoint = aliasIf(lib.Point.new(close + 3), bar_index % 2 == 0)
+lib.Point typedIf = aliasIf(lib.Point.new(open + 3), bar_index % 2 == 0)
+forPoint = aliasFor(lib.Point.new(high + 4), 2)
+lib.Point typedFor = aliasFor(lib.Point.new(low + 4), 2)
+whilePoint = aliasWhile(lib.Point.new(high))
+lib.Point typedWhile = aliasWhile(lib.Point.new(low))
+switchPoint = aliasSwitch(lib.Point.new(close + 1), bar_index % 2)
+lib.Point typedSwitch = aliasSwitch(lib.Point.new(open + 1), bar_index % 2)
+forInPoint = aliasForIn(lib.Point.new(high + 1), steps)
+lib.Point typedForIn = aliasForIn(lib.Point.new(low + 1), steps)
+forInPoint_prior = forInPoint[1]
+wrapped = passthrough(lib.Wrapper.new(lib.Point.new(close)))
+lib.Wrapper wrapped_typed = passthrough(lib.Wrapper.new(lib.Point.new(open)))
+wrapped_prior = wrapped[1]
+dyn = bar_index == 0 ? na : 1
+p_dynamic = p[dyn]
+p_dynamic_sibling = p[dyn]
+float p_dynamic_x = na
+float p_dynamic_sibling_x_after_mutation = na
+wrapped_dynamic = wrapped[dyn]
+wrapped_dynamic_sibling = wrapped[dyn]
+float wrapped_dynamic_x = na
+float wrapped_dynamic_sibling_x_after_mutation = na
+if bar_index > 0
+    p_dynamic_x := (na(p_dynamic) ? na : p_dynamic.x)
+    p_dynamic.x := close + 700
+    p_dynamic_sibling_x_after_mutation := (na(p_dynamic_sibling) ? na : p_dynamic_sibling.x)
+    wrapped_dynamic_x := (na(wrapped_dynamic) ? na : na(wrapped_dynamic.nested) ? na : wrapped_dynamic.nested.x)
+    wrapped_dynamic.nested := lib.Point.new(close + 800)
+    wrapped_dynamic_sibling_x_after_mutation := (na(wrapped_dynamic_sibling) ? na : na(wrapped_dynamic_sibling.nested) ? na : wrapped_dynamic_sibling.nested.x)
+plot((na(p) ? na : p.x) + (na(typed) ? na : typed.x))
+plot(exportedFunctionScalarPrior)
+plot((na(blockPoint) ? na : blockPoint.x) + (na(typedBlock) ? na : typedBlock.x))
+plot((na(ternaryPoint) ? na : ternaryPoint.x) + (na(typedTernary) ? na : typedTernary.x))
+plot((na(ifPoint) ? na : ifPoint.x) + (na(typedIf) ? na : typedIf.x))
+plot((na(forPoint) ? na : forPoint.x) + (na(typedFor) ? na : typedFor.x))
+plot((na(whilePoint) ? na : whilePoint.x) + (na(typedWhile) ? na : typedWhile.x))
+plot((na(switchPoint) ? na : switchPoint.x) + (na(typedSwitch) ? na : typedSwitch.x))
+plot((na(forInPoint) ? na : forInPoint.x) + (na(typedForIn) ? na : typedForIn.x))
+plot((na(wrapped) ? na : na(wrapped.nested) ? na : wrapped.nested.x) + (na(wrapped_typed) ? na : na(wrapped_typed.nested) ? na : wrapped_typed.nested.x))
+plot((na(p_prior) ? na : p_prior.x))
+plot((na(forInPoint_prior) ? na : forInPoint_prior.x))
+plot((na(wrapped_prior) ? na : na(wrapped_prior.nested) ? na : wrapped_prior.nested.x))
+plot(p_dynamic_x)
+plot(p_dynamic_sibling_x_after_mutation)
+plot(wrapped_dynamic_x)
+plot(wrapped_dynamic_sibling_x_after_mutation)

@@ -9,6 +9,7 @@ use crate::source_graph::{SourceContextId, SourceId};
 
 #[derive(Debug)]
 pub(crate) struct ModuleValidation {
+    pub(crate) source_texts: HashMap<SourceId, String>,
     pub(crate) source_context_origins: HashMap<SourceContextId, (SourceId, Option<String>)>,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) root_program: Program,

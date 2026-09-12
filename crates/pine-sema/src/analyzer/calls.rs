@@ -108,6 +108,12 @@ impl Analyzer {
         args: &[CallArg],
         span: Span,
     ) -> Option<PineType> {
+        if let Some(member) = self.qualified_member_callee(callee) {
+            return self.analyze_call(&member, args, span);
+        }
+        if let ExprKind::Member { receiver, name } = &callee.kind {
+            return self.analyze_member_call(callee, receiver, name, args, span);
+        }
         let Some(name) = expr_name(callee) else {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_TARGET",
@@ -381,7 +387,7 @@ impl Analyzer {
         None
     }
 
-    fn analyze_registered_builtin(
+    pub(crate) fn analyze_registered_builtin(
         &mut self,
         name: &str,
         signature: &'static BuiltinSignature,

@@ -29,6 +29,13 @@ actual WASM. Both unchanged RSI configurations now match their separate native
 references (218 and 852 values) and full cross-host output. Pivot Points
 Standard, broader capability/resource work and unified distribution remain open.
 
+The subsequent [member access slice](MEMBER_ACCESS_AUDIT.md) passes 6,745 Rust /
+766 installed Python / 130 tools and actual WASM. Native v6/v5 member controls
+match 654/981 values; both RSI reference suites still pass on fresh retained
+development artifacts. Pivot Points now parses but remains non-executable due
+to collection, function-result and request semantics. Broader UDT alias/history
+behavior is not covered by this member-read qualification.
+
 ## Latest retained streaming qualification
 
 [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records 6,715 Rust / 755

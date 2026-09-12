@@ -412,6 +412,21 @@ fn collect_expr_dependencies(
     unsafe_initializer: &mut Option<UnsafeInitializer>,
 ) {
     match &expr.kind {
+        ExprKind::Member { receiver, .. } => {
+            collect_expr_dependencies(
+                receiver,
+                names,
+                historical,
+                functions,
+                dependencies,
+                unsafe_initializer,
+            );
+            record_unsafe(
+                unsafe_initializer,
+                "member accesses on graph declarations are outside the scalar subset",
+                expr.span,
+            );
+        }
         ExprKind::Identifier(name) => {
             if let Some(target) = names.get(name.as_str()) {
                 dependencies.push(Dependency {

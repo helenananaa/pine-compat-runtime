@@ -207,7 +207,9 @@ impl Analyzer {
             return true;
         }
         match &expr.kind {
-            ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => {
+            ExprKind::Unary { expr, .. }
+            | ExprKind::Group(expr)
+            | ExprKind::Member { receiver: expr, .. } => {
                 self.legacy_input_constant_in_expr_inner(expr, trace)
             }
             ExprKind::Binary { left, right, .. } => {

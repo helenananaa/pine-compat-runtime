@@ -52,7 +52,7 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     (
         "runtime_user_type_array_scalar_tree.json",
-        "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+        "tests/fixtures/runtime/user_type_array_scalar_tree_guarded.pine",
     ),
     (
         "runtime_user_type_array_scalar_tree_helpers.json",
@@ -64,19 +64,19 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     (
         "runtime_user_type_array_history.json",
-        "tests/fixtures/runtime/user_type_array_history.pine",
+        "tests/fixtures/runtime/user_type_array_history_guarded.pine",
     ),
     (
         "runtime_user_type_history.json",
-        "tests/fixtures/runtime/user_type_history.pine",
+        "tests/fixtures/runtime/user_type_history_guarded.pine",
     ),
     (
         "runtime_user_type_non_scalar_typed_na_history.json",
-        "tests/fixtures/runtime/user_type_non_scalar_typed_na_history.pine",
+        "tests/fixtures/runtime/user_type_non_scalar_typed_na_history_guarded.pine",
     ),
     (
         "runtime_user_type_non_scalar_constructed_history.json",
-        "tests/fixtures/runtime/user_type_non_scalar_constructed_history.pine",
+        "tests/fixtures/runtime/user_type_non_scalar_constructed_history_guarded.pine",
     ),
     (
         "runtime_user_type_array_writeback.json",

@@ -158,8 +158,21 @@ impl Parser {
             if self.at(TokenKind::Dot)
                 && self.nth_is_identifier(1)
                 && self.nth_at(2, TokenKind::LParen)
+                && !matches!(left.kind, ExprKind::Member { .. })
             {
                 left = self.finish_postfix_method_call(left)?;
+                continue;
+            }
+            if self.at(TokenKind::Dot) && self.nth_is_identifier(1) {
+                self.bump();
+                let (name, end) = self.expect_identifier("expected member name after `.`")?;
+                left = Expr {
+                    span: left.span.merge(end),
+                    kind: ExprKind::Member {
+                        receiver: Box::new(left),
+                        name,
+                    },
+                };
                 continue;
             }
             if self.at(TokenKind::LBracket) {

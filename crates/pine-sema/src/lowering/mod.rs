@@ -10,6 +10,7 @@ mod inline_calls;
 mod legacy;
 mod legacy_conversions;
 mod literals;
+mod members;
 mod program;
 mod pure_series;
 mod reassignments;
@@ -514,10 +515,35 @@ impl Analyzer {
             return self.finish_legacy_expr_coercion(expr, param_expr.clone());
         }
 
+        if let Some(member) = self.qualified_member_expression(expr)
+            && let ExprKind::Member { receiver, name } = &member.kind
+        {
+            return self.lower_member_access(expr, receiver, name, param_exprs, param_types);
+        }
+        if let ExprKind::Member { receiver, name } = &expr.kind {
+            return self.lower_member_access(expr, receiver, name, param_exprs, param_types);
+        }
+        if let ExprKind::Call { callee, args } = &expr.kind {
+            let normalized = self.qualified_member_callee(callee);
+            let callee = normalized.as_ref().unwrap_or(callee);
+            if let ExprKind::Member { receiver, name } = &callee.kind {
+                return self.lower_member_call(
+                    expr,
+                    receiver,
+                    name,
+                    args,
+                    param_exprs,
+                    param_types,
+                );
+            }
+        }
         let pine_type = self.type_of_expr_with_params(expr, param_types)?;
         let series_id = self.lower_expr_series_id(expr, pine_type);
 
         let kind = match &expr.kind {
+            ExprKind::Member { .. } => {
+                unreachable!("members are lowered with call-specific receiver identity")
+            }
             ExprKind::Literal(literal) => HirExprKind::Literal(lower_literal(literal)),
             ExprKind::Identifier(name) => {
                 if let Some(kind) = self.lower_legacy_value(expr.span) {

@@ -2315,7 +2315,7 @@ fn run_script_csv_returns_varip_array_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_type_varip_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_type_varip.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_type_varip_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user type varip fixture should run");
@@ -2381,7 +2381,7 @@ fn run_script_csv_returns_request_security_time_close_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_types_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_types.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_types_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user-defined types fixture should run");
@@ -2392,7 +2392,7 @@ fn run_script_csv_returns_user_types_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_type_functions_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_type_functions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_type_functions_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user-defined type functions fixture should run");
@@ -2403,7 +2403,7 @@ fn run_script_csv_returns_user_type_functions_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_methods_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_methods.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_methods_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user-defined methods fixture should run");

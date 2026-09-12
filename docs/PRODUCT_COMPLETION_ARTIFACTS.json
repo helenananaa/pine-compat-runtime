@@ -5,10 +5,10 @@
   "metadataCommit": "67862713f",
   "qualification": "pre-commit worktree gates; integration commits identify the implemented slices; no final distribution",
   "checks": {
-    "installedPython": 762,
+    "installedPython": 766,
     "tools": 130,
     "actualWasm": true,
-    "rust": 6730
+    "rust": 6745
   },
   "rsiReferenceStatus": "Default 218 and Bollinger/divergence 852 references pass on retained Windows development artifacts; Pivot Points Standard remains blocked",
   "files": [
@@ -106,6 +106,96 @@
       "path": ".local\\product-completion-20260912\\schema9-snapshot-migration.json",
       "bytes": 62240,
       "sha256": "e7771c15831f2ac8178837da04d8aadcfa36814a8d1cf3e6111828e0ef510edd"
+    },
+    {
+      "path": ".local/product-completion-20260912/verify-member-v4.log",
+      "bytes": 588311,
+      "sha256": "0800c70913993bf1bb9fb7a2e90592567d898646503ec013787506de01801f3e"
+    },
+    {
+      "path": ".local/product-completion-20260912/member-final-hosts.log",
+      "bytes": 7585,
+      "sha256": "e1f49086fa7660f06311fa1a611e3550a56a71e8b74ecedcd61bc2cafce60d75"
+    },
+    {
+      "path": ".local/product-completion-20260912/member-snapshot-audit.json",
+      "bytes": 3660,
+      "sha256": "08aa83c3bc302d30261b91b467660b16b97b1fff70d630fcaa5d3e47cfd43105"
+    },
+    {
+      "path": ".local/product-completion-20260912/guarded-fixture-migration.json",
+      "bytes": 14639,
+      "sha256": "57efd762867ad9b9674c64ce077634ddab8361e68c5ee50b61cd15cda3bd7432"
+    },
+    {
+      "path": ".local/product-completion-20260912/corpus/pivot-member-analysis.json",
+      "bytes": 29837,
+      "sha256": "6ee6fc8c99d633d9e0a351a75d0f0584ee4d6ee413eebb9ccd3642b0abc46165"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v5-expected.json",
+      "bytes": 8366,
+      "sha256": "0506aeea16504badda8be0b9da5208ef581f0c1b98efb1771ea8bffb2f18126a"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v5-guarded.pine",
+      "bytes": 782,
+      "sha256": "deb21882aea925ae5cb267f433767a5e9e8e2a7c501ff312ce6a4656102ba045"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v5-manifest.json",
+      "bytes": 381,
+      "sha256": "f2d129274de6b846eeb9b6bf0975000d048acb0f3e00bb98b66c2c19fd84377c"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v5-probe.pine",
+      "bytes": 761,
+      "sha256": "77a709af70c1b2f2bc3ac642c134605c4f91d58994616cbee51377daad97914c"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v5-raw.csv",
+      "bytes": 61230,
+      "sha256": "1e4a3510df5d4bf14d7794616ad00a86d942e69593a5524ecb9303aad06fa4c3"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v6-expected.json",
+      "bytes": 5171,
+      "sha256": "ed626a5c22482a509ec211833efa8387fb6f4c79b3fc9e287e0090698523aac5"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v6-manifest.json",
+      "bytes": 381,
+      "sha256": "c8fcb57ecebf2af3d527a354521bedddbcfc3a5c1b3477b24dd23bc9e2aef739"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\member-v6-raw.csv",
+      "bytes": 58440,
+      "sha256": "74291a6b056f4c917ef0b83f770d69a9044558ff0bf2506e3ccb57c1e83bd603"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\member-hosts\\member-v5-comparison.json",
+      "bytes": 70,
+      "sha256": "6a69ac70756cd367bdcbfb22c354378400a565ff21b20f39da3d9cb72c60390a"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\member-hosts\\member-v6-comparison.json",
+      "bytes": 70,
+      "sha256": "7225426761fd0b7b6a54b4d785641caf1a903158600bcf9e824c9dd64a749cc3"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\member-hosts\\rsi-bb-divergence-comparison.json",
+      "bytes": 462,
+      "sha256": "ec793667b70b375cb803756b6c4e8dae79b18bcbb8a93dede4544550e137c49d"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\member-hosts\\member-qualification.json",
+      "bytes": 408,
+      "sha256": "9363de56023c79bdcb632ef181c7cf1651f8b5ace32334a16b1a6c509c5d09f4"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\member-hosts\\qualification.json",
+      "bytes": 921,
+      "sha256": "c69983d0c373483d9a3c0aa4e1f4f40b9ee44beceaae92d71612868960efeaa6"
     }
   ],
   "gradientCommit": "f6339ec54",
@@ -115,7 +205,9 @@
     "alternateRSI": 852,
     "pivotV5": 654,
     "pivotV6": 654,
-    "scope": "Separate frozen suites; all include initial nulls and exclude forming executions as documented"
+    "scope": "Separate frozen suites; all include initial nulls and exclude forming executions as documented",
+    "memberV6": 654,
+    "memberV5": 981
   },
   "retainedArtifacts": {
     "gradient": {
@@ -158,6 +250,50 @@
         "3": true
       },
       "pythonModule": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\pivot-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+      "surfaceParity": "installed Python batch and streaming replica, four CLI modes, actual generated WASM full output"
+    },
+    "member": {
+      "status": "passed",
+      "scope": "Windows debug CLI, installed Python and actual WASM; full unchanged official RSI default monthly source; numerical native reference plus cross-host full-output and Python streaming parity",
+      "confirmedBars": 109,
+      "referenceValues": 218,
+      "mismatches": 0,
+      "skippedWarmup": 0,
+      "module": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\member-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+      "hashes": {
+        "pine-compat.exe": "3dda54892b55b4aad47218e18202f22be501eebea31b070fcb29148c7e2c2dfd",
+        "wheels\\pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl": "a4aafae87d2b53feacfa6d9702d44db39a91a87ea10a4ee07a7e00809ea20faf",
+        "wasm\\pine_wasm.js": "0b161f3108056527da485b5a399650194715925ea83b0d6441f59f537d1c8e50",
+        "wasm\\pine_wasm_bg.wasm": "81a77029829c2bd2c4a370e7e28cc0395b6333fe71c996d2120587d1175ee94e"
+      }
+    },
+    "memberControls": {
+      "status": "passed",
+      "suites": [
+        {
+          "version": 6,
+          "referenceValues": 654,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        },
+        {
+          "version": 5,
+          "referenceValues": 981,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        }
+      ]
+    },
+    "memberAlternate": {
+      "referenceValues": 852,
+      "nonNullReferences": 357,
+      "mismatches": 0,
+      "firstMismatches": [],
+      "inputOverrides": {
+        "23": "SMA + Bollinger Bands",
+        "3": true
+      },
+      "pythonModule": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\member-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
       "surfaceParity": "installed Python batch and streaming replica, four CLI modes, actual generated WASM full output"
     }
   }

@@ -103,7 +103,9 @@ fn binding_may_change(stmt: &Stmt, name: &str) -> bool {
 fn expr_may_rebind(expr: &Expr, name: &str) -> bool {
     match &expr.kind {
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
-        ExprKind::Group(expr) | ExprKind::Unary { expr, .. } => expr_may_rebind(expr, name),
+        ExprKind::Group(expr)
+        | ExprKind::Unary { expr, .. }
+        | ExprKind::Member { receiver: expr, .. } => expr_may_rebind(expr, name),
         ExprKind::Binary { left, right, .. } => {
             expr_may_rebind(left, name) || expr_may_rebind(right, name)
         }
@@ -158,7 +160,9 @@ fn expr_may_rebind(expr: &Expr, name: &str) -> bool {
 fn straight_expr(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => true,
-        ExprKind::Group(expr) | ExprKind::Unary { expr, .. } => straight_expr(expr),
+        ExprKind::Group(expr)
+        | ExprKind::Unary { expr, .. }
+        | ExprKind::Member { receiver: expr, .. } => straight_expr(expr),
         ExprKind::Binary { left, right, .. } => straight_expr(left) && straight_expr(right),
         ExprKind::History { expr, offset } => straight_expr(expr) && straight_expr(offset),
         ExprKind::Call { callee, args } => {

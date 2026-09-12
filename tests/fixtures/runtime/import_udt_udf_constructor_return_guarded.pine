@@ -1,0 +1,79 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT UDF constructor return")
+
+makePoint(x) => lib.Point.new(x)
+makeWrapper(x) => lib.Wrapper.new(makePoint(x))
+makeTernary(x, flip) => flip ? lib.Point.new(x) : lib.Point.new(x + 1)
+makeIf(x, flip) =>
+    if flip
+        lib.Point.new(x)
+    else
+        lib.Point.new(x + 1)
+makeFor(x, count) =>
+    for i = 0 to count
+        lib.Point.new(x + i)
+makeForIn(x, values) =>
+    for value in values
+        lib.Point.new(x + value)
+makeWhile(x, count) =>
+    i = 0
+    while i < count
+        i := i + 1
+        lib.Point.new(x + i)
+makeSwitch(x, selector) =>
+    switch selector
+        0 => lib.Point.new(x)
+        => lib.Point.new(x + 1)
+
+values = array.from(1, 2)
+p = makePoint(close)
+lib.Point typed = makePoint(open)
+p_prior = p[1]
+ternaryPoint = makeTernary(close + 10, bar_index % 2 == 0)
+lib.Point typedTernary = makeTernary(open + 10, bar_index % 2 == 0)
+ifPoint = makeIf(close + 20, bar_index % 2 == 0)
+lib.Point typedIf = makeIf(open + 20, bar_index % 2 == 0)
+forPoint = makeFor(close + 30, 2)
+lib.Point typedFor = makeFor(open + 30, 2)
+forInPoint = makeForIn(close + 40, values)
+lib.Point typedForIn = makeForIn(open + 40, values)
+whilePoint = makeWhile(close + 50, 2)
+lib.Point typedWhile = makeWhile(open + 50, 2)
+switchPoint = makeSwitch(close + 60, bar_index % 2)
+lib.Point typedSwitch = makeSwitch(open + 60, bar_index % 2)
+switchPoint_prior = switchPoint[1]
+wrapped = makeWrapper(close)
+lib.Wrapper wrapped_typed = makeWrapper(open)
+wrapped_prior = wrapped[1]
+dyn = bar_index == 0 ? na : 1
+p_dynamic = p[dyn]
+p_dynamic_sibling = p[dyn]
+float p_dynamic_x = na
+float p_dynamic_sibling_x_after_mutation = na
+wrapped_dynamic = wrapped[dyn]
+wrapped_dynamic_sibling = wrapped[dyn]
+float wrapped_dynamic_x = na
+float wrapped_dynamic_sibling_x_after_mutation = na
+if bar_index > 0
+    p_dynamic_x := (na(p_dynamic) ? na : p_dynamic.x)
+    p_dynamic.x := close + 700
+    p_dynamic_sibling_x_after_mutation := (na(p_dynamic_sibling) ? na : p_dynamic_sibling.x)
+    wrapped_dynamic_x := (na(wrapped_dynamic) ? na : na(wrapped_dynamic.nested) ? na : wrapped_dynamic.nested.x)
+    wrapped_dynamic.nested := lib.Point.new(close + 800)
+    wrapped_dynamic_sibling_x_after_mutation := (na(wrapped_dynamic_sibling) ? na : na(wrapped_dynamic_sibling.nested) ? na : wrapped_dynamic_sibling.nested.x)
+plot((na(p) ? na : p.x) + (na(typed) ? na : typed.x))
+plot((na(ternaryPoint) ? na : ternaryPoint.x) + (na(typedTernary) ? na : typedTernary.x))
+plot((na(ifPoint) ? na : ifPoint.x) + (na(typedIf) ? na : typedIf.x))
+plot((na(forPoint) ? na : forPoint.x) + (na(typedFor) ? na : typedFor.x))
+plot((na(forInPoint) ? na : forInPoint.x) + (na(typedForIn) ? na : typedForIn.x))
+plot((na(whilePoint) ? na : whilePoint.x) + (na(typedWhile) ? na : typedWhile.x))
+plot((na(switchPoint) ? na : switchPoint.x) + (na(typedSwitch) ? na : typedSwitch.x))
+plot((na(wrapped) ? na : na(wrapped.nested) ? na : wrapped.nested.x) + (na(wrapped_typed) ? na : na(wrapped_typed.nested) ? na : wrapped_typed.nested.x))
+plot((na(p_prior) ? na : p_prior.x))
+plot((na(switchPoint_prior) ? na : switchPoint_prior.x))
+plot((na(wrapped_prior) ? na : na(wrapped_prior.nested) ? na : wrapped_prior.nested.x))
+plot(p_dynamic_x)
+plot(p_dynamic_sibling_x_after_mutation)
+plot(wrapped_dynamic_x)
+plot(wrapped_dynamic_sibling_x_after_mutation)

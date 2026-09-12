@@ -259,6 +259,11 @@ pub enum ExprKind {
     Literal(Literal),
     Identifier(String),
     QualifiedName(Vec<String>),
+    /// A field or method selected from an evaluated receiver expression.
+    Member {
+        receiver: Box<Expr>,
+        name: String,
+    },
     Unary {
         op: UnaryOp,
         expr: Box<Expr>,

@@ -107,6 +107,7 @@ fn analyze_validated_modules(
         None => crate::legacy::LegacyFrontEnd::new(dialect),
     };
     let mut analyzer = Analyzer {
+        source_texts: module_validation.source_texts,
         diagnostics,
         compatibility,
         legacy,

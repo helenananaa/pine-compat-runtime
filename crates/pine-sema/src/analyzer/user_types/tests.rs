@@ -66,6 +66,7 @@ fn analyzer() -> Analyzer {
     };
 
     Analyzer {
+        source_texts: HashMap::new(),
         diagnostics: Vec::new(),
         compatibility: CompatibilityReport::default(),
         legacy: crate::legacy::LegacyFrontEnd::new(crate::PineDialect::V5),

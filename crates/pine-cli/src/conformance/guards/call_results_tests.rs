@@ -18,7 +18,9 @@ fn import_row_requires_imported_udt_array_return_fixture_set() {
     let error = validate_fixture_paths(1, "import", &[])
         .expect_err("import row must retain the imported UDT array return fixture set");
 
-    assert!(error.contains("tests/fixtures/runtime/import_udt_array_udf_method_returns.pine"));
+    assert!(
+        error.contains("tests/fixtures/runtime/import_udt_array_udf_method_returns_guarded.pine")
+    );
 }
 
 #[test]

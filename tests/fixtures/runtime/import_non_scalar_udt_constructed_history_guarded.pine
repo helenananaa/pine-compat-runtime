@@ -1,0 +1,17 @@
+//@version=6
+import user/non_scalar_udt/1 as lib
+indicator("Imported non-scalar constructed UDT history")
+
+marker = lib.Handles.new(label.new(bar_index, close), line.new(bar_index, close, bar_index + 1, high), box.new(bar_index, high, bar_index + 1, low), chart.point.from_index(bar_index, close))
+prior = marker[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_prior = marker[dynamic_offset]
+
+plot(na(prior) ? 1 : na(prior.id) ? 1 : label.get_x(prior.id))
+plot(na(prior) ? 1 : na(prior.trend) ? 1 : line.get_x1(prior.trend))
+plot(na(prior) ? 1 : na(prior.zone) ? 1 : box.get_left(prior.zone))
+plot(na(prior) ? 1 : na(prior.anchor) ? 1 : prior.anchor.index)
+plot(na(dynamic_prior) ? 1 : na(dynamic_prior.id) ? 1 : label.get_x(dynamic_prior.id))
+plot(na(dynamic_prior) ? 1 : na(dynamic_prior.trend) ? 1 : line.get_x1(dynamic_prior.trend))
+plot(na(dynamic_prior) ? 1 : na(dynamic_prior.zone) ? 1 : box.get_left(dynamic_prior.zone))
+plot(na(dynamic_prior) ? 1 : na(dynamic_prior.anchor) ? 1 : dynamic_prior.anchor.index)

@@ -1,5 +1,5 @@
 pub(super) const LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
-    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/runtime/user_type_array_scalar_tree_guarded.pine",
     "tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine",
     "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine",
     "tests/fixtures/runtime/user_type_array_tuple_returns.pine",
@@ -10,7 +10,7 @@ pub(super) const LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
 ];
 
 pub(super) const IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
-    "tests/fixtures/runtime/import_udt_array_udf_method_returns.pine",
+    "tests/fixtures/runtime/import_udt_array_udf_method_returns_guarded.pine",
     "tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine",
     "tests/fixtures/sema/unsupported_imported_user_type_array_udf_method_return_identities.pine",
     "tests/fixtures/runtime/import_udt_array_tuple_returns.pine",
@@ -22,10 +22,10 @@ pub(super) const IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
 ];
 
 const UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES: &[&str] = &[
-    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/runtime/user_type_array_scalar_tree_guarded.pine",
     "tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine",
     "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine",
-    "tests/fixtures/runtime/import_udt_array_udf_method_returns.pine",
+    "tests/fixtures/runtime/import_udt_array_udf_method_returns_guarded.pine",
     "tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine",
     "tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine",
     "tests/fixtures/libraries/import_udt_array_return_lib.pine",

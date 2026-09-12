@@ -104,3 +104,18 @@ Next continuation should inspect the original Pivot Points line 194 chained
 then continue through reference-bearing UDT arrays/matrices, method side effects,
 function-final tuple declarations and requested-context requirements. The source
 must remain unchanged; partial admission is not completion of that target.
+
+2026-09-12: the [member access slice](MEMBER_ACCESS_AUDIT.md) now removes that
+parser obstruction. The full Windows gate passes 6,745 Rust / 766 installed
+Python / 130 tools / actual WASM. Retained CLI/wheel/WASM match 654 native v6
+and 981 native v5 member-control values and both unchanged RSI references
+(218 and 852); complete outputs and Python streaming replicas agree.
+Native undefined-object errors required preserving 29 old fixtures as negative
+cases alongside guarded positive variants, not discarding their regression
+coverage. General mutable UDT reference semantics remain unqualified here.
+
+Next continuation: implement and independently verify function-final tuple
+declarations (including branch results and discarded bindings), then continue
+the remaining original Pivot Points reference-bearing array/matrix, method
+mutation and requested-context gaps. `corpus/pivot-member-analysis.json` has
+zero parser errors but remains non-executable. Goal is active.

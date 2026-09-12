@@ -148,6 +148,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_UDT_FIELD_TYPE`: unsupported or unknown user-defined type field type.
 - `E_UDT_FIELD_MUTATION`: field reassignment targets a value that is not a
   supported local user-defined type.
+- `E_UDT_FIELD_HISTORY`: Pine v6 rejects history directly on a UDT field;
+  reference `(object[offset]).field` or store the field in a variable first.
+- `E_UDT_NA_FIELD`: execution attempted to read a field of an undefined (`na`)
+  user-defined object. Test the object with `na()` before dereferencing it.
 - `E_UDT_UNKNOWN_FIELD`: field read references a field not declared on the
   receiver's user-defined type.
 - `E_CHART_POINT_UNKNOWN_FIELD`: field read or mutation references a field not

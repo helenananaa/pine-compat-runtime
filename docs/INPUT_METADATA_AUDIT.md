@@ -41,5 +41,10 @@ not a retained optimized Windows/Linux distribution.
 
 The official source and its 316-row one-minute CSV are frozen separately. That
 CSV starts after the indicator's initialization history and is not a complete
-from-origin oracle. A separate monthly export with an explicit bar-index column
-is being collected before claiming numerical parity.
+from-origin oracle. A separate monthly export has now been frozen with indexes
+0 through 109. The forming September 2026 bar is excluded, leaving 109 confirmed
+bars and 218 RSI/RSI-based-MA values with no skipped warmup. The original source,
+raw CSV, derived inputs and expected values have SHA-256 identities in
+`.local/product-completion-20260912/corpus/manifest.json`. Absolute and relative
+tolerances are frozen at 1e-9 before implementation comparison. The full source
+remains blocked by gradient-fill admission; a ready reference is not a pass.

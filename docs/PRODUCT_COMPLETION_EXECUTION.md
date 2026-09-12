@@ -53,3 +53,29 @@ Rust / 758 installed Python / 130 tools / actual WASM), see
 editable is preserved. RSI now has six remaining gradient-fill diagnostics.
 User identified downloads under `I:\sys\下载`; the supplied one-minute CSV is
 retained, with its missing initialization prefix explicitly recorded.
+
+## Next continuation: complete official RSI
+
+Monthly native reference is now ready, frozen by
+`.local/product-completion-20260912/freeze-rsi-reference.py` and
+`corpus/manifest.json`: 110 raw monthly bars with native indexes 0..109,
+109 confirmed bars after excluding the current month, 218 numeric reference
+values, no warmup exclusion, absolute/relative tolerance 1e-9. Keep the
+one-minute incomplete-prefix CSV separate. All downloads are in the user-named
+`I:\sys\下载` directory; no browser download-history access is needed.
+
+Remaining RSI admission errors are the two gradient-fill overloads. Implement
+the real vertical gradient contract (top/bottom values and colors per bar,
+masked by the two plot series), not a solid-color approximation. Cover overload
+binding, missing/duplicate/wrong arguments, full output, incremental deltas,
+replica parsing, physical output retention and rollback. Determine explicit
+schema migration before adding wire fields/actions; preserve old-format reader
+behavior where supported, and do not silently ignore gradient data. Update
+current consumption docs and retain historical audit source identities.
+
+After implementation, run the unchanged official RSI against the frozen
+monthly inputs, compare all 218 values including initial nulls, and exercise
+alternate smoothing/divergence inputs separately. Do not call the entire RSI
+capability qualified from only its default two numerical plots. Pivot Points,
+broader request/account contracts, resources and unified distribution remain
+open in the ledger above. Goal remains active.

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "channel": "local-development",
+  "arrayPushCommit": "f9cd5377c",
+  "metadataCommit": "67862713f",
+  "qualification": "pre-commit worktree gates; integration commits identify the implemented slices; no final distribution",
+  "checks": {
+    "installedPython": 758,
+    "tools": 130,
+    "actualWasm": true,
+    "rust": 6724
+  },
+  "rsiReferenceStatus": "ready but full source still gradient-blocked",
+  "files": [
+    {
+      "path": ".local\\product-completion-20260912\\verify-udf-push-v5.log",
+      "bytes": 584650,
+      "sha256": "4eb06867c6b12eafba2d2a6743107405196bcf31ec9fec554a7678a00e488d70"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\verify-input-metadata.log",
+      "bytes": 586688,
+      "sha256": "cd49f57c21abbc4c1756b99fc99d4cb8172f647b99c866d8fbea1bcfff86e0ca"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\manifest.json",
+      "bytes": 1890,
+      "sha256": "6ffc28e4a758ca6413ddf326dd6d4278b55b529414437b9d0542097d48d690f6"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\input-metadata-v6-dom.txt",
+      "bytes": 12933,
+      "sha256": "7f84f36bab8286e1519bde76b096bf732dc42523abfa98b0fa047823300e5fa9"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\input-metadata-v5-dom.txt",
+      "bytes": 13765,
+      "sha256": "beb8aaec7083bc21971a441de83b1744a8d736b099a7a2a209c5a81580cb7e3f"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\input-metadata-v5-no-active-compiled-dom.txt",
+      "bytes": 13817,
+      "sha256": "c18f3d45ae2c6f193a98a3ddf295102d8bde18af73610e5cd663981936dee8bc"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\input-display-v5-dom.txt",
+      "bytes": 12901,
+      "sha256": "c5be816021f8241da5bc1b26026957ed47252f07baa6eb42db5ba009ec6463f5"
+    }
+  ]
+}

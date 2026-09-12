@@ -9164,17 +9164,20 @@ fn request_host_data_runs_through_direct_wasm_api() {
         parsed["plots"][49]["values"],
         serde_json::json!([null, 9, 9, 9.16, 9.4504])
     );
+    // CCI for consecutive prices has deviation 2/3; preserve the actual f64
+    // formula result instead of relying on lossy JSON parsing to round to 100.
+    let cci = 1.0_f64 / (0.015 * (2.0 / 3.0));
     assert_eq!(
         parsed["plots"][50]["values"],
-        serde_json::json!([null, null, 100.0, 100.0, 100.0])
+        serde_json::json!([null, null, cci, cci, cci])
     );
     assert_eq!(
         parsed["plots"][51]["values"],
         serde_json::json!([
             null,
             null,
-            -1.968253968253968,
-            -1.9696969696969695,
+            -1.9682539682539681,
+            -1.9696969696969697,
             -1.9710144927536233
         ])
     );
@@ -9201,7 +9204,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
             1.170731707317073,
             1.5058823529411764,
             1.6271186440677967,
-            1.6476964769647696
+            1.6476964769647697
         ])
     );
     assert_eq!(
@@ -9257,7 +9260,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             null,
             5,
-            9.761904761904765,
+            9.761904761904763,
             14.30735930735931,
             18.65518539431583
         ])
@@ -9349,7 +9352,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             20,
             21.5,
-            22.63299316185547,
+            22.632993161855474,
             23.73606797749979,
             24.82842712474619
         ])
@@ -9359,7 +9362,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             20,
             19.5,
-            19.36700683814453,
+            19.367006838144526,
             19.26393202250021,
             19.17157287525381
         ])
@@ -9810,15 +9813,21 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][192]["values"],
-        serde_json::json!([null, null, 100.0, 100.0, 100.0])
+        serde_json::json!([
+            null,
+            null,
+            100.00000000000001,
+            100.00000000000001,
+            100.00000000000001
+        ])
     );
     assert_eq!(
         parsed["plots"][193]["values"],
         serde_json::json!([
             null,
             null,
-            -1.968253968253968,
-            -1.9696969696969695,
+            -1.9682539682539681,
+            -1.9696969696969697,
             -1.9710144927536233
         ])
     );
@@ -9841,7 +9850,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
             1.170731707317073,
             1.5058823529411764,
             1.6271186440677967,
-            1.6476964769647695
+            1.6476964769647697
         ])
     );
     assert_eq!(
@@ -9873,7 +9882,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             null,
             5,
-            9.761904761904765,
+            9.761904761904763,
             14.30735930735931,
             18.65518539431583
         ])
@@ -10104,7 +10113,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][253]["values"],
-        serde_json::json!([null, null, 10, 10, 14.142135623730953])
+        serde_json::json!([null, null, 10, 10, 14.142135623730951])
     );
     assert_eq!(
         parsed["plots"][254]["values"],
@@ -10127,7 +10136,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
             null,
             0.8414709848078965,
             0.8414709848078965,
-            0.9092974268256816
+            0.9092974268256817
         ])
     );
     assert_eq!(
@@ -10145,9 +10154,9 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             null,
             null,
-            0.10033467208545056,
-            0.10033467208545056,
-            0.10033467208545056
+            0.10033467208545055,
+            0.10033467208545055,
+            0.10033467208545055
         ])
     );
     assert_eq!(

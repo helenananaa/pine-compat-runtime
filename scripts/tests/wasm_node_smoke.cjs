@@ -448,6 +448,20 @@ for (let tick=1; tick<=3; tick++) {
 }
 udtVaripReplica.free(); udtVaripSession.free(); udtVaripProgram.free();
 
+{
+  const precisionProgram = pine.compileScript('//@version=6\nindicator("wire precision")\nplot(close)\nlabel.new(bar_index,close)\nline.new(bar_index,close,bar_index+1,close)\n');
+  const session = precisionProgram.realtimeSession();
+  session.seed('time,open,high,low,close,volume\n0,1,1,1,1,1\n');
+  const consumer = session.replica();
+  const close = 96118.61666666665;
+  const update = JSON.stringify({time:60000,open:close,high:close,low:close,close,volume:1});
+  consumer.apply(session.applyForming(update));
+  assert.deepEqual(JSON.parse(consumer.result()), JSON.parse(session.result()));
+  consumer.apply(session.applyConfirmed(update));
+  assert.deepEqual(JSON.parse(consumer.result()), JSON.parse(session.result()));
+  consumer.free(); session.free(); precisionProgram.free();
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

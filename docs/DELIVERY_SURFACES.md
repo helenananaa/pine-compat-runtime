@@ -50,7 +50,7 @@ digest and does not claim a fresh build of the merged main revision.
 
 ## Schema and platform matrix
 
-- Analysis JSON schema 5, runtime JSON schema 9, host-requirements schema 1,
+- Analysis JSON schema 5, runtime JSON schema 9, host-requirements schema 2,
   render metadata 1.
 - Qualified desktop targets (retained optimized wheels): Windows x86-64 (`win_amd64`) and native
   Ubuntu 22.04 (`manylinux_2_35_x86_64`), implementation a2a1ba5fb. Each passes

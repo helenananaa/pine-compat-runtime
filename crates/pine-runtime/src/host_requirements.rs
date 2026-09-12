@@ -7,9 +7,10 @@ use std::collections::{BTreeSet, HashMap};
 use pine_ir::{HirExpr, HirExprKind, HirLiteral, HirProgram, ScriptMode, SymbolId};
 use serde::Serialize;
 
+mod merge;
 mod walk;
 
-pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 1;
+pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -122,6 +123,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         .map(|symbol| (symbol.id, symbol.name.as_str()))
         .collect();
     let defaults = crate::ChartContext::default();
+    let initializers = crate::builtins::requests::request_dependency_initializers(program);
     let mut requests = Vec::new();
     let mut metadata = BTreeSet::new();
     let mut input_ids = BTreeSet::new();
@@ -169,13 +171,25 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
                 symbol: argument(0, "symbol", true),
                 timeframe: argument(1, "timeframe", false),
                 provider: "whenEvaluatedOutsideCurrentContext",
-                timeframe_relation: "sameOrHigherIntegerMultiple",
-                gaps: if callee.contains(".gaps_on.") {
+                timeframe_relation: "sameOrHigherIntegerMultipleExceptCalendarMonths",
+                gaps: if callee == "request.security" {
+                    merge::option(program, &initializers, args, 3, "gaps", "gapsOn", "gapsOff")
+                } else if callee.contains(".gaps_on.") {
                     "gapsOn"
                 } else {
                     "gapsOff"
                 },
-                lookahead: if callee.ends_with(".lookahead_on") {
+                lookahead: if callee == "request.security" {
+                    merge::option(
+                        program,
+                        &initializers,
+                        args,
+                        4,
+                        "lookahead",
+                        "lookaheadOn",
+                        "lookaheadOff",
+                    )
+                } else if callee.ends_with(".lookahead_on") {
                     "lookaheadOn"
                 } else {
                     "lookaheadOff"

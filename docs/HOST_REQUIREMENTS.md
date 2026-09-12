@@ -25,8 +25,8 @@ pine-compat requirements script.pine --library-source Author/Library/1=library.p
 ```
 
 An unsupported script returns a nonzero status with the existing analysis JSON
-diagnostics on stderr. A valid report on stdout uses its own schema version 1;
-it does not change analysis schema 5 or runtime result schema 8.
+diagnostics on stderr. A valid report on stdout uses its own schema version 2;
+it is separate from analysis schema 5 and the current runtime result schema 9.
 
 Python uses the compiled program, including libraries supplied to compilation:
 
@@ -44,6 +44,17 @@ program.free();
 ```
 
 ## Contract and interpretation
+
+Version 2 corrects modern request merge discovery: explicit on/off arguments and
+resolvable constant aliases are reported as gapsOn/gapsOff or
+lookaheadOn/lookaheadOff. An unresolved expression is reported as
+`runtimeExpression`, never silently as the default. Legacy encoded merge policies
+retain their existing interpretation. The timeframe relation is now
+`sameOrHigherIntegerMultipleExceptCalendarMonths`: fixed-period ratios retain
+their integer-multiple restriction, while calendar months align by actual opens
+and closes. Consumers validating version 1 or its relation string must recognize
+version 2 explicitly. This version change affects only the discovery report,
+not runtime result schema 9 or streaming changes schema 4.
 
 The discovery mode is `conservativeExecutableHirInventory`. It visits all
 lowered executable expressions, including inlined library bodies, loop bounds,

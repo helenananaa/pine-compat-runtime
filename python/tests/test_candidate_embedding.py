@@ -29,7 +29,7 @@ def test_package_identity_is_the_coordinated_prerelease():
 def test_compile_requirements_historical_realtime_error_and_owned_result():
     program = pine_compat.compile_script(SOURCE)
     requirements = program.host_requirements()
-    assert requirements["schemaVersion"] == 1
+    assert requirements["schemaVersion"] == 2
     assert requirements["execution"]["clock"] == "explicitTimestampWhenEvaluated"
     clocks = [1_000, 2_000]
     historical = program.run(BARS, execution_times=clocks)

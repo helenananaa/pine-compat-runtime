@@ -8,6 +8,15 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_modern_request_options_are_not_reported_as_implicit_defaults():
+    program = pine_compat.compile_script('//@version=6\nindicator("merge")\ng=barmerge.gaps_on\nplot(request.security("OTHER","M",close,gaps=g,lookahead=barmerge.lookahead_on))\n')
+    report = program.host_requirements()
+    assert report["schemaVersion"] == 2
+    assert report["requests"][0]["gaps"] == "gapsOn"
+    assert report["requests"][0]["lookahead"] == "lookaheadOn"
+    assert report["requests"][0]["timeframeRelation"] == "sameOrHigherIntegerMultipleExceptCalendarMonths"
+
+
 def test_compiled_host_requirements_match_shared_contract_without_data():
     source = (ROOT / "tests/fixtures/host_requirements/strategy.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/host_requirements.json").read_text())

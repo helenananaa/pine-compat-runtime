@@ -3,14 +3,14 @@
   "channel": "local-development",
   "arrayPushCommit": "f9cd5377c",
   "metadataCommit": "67862713f",
-  "qualification": "pre-commit worktree gates; integration commits identify the implemented slices; no final distribution",
+  "qualification": "Committed Windows debug CLI/wheel/WASM with retained targeted reference receipts; not final optimized or cross-platform resource acceptance",
   "checks": {
-    "installedPython": 771,
+    "rust": 6793,
+    "installedPython": 772,
     "tools": 130,
-    "actualWasm": true,
-    "rust": 6762
+    "actualWasm": true
   },
-  "rsiReferenceStatus": "Default 218 and Bollinger/divergence 852 references pass on retained Windows development artifacts; Pivot Points Standard remains blocked",
+  "rsiReferenceStatus": "Both complete RSI configurations pass on retained 4f32668a7 artifacts. Complete v6 Pivot Traditional/Auto matches 3161 native numeric and 654 drawing-coordinate observations; explicit forming-feed simulation has cross-host parity. Broader options/native live feed/visual/resource scope remains open.",
   "files": [
     {
       "path": ".local\\product-completion-20260912\\verify-udf-push-v5.log",
@@ -446,6 +446,91 @@
       "path": ".local\\product-completion-20260912\\udt-hosts\\source-identity.json",
       "bytes": 195,
       "sha256": "91ba8fb9f2757afce251684c89d3a61e39cfd8d6853e849a4b902aa66407cb41"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\build-provenance.json",
+      "bytes": 1326,
+      "sha256": "3a14cd85253fa04776364703febc9aa5ba1341154520ee842aff62a6a9bec4e4"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\member-qualification.json",
+      "bytes": 408,
+      "sha256": "9363de56023c79bdcb632ef181c7cf1651f8b5ace32334a16b1a6c509c5d09f4"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\pivot-drawing-qualification.json",
+      "bytes": 366,
+      "sha256": "93cf9ec4145d4fb6c88249dc89249a7cf8f728515c082d5277a5adb565d40519"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\pivot-qualification.json",
+      "bytes": 964,
+      "sha256": "6357a8d7e56f930b7aa5ddb635c91dae3f84a47e83ff42bcf981e957f939eb11"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\qualification.json",
+      "bytes": 930,
+      "sha256": "4de253679ad4952cdfb57cffddd4d38ce8305ada01e466ad1c307e2129c77f41"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\tuple-final-qualification.json",
+      "bytes": 410,
+      "sha256": "c2b40caa76782644ff566ca3f2cb41fe7b5f8f6e4dc5270718a90a8a9fe2db25"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\udt-array-identity-qualification.json",
+      "bytes": 228,
+      "sha256": "4fecbf73b344001449eaf8aa404632e3526d631ba1240488ce31e97ee3952508"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\udt-drawing-array-qualification.json",
+      "bytes": 408,
+      "sha256": "8112fea21e09273c0fdfc7b782eea6915a9e2da469c194cbcb6ae9d0edd6b299"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\udt-identity-qualification.json",
+      "bytes": 408,
+      "sha256": "7daa1c038baf632ddfa396b8d986fd3e6cacc23a8c71e70d3268048fceae75e2"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\udt-matrix-qualification.json",
+      "bytes": 408,
+      "sha256": "7daa1c038baf632ddfa396b8d986fd3e6cacc23a8c71e70d3268048fceae75e2"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\month-conversion-full-verify-v2.log",
+      "bytes": 595207,
+      "sha256": "c2ad59e5236aca7f79e7285cf03f95860d774a6bc036ebc12fc5822bf734f3e9"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\month-pivot-retained-hosts.log",
+      "bytes": 12850,
+      "sha256": "69b035ee720695ac9cb2b62d2af3383e878c47082019d03bf31a18289a477241"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\pivot-native-manifest.json",
+      "bytes": 1084,
+      "sha256": "a31a8a5305b10af38a1df35426bfcb574e3e3ca2b5213faead14e8b6da4777c9"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\pivot-drawing-reference-manifest.json",
+      "bytes": 29061,
+      "sha256": "21680e2f1ff71d757cc84043020479871329ffa96a7b49766b32d452748be9f5"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\timeframe-canonical-native-manifest.json",
+      "bytes": 1455,
+      "sha256": "5b2c8c45ec2d8d98902fca19ce7b6e07595e72f455dcb8aa5eef6b89c67760de"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\linux-4f32668a7-reference-receipt.json",
+      "bytes": 7183,
+      "sha256": "18d8bcb2fcc4edecda0b336b263cc2607ae47148454232a89b9681ac783f299f"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\linux-current-wheel-tag-test.log",
+      "bytes": 222,
+      "sha256": "b01e9c34c8d9f248363149791828836d05d8360642043581559e4a8358139080"
     }
   ],
   "gradientCommit": "f6339ec54",
@@ -726,5 +811,342 @@
   "memberCommit": "6e14f352e",
   "tupleFinalCommit": "4407159cd",
   "udtIdentityStatus": "passed for named Windows UDT identity/default/copy/field-varip scope on commit-bound debug artifacts; richer graphs, request transfer and resources remain open",
-  "udtIdentityCommit": "b091d28322c52ee9cba9990bf85921d587a56c82"
+  "udtIdentityCommit": "b091d28322c52ee9cba9990bf85921d587a56c82",
+  "latestCheckpoint": {
+    "sourceCommit": "4f32668a738e600590d187f79ecf81c3e266436d",
+    "profile": "debug",
+    "platform": "windows-x86_64",
+    "provenance": ".local\\product-completion-20260912\\pivot-hosts-4f32668a7\\build-provenance.json",
+    "receipts": {
+      "member-qualification": {
+        "status": "passed",
+        "suites": [
+          {
+            "version": 6,
+            "referenceValues": 654,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          },
+          {
+            "version": 5,
+            "referenceValues": 981,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          }
+        ]
+      },
+      "pivot-drawing-qualification": {
+        "status": "passed",
+        "referenceValues": 654,
+        "mismatches": 0,
+        "scope": "native count, duration and latest line/label coordinates on 109 confirmed monthly bars; installed Python/three historical CLI modes/actual WASM full-output equality; observers preserve original drawings",
+        "notQualified": "complete pixel/style rendering and all input options"
+      },
+      "pivot-qualification": {
+        "status": "passed",
+        "sourceCommit": "4f32668a738e600590d187f79ecf81c3e266436d",
+        "bars": 109,
+        "referenceValues": 3161,
+        "mismatches": 0,
+        "labels": 99,
+        "lines": 99,
+        "module": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\pivot-hosts-4f32668a7\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+        "scope": "Original v6 Pivot Traditional/Auto and read-only observer; installed Python, three historical CLI modes, actual WASM batch full outputs; explicit annual forming-feed simulation with Python stream/replica and actual WASM full-output parity",
+        "notQualified": [
+          "native realtime request feed",
+          "all Pivot input options",
+          "native drawing visual parity"
+        ],
+        "excludedComparison": "Static annual lookahead input is not a realtime forming feed; the earlier four-mode equality failure is retained. Live end-of-history drawing creation timing can differ from one-shot historical execution."
+      },
+      "qualification": {
+        "status": "passed",
+        "scope": "Windows debug CLI, installed Python and actual WASM; full unchanged official RSI default monthly source; numerical native reference plus cross-host full-output and Python streaming parity",
+        "confirmedBars": 109,
+        "referenceValues": 218,
+        "mismatches": 0,
+        "skippedWarmup": 0,
+        "module": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\pivot-hosts-4f32668a7\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+        "hashes": {
+          "pine-compat.exe": "06e2f840f67378bedde56e109bed5a3a5330676168deed001b78ceeb09856620",
+          "wheels\\pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl": "d60873fe0a8445e429ed9df7ea61ab0bd8114918b6342bde409f3439676a1afc",
+          "wasm\\pine_wasm.js": "0b161f3108056527da485b5a399650194715925ea83b0d6441f59f537d1c8e50",
+          "wasm\\pine_wasm_bg.wasm": "3d2348645062d1519ecefbded70c0f25a5d0fea1fe8fb8b4ea9083b09cf33e5b"
+        }
+      },
+      "tuple-final-qualification": {
+        "status": "passed",
+        "suites": [
+          {
+            "version": 6,
+            "referenceValues": 1090,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          },
+          {
+            "version": 5,
+            "referenceValues": 1090,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          }
+        ]
+      },
+      "udt-array-identity-qualification": {
+        "status": "passed",
+        "suites": [
+          {
+            "version": 6,
+            "referenceValues": 872,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          }
+        ]
+      },
+      "udt-drawing-array-qualification": {
+        "status": "passed",
+        "suites": [
+          {
+            "version": 6,
+            "referenceValues": 436,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          },
+          {
+            "version": 5,
+            "referenceValues": 436,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          }
+        ]
+      },
+      "udt-identity-qualification": {
+        "status": "passed",
+        "suites": [
+          {
+            "version": 6,
+            "referenceValues": 872,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          },
+          {
+            "version": 5,
+            "referenceValues": 872,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          }
+        ]
+      },
+      "udt-matrix-qualification": {
+        "status": "passed",
+        "suites": [
+          {
+            "version": 6,
+            "referenceValues": 872,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          },
+          {
+            "version": 5,
+            "referenceValues": 872,
+            "mismatches": [],
+            "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+          }
+        ]
+      }
+    },
+    "pending": [
+      "broader Pivot input/native realtime/visual scenarios",
+      "full product resource and host qualification",
+      "optimized unified distribution"
+    ],
+    "linux": {
+      "status": "targeted-reference-gates-passed",
+      "sourceCommit": "4f32668a738e600590d187f79ecf81c3e266436d",
+      "platform": "linux-x86_64",
+      "profile": "debug",
+      "nodeVersion": "24.18.0",
+      "nativeGates": {
+        "sourceCommit": "4f32668a738e600590d187f79ecf81c3e266436d",
+        "status": "native-linux-gates-passed",
+        "rustTests": 6793,
+        "installedPythonTests": 772,
+        "toolTestsRun": 130,
+        "toolTestsSkipped": 1,
+        "skipReason": "old candidate artifact path absent; current wheel inspected separately",
+        "wheel": "pine_compat_runtime-0.3.0rc1-cp310-abi3-manylinux_2_35_x86_64.whl",
+        "wheelTags": [
+          "cp310-abi3-manylinux_2_35_x86_64"
+        ],
+        "python": "3.10.12",
+        "artifacts": {
+          "pine_compat_runtime-0.3.0rc1-cp310-abi3-manylinux_2_35_x86_64.whl": "f7268143aaaa1cb3519818d8b05c99ed180a435324e35d5154d3b48dd10560f9",
+          "pine-compat": "f0a74c07b30997871099d2252ec5bf81621784dab46882225f6f8c2ee5c6df71"
+        },
+        "pending": [
+          "Linux actual WASM and native-reference cross-host checks",
+          "optimized resource acceptance"
+        ]
+      },
+      "artifacts": [
+        {
+          "path": "/home/helenanana/.local/share/pine-product-4f32668a7/pine-compat",
+          "sha256": "f0a74c07b30997871099d2252ec5bf81621784dab46882225f6f8c2ee5c6df71"
+        },
+        {
+          "path": "/home/helenanana/.local/share/pine-product-4f32668a7/wheels/pine_compat_runtime-0.3.0rc1-cp310-abi3-manylinux_2_35_x86_64.whl",
+          "sha256": "f7268143aaaa1cb3519818d8b05c99ed180a435324e35d5154d3b48dd10560f9"
+        },
+        {
+          "path": "/home/helenanana/.local/share/pine-product-4f32668a7/wasm/pine_wasm.js",
+          "sha256": "0b161f3108056527da485b5a399650194715925ea83b0d6441f59f537d1c8e50"
+        },
+        {
+          "path": "/home/helenanana/.local/share/pine-product-4f32668a7/wasm/pine_wasm_bg.wasm",
+          "sha256": "bda12306e8148945e96bffd83e769a8ab4ceed209258f712c75436320cd9819d"
+        }
+      ],
+      "references": {
+        "udt-identity-qualification": {
+          "status": "passed",
+          "suites": [
+            {
+              "version": 6,
+              "referenceValues": 872,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            },
+            {
+              "version": 5,
+              "referenceValues": 872,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            }
+          ]
+        },
+        "pivot-drawing-qualification": {
+          "status": "passed",
+          "referenceValues": 654,
+          "mismatches": 0,
+          "scope": "native count, duration and latest line/label coordinates on 109 confirmed monthly bars; installed Python/three historical CLI modes/actual WASM full-output equality; observers preserve original drawings",
+          "notQualified": "complete pixel/style rendering and all input options"
+        },
+        "member-qualification": {
+          "status": "passed",
+          "suites": [
+            {
+              "version": 6,
+              "referenceValues": 654,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            },
+            {
+              "version": 5,
+              "referenceValues": 981,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            }
+          ]
+        },
+        "udt-drawing-array-qualification": {
+          "status": "passed",
+          "suites": [
+            {
+              "version": 6,
+              "referenceValues": 436,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            },
+            {
+              "version": 5,
+              "referenceValues": 436,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            }
+          ]
+        },
+        "qualification": {
+          "status": "passed",
+          "scope": "Linux debug CLI, installed Python and actual WASM; full unchanged official RSI default monthly source; numerical native reference plus cross-host full-output and Python streaming parity",
+          "confirmedBars": 109,
+          "referenceValues": 218,
+          "mismatches": 0,
+          "skippedWarmup": 0,
+          "module": "/home/helenanana/.local/share/pine-product-4f32668a7/venv/lib/python3.10/site-packages/pine_compat/__init__.py",
+          "hashes": {
+            "pine-compat.exe": "f0a74c07b30997871099d2252ec5bf81621784dab46882225f6f8c2ee5c6df71",
+            "wheels/pine_compat_runtime-0.3.0rc1-cp310-abi3-manylinux_2_35_x86_64.whl": "f7268143aaaa1cb3519818d8b05c99ed180a435324e35d5154d3b48dd10560f9",
+            "wasm/pine_wasm.js": "0b161f3108056527da485b5a399650194715925ea83b0d6441f59f537d1c8e50",
+            "wasm/pine_wasm_bg.wasm": "bda12306e8148945e96bffd83e769a8ab4ceed209258f712c75436320cd9819d"
+          }
+        },
+        "udt-matrix-qualification": {
+          "status": "passed",
+          "suites": [
+            {
+              "version": 6,
+              "referenceValues": 872,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            },
+            {
+              "version": 5,
+              "referenceValues": 872,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            }
+          ]
+        },
+        "tuple-final-qualification": {
+          "status": "passed",
+          "suites": [
+            {
+              "version": 6,
+              "referenceValues": 1090,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            },
+            {
+              "version": 5,
+              "referenceValues": 1090,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            }
+          ]
+        },
+        "pivot-qualification": {
+          "status": "passed",
+          "sourceCommit": "4f32668a738e600590d187f79ecf81c3e266436d",
+          "bars": 109,
+          "referenceValues": 3161,
+          "mismatches": 0,
+          "labels": 99,
+          "lines": 99,
+          "module": "/home/helenanana/.local/share/pine-product-4f32668a7/venv/lib/python3.10/site-packages/pine_compat/__init__.py",
+          "scope": "Original v6 Pivot Traditional/Auto and read-only observer; installed Python, three historical CLI modes, actual WASM batch full outputs; explicit annual forming-feed simulation with Python stream/replica and actual WASM full-output parity",
+          "notQualified": [
+            "native realtime request feed",
+            "all Pivot input options",
+            "native drawing visual parity"
+          ],
+          "excludedComparison": "Static annual lookahead input is not a realtime forming feed; the earlier four-mode equality failure is retained. Live end-of-history drawing creation timing can differ from one-shot historical execution."
+        },
+        "udt-array-identity-qualification": {
+          "status": "passed",
+          "suites": [
+            {
+              "version": 6,
+              "referenceValues": 872,
+              "mismatches": [],
+              "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+            }
+          ]
+        }
+      },
+      "pending": [
+        "host requirements v2 repair qualification",
+        "optimized resource and complete product acceptance"
+      ],
+      "currentWheelTagTest": "passed using original test with current retained artifact directory"
+    }
+  }
 }

@@ -48,7 +48,15 @@ assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
 const requirements = JSON.parse(program.hostRequirements());
-assert.equal(requirements.schemaVersion, 1);
+assert.equal(requirements.schemaVersion, 2);
+{
+  const mergeProgram=pine.compileScript('//@version=6\nindicator("merge inventory")\ng=barmerge.gaps_on\nplot(request.security("OTHER","M",close,gaps=g,lookahead=barmerge.lookahead_on))\n');
+  const report=JSON.parse(mergeProgram.hostRequirements());
+  assert.equal(report.requests[0].gaps,'gapsOn');
+  assert.equal(report.requests[0].lookahead,'lookaheadOn');
+  assert.equal(report.requests[0].timeframeRelation,'sameOrHigherIntegerMultipleExceptCalendarMonths');
+  mergeProgram.free();
+}
 assert.equal(requirements.chart.bars, 'hostSuppliedStandardOhlcv');
 const compiledRun = JSON.parse(program.runCsv(bars));
 assert.deepEqual(compiledRun.plots[0].values, [2, 4, 6]);

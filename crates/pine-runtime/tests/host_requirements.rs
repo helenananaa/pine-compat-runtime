@@ -2,6 +2,23 @@ use pine_runtime::{RequestArgument, host_requirements, host_requirements_json, r
 use pine_sema::{AnalysisInput, analyze_input, analyze_source};
 use pine_syntax::SourceFile;
 
+#[test]
+fn modern_merge_options_and_calendar_relation_are_reported_without_execution() {
+    let hir = program(
+        "//@version=6\nindicator(\"merge inventory\")\ng=barmerge.gaps_on\na=g\nplot(request.security(\"OTHER\",\"M\",close,gaps=a,lookahead=barmerge.lookahead_on))\nplot(request.security(\"OTHER\",\"M\",close))\n",
+    );
+    let report = host_requirements(&hir);
+    assert_eq!(report.schema_version, 2);
+    assert_eq!(report.requests[0].gaps, "gapsOn");
+    assert_eq!(report.requests[0].lookahead, "lookaheadOn");
+    assert_eq!(
+        report.requests[0].timeframe_relation,
+        "sameOrHigherIntegerMultipleExceptCalendarMonths"
+    );
+    assert_eq!(report.requests[1].gaps, "gapsOff");
+    assert_eq!(report.requests[1].lookahead, "lookaheadOff");
+}
+
 fn program(source: &str) -> pine_ir::HirProgram {
     let analysis = analyze_source(&SourceFile::new("requirements.pine", source));
     assert!(

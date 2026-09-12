@@ -359,6 +359,15 @@ for (const pointValue of [0, -1, 0.5, 5, 1.0000000001, true, null, '1']) {
   assert.throws(() => pine.runScriptCsvWithRequestBars(source, bars, JSON.stringify({$chart: {pointValue}})), /pointValue/);
 }
 
+// A function mutates caller-owned arrays through namespace, method and nested
+// alias paths. Expected terminal values were observed in native v5/v6 charts.
+for (const version of [5, 6]) {
+  const pushSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/udf_array_push.pine'), 'utf8').replace('version=6', `version=${version}`);
+  const pushBars = 'time,open,high,low,close,volume\n' + Array.from({length: 8}, (_, i) => `${i * 60000},10,10,10,10,1`).join('\n') + '\n';
+  const pushResult = JSON.parse(pine.runScriptCsv(pushSource, pushBars));
+  assert.deepEqual(pushResult.plots.map(plot => plot.values.at(-1)), [1, 3, 19, 9, 10, 5]);
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

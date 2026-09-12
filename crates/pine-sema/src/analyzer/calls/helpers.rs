@@ -43,7 +43,8 @@ impl Analyzer {
         if self.allows_legacy_v4_udf_reference_side_effect(name) {
             return true;
         }
-        self.legacy.dialect() >= crate::PineDialect::V5 && name == "array.unshift"
+        self.legacy.dialect() >= crate::PineDialect::V5
+            && matches!(name, "array.unshift" | "array.push")
     }
 
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {

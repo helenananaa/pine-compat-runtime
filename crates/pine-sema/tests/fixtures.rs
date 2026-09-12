@@ -9014,14 +9014,14 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`function_side_effect` is not supported: collection mutation via `array.pop` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.shift` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.remove` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.push` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.insert` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.set` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.fill` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.sort` is not supported inside user-defined functions",
         ],
     );
-    assert_diagnostic_count(path, 254);
+    // array.copy(values).push(...) is now admitted; all other diagnostics remain.
+    assert_diagnostic_count(path, 253);
 }
 
 #[test]
@@ -20838,12 +20838,9 @@ fn reports_unsupported_declaration_function_side_effect_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_function_side_effect_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_function_side_effect.pine",
-        "function_side_effect",
-        "collection mutation via `array.push`",
-    );
+fn accepts_original_array_function_side_effect_fixture() {
+    // Preserve the original formerly unsupported source as a regression.
+    assert_valid_fixture("tests/fixtures/sema/unsupported_array_function_side_effect.pine");
 }
 
 #[test]

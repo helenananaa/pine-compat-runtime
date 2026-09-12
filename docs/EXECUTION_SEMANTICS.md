@@ -1212,7 +1212,10 @@ mutating either name mutates the same runtime-owned array. Passing an array to a
 user-defined function also passes the array id, so helpers read the same
 backing values through parameters. Pine v4 UDF bodies additionally admit the
 exact namespace-call mutation subset `array.set`, `array.pop`,
-`array.unshift`, and `array.clear`; all other UDF collection mutation remains
+`array.unshift`, and `array.clear`. Modern v5/v6 local UDFs admit
+`array.unshift` and `array.push`, including caller parameters and global array
+references, aliases and nested calls. Imported functions retain their separate
+pure-library admission restrictions. Other UDF collection mutation remains
 outside the executable subset. Top-level
 branches and loops mutate the same array id they can read after control flow
 continues. `array.copy` and `values.copy()` allocate a new array id initialized

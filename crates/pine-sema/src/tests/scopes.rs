@@ -931,39 +931,31 @@ fn accepts_readonly_float_array_method_udf_parameter() {
 }
 
 #[test]
-fn rejects_array_mutation_inside_udf() {
+fn accepts_array_mutation_inside_udf() {
     let analysis = analyze(
         "add(values, value) =>\n    array.push(values, value)\n    array.size(values)\nvalues = array.new_float()\nplot(add(values, close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_array_method_mutation_inside_udf() {
+fn accepts_array_method_mutation_inside_udf() {
     let analysis = analyze(
         "add(values, value) =>\n    values.push(value)\n    values.size()\nvalues = array.new_float()\nplot(add(values, close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Pine completion global array push reference")
+var globalValues = array.new_float()
+pushGlobal() =>
+    alias = globalValues
+    if bar_index < 5
+        array.push(globalValues, 2)
+        alias.push(3)
+    array.sum(globalValues)
+plot(pushGlobal(), "PUSH global sum")
+plot(array.size(globalValues), "PUSH global size")

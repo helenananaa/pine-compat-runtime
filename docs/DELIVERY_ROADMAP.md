@@ -1,9 +1,16 @@
 # Independent runtime delivery
 
-Updated 2026-09-11. This is the single current delivery-status entry point.
+Updated 2026-09-12. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
 Streaming additions are integrated through `5f158f59c` and `f368ab96e`, included
 in main by `7b70095f6`. No stable publication is implied by integration.
+
+User-authorized [product completion](PRODUCT_COMPLETION_EXECUTION.md) is active
+from `cc11124f2`. The first [local UDF array-push slice](UDF_ARRAY_PUSH_AUDIT.md)
+passes 6,720 Rust / 757 installed Python / 130 tool tests and actual WASM on
+Windows. It is worktree qualification, not a unified final distribution. The
+newly frozen complete official RSI and Pivot Points sources remain blocked;
+their failures drive subsequent work rather than widening compatibility claims.
 
 ## Latest retained streaming qualification
 

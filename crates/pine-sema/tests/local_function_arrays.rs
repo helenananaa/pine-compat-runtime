@@ -31,7 +31,7 @@ fn imported_array_admission_retains_effect_and_ownership_rejections() {
 }
 
 #[test]
-fn local_array_support_does_not_admit_global_receivers() {
+fn modern_udf_push_admits_global_array_receivers() {
     for receiver in ["global", "alias"] {
         let source = SourceFile::new(
             "root.pine",
@@ -40,13 +40,9 @@ fn local_array_support_does_not_admit_global_receivers() {
             ),
         );
         let analysis = pine_sema::analyze_source(&source);
-        assert!(analysis.hir.is_none(), "accepted {receiver}");
         assert!(
-            analysis
-                .diagnostics
-                .iter()
-                .any(|d| d.message.contains("inside user-defined functions")),
-            "{:?}",
+            analysis.hir.is_some(),
+            "{receiver}: {:?}",
             analysis.diagnostics
         );
     }

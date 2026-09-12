@@ -296,5 +296,6 @@
       "pythonModule": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\member-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
       "surfaceParity": "installed Python batch and streaming replica, four CLI modes, actual generated WASM full output"
     }
-  }
+  },
+  "memberCommit": "6e14f352e"
 }

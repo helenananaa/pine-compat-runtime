@@ -16,6 +16,9 @@ use crate::types::UNKNOWN;
 
 mod arrays;
 mod constructors;
+mod copy;
+mod defaults;
+pub(crate) use defaults::field_default_type;
 mod flow;
 mod imported;
 mod types;
@@ -39,6 +42,42 @@ enum UserTypeArrayResultName {
 }
 
 impl Analyzer {
+    pub(crate) fn resolve_user_type_path_mutation(
+        &mut self,
+        receiver: &str,
+        path: &[String],
+        field: &str,
+        span: Span,
+    ) -> Option<UdtFieldMutation> {
+        if path.is_empty() {
+            return self.resolve_user_type_field_mutation(receiver, field, span);
+        }
+        let symbol = self.scope.resolve(receiver);
+        let identity = symbol
+            .and_then(|symbol| self.symbol_user_types.get(&symbol.id))
+            .cloned();
+        let (Some(symbol), Some(identity)) = (symbol, identity) else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UDT_FIELD_MUTATION",
+                "nested field mutation requires a defined user-defined type receiver",
+                span,
+            ));
+            return None;
+        };
+        let mut names = path.to_vec();
+        names.push(field.to_owned());
+        let (pine_type, user_type_name, _) = if self.imported_user_types.contains_key(&identity) {
+            self.resolve_imported_user_type_field_path(&identity, Qualifier::Series, &names, span)?
+        } else {
+            self.resolve_user_type_field_path(&identity, Qualifier::Series, &names, span)?
+        };
+        self.bind_symbol(receiver, span, symbol);
+        Some(UdtFieldMutation {
+            pine_type,
+            user_type_name,
+            receiver_symbol: symbol,
+        })
+    }
     pub(crate) fn local_user_type_has_scalar_tree_fields(&self, type_name: &str) -> bool {
         self.local_user_type_scalar_tree_fields_are_supported(type_name, &mut HashSet::new())
     }
@@ -108,7 +147,23 @@ impl Analyzer {
                 else {
                     continue;
                 };
+                if let Some(value) = &field.default_value
+                    && !field_default_type(value).is_some_and(|actual| {
+                        crate::types::can_assign(
+                            PineType::new(Qualifier::Series, pine_type.kind),
+                            actual,
+                        )
+                    })
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_FIELD_DEFAULT",
+                        "UDT field defaults must be compatible literals or built-in variables",
+                        value.span,
+                    ));
+                }
                 fields.push(UserTypeFieldInfo {
+                    default_value: field.default_value.clone(),
+                    varip: field.varip,
                     name: field.name.clone(),
                     pine_type,
                     user_type_name,
@@ -821,7 +876,7 @@ impl Analyzer {
         self.symbol_user_type_arrays.insert(symbol.id, type_name);
     }
 
-    fn user_type_identity_for_name(&self, type_name: &str) -> Option<UserTypeIdentity> {
+    pub(crate) fn user_type_identity_for_name(&self, type_name: &str) -> Option<UserTypeIdentity> {
         self.user_types
             .get(type_name)
             .map(|user_type| user_type.identity.clone())

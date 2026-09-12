@@ -21,6 +21,8 @@ pub(crate) struct UserTypeIdentity {
 
 #[derive(Debug, Clone)]
 pub(crate) struct UserTypeFieldInfo {
+    pub(crate) default_value: Option<Expr>,
+    pub(crate) varip: bool,
     pub(crate) name: String,
     pub(crate) pine_type: PineType,
     pub(crate) user_type_name: Option<String>,
@@ -28,6 +30,7 @@ pub(crate) struct UserTypeFieldInfo {
 
 #[derive(Debug, Clone)]
 pub(crate) struct UdtConstructor {
+    pub(crate) field_defaults: Vec<bool>,
     pub(crate) identity: UserTypeIdentity,
     pub(crate) field_args: Vec<Expr>,
     pub(crate) pine_type: PineType,
@@ -66,13 +69,12 @@ pub(crate) enum ImportedUdtConstructorArgError {
     UnknownField(String),
     DuplicateField(String),
     PositionalAfterNamed,
-    MissingField(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ImportedUdtConstructorArgPlan {
     pub(crate) supported_fields: bool,
-    pub(crate) field_arg_indices: Vec<usize>,
+    pub(crate) field_arg_indices: Vec<Option<usize>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

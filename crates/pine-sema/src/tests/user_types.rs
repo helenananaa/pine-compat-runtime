@@ -1717,7 +1717,7 @@ plot(w.inner.x)
 }
 
 #[test]
-fn rejects_nested_user_type_field_mutation() {
+fn accepts_nested_user_type_field_mutation() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -1731,23 +1731,11 @@ plot(w.inner.x)
     );
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_UNSUPPORTED_FEATURE"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "nested field mutation"),
-        "{:?}",
-        analysis.compatibility.unsupported
-    );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

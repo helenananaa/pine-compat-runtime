@@ -15,6 +15,7 @@ mod program;
 mod pure_series;
 mod reassignments;
 mod tuple_returns;
+mod user_type_copy;
 pub(crate) mod user_types;
 
 pub(crate) use blocks::prepend_block_statements;
@@ -406,23 +407,33 @@ impl Analyzer {
             },
             StmtKind::FieldReassign {
                 receiver,
+                path,
                 field,
                 value,
             } => {
-                let parts = vec![receiver.clone(), field.clone()];
+                let mut parts = vec![receiver.clone()];
+                parts.extend(path.clone());
+                parts.push(field.clone());
                 let access = self
                     .chart_point_field_access_for_lowering(&parts, statement.span)
-                    .map(|access| (access.receiver, access.index))
+                    .map(|access| (access.receiver, access.index, Vec::new()))
                     .or_else(|| {
                         self.user_type_field_access_for_lowering(&parts, statement.span)
                             .and_then(|access| {
-                                access
-                                    .fields
-                                    .first()
-                                    .map(|field| (access.receiver, field.index))
+                                access.fields.last().map(|field| {
+                                    (
+                                        access.receiver,
+                                        field.index,
+                                        access.fields[..access.fields.len() - 1]
+                                            .iter()
+                                            .map(|field| field.index)
+                                            .collect(),
+                                    )
+                                })
                             })
                     })?;
                 HirStmtKind::FieldReassign {
+                    path: access.2,
                     symbol: self.bound_symbol(&access.0, statement.span)?.id,
                     field_index: access.1,
                     value: self.lower_expr_with_params(value, param_exprs, param_types)?,
@@ -499,6 +510,11 @@ impl Analyzer {
         if !self.record_lowering_node(expr.span) {
             return None;
         }
+        if let ExprKind::Call { callee, args } = &expr.kind
+            && let Some((receiver, _, true)) = self.udt_copy_receiver(callee, args, param_types)
+        {
+            return self.lower_udt_copy(expr, &receiver, param_exprs, param_types);
+        }
 
         if let ExprKind::Group(inner) = &expr.kind {
             let lowered = self.lower_expr_with_params(inner, param_exprs, param_types)?;
@@ -549,7 +565,21 @@ impl Analyzer {
                 if let Some(kind) = self.lower_legacy_value(expr.span) {
                     kind
                 } else {
-                    HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
+                    HirExprKind::Symbol(
+                        self.bound_symbol(name, expr.span)
+                            .or_else(|| {
+                                // Omitted UDT fields synthesize `na` without a source token.
+                                (name == "na")
+                                    .then(|| {
+                                        self.scope.all_symbols.iter().find_map(|(name, symbol)| {
+                                            (name == "na" && symbol.pine_type.kind == ValueKind::Na)
+                                                .then_some(*symbol)
+                                        })
+                                    })
+                                    .flatten()
+                            })?
+                            .id,
+                    )
                 }
             }
             ExprKind::QualifiedName(parts) => {
@@ -829,7 +859,14 @@ impl Analyzer {
                     let fields = constructor
                         .field_args
                         .iter()
-                        .map(|arg| self.lower_expr_with_params(arg, param_exprs, param_types))
+                        .zip(&constructor.field_defaults)
+                        .map(|(arg, is_default)| {
+                            if *is_default {
+                                self.lower_expr_with_params(arg, &HashMap::new(), &HashMap::new())
+                            } else {
+                                self.lower_expr_with_params(arg, param_exprs, param_types)
+                            }
+                        })
                         .collect::<Option<_>>()?;
                     let lowered = HirExpr {
                         pine_type,

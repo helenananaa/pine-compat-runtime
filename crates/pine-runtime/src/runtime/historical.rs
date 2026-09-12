@@ -119,6 +119,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) array_user_types: HashMap<u32, String>,
     pub(crate) array_slices: HashMap<u32, ArraySlice>,
     pub(crate) next_array_id: u32,
+    pub(crate) object_store: Vec<Vec<PineValue>>,
+    pub(crate) object_varip_fields: Vec<Vec<bool>>,
     #[allow(dead_code)]
     pub(crate) matrix_store: HashMap<u32, MatrixStorage>,
     #[allow(dead_code)]
@@ -380,6 +382,8 @@ impl<'a> HistoricalRuntime<'a> {
             array_user_types: HashMap::new(),
             array_slices: HashMap::new(),
             next_array_id: 0,
+            object_store: Vec::new(),
+            object_varip_fields: Vec::new(),
             matrix_store: HashMap::new(),
             next_matrix_id: 0,
             map_store: HashMap::new(),

@@ -80,6 +80,7 @@ impl Analyzer {
             .map(|user_type| {
                 let type_name = user_type.name.clone();
                 HirUserTypeInfo {
+                    declaration_name: user_type.identity.name.clone(),
                     identity: HirUserTypeIdentity {
                         source_id: user_type.identity.source_id.get(),
                         type_name: type_name.clone(),
@@ -88,6 +89,7 @@ impl Analyzer {
                         .fields
                         .iter()
                         .map(|field| HirUserTypeField {
+                            varip: field.varip,
                             name: field.name.clone(),
                             user_type_name: field.user_type_name.clone(),
                         })
@@ -100,6 +102,7 @@ impl Analyzer {
             imported_user_types
                 .into_iter()
                 .map(|(type_name, user_type)| HirUserTypeInfo {
+                    declaration_name: user_type.identity.name.clone(),
                     identity: HirUserTypeIdentity {
                         source_id: user_type.identity.source_id.get(),
                         type_name: type_name.clone(),
@@ -108,6 +111,7 @@ impl Analyzer {
                         .fields
                         .iter()
                         .map(|field| HirUserTypeField {
+                            varip: field.varip,
                             name: field.name.clone(),
                             user_type_name: field.pine_type.is_none().then(|| {
                                 self.imported_user_types

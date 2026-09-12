@@ -116,18 +116,20 @@ impl<'a> HistoricalRuntime<'a> {
                     .map(|item| self.eval_expr(item))
                     .collect::<Result<_, _>>()?,
             ),
-            HirExprKind::UserTypeConstruct { fields, .. } => PineValue::UserType(
-                fields
+            HirExprKind::UserTypeConstruct { fields, identity } => {
+                let fields = fields
                     .iter()
                     .map(|field| self.eval_expr(field))
-                    .collect::<Result<_, _>>()?,
-            ),
+                    .collect::<Result<_, _>>()?;
+                self.allocate_object(fields, identity)?
+            }
             HirExprKind::UserTypeArrayConstruct {
                 type_name,
                 elements,
             } => self.eval_user_type_array_construct(type_name, elements)?,
             HirExprKind::FieldAccess { value, index } => match self.eval_expr(value)? {
                 PineValue::UserType(fields) => fields.get(*index).cloned().unwrap_or(PineValue::Na),
+                PineValue::UserTypeRef(id) => self.object_field(id, *index)?,
                 PineValue::ChartPoint(point) => point.field(*index),
                 PineValue::Na if value.pine_type.kind == pine_ir::ValueKind::UserType => {
                     return Err(RuntimeError {

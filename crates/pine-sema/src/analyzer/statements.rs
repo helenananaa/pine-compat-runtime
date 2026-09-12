@@ -752,15 +752,20 @@ impl Analyzer {
             }
             StmtKind::FieldReassign {
                 receiver,
+                path,
                 field,
                 value,
             } => {
-                let target = if let Some(target) =
-                    self.resolve_chart_point_field_mutation(receiver, field, statement.span)
+                let target = if let Some(target) = path
+                    .is_empty()
+                    .then(|| {
+                        self.resolve_chart_point_field_mutation(receiver, field, statement.span)
+                    })
+                    .flatten()
                 {
                     Some((target.pine_type, None, "chart.point field mutation", None))
                 } else {
-                    self.resolve_user_type_field_mutation(receiver, field, statement.span)
+                    self.resolve_user_type_path_mutation(receiver, path, field, statement.span)
                         .map(|target| {
                             (
                                 target.pine_type,

@@ -66,6 +66,7 @@ pub enum StmtKind {
         value: Expr,
     },
     FieldReassign {
+        path: Vec<String>,
         receiver: String,
         field: String,
         value: Expr,
@@ -207,6 +208,8 @@ pub struct UserTypeDecl {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserTypeField {
+    pub default_value: Option<Expr>,
+    pub varip: bool,
     pub type_name: String,
     pub name: String,
     pub span: Span,

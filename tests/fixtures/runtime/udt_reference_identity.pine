@@ -1,0 +1,30 @@
+//@version=6
+indicator("UDT identity control")
+type Leaf
+    float value
+type Parent
+    Leaf child
+a = Leaf.new(close)
+b = a
+b.value := close + 1
+plot(a.value, "UID alias")
+c = a.copy()
+c.value := close + 2
+plot(a.value, "UID copy original")
+plot(c.value, "UID copy changed")
+p = Parent.new(a)
+q = p.copy()
+q.child.value := close + 3
+plot(p.child.value, "UID shallow nested")
+items = array.from(a)
+item = array.get(items, 0)
+item.value := close + 4
+plot(a.value, "UID array alias")
+var persistent = Leaf.new(0)
+persistent.value := bar_index
+previous = persistent[1]
+plot(bar_index > 0 ? previous.value : na, "UID persistent history")
+fresh = Leaf.new(bar_index)
+old = fresh[1]
+plot(bar_index > 0 ? old.value : na, "UID fresh history")
+plot(bar_index, "UID index")

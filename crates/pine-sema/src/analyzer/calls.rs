@@ -108,6 +108,9 @@ impl Analyzer {
         args: &[CallArg],
         span: Span,
     ) -> Option<PineType> {
+        if let Some(result) = self.analyze_udt_copy(callee, args, span) {
+            return result;
+        }
         if let Some(member) = self.qualified_member_callee(callee) {
             return self.analyze_call(&member, args, span);
         }

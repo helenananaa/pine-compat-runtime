@@ -415,7 +415,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             if let Some(type_name) = user_type_name {
                 result.push_str(&stringify_user_type_array_join_element(
-                    value,
+                    &self.materialize_object(value)?,
                     type_name,
                     &self.program.user_types,
                 ));
@@ -529,8 +529,11 @@ mod tests {
         );
         assert_eq!(runtime.array_user_type_name(id), Some("Point"));
         assert_eq!(
-            runtime.array_store.get(&id),
-            Some(&vec![
+            runtime.array_store.get(&id).map(|values| values
+                .iter()
+                .map(|value| runtime.materialize_object(value).unwrap())
+                .collect::<Vec<_>>()),
+            Some(vec![
                 PineValue::UserType(vec![PineValue::Float(1.0)]),
                 PineValue::UserType(vec![PineValue::Float(2.0)]),
             ])

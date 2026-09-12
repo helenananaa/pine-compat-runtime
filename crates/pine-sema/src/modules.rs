@@ -233,8 +233,13 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     module.constants.insert(name.clone(), value.clone());
                 }
                 ExportItem::UserType { decl, span } => {
-                    let user_type =
-                        module_user_type_info(module.id, &decl.name, &decl.fields, *span);
+                    let user_type = module_user_type_info(
+                        module.id,
+                        &decl.name,
+                        &decl.fields,
+                        *span,
+                        diagnostics,
+                    );
                     register_export(
                         module,
                         &decl.name,
@@ -288,6 +293,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                         &user_type.name,
                         &user_type.fields,
                         statement.span,
+                        diagnostics,
                     ),
                 );
             }
@@ -357,7 +363,26 @@ fn module_user_type_info(
     name: &str,
     fields: &[UserTypeField],
     span: Span,
+    diagnostics: &mut Vec<Diagnostic>,
 ) -> ModuleUserTypeInfo {
+    for field in fields {
+        if let Some(value) = &field.default_value {
+            let default_type = crate::analyzer::user_types::field_default_type(value);
+            let target_type = imported_user_type_field_type(&field.type_name);
+            let valid = default_type.is_some_and(|actual| {
+                target_type.map_or(actual.kind == ValueKind::Na, |target| {
+                    crate::types::can_assign(PineType::new(Qualifier::Series, target.kind), actual)
+                })
+            });
+            if !valid {
+                diagnostics.push(Diagnostic::error(
+                    "E_UDT_FIELD_DEFAULT",
+                    "UDT field defaults must be compatible literals or built-in variables",
+                    value.span,
+                ));
+            }
+        }
+    }
     let identity = ModuleUserTypeIdentity {
         source_id,
         name: name.to_owned(),
@@ -365,6 +390,8 @@ fn module_user_type_info(
     let fields = fields
         .iter()
         .map(|field| ModuleUserTypeFieldInfo {
+            default_value: field.default_value.clone(),
+            varip: field.varip,
             name: field.name.clone(),
             type_name: field.type_name.clone(),
             pine_type: imported_user_type_field_type(&field.type_name),
@@ -696,6 +723,8 @@ fn insert_imported_user_type_metadata(
                 .fields
                 .iter()
                 .map(|field| ImportedUserTypeFieldInfo {
+                    default_value: field.default_value.clone(),
+                    varip: field.varip,
                     name: field.name.clone(),
                     type_name: field.type_name.clone(),
                     pine_type: field.pine_type,

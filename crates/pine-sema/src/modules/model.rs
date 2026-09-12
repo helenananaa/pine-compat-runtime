@@ -20,7 +20,7 @@ pub(crate) struct ModuleValidation {
     pub(crate) imported_user_types: HashMap<String, ImportedUserTypeInfo>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct ImportedUserTypeInfo {
     pub(crate) identity: ImportedUserTypeIdentity,
     pub(crate) fields: Vec<ImportedUserTypeFieldInfo>,
@@ -33,8 +33,10 @@ pub(crate) struct ImportedUserTypeIdentity {
     pub(crate) name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct ImportedUserTypeFieldInfo {
+    pub(crate) default_value: Option<Expr>,
+    pub(crate) varip: bool,
     pub(crate) name: String,
     pub(crate) type_name: String,
     pub(crate) pine_type: Option<PineType>,
@@ -85,6 +87,8 @@ pub(super) struct ModuleUserTypeInfo {
 
 #[derive(Debug, Clone)]
 pub(super) struct ModuleUserTypeFieldInfo {
+    pub(super) default_value: Option<Expr>,
+    pub(super) varip: bool,
     pub(super) name: String,
     pub(super) type_name: String,
     pub(super) pine_type: Option<PineType>,

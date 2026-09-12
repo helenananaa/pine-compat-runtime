@@ -203,10 +203,24 @@ impl Parser {
                     self.error_here("E_PARSE_TYPE", "expected dedent before end of type");
                     break;
                 }
+                let varip = self.at(TokenKind::Varip);
+                if varip {
+                    self.bump();
+                }
                 let (type_name, type_span) = self.expect_field_type_name()?;
                 let (field_name, field_span) = self.expect_identifier("expected field name")?;
                 end = field_span;
+                let default_value = if self.at(TokenKind::Eq) {
+                    self.bump();
+                    let value = self.parse_expr(0)?;
+                    end = value.span;
+                    Some(value)
+                } else {
+                    None
+                };
                 fields.push(UserTypeField {
+                    default_value,
+                    varip,
                     type_name,
                     name: field_name,
                     span: type_span.merge(field_span),
@@ -553,6 +567,7 @@ mod tests {
 
         let StmtKind::FieldReassign {
             receiver,
+            path,
             field,
             value,
         } = &parsed.program.statements[0].kind
@@ -560,18 +575,27 @@ mod tests {
             panic!("expected field mutation");
         };
         assert_eq!(receiver, "p");
+        assert!(path.is_empty());
         assert_eq!(field, "x");
         assert!(matches!(value.kind, ExprKind::Literal(_)));
     }
 
     #[test]
-    fn parses_nested_field_mutation_as_unsupported_boundary() {
+    fn parses_nested_field_mutation_with_structural_path() {
         let parsed = parse("p.inner.x := 1\n");
 
-        let StmtKind::Unsupported { feature } = &parsed.program.statements[0].kind else {
-            panic!("expected unsupported nested field mutation");
+        let StmtKind::FieldReassign {
+            receiver,
+            path,
+            field,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected nested field mutation");
         };
-        assert_eq!(feature, "nested field mutation");
+        assert_eq!(receiver, "p");
+        assert_eq!(path, &["inner"]);
+        assert_eq!(field, "x");
         assert!(
             !parsed
                 .diagnostics

@@ -1362,6 +1362,7 @@ fn value_json(value: &PineValue) -> String {
             output
         }
         PineValue::Array(_)
+        | PineValue::UserTypeRef(_)
         | PineValue::Matrix(_)
         | PineValue::Map(_)
         | PineValue::Na

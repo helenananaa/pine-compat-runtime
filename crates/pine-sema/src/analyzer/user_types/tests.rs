@@ -8,6 +8,8 @@ use std::collections::HashSet;
 
 fn field(name: &str, kind: ValueKind, user_type_name: Option<&str>) -> UserTypeFieldInfo {
     UserTypeFieldInfo {
+        default_value: None,
+        varip: false,
         name: name.to_owned(),
         pine_type: PineType::new(Qualifier::Series, kind),
         user_type_name: user_type_name.map(str::to_owned),
@@ -51,6 +53,8 @@ fn imported_field(
     pine_type: Option<PineType>,
 ) -> ImportedUserTypeFieldInfo {
     ImportedUserTypeFieldInfo {
+        default_value: None,
+        varip: false,
         name: name.to_owned(),
         type_name: type_name.to_owned(),
         pine_type,
@@ -448,7 +452,7 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: true,
-            field_arg_indices: vec![0, 1],
+            field_arg_indices: vec![Some(0), Some(1)],
         }))
     );
     assert_eq!(
@@ -461,7 +465,7 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: true,
-            field_arg_indices: vec![1, 0],
+            field_arg_indices: vec![Some(1), Some(0)],
         }))
     );
     assert_eq!(
@@ -469,9 +473,10 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
             "lib.Point.new",
             &[call_arg(Some("label"), "name")]
         ),
-        Some(Err(ImportedUdtConstructorArgError::MissingField(
-            "x".to_owned()
-        )))
+        Some(Ok(ImportedUdtConstructorArgPlan {
+            supported_fields: true,
+            field_arg_indices: vec![None, Some(0)],
+        }))
     );
     assert_eq!(
         analyzer.imported_user_type_constructor_arg_plan(
@@ -542,7 +547,7 @@ fn detects_imported_user_type_constructor_with_deferred_field_family() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: false,
-            field_arg_indices: vec![0],
+            field_arg_indices: vec![Some(0)],
         }))
     );
 }
@@ -579,7 +584,7 @@ fn plans_imported_user_type_constructor_args_with_object_fields() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: true,
-            field_arg_indices: vec![0],
+            field_arg_indices: vec![Some(0)],
         }))
     );
 }

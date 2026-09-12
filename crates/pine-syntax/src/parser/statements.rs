@@ -128,14 +128,28 @@ impl Parser {
             }
 
             if let Some(colon_eq_offset) = self.nested_field_reassign_colon_eq_offset() {
+                let mut path = (2..colon_eq_offset)
+                    .step_by(2)
+                    .filter_map(|offset| {
+                        if let TokenKind::Identifier(name) = &self.tokens[self.pos + offset].kind {
+                            Some(name.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                let field = path.pop()?;
                 for _ in 0..=colon_eq_offset {
                     self.bump();
                 }
                 let value = self.parse_expr(0)?;
                 return Some(Stmt {
                     span: start.merge(value.span),
-                    kind: StmtKind::Unsupported {
-                        feature: "nested field mutation".to_owned(),
+                    kind: StmtKind::FieldReassign {
+                        receiver: name,
+                        path,
+                        field,
+                        value,
                     },
                 });
             }
@@ -145,17 +159,32 @@ impl Parser {
                     .tokens
                     .get(self.pos + 2)
                     .is_some_and(|token| matches!(token.kind, TokenKind::Identifier(_)))
-                && self.nth_at(3, TokenKind::ColonEq)
+                && (self.nth_at(3, TokenKind::ColonEq) || self.compound_assignment_op(3).is_some())
             {
+                let compound_op = self.compound_assignment_op(3);
                 self.bump();
                 self.bump();
                 let TokenKind::Identifier(field) = self.current().kind.clone() else {
                     self.error_here("E_PARSE_ASSIGN", "expected field name after `.`");
                     return None;
                 };
+                let field_span = start.merge(self.current().span);
                 self.bump();
-                self.expect(TokenKind::ColonEq, "expected `:=` in field reassignment")?;
-                let value = self.parse_expr(0)?;
+                self.bump(); // The reassignment operator was checked above.
+                let mut value = self.parse_expr(0)?;
+                if let Some(op) = compound_op {
+                    value = Expr {
+                        span: start.merge(value.span),
+                        kind: ExprKind::Binary {
+                            op,
+                            left: Box::new(Expr {
+                                span: field_span,
+                                kind: ExprKind::QualifiedName(vec![name.clone(), field.clone()]),
+                            }),
+                            right: Box::new(value),
+                        },
+                    };
+                }
                 if name == "strategy" {
                     return Some(Stmt {
                         span: start.merge(value.span),
@@ -167,6 +196,7 @@ impl Parser {
                 return Some(Stmt {
                     span: start.merge(value.span),
                     kind: StmtKind::FieldReassign {
+                        path: Vec::new(),
                         receiver: name,
                         field,
                         value,

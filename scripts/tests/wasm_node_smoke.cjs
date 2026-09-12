@@ -429,6 +429,25 @@ for (const version of [5, 6]) {
   assert.deepEqual(result.plots[9].values, [10,20,30]);
 }
 
+const udtIdentitySource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/udt_reference_identity.pine'), 'utf8');
+for (const version of [5, 6]) {
+  const result = JSON.parse(pine.runScriptCsv(udtIdentitySource.replace('version=6', `version=${version}`), bars));
+  assert.deepEqual(result.plots[0].values, [2,3,4]);
+  assert.deepEqual(result.plots[3].values, [4,5,6]);
+  assert.deepEqual(result.plots[5].values, [null,1,2]);
+}
+const udtVaripProgram = pine.compileScript(requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/udt_field_varip.pine'), 'utf8'));
+const udtVaripSession = udtVaripProgram.realtimeSession();
+udtVaripSession.seed('time,open,high,low,close,volume\n0,10,10,10,10,1\n');
+const udtVaripReplica = udtVaripSession.replica();
+for (let tick=1; tick<=3; tick++) {
+  udtVaripReplica.apply(udtVaripSession.applyForming(JSON.stringify({time:60000,open:11,high:11,low:11,close:11,volume:1})));
+  const result = JSON.parse(udtVaripSession.result());
+  assert.deepEqual(JSON.parse(udtVaripReplica.result()), result);
+  assert.deepEqual(result.plots.map(plot=>plot.values[1]), [2,1+tick,2,1+tick,tick,tick,1]);
+}
+udtVaripReplica.free(); udtVaripSession.free(); udtVaripProgram.free();
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

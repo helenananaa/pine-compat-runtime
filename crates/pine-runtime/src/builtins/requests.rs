@@ -273,6 +273,9 @@ impl<'a> HistoricalRuntime<'a> {
             &self.current_symbols,
             &dependency_initializers,
         );
+        for value in captures.values() {
+            self.reject_request_object_graph(value)?;
+        }
         let mut runtime = self.fork_with_request_environment(requested_environment);
         runtime.historical_end = Some(requested_bars.len());
         let mut values = Vec::with_capacity(requested_bars.len());
@@ -319,6 +322,7 @@ impl<'a> HistoricalRuntime<'a> {
         )?;
 
         let value = self.eval_expr(expression)?;
+        self.reject_request_object_graph(&value)?;
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;

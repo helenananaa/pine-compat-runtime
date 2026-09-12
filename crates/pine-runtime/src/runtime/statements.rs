@@ -90,11 +90,38 @@ impl<'a> HistoricalRuntime<'a> {
             }
             HirStmtKind::FieldReassign {
                 symbol,
+                path,
                 field_index,
                 value,
             } => {
                 let value = self.eval_expr(value)?;
+                if !path.is_empty() {
+                    let mut receiver = self
+                        .current_symbols
+                        .get(symbol)
+                        .cloned()
+                        .unwrap_or(PineValue::Na);
+                    for index in path {
+                        let PineValue::UserTypeRef(id) = receiver else {
+                            return Err(RuntimeError{message:"nested field mutation receiver is undefined or not a UDT object".to_owned()});
+                        };
+                        receiver = self.object_field(id, *index)?;
+                    }
+                    let PineValue::UserTypeRef(id) = receiver else {
+                        return Err(RuntimeError {
+                            message:
+                                "nested field mutation receiver is undefined or not a UDT object"
+                                    .to_owned(),
+                        });
+                    };
+                    self.set_object_field(id, *field_index, value)?;
+                    return Ok(StmtControl::None);
+                }
                 let updated = match self.current_symbols.get(symbol).cloned() {
+                    Some(PineValue::UserTypeRef(id)) => {
+                        self.set_object_field(id, *field_index, value)?;
+                        PineValue::UserTypeRef(id)
+                    }
                     Some(PineValue::UserType(mut fields)) => {
                         if *field_index < fields.len() {
                             fields[*field_index] = value;
@@ -221,6 +248,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(());
         };
         let updated = match slot {
+            PineValue::UserTypeRef(id) => {
+                self.set_object_field(id, field_index, value)?;
+                PineValue::UserTypeRef(id)
+            }
             PineValue::UserType(mut fields) => {
                 if field_index < fields.len() {
                     fields[field_index] = value;

@@ -15,7 +15,6 @@ pub use strategy::{
     StrategyDefaultQuantity, StrategyMarginSetting, StrategySettings,
 };
 pub use types::{PineType, Qualifier, ValueKind};
-
 pub use user_types::{HirUserTypeField, HirUserTypeIdentity, HirUserTypeInfo};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -148,6 +147,7 @@ pub enum HirStmtKind {
         value: HirExpr,
     },
     FieldReassign {
+        path: Vec<usize>,
         symbol: SymbolId,
         field_index: usize,
         value: HirExpr,

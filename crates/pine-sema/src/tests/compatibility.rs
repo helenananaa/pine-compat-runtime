@@ -3927,7 +3927,7 @@ fn import_rejects_scalar_imported_user_type_varip_identity_mismatch() {
 }
 
 #[test]
-fn import_rejects_private_dependency_imported_user_type_varip_constructor_arg() {
+fn import_accepts_na_for_private_dependency_imported_user_type_varip_field() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_varip.pine"),
         vec![(
@@ -3937,8 +3937,8 @@ fn import_rejects_private_dependency_imported_user_type_varip_constructor_arg() 
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UDT_CONSTRUCTOR_ARG"), "{codes:?}");
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -4079,7 +4079,7 @@ fn import_accepts_exported_user_type_history_with_private_scalar_dependency_meta
 }
 
 #[test]
-fn import_rejects_nested_imported_user_type_field_mutation() {
+fn import_accepts_nested_imported_user_type_field_mutation() {
     let analysis = analyze_with_libraries(
         include_str!(
             "../../../../tests/fixtures/sema/unsupported_imported_udt_nested_field_mutation.pine"
@@ -4090,18 +4090,12 @@ fn import_rejects_nested_imported_user_type_field_mutation() {
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "nested field mutation"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -4585,7 +4579,7 @@ fn import_accepts_imported_user_type_udf_nested_control_flow_constructor_returns
 }
 
 #[test]
-fn import_rejects_private_dependency_imported_user_type_constructor_arg() {
+fn import_accepts_na_for_private_dependency_imported_user_type_field() {
     let analysis = analyze_with_libraries(
         "import user/udt/1 as lib\np = lib.Wrapper.new(na)\nplot(close)\n",
         vec![(
@@ -4595,18 +4589,8 @@ fn import_rejects_private_dependency_imported_user_type_constructor_arg() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UDT_CONSTRUCTOR_ARG"), "{codes:?}");
-    assert!(
-        analysis.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_UDT_CONSTRUCTOR_ARG"
-                && diagnostic
-                    .message
-                    .contains("cannot assign const na to imported field `nested`")
-        }),
-        "{:?}",
-        analysis.diagnostics
-    );
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

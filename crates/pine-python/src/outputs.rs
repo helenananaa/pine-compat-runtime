@@ -753,6 +753,7 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
             output.append(values_to_py(py, values)?)
         }
         PineValue::Array(_)
+        | PineValue::UserTypeRef(_)
         | PineValue::Matrix(_)
         | PineValue::Map(_)
         | PineValue::Na

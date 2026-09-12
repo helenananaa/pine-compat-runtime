@@ -43,13 +43,13 @@ Both unchanged RSI suites still pass. Pivot Points has no parser or
 function-return diagnostics but remains blocked by collection/method/request
 semantics; native mutable UDT identity qualification is the next step.
 
-The [native UDT identity audit](UDT_IDENTITY_AUDIT.md) now confirms an open
-correctness defect: assignment/array aliases are copied by value. An executable
-two-plot isolation mismatches all 218 corresponding native reference values.
-The complete v5/v6 object control has 872 frozen values per version but still
-fails admission. Previous member/tuple test passes must not be read as general
-UDT reference compatibility. Runtime-owned object storage, shallow copy,
-field-level realtime persistence and graph transfer across requests need repair.
+The [UDT identity repair](UDT_IDENTITY_AUDIT.md) now passes 6,762 Rust /
+771 installed Python / 130 tools and actual WASM on Windows. Object storage,
+shallow copy, nested writes, defaults and field-level varip fix the earlier
+218-mismatch alias baseline. The complete native v5/v6 control matches 872
+values per version, with a separate 872-value array reference. Retained
+artifacts are being qualified. Richer reference-bearing collections, request
+graph transfer, resource bounds and complete Pivot Points remain open.
 
 ## Latest retained streaming qualification
 

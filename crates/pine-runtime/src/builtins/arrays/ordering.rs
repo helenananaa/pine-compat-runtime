@@ -20,12 +20,22 @@ impl<'a> HistoricalRuntime<'a> {
             let Some(field_index) = self.eval_array_sort_field_index(args)? else {
                 return Ok(PineValue::Void);
             };
-            if let Some(mut values) = self.array_values_clone(id)? {
+            if let Some(values) = self.array_values_clone(id)? {
                 validate_user_type_sort_values("array.sort", &values)?;
+                let mut values = values
+                    .into_iter()
+                    .map(|value| {
+                        let key = self.materialize_object(&value)?;
+                        Ok((value, key))
+                    })
+                    .collect::<Result<Vec<_>, RuntimeError>>()?;
                 values.sort_by(|left, right| {
-                    compare_user_type_sort_field_values(left, right, field_index, descending)
+                    compare_user_type_sort_field_values(&left.1, &right.1, field_index, descending)
                 });
-                self.array_replace_values(id, values)?;
+                self.array_replace_values(
+                    id,
+                    values.into_iter().map(|(value, _)| value).collect(),
+                )?;
             }
             return Ok(PineValue::Void);
         }
@@ -62,6 +72,10 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Na);
             };
             validate_user_type_sort_values("array.sort_indices", &values)?;
+            let values = values
+                .iter()
+                .map(|value| self.materialize_object(value))
+                .collect::<Result<Vec<_>, _>>()?;
             return Ok(self.sorted_index_array(values.len(), |left, right| {
                 compare_user_type_sort_field_values(
                     &values[*left],

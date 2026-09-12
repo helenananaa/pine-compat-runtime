@@ -26,11 +26,13 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn seed_intrabar_persistence_from(&mut self, previous: &Self) {
+        let mut object_roots = Vec::new();
         let mut retained_array_ids = Vec::new();
         let mut retained_map_ids = Vec::new();
         let mut retained_matrix_ids = Vec::new();
         for var_slot_id in self.persistent_slots_for_kind(PersistenceKind::Varip) {
             if let Some(value) = previous.var_store.get(&var_slot_id).cloned() {
+                object_roots.push(value.clone());
                 match value {
                     PineValue::Array(id) => retained_array_ids.push(id),
                     PineValue::Map(id) => retained_map_ids.push(id),
@@ -50,6 +52,7 @@ impl<'a> HistoricalRuntime<'a> {
         for id in retained_matrix_ids {
             self.seed_intrabar_matrix_from(previous, id);
         }
+        self.seed_intrabar_objects_from(previous, object_roots);
     }
 
     pub(crate) fn persistent_slot_for_symbol(

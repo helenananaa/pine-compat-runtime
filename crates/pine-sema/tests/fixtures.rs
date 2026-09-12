@@ -14937,11 +14937,8 @@ fn reports_import_fixture_missing_host_library() {
 }
 
 #[test]
-fn reports_unsupported_imported_udt_constructor_fixture() {
-    assert_import_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_imported_udt_constructor.pine",
-        "E_UDT_CONSTRUCTOR_ARG",
-    );
+fn accepts_imported_udt_constructor_na_field_fixture() {
+    assert_import_ok_fixture("tests/fixtures/sema/unsupported_imported_udt_constructor.pine");
 }
 
 #[test]
@@ -15067,11 +15064,8 @@ fn reports_unsupported_import_duplicate_exported_udt_function_fixture() {
 }
 
 #[test]
-fn reports_unsupported_imported_udt_varip_fixture() {
-    assert_import_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_imported_udt_varip.pine",
-        "E_UDT_CONSTRUCTOR_ARG",
-    );
+fn accepts_imported_udt_varip_na_field_fixture() {
+    assert_import_ok_fixture("tests/fixtures/sema/unsupported_imported_udt_varip.pine");
 }
 
 #[test]
@@ -16351,11 +16345,8 @@ fn reports_unsupported_user_type_constructor_too_many_args_fixture() {
 }
 
 #[test]
-fn reports_unsupported_user_type_constructor_missing_arg_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_user_type_constructor_missing_arg.pine",
-        "E_UDT_CONSTRUCTOR_ARG",
-    );
+fn accepts_user_type_constructor_omitted_field_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_user_type_constructor_missing_arg.pine");
 }
 
 #[test]
@@ -21023,7 +21014,6 @@ fn reports_unsupported_dynamic_history_udt_field_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history_udt_field.pine",
         &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got const float",
             "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
             "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series bool",
             "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series string",

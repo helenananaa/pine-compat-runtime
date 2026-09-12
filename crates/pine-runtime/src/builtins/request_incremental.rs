@@ -35,6 +35,9 @@ impl<'a> HistoricalRuntime<'a> {
             &self.current_symbols,
             &initializers,
         );
+        for value in captures.values() {
+            self.reject_request_object_graph(value)?;
+        }
         if !incremental_expression(
             expression,
             &initializers,

@@ -55,6 +55,8 @@ pub enum PineValue {
     Matrix(u32),
     Map(u32),
     UserType(Vec<PineValue>),
+    /// Runtime-owned UDT identity. The owning runtime resolves its fields.
+    UserTypeRef(u32),
     Tuple(Vec<PineValue>),
     Na,
     Void,

@@ -172,6 +172,7 @@ pub(crate) fn array_value_for_kind(kind: ArrayElementKind, value: PineValue) -> 
             PineValue::ChartPoint(value)
         }
         (ArrayElementKind::UserType, PineValue::UserType(value)) => PineValue::UserType(value),
+        (ArrayElementKind::UserType, PineValue::UserTypeRef(id)) => PineValue::UserTypeRef(id),
         (_, PineValue::Na) => PineValue::Na,
         _ => PineValue::Na,
     }

@@ -138,3 +138,13 @@ reference collection. Next implementation must replace value-copy UDT storage
 with runtime-owned object identity and integrate rollback/varip, shallow copy,
 field paths, public materialization and cross-request graph boundaries. Keep
 the failing baseline and complete source; do not merely widen collection guards.
+
+The UDT identity implementation now passes the full Windows gate: 6,762 Rust /
+771 installed Python / 130 tools and actual WASM. It implements object-owned
+storage, shallow copy, nested writes, defaults and field-level varip, with
+original native identity controls and an additional array-identity reference.
+Old value-copy snapshots/rejections were requalified; the failed originals and
+the discovered recursive-copy regression are documented in `UDT_IDENTITY_AUDIT.md`.
+Retained commit-bound artifacts are being built next. Full Pivot Points,
+reference-bearing matrices/arrays, cross-request object graph transfer and
+resource qualification remain open. The broad goal is still active.

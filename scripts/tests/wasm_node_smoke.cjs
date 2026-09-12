@@ -368,6 +368,12 @@ for (const version of [5, 6]) {
   assert.deepEqual(pushResult.plots.map(plot => plot.values.at(-1)), [1, 3, 19, 9, 10, 5]);
 }
 
+const activeMetadataSource = requirementsFs.readFileSync(path.join(requirementsRoot, 'tests/fixtures/runtime/input_active_metadata.pine'), 'utf8');
+const activeMetadataResult = JSON.parse(pine.runScriptCsv(activeMetadataSource, bars));
+assert.deepEqual(activeMetadataResult.plots.map(plot => plot.values[0]), [7, 2.5, 1]);
+assert.equal(activeMetadataResult.plots[0].editable, false);
+assert.equal(JSON.parse(pine.analyzeScript(activeMetadataSource.replace('version=6', 'version=5'))).executable, false);
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

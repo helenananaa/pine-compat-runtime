@@ -50,7 +50,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "editable",
-        accepts: Accepts::ConstBool,
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
     BuiltinParam {
@@ -60,7 +60,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputString,
         optional: true,
     },
     BuiltinParam {
@@ -219,7 +219,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "editable",
-        accepts: Accepts::ConstBool,
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
     BuiltinParam {
@@ -234,7 +234,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputString,
         optional: true,
     },
     BuiltinParam {
@@ -469,7 +469,7 @@ const FILL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "editable",
-        accepts: Accepts::ConstBool,
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
     BuiltinParam {
@@ -484,7 +484,7 @@ const FILL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputString,
         optional: true,
     },
     BuiltinParam {

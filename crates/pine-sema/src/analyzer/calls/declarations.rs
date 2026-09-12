@@ -1,6 +1,64 @@
 use crate::prelude::*;
 
 impl Analyzer {
+    pub(crate) fn validate_versioned_input_output_metadata(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) {
+        if self.legacy.dialect() >= crate::PineDialect::V6 {
+            return;
+        }
+        for (index, arg) in args.iter().enumerate() {
+            if signature.name.starts_with("input.") && is_call_arg(signature, arg, index, "active")
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    format!("`{}` argument `active` requires Pine v6", signature.name),
+                    arg.span,
+                ));
+            }
+            if matches!(signature.name, "plot" | "plotshape" | "fill") {
+                let old_const_metadata = is_call_arg(signature, arg, index, "editable")
+                    || (self.legacy.dialect() < crate::PineDialect::V5
+                        && is_call_arg(signature, arg, index, "display"));
+                if old_const_metadata
+                    && arg_types
+                        .get(index)
+                        .copied()
+                        .flatten()
+                        .is_some_and(|ty| ty.qualifier != Qualifier::Const)
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_TYPE",
+                        format!(
+                            "`{}` metadata argument requires a const value in this Pine version",
+                            signature.name
+                        ),
+                        arg.span,
+                    ));
+                }
+            }
+        }
+    }
+
+    pub(crate) fn validate_indicator_timeframe_args(&mut self, args: &[CallArg]) {
+        let signature =
+            pine_builtins::get_phase_1_builtin("indicator").expect("indicator signature");
+        for (index, arg) in args.iter().enumerate() {
+            if is_call_arg(signature, arg, index, "timeframe")
+                && self.known_const_string_value(&arg.value).as_deref() != Some("")
+            {
+                self.unsupported(
+                    "indicator.timeframe",
+                    "only an empty timeframe inheriting the host chart is supported; non-empty program-level timeframes require separate execution and output alignment",
+                    arg.span,
+                );
+            }
+        }
+    }
+
     pub(crate) fn validate_label_string_arg(
         &mut self,
         signature: &BuiltinSignature,

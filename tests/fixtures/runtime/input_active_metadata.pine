@@ -1,0 +1,10 @@
+//@version=6
+indicator("Pine completion input metadata reference", timeframe="", timeframe_gaps=true)
+enabled = input.bool(false, "Enabled")
+length = input.int(7, "Length", active=enabled)
+scale = input.float(2.5, "Scale", active=enabled)
+shade = input.color(color.green, "Shade", active=enabled)
+mode = input.string("A", "Mode", active=enabled)
+plot(length, "META length", display=enabled ? display.none : display.all, editable=enabled)
+plot(scale, "META scale", editable=enabled)
+plot(mode == "A" ? 1 : 0, "META string", color=shade)

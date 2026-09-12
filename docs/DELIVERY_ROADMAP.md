@@ -11,6 +11,9 @@ passes 6,720 Rust / 757 installed Python / 130 tool tests and actual WASM on
 Windows. It is worktree qualification, not a unified final distribution. The
 newly frozen complete official RSI and Pivot Points sources remain blocked;
 their failures drive subsequent work rather than widening compatibility claims.
+The subsequent [versioned metadata slice](INPUT_METADATA_AUDIT.md) passes 6,724
+Rust / 758 installed Python / 130 tool tests and actual WASM. RSI is reduced to
+six gradient-fill diagnostics; the full original script is not yet qualified.
 
 ## Latest retained streaming qualification
 

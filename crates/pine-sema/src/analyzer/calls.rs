@@ -1006,6 +1006,7 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) {
         self.validate_legacy_drawing_arg_versions(signature, args, arg_types);
+        self.validate_versioned_input_output_metadata(signature, args, arg_types);
         if is_time_function_overload(signature.name) {
             self.validate_time_function_args(signature, args, arg_types);
             return;

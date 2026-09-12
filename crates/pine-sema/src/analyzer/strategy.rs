@@ -170,6 +170,8 @@ impl Analyzer {
         self.script_declaration = Some((mode, span));
         if mode == ScriptMode::Strategy {
             self.validate_strategy_declaration_args(args);
+        } else {
+            self.validate_indicator_timeframe_args(args);
         }
     }
 

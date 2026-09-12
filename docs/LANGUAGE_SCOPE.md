@@ -1,5 +1,13 @@
 # Language Scope
 
+Modern declarations admit an explicitly empty `indicator(timeframe="")`, with
+const `timeframe_gaps`, to inherit the host chart; non-empty or unresolved
+program-level timeframes remain rejected. Typed v6 input families admit `active`
+as const/input bool metadata without changing input values. For `plot`,
+`plotshape` and `fill`, input-qualified display is accepted in v5/v6 and
+input-qualified editable only in v6. See `INPUT_METADATA_AUDIT.md` for native
+version controls and the remaining host-UI discovery boundary.
+
 Modern v5/v6 scalar UDF parameters additionally accept explicit `simple`
 qualifiers. Const/input/simple actuals are accepted and remain bound as Simple;
 series actuals and series defaults are rejected. Local and host-provided

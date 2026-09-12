@@ -46,3 +46,10 @@ and input-controlled output metadata gaps. Pivot Points adds parser/UDT/method
 and requested-context gaps. Both remain failure inventory, not accepted scripts.
 Next slice: admit and model the RSI metadata/declaration combinations, then
 gradient fill with versioned output/streaming representation and native checks.
+
+The versioned metadata/declaration slice passes the full Windows gate (6,724
+Rust / 758 installed Python / 130 tools / actual WASM), see
+`INPUT_METADATA_AUDIT.md`. Native v5 rejection of active and input-qualified
+editable is preserved. RSI now has six remaining gradient-fill diagnostics.
+User identified downloads under `I:\sys\下载`; the supplied one-minute CSV is
+retained, with its missing initialization prefix explicitly recorded.

@@ -7,6 +7,7 @@ pub(crate) mod drawing_history;
 pub(crate) mod expressions;
 pub(crate) mod historical;
 pub(crate) mod history;
+pub(crate) mod id_store;
 mod objects;
 pub(crate) mod persistence;
 pub(crate) mod plot_history;

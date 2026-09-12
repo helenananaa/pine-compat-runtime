@@ -9,6 +9,7 @@ use pine_ir::{HirProgram, ScriptMode};
 use super::drawing_history::{
     RuntimeBox, RuntimeLabel, RuntimeLine, RuntimeLineFill, RuntimePolyline, RuntimeTable,
 };
+use super::id_store::IdStore;
 use super::plot_history::{
     RuntimeColorSeries, RuntimeFill, RuntimePlotArrow, RuntimePlotBar, RuntimePlotCandle,
     RuntimePlotChar, RuntimePlotShape,
@@ -119,10 +120,10 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) current_series: HashMap<SeriesId, PineValue>,
     pub(crate) active_series: HashSet<SeriesId>,
     pub(crate) var_store: HashMap<VarSlotId, PineValue>,
-    pub(crate) array_store: HashMap<u32, Vec<PineValue>>,
-    pub(crate) array_kinds: HashMap<u32, ArrayElementKind>,
-    pub(crate) array_user_types: HashMap<u32, String>,
-    pub(crate) array_slices: HashMap<u32, ArraySlice>,
+    pub(crate) array_store: IdStore<Vec<PineValue>>,
+    pub(crate) array_kinds: IdStore<ArrayElementKind>,
+    pub(crate) array_user_types: IdStore<String>,
+    pub(crate) array_slices: IdStore<ArraySlice>,
     pub(crate) next_array_id: u32,
     pub(crate) object_store: Vec<Vec<PineValue>>,
     pub(crate) object_varip_fields: Vec<Vec<bool>>,
@@ -382,10 +383,10 @@ impl<'a> HistoricalRuntime<'a> {
             current_series: HashMap::new(),
             active_series: HashSet::new(),
             var_store: HashMap::new(),
-            array_store: HashMap::new(),
-            array_kinds: HashMap::new(),
-            array_user_types: HashMap::new(),
-            array_slices: HashMap::new(),
+            array_store: IdStore::new(),
+            array_kinds: IdStore::new(),
+            array_user_types: IdStore::new(),
+            array_slices: IdStore::new(),
             next_array_id: 0,
             object_store: Vec::new(),
             object_varip_fields: Vec::new(),

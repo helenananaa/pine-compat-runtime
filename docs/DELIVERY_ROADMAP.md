@@ -48,7 +48,8 @@ The [UDT identity repair](UDT_IDENTITY_AUDIT.md) now passes 6,762 Rust /
 shallow copy, nested writes, defaults and field-level varip fix the earlier
 218-mismatch alias baseline. The complete native v5/v6 control matches 872
 values per version, with a separate 872-value array reference. Retained
-artifacts are being qualified. Richer reference-bearing collections, request
+CLI/wheel/WASM artifacts built from `b091d2832` pass these suites and prior
+RSI/member/tuple references. Richer reference-bearing collections, request
 graph transfer, resource bounds and complete Pivot Points remain open.
 
 ## Latest retained streaming qualification

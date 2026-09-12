@@ -148,3 +148,11 @@ the discovered recursive-copy regression are documented in `UDT_IDENTITY_AUDIT.m
 Retained commit-bound artifacts are being built next. Full Pivot Points,
 reference-bearing matrices/arrays, cross-request object graph transfer and
 resource qualification remain open. The broad goal is still active.
+
+Retained Windows debug artifacts now pass at implementation commit `b091d2832`:
+UDT 872/872 per dialect, array identity 872/872, and all prior RSI/member/tuple
+reference suites with complete cross-host and streaming parity. See
+`UDT_IDENTITY_AUDIT.md` and `PRODUCT_COMPLETION_ARTIFACTS.json`. Next work returns
+to the original Pivot Points reference-bearing UDT arrays/matrices and method
+effects, followed by requested contexts. Its current diagnostic inventory is
+`corpus/pivot-after-udt-analysis.json` (42 diagnostics, no parse/return failures).

@@ -1,7 +1,7 @@
 # UDT identity: native evidence and current defect — 2026-09-12
 
-Status: **Windows-qualified for the named UDT scope; retained artifact
-qualification in progress**, following `4407159cd` and `0606a9943`.
+Status: **Windows-qualified for the named UDT scope**, with retained artifacts
+built from `b091d28322c52ee9cba9990bf85921d587a56c82`.
 The previously qualified member/tuple slices do not establish mutable UDT
 reference semantics. This audit drives the next implementation required by
 the unchanged official Pivot Points source.
@@ -210,3 +210,19 @@ identity and field-varip replica checks. All 2,247 semantic fixtures pass;
 copy receiver failures no longer recurse or duplicate diagnostics. Retained
 artifacts are the next step, and richer UDT graphs/requests/resources remain
 explicitly outside this acceptance scope.
+
+`udt-retained-hosts.log` also passes. `udt-hosts/source-identity.json` binds the
+retained Windows debug CLI, installed wheel and generated WASM to implementation
+commit `b091d28322c52ee9cba9990bf85921d587a56c82` and its tree. Native UDT suites
+match 872 values each (v5/v6), and the array suite matches 872. Both RSI suites
+(218/852), both member suites (654/981) and both tuple suites (1090/1090) pass
+again. Every suite checks complete output through four CLI modes, installed
+Python and actual WASM, plus Python forming/confirmation replica parity. All
+771 installed-wheel tests and the WASM field-varip replica smoke pass. Hashes
+and receipts are recorded in `PRODUCT_COMPLETION_ARTIFACTS.json`.
+
+This is committed Windows development qualification, not optimized unified
+distribution or Linux acceptance. The unchanged Pivot Points still has 42
+diagnostics (`corpus/pivot-after-udt-analysis.json`), dominated by reference-bearing
+UDT array/matrix admission, method effects and requested contexts. Continue
+those actual target gaps while preserving the newly qualified reference rules.

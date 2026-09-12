@@ -5,10 +5,10 @@
   "metadataCommit": "67862713f",
   "qualification": "pre-commit worktree gates; integration commits identify the implemented slices; no final distribution",
   "checks": {
-    "installedPython": 768,
+    "installedPython": 771,
     "tools": 130,
     "actualWasm": true,
-    "rust": 6748
+    "rust": 6762
   },
   "rsiReferenceStatus": "Default 218 and Bollinger/divergence 852 references pass on retained Windows development artifacts; Pivot Points Standard remains blocked",
   "files": [
@@ -351,6 +351,101 @@
       "path": ".local/product-completion-20260912/compare-udt-baseline.py",
       "bytes": 933,
       "sha256": "6f9563e79cdc11d3a61c1e03f0022f4dd93b1d2cbbd3875b4f20f2629827364e"
+    },
+    {
+      "path": ".local/product-completion-20260912/verify-udt-identity-v7.log",
+      "bytes": 591413,
+      "sha256": "db37588099bd902bd76c80813aab8d6cd6ec6e88d3689ba2756ae2d63915ea34"
+    },
+    {
+      "path": ".local/product-completion-20260912/udt-retained-hosts.log",
+      "bytes": 9320,
+      "sha256": "000e373b4f90cb2c55a58f1f128c96c386fd126fc9152c227e3d4bd728c28a29"
+    },
+    {
+      "path": ".local/product-completion-20260912/udt-snapshot-diff-audit.json",
+      "bytes": 21827,
+      "sha256": "60196496c33c921f9154560727295e6356a73f7dd99c2be3d71dd9f50ef38d37"
+    },
+    {
+      "path": ".local/product-completion-20260912/udt-copy-recursion-fix.log",
+      "bytes": 420,
+      "sha256": "1399b7c806c0780293147237e4d7b3ff8e7cc993f62344cc420cf61e3fca647a"
+    },
+    {
+      "path": ".local/product-completion-20260912/udt-sema-fixtures-requalified.log",
+      "bytes": 159900,
+      "sha256": "5d1d66b681dd6543d03bc210303d2348660211a0cf95af7a11ae8b4f9bb15cff"
+    },
+    {
+      "path": ".local/product-completion-20260912/udt-realtime-requalified.log",
+      "bytes": 442,
+      "sha256": "d43c43fe130a4744ad4fabd5236549af432bc245bdbb7f86be26a9a5bcaddac4"
+    },
+    {
+      "path": ".local/product-completion-20260912/corpus/pivot-after-udt-analysis.json",
+      "bytes": 29666,
+      "sha256": "ec5956ace03a751a657e743fd430b5a51c8fa83732d65fff09be4b20b399328d"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-array-identity-control.pine",
+      "bytes": 675,
+      "sha256": "bdb110b79c498a73aab566ab8e64a098f34e0b8a85a6bf30e8bdb159b7b6be0d"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-array-identity-dom.txt",
+      "bytes": 15562,
+      "sha256": "7192897c409382376f54fa5f6bb65ee7c8d811e9f9d203a44c0862d01b344d59"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-array-identity-v6-expected.json",
+      "bytes": 5746,
+      "sha256": "744a3746ba2776cfc29aa2a14d12c0f4a07647ae44bf8f6ec0726266b4be8458"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-array-identity-v6-manifest.json",
+      "bytes": 330,
+      "sha256": "dff9d8fb6d18363545c3ca7ebd9895ee00bbad3cac7e6e8917cfa5670920e81f"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-array-identity-v6-raw.csv",
+      "bytes": 80872,
+      "sha256": "41483d18b0cb364ef0b68e1965755bd41b02f761cbdd6553bb5f1efb638be8af"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\corpus\\udt-array-identity-v6.pine",
+      "bytes": 675,
+      "sha256": "bdb110b79c498a73aab566ab8e64a098f34e0b8a85a6bf30e8bdb159b7b6be0d"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\udt-hosts\\member-qualification.json",
+      "bytes": 408,
+      "sha256": "9363de56023c79bdcb632ef181c7cf1651f8b5ace32334a16b1a6c509c5d09f4"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\udt-hosts\\qualification.json",
+      "bytes": 918,
+      "sha256": "c5a9077d9ee920efa5009368cae1c0136ead894f17345c3fbf57f3f2f93cc8a9"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\udt-hosts\\tuple-final-qualification.json",
+      "bytes": 410,
+      "sha256": "c2b40caa76782644ff566ca3f2cb41fe7b5f8f6e4dc5270718a90a8a9fe2db25"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\udt-hosts\\udt-array-identity-qualification.json",
+      "bytes": 228,
+      "sha256": "4fecbf73b344001449eaf8aa404632e3526d631ba1240488ce31e97ee3952508"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\udt-hosts\\udt-identity-qualification.json",
+      "bytes": 408,
+      "sha256": "7daa1c038baf632ddfa396b8d986fd3e6cacc23a8c71e70d3268048fceae75e2"
+    },
+    {
+      "path": ".local\\product-completion-20260912\\udt-hosts\\source-identity.json",
+      "bytes": 195,
+      "sha256": "91ba8fb9f2757afce251684c89d3a61e39cfd8d6853e849a4b902aa66407cb41"
     }
   ],
   "gradientCommit": "f6339ec54",
@@ -366,7 +461,8 @@
     "tupleFinalV6": 1090,
     "tupleFinalV5": 1090,
     "udtIdentityV6": 872,
-    "udtIdentityV5": 872
+    "udtIdentityV5": 872,
+    "udtArrayIdentityV6": 872
   },
   "retainedArtifacts": {
     "gradient": {
@@ -531,9 +627,104 @@
           "expected": 9839.96
         }
       ]
+    },
+    "udtIdentity": {
+      "status": "passed",
+      "scope": "Windows debug CLI, installed Python and actual WASM; full unchanged official RSI default monthly source; numerical native reference plus cross-host full-output and Python streaming parity",
+      "confirmedBars": 109,
+      "referenceValues": 218,
+      "mismatches": 0,
+      "skippedWarmup": 0,
+      "module": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\udt-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+      "hashes": {
+        "pine-compat.exe": "739c9c48e172c2be7c6ddfdf498d6a8018fa4a229d44d44d72e526e108231349",
+        "wheels\\pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl": "318fd02d161a18dd55718a42a7ec743f23dcfb544d9c2610712fabd97ef8badd",
+        "wasm\\pine_wasm.js": "0b161f3108056527da485b5a399650194715925ea83b0d6441f59f537d1c8e50",
+        "wasm\\pine_wasm_bg.wasm": "fa41da5171d1da04de4459c920bfe81b196dacaf916ab27f08d3f728a93be9d4"
+      }
+    },
+    "udtIdentityControls": {
+      "status": "passed",
+      "suites": [
+        {
+          "version": 6,
+          "referenceValues": 872,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        },
+        {
+          "version": 5,
+          "referenceValues": 872,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        }
+      ]
+    },
+    "udtArrayIdentityControls": {
+      "status": "passed",
+      "suites": [
+        {
+          "version": 6,
+          "referenceValues": 872,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        }
+      ]
+    },
+    "udtMemberControls": {
+      "status": "passed",
+      "suites": [
+        {
+          "version": 6,
+          "referenceValues": 654,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        },
+        {
+          "version": 5,
+          "referenceValues": 981,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        }
+      ]
+    },
+    "udtTupleControls": {
+      "status": "passed",
+      "suites": [
+        {
+          "version": 6,
+          "referenceValues": 1090,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        },
+        {
+          "version": 5,
+          "referenceValues": 1090,
+          "mismatches": [],
+          "parity": "Python batch/stream/replica, four CLI modes, actual WASM full result"
+        }
+      ]
+    },
+    "udtAlternate": {
+      "referenceValues": 852,
+      "nonNullReferences": 357,
+      "mismatches": 0,
+      "firstMismatches": [],
+      "inputOverrides": {
+        "23": "SMA + Bollinger Bands",
+        "3": true
+      },
+      "pythonModule": "E:\\projects\\pine-interpreter\\.local\\product-completion-20260912\\udt-hosts\\venv\\lib\\site-packages\\pine_compat\\__init__.py",
+      "surfaceParity": "installed Python batch and streaming replica, four CLI modes, actual generated WASM full output"
+    },
+    "udtSource": {
+      "commit": "b091d28322c52ee9cba9990bf85921d587a56c82",
+      "tree": "97e9b668b95a72f0d3803214bd97b6845c8162df",
+      "scope": "Windows debug artifacts built from committed UDT implementation"
     }
   },
   "memberCommit": "6e14f352e",
   "tupleFinalCommit": "4407159cd",
-  "udtIdentityStatus": "unrepaired: full native control has five admission errors; executable two-plot alias isolation mismatches 218/218 references"
+  "udtIdentityStatus": "passed for named Windows UDT identity/default/copy/field-varip scope on commit-bound debug artifacts; richer graphs, request transfer and resources remain open",
+  "udtIdentityCommit": "b091d28322c52ee9cba9990bf85921d587a56c82"
 }

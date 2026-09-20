@@ -45,6 +45,9 @@ impl<'a> HistoricalRuntime<'a> {
         _call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
+        if self.external_execution.is_some() && callee.starts_with("strategy.") {
+            return Some(self.eval_external_call(callee, args));
+        }
         Some(match callee {
             "strategy.convert_to_account" | "strategy.convert_to_symbol" => {
                 self.eval_strategy_currency_conversion(args)

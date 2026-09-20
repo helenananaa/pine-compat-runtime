@@ -182,6 +182,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) alerts: super::append_history::AppendHistory<AlertEvent>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
+    pub(crate) external_execution: Option<crate::external::ExternalExecution>,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
     magnifier_diagnostics: Vec<RuntimeDiagnostic>,
@@ -443,6 +444,7 @@ impl<'a> HistoricalRuntime<'a> {
             alerts: Default::default(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
+            external_execution: None,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
             magnifier_diagnostics: Vec::new(),
@@ -703,6 +705,25 @@ impl<'a> HistoricalRuntime<'a> {
         result
     }
 
+    /// Freeze historical endpoint metadata without exposing future price values.
+    pub fn set_historical_horizon(
+        &mut self,
+        total: usize,
+        last_time: i64,
+    ) -> Result<(), RuntimeError> {
+        if total == 0 || self.bars > total {
+            return Err(RuntimeError {
+                message: "invalid historical horizon".into(),
+            });
+        }
+        self.historical_end = Some(total);
+        self.last_bar_index = Some(total - 1);
+        self.last_bar_time = Some(last_time);
+        self.chart_visible_right_time = Some(last_time);
+        self.prepare_magnifier_chart_bar_count(total)?;
+        Ok(())
+    }
+
     pub fn append_bar(&mut self, bar: Bar) -> Result<(), RuntimeError> {
         self.append_bar_with_kind(bar, BarUpdateKind::Historical)
     }
@@ -731,6 +752,17 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        if let Some(external) = &self.external_execution {
+            if external
+                .frames
+                .get(bar_index)
+                .is_none_or(|frame| frame.time != bar.time)
+            {
+                return Err(crate::external::external_error(
+                    "account feedback time differs from current bar",
+                ));
+            }
+        }
         if self.program.script_mode == ScriptMode::Strategy {
             self.session_windows
                 .validate_range(bar_index, bar_index + 1)
@@ -783,7 +815,9 @@ impl<'a> HistoricalRuntime<'a> {
             self.snapshot_strategy_eval_checkpoint();
         }
         let passes_before_tick = self.strategy_scheduler.script_passes();
-        self.run_pre_script_strategy_phases(bar_index, bar)?;
+        if self.external_execution.is_none() {
+            self.run_pre_script_strategy_phases(bar_index, bar)?;
+        }
         let skip_normal_strategy_pass = self.program.script_mode == ScriptMode::Strategy
             && ((update_kind == BarUpdateKind::Forming
                 && !self.program.strategy_settings.calc_on_every_tick)
@@ -808,8 +842,22 @@ impl<'a> HistoricalRuntime<'a> {
                 crate::runtime::strategy_scheduler::StrategyBarPhase::BuiltinRefresh,
             );
             if !skip_normal_strategy_pass {
-                let filled = self.run_strategy_script_pass()?;
-                self.recalculate_after_fill(filled)?;
+                let passes = self
+                    .external_execution
+                    .as_ref()
+                    .and_then(|state| state.passes.as_ref())
+                    .map(|groups| groups[bar_index].clone());
+                if let Some(passes) = passes {
+                    for (index, pass) in passes.into_iter().enumerate() {
+                        self.current_bar = Some(pass.bar);
+                        self.current_execution_time = Some(pass.event_time_ms);
+                        self.external_execution.as_mut().unwrap().active_pass = Some((index, pass));
+                        self.run_strategy_script_pass()?;
+                    }
+                } else {
+                    let filled = self.run_strategy_script_pass()?;
+                    self.recalculate_after_fill(filled)?;
+                }
             }
         } else {
             let program = self.program.clone();
@@ -827,7 +875,9 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        self.run_post_script_strategy_phases(bar_index, bar)?;
+        if self.external_execution.is_none() {
+            self.run_post_script_strategy_phases(bar_index, bar)?;
+        }
         if self.program.script_mode == ScriptMode::Strategy {
             self.trace_strategy_phase(
                 crate::runtime::strategy_scheduler::StrategyBarPhase::OutputCommit,
@@ -990,6 +1040,14 @@ impl<'a> HistoricalRuntime<'a> {
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {
         let before = self.strategy_broker.public_order_event_count();
         self.restore_strategy_eval_checkpoint();
+        self.bind_external_request_data()?;
+        if self
+            .external_execution
+            .as_ref()
+            .is_some_and(|state| state.active_pass.is_some())
+        {
+            self.set_builtin_symbols(&self.current_bar.unwrap(), self.bars)?;
+        }
         self.strategy_scheduler.begin_script_pass()?;
         self.trace_strategy_phase(
             crate::runtime::strategy_scheduler::StrategyBarPhase::ScriptStatements,
@@ -1150,7 +1208,7 @@ impl<'a> HistoricalRuntime<'a> {
 }
 
 impl HistoricalRuntime<'static> {
-    pub(crate) fn with_owned_program_and_request_environment_and_input_overrides(
+    pub fn with_owned_program_and_request_environment_and_input_overrides(
         program: HirProgram,
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,

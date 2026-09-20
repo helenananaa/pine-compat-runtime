@@ -319,6 +319,7 @@ dependencies = [
  "pine-sema",
  "pine-syntax",
  "pyo3",
+ "serde_json",
 ]
 
 [[package]]

@@ -17,6 +17,7 @@ mod changes;
 mod chart_metadata;
 mod diagnostics;
 mod gradient;
+mod history;
 mod outputs;
 mod realtime;
 mod replica;
@@ -37,6 +38,80 @@ struct PyProgram {
 
 #[pymethods]
 impl PyProgram {
+    #[pyo3(signature=(bars, input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None, magnifier_bars=None))]
+    #[allow(clippy::too_many_arguments)]
+    fn historical_session(
+        &self,
+        bars: &Bound<'_, PyAny>,
+        input_overrides: Option<&Bound<'_, PyAny>>,
+        chart_symbol: Option<&str>,
+        chart_timeframe: Option<&str>,
+        request_bars: Option<&Bound<'_, PyAny>>,
+        magnifier_bars: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<history::HistoricalSession> {
+        history::HistoricalSession::new(
+            self,
+            bars,
+            input_overrides,
+            chart_symbol,
+            chart_timeframe,
+            request_bars,
+            magnifier_bars,
+        )
+    }
+    /// Evaluate against host-owned account frames; never run the native broker.
+    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None))]
+    fn run_external(
+        &self,
+        py: Python<'_>,
+        bars: &Bound<'_, PyAny>,
+        accounts: &Bound<'_, PyAny>,
+        input_overrides: Option<&Bound<'_, PyAny>>,
+        chart_symbol: Option<&str>,
+        chart_timeframe: Option<&str>,
+        execution_passes: Option<&Bound<'_, PyAny>>,
+        request_bars: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
+        let bars = parse_bars(bars)?;
+        let json = PyModule::import(py, "json")?;
+        let raw: String = json.call_method1("dumps", (accounts,))?.extract()?;
+        let frames: Vec<pine_runtime::ExternalAccountFrame> =
+            serde_json::from_str(&raw).map_err(|err| PyValueError::new_err(err.to_string()))?;
+        if frames.len() != bars.len() {
+            return Err(PyValueError::new_err("E_EXTERNAL_FEEDBACK_COUNT"));
+        }
+        let passes = execution_passes
+            .map(|value| -> PyResult<Vec<Vec<pine_runtime::ExternalPass>>> {
+                let raw: String = json.call_method1("dumps", (value,))?.extract()?;
+                serde_json::from_str(&raw).map_err(|err| PyValueError::new_err(err.to_string()))
+            })
+            .transpose()?;
+        let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
+            &self.hir,
+            parse_request_environment(request_bars, chart_symbol, chart_timeframe)?,
+            parse_input_overrides(input_overrides, &self.hir)?,
+        )
+        .with_external_accounts_and_passes(frames, passes)
+        .map_err(|err| PyValueError::new_err(err.message))?;
+        runtime
+            .append_bars(&bars)
+            .map_err(|err| PyValueError::new_err(err.message))?;
+        let intents = runtime
+            .external_intents()
+            .map_err(|err| PyValueError::new_err(err.message))?;
+        let result = PyDict::new(py);
+        result.set_item("protocol", "external-broker/1")?;
+        result.set_item("pyramiding", self.hir.strategy_settings.pyramiding_limit)?;
+        result.set_item(
+            "intents",
+            json.call_method1("loads", (serde_json::to_string(intents).unwrap(),))?,
+        )?;
+        let mut output = runtime.result();
+        output.strategy = None;
+        result.set_item("output", runtime_result_to_py(py, &output)?)?;
+        Ok(result.into_any().unbind())
+    }
+
     /// Describe potential host inputs without executing the program.
     fn host_requirements(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         Ok(PyModule::import(py, "json")?

@@ -80,6 +80,10 @@ impl<'a> HistoricalRuntime<'a> {
             None => self.fork_with_request_environment(environment),
         };
         let bars = self.resolved_request_bars_from(key, prefix.len())?;
+        if bars.is_empty() {
+            self.request_evaluations.remove(cache_key);
+            return Ok(prefix);
+        }
         runtime.historical_end = Some(count);
         let mut before_last = None;
         let mut last = None;

@@ -42,3 +42,21 @@ WASM. Release rebuilding, native-reference rechecks and the unchanged large
 resource trial are still pending. The collector now persists incomplete timing
 checkpoints during long runs so future interrupted trials retain raw samples;
 that instrumentation change does not alter the workload or acceptance budgets.
+
+Release 5c775fb87 passed all prior native-reference gates. Its unchanged
+100000-history trial improved markedly but still missed budgets: the first
+complete 10000-append phase had P95 5.3098 ms and its replica applications had
+P95 4.2504 ms. Raw samples were retained in the interrupted checkpoint; the full
+multi-phase/repetition case remains incomplete, not accepted. No memory-limit
+failure is claimed.
+
+The next cost was unconditional empty drawing SetTail records plus quadratic
+ID searches. The output cursor now retains both stable-prefix and total snapshot
+lengths, so it can omit genuinely unchanged objects while still emitting empty
+tails that retract forming snapshots. Tables retain their updates because their
+metadata lives outside snapshots. Drawing ID lookups use ordered maps and
+missing-ID detection avoids quadratic scans. A focused test verifies omission,
+mutation, preview retraction and confirmation against a replica; it passes.
+The full verifier passed on September 12; its raw output is retained in
+`drawing-delta-full-verify.log`. Performance after this second change has not
+yet been measured.

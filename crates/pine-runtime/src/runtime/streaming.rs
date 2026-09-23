@@ -1,3 +1,7 @@
+use std::collections::{BTreeMap, BTreeSet};
+
+type DrawingCursor = BTreeMap<u32, (usize, usize)>;
+
 use super::historical::HistoricalRuntime;
 use crate::output::changes::{
     DrawingAction, DrawingChange, DrawingFamily, DrawingObject, EventAction, EventChange,
@@ -18,12 +22,12 @@ pub(crate) struct OutputCursor {
     bar_colors: Vec<(u32, usize)>,
     hlines: Vec<crate::HLineOutput>,
     fills: Vec<(u32, usize)>,
-    labels: Vec<(u32, usize)>,
-    lines: Vec<(u32, usize)>,
-    line_fills: Vec<(u32, usize)>,
-    polylines: Vec<(u32, usize)>,
-    boxes: Vec<(u32, usize)>,
-    tables: Vec<(u32, usize)>,
+    labels: DrawingCursor,
+    lines: DrawingCursor,
+    line_fills: DrawingCursor,
+    polylines: DrawingCursor,
+    boxes: DrawingCursor,
+    tables: DrawingCursor,
     alerts: Vec<crate::AlertEvent>,
     alert_bar: usize,
     drawing_bar: usize,
@@ -93,8 +97,11 @@ impl OutputCursor {
                 .map(|item| {
                     (
                         item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                        (
+                            item.snapshots
+                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            item.snapshots.len(),
+                        ),
                     )
                 })
                 .collect(),
@@ -104,8 +111,11 @@ impl OutputCursor {
                 .map(|item| {
                     (
                         item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                        (
+                            item.snapshots
+                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            item.snapshots.len(),
+                        ),
                     )
                 })
                 .collect(),
@@ -115,8 +125,11 @@ impl OutputCursor {
                 .map(|item| {
                     (
                         item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                        (
+                            item.snapshots
+                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            item.snapshots.len(),
+                        ),
                     )
                 })
                 .collect(),
@@ -126,8 +139,11 @@ impl OutputCursor {
                 .map(|item| {
                     (
                         item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                        (
+                            item.snapshots
+                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            item.snapshots.len(),
+                        ),
                     )
                 })
                 .collect(),
@@ -137,8 +153,11 @@ impl OutputCursor {
                 .map(|item| {
                     (
                         item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                        (
+                            item.snapshots
+                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            item.snapshots.len(),
+                        ),
                     )
                 })
                 .collect(),
@@ -148,8 +167,11 @@ impl OutputCursor {
                 .map(|item| {
                     (
                         item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                        (
+                            item.snapshots
+                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            item.snapshots.len(),
+                        ),
                     )
                 })
                 .collect(),
@@ -555,12 +577,23 @@ fn delta_start(old_len: usize, new_len: usize) -> usize {
 fn push_drawing(
     changes: &mut RuntimeChanges,
     family: DrawingFamily,
-    cursor: &[(u32, usize)],
+    cursor: &DrawingCursor,
     id: u32,
     stable_len: usize,
+    total_len: usize,
     tail: impl FnOnce(usize) -> DrawingObject,
 ) {
-    let action = match lens_get(cursor, id) {
+    // No tail existed in the previous observation and none exists now.
+    // Keep empty SetTail updates when they retract a prior forming snapshot.
+    // Table metadata lives outside snapshots and still needs its own updates.
+    if family != DrawingFamily::Table
+        && cursor.get(&id).is_some_and(|(old_stable, old_total)| {
+            old_stable == old_total && *old_total == stable_len && stable_len == total_len
+        })
+    {
+        return;
+    }
+    let action = match cursor.get(&id) {
         None => DrawingAction::Add(tail(0)),
         Some(_) => {
             let start = stable_len;
@@ -576,11 +609,16 @@ fn push_drawing(
 fn delete_missing(
     changes: &mut RuntimeChanges,
     family: DrawingFamily,
-    cursor: &[(u32, usize)],
-    present: impl Fn(u32) -> bool,
+    cursor: &DrawingCursor,
+    present: impl Iterator<Item = u32>,
 ) {
-    for (id, _) in cursor {
-        if !present(*id) {
+    let present: Vec<_> = present.collect();
+    if cursor.keys().copied().eq(present.iter().copied()) {
+        return;
+    }
+    let present: BTreeSet<_> = present.into_iter().collect();
+    for id in cursor.keys() {
+        if !present.contains(id) {
             changes.drawings.push(DrawingChange {
                 family,
                 id: *id,
@@ -592,7 +630,7 @@ fn delete_missing(
 
 fn diff_label_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
+    cursor: &DrawingCursor,
     items: &[super::drawing_history::RuntimeLabel],
     bar: usize,
 ) {
@@ -604,6 +642,7 @@ fn diff_label_drawings(
             item.id,
             item.snapshots
                 .partition_point(|snapshot| snapshot.bar_index < bar),
+            item.snapshots.len(),
             |start| {
                 DrawingObject::Label(crate::LabelOutput {
                     id: item.id,
@@ -612,14 +651,17 @@ fn diff_label_drawings(
             },
         );
     }
-    delete_missing(changes, DrawingFamily::Label, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    delete_missing(
+        changes,
+        DrawingFamily::Label,
+        cursor,
+        items.iter().map(|item| item.id),
+    );
 }
 
 fn diff_line_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
+    cursor: &DrawingCursor,
     items: &[super::drawing_history::RuntimeLine],
     bar: usize,
 ) {
@@ -631,6 +673,7 @@ fn diff_line_drawings(
             item.id,
             item.snapshots
                 .partition_point(|snapshot| snapshot.bar_index < bar),
+            item.snapshots.len(),
             |start| {
                 DrawingObject::Line(crate::LineOutput {
                     id: item.id,
@@ -639,14 +682,17 @@ fn diff_line_drawings(
             },
         );
     }
-    delete_missing(changes, DrawingFamily::Line, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    delete_missing(
+        changes,
+        DrawingFamily::Line,
+        cursor,
+        items.iter().map(|item| item.id),
+    );
 }
 
 fn diff_line_fill_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
+    cursor: &DrawingCursor,
     items: &[super::drawing_history::RuntimeLineFill],
     bar: usize,
 ) {
@@ -658,6 +704,7 @@ fn diff_line_fill_drawings(
             item.id,
             item.snapshots
                 .partition_point(|snapshot| snapshot.bar_index < bar),
+            item.snapshots.len(),
             |start| {
                 DrawingObject::LineFill(crate::LineFillOutput {
                     id: item.id,
@@ -666,14 +713,17 @@ fn diff_line_fill_drawings(
             },
         );
     }
-    delete_missing(changes, DrawingFamily::LineFill, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    delete_missing(
+        changes,
+        DrawingFamily::LineFill,
+        cursor,
+        items.iter().map(|item| item.id),
+    );
 }
 
 fn diff_polyline_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
+    cursor: &DrawingCursor,
     items: &[super::drawing_history::RuntimePolyline],
     bar: usize,
 ) {
@@ -685,6 +735,7 @@ fn diff_polyline_drawings(
             item.id,
             item.snapshots
                 .partition_point(|snapshot| snapshot.bar_index < bar),
+            item.snapshots.len(),
             |start| {
                 DrawingObject::Polyline(crate::PolylineOutput {
                     id: item.id,
@@ -693,14 +744,17 @@ fn diff_polyline_drawings(
             },
         );
     }
-    delete_missing(changes, DrawingFamily::Polyline, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    delete_missing(
+        changes,
+        DrawingFamily::Polyline,
+        cursor,
+        items.iter().map(|item| item.id),
+    );
 }
 
 fn diff_box_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
+    cursor: &DrawingCursor,
     items: &[super::drawing_history::RuntimeBox],
     bar: usize,
 ) {
@@ -712,6 +766,7 @@ fn diff_box_drawings(
             item.id,
             item.snapshots
                 .partition_point(|snapshot| snapshot.bar_index < bar),
+            item.snapshots.len(),
             |start| {
                 DrawingObject::Box(crate::BoxOutput {
                     id: item.id,
@@ -720,14 +775,17 @@ fn diff_box_drawings(
             },
         );
     }
-    delete_missing(changes, DrawingFamily::Box, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    delete_missing(
+        changes,
+        DrawingFamily::Box,
+        cursor,
+        items.iter().map(|item| item.id),
+    );
 }
 
 fn diff_table_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
+    cursor: &DrawingCursor,
     items: &[super::drawing_history::RuntimeTable],
     bar: usize,
 ) {
@@ -739,6 +797,7 @@ fn diff_table_drawings(
             item.id,
             item.snapshots
                 .partition_point(|snapshot| snapshot.bar_index < bar),
+            item.snapshots.len(),
             |start| {
                 DrawingObject::Table(Box::new(crate::TableOutput {
                     id: item.id,
@@ -755,9 +814,12 @@ fn diff_table_drawings(
             },
         );
     }
-    delete_missing(changes, DrawingFamily::Table, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    delete_missing(
+        changes,
+        DrawingFamily::Table,
+        cursor,
+        items.iter().map(|item| item.id),
+    );
 }
 
 fn diff_alerts(

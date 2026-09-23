@@ -225,7 +225,7 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_imported_udt_varip.pine",
     "tests/fixtures/sema/unsupported_imported_udt_varip_identity.pine",
     "tests/fixtures/sema/unsupported_imported_udt_field_mutation_type.pine",
-    "tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine",
+    "tests/fixtures/sema/supported_imported_udt_parameter_field_mutation.pine",
     "tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine",
     "tests/fixtures/sema/unsupported_imported_udt_nested_field_mutation.pine",
     "tests/fixtures/sema/supported_imported_udt_array_decl.pine",

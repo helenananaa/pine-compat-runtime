@@ -2006,3 +2006,26 @@ plot(ratio)
         .expect("phase 6 confirmed update");
     assert_eq!(confirmed, historical);
 }
+#[test]
+fn v5_numeric_typed_bool_declaration_casts_at_runtime() {
+    let source = SourceFile::new(
+        "v5_typed_bool.pine",
+        "//@version=5\nindicator(\"v5 typed bool\")\nbool flag = close - 2\nplot(flag ? 1 : 0)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[1.0, 0.0, 1.0]);
+
+    let v6_source = SourceFile::new(
+        "v6_typed_bool.pine",
+        "//@version=6\nindicator(\"v6 typed bool\")\nbool flag = close - 2\nplot(flag ? 1 : 0)\n",
+    );
+    let v6 = analyze_source(&v6_source);
+    assert!(v6.diagnostics.iter().any(|d| d.code == "E_ASSIGN_TYPE"));
+}

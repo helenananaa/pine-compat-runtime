@@ -305,6 +305,34 @@ impl PendingEntryBook {
         eligible
     }
 
+    pub(super) fn take_same_bar_eligible_limits(
+        &mut self,
+        bar_index: usize,
+        close: f64,
+        verification_offset: f64,
+    ) -> Vec<PendingEntry> {
+        let mut eligible = Vec::new();
+        let mut index = 0;
+        while index < self.entries.len() {
+            let entry = &self.entries[index];
+            let reached = match (entry.direction, entry.kind) {
+                (PendingEntryDirection::Long, PendingEntryKind::Limit { price }) => {
+                    close <= price - verification_offset
+                }
+                (PendingEntryDirection::Short, PendingEntryKind::Limit { price }) => {
+                    close >= price + verification_offset
+                }
+                _ => false,
+            };
+            if entry.created_bar_index == bar_index && reached {
+                eligible.push(self.entries.remove(index));
+            } else {
+                index += 1;
+            }
+        }
+        eligible
+    }
+
     #[allow(dead_code)]
     pub(super) fn take_first_eligible_stop_long(
         &mut self,

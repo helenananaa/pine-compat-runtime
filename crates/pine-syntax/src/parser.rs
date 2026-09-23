@@ -63,9 +63,26 @@ impl Parser {
     }
 
     fn parse(mut self) -> Parse {
-        let version = self.parse_optional_version();
+        let directives: Vec<_> = self
+            .tokens
+            .iter()
+            .filter_map(|token| match token.kind {
+                TokenKind::VersionDirective(version) => Some(VersionDecl {
+                    version,
+                    span: token.span,
+                }),
+                _ => None,
+            })
+            .collect();
+        let version = directives.first().copied();
+        for duplicate in directives.iter().skip(1) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LANGUAGE_VERSION_DUPLICATE",
+                "source contains more than one version directive",
+                duplicate.span,
+            ));
+        }
         self.source_version = version.as_ref().map_or(1, |version| version.version);
-        let mut saw_version_directive = version.is_some();
         let mut statements = Vec::new();
 
         while !self.at(TokenKind::Eof) {
@@ -74,20 +91,6 @@ impl Parser {
                 break;
             }
             if matches!(self.current().kind, TokenKind::VersionDirective(_)) {
-                let (code, message) = if saw_version_directive {
-                    (
-                        "E_LANGUAGE_VERSION_DUPLICATE",
-                        "source contains more than one version directive",
-                    )
-                } else {
-                    (
-                        "E_LANGUAGE_VERSION_PLACEMENT",
-                        "version directive must appear before source statements",
-                    )
-                };
-                self.diagnostics
-                    .push(Diagnostic::error(code, message, self.current().span));
-                saw_version_directive = true;
                 self.bump();
                 continue;
             }
@@ -96,7 +99,7 @@ impl Parser {
                 Some(statement) => statements.push(statement),
                 None => self.recover_stmt(),
             }
-            self.skip_legacy_statement_commas();
+            self.skip_statement_separator();
             self.skip_newlines();
         }
 
@@ -106,18 +109,6 @@ impl Parser {
                 statements,
             },
             diagnostics: self.diagnostics,
-        }
-    }
-
-    fn parse_optional_version(&mut self) -> Option<VersionDecl> {
-        self.skip_newlines();
-        match self.current().kind {
-            TokenKind::VersionDirective(version) => {
-                let span = self.current().span;
-                self.bump();
-                Some(VersionDecl { version, span })
-            }
-            _ => None,
         }
     }
 
@@ -742,10 +733,19 @@ impl Parser {
         }
     }
 
-    fn skip_legacy_statement_commas(&mut self) {
+    fn skip_statement_separator(&mut self) {
         if self.source_version <= 4 {
             while self.at(TokenKind::Comma) {
                 self.bump();
+            }
+        } else if self.at(TokenKind::Comma) {
+            // Modern Pine also permits distinct one-line statements separated
+            // by a comma. Consume one separator and parse the next statement
+            // in the same scope, preserving declaration order.
+            self.bump();
+            if self.at(TokenKind::Newline) || self.at(TokenKind::Dedent) || self.at(TokenKind::Eof)
+            {
+                self.error_here("E_PARSE_STMT", "expected statement after `,`");
             }
         }
     }

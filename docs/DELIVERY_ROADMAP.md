@@ -1,7 +1,15 @@
 # Independent runtime delivery
 
-Updated 2026-09-12. This is the single current delivery-status entry point.
+Updated 2026-09-23. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
+The [September 23 complete-script expansion](SCRIPT_COVERAGE_20260923.md)
+adds three unchanged v6 built-in indicators and 4,486 independently compared
+native plot positions at `f249b3db` on local CLI artifacts. It does not update
+the older platform receipts below or qualify a unified release.
+The subsequent [community-script qualification](COMMUNITY_SCRIPT_COVERAGE_20260923.md)
+adds native evidence for two admitted v5 community scripts, a narrowly scoped
+cash-order slippage sizing repair, and explicit admission blockers for SMC and
+Double Tap. The repair remains an uncommitted local candidate.
 Streaming additions are integrated through `5f158f59c` and `f368ab96e`, included
 in main by `7b70095f6`. No stable publication is implied by integration.
 

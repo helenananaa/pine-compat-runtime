@@ -31,14 +31,16 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_LIBRARY`: invalid library declaration.
 - `E_PARSE_NAME`: invalid qualified name.
 - `E_PARSE_SWITCH`: invalid switch expression.
+- `E_PARSE_STMT`: invalid statement.
 - `E_PARSE_TYPE`: invalid user-defined type declaration.
 - `E_LANGUAGE_VERSION_DUPLICATE`: more than one recognized `//@version=N`
   directive, including the spaced-equals compatibility form, was found.
-- `E_LANGUAGE_VERSION_PLACEMENT`: a recognized version directive appeared
-  after a source statement instead of in the leading comment/directive region.
 
 ## Semantic Analysis
 
+- `E_CONST_DECL_VALUE`: a scalar `const` declaration is initialized with a
+  value that is not available at compile time.
+- `E_CONST_REASSIGN`: reassignment of a `const` declaration.
 - `E_HOST_INPUT`: a host binding rejected malformed input before semantic
   analysis, such as invalid WASM library-source JSON.
 - `E_LANGUAGE_VERSION_`: internal diagnostic-family prefix used to stop before
@@ -172,8 +174,8 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
   or generated temporary-symbol budget.
 - `E_MAP_ASSIGN_TYPE`: reassignment changed a map key/value template identity.
 - `E_IMPORT_CYCLE`: import dependency graph contains a cycle.
-- `E_IMPORT_ALIAS_REQUIRED`: an import used by the executable subset omitted
-  the required alias.
+- `E_IMPORT_ALIAS_REQUIRED`: an import key is malformed and provides no
+  library name from which to derive the optional implicit alias.
 - `E_IMPORT_CONST_VALUE`: an exported library constant is not a const
   expression in the supported import subset.
 - `E_IMPORT_DUPLICATE_ALIAS`: root imports reuse the same alias.
@@ -221,6 +223,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 ## Runtime
 
 - `E_RUNTIME`: runtime execution emitted a host-visible diagnostic.
+- `E_UNSUPPORTED_ALERT_PLACEHOLDER`: a triggered `alertcondition` message
+  references a named plot with no numeric value on the current bar. The alert
+  event is suppressed, the diagnostic is deduplicated by message, and the
+  indicator continues to execute.
 - `W_LEGACY_SECURITY_LOOKAHEAD`: a reached legacy `security` callsite uses
   historical lookahead-on alignment, whether by v1/v2 default or explicit
   selection, and can repaint. The warning
@@ -231,7 +237,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_STRATEGY_MARGIN`: supported strategy entry fill requires more margin than
   available simulated equity.
 - `E_STRATEGY_PRICE`: strategy order fill price is not finite.
-- `E_STRATEGY_QTY`: strategy order quantity is not finite and positive.
+- `E_STRATEGY_QTY`: low-level broker placement receives an invalid strategy
+  quantity. Script-level `strategy.entry` and `strategy.order` stop execution
+  with a runtime error for invalid nonzero quantities; zero is a no-op and
+  `na` selects declared default sizing.
 - `E_STRATEGY_CLOSE_QTY`: `strategy.close` quantity is not finite and positive.
 - `E_STRATEGY_CLOSE_QTY_PERCENT`: `strategy.close` percent quantity is not
   finite and positive.

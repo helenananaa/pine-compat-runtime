@@ -286,6 +286,7 @@ pub(crate) struct MagnifierHostGap {
 }
 
 impl MagnifierHostGap {
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn between(previous: &Bar, next: &Bar) -> Option<Self> {
         if previous.close == next.open {

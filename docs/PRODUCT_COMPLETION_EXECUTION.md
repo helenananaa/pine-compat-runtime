@@ -23,6 +23,21 @@ real-script adoption. Missing references remain unverified, not passed.
 | Unified local distribution | Build selected Rust/CLI/Python/WASM outputs from one committed implementation; run installed-wheel, actual-WASM and retained independent reference gates | Windows/Linux debug artifacts at 4f32668a7 pass retained reference gates; current discovery repair and optimized resource/distribution acceptance remain open |
 | Consumption and closeout | Match version, source identity, hashes, installation examples, schema migration and evidence; retain explicit unsupported profiles | Pending |
 
+2026-09-23: [complete-script native reference expansion](SCRIPT_COVERAGE_20260923.md)
+admits three additional unchanged built-in v6 indicators on the named monthly
+and daily BTCUSDT inputs. Their six script/settings/timeframe runs match 4,486
+observable TradingView plot positions with zero mismatches at the stated
+tolerance. Batch, incremental, and historical realtime full outputs agree on
+the daily input. This is local CLI coverage at `f249b3db`, with source/export
+inputs retained outside Git; visual, forming-feed, and distribution gates remain
+open.
+
+The follow-on [community-script receipt](COMMUNITY_SCRIPT_COVERAGE_20260923.md)
+separately records two admitted v5 community scripts, two failed admissions,
+native plot/trade comparisons, and a cash-market-order slippage sizing repair.
+Its USD-quoted strategy comparison is inside the same-currency product scope;
+the USDT-quoted comparison exposes the external-FX boundary.
+
 Account expansion and indefinite-memory claims must not be silently substituted
 for the selected standard-candle scope. The core may expose deterministic
 configuration and capability contracts; data feeds, persistence and scheduling

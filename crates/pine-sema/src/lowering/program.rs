@@ -60,6 +60,7 @@ impl Analyzer {
             call_site_sources: self.call_site_sources.clone(),
             next_var_slot_id: self.next_var_slot_id,
             max_bars_back,
+            calc_bars_count: self.calc_bars_count,
             series_max_bars_back,
             history: history.program,
             series_history: history.series,

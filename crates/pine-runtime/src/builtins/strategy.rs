@@ -1,4 +1,4 @@
-use pine_ir::{CallSiteId, HirCallArg};
+use pine_ir::{CallSiteId, HirCallArg, StrategyDefaultQuantity};
 
 use crate::builtins::args::call_arg_expr;
 use crate::strategy::{
@@ -39,6 +39,31 @@ struct RuntimeExitBracketPlacement {
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    fn default_order_qty(
+        &self,
+        equity: f64,
+        close: f64,
+        is_long: bool,
+        market: bool,
+    ) -> Option<f64> {
+        // A cash market order is sized from the expected fill price, including
+        // its configured slippage. The actual next-bar open is not known yet.
+        let price = if market
+            && matches!(
+                self.program.strategy_settings.default_qty,
+                Some(StrategyDefaultQuantity::Cash(_))
+            ) {
+            let slippage = self.program.strategy_settings.slippage_ticks
+                * self.request_environment.chart().min_tick();
+            close + if is_long { slippage } else { -slippage }
+        } else {
+            close
+        };
+        self.program
+            .strategy_settings
+            .default_entry_qty(equity, price)
+    }
+
     pub(crate) fn eval_strategy_call(
         &mut self,
         callee: &str,
@@ -339,15 +364,33 @@ impl<'a> HistoricalRuntime<'a> {
             None => None,
         };
 
-        let qty = if let Some(qty_expr) = qty_expr {
-            self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
+        let explicit_qty = match qty_expr {
+            Some(expr) => self.eval_expr(expr)?.as_f64(),
+            None => None,
+        };
+        let qty = if let Some(qty) = explicit_qty {
+            qty
         } else {
             let equity = self.strategy_broker.equity_value(bar.close);
-            self.program
-                .strategy_settings
-                .default_entry_qty(equity, bar.close)
-                .unwrap_or(f64::NAN)
+            self.default_order_qty(
+                equity,
+                bar.close,
+                is_long,
+                limit_expr.is_none() && stop_expr.is_none(),
+            )
+            .unwrap_or(f64::NAN)
         };
+        if qty == 0.0 {
+            return Ok(PineValue::Void);
+        }
+        if !qty.is_finite() || !(0.0..=1_000_000_000_000.0).contains(&qty) {
+            return Err(RuntimeError {
+                message: format!(
+                    "`strategy.entry` invalid `qty` value ({qty}) on bar {}: expected a positive number no greater than 1000000000000",
+                    self.bars
+                ),
+            });
+        }
         let oca_id = id.clone();
         if is_short {
             if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
@@ -426,21 +469,39 @@ impl<'a> HistoricalRuntime<'a> {
             _ => return Ok(PineValue::Void),
         };
         let direction = self.eval_expr(direction_expr)?;
-        let qty = if let Some(qty_expr) = qty_expr {
-            self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
+        let explicit_qty = match qty_expr {
+            Some(expr) => self.eval_expr(expr)?.as_f64(),
+            None => None,
+        };
+        let qty = if let Some(qty) = explicit_qty {
+            qty
         } else if matches!(
             &direction,
             PineValue::String(value)
                 if value == "strategy.long" || value == "strategy.short"
         ) {
             let equity = self.strategy_broker.equity_value(bar.close);
-            self.program
-                .strategy_settings
-                .default_entry_qty(equity, bar.close)
-                .unwrap_or(f64::NAN)
+            self.default_order_qty(
+                equity,
+                bar.close,
+                matches!(&direction, PineValue::String(value) if value == "strategy.long"),
+                limit_expr.is_none() && stop_expr.is_none(),
+            )
+            .unwrap_or(f64::NAN)
         } else {
             return Ok(PineValue::Void);
         };
+        if qty == 0.0 {
+            return Ok(PineValue::Void);
+        }
+        if !qty.is_finite() || !(0.0..=1_000_000_000_000.0).contains(&qty) {
+            return Err(RuntimeError {
+                message: format!(
+                    "`strategy.order` invalid `qty` value ({qty}) on bar {}: expected a positive number no greater than 1000000000000",
+                    self.bars
+                ),
+            });
+        }
         let limit = match limit_expr {
             Some(expr) => Some(self.eval_expr(expr)?.as_f64().unwrap_or(f64::NAN)),
             None => None,
@@ -970,18 +1031,6 @@ impl<'a> HistoricalRuntime<'a> {
 
             let downside_price = if let Some(stop_expr) = stop_expr {
                 let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
-                if !stop_price.is_finite() {
-                    self.place_exit_bracket_quantity(RuntimeExitBracketPlacement {
-                        id,
-                        from_entry,
-                        downside_price: stop_price,
-                        upside_price: f64::NAN,
-                        quantity,
-                        bar_index: self.bars,
-                        metadata: metadata.clone(),
-                    });
-                    return Ok(PineValue::Void);
-                }
                 stop_price
             } else if let Some(loss_expr) = loss_expr {
                 let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
@@ -999,18 +1048,6 @@ impl<'a> HistoricalRuntime<'a> {
 
             let upside_price = if let Some(limit_expr) = limit_expr {
                 let limit_price = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
-                if !limit_price.is_finite() {
-                    self.place_exit_bracket_quantity(RuntimeExitBracketPlacement {
-                        id,
-                        from_entry,
-                        downside_price,
-                        upside_price: limit_price,
-                        quantity,
-                        bar_index: self.bars,
-                        metadata: metadata.clone(),
-                    });
-                    return Ok(PineValue::Void);
-                }
                 limit_price
             } else if let Some(profit_expr) = profit_expr {
                 let profit_ticks = self.eval_expr(profit_expr)?.as_f64().unwrap_or(f64::NAN);
@@ -1026,15 +1063,34 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             };
 
-            self.place_exit_bracket_quantity(RuntimeExitBracketPlacement {
-                id,
-                from_entry,
-                downside_price,
-                upside_price,
-                quantity,
-                bar_index: self.bars,
-                metadata: metadata.clone(),
-            });
+            match (downside_price.is_nan(), upside_price.is_nan()) {
+                (false, false) => self.place_exit_bracket_quantity(RuntimeExitBracketPlacement {
+                    id,
+                    from_entry,
+                    downside_price,
+                    upside_price,
+                    quantity,
+                    bar_index: self.bars,
+                    metadata: metadata.clone(),
+                }),
+                (false, true) => self.place_exit_stop_quantity(
+                    id,
+                    from_entry,
+                    downside_price,
+                    quantity,
+                    self.bars,
+                    metadata.clone(),
+                ),
+                (true, false) => self.place_exit_limit_quantity(
+                    id,
+                    from_entry,
+                    upside_price,
+                    quantity,
+                    self.bars,
+                    metadata.clone(),
+                ),
+                (true, true) => {}
+            }
         } else if let Some(stop_expr) = stop_expr {
             let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
             self.place_exit_stop_quantity(

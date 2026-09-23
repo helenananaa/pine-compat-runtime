@@ -3,6 +3,143 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn udf_clear_mutates_shared_array_across_bars() {
+    let source = SourceFile::new(
+        "udf_clear.pine",
+        "//@version=6\nindicator(\"UDF clear\")\nvar values = array.from(10, 20)\nclearValues(array<int> receiver) =>\n    array.clear(receiver)\nif bar_index == 1\n    clearValues(values)\nplot(array.size(values))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[2.0, 0.0, 0.0]);
+}
+
+#[test]
+fn array_new_numeric_sizes_follow_series_values() {
+    let source = SourceFile::new(
+        "series_array_sizes.pine",
+        "//@version=6\nindicator(\"Series array sizes\")\nfloats = array.new_float(bar_index + 1, close)\nints = array.new_int(bar_index + 2, bar_index)\nplot(array.size(floats))\nplot(array.size(ints))\nplot(array.get(ints, bar_index + 1))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 3.0, 4.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, 1.0, 2.0]);
+}
+
+#[test]
+fn for_in_array_uses_updated_size_after_removal() {
+    let source = SourceFile::new(
+        "for_in_remove.pine",
+        r#"//@version=5
+indicator("for in remove")
+values = array.from(1, 2, 3, 4)
+for [index, value] in values
+    if index == 1
+        array.remove(values, index)
+plot(array.size(values))
+plot(array.get(values, 2))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[3.0]);
+    assert_values_close(&result.plots[1].values, &[4.0]);
+}
+
+#[test]
+fn for_in_function_result_uses_updated_array_size() {
+    let source = SourceFile::new(
+        "for_in_expr_remove.pine",
+        r#"//@version=5
+indicator("for in result")
+lastSeen() =>
+    values = array.from(1, 2, 3, 4)
+    for [index, value] in values
+        if index == 1
+            array.remove(values, index)
+        value
+plot(lastSeen())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[4.0]);
+}
+
+#[test]
+fn udf_removes_global_array_element_at_series_index() {
+    let source = SourceFile::new(
+        "udf_series_remove.pine",
+        r#"//@version=5
+indicator("series remove")
+var values = array.from(10, 20, 30)
+removeAt(int index) =>
+    array.remove(values, index)
+index = bar_index % array.size(values)
+plot(removeAt(index))
+plot(array.size(values))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[10.0, 30.0, 20.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 1.0, 0.0]);
+}
+
+#[test]
+fn array_slice_accepts_series_bounds() {
+    let source = SourceFile::new(
+        "series_slice.pine",
+        r#"//@version=5
+indicator("series slice")
+values = array.from(10, 20, 30, 40)
+start = bar_index % 3
+window = array.slice(values, start, start + 2)
+plot(array.get(window, 0))
+plot(array.get(window, 1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[10.0, 20.0, 30.0]);
+    assert_values_close(&result.plots[1].values, &[20.0, 30.0, 40.0]);
+}
+
+#[test]
 fn runs_float_array_operations() {
     let source = SourceFile::new(
         "test.pine",
@@ -60,6 +197,63 @@ plot(na(empty.pop()) and empty.size() == 0 ? 1 : 0)
     assert_eq!(result.plots.len(), 2);
     assert_values_close(&result.plots[0].values, &[4.0, 6.0, 8.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn udf_can_set_and_fill_global_array_without_reassigning_its_reference() {
+    let source = SourceFile::new(
+        "udf_global_array.pine",
+        r#"//@version=5
+indicator("UDF global array")
+var values = array.new_float(2, 0)
+setFirst(float value) =>
+    array.set(values, 0, value)
+fillSecond(float value) =>
+    array.fill(values, value, 1, 2)
+setFirst(close)
+fillSecond(close + 1)
+plot(array.get(values, 0))
+plot(array.get(values, 1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 3.0, 4.0]);
+}
+
+#[test]
+fn udf_can_pop_global_array_and_return_removed_value() {
+    let source = SourceFile::new(
+        "udf_pop_global_array.pine",
+        r#"//@version=5
+indicator("UDF pop global array")
+var values = array.new_float(0)
+popLast() =>
+    array.pop(values)
+array.push(values, close)
+array.push(values, close + 1)
+removed = popLast()
+plot(removed)
+plot(array.size(values))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0]);
 }
 
 #[test]
@@ -510,6 +704,23 @@ plot(empty.size())
     assert_values_close(&result.plots[8].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[9].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[10].values, &[0.0, 0.0, 0.0]);
+}
+
+#[test]
+fn udf_shift_mutates_global_array_across_bars() {
+    let source = SourceFile::new(
+        "test.pine",
+        "//@version=6\nindicator(\"global queue\")\nvar array<int> values = array.new<int>()\nupdate() =>\n    array.push(values, bar_index)\n    if array.size(values) > 2\n        array.shift(values)\nupdate()\nplot(array.first(values) + array.size(values) * 10)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("run");
+    assert_values_close(&result.plots[0].values, &[10.0, 20.0, 21.0, 22.0]);
 }
 
 #[test]

@@ -145,6 +145,7 @@ mod tests {
             call_site_sources: Vec::new(),
             next_var_slot_id: 0,
             max_bars_back: None,
+            calc_bars_count: None,
             series_max_bars_back: Vec::new(),
             history: HirHistoryRequirements::default(),
             series_history: Vec::new(),

@@ -696,8 +696,10 @@ impl Analyzer {
                         else {
                             return false;
                         };
-                        if *mode != pine_syntax::DeclMode::Normal
-                            || function_locals.contains(name)
+                        if !matches!(
+                            mode,
+                            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const
+                        ) || function_locals.contains(name)
                             || !analyzer.request_expression_is_legacy_provider_scalar_inner(
                                 value,
                                 visiting,
@@ -970,6 +972,7 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "ta.obv"
             | "ta.pvi"
             | "ta.pvt"
+            | "ta.vwap"
             | "ta.wvad"
     )
 }

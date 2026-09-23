@@ -304,17 +304,9 @@ impl Analyzer {
                         ));
                     }
                 }
-                "qty" => {
-                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
-                        && qty <= 0.0
-                    {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy.entry` argument `qty` must be positive",
-                            arg.span,
-                        ));
-                    }
-                }
+                // Order quantities are checked at execution time. A zero
+                // quantity is a no-op and `na` selects the declared default.
+                "qty" => {}
                 "limit" => {
                     if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
@@ -597,17 +589,7 @@ impl Analyzer {
                         ));
                     }
                 }
-                "qty" => {
-                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
-                        && (!qty.is_finite() || qty <= 0.0)
-                    {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy.order` argument `qty` must be finite and positive",
-                            arg.span,
-                        ));
-                    }
-                }
+                "qty" => {}
                 "limit" => {
                     if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)

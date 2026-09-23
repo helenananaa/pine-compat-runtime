@@ -335,7 +335,13 @@ impl<'a> HistoricalRuntime<'a> {
             return self.new_array_from_values(ArrayElementKind::Table, tables);
         }
         if name == "strategy.account_currency" {
-            return eval_static_builtin_value("syminfo.currency");
+            return PineValue::String(
+                self.program
+                    .strategy_settings
+                    .account_currency
+                    .unwrap_or(self.request_environment.chart().currency())
+                    .to_owned(),
+            );
         }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());
@@ -516,6 +522,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "ta.wvad" {
             return self.wvad_current.clone();
+        }
+        if name == "syminfo.currency" {
+            return PineValue::String(self.request_environment.chart().currency().to_owned());
         }
         eval_static_builtin_value(name)
     }

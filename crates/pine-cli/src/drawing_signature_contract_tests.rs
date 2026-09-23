@@ -980,6 +980,7 @@ fn format_array_same_kind_signature(signature: &pine_builtins::BuiltinSignature)
 fn accepts_doc(accepts: Accepts) -> &'static str {
     match accepts {
         Accepts::Exact(pine_type) => pine_type_doc(pine_type),
+        Accepts::Kind(_) => "array<chart.point>",
         Accepts::Numeric => "numeric",
         Accepts::SimpleInt => "simple int",
         Accepts::SimpleIntCompatible => "simple integer-compatible",

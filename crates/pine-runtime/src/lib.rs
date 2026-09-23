@@ -147,7 +147,6 @@ const DEFAULT_MAX_POLYLINES: usize = 50;
 const MAX_POLYLINES: usize = 100;
 const DEFAULT_MAX_BOXES: usize = 50;
 const MAX_BOXES: usize = 500;
-const MAX_TABLES: usize = 50;
 const MAX_TABLE_CELLS: i64 = 1_000;
 const DEFAULT_CHART_TIMEFRAME: &str = "1";
 

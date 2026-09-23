@@ -5,6 +5,23 @@ use crate::builtins::colors::{color_rgba, compose_color, interpolate_color};
 use super::*;
 
 #[test]
+fn color_new_tracks_series_transparency_across_bars() {
+    let source = SourceFile::new(
+        "test.pine",
+        "//@version=6\nindicator(\"dynamic transparency\")\ntransp = bar_index * 25\nplot(color.t(color.new(color.blue, transp)))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("run");
+    assert_values_close(&result.plots[0].values, &[0.0, 25.0, 50.0, 75.0]);
+}
+
+#[test]
 fn reordered_named_color_args_use_signature_order() {
     let source = SourceFile::new(
         "test.pine",

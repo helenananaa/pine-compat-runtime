@@ -51,9 +51,8 @@ fn tuple_switch_styles_follow_each_branch_in_v5_and_v6() {
 }
 
 #[test]
-fn tuple_style_provenance_does_not_admit_unknown_or_reassigned_values() {
+fn tuple_style_provenance_rejects_known_invalid_values() {
     for source in [
-        "side=input.string(\"Left\",options=[\"Left\",\"Other\"])\n[x,style]=switch side\n    \"Left\" => [bar_index,label.style_label_right]\n    \"Right\" => [bar_index,label.style_label_left]\nlabel.new(x,close,style=style)",
         "[x,style]=[bar_index,label.style_label_right]\nstyle:=\"invalid\"\nlabel.new(x,close,style=style)",
         "side=close>0?\"Left\":\"Right\"\n[x,style]=switch side\n    \"Left\" => [bar_index,label.style_label_right]\n    \"Right\" => [bar_index,\"invalid\"]\nlabel.new(x,close,style=style)",
     ] {
@@ -71,4 +70,25 @@ fn tuple_style_provenance_does_not_admit_unknown_or_reassigned_values() {
             analysis.diagnostics
         );
     }
+}
+
+#[test]
+fn tuple_style_provenance_accepts_unknown_domain_for_runtime_validation() {
+    let source = "//@version=6\nindicator(\"dynamic style\")\nside=input.string(\"Left\",options=[\"Left\",\"Other\"])\n[x,style]=switch side\n    \"Left\" => [bar_index,label.style_label_right]\n    \"Right\" => [bar_index,label.style_label_left]\nlabel.new(x,close,style=style)\n";
+    let analysis = analyze_source(&SourceFile::new("dynamic.pine", source));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bar = Bar {
+        time: 0,
+        open: 10.,
+        high: 10.,
+        low: 10.,
+        close: 10.,
+        volume: 1.,
+    };
+    let result = run_historical(&analysis.hir.unwrap(), &[bar]).unwrap();
+    assert_eq!(result.labels.len(), 1);
 }

@@ -146,6 +146,7 @@ impl BrokerState {
         time: i64,
         raw_price: f64,
         metadata: StrategyOrderMetadata,
+        apply_slippage: bool,
     ) -> bool {
         if !signed_quantity.is_finite() || signed_quantity == 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -167,9 +168,10 @@ impl BrokerState {
         } else {
             TradeDirection::Short
         };
-        let fill_price = match order_direction {
-            TradeDirection::Long => self.long_entry_fill_price(raw_price),
-            TradeDirection::Short => self.short_entry_fill_price(raw_price),
+        let fill_price = match (order_direction, apply_slippage) {
+            (TradeDirection::Long, true) => self.long_entry_fill_price(raw_price),
+            (TradeDirection::Short, true) => self.short_entry_fill_price(raw_price),
+            (_, false) => raw_price,
         };
         if !fill_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -303,6 +305,7 @@ impl BrokerState {
                     bar_index,
                     time,
                     price: fill_price,
+                    apply_slippage,
                     qty: opened.quantity,
                     metadata: metadata.clone(),
                 },

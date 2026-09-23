@@ -7,7 +7,7 @@ array.push(values, 1)
 int total = 0
 for value in values
     total := total + value
-    if barstate.isrealtime and not barstate.isconfirmed
+    if barstate.isrealtime and not barstate.isconfirmed and array.size(values) == 2
         array.push(values, 10)
 
 plot(array.size(values))

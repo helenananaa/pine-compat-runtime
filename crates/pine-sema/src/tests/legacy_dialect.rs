@@ -271,7 +271,7 @@ fn modern_v5_v6_modes_keep_existing_paths_and_reject_study_alias() {
 }
 
 #[test]
-fn root_and_library_language_versions_must_match() {
+fn newer_root_can_import_older_library_version() {
     let root = SourceFile::new(
         "root.pine",
         "//@version=6\nindicator(\"root\")\nimport user/lib/1 as lib\nplot(lib.value)\n",
@@ -285,6 +285,28 @@ fn root_and_library_language_versions_must_match() {
 
     let analysis = analyze_input(&input);
 
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn older_root_cannot_import_newer_library_version() {
+    let root = SourceFile::new(
+        "root.pine",
+        "//@version=5\nindicator(\"root\")\nimport user/lib/1 as lib\nplot(lib.value)\n",
+    );
+    let library = SourceFile::new(
+        "lib.pine",
+        "//@version=6\nlibrary(\"lib\")\nexport value = 1\n",
+    );
+    let input = AnalysisInput::with_library_sources(root, vec![("user/lib/1".to_owned(), library)])
+        .expect("analysis input");
+
+    let analysis = analyze_input(&input);
     assert_eq!(
         diagnostic_codes(&analysis),
         vec!["E_LANGUAGE_VERSION_CONFLICT"]

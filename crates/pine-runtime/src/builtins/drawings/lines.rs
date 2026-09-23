@@ -1,3 +1,4 @@
+use pine_builtins::LINE_STYLES;
 use pine_ir::{HirCallArg, HirExpr};
 
 use crate::runtime::drawing_history::RuntimeLine;
@@ -73,6 +74,12 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn create_line(&mut self, fields: LineFields) -> Result<PineValue, RuntimeError> {
+        if !matches!(&fields.style, PineValue::String(style) if LINE_STYLES.contains(&style.as_str()))
+        {
+            return Err(RuntimeError {
+                message: "line.new style must be a supported line.style_* value".to_owned(),
+            });
+        }
         self.evict_oldest_lines_at_limit()?;
         let id = self.next_line_id;
         self.next_line_id = self

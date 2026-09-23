@@ -69,6 +69,7 @@ pub struct BrokerState {
     margin_long: StrategyMarginSetting,
     margin_short: StrategyMarginSetting,
     quantity_scale: u32,
+    price_tick: Option<f64>,
     open_entry_commission: f64,
     slippage_price_offset: f64,
     limit_verification_price_offset: f64,

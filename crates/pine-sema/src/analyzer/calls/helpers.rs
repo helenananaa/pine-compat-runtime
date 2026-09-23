@@ -32,7 +32,7 @@ impl Analyzer {
         )
     }
 
-    pub(super) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
+    pub(crate) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
         if self.allows_legacy_v4_udf_reference_side_effect(name) {
             return true;
         }
@@ -56,7 +56,17 @@ impl Analyzer {
             return true;
         }
         self.legacy.dialect() >= crate::PineDialect::V5
-            && (matches!(name, "array.unshift" | "array.push") || name.starts_with("matrix."))
+            && (matches!(
+                name,
+                "array.unshift"
+                    | "array.push"
+                    | "array.set"
+                    | "array.fill"
+                    | "array.clear"
+                    | "array.pop"
+                    | "array.remove"
+                    | "array.shift"
+            ) || name.starts_with("matrix."))
     }
 
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {

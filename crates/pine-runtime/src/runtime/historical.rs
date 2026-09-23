@@ -185,6 +185,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
     magnifier_diagnostics: Vec<RuntimeDiagnostic>,
+    alert_diagnostics: Vec<RuntimeDiagnostic>,
     #[cfg(test)]
     pub(crate) strategy_phase_trace: Vec<crate::runtime::strategy_scheduler::StrategyBarPhase>,
     #[cfg(test)]
@@ -349,6 +350,7 @@ impl<'a> HistoricalRuntime<'a> {
             program.strategy_settings.pyramiding_limit,
         )
         .with_quantity_scale(request_environment.chart().quantity_scale())
+        .with_price_tick(request_environment.chart().min_tick())
         .with_close_entries_rule(program.strategy_settings.close_entries_rule)
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
         Self {
@@ -446,6 +448,7 @@ impl<'a> HistoricalRuntime<'a> {
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
             magnifier_diagnostics: Vec::new(),
+            alert_diagnostics: Vec::new(),
             #[cfg(test)]
             strategy_phase_trace: Vec::new(),
             #[cfg(test)]
@@ -580,6 +583,12 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
+    pub(crate) fn push_alert_diagnostic(&mut self, diagnostic: RuntimeDiagnostic) {
+        if !self.alert_diagnostics.contains(&diagnostic) {
+            self.alert_diagnostics.push(diagnostic);
+        }
+    }
+
     pub(crate) fn fork_with_request_environment(
         &self,
         request_environment: RequestEnvironment,
@@ -640,6 +649,10 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    /// Appends a batch. For `calc_bars_count`, the first batch must contain
+    /// the complete initially available chart dataset so the runtime can
+    /// select its latest N bars. Streaming hosts should select that initial
+    /// window before sending bars individually.
     pub fn append_bars(&mut self, bars: &[Bar]) -> Result<(), RuntimeError> {
         self.append_bars_inner(bars, None)
     }
@@ -666,6 +679,19 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        // A batch supplies the complete initial dataset. Restrict its first
+        // execution window before any series, bar indices or strategy state
+        // are created. Later incremental appends extend that window normally.
+        let skip = if self.bars == 0 {
+            self.program
+                .calc_bars_count
+                .filter(|count| *count > 0)
+                .map_or(0, |count| bars.len().saturating_sub(count as usize))
+        } else {
+            0
+        };
+        let bars = &bars[skip..];
+        let execution_times = execution_times.map(|times| &times[skip..]);
         if self.program.script_mode == ScriptMode::Strategy {
             self.session_windows
                 .validate_range(self.bars, self.bars + bars.len())
@@ -730,6 +756,16 @@ impl<'a> HistoricalRuntime<'a> {
         is_new_bar: bool,
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
+        if let Some(account) = self.program.strategy_settings.account_currency {
+            let chart = self.request_environment.chart().currency();
+            if account != chart {
+                return Err(RuntimeError {
+                    message: format!(
+                        "strategy account currency {account} differs from chart currency {chart}; foreign currency conversion is not supported"
+                    ),
+                });
+            }
+        }
         let bar_index = self.bars;
         if self.program.script_mode == ScriptMode::Strategy {
             self.session_windows
@@ -910,6 +946,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
         let mut diagnostics = self.magnifier_diagnostics.clone();
+        diagnostics.extend(self.alert_diagnostics.iter().cloned());
         let mut lookahead = self
             .legacy_security_repaint_warnings
             .iter()

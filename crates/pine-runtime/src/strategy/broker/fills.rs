@@ -46,6 +46,21 @@ fn pending_exit_alert_kind(
     }
 }
 
+fn pending_exit_is_limit_fill(
+    trigger: &PendingExitTrigger,
+    direction: TradeDirection,
+    raw_exit_price: f64,
+) -> bool {
+    match trigger {
+        PendingExitTrigger::Limit(_) => true,
+        PendingExitTrigger::Bracket { upside, .. } => match direction {
+            TradeDirection::Long => raw_exit_price >= *upside,
+            TradeDirection::Short => raw_exit_price <= *upside,
+        },
+        PendingExitTrigger::Stop(_) | PendingExitTrigger::Trailing(_) => false,
+    }
+}
+
 fn exit_alert_message(metadata: &StrategyExitMetadata, kind: StrategyExitFillAlertKind) -> String {
     let specific = match kind {
         StrategyExitFillAlertKind::Profit => metadata.alert_profit.as_ref(),
@@ -266,7 +281,12 @@ impl BrokerState {
             return;
         }
         let raw_exit_price = exit_price;
-        let exit_price = self.exit_fill_price(direction, raw_exit_price);
+        let exit_price =
+            if pending_exit_is_limit_fill(&pending_exit.trigger, direction, raw_exit_price) {
+                raw_exit_price
+            } else {
+                self.exit_fill_price(direction, raw_exit_price)
+            };
         if !exit_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),

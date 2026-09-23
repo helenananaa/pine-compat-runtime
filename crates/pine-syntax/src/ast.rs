@@ -247,6 +247,7 @@ pub enum FunctionBody {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeclMode {
     Normal,
+    Const,
     Var,
     Varip,
 }

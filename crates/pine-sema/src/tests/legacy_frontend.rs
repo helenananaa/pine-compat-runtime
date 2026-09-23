@@ -1782,8 +1782,12 @@ fn v4_string_input_options_bound_drawing_enum_values() {
     let unbounded = analyze_production(
         "//@version=4\nstudy(\"unbounded drawing input\")\nstyle = input(line.style_solid, \"Style\", input.string)\nline.new(bar_index, low, bar_index + 1, high, style=style)\nplot(close)\n",
     );
-    assert_eq!(diagnostic_codes(&unbounded), vec!["E_CALL_ARG_VALUE"]);
-    assert!(unbounded.hir.is_none());
+    assert!(
+        unbounded.diagnostics.is_empty(),
+        "{:?}",
+        unbounded.diagnostics
+    );
+    assert!(unbounded.hir.is_some());
 }
 
 #[test]

@@ -35,11 +35,6 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("table cell count cannot exceed {MAX_TABLE_CELLS}"),
             });
         }
-        if self.tables.len() >= MAX_TABLES {
-            return Err(RuntimeError {
-                message: format!("table count cannot exceed {MAX_TABLES}"),
-            });
-        }
         let id = self.next_table_id;
         self.next_table_id = self
             .next_table_id

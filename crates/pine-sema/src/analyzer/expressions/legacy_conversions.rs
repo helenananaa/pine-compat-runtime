@@ -254,7 +254,7 @@ impl Analyzer {
             });
     }
 
-    pub(super) fn record_numeric_to_bool_coercion(&mut self, span: Span) {
+    pub(crate) fn record_numeric_to_bool_coercion(&mut self, span: Span) {
         self.legacy_numeric_to_bool_exprs
             .insert(self.expr_key(span));
         let version = self.legacy.dialect().version();

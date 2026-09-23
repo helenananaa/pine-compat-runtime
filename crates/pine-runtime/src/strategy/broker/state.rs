@@ -121,6 +121,7 @@ impl BrokerState {
             margin_short,
             open_entry_commission: 0.0,
             quantity_scale: 1,
+            price_tick: None,
             slippage_price_offset,
             limit_verification_price_offset,
             cash: initial_capital,
@@ -184,6 +185,12 @@ impl BrokerState {
     pub(crate) fn with_quantity_scale(mut self, scale: u32) -> Self {
         debug_assert!(scale > 0);
         self.quantity_scale = scale;
+        self
+    }
+
+    pub(crate) fn with_price_tick(mut self, tick: f64) -> Self {
+        debug_assert!(tick.is_finite() && tick > 0.0);
+        self.price_tick = Some(tick);
         self
     }
 

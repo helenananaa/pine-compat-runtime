@@ -288,11 +288,11 @@ box.get_bottom(id: box-compatible) -> series float
 box.get_left(id: box-compatible) -> series int
 box.get_right(id: box-compatible) -> series int
 box.all -> simple array<box>
-table.new(position: const string, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible, force_overlay?: const bool) -> series table
+table.new(position: string-compatible, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible, force_overlay?: const bool) -> series table
 table.delete(id: table-compatible) -> void
 table.clear(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
 table.merge_cells(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
-table.cell(id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: const string, text_formatting?: int-compatible) -> void
+table.cell(table_id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: const string, text_formatting?: int-compatible) -> void
 table.set_position(id: table-compatible, position: const string) -> void
 table.set_bgcolor(id: table-compatible, bgcolor: color-compatible) -> void
 table.set_frame_color(id: table-compatible, frame_color: color-compatible) -> void
@@ -312,7 +312,7 @@ table.cell_set_tooltip(id: table-compatible, column: int-compatible, row: int-co
 table.cell_set_text_font_family(id: table-compatible, column: int-compatible, row: int-compatible, text_font_family: const string) -> void
 table.cell_set_text_formatting(id: table-compatible, column: int-compatible, row: int-compatible, text_formatting: int-compatible) -> void
 table.all -> simple array<table>
-polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
+polyline.new(points: array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
 polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
 ```
@@ -789,9 +789,9 @@ strategy(title: const string, shorttitle?: const string, overlay?: const bool, m
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, when?: bool-compatible v5 hidden)
+strategy.entry(id: simple string, direction: string-compatible, qty?: numeric-compatible, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, when?: bool-compatible v5 hidden)
 -> void
-strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.order(id: simple string, direction: string-compatible, qty?: numeric-compatible, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
 strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool)
 -> void
@@ -1336,7 +1336,7 @@ plotarrow(series: series/simple numeric, title?: const string, colorup?: color-c
 plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: input/const int, display?: const string)
   -> void
 
-plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: const string)
+plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: input/const string)
   -> void
 
 hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const string)
@@ -1508,9 +1508,9 @@ existing string rendering convention.
 ## Arrays
 
 ```text
-array.new_float(size?: simple integer-compatible, initial_value?: numeric-compatible) -> simple float-array
+array.new_float(size?: int-compatible, initial_value?: numeric-compatible) -> simple float-array
 array.new<float>(size?: simple integer-compatible, initial_value?: numeric-compatible) -> simple float-array
-array.new_int(size?: simple integer-compatible, initial_value?: int-compatible) -> simple int-array
+array.new_int(size?: int-compatible, initial_value?: int-compatible) -> simple int-array
 array.new<int>(size?: simple integer-compatible, initial_value?: int-compatible) -> simple int-array
 array.new_bool(size?: simple integer-compatible, initial_value?: bool-compatible) -> simple bool-array
 array.new<bool>(size?: simple integer-compatible, initial_value?: bool-compatible) -> simple bool-array
@@ -1538,14 +1538,14 @@ array.get(id: float-array|int-array|bool-array|string-array|color-array|label-ar
 array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible, value: element-compatible) -> void
 array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible, value: element-compatible) -> void
 array.pop(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
-array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible) -> series element
+array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible) -> series element
 array.shift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.unshift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> void
 array.fill(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible, index_from?: simple integer-compatible, index_to?: simple integer-compatible) -> void
 array.first(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.last(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.copy(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> same array kind
-array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index_from: simple integer-compatible, index_to: simple integer-compatible) -> same array kind
+array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index_from: int-compatible, index_to: int-compatible) -> same array kind
 array.concat(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, id2: same array kind) -> same array kind
 array.includes(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> series bool
 array.includes(id: same-local-scalar-field-UDT-array, value: same local UDT) -> series bool
@@ -2163,7 +2163,7 @@ Rules:
 ## Color
 
 ```text
-color.new(color: color-compatible, transp?: simple integer-compatible) -> same qualifier color
+color.new(color: color-compatible, transp?: numeric-compatible) -> color with strongest qualifier
 color.rgb(red: numeric-compatible, green: numeric-compatible, blue: numeric-compatible, transp?: numeric-compatible) -> color with strongest qualifier
 color.r(color: color-compatible) -> float with same qualifier
 color.g(color: color-compatible) -> float with same qualifier

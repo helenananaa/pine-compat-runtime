@@ -598,9 +598,9 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[30].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[31].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[32].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[33].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[34].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[35].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[33].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[34].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[35].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[36].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[37].values, &[1.0, 1.0]);
 }
@@ -666,8 +666,8 @@ plot(na(timeframe.change(na)) ? 1 : 0)
     ];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
 
-    assert_values_close(&result.plots[0].values, &[1.0, 0.0, 1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[1].values, &[1.0, 0.0, 0.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0, 1.0, 0.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0]);
 }
 
@@ -710,19 +710,67 @@ plot(timeframe.change("3M") ? 1 : 0)
 
     assert_values_close(
         &result.plots[0].values,
-        &[1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0],
+        &[0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0],
     );
     assert_values_close(
         &result.plots[1].values,
-        &[1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
+        &[0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
     );
     assert_values_close(
         &result.plots[2].values,
-        &[1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+        &[0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
     );
     assert_values_close(
         &result.plots[3].values,
-        &[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        &[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+    );
+}
+
+#[test]
+fn seven_month_timeframe_resets_at_january_and_august() {
+    let source = SourceFile::new(
+        "seven_month.pine",
+        "//@version=6\nindicator(\"7M boundary\")\nplot(timeframe.change(\"7M\") ? 1 : 0)\nplot(time(\"7M\"))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let timestamps = [
+        1_617_408_000_000, // April 3, 2021
+        1_627_689_600_000, // July 31, 2021
+        1_627_776_000_000, // August 1, 2021
+        1_640_908_800_000, // December 31, 2021
+        1_640_995_200_000, // January 1, 2022
+        1_659_225_600_000, // July 31, 2022
+        1_659_312_000_000, // August 1, 2022
+    ];
+    let bars = timestamps.map(|time| Bar {
+        time,
+        open: 1.0,
+        high: 1.0,
+        low: 1.0,
+        close: 1.0,
+        volume: 1.0,
+    });
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+    assert_values_close(
+        &result.plots[0].values,
+        &[0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[
+            1_609_459_200_000.0,
+            1_609_459_200_000.0,
+            1_627_776_000_000.0,
+            1_627_776_000_000.0,
+            1_640_995_200_000.0,
+            1_640_995_200_000.0,
+            1_659_312_000_000.0,
+        ],
     );
 }
 

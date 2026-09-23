@@ -1264,15 +1264,15 @@ fn for_in_fixture_rolls_back_loop_body_array_mutation_between_forming_updates() 
     let result = runtime
         .update(BarUpdate::forming(bar(2.0)))
         .expect("forming update should run");
-    assert_values(&result.plots[0].values, &[1.0, 4.0]);
-    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 12.0]);
     assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(3.0)))
         .expect("second forming update should roll back for-in array mutation");
-    assert_values(&result.plots[0].values, &[1.0, 4.0]);
-    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 12.0]);
     assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
 
     let result = runtime
@@ -1290,7 +1290,7 @@ fn for_in_fixture_rolls_back_loop_body_array_mutation_between_forming_updates() 
     let result = runtime
         .update(BarUpdate::forming(bar(5.0)))
         .expect("next forming update should start from confirmed for-in array store");
-    assert_values(&result.plots[0].values, &[1.0, 2.0, 6.0]);
+    assert_values(&result.plots[0].values, &[1.0, 2.0, 3.0]);
     assert_values(&result.plots[1].values, &[1.0, 2.0, 3.0]);
 }
 
@@ -1307,29 +1307,29 @@ fn for_in_fixture_preserves_varip_array_mutation_between_forming_updates() {
     let result = runtime
         .update(BarUpdate::forming(bar(2.0)))
         .expect("forming update should run");
-    assert_values(&result.plots[0].values, &[1.0, 4.0]);
-    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 12.0]);
     assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(3.0)))
         .expect("second forming update should carry varip for-in mutation");
-    assert_values(&result.plots[0].values, &[1.0, 10.0]);
-    assert_values(&result.plots[1].values, &[1.0, 23.0]);
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+    assert_values(&result.plots[1].values, &[1.0, 13.0]);
     assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
 
     let result = runtime
         .update(BarUpdate::confirmed(bar(4.0)))
         .expect("confirmed update should commit carried varip for-in mutation");
-    assert_values(&result.plots[0].values, &[1.0, 11.0]);
-    assert_values(&result.plots[1].values, &[1.0, 74.0]);
+    assert_values(&result.plots[0].values, &[1.0, 5.0]);
+    assert_values(&result.plots[1].values, &[1.0, 14.0]);
     assert_eq!(runtime.confirmed_result().plots, result.plots);
 
     let result = runtime
         .update(BarUpdate::forming(bar(5.0)))
         .expect("next forming update should start from confirmed varip for-in state");
-    assert_values(&result.plots[0].values, &[1.0, 11.0, 24.0]);
-    assert_values(&result.plots[1].values, &[1.0, 74.0, 75.0]);
+    assert_values(&result.plots[0].values, &[1.0, 5.0, 6.0]);
+    assert_values(&result.plots[1].values, &[1.0, 14.0, 15.0]);
 }
 
 #[test]

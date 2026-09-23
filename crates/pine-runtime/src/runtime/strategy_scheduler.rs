@@ -249,6 +249,7 @@ pub(crate) enum HistoricalFillStep {
     StopLimitShort,
     SameBarMarketClosesAtClose,
     SameBarMarketEntriesAtClose,
+    SameBarLimitEntriesAtClose,
 }
 
 impl HistoricalFillStep {
@@ -260,6 +261,7 @@ impl HistoricalFillStep {
         &[
             Self::SameBarMarketClosesAtClose,
             Self::SameBarMarketEntriesAtClose,
+            Self::SameBarLimitEntriesAtClose,
         ]
     }
 
@@ -278,7 +280,9 @@ impl HistoricalFillStep {
             | Self::LimitShort
             | Self::StopShort
             | Self::StopLimitShort => 0,
-            Self::SameBarMarketClosesAtClose | Self::SameBarMarketEntriesAtClose => 1,
+            Self::SameBarMarketClosesAtClose
+            | Self::SameBarMarketEntriesAtClose
+            | Self::SameBarLimitEntriesAtClose => 1,
         }
     }
 }
@@ -444,6 +448,10 @@ impl HistoricalRuntime<'_> {
                 self.strategy_broker
                     .fill_same_bar_market_entries(bar_index, bar.time, bar.close);
             }
+            HistoricalFillStep::SameBarLimitEntriesAtClose => {
+                self.strategy_broker
+                    .fill_same_bar_limit_entries(bar_index, bar.time, bar.close);
+            }
         }
         self.strategy_broker.public_order_event_count() > before
     }
@@ -454,16 +462,23 @@ impl HistoricalRuntime<'_> {
         chart_time: i64,
         hosts: &[MagnifierHostBar],
     ) -> Result<(), RuntimeError> {
+        // Every host open is a new order observation, including an open equal to
+        // the previous close. Orders placed at that close can fill at the open.
         if let (Some(previous), Some(first)) =
             (self.strategy_scheduler.last_host_bar, hosts.first())
-            && let Some(gap) = MagnifierHostGap::between(&previous, &first.bar)
         {
+            let gap = MagnifierHostGap {
+                previous_close: previous.close,
+                next_open: first.bar.open,
+            };
             self.observe_host_open_gap(chart_bar_index, chart_time, first, gap)?;
         }
         for (index, host) in hosts.iter().enumerate() {
-            if index > 0
-                && let Some(gap) = MagnifierHostGap::between(&hosts[index - 1].bar, &host.bar)
-            {
+            if index > 0 {
+                let gap = MagnifierHostGap {
+                    previous_close: hosts[index - 1].bar.close,
+                    next_open: host.bar.open,
+                };
                 self.observe_host_open_gap(chart_bar_index, chart_time, host, gap)?;
             }
             self.walk_one_host_bar(chart_bar_index, chart_time, host)?;

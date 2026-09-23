@@ -54,6 +54,8 @@ pub enum StrategyCloseEntriesRule {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StrategySettings {
+    /// Explicit account currency; None inherits the chart currency.
+    pub account_currency: Option<&'static str>,
     pub initial_capital: f64,
     pub default_qty: Option<StrategyDefaultQuantity>,
     pub commission: Option<StrategyCommission>,
@@ -72,6 +74,7 @@ pub struct StrategySettings {
 impl Default for StrategySettings {
     fn default() -> Self {
         Self {
+            account_currency: None,
             initial_capital: DEFAULT_STRATEGY_INITIAL_CAPITAL,
             default_qty: Some(StrategyDefaultQuantity::Fixed(1.0)),
             commission: None,

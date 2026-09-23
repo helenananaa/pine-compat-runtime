@@ -177,6 +177,11 @@ impl Analyzer {
                 continue;
             }
 
+            if is_call_arg(signature, arg, index, "calc_bars_count") {
+                self.validate_calc_bars_count_arg("indicator", arg);
+                continue;
+            }
+
             let is_max_bars_back = arg.name.as_deref() == Some("max_bars_back")
                 || (arg.name.is_none()
                     && signature
@@ -218,6 +223,26 @@ impl Analyzer {
         if let Some(message) = message {
             self.diagnostics
                 .push(Diagnostic::error("E_CALL_ARG_VALUE", message, arg.span));
+        }
+    }
+
+    pub(crate) fn validate_calc_bars_count_arg(&mut self, call_name: &str, arg: &CallArg) {
+        let Some(value) = self.known_const_int_for_validation(&arg.value) else {
+            return;
+        };
+        match value
+            .ok()
+            .filter(|value| *value >= 0)
+            .and_then(|value| u32::try_from(value).ok())
+        {
+            Some(value) => self.calc_bars_count = Some(value),
+            None => self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_VALUE",
+                format!(
+                    "`{call_name}` argument `calc_bars_count` must be a non-negative 32-bit integer"
+                ),
+                arg.span,
+            )),
         }
     }
 

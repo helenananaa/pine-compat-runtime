@@ -84,6 +84,56 @@ alertcondition(true, "Chart", "{{exchange}} {{ticker}} {{interval}} {{time}} {{c
 }
 
 #[test]
+fn alertcondition_message_renders_named_plot_on_same_bar() {
+    let result = run_alert_script(
+        r#"indicator("alerts")
+plot(close * 2, "Grade", display=display.data_window)
+alertcondition(close > 1, "Grade alert", 'Grade={{plot("Grade")}} close={{close}}')
+"#,
+        &timed_bars(&[1.0, 2.5, 3.0]),
+    );
+
+    assert_eq!(result.alerts.len(), 2);
+    assert_eq!(result.alerts[0].message, "Grade=5 close=2.5");
+    assert_eq!(result.alerts[1].message, "Grade=6 close=3");
+}
+
+#[test]
+fn alertcondition_missing_named_plot_skips_event_with_diagnostic() {
+    let source = SourceFile::new(
+        "alerts.pine",
+        r#"indicator("alerts")
+alertcondition(true, "Missing", 'Value={{plot("Missing")}}')
+plot(close, "Actual")
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical_with_request_environment(
+        &analysis.hir.expect("HIR"),
+        &timed_bars(&[1.0, 2.0]),
+        RequestEnvironment::default(),
+    )
+    .expect("unresolved alert template must not stop indicator plots");
+    assert!(result.alerts.is_empty());
+    assert_eq!(result.plots.len(), 1);
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(1.0), PineValue::Float(2.0)]
+    );
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(
+        result.diagnostics[0].code,
+        "E_UNSUPPORTED_ALERT_PLACEHOLDER"
+    );
+    assert!(result.diagnostics[0].message.contains("Missing"));
+}
+
+#[test]
 fn alertcondition_exchange_placeholder_is_empty_without_symbol_prefix() {
     let environment = RequestEnvironment::new(
         ChartContext::new(

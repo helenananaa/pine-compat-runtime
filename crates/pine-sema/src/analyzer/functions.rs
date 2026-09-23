@@ -147,46 +147,9 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                 || step
                     .as_deref()
                     .is_some_and(contains_output_or_declaration_call)
-                || body.iter().any(|statement| match &statement.kind {
-                    StmtKind::Expr(expr) => contains_output_or_declaration_call(expr),
-                    StmtKind::Decl { value, .. }
-                    | StmtKind::Reassign { value, .. }
-                    | StmtKind::FieldReassign { value, .. }
-                    | StmtKind::TupleDecl { value, .. } => {
-                        contains_output_or_declaration_call(value)
-                    }
-                    StmtKind::ArrayFieldReassign {
-                        array,
-                        index,
-                        value,
-                        ..
-                    } => {
-                        contains_output_or_declaration_call(array)
-                            || contains_output_or_declaration_call(index)
-                            || contains_output_or_declaration_call(value)
-                    }
-                    StmtKind::If {
-                        condition,
-                        then_branch,
-                        else_branch,
-                    } => {
-                        contains_output_or_declaration_call(condition)
-                            || then_branch.iter().any(|statement| {
-                                statement_contains_output_or_declaration_call(statement)
-                            })
-                            || else_branch.iter().any(|statement| {
-                                statement_contains_output_or_declaration_call(statement)
-                            })
-                    }
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => true,
-                    StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
-                    StmtKind::Import(_)
-                    | StmtKind::Library(_)
-                    | StmtKind::Export(_)
-                    | StmtKind::UserType(_)
-                    | StmtKind::Method(_) => false,
-                    StmtKind::Unsupported { .. } => false,
-                })
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
         }
         ExprKind::While { condition, body } => {
             contains_output_or_declaration_call(condition)
@@ -236,6 +199,7 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
         | StmtKind::Decl { .. }
         | StmtKind::TupleDecl { .. }
         | StmtKind::Reassign { .. }
+        | StmtKind::FieldReassign { .. }
         | StmtKind::For { .. }
         | StmtKind::ForIn { .. }
         | StmtKind::While { .. } => true,
@@ -249,6 +213,32 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
         }
         _ => false,
     }
+}
+
+pub(crate) fn field_reassign_result_expr(
+    receiver: &str,
+    path: &[String],
+    field: &str,
+    span: Span,
+) -> Expr {
+    let mut result = Expr {
+        kind: ExprKind::Identifier(receiver.to_owned()),
+        span,
+    };
+    for name in path
+        .iter()
+        .map(String::as_str)
+        .chain(std::iter::once(field))
+    {
+        result = Expr {
+            kind: ExprKind::Member {
+                receiver: Box::new(result),
+                name: name.to_owned(),
+            },
+            span,
+        };
+    }
+    result
 }
 
 pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
@@ -281,7 +271,34 @@ pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) ->
                     .iter()
                     .any(statement_contains_output_or_declaration_call)
         }
-        StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => true,
+        StmtKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            contains_output_or_declaration_call(from)
+                || contains_output_or_declaration_call(to)
+                || step
+                    .as_ref()
+                    .is_some_and(contains_output_or_declaration_call)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
+        StmtKind::ForIn { iterable, body, .. } => {
+            contains_output_or_declaration_call(iterable)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
+        StmtKind::While { condition, body } => {
+            contains_output_or_declaration_call(condition)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
         StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
         StmtKind::Import(_)
         | StmtKind::Library(_)
@@ -524,7 +541,7 @@ impl Analyzer {
                 && matches!(&arg.value.kind, ExprKind::Call { callee, args }
                     if expr_name(callee).is_some_and(|name| name.starts_with("input."))
                         && args.iter().all(|arg| !self.argument_has_side_effect(&arg.value)));
-            if !direct_global_input && self.argument_has_side_effect(&arg.value) {
+            if !direct_global_input && self.argument_has_disallowed_udf_side_effect(&arg.value) {
                 self.unsupported(
                     "function_side_effect",
                     "side-effecting calls cannot be passed as user-defined function arguments",
@@ -842,6 +859,17 @@ impl Analyzer {
                     StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                         self.analyze_function_symbol_statement_return(last, name)
                     }
+                    StmtKind::FieldReassign {
+                        receiver,
+                        path,
+                        field,
+                        ..
+                    } => {
+                        self.analyze_stmt(last);
+                        self.analyze_expr(&field_reassign_result_expr(
+                            receiver, path, field, last.span,
+                        ))
+                    }
                     StmtKind::If {
                         condition,
                         then_branch,
@@ -1013,6 +1041,17 @@ impl Analyzer {
             }
             StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                 self.analyze_function_symbol_statement_return(last, name)
+            }
+            StmtKind::FieldReassign {
+                receiver,
+                path,
+                field,
+                ..
+            } => {
+                self.analyze_stmt(last);
+                self.analyze_expr(&field_reassign_result_expr(
+                    receiver, path, field, last.span,
+                ))
             }
             StmtKind::If {
                 condition,

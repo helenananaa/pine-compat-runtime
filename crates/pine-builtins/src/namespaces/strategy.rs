@@ -15,7 +15,7 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "qty",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -73,7 +73,7 @@ const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "qty",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {

@@ -403,7 +403,7 @@ const PLOTCANDLE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputString,
         optional: true,
     },
 ];

@@ -75,18 +75,14 @@ fn rejects_duplicate_version_directives_with_focused_diagnostic() {
 }
 
 #[test]
-fn rejects_version_directive_after_source_statement() {
+fn accepts_version_directive_after_source_statement() {
     let parsed = parse("indicator(\"Demo\")\n//@version = 6\n");
 
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     assert_eq!(
-        parsed
-            .diagnostics
-            .iter()
-            .map(|diagnostic| diagnostic.code.as_str())
-            .collect::<Vec<_>>(),
-        vec!["E_LANGUAGE_VERSION_PLACEMENT"]
+        parsed.program.version.map(|version| version.version),
+        Some(6)
     );
-    assert!(parsed.program.version.is_none());
 }
 
 #[test]
@@ -1882,15 +1878,59 @@ fn parses_legacy_comma_separated_statements() {
 }
 
 #[test]
-fn rejects_comma_separated_statements_in_modern_versions() {
-    let parsed = parse("//@version=6\nfirst = 1, second = 2\n");
+fn parses_comma_separated_statements_in_modern_versions() {
+    for version in [5, 6] {
+        let parsed = parse(&format!(
+            "//@version={version}\nstring first = \"a\", string second = \"b\"\nf() =>\n    int one = 1, int two = 2\n    one + two\n"
+        ));
 
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        assert_eq!(parsed.program.statements.len(), 3);
+        assert!(matches!(
+            &parsed.program.statements[1].kind,
+            StmtKind::Decl { name, .. } if name == "second"
+        ));
+        let StmtKind::Function {
+            body: FunctionBody::Block(body),
+            ..
+        } = &parsed.program.statements[2].kind
+        else {
+            panic!("expected function block");
+        };
+        assert_eq!(body.len(), 3);
+    }
+}
+
+#[test]
+fn rejects_trailing_modern_statement_comma() {
+    let parsed = parse("//@version=5\nfirst = 1,\nsecond = 2\n");
     assert!(
         parsed
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR")
+            .any(|diagnostic| diagnostic.code == "E_PARSE_STMT")
     );
+}
+
+#[test]
+fn parses_published_v5_ternary_continuation_below_function_indent() {
+    let parsed = parse(
+        "//@version=5\nindicator(\"continuation\")\nchoose(x) =>\n    x > 0 ?\n   1 :\n   2\nplot(choose(close))\n",
+    );
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 3);
+    assert!(matches!(
+        &parsed.program.statements[1].kind,
+        StmtKind::Function { .. }
+    ));
+}
+
+#[test]
+fn parses_v5_wrapped_assignment_after_blank_line() {
+    let parsed = parse(
+        "//@version=5\nindicator(\"wrapped\")\nif true\n    string message =\n\n     \"first\"\n     + \"second\"\n    plot(close)\n",
+    );
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
 }
 
 #[test]

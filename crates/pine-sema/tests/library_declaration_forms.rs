@@ -2,18 +2,13 @@ use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
 #[test]
-fn parsed_collection_fields_do_not_silently_enable_unsupported_runtime_types() {
+fn parsed_scalar_array_fields_are_supported_in_user_types() {
     let result = analyze_source(&SourceFile::new(
         "fields.pine",
         "//@version=6\nindicator(\"fields\")\ntype Buffer\n    array<float> values\nb=Buffer.new(array.new<float>())\nplot(close)\n",
     ));
-    assert!(result.hir.is_none());
-    assert!(
-        result
-            .diagnostics
-            .iter()
-            .any(|d| d.code == "E_UDT_FIELD_TYPE")
-    );
+    assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+    assert!(result.hir.is_some());
 }
 
 #[test]

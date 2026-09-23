@@ -8307,6 +8307,34 @@ if bar_index == 0
 }
 
 #[test]
+fn cash_market_order_sizing_includes_slippage_at_placement() {
+    for command in ["entry", "order"] {
+        for (direction, expected_price, fill_price) in [
+            ("strategy.long", 10.01, 20.01),
+            ("strategy.short", 9.99, 19.99),
+        ] {
+            let source = SourceFile::new(
+                "cash_slippage.pine",
+                format!(
+                    "strategy(\"cash slippage\", initial_capital=1000, default_qty_type=strategy.cash, default_qty_value=100, slippage=1)\nif bar_index == 0\n    strategy.{command}(\"D\", {direction})\n"
+                ),
+            );
+            let analysis = analyze_source(&source);
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{:?}",
+                analysis.diagnostics
+            );
+            let result = run_historical(&analysis.hir.expect("HIR"), &[bar(10.0), bar(20.0)])
+                .expect("runtime result");
+            let order = &result.strategy.expect("strategy output").orders[0];
+            assert!((order.qty - 100.0 / expected_price).abs() < 1e-10);
+            assert!((order.price - fill_price).abs() < 1e-10);
+        }
+    }
+}
+
+#[test]
 fn strategy_limit_entry_uses_cash_default_qty_at_placement_close() {
     let source = SourceFile::new(
         "strategy.pine",
@@ -10902,7 +10930,7 @@ plot(strategy.equity)
 }
 
 #[test]
-fn strategy_slippage_updates_pending_exit_fill_price() {
+fn strategy_slippage_does_not_change_limit_exit_fill_price() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("exit slippage", slippage=100)
@@ -10965,8 +10993,8 @@ plot(strategy.equity)
         vec![
             PineValue::Na,
             PineValue::Na,
-            PineValue::Float(2.0),
-            PineValue::Float(2.0),
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
         ]
     );
     assert_eq!(
@@ -10974,8 +11002,8 @@ plot(strategy.equity)
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(-2.0),
-            PineValue::Float(-2.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -10983,17 +11011,17 @@ plot(strategy.equity)
         vec![
             PineValue::Float(1000000.0),
             PineValue::Float(999998.0),
-            PineValue::Float(999998.0),
-            PineValue::Float(999998.0),
+            PineValue::Float(1000000.0),
+            PineValue::Float(1000000.0),
         ]
     );
 
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.orders[0].price, 3.0);
-    assert_eq!(strategy.orders[1].price, 2.0);
+    assert_eq!(strategy.orders[1].price, 3.0);
     assert_eq!(strategy.trades[0].entry_price, 3.0);
-    assert_eq!(strategy.trades[0].exit_price, 2.0);
-    assert_eq!(strategy.trades[0].profit, -2.0);
+    assert_eq!(strategy.trades[0].exit_price, 3.0);
+    assert_eq!(strategy.trades[0].profit, 0.0);
 }
 
 #[test]

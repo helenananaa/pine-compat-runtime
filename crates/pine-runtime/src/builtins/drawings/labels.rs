@@ -1,5 +1,6 @@
 use crate::runtime::drawing_history::RuntimeLabel;
 use crate::*;
+use pine_builtins::LABEL_STYLES;
 use pine_ir::{HirCallArg, HirExpr};
 
 struct LabelFields {
@@ -123,6 +124,12 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn create_label(&mut self, fields: LabelFields) -> Result<PineValue, RuntimeError> {
+        if !matches!(&fields.style, PineValue::String(style) if LABEL_STYLES.contains(&style.as_str()))
+        {
+            return Err(RuntimeError {
+                message: "label.new style must be a supported label.style_* value".to_owned(),
+            });
+        }
         self.evict_oldest_labels_at_limit()?;
         let id = self.next_label_id;
         self.next_label_id = self

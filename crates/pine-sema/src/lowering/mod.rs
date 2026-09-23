@@ -391,7 +391,10 @@ impl Analyzer {
                     })?;
                 HirStmtKind::FieldReassign {
                     path: access.2,
-                    symbol: self.bound_symbol(&access.0, statement.span)?.id,
+                    symbol: match param_exprs.get(&access.0).map(|expr| &expr.kind) {
+                        Some(HirExprKind::Symbol(symbol)) => *symbol,
+                        _ => self.bound_symbol(&access.0, statement.span)?.id,
+                    },
                     field_index: access.1,
                     value: self.lower_expr_with_params(value, param_exprs, param_types)?,
                 }

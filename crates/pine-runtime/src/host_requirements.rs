@@ -73,6 +73,9 @@ pub struct ChartInputDefaults {
 #[serde(rename_all = "camelCase")]
 pub struct AccountInputContract {
     pub profile: &'static str,
+    /// An explicit strategy currency must equal the host chart's quote currency.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub declared_currency: Option<&'static str>,
     pub point_value: u32,
     pub currency_conversion: bool,
     pub unsupported_profiles: Vec<&'static str>,
@@ -247,6 +250,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         },
         account: strategy.then_some(AccountInputContract {
             profile: "linearUnitPointValueSameCurrency",
+            declared_currency: program.strategy_settings.account_currency,
             point_value: 1,
             currency_conversion: false,
             unsupported_profiles: vec![

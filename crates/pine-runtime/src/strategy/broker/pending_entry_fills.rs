@@ -338,6 +338,15 @@ impl BrokerState {
         }
     }
 
+    pub(crate) fn fill_same_bar_limit_entries(&mut self, bar_index: usize, time: i64, close: f64) {
+        let entries = self.order_book.entries_mut().take_same_bar_eligible_limits(
+            bar_index,
+            close,
+            self.limit_verification_price_offset,
+        );
+        self.fill_taken_generic_or_entries(entries, bar_index, time, |_| Some(close));
+    }
+
     fn fill_one_pending_market_entry(
         &mut self,
         pending_entry: super::pending_entries::PendingEntry,
@@ -359,6 +368,7 @@ impl BrokerState {
                 time,
                 fill_price,
                 pending_entry.metadata,
+                true,
             ) {
                 self.order_book.apply_oca_after_fill(filled_key, filled_qty);
             }
@@ -374,6 +384,7 @@ impl BrokerState {
                     bar_index,
                     time,
                     price: fill_price,
+                    apply_slippage: true,
                     qty: filled_qty,
                     metadata: pending_entry.metadata,
                 },
@@ -396,6 +407,7 @@ impl BrokerState {
                 bar_index,
                 time,
                 price: fill_price,
+                apply_slippage: true,
                 qty: filled_qty,
                 metadata: pending_entry.metadata,
             },
@@ -628,6 +640,10 @@ impl BrokerState {
         time: i64,
         price: f64,
     ) -> OcaPeerEffects {
+        let apply_slippage = matches!(
+            pending_entry.kind,
+            PendingEntryKind::Market | PendingEntryKind::Stop { .. }
+        );
         if !pending_entry.enforce_pyramiding {
             let signed_quantity = match pending_entry.direction {
                 PendingEntryDirection::Long => pending_entry.quantity,
@@ -642,6 +658,7 @@ impl BrokerState {
                 time,
                 price,
                 pending_entry.metadata,
+                apply_slippage,
             ) {
                 return self.order_book.apply_oca_after_fill(filled_key, filled_qty);
             }
@@ -667,6 +684,7 @@ impl BrokerState {
                     bar_index,
                     time,
                     price,
+                    apply_slippage,
                     qty: filled_qty,
                     metadata: pending_entry.metadata,
                 },
@@ -678,6 +696,7 @@ impl BrokerState {
                     bar_index,
                     time,
                     price,
+                    apply_slippage,
                     qty: filled_qty,
                     metadata: pending_entry.metadata,
                 },

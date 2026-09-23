@@ -693,6 +693,9 @@ impl Analyzer {
         then_branch: &[Stmt],
         else_branch: &[Stmt],
     ) -> Option<String> {
+        if else_branch.is_empty() {
+            return self.user_type_name_of_branch_return(then_branch);
+        }
         let (_, then_expr) = branch_return_expr(then_branch)?;
         let (_, else_expr) = branch_return_expr(else_branch)?;
         match (
@@ -1023,6 +1026,14 @@ impl Analyzer {
         name: &str,
         span: Span,
     ) -> Option<(PineType, Option<String>)> {
+        if let Some(element) = name
+            .strip_prefix("array<")
+            .and_then(|element| element.strip_suffix('>'))
+            .or_else(|| name.strip_suffix("[]"))
+            && let Some(kind) = crate::types::array_kind_from_element_type_name(element)
+        {
+            return Some((PineType::new(Qualifier::Series, kind), None));
+        }
         let kind = match name {
             "int" => ValueKind::Int,
             "float" => ValueKind::Float,

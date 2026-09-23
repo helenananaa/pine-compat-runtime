@@ -276,6 +276,32 @@ fn modern_request_stateful_udf_and_dependencies_use_requested_bars() {
 }
 
 #[test]
+fn modern_request_stateful_udf_can_select_ma_with_switch() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"switch request\")\nMA(float source, int length, string kind) =>\n    switch kind\n        \"SMA\" => ta.sma(source, length)\n        \"EMA\" => ta.ema(source, length)\n        => ta.sma(source, length)\nstate(int length, string kind) =>\n    upper = MA(high, length, kind)\n    lower = MA(low, length, kind)\n    var int direction = 1\n    direction := close > upper ? 1 : close < lower ? -1 : nz(direction[1], 1)\n    direction\nplot(request.security(\"B\", \"5\", state(2, \"SMA\")[1], lookahead=barmerge.lookahead_on))\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "B",
+        "5",
+        "1",
+        vec![
+            timed_bar(0, 10.0),
+            timed_bar(300_000, 20.0),
+            timed_bar(600_000, 5.0),
+        ],
+    );
+    let chart = (0..15)
+        .map(|i| timed_bar(i * 60_000, 100.0))
+        .collect::<Vec<_>>();
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&chart)
+        .expect("requested switch MA and local state should execute");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[5], PineValue::Int(1));
+    assert_eq!(result.plots[0].values[10], PineValue::Int(1));
+}
+
+#[test]
 fn modern_request_conditional_initializer_runs_only_in_its_branch() {
     let program = compile_program(
         "//@version=6\nindicator(\"conditional init\")\nbump()=>\n    var int n=0\n    n+=1\n    n\nrouted()=>\n    if close>15\n        value=bump()\n        value\n    else\n        0\nplot(request.security(\"B\",\"1\",routed()))\n",
@@ -5316,6 +5342,30 @@ fn request_security_evaluates_provider_vwap_in_requested_context() {
         &result.plots[1].values,
         &[4.0, 4.666666666666667, 5.333333333333333, 6.0],
     );
+}
+
+#[test]
+fn request_security_evaluates_builtin_vwap_variable_in_requested_context() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"request vwap variable\")\nplot(request.security(\"B\", timeframe.period, ta.vwap))\nplot(ta.vwap)\n",
+    );
+    let environment = external_symbol_environment(
+        "B",
+        vec![
+            timed_ohlcv(0, 9.0, 12.0, 6.0, 9.0, 1.0),
+            timed_ohlcv(60_000, 18.0, 24.0, 12.0, 18.0, 3.0),
+            timed_ohlcv(86_400_000, 27.0, 36.0, 18.0, 27.0, 2.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(60_000, 100.0),
+            timed_bar(86_400_000, 100.0),
+        ])
+        .expect("requested bare ta.vwap should use provider HLC3, volume and day reset");
+    assert_values_close(&result.plots[0].values, &[9.0, 15.75, 27.0]);
+    assert_values_close(&result.plots[1].values, &[100.0, 100.0, 100.0]);
 }
 
 #[test]

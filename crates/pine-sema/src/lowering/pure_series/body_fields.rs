@@ -37,7 +37,10 @@ pub(super) fn collect_body_field_param_keys(
                         name,
                         value,
                     } => {
-                        if *mode != pine_syntax::DeclMode::Normal {
+                        if !matches!(
+                            mode,
+                            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const
+                        ) {
                             return None;
                         }
                         let mut accepted_decl = false;

@@ -7,6 +7,7 @@ pub struct ChartContext {
     min_move: u32,
     price_scale: u32,
     quantity_scale: u32,
+    currency: String,
 }
 
 impl ChartContext {
@@ -18,12 +19,28 @@ impl ChartContext {
             min_move: 1,
             price_scale: 100,
             quantity_scale: 1,
+            currency: "USD".to_owned(),
         }
     }
 
     #[must_use]
     pub fn symbol(&self) -> &str {
         &self.symbol
+    }
+
+    #[must_use]
+    pub fn currency(&self) -> &str {
+        &self.currency
+    }
+
+    /// The host supplies the symbol's quote currency; no FX lookup is performed.
+    pub fn with_currency(mut self, currency: impl Into<String>) -> Result<Self, &'static str> {
+        let currency = currency.into();
+        if currency.is_empty() || !currency.chars().all(|c| c.is_ascii_uppercase()) {
+            return Err("chart currency must be a nonempty uppercase currency code");
+        }
+        self.currency = currency;
+        Ok(self)
     }
 
     #[must_use]
@@ -115,6 +132,7 @@ impl Default for ChartContext {
             min_move: 1,
             price_scale: 100,
             quantity_scale: 1,
+            currency: "USD".to_owned(),
         }
     }
 }

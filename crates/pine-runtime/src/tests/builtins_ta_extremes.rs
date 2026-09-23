@@ -799,7 +799,7 @@ plot(invalid)
     assert_eq!(result.plots[5].values[0], PineValue::Na);
     assert_eq!(result.plots[5].values[1], PineValue::Na);
     assert_values_close(&result.plots[5].values[2..3], &[2.0]);
-    assert_eq!(result.plots[5].values[3], PineValue::Na);
+    assert_values_close(&result.plots[5].values[3..4], &[3.5]);
     assert_eq!(result.plots[6].values[0], PineValue::Na);
     assert_eq!(result.plots[6].values[1], PineValue::Na);
     assert_eq!(result.plots[6].values[2], PineValue::Na);

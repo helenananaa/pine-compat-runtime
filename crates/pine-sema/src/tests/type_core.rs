@@ -2,6 +2,64 @@ use super::*;
 use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
+fn const_typed_declarations_retain_compile_time_values() {
+    let analysis = analyze(
+        "//@version=6\nindicator(\"const declarations\")\nconst string GROUP = \"Core\"\nconst color SHADE = #00ff00\nlength = input.int(3, group=GROUP)\nplot(ta.sma(close, length), color=SHADE)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn const_typed_declarations_reject_input_values_and_reassignment() {
+    let input_value = analyze(
+        "//@version=6\nindicator(\"const input\")\nconst int LENGTH = input.int(3)\nplot(close)\n",
+    );
+    assert!(
+        input_value
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CONST_DECL_VALUE")
+    );
+
+    let reassigned = analyze(
+        "//@version=6\nindicator(\"const reassignment\")\nconst int LENGTH = 3\nLENGTH := 4\nplot(close)\n",
+    );
+    assert!(
+        reassigned
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CONST_REASSIGN")
+    );
+}
+
+#[test]
+fn const_reference_declarations_allow_object_mutation_but_not_rebinding() {
+    let mutable_contents = analyze(
+        "//@version=6\nindicator(\"const array\")\nconst array<int> values = array.new<int>()\narray.push(values, 1)\nplot(array.size(values))\n",
+    );
+    assert!(
+        mutable_contents.diagnostics.is_empty(),
+        "{:?}",
+        mutable_contents.diagnostics
+    );
+
+    let rebound = analyze(
+        "//@version=6\nindicator(\"const array reassignment\")\nconst array<int> values = array.new<int>()\nvalues := array.new<int>()\nplot(array.size(values))\n",
+    );
+    assert!(
+        rebound
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CONST_REASSIGN")
+    );
+}
+
+#[test]
 fn accepts_fixnan() {
     let analysis = analyze(
         "source = close > open ? close : na\nplot(fixnan(source) + (fixnan(color.green == color.red ? color.green : na) == color.green ? 1 : 0))\n",

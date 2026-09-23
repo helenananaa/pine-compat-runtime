@@ -9,7 +9,11 @@ fn unsupported_alert_placeholder(value: &str, supported: &[&str]) -> Option<Stri
         };
         let end = relative_end + 2;
         let placeholder = &placeholder_tail[..end];
-        if !supported.contains(&placeholder) {
+        let named_plot = placeholder
+            .strip_prefix("{{plot(\"")
+            .and_then(|title| title.strip_suffix("\")}}"))
+            .is_some_and(|title| !title.is_empty() && !title.contains('"'));
+        if !supported.contains(&placeholder) && !(named_plot && !supported.is_empty()) {
             return Some(placeholder.to_owned());
         }
         remaining = &placeholder_tail[end..];

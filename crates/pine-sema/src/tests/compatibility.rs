@@ -3313,6 +3313,22 @@ fn rejects_provider_request_security_unsupported_call() {
 }
 
 #[test]
+fn request_security_checks_every_switch_arm_in_nested_udf() {
+    let analysis = analyze(
+        "//@version=6\nindicator(\"request switch\")\nchoose(string kind) =>\n    switch kind\n        \"safe\" => ta.sma(close, 2)\n        => math.random(0, 1, 7)\nplot(request.security(\"B\", \"5\", choose(\"safe\")))\n",
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| { feature.feature == "request.security" })
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_request_security_non_default_merge_args() {
     let analysis = analyze(
         "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_on))\nplot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on))\n",
@@ -3743,14 +3759,35 @@ plot(box.importedOffset())
 }
 
 #[test]
-fn import_reports_missing_alias_for_executable_subset() {
+fn import_uses_library_name_when_alias_is_omitted() {
     let analysis = analyze_with_libraries(
-        "import user/lib/1\nplot(close)\n",
+        "import user/lib/1\nplot(lib.value)\n",
         vec![("user/lib/1", "library(\"lib\")\nexport value = 1\n")],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_IMPORT_ALIAS_REQUIRED"), "{codes:?}");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_before_version_directive_uses_declared_dialect_and_implicit_alias() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1\n//@version=6\nindicator(\"root\")\nplot(lib.value)\n",
+        vec![(
+            "user/lib/1",
+            "//@version=6\nlibrary(\"lib\")\nexport value = 1\n",
+        )],
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3779,6 +3816,24 @@ fn import_rejects_exported_function_side_effects() {
         codes.contains(&"E_IMPORT_FUNCTION_SIDE_EFFECT"),
         "{codes:?}"
     );
+}
+
+#[test]
+fn import_accepts_pure_exported_function_with_nested_loops() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(lib.sum(3))\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport sum(n) =>\n    total = 0\n    for i = 0 to n\n        for j = 0 to i\n            total += j\n    total\n",
+        )],
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -4027,10 +4082,10 @@ fn import_rejects_scalar_imported_user_type_field_mutation_type() {
 }
 
 #[test]
-fn import_rejects_scalar_imported_user_type_parameter_field_mutation() {
+fn import_accepts_scalar_imported_user_type_parameter_field_mutation() {
     let analysis = analyze_with_libraries(
         include_str!(
-            "../../../../tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine"
+            "../../../../tests/fixtures/sema/supported_imported_udt_parameter_field_mutation.pine"
         ),
         vec![(
             "user/udt/1",
@@ -4038,20 +4093,16 @@ fn import_rejects_scalar_imported_user_type_parameter_field_mutation() {
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
-        analysis.compatibility.unsupported.iter().any(|feature| {
-            feature.feature == "function_side_effect" && feature.reason.contains("parameter fields")
-        }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn import_rejects_scalar_imported_user_type_global_field_mutation() {
+fn import_accepts_scalar_imported_user_type_global_field_mutation() {
     let analysis = analyze_with_libraries(
         include_str!(
             "../../../../tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine"
@@ -4062,17 +4113,12 @@ fn import_rejects_scalar_imported_user_type_global_field_mutation() {
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
-        analysis.compatibility.unsupported.iter().any(|feature| {
-            feature.feature == "function_side_effect"
-                && feature.reason.contains("global user-defined type values")
-        }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

@@ -14,6 +14,90 @@ fn bar(i: i64, close: f64) -> Bar {
 }
 
 #[test]
+fn udf_parameter_field_mutation_preserves_caller_identity_and_realtime_rollback() {
+    let source = "//@version=6\nindicator(\"UDT parameter mutation\")\ntype Counter\n    int value\nbump(Counter object) =>\n    object.value := object.value + 1\n    object\nvar Counter original = Counter.new(0)\nalias = original\nreturned = bump(alias)\nplot(original.value)\nplot(returned.value)\n";
+    let analysis = analyze_source(&SourceFile::new("udf_udt_param.pine", source));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bars = [bar(0, 10.), bar(1, 20.), bar(2, 30.)];
+    let expected = run_historical(&hir, &bars).expect("historical result");
+    for plot in &expected.plots {
+        assert_eq!(
+            plot.values.iter().map(|v| v.as_f64()).collect::<Vec<_>>(),
+            [Some(1.), Some(2.), Some(3.)],
+            "plots: {:?}",
+            expected.plots
+        );
+    }
+    let mut session = RealtimeRuntime::new(&hir);
+    session.update(BarUpdate::historical(bars[0])).unwrap();
+    session.update(BarUpdate::historical(bars[1])).unwrap();
+    session.update(BarUpdate::forming(bar(2, 40.))).unwrap();
+    session.update(BarUpdate::forming(bar(2, 35.))).unwrap();
+    session.update(BarUpdate::confirmed(bars[2])).unwrap();
+    assert_eq!(session.result(), expected);
+}
+
+#[test]
+fn udt_array_retains_nested_drawing_arrays_across_bars_and_rollback() {
+    let source = "//@version=6\nindicator(\"UDT drawing arrays\")\ntype Visual\n    line[] paths\n    box[] zones\nvar Visual[] history = array.new<Visual>(0)\nif bar_index == 0\n    array.push(history, Visual.new(array.new_line(), array.new_box()))\nVisual current = array.get(history, 0)\narray.push(current.paths, line.new(bar_index, close, bar_index + 1, close))\narray.push(current.zones, box.new(bar_index, high, bar_index + 1, low))\nplot(array.size(current.paths))\nplot(array.size(current.zones))\n";
+    let analysis = analyze_source(&SourceFile::new("udt_drawing_arrays.pine", source));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bars = [bar(0, 10.), bar(1, 20.), bar(2, 30.)];
+    let expected = run_historical(&hir, &bars).expect("historical result");
+    for plot in &expected.plots {
+        assert_eq!(
+            plot.values.iter().map(|v| v.as_f64()).collect::<Vec<_>>(),
+            [Some(1.), Some(2.), Some(3.)]
+        );
+    }
+    let mut session = RealtimeRuntime::new(&hir);
+    session.update(BarUpdate::historical(bars[0])).unwrap();
+    session.update(BarUpdate::historical(bars[1])).unwrap();
+    session.update(BarUpdate::forming(bar(2, 40.))).unwrap();
+    session.update(BarUpdate::forming(bar(2, 35.))).unwrap();
+    session.update(BarUpdate::confirmed(bars[2])).unwrap();
+    assert_eq!(session.result(), expected);
+}
+
+#[test]
+fn user_type_array_fields_hold_and_mutate_array_values() {
+    let source = "//@version=6\nindicator(\"arrays\")\ntype Features\n    array<float> values\n    array<int> labels\nfeatures=Features.new(array.new_float(),array.new_int())\narray.push(features.values,close)\narray.push(features.labels,bar_index)\nplot(array.get(features.values,0))\nplot(array.get(features.labels,0))\n";
+    let analysis = analyze_source(&SourceFile::new("arrays.pine", source));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.unwrap(), &[bar(0, 10.), bar(1, 20.)]).unwrap();
+    assert_eq!(
+        result.plots[0]
+            .values
+            .iter()
+            .map(|v| v.as_f64())
+            .collect::<Vec<_>>(),
+        vec![Some(10.), Some(20.)]
+    );
+    assert_eq!(
+        result.plots[1]
+            .values
+            .iter()
+            .map(|v| v.as_f64())
+            .collect::<Vec<_>>(),
+        vec![Some(0.), Some(1.)]
+    );
+}
+
+#[test]
 fn assignment_and_array_aliases_mutate_the_same_object() {
     let source = "//@version=6\nindicator(\"alias\")\ntype Item\n    float value\na=Item.new(close)\nb=a\nb.value:=close+1\nplot(a.value)\nitems=array.from(a)\nx=array.get(items,0)\nx.value:=close+4\nplot(a.value)\n";
     for version in [5, 6] {

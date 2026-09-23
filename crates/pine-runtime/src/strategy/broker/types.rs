@@ -94,6 +94,7 @@ pub(super) struct EntryFill {
     pub(super) bar_index: usize,
     pub(super) time: i64,
     pub(super) price: f64,
+    pub(super) apply_slippage: bool,
     pub(super) qty: f64,
     pub(super) metadata: StrategyOrderMetadata,
 }

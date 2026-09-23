@@ -488,12 +488,11 @@ fn void_function_final_if_and_for_do_not_add_return_diagnostics() {
         analysis.diagnostics
     );
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_UNSUPPORTED_FEATURE")
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -811,21 +810,17 @@ fn accepts_branch_loop_interactions() {
 }
 
 #[test]
-fn rejects_array_helper_mutation_inside_udf() {
+fn accepts_array_queue_mutation_inside_udf() {
     let analysis = analyze(
         "add(values, value) =>\n    values.unshift(value)\n    values.shift()\nvalues = array.new_float()\nplot(add(values, close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

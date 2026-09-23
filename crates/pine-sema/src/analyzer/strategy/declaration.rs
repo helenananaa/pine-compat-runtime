@@ -6,8 +6,6 @@ const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.ca
 const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
 const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
 const STRATEGY_NONE_ACCOUNT_CURRENCY: &str = "NONE";
-// Matches the registered `syminfo.currency` value used by the no-conversion path.
-const STRATEGY_SYMBOL_ACCOUNT_CURRENCY: &str = "USD";
 
 impl Analyzer {
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
@@ -47,6 +45,7 @@ impl Analyzer {
                     "use_bar_magnifier",
                     "format",
                     "precision",
+                    "calc_bars_count",
                 ]
                 .get(index)
                 .copied()
@@ -58,6 +57,7 @@ impl Analyzer {
                 "max_bars_back" => {
                     self.validate_max_bars_back_bound_value("strategy", "max_bars_back", arg);
                 }
+                "calc_bars_count" => self.validate_calc_bars_count_arg("strategy", arg),
                 "initial_capital" => {
                     let Some(initial_capital) = self.known_const_numeric_value(&arg.value) else {
                         continue;
@@ -76,12 +76,16 @@ impl Analyzer {
                     let Some(currency) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
-                    if currency != STRATEGY_NONE_ACCOUNT_CURRENCY
-                        && currency != STRATEGY_SYMBOL_ACCOUNT_CURRENCY
+                    if currency == STRATEGY_NONE_ACCOUNT_CURRENCY {
+                        self.strategy_settings.account_currency = None;
+                    } else if let Some(code) =
+                        pine_builtins::named_string_constant(&format!("currency.{currency}"))
                     {
+                        self.strategy_settings.account_currency = Some(code);
+                    } else {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy` argument `currency` only supports currency.NONE or the current symbol currency in the current no-conversion subset",
+                            "`strategy` argument `currency` must be a supported currency constant",
                             arg.span,
                         ));
                     }

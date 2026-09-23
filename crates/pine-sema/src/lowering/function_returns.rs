@@ -14,6 +14,7 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
         | StmtKind::Decl { .. }
         | StmtKind::TupleDecl { .. }
         | StmtKind::Reassign { .. }
+        | StmtKind::FieldReassign { .. }
         | StmtKind::For { .. }
         | StmtKind::ForIn { .. }
         | StmtKind::While { .. } => true,
@@ -193,6 +194,22 @@ impl Analyzer {
                             param_types,
                         );
                     }
+                    StmtKind::FieldReassign {
+                        receiver,
+                        path,
+                        field,
+                        ..
+                    } => {
+                        return self.lower_function_field_return_statement(
+                            prefix,
+                            last,
+                            &crate::analyzer::functions::field_reassign_result_expr(
+                                receiver, path, field, last.span,
+                            ),
+                            param_exprs,
+                            param_types,
+                        );
+                    }
                     StmtKind::If {
                         condition,
                         then_branch,
@@ -271,6 +288,28 @@ impl Analyzer {
             let (statement, result) =
                 self.lower_function_symbol_statement_result(last, name, param_exprs, param_types)?;
             statements.push(statement);
+            Some(prepend_block_statements(statements, result))
+        });
+        self.lower_symbol_overrides.pop();
+        result
+    }
+
+    fn lower_function_field_return_statement(
+        &mut self,
+        prefix: &[Stmt],
+        last: &Stmt,
+        result: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        self.lower_symbol_overrides.push(HashMap::new());
+        let lowered_statements = prefix
+            .iter()
+            .chain(std::iter::once(last))
+            .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
+            .collect::<Option<Vec<_>>>();
+        let result = lowered_statements.and_then(|statements| {
+            let result = self.lower_expr_with_params(result, param_exprs, param_types)?;
             Some(prepend_block_statements(statements, result))
         });
         self.lower_symbol_overrides.pop();
@@ -501,6 +540,25 @@ impl Analyzer {
                 )?;
                 lowered_statements.push(statement);
                 result
+            }
+            StmtKind::FieldReassign {
+                receiver,
+                path,
+                field,
+                ..
+            } => {
+                lowered_statements.push(self.lower_stmt_with_params(
+                    last,
+                    param_exprs,
+                    param_types,
+                )?);
+                self.lower_expr_with_params(
+                    &crate::analyzer::functions::field_reassign_result_expr(
+                        receiver, path, field, last.span,
+                    ),
+                    param_exprs,
+                    param_types,
+                )?
             }
             StmtKind::If {
                 condition,

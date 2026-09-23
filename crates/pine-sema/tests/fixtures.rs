@@ -1384,11 +1384,8 @@ fn accepts_supported_color_new_input_return_qualifier_fixture() {
 }
 
 #[test]
-fn reports_unsupported_color_new_series_transp_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_color_new_series_transp.pine",
-        &["`color.new` argument `transp` expects simple integer-compatible, got series int"],
-    );
+fn accepts_supported_color_new_series_transp_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_color_new_series_transp.pine");
 }
 
 #[test]
@@ -4541,9 +4538,7 @@ fn reports_strategy_calc_on_order_fills_series_rejected() {
 fn reports_unsupported_strategy_currency_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_currency.pine",
-        &[
-            "`strategy` argument `currency` only supports currency.NONE or the current symbol currency",
-        ],
+        &["`strategy` argument `currency` must be a supported currency constant"],
     );
 }
 
@@ -5078,11 +5073,11 @@ fn reports_strategy_entry_indicator_fixture() {
 fn reports_strategy_entry_qty_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_entry_qty.pine",
-        "E_CALL_ARG_VALUE",
+        "E_CALL_ARG_TYPE",
     );
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_entry_named_const_qty.pine",
-        "E_CALL_ARG_VALUE",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -7690,8 +7685,8 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.percentile_linear_interpolation` argument `id` expects numeric array, got simple array<UDT>",
             "`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`",
             "`array.transform` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
-            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
-            "`array.slice` argument `index_to` expects simple integer-compatible, got const string",
+            "`array.slice` argument `index_from` expects integer-compatible, got const string",
+            "`array.slice` argument `index_to` expects integer-compatible, got const string",
             "`array.slice` expects at least 3 argument(s), got 2",
             "`array.slice` expects at most 3 argument(s), got 4",
             "ternary UDT array branches must resolve to the same element identity",
@@ -7810,7 +7805,7 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.reverse` expects at most 1 argument(s), got 2",
             "`array.pop` expects at most 1 argument(s), got 2",
             "`array.shift` expects at most 1 argument(s), got 2",
-            "`array.remove` argument `index` expects simple integer-compatible, got const string",
+            "`array.remove` argument `index` expects integer-compatible, got const string",
             "`array.remove` expects at most 2 argument(s), got 3",
             "`array.push` argument `value` expects UDT `First`, got `Second`",
             "`array.push` expects at most 2 argument(s), got 3",
@@ -7886,7 +7881,7 @@ fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
             "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.get` argument `index` expects integer-compatible, got const string",
-            "`array.remove` argument `index` expects simple integer-compatible, got const string",
+            "`array.remove` argument `index` expects integer-compatible, got const string",
             "`array.remove` expects at least 2 argument(s), got 1",
             "`array.remove` expects at most 2 argument(s), got 3",
             "`array.get` argument `index` expects integer-compatible, got const string",
@@ -8076,8 +8071,8 @@ fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
             "`array.some` expects at most 1 argument(s), got 2",
             "`array.join` argument `separator` expects string-compatible, got series float",
             "`array.join` expects at most 2 argument(s), got 3",
-            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
-            "`array.slice` argument `index_to` expects simple integer-compatible, got const string",
+            "`array.slice` argument `index_from` expects integer-compatible, got const string",
+            "`array.slice` argument `index_to` expects integer-compatible, got const string",
             "`array.slice` expects at least 3 argument(s), got 2",
             "`array.slice` expects at most 3 argument(s), got 4",
             "`array.clear` expects at most 1 argument(s), got 2",
@@ -8759,15 +8754,15 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
         &[
             "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.transform` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
-            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
-            "`array.slice` argument `index_to` expects simple integer-compatible, got const string",
+            "`array.slice` argument `index_from` expects integer-compatible, got const string",
+            "`array.slice` argument `index_to` expects integer-compatible, got const string",
             "`array.slice` expects at least 3 argument(s), got 2",
             "`array.slice` expects at most 3 argument(s), got 4",
             "`array.clear` expects at most 1 argument(s), got 2",
             "`array.reverse` expects at most 1 argument(s), got 2",
             "`array.pop` expects at most 1 argument(s), got 2",
             "`array.shift` expects at most 1 argument(s), got 2",
-            "`array.remove` argument `index` expects simple integer-compatible, got const string",
+            "`array.remove` argument `index` expects integer-compatible, got const string",
             "`array.remove` expects at least 2 argument(s), got 1",
             "`array.remove` expects at most 2 argument(s), got 3",
             "`array.push` argument `value` expects integer-compatible, got const string",
@@ -8803,7 +8798,7 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.size` is not supported: direct UDT-array call-result methods require one concrete same-local or same-imported element identity",
             "`array.standardize` argument `id` expects numeric array, got simple array<string>",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
-            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
+            "`array.slice` argument `index_from` expects integer-compatible, got const string",
             "`array.includes` argument `value` expects UDT `First`, got `Second`",
             "`array.includes` argument `value` expects integer-compatible, got const string",
             "`array.includes` expects at most 2 argument(s), got 3",
@@ -8967,19 +8962,13 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.join` argument `separator` expects string-compatible, got series float",
             "`array.join` expects at most 2 argument(s), got 3",
             "`function_side_effect` is not supported: collection mutation via `array.concat` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.clear` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.reverse` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.pop` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.shift` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.remove` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.insert` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.set` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.fill` is not supported inside user-defined functions",
             "`function_side_effect` is not supported: collection mutation via `array.sort` is not supported inside user-defined functions",
         ],
     );
     // Call-result push and drawing-bearing UDT array construction are admitted.
-    assert_diagnostic_count(path, 251);
+    assert_diagnostic_count(path, 245);
 }
 
 #[test]
@@ -9532,7 +9521,7 @@ fn reports_unsupported_array_push_value_method_fixture() {
 fn reports_unsupported_array_remove_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_remove_index.pine",
-        &["`array.remove` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.remove` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -9540,7 +9529,7 @@ fn reports_unsupported_array_remove_index_fixture() {
 fn reports_unsupported_array_remove_index_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_remove_index_method.pine",
-        &["`array.remove` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.remove` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -9886,9 +9875,7 @@ fn reports_unsupported_array_join_simple_string_return_qualifier_fixture() {
 fn reports_unsupported_array_slice_index_from_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_slice_index_from.pine",
-        &[
-            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
-        ],
+        &["`array.slice` argument `index_from` expects integer-compatible, got const string"],
     );
 }
 
@@ -9896,9 +9883,7 @@ fn reports_unsupported_array_slice_index_from_fixture() {
 fn reports_unsupported_array_slice_index_from_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_slice_index_from_method.pine",
-        &[
-            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
-        ],
+        &["`array.slice` argument `index_from` expects integer-compatible, got const string"],
     );
 }
 
@@ -9906,7 +9891,7 @@ fn reports_unsupported_array_slice_index_from_method_fixture() {
 fn reports_unsupported_array_slice_index_to_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_slice_index_to.pine",
-        &["`array.slice` argument `index_to` expects simple integer-compatible, got const string"],
+        &["`array.slice` argument `index_to` expects integer-compatible, got const string"],
     );
 }
 
@@ -9914,7 +9899,7 @@ fn reports_unsupported_array_slice_index_to_fixture() {
 fn reports_unsupported_array_slice_index_to_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_slice_index_to_method.pine",
-        &["`array.slice` argument `index_to` expects simple integer-compatible, got const string"],
+        &["`array.slice` argument `index_to` expects integer-compatible, got const string"],
     );
 }
 
@@ -14887,10 +14872,12 @@ fn reports_import_fixture_missing_host_library() {
     let source = SourceFile::new(path.display().to_string(), text);
     let analysis = analyze_source(&source);
 
-    assert!(analysis.diagnostics.iter().any(|diagnostic| {
-        diagnostic.code == "E_IMPORT_MISSING_LIBRARY"
-            || diagnostic.code == "E_IMPORT_ALIAS_REQUIRED"
-    }));
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| { diagnostic.code == "E_IMPORT_MISSING_LIBRARY" })
+    );
     assert!(analysis.hir.is_none());
 }
 
@@ -15377,15 +15364,15 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.concat` expects at most 2 argument(s), got 3",
             "`array.join` argument `separator` expects string-compatible, got series float",
             "`array.join` expects at most 2 argument(s), got 3",
-            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
-            "`array.slice` argument `index_to` expects simple integer-compatible, got const string",
+            "`array.slice` argument `index_from` expects integer-compatible, got const string",
+            "`array.slice` argument `index_to` expects integer-compatible, got const string",
             "`array.slice` expects at least 3 argument(s), got 2",
             "`array.slice` expects at most 3 argument(s), got 4",
             "`array.clear` expects at most 1 argument(s), got 2",
             "`array.reverse` expects at most 1 argument(s), got 2",
             "`array.pop` expects at most 1 argument(s), got 2",
             "`array.shift` expects at most 1 argument(s), got 2",
-            "`array.remove` argument `index` expects simple integer-compatible, got const string",
+            "`array.remove` argument `index` expects integer-compatible, got const string",
             "`array.remove` expects at most 2 argument(s), got 3",
             "`array.push` argument `value` expects UDT `lib.First`, got `lib.Second`",
             "`array.push` expects at most 2 argument(s), got 3",
@@ -16394,21 +16381,13 @@ fn reports_unsupported_user_type_final_if_branch_identity_fixture() {
 }
 
 #[test]
-fn reports_unsupported_user_type_field_mutation_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_user_type_field_mutation.pine",
-        "function_side_effect",
-        "mutating fields on global user-defined type values inside user-defined functions",
-    );
+fn admits_user_type_field_mutation_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_user_type_field_mutation.pine");
 }
 
 #[test]
-fn reports_unsupported_user_type_parameter_field_mutation_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_user_type_parameter_field_mutation.pine",
-        "function_side_effect",
-        "mutating user-defined type parameter fields inside user-defined functions",
-    );
+fn admits_user_type_parameter_field_mutation_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_user_type_parameter_field_mutation.pine");
 }
 
 #[test]

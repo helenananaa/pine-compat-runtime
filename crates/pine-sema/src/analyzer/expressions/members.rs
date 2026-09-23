@@ -65,6 +65,33 @@ impl Analyzer {
         effect
     }
 
+    pub(crate) fn argument_has_disallowed_udf_side_effect(&self, expr: &Expr) -> bool {
+        let mut effect = false;
+        crate::modules::visit_expression(expr, &mut |node| {
+            let ExprKind::Call { callee, .. } = &node.kind else {
+                return;
+            };
+            let normalized = self.qualified_member_callee(callee);
+            let callee = normalized.as_ref().unwrap_or(callee);
+            let name = if let ExprKind::Member { receiver, name } = &callee.kind {
+                self.type_of_expr_with_params(receiver, &HashMap::new())
+                    .and_then(|ty| Self::member_builtin_name(ty.kind, name))
+            } else {
+                expr_name(callee)
+            };
+            effect |= name.as_deref().is_some_and(|name| {
+                (is_output_or_declaration_builtin(name)
+                    || is_array_mutation_builtin(name)
+                    || is_array_mutation_method_call_name(name)
+                    || is_map_mutation_builtin(name)
+                    || is_map_mutation_method_call_name(name))
+                    && !(name.ends_with(".new")
+                        && self.allows_udf_output_or_declaration_side_effect(name))
+            });
+        });
+        effect
+    }
+
     pub(crate) fn qualified_member_callee(&self, callee: &Expr) -> Option<Expr> {
         if !matches!(&callee.kind,ExprKind::QualifiedName(parts) if parts.len()>=3) {
             return None;

@@ -5,7 +5,7 @@ use super::types::*;
 const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleIntCompatible,
+        accepts: Accepts::IntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -18,7 +18,7 @@ const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_INT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleIntCompatible,
+        accepts: Accepts::IntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -286,12 +286,12 @@ const ARRAY_SLICE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "index_from",
-        accepts: Accepts::SimpleIntCompatible,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "index_to",
-        accepts: Accepts::SimpleIntCompatible,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];
@@ -385,19 +385,6 @@ const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "value",
         accepts: Accepts::Any,
-        optional: false,
-    },
-];
-
-const ARRAY_SIMPLE_INDEX_PARAMS: &[BuiltinParam] = &[
-    BuiltinParam {
-        name: "id",
-        accepts: Accepts::Array,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "index",
-        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -557,7 +544,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "array.remove",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_SIMPLE_INDEX_PARAMS,
+        params: ARRAY_GET_PARAMS,
         returns: ReturnSpec::ArrayElement(0),
         variadic: false,
     },

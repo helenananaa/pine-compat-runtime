@@ -343,11 +343,20 @@ impl<'a> HistoricalRuntime<'a> {
 
         let length = length as usize;
         let window = self.update_rolling_window(call_site_id, source, length);
-        if !window.is_ready(length) {
+        // Native linear interpolation retains the bar-count window but omits
+        // NA samples within it. Nearest-rank behavior is qualified separately.
+        let ready = match mode {
+            ArrayPercentileMode::LinearInterpolation => window.values.len() == length,
+            ArrayPercentileMode::NearestRank => window.is_ready(length),
+        };
+        if !ready {
             return Ok(PineValue::Na);
         }
 
         let mut values: Vec<_> = window.values.iter().flatten().copied().collect();
+        if values.is_empty() {
+            return Ok(PineValue::Na);
+        }
         values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
         match mode {
             ArrayPercentileMode::NearestRank => {

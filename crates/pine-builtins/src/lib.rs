@@ -1,6 +1,7 @@
 //! Built-in registry scaffolding.
 
 mod constants;
+mod drawing_styles;
 mod history;
 mod namespaces;
 mod registry;
@@ -11,6 +12,7 @@ pub use constants::{
     NAMED_COLORS, NamedColor, builtin_series_value_type, named_color, named_float_constant,
     named_int_constant, named_string_constant, registered_value_names,
 };
+pub use drawing_styles::{LABEL_STYLES, LINE_STYLES};
 pub use history::{
     BUILTIN_HISTORY_METADATA, BuiltinHistoryMetadata, BuiltinHistoryRequirement,
     BuiltinSeriesHistoryRequirement, builtin_history_requirement,

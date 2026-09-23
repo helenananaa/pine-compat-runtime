@@ -136,6 +136,12 @@ fn timeframe_change_bucket(timestamp_ms: i64, timeframe: &str, seconds: i64) -> 
 
     if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
         let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
+        if multiplier <= 12 {
+            let periods_per_year = (12 + multiplier - 1) / multiplier;
+            return i64::from(datetime.year())
+                .checked_mul(periods_per_year)?
+                .checked_add(i64::from(datetime.month0()) / multiplier);
+        }
         let month = i64::from(datetime.year())
             .checked_mul(12)?
             .checked_add(i64::from(datetime.month0()))?;
@@ -160,6 +166,19 @@ fn timeframe_bucket_bounds(bucket: i64, timeframe: &str, seconds: i64) -> Option
     }
 
     if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
+        if multiplier <= 12 {
+            let periods_per_year = (12 + multiplier - 1) / multiplier;
+            let year = bucket.div_euclid(periods_per_year);
+            let first_month = bucket
+                .rem_euclid(periods_per_year)
+                .checked_mul(multiplier)?;
+            let last_month = first_month.checked_add(multiplier)?.min(12);
+            let year_start = year.checked_mul(12)?;
+            return Some((
+                calendar_month_start(year_start.checked_add(first_month)?)?,
+                calendar_month_start(year_start.checked_add(last_month)?)?,
+            ));
+        }
         let open_month = bucket.checked_mul(multiplier)?;
         let close_month = open_month.checked_add(multiplier)?;
         return Some((
@@ -848,7 +867,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let Some(previous_time) = self.previous_bar_time else {
-            return Ok(PineValue::Bool(true));
+            return Ok(PineValue::Bool(false));
         };
         let Some(current_bucket) = timeframe_change_bucket(current_time, timeframe, seconds) else {
             return Err(RuntimeError {

@@ -73,7 +73,16 @@ impl<'a> HistoricalRuntime<'a> {
 
         let source = self.alert_string_arg("alertcondition", args, 1, "title")?;
         let message = self.alert_string_arg("alertcondition", args, 2, "message")?;
-        let message = self.render_alertcondition_message(&message);
+        let message = match self.render_alertcondition_message(&message) {
+            Ok(message) => message,
+            Err(message) => {
+                self.push_alert_diagnostic(RuntimeDiagnostic {
+                    code: "E_UNSUPPORTED_ALERT_PLACEHOLDER".to_owned(),
+                    message,
+                });
+                return Ok(PineValue::Void);
+            }
+        };
         self.push_alert_event(call_site_id, source, message);
         Ok(PineValue::Void)
     }
@@ -130,12 +139,12 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    fn render_alertcondition_message(&self, message: &str) -> String {
+    fn render_alertcondition_message(&self, message: &str) -> Result<String, String> {
         let Some(bar) = self.current_bar else {
-            return message.to_owned();
+            return Ok(message.to_owned());
         };
 
-        message
+        let message = message
             .replace("{{open}}", &format_number(bar.open, ""))
             .replace("{{high}}", &format_number(bar.high, ""))
             .replace("{{low}}", &format_number(bar.low, ""))
@@ -147,7 +156,35 @@ impl<'a> HistoricalRuntime<'a> {
                 self.request_environment.chart().timeframe().value(),
             )
             .replace("{{exchange}}", self.alert_exchange_placeholder())
-            .replace("{{time}}", &self.alert_time_placeholder(bar.time))
+            .replace("{{time}}", &self.alert_time_placeholder(bar.time));
+        let mut rendered = String::with_capacity(message.len());
+        let mut remaining = message.as_str();
+        while let Some(start) = remaining.find("{{plot(\"") {
+            rendered.push_str(&remaining[..start]);
+            let tail = &remaining[start + "{{plot(\"".len()..];
+            let Some(end) = tail.find("\")}}") else {
+                return Err("unclosed named plot alert placeholder".to_owned());
+            };
+            let title = &tail[..end];
+            let plot = self.plots.iter().find(
+                |plot| matches!(&plot.metadata.title, PineValue::String(value) if value == title),
+            );
+            let value = plot.and_then(|plot| plot.values.get(self.bars - self.stored_origin));
+            let text = match value {
+                Some(PineValue::Int(value)) => value.to_string(),
+                Some(PineValue::Float(value)) => format_number(*value, ""),
+                Some(PineValue::Na) => "NaN".to_owned(),
+                _ => {
+                    return Err(format!(
+                        "named plot alert placeholder has no numeric value for {title:?}"
+                    ));
+                }
+            };
+            rendered.push_str(&text);
+            remaining = &tail[end + "\")}}".len()..];
+        }
+        rendered.push_str(remaining);
+        Ok(rendered)
     }
 
     fn alert_ticker_placeholder(&self) -> &str {

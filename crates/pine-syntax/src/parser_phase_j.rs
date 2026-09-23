@@ -75,7 +75,10 @@ impl Parser {
                 }
             }
         } else {
-            None
+            key.split('/').nth(1).map(|name| ImportAlias {
+                name: name.to_owned(),
+                span: key_start.merge(key_end),
+            })
         };
 
         let end = alias.as_ref().map_or(key_end, |alias| alias.span);
@@ -385,13 +388,20 @@ impl Parser {
             let end = self.expect(TokenKind::Gt, "expected `>` after array field type")?;
             return Some((format!("array<{element}>"), first_span.merge(end)));
         }
-        if self.at(TokenKind::Dot) {
+        let (type_name, type_span) = if self.at(TokenKind::Dot) {
             self.bump();
             let (second, second_span) =
                 self.expect_identifier("expected field type name after `.`")?;
-            return Some((format!("{first}.{second}"), first_span.merge(second_span)));
+            (format!("{first}.{second}"), first_span.merge(second_span))
+        } else {
+            (first, first_span)
+        };
+        if self.at(TokenKind::LBracket) {
+            self.bump();
+            let end = self.expect(TokenKind::RBracket, "expected `]` after array field type")?;
+            return Some((format!("{type_name}[]"), type_span.merge(end)));
         }
-        Some((first, first_span))
+        Some((type_name, type_span))
     }
 
     fn nth_identifier(&self, offset: usize) -> bool {
@@ -530,6 +540,24 @@ mod tests {
         assert_eq!(user_type.fields[2].name, "zone");
         assert_eq!(user_type.fields[3].type_name, "chart.point");
         assert_eq!(user_type.fields[3].name, "anchor");
+    }
+
+    #[test]
+    fn parses_user_type_array_alias_fields() {
+        let parsed =
+            parse("type Handles\n    line[] paths\n    box[] zones\n    chart.point[] anchors\n");
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::UserType(user_type) = &parsed.program.statements[0].kind else {
+            panic!("expected user-defined type");
+        };
+        assert_eq!(
+            user_type
+                .fields
+                .iter()
+                .map(|field| field.type_name.as_str())
+                .collect::<Vec<_>>(),
+            ["line[]", "box[]", "chart.point[]"]
+        );
     }
 
     #[test]

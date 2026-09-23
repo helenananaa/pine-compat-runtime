@@ -2499,7 +2499,7 @@ plot(p.x + p.y)
 }
 
 #[test]
-fn rejects_user_type_field_mutation_inside_function() {
+fn accepts_global_user_type_field_mutation_inside_function() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -2512,15 +2512,11 @@ plot(touch())
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| { feature.feature == "function_side_effect" }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -2554,7 +2550,7 @@ plot(p.x)
 }
 
 #[test]
-fn rejects_user_type_parameter_field_mutation_inside_function() {
+fn accepts_user_type_parameter_field_mutation_inside_function() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -2568,13 +2564,9 @@ plot(mutated.x)
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| { feature.feature == "function_side_effect" }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }

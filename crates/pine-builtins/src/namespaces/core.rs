@@ -70,6 +70,11 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstBool,
         optional: true,
     },
+    BuiltinParam {
+        name: "calc_bars_count",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
 ];
 
 const STRATEGY_PARAMS: &[BuiltinParam] = &[
@@ -200,6 +205,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "precision",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "calc_bars_count",
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },

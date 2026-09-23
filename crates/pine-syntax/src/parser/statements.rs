@@ -47,7 +47,12 @@ impl Parser {
             return self.parse_tuple_decl();
         }
 
-        let mode = if self.at(TokenKind::Var) {
+        let mode = if self.source_version >= 5
+            && matches!(&self.current().kind, TokenKind::Identifier(name) if name == "const")
+        {
+            self.bump();
+            Some(DeclMode::Const)
+        } else if self.at(TokenKind::Var) {
             self.bump();
             Some(DeclMode::Var)
         } else if self.at(TokenKind::Varip) {
@@ -69,6 +74,11 @@ impl Parser {
                     value,
                 },
             });
+        }
+
+        if mode == Some(DeclMode::Const) {
+            self.error_here("E_PARSE_DECL", "`const` requires a typed declaration");
+            return None;
         }
 
         if let TokenKind::Identifier(name) = self.current().kind.clone() {
@@ -771,7 +781,7 @@ impl Parser {
                 Some(statement) => statements.push(statement),
                 None => self.recover_stmt(),
             }
-            self.skip_legacy_statement_commas();
+            self.skip_statement_separator();
             self.skip_newlines();
         }
 

@@ -541,6 +541,15 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                 }
                 options.chart_context = options.chart_context.clone().with_symbol(value.trim());
             }
+            "--chart-currency" => {
+                index += 1;
+                let value = args.get(index).ok_or_else(usage)?;
+                options.chart_context = options
+                    .chart_context
+                    .clone()
+                    .with_currency(value.trim())
+                    .map_err(str::to_owned)?;
+            }
             "--chart-timeframe" => {
                 index += 1;
                 let Some(value) = args.get(index) else {

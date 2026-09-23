@@ -111,7 +111,7 @@ fn nominal_month_seconds_match_native_and_calendar_closes_stay_calendar_based() 
                 .iter()
                 .map(|v| v.as_f64())
                 .collect::<Vec<_>>(),
-            vec![Some(1.), Some(1.)]
+            vec![Some(0.), Some(1.)]
         );
     }
 }

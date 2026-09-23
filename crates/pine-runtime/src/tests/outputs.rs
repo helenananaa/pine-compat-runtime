@@ -3,6 +3,95 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn drawing_constructors_accept_series_style_through_udf_parameters() {
+    let source = SourceFile::new(
+        "series_drawing_styles.pine",
+        r#"//@version=5
+indicator("series drawing styles")
+drawLine(string style) => line.new(bar_index, low, bar_index, high, style=style)
+drawLabel(string style) => label.new(bar_index, high, "x", style=style)
+lineStyle = bar_index % 2 == 0 ? line.style_solid : line.style_dashed
+labelStyle = bar_index % 2 == 0 ? label.style_label_up : label.style_label_down
+lineId = drawLine(lineStyle)
+labelId = drawLabel(labelStyle)
+plot(line.get_x2(lineId) + label.get_x(labelId))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 4.0]);
+    assert_eq!(result.lines.len(), 3);
+    assert_eq!(result.labels.len(), 3);
+}
+
+#[test]
+fn drawing_constructor_rejects_invalid_dynamic_style_at_runtime() {
+    let source = SourceFile::new(
+        "invalid_series_style.pine",
+        r#"//@version=5
+indicator("invalid series style")
+drawLine(string style) => line.new(bar_index, low, bar_index, high, style=style)
+drawLine(str.tostring(close))
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("invalid style must fail at runtime");
+    assert!(error.message.contains("line.new style"), "{error:?}");
+}
+
+#[test]
+fn drawing_created_as_udf_argument_is_evaluated_once() {
+    let source = SourceFile::new(
+        "udf_drawing_arg.pine",
+        "//@version=5\nindicator(\"UDF drawing arg\")\nxOf(label id) => label.get_x(id)\nplot(xOf(label.new(bar_index, close)))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 2.0]);
+    assert_eq!(result.labels.len(), 3);
+}
+
+#[test]
+fn repeated_table_new_at_one_position_survives_more_than_fifty_bars() {
+    let source = SourceFile::new(
+        "repeated_table.pine",
+        "//@version=5\nindicator(\"repeated table\")\nt = table.new(position.bottom_right, 1, 1)\ntable.cell(table_id=t, column=0, row=0, text=str.tostring(close))\nplot(close)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = (0..60).map(|i| bar(f64::from(i))).collect::<Vec<_>>();
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    assert_eq!(result.tables.len(), 60);
+    assert_values_close(
+        &result.plots[0].values,
+        &(0..60).map(f64::from).collect::<Vec<_>>(),
+    );
+}
+
+#[test]
 fn collects_hline_and_fill_once() {
     let source = SourceFile::new(
         "test.pine",

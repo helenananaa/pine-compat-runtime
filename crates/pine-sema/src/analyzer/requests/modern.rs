@@ -99,6 +99,22 @@ impl Analyzer {
                     && self.modern_request_block(then_branch, locals, visiting, calls)
                     && self.modern_request_block(else_branch, locals, visiting, calls)
             }
+            ExprKind::Switch { selector, arms } => {
+                selector.as_deref().is_none_or(|selector| {
+                    self.modern_request_expr(selector, locals, visiting, calls)
+                }) && arms.iter().all(|arm| {
+                    arm.condition.as_ref().is_none_or(|condition| {
+                        self.modern_request_expr(condition, locals, visiting, calls)
+                    }) && match &arm.result {
+                        SwitchArmResult::Expr(expr) => {
+                            self.modern_request_expr(expr, locals, visiting, calls)
+                        }
+                        SwitchArmResult::Block(body) => {
+                            self.modern_request_block(body, locals, visiting, calls)
+                        }
+                    }
+                })
+            }
             ExprKind::Call { callee, args } => {
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;

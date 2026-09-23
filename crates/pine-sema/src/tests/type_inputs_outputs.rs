@@ -34,6 +34,19 @@ fn accepts_input_string_in_conditions() {
 }
 
 #[test]
+fn accepts_named_table_cell_id_and_input_selected_position() {
+    let analysis = analyze(
+        "//@version=5\nindicator(\"table input\")\ny = input.string(\"bottom\")\nx = input.string(\"right\")\nif barstate.islast\n    t = table.new(y + \"_\" + x, 1, 1)\n    table.cell(table_id=t, column=0, row=0, text=\"ok\")\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_additional_input_variants() {
     let analysis = analyze(
         "threshold = input.price(2.5, \"Price\")\nstart = input.time(0, \"Start\")\nsymbol = input.symbol(\"AAPL\", \"Symbol\")\ntimeframe = input.timeframe(\"D\", \"Timeframe\")\nsession = input.session(\"0930-1600\", \"Session\")\nnotes = input.text_area(\"Plan\", \"Notes\")\nplot(time >= start and symbol == \"AAPL\" and timeframe == \"D\" and session == \"0930-1600\" and notes == \"Plan\" ? math.max(close, threshold) : open)\n",
@@ -489,6 +502,19 @@ fn rejects_alert_unsupported_frequency() {
             .any(|feature| feature.feature == "alert_frequency")
     );
     assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn plotcandle_display_accepts_input_selection() {
+    let analysis = analyze(
+        "//@version=6\nindicator(\"input display\")\nvisible = input.bool(false)\nplotcandle(open, high, low, close, display=visible ? display.all : display.none)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

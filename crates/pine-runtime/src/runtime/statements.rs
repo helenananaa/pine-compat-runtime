@@ -432,11 +432,15 @@ impl<'a> HistoricalRuntime<'a> {
         let iterable = self.eval_expr(iterable)?;
         match iterable {
             PineValue::Array(array_id) => {
-                let Some(initial_len) = self.array_len(array_id)? else {
-                    return Ok(());
-                };
-
-                for index in 0..initial_len {
+                let mut index = 0;
+                while index < self.array_len(array_id)?.unwrap_or(0) {
+                    if index >= MAX_WHILE_ITERATIONS {
+                        return Err(RuntimeError {
+                            message: format!(
+                                "for...in array loop exceeded maximum iteration count of {MAX_WHILE_ITERATIONS}"
+                            ),
+                        });
+                    }
                     let value = self.array_get_cloned(array_id, index as i64)?;
                     let Some(value) = value else {
                         return Err(RuntimeError {
@@ -452,6 +456,7 @@ impl<'a> HistoricalRuntime<'a> {
                     )? {
                         return Ok(());
                     }
+                    index += 1;
                 }
             }
             PineValue::Matrix(matrix_id) => {
@@ -540,11 +545,15 @@ impl<'a> HistoricalRuntime<'a> {
 
         match iterable {
             PineValue::Array(array_id) => {
-                let Some(initial_len) = self.array_len(array_id)? else {
-                    return Ok(PineValue::Na);
-                };
-
-                for index in 0..initial_len {
+                let mut index = 0;
+                while index < self.array_len(array_id)?.unwrap_or(0) {
+                    if index >= MAX_WHILE_ITERATIONS {
+                        return Err(RuntimeError {
+                            message: format!(
+                                "for...in array loop exceeded maximum iteration count of {MAX_WHILE_ITERATIONS}"
+                            ),
+                        });
+                    }
                     let value = self.array_get_cloned(array_id, index as i64)?;
                     let Some(value) = value else {
                         return Err(RuntimeError {
@@ -563,6 +572,7 @@ impl<'a> HistoricalRuntime<'a> {
                     )? {
                         break;
                     }
+                    index += 1;
                 }
             }
             PineValue::Matrix(matrix_id) => {

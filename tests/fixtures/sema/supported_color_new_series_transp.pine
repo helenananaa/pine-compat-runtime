@@ -1,3 +1,3 @@
 //@version=5
-indicator("Unsupported color.new series transp")
+indicator("Supported color.new series transp")
 plot(close, color=color.new(color.blue, bar_index))

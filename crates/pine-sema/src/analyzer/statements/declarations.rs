@@ -73,7 +73,9 @@ impl Analyzer {
         span: Span,
     ) -> (PersistenceKind, Option<pine_ir::VarSlotId>) {
         match mode {
-            pine_syntax::DeclMode::Normal => (PersistenceKind::None, None),
+            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const => {
+                (PersistenceKind::None, None)
+            }
             pine_syntax::DeclMode::Var => (PersistenceKind::Var, Some(self.alloc_var_slot())),
             pine_syntax::DeclMode::Varip => {
                 if is_drawing_id_value(value_type.kind) {
@@ -317,9 +319,17 @@ impl Analyzer {
         name: &str,
         target_type: PineType,
         value_type: PineType,
+        value_span: Span,
         span: Span,
     ) {
         if can_assign(target_type, value_type) || value_type.kind == ValueKind::Na {
+            return;
+        }
+        if self.legacy.dialect().version() <= 5
+            && target_type.kind == ValueKind::Bool
+            && matches!(value_type.kind, ValueKind::Int | ValueKind::Float)
+        {
+            self.record_numeric_to_bool_coercion(value_span);
             return;
         }
 

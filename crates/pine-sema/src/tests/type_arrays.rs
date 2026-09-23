@@ -1075,19 +1075,17 @@ fn rejects_mismatched_array_concat_kind() {
 }
 
 #[test]
-fn rejects_series_array_slice_index() {
-    let analysis =
-        analyze("values = array.new_string()\nplot(array.size(values.slice(0, bar_index)))\n");
+fn accepts_series_array_slice_index() {
+    let analysis = analyze(
+        "values = array.from(10, 20, 30)\nstart = bar_index % 2\nplot(array.size(values.slice(start, start + 1)))\n",
+    );
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

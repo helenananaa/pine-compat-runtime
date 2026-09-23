@@ -2464,27 +2464,14 @@ fn analyze_script_reports_unsupported_user_type_varip_fixture() {
 }
 
 #[test]
-fn analyze_script_reports_unsupported_user_type_field_mutation_fixture() {
+fn analyze_script_accepts_user_type_field_mutation_fixture() {
     let output = analyze_script(include_str!(
-        "../../../../tests/fixtures/sema/unsupported_user_type_field_mutation.pine"
+        "../../../../tests/fixtures/sema/supported_user_type_field_mutation.pine"
     ));
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert_eq!(parsed["executable"], serde_json::json!(false));
-    assert_eq!(
-        parsed["diagnostics"][0]["code"],
-        serde_json::json!("E_UNSUPPORTED_FEATURE")
-    );
-    assert_eq!(
-        parsed["compatibility"]["unsupported"][0]["feature"],
-        serde_json::json!("function_side_effect")
-    );
-    assert!(
-        parsed["compatibility"]["unsupported"][0]["reason"]
-            .as_str()
-            .expect("unsupported reason should be a string")
-            .contains("mutating fields on global user-defined type values")
-    );
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
 }
 
 #[test]
@@ -10875,7 +10862,7 @@ fn library_source_json_reports_missing_library() {
     assert_eq!(parsed["executable"], serde_json::json!(false));
     assert!(supported_features.contains(&"import"));
     assert!(diagnostic_codes.contains(&"E_IMPORT_MISSING_LIBRARY"));
-    assert!(diagnostic_codes.contains(&"E_IMPORT_ALIAS_REQUIRED"));
+    assert!(!diagnostic_codes.contains(&"E_IMPORT_ALIAS_REQUIRED"));
 }
 
 #[test]

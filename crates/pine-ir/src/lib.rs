@@ -65,6 +65,8 @@ pub struct HirProgram {
     pub call_site_sources: Vec<HirCallSiteSource>,
     pub next_var_slot_id: u32,
     pub max_bars_back: Option<u32>,
+    /// Restricts initial batch execution to the latest N bars; zero means all bars.
+    pub calc_bars_count: Option<u32>,
     pub series_max_bars_back: Vec<HirSeriesMaxBarsBack>,
     pub history: HirHistoryRequirements,
     pub series_history: Vec<HirSeriesHistoryRequirement>,

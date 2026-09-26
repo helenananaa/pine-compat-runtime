@@ -85,8 +85,6 @@ improved over time, but codes should remain stable once published.
 - `E_LEGACY_SECURITY_MERGE`: a v1-v4 `security` gaps/lookahead argument is not
   a compile-time bool or the corresponding `barmerge` constant; runtime
   alignment is not guessed from series metadata.
-- `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
-  references `strategy.*`; legacy strategy execution is outside this project.
 - `E_LEGACY_V3_NA_INFERENCE`: a Pine v3 untyped `na` declaration cannot infer
   exactly one stable scalar type from a later assignment because it is
   unresolved, collection/object-valued, or conflicts with another assignment;

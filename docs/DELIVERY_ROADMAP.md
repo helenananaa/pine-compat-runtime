@@ -10,6 +10,26 @@ The subsequent [community-script qualification](COMMUNITY_SCRIPT_COVERAGE_202609
 adds native evidence for two admitted v5 community scripts, a narrowly scoped
 cash-order slippage sizing repair, and explicit admission blockers for SMC and
 Double Tap. The repair remains an uncommitted local candidate.
+The [Pine v4 strategy slice](LEGACY_V4_STRATEGY_AUDIT_20260923.md) admits
+versioned strategy execution and matches one unchanged public v4 strategy on
+4,698 native plot positions and 75 closed trade dates/prices. It is a local
+source qualification, not a broader legacy-strategy or release claim.
+The [Pine v2/v3 strategy slice](LEGACY_V2_V3_STRATEGY_AUDIT_20260923.md)
+admits legacy `strategy(...)` declarations and `strategy.entry(..., when=...)`
+for a SMA crossover control, with recent native TradingView trade agreement.
+The [implicit Pine v1 strategy slice](LEGACY_V1_STRATEGY_AUDIT_20260923.md)
+adds a v1-valid SMA reversal control and matches the native trade total and
+recent closed fills on the same confirmed-bar history.
+The [Super Trend 3 v3 admission](LEGACY_V3_SUPERTREND3_ADMISSION_20260923.md)
+removes a requested-context synthetic-OHLC blocker from a complete public
+strategy. A subsequent [native strategy check](LEGACY_V3_SUPERTREND3_NATIVE_PARITY_20260923.md)
+repairs pending short-entry brackets and matches the native 179-trade total and
+six visible recent trade rows. Full plot and historical trade-list parity remain
+open.
+The [v3 short all-entry exit check](LEGACY_V3_SHORT_ALL_ENTRY_EXIT_AUDIT_20260923.md)
+extends the broker's relative exit handling to omitted `from_entry`; a separate
+SMA control matches 86 native closed trades and six recent rows. Full native
+plot and historical trade-list exports remain pending.
 Streaming additions are integrated through `5f158f59c` and `f368ab96e`, included
 in main by `7b70095f6`. No stable publication is implied by integration.
 

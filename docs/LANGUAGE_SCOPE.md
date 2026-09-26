@@ -46,9 +46,10 @@ The analyzer carries the validated dialect into HIR so the runtime can select
 version-specific behavior. For v1-v4, script-mode classification runs before
 ordinary symbol and call diagnostics. The fixture-backed v1-v4 `study()`
 subsets are executable through versioned declaration, input, alias, output,
-and request translation. `strategy()` and any `strategy.*` use in v1-v4 stop with
-one `E_LEGACY_STRATEGY_OUT_OF_SCOPE` diagnostic; legacy strategies are not in
-scope. Explicit v5/v6 `indicator()` and `strategy()` continue through the
+and request translation. Pine v1-v4 `strategy()` sources enter the host-neutral
+strategy analyzer and broker; the measured v1, v2/v3, and v4 slices are linked
+from the delivery roadmap. `strategy.*` use in a legacy `study()` source is
+rejected by script-mode checks. Explicit v5/v6 `indicator()` and `strategy()` continue through the
 existing modern paths, and legacy-only declaration names are not activated for
 modern sources.
 
@@ -673,8 +674,9 @@ The analyzer should reject these with clear diagnostics:
   `study(resolution=...)`; the exact empty-string chart-inherited subset is
   supported, while all execution-timeframe-changing forms remain a precise
   unsupported program-context feature
-- `request.security_lower_tf`; lower-timeframe array-returning request APIs need
-  typed array return semantics and host output shapes before support is claimed
+- `request.security_lower_tf` optional policies beyond named `calc_bars_count`,
+  collection expressions, and provider-backed forming updates; the historical
+  scalar and scalar-tuple subset returns typed intrabar arrays from host-provided bars
 - unsupported alert frequency values outside the claimed const-string
   frequency subset and alert placeholder interpolation outside the
   supported `alertcondition` message subset

@@ -1,0 +1,18 @@
+# LuxAlgo SMC fair value gaps and empty timeframe, 2026-09-25
+
+The complete [public Pine v5 Smart Money Concepts source](https://www.tradingview.com/script/CnB3fSph-Smart-Money-Concepts-SMC-LuxAlgo/) was used in a private diagnostic copy. The copy appends the eight existing transparent state/event probes plus two `currentAlerts.bullishFairValueGap` and `currentAlerts.bearishFairValueGap` probes. Its only change to a published input is setting the `Fair Value Gaps` default from `false` to `true`; `Auto Threshold=true` and `Timeframe=""` retain their published defaults. The source is ignored locally as `.local/community-coverage-20260923/luxalgo-smc-fvg-default-on-oracle-v5.pine`, SHA-256 `428e53cb354f52ff680862258bbcb82ba1c14c3040081271f7975d7c26b2e112`. This is an instrumented derivative, not exact-source admission for the nondefault setting. Running the corresponding unchanged-input diagnostic source with call-site `38=true` produces identical local plots and diagnostics.
+
+The pre-fix runtime resolved the empty `input.timeframe("")` to its fixed one-minute default inside `request.security`. On a 1D chart, enabling FVG therefore failed with `request.security lower timeframe requests are not supported ... timeframe '1' on chart timeframe '1D'`. The runtime now resolves an empty request timeframe to the host-provided chart timeframe before selecting same-context execution or external provider data. Two focused regressions cover `input.timeframe("")` on the chart symbol and a literal empty timeframe on an external symbol, both with a 1D chart. `cargo test -p pine-runtime --lib --locked --quiet` passed all 1,892 tests.
+
+TradingView compiled and ran the diagnostic copy on `BINANCE:BTCUSDT`, 1D. The chart export was copied from `I:\sys\下载\BINANCE_BTCUSDT, D (3).csv` to ignored `.local/community-coverage-20260923/luxalgo-smc-fvg-native-20260925.csv`, SHA-256 `c0258c523b0ccad06a49fe4be16c44d20473c162844cfe09ba5fe48aaacaf582`. Its 3,282 rows span 2017-10-01 through 2026-09-25 UTC. The local run used exactly the same exported OHLCV history, frozen as `luxalgo-smc-confluence-native-bars-20260925.csv` (SHA-256 `33aeeb93cacf0bb1f0bb1ee262fe132041d650114f28682f5275068fd83a9568`), except that its final forming bar was captured earlier. The final bar was excluded from comparison. Every OHLC value in the preceding 3,281 bars matches.
+
+Reproduce from the repository root with the current-tree CLI:
+
+```powershell
+target\debug\pine-compat.exe run .local\community-coverage-20260923\luxalgo-smc-fvg-default-on-oracle-v5.pine --bars .local\community-coverage-20260923\luxalgo-smc-confluence-native-bars-20260925.csv --chart-symbol BINANCE:BTCUSDT --chart-timeframe 1D --chart-price-grid 1/100 > .local\community-coverage-20260923\luxalgo-smc-fvg-default-on-local-20260925.json
+python .local\community-coverage-20260923\compare_smc_fvg_native_20260925.py
+```
+
+The ignored receipt `luxalgo-smc-fvg-native-comparison-20260925.json` records source/data/result hashes and all ten plotted comparisons. **All 32,810 confirmed-bar probe positions match** the TradingView export with zero blank or numerical mismatches at `1e-8` absolute tolerance. The FVG probes contain 112 bullish and 79 bearish events; the remaining eight probes also match. The local run completes with zero diagnostics. This establishes the enabled same-chart-timeframe FVG event path and its empty-timeframe request behavior on this chart. It does not establish FVG box geometry, other timeframe selections, alert delivery, or realtime updates.
+
+The temporary chart and editor changes were discarded. Reopening the saved layout showed `COINBASE:BTCUSD` 1D, the original `Percent short market probe v6` strategy, no SMC indicator, and `All changes saved`.

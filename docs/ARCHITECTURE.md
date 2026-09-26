@@ -300,13 +300,19 @@ while `gaps_on` returns values only on the corresponding open or confirmation
 boundary. Chart bars before the first eligible requested value return `na`.
 Each provider evaluation receives a child request environment whose chart
 symbol/timeframe match the requested key; cache and callsite state remain
-isolated. Legacy missing-data errors add the original security call span, and
+isolated. Modern named `calc_bars_count` bounds requested history before
+expression execution; zero uses all available bars. Legacy missing-data errors add the original security call span, and
 v1/v2 historical lookahead emits one non-error warning per callsite.
-Lower-timeframe `request.security` alignment is intentionally not implemented
-in Phase F because it needs a separate rule for selecting intrabars inside each
-chart bar and bounded storage for multiple requested bars per chart bar. The
-array-returning `request.security_lower_tf` API remains unsupported until typed
-array return shapes and host JSON bindings are designed together. Phase F's
+Historical lower-timeframe `request.security` alignment now selects the first
+or last requested intrabar inside each chart bar according to lookahead. Forming
+updates use only explicitly received intrabars from the ordered request feed;
+without a current-period feed update, they fail explicitly. The
+array-returning `request.security_lower_tf` now supports historical scalar and
+scalar-tuple expressions from host-provided lower-or-equal-timeframe bars,
+returning ordered typed arrays and empty arrays where no intrabars exist.
+Named nonnegative `calc_bars_count` bounds the requested historical dataset before expression
+execution. Forming arrays use only explicitly received current-period intrabars
+from the ordered request feed. Other optional policies remain gated. Phase F's
 closed request boundary and maintenance tails are recorded in
 [`PHASE_F_AUDIT.md`](PHASE_F_AUDIT.md).
 

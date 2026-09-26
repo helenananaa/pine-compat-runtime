@@ -1,0 +1,15 @@
+# Ichimoku Kinko Hyo Strategy v4 compatibility check (2026-09-25)
+
+The public [Ichimoku Kinko Hyo Strategy](https://www.tradingview.com/script/E8317mg6-Ichimoku-Kinko-Hyo-Strategy/) by mdeous is a 148-line Pine v4 strategy. Its published MPL 2.0 source is retained as ignored local evidence, `mdeous-ichimoku-strategy-v4-20260925.pine` (SHA-256 `9D49A513A73850ED7F788FC2DFE6C1B431A506F3B9EF7637629424512EE68CFF`), and is not copied into tracked fixtures.
+
+The initial unmodified analysis reported three diagnostics: the v4 `strategy.close_all(when=...)` parameter was missing, and two `alertcondition()` messages used the unsupported `{{strategy.position_size}}` placeholder. The built-in signature and runtime now evaluate `when` before placing a close order; v6 rejects the removed parameter. Strategy alert messages render the current broker position size. A focused regression checks the v4 false/true order path, placeholder values before and after fills, and the v6 rejection. TradingView's [v6 migration guide](https://www.tradingview.com/pine-script-docs/migration-guides/to-pine-version-6/) confirms removal of `when` from `strategy.close_all()` in v6; its [strategy alert help](https://www.tradingview.com/support/solutions/43000481368-strategy-alerts/) defines `{{strategy.position_size}}`.
+
+The original strategy now analyzes with zero diagnostics and runs on all 4,282 retained confirmed `COINBASE:BTCUSD` daily bars. Its four plots and full strategy report were compared with TradingView at default inputs:
+
+- TradingView exported 300 daily chart rows. The last, forming September 25 row was excluded. Across the 299 confirmed rows, all available Tenkan (299), Chikou (274), SSA (274), and SSB (274) plot values match the full-history local run within `1e-8`: 1,121 values, zero mismatches. The three offset plots have blank export edges; the comparison accounts for their ±25-bar visual offsets.
+- Both engines report 20 closed trades. Entry and exit dates and prices agree for every trade. Quantities differ by at most `2.1991e-6` units, and per-trade net profit by at most `0.0712 USD` in the displayed native CSV; those are measured differences, not asserted rounding equivalence.
+- The original local run has zero runtime diagnostics. This check does not verify native alert delivery, alternate inputs, symbols/timeframes, intrabar behavior, or any global v4/v6 compatibility claim.
+
+Ignored evidence in `.local/community-coverage-20260923/` includes the source, full-run JSON, native trade CSV (SHA-256 `2BD8CF885573A00D799F12228380685C23C9E75D8B93E395E5E192C80012EBC2`), native chart CSV (SHA-256 `852130ECE8F90A152019B80B862E5BE7B7747BAFD7AFAA2C1C0C9732A399E096`), and `compare_mdeous_ichimoku.py`. Run the comparator to reproduce the alignment and measured differences.
+
+Verification completed with `cargo test -p pine-builtins -p pine-syntax -p pine-sema -p pine-runtime -p pine-cli --locked --quiet`, `cargo fmt --all -- --check`, and `git diff --check`. The ignored full test log is `mdeous-ichimoku-five-package-tests-20260925.log`.

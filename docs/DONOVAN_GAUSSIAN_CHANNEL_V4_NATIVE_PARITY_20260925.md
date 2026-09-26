@@ -1,0 +1,12 @@
+# DonovanWall Gaussian Channel Pine v4 native parity (2026-09-25)
+
+The original open-source [Gaussian Channel [DW]](https://www.tradingview.com/script/WpVY7GKW-Gaussian-Channel-DW/) declares Pine v4. Its Source code tab showed 9,547 boosts during this audit. The complete 147-line script was saved in ignored `.local/community-coverage-20260923/donovan-gaussian-channel-v4-20260925.pine` (SHA-256 `802509d99224e5d3748ef8ac1190573b3894f7887625489447c8cc8b0cdcace9`). Only HTML nonbreaking spaces were normalized; the source was not rewritten for the runtime.
+
+Initially, the original script produced 60 analysis diagnostics, starting with unknown `asin()`. Pine v3-v4 unqualified `asin`, `acos`, and `atan` now resolve through the existing `math` builtins. The original script then analyzed with zero diagnostics, but every output was `na`. Its coefficient uses `2 / N`, where `N = input(4)`. The previous runtime rule truncated this to zero. The native Gaussian filter output establishes that v4 input integer division is fractional: `2 / 4 = 0.5`. The corrected rule truncates two `const int` operands in v4-v5 and retains the existing older v1-v3 behavior. Focused version tests and a v4 fixture protect the boundary.
+
+The original study was added to a `COINBASE:BTCUSD` daily chart with published default inputs. TradingView's chart CSV was expanded to December 1, 2014 through September 25, 2026. The native export (SHA-256 `6e1482f9e5a9ff2125e9ca7c7e10b01d14031580c8bba7226e2bed4db0b2af04`) contains 4,283 rows; the September 25 row was still forming. The local run used the same 4,282 confirmed OHLCV bars through September 24. All matched OHLC values were identical.
+
+The ignored `compare_donovan_gaussian.py` script and `donovan-gaussian-comparison-v4-20260925.json` receipt compare every confirmed bar. Each of the three exported series, `Filter`, `Filtered True Range High Band`, and `Filtered True Range Low Band`, matched the native CSV at absolute tolerance `1e-8` over all 4,282 bars, including blank positions. The local original script had no analysis or runtime diagnostics.
+
+This comparison covers the default inputs and confirmed daily bars on one symbol. The chart CSV does not establish color, fill, or bar-color parity. Other input combinations, timeframes, and forming-bar updates remain unqualified by this receipt.
+The temporary study and date-range change were undone; the research layout was saved and both TradingView tabs closed.

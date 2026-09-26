@@ -675,7 +675,7 @@ The current executable subset has two forms:
   `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` evaluate
-  side-effect-free expressions over host-provided same-or-higher-timeframe bars.
+  side-effect-free expressions over host-provided requested-context bars.
   The supported provider expression subset includes direct OHLCV/time sources,
   pure arithmetic and ternaries, history references, `na`, `nz`, positional
   `time(timeframe)` calls, `barstate.islast`, selected
@@ -696,11 +696,10 @@ The current executable subset has two forms:
   directly, currently `ta.macd`, `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`,
   and `ta.vwap(source, anchor, stdev_mult)`. Other provider-backed tuple
   expressions remain unsupported.
-  Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
-  confirmed requested bars are visible, and missing requested bars forward-fill
-  the last confirmed value.
-  Explicit default merge options are accepted as metadata:
-  `gaps=barmerge.gaps_off` and `lookahead=barmerge.lookahead_off`.
+  Higher-timeframe alignment defaults to `gaps_off` and `lookahead_off`;
+  historical chart bars receive confirmed requested values and missing bars
+  forward-fill. Explicit `gaps_off`/`gaps_on` and
+  `lookahead_off`/`lookahead_on` policies are supported.
 
 Historical Pine v1-v4 `security` keeps its separate versioned gaps/lookahead
 policy and widens only that legacy path to simple symbol/resolution expressions
@@ -715,14 +714,26 @@ enclosing request exactly. Different selectors, control-flow-local requests,
 mutable or persistent aliases, cycles, recursion, and side effects remain
 rejected. This does not widen modern `request.security` source analysis.
 
-For modern `request.security`, lower timeframe requests, provider expression
-local variable aliases, UDF calls, stateful math calls such as `math.random`,
+For modern `request.security`, lower-timeframe historical requests select the
+last intrabar in each chart period with `lookahead_off`, or the first with
+`lookahead_on`. Missing periods forward-fill with `gaps_off` and return `na`
+with `gaps_on`. Forming lower-timeframe updates use only intrabars explicitly
+received through the ordered request feed for the current chart bar; without
+one, they fail explicitly. Stateful math calls such as `math.random`,
 `ta.tr` variable form,
 output/drawing side effects, input
-declarations, array mutation, non-default barmerge behavior, and non-default
-explicit gaps/lookahead remain unsupported.
-`request.security_lower_tf` is unsupported; it returns arrays in Pine and is not
-claimed until typed array return semantics and host output shapes are designed.
+declarations and array mutation remain unsupported.
+Named nonnegative simple-int `calc_bars_count` limits the requested context's
+historical bars before expression execution; zero uses all available bars.
+`request.security_lower_tf(symbol, timeframe, expression, calc_bars_count=...)` supports historical
+scalar and scalar-tuple expressions on host-provided lower-or-equal-timeframe
+bars and returns time-ordered typed intrabar arrays, or a tuple of those arrays.
+An interval without intrabars returns empty arrays. Nonnegative simple-int
+`calc_bars_count` limits requested history before expression evaluation; zero
+uses all available bars. Provider-backed forming updates use current-period
+intrabar updates from the ordered request feed and return arrays containing
+only values received so far. With no current-period update, the arrays are
+empty. Other optional policies and collection expressions remain unsupported.
 `timeframe.in_seconds()` and `timeframe.in_seconds("")` return `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through

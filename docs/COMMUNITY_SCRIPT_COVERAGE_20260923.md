@@ -9,6 +9,60 @@ source text and UI exports are retained only in ignored
 The published HTML's nonbreaking spaces were normalized to spaces for local
 Pine source files. No community source or TradingView market data is committed.
 
+Later compatibility work includes the implicit-v1 original
+[LazyBear Squeeze Momentum native comparison](LAZYBEAR_SQUEEZE_V1_NATIVE_PARITY_20260925.md):
+4,280 `COINBASE:BTCUSD` daily bars, both exported numerical plots aligned,
+and zero blank-position or numeric mismatches at `1e-8`.
+The implicit-v1
+[DMI Stochastic Extreme comparison](DMI_STOCHASTIC_EXTREME_V1_NATIVE_PARITY_20260925.md)
+also aligns five exported study columns over 4,280 daily bars after admitting
+function-local self-history and the observed legacy extreme-window warmup.
+The later [QQE MOD v6 comparison](QQE_MOD_V6_NATIVE_PARITY_20260925.md)
+admits the complete current public source and aligns its four exported
+numerical plots over 4,280 daily bars at default inputs.
+The implicit-v1 [original WaveTrend](LAZYBEAR_WAVETREND_V1_NATIVE_PARITY_20260925.md)
+and [WaveTrend with Crosses](WAVETREND_CROSSES_V1_NATIVE_PARITY_20260925.md)
+follow-ups align all eight and ten native plot series, respectively, over
+4,282 confirmed daily bars; chart CSV does not expose the latter's candle colors.
+The complete public v5 [Bollinger Bands Strategy](BOLLINGER_BANDS_STRATEGY_V5_NATIVE_PARITY_20260925.md)
+further aligns three plots across 4,282 confirmed bars and all 32 closed
+TradingView trades by direction, dates, and displayed prices at default inputs.
+The public v4 [RSI Mean Reversion Bot Strategy](RSI_MEAN_REVERSION_V4_NATIVE_PARITY_20260925.md)
+aligns nine plots across 4,282 confirmed bars and all 11 closed trades at
+default inputs, including displayed quantity at the chart's six-decimal precision.
+The original Pine v4 [KivancOzbilgic SuperTrend indicator and strategy](KIVANC_SUPERTREND_V4_NATIVE_PARITY_20260925.md)
+each align seven exported plot and signal fields over 4,282 confirmed daily
+bars. The strategy also aligns all 68 closed trades and its open long entry
+by direction, dates, prices, quantity, and exported PnL at default inputs.
+The original Pine v4 [DonovanWall Gaussian Channel](DONOVAN_GAUSSIAN_CHANNEL_V4_NATIVE_PARITY_20260925.md)
+aligns its filter and both channel bands over all 4,282 confirmed daily bars.
+Its native output exposed the v4 fractional division of an input integer and
+motivated the corrected version boundary.
+The current v6 [everget Chandelier Exit](EVERGET_CHANDELIER_EXIT_V6_NATIVE_PARITY_20260925.md)
+aligns both stop lines and all four buy/sell marker series over 4,282
+confirmed daily bars, including the positions and numerical levels of 65 buy
+and 65 sell signals.
+The current v6 [RSI Divergence—KT](RSI_DIVERGENCE_KT_V6_NATIVE_PARITY_20260925.md)
+revision aligns six native-exported plot columns over the same 4,282 confirmed
+bars, including its four five-bar offset divergence series.
+The public v5 [AlphaTrend](ALPHATREND_V5_NATIVE_PARITY_20260925.md) aligns
+both trend lines and BUY/SELL shape series over 4,282 confirmed bars in each
+of its default MFI and no-volume RSI calculation paths.
+Its public v5 [AlphaTrend Strategy](ALPHATREND_STRATEGY_V5_NATIVE_PARITY_20260925.md)
+also aligns two plots and all 98 closed trades, with one matching open entry,
+on the same confirmed daily chart history.
+The public v5 [Nadaraya-Watson rational quadratic kernel](NADARAYA_WATSON_RATIONAL_QUADRATIC_V5_NATIVE_PARITY_20260925.md)
+aligns its visible estimate exactly over 4,282 confirmed daily bars, including
+the 26 warmup blanks; the exported CSV omits its hidden alert stream.
+The public v5 [Nadaraya-Watson Envelope](NADARAYA_WATSON_ENVELOPE_V5_NATIVE_PARITY_20260925.md)
+with the exact `KernelFunctions/2` source aligns seven numerical plots over
+the same 4,282 bars; the four fill appearances remain outside CSV evidence.
+The public v5 [Heiken Ashi & Super Trend strategy](RINGSCHERRY_HEIKIN_ASHI_SUPERTREND_V5_NATIVE_PARITY_20260925.md)
+aligns all 67 closed native trades by direction, dates, signals, and displayed
+entry/exit prices on `COINBASE:BTCUSD` daily bars using an explicit host-provided
+Heikin Ashi request stream. Its fractional-tick exits and reversal-day relative
+brackets exposed broker-emulator gaps that now have focused regressions.
+
 ## Script selection and admission
 
 | Public script | Local source SHA-256 | Result at `f249b3db` | Local candidate |
@@ -18,7 +72,7 @@ Pine source files. No community source or TradingView market data is committed.
 | [3Commas Bot by Bjorgum](https://www.tradingview.com/script/MvlwAzSg-3Commas-Bot/), v5, 14.9K boosts | `07e2a14a43724bb3bae2df59a149360b1efc8c6b8c71a3c292e64b61fce76f1b` | Executable, zero diagnostics. | Executable, independently compared below. |
 | [Bjorgum Double Tap](https://www.tradingview.com/script/rLkjr2sQ-Bjorgum-Double-Tap/), v5, 8.9K boosts | `f45df214dbb49c70fd848f2f9998a59a0172fdd1f32398771fcebeb652f866cf` | Not executable: 109 diagnostics, including comma-separated typed declarations, multiline conditional parsing, and collection mutation inside user functions, with downstream unresolved names. Count includes repeated and cascading diagnostics. | Executable, zero diagnostics on the unmodified published source; default-input native comparison below. |
 
-The 14.7K-boost [Hull Suite Strategy](https://www.tradingview.com/script/Q9OQye4C-Hull-Suite-Strategy/) is Pine v4; it was inspected but not admitted to the selected v5/v6 product scope. Boost figures are the UI snapshot on September 23, not a stable popularity metric.
+The 14.7K-boost [Hull Suite Strategy](https://www.tradingview.com/script/Q9OQye4C-Hull-Suite-Strategy/) is Pine v4; it was outside this initial v5/v6 selection and was later qualified separately in the [v4 strategy audit](LEGACY_V4_STRATEGY_AUDIT_20260923.md). Boost figures are the UI snapshot on September 23, not a stable popularity metric.
 
 A further complete v6 candidate is [Session VWAP Profile & Candle Delta by BigBeluga](https://www.tradingview.com/script/36ik5Jpc-Session-VWAP-Profile-Candle-Delta-BigBeluga/), with 1,140 boosts in the September 23 UI snapshot. Its 440-line published source is frozen as `bigbeluga-session-vwap-profile-v6.pine` (SHA-256 `12ca8cfaa734fb2f55ebe28784958df05fa8a988481685d309f1fcf11bc654a0`). The original interpreter returned 66 diagnostics, many caused by rejection of `line[]` and `box[]` UDT field types. The parser now accepts array shorthand in UDT fields; `array.new_float` and `array.new_int` accept series lengths and evaluate those lengths on each call; `array.clear` can mutate a shared array inside a v5/v6 user function. UDT parameter field mutation now writes through the caller's object identity, and a UDT array can retain nested `line[]` and `box[]` fields. These behaviors have focused historical and realtime rollback regressions. `calc_bars_count` now restricts the initial complete batch before creating bar indices, history or state, and later appended bars extend that execution window. The unmodified published script runs without diagnostics on the frozen chart data.
 
@@ -95,6 +149,9 @@ values. Blank markers are compared as blank, not converted to zero.
 | Directional Kernel Filter / `BINANCE:BTCUSDT` | 3,324 confirmed daily bars | 23,268 numerical plot positions | 0 | Full published v6 source and default inputs; all exported OHLCV cells match runtime input |
 | Adaptive Decycler Supertrend / `BINANCE:BTCUSDT` | 3,089 native confirmed bars with 235 earlier runtime warmup bars | 33,979 positions at default settings and 33,979 with RMS envelope enabled | 0 in either setting | Nine plot fields and two signal fields; 35 long and 34 short signals; the enabled envelope gives 6,178 additional nonblank band values |
 | Volatility Reversion Scalper / `BINANCE:BTCUSDT` | 3,279 confirmed daily bars | 9,837 numerical plot positions; 3,279 signal positions; 25 closed trades | 0 plot, signal, and trade date/price/quantity/profit mismatches at `1e-8` | Complete published v6 source and default inputs; total profit 62,843.57 USDT in both engines |
+| SSL Channel Pro / `BINANCE:BTCUSDT`, 1h | 2,309 confirmed bars with 1,861 earlier warmup bars | 16,163 positions across five plots and two marker series | 0 blank or numeric mismatches | Complete published v6 source and default inputs; three unresolved alert-template diagnostics remain explicit |
+| SSL Channel Pro / `BINANCE:BTCUSDT`, 1h with 4h confirmation | 299 confirmed hourly bars with earlier warmup and native 4h provider bars | 2,093 positions across five plots and two marker series | 0 blank or numeric mismatches | Complete published v6 source; one BUY and two SELL markers; batch, incremental, and historical realtime results identical; see [4h receipt](SSL_PRO_NATIVE_PARITY_20260924.md) |
+| VWAP Reversal Strategy V1 / `BINANCE:BTCUSDT`, 1m | 26,124 confirmed bars | 26,124 daily VWAP and 26,060 stable-history H1 VWAP positions | 0 within these ranges | Complete published v6 source and default inputs; 37 native and local closed trades, with the six latest visible rows matching identity, time, displayed price, and size; 59 leading and four trailing H1 positions remain outside the matched window. See [native receipt](VWAP_REVERSAL_NATIVE_PARITY_20260925.md). |
 
 The first Nadaraya-Watson comparison used the earlier 3,324-bar input. It
 found 45 initial bars where the runtime bands had values and the native bands
@@ -110,6 +167,14 @@ it does not qualify the default repainting drawings or realtime behavior.
 The batch, incremental, and historical realtime JSON outputs are also equal
 on the same 3,279 confirmed bars. The native comparison receipt is
 `luxalgo-nwe-matched-history-comparison.json`.
+
+A later default-repainting measurement on `COINBASE:BTCUSD` 1D uses a
+local-only instrumented copy of the same public source. The measurement plots
+at lookback offsets 50, 100, 250, and 498 match native TradingView values;
+the original and instrumented local runs have exactly equal drawings and
+original plots. Values near the forming bar vary between two native exports,
+and native line coordinates remain unavailable. The evidence and limits are
+in [the repainting measurement](LUXALGO_NWE_REPAINT_MEASUREMENT_20260925.md).
 
 ## Additional community candidates under qualification
 
@@ -178,14 +243,23 @@ The source selects a USD strategy account on a USDT-priced chart; the local
 run explicitly supplies USD chart-currency compatibility to exercise the
 runtime, so its trades and accounting are not native parity evidence. The
 hourly series is also locally aggregated, not a native TradingView H1 export.
-No native plot or trade comparison is claimed, and the candidate remains
-outside the independently admitted table. The builtins, syntax, semantic,
+At this September 23 stage, no native plot or trade comparison was claimed,
+and the candidate remained outside the independently admitted table. The builtins, syntax, semantic,
 runtime, and CLI package suites, formatting, and diff checks passed after the
-variable admission. [EMA200 REGIME + BOS/CHoCH + 2x FVG Strategy](https://www.tradingview.com/script/x3kpQqJ5/)
+variable admission. The later [September 25 native comparison](VWAP_REVERSAL_NATIVE_PARITY_20260925.md)
+supersedes that initial unverified status for the stated stable-history plot
+window and six visible trades. The incomplete higher-timeframe edges, exact
+profit accounting, and realtime ticks remain unverified.
+
+[EMA200 REGIME + BOS/CHoCH + 2x FVG Strategy](https://www.tradingview.com/script/x3kpQqJ5/)
 is a complete 3,194-line v6 source (68 boosts) frozen with SHA-256
 `054a24513560e7ae34640653da764fda02815fa80d6997fc8b6adf5ee935df69`
 and analyzes with zero diagnostics. Its declaration enables bar magnifier,
-so native fill qualification needs lower-timeframe input and is pending.
+so native fill qualification needs lower-timeframe input. A later
+[default-input COINBASE:BTCUSD daily native comparison](EMA200_BOS_FVG_V6_NATIVE_TRADES_20260925.md)
+matches all four exported closed trades by direction, date, entry and exit
+price, size, and PnL. The local run explicitly reports standard-OHLC fallback
+on every bar, so general bar magnifier behavior remains unqualified.
 
 [Directional Kernel Filter by BackQuant](https://www.tradingview.com/script/5AnxLyjj-Directional-Kernel-Filter-BackQuant/)
 is a complete public v6 indicator with 424 boosts in the September 23
@@ -249,15 +323,31 @@ frozen. The [MLExtensions](https://www.tradingview.com/script/ia5ozyMF-MLExtensi
 page exposes `/3`, whereas the indicator imports `/2`. The frozen `/3` text
 is a diagnostic proxy, **not** a verified copy of `/2`.
 
-Using those two frozen library files, the complete indicator now has three
-static errors, all in MLExtensions exports: `getColorShades` (array mutation
-inside a loop), `init_table`, and `update_table` (table creation/mutation).
-It remains unadmitted. This candidate fixed two false restrictions with
-focused tests: a v6 root may import v5 libraries, and a pure exported loop
-is not inherently a side effect. Scalar array fields in UDTs now type check
-and a runtime test proves construction, field access, and mutation. The
-remaining library side effects need narrower proof; there is no native output
-parity claim for this indicator.
+Using those two frozen library files, the complete indicator now passes
+static analysis with `executable=true` and zero diagnostics. Exported
+functions may fill their own newly allocated arrays inside a stable `for`
+loop; ownership tests still reject parameter arrays, aliases, and rebinding.
+The library checker also accepts `table.*` drawing calls in exports, while
+still rejecting nested `plot()` calls. These are consistent with the
+[official library constraints](https://www.tradingview.com/pine-script-docs/concepts/libraries/)
+and the interpreter's existing table runtime. A 300-bar BTCUSDT 1h smoke run
+with the `/3` proxy produced two plots, four plot-shape series, 300 labels,
+one table, and 36 alerts with no runtime diagnostics. Batch and incremental
+JSON outputs have the same SHA-256
+`5ca1e55a9bce77002a31112b5c1af256e014ee4f013ab74c35309d8aaaec9ae`.
+The ignored `.local/community-coverage-20260923/lorentzian-proxy-smoke*.json`
+files retain this local evidence. At this smoke-test stage, the actual
+imported `MLExtensions/2` source and TradingView chart output were unverified,
+so it did not establish exact-library execution or native plot parity.
+
+A subsequent native `BINANCE:BTCUSDT` 1h export verified the kernel estimate
+on all 2,349 closed chart bars after adding 200 preceding bars for warmup.
+The final forming bar differed by about `0.000912` USDT; Buy/Sell still had
+11 signal-cell mismatches in the 2,350-bar export. A later 1,000-hour prefix
+experiment reduced this to four, while a 1,500-hour prefix increased it to
+13; the native hidden history and exact `/2` library source remain unverified.
+Full native parity is still open. See
+[Lorentzian native audit](LORENTZIAN_NATIVE_AUDIT_20260924.md).
 
 [TrendLock: Multi-Timeframe Supertrend Donchian Breakout by blitz_locked](https://www.tradingview.com/script/FDeprmix-TrendLock-Multi-Timeframe-Supertrend-Donchian-Breakout/)
 is another complete public v6 strategy, with 132 boosts in the September 23
@@ -276,17 +366,52 @@ The cross-component `cargo test -p pine-syntax -p pine-sema -p pine-runtime
 The exact public [TradingView `ta` v14 library](https://www.tradingview.com/script/BICzyhq0-ta/)
 was frozen as `tradingview-ta-v14.pine` (SHA-256
 `8f8c503618bf213e5b0378f0559a4fe1b6e1a94af4a6f5810b7675dfda88d07c`).
-With that source supplied, the TrendLock analysis has one remaining
-diagnostic: `ta` v14 imports `TradingView/RelativeValue/3`. The public
-[RelativeValue page](https://www.tradingview.com/script/cZnSLls2-RelativeValue/)
-currently displays v4. Exact v3 source has not yet been obtained. The
-public release notes identify v3 as the Pine v6 upgrade and v4 as a later
-release with documentation and example-code changes, but those notes do not
-establish source identity. The candidate is therefore not executable in this
-interpreter, and no native
-output agreement is claimed. The publication's native strategy report does
-load and displays 106 trades on its preview chart; this establishes native
-execution of the published source, not local parity.
+The public [RelativeValue page](https://www.tradingview.com/script/cZnSLls2-RelativeValue/)
+currently displays v4, but the unmodified v3 source was already retained as
+`.local/delivery-20260909/RelativeValue-v3.pine` with SHA-256
+`11850708783161673a00173f222a8aa823bf2aec2788c0af98c41bdd8afe4a0f`;
+the same hash is recorded in the earlier TechnicalRating/3 library-chain
+reference manifest. With that exact v3 source and `ta` v14 supplied, the
+complete TrendLock source analyzes with `executable=true` and zero
+diagnostics. A local `BINANCE:BTCUSDT` 1h smoke test over 2,985 bars, with
+747 synthetic UTC 4h provider buckets, produced 3 plots, 2 shape series,
+91 orders, and 49 closed trades with no runtime diagnostics. Batch and
+incremental output JSON hashes match at
+`9b82605541aa2e8d08c8584627b8b5e0190ccb276fa39be0c432f6440a21e411`.
+The script and provider evidence are retained in the ignored
+`.local/community-coverage-20260923/trendlock-*` files. The TradingView
+publication's preview is `COINBASE:ETHUSD` 1D and its report shows 106
+trades (59 profitable), so it cannot be compared to this BTCUSDT 1h smoke
+run. The subsequent same-symbol, extended-history comparison is documented
+in [TrendLock native parity](TRENDLOCK_NATIVE_PARITY_20260924.md).
+
+A same-symbol native comparison was then captured by inserting the published
+script into the `BINANCE:BTCUSDT` 1h chart. TradingView exported chart CSV
+`I:\sys\下载\BINANCE_BTCUSDT, 60 (1).csv` (SHA-256
+`49bd5fdc49d75a87c4d52f8c8113e355e5e4af468d7a46a57b7b46c4ad06206d`)
+and strategy trades CSV `I:\sys\下载\STDB_BINANCE_BTCUSDT_2026-09-24.csv`
+(SHA-256 `144028ea4c93b13ac17796de6cbe01ad650e572ac5340079e27c43c826051280`).
+Across 1,109 overlapping hourly bars, `Supertrend`, `Donchian Upper`,
+`Donchian Lower`, `Long Entry`, and `Short Entry` all match at every bar.
+The first 1,108 OHLC bars match too; the last local bar had a different close
+because its prior export captured that hour while it was still forming.
+The comparison receipt is
+`.local/community-coverage-20260923/trendlock-native-local-plot-comparison.json`.
+
+The initial April-to-August local history produced partial trade agreement
+because it omitted the earlier position and equity path. Extending the local
+BTCUSDT hourly input to January 2024 with SHA-256-verified Binance monthly
+archives, and fixing previous-pass position history plus same-bar close exit
+fills, yielded **420/420 native closed trades in the local data window with
+matching entry and exit times and prices**. Supplying the BTCUSDT quantity
+precision of five decimal places and reserving the percentage entry commission
+now also matches all 420 entry quantities exactly. The full native report has
+452 trades through September 2026; the local history ends in August. All 420
+net PnLs and calculated commissions match the native export to its displayed
+two-decimal precision; exact internal-ledger equality is not established. The comparison receipt is
+`.local/community-coverage-20260923/trendlock-long-history-trade-comparison.json`.
+The temporary script insertion was undone and the original TradingView layout
+saved.
 
 [Modern Ichimoku Cloud by GBB](https://www.tradingview.com/script/jJAqvJP5-Modern-Ichimoku-Cloud-GBB/)
 is a complete public v6 indicator from the open-source popularity listing
@@ -312,9 +437,18 @@ all 36 alerts containing `grade` match the `Grade` plot at the alert bar.
 The hashes, counts, and comparison outcome are frozen in
 `.local/community-coverage-20260923/gbb-modern-ichimoku-local-smoke-receipt.json`.
 The 4D aggregation is a local smoke-test fixture, not a TradingView export;
-native plot, alert, and drawing parity remain unverified. After the named-plot
+at this stage native plot, alert, and drawing parity were unverified. After the named-plot
 change, the builtins, syntax, semantic, runtime, and CLI test suites passed;
 the missing-title failure path passed a separate focused runtime test.
+
+A subsequent native `BINANCE:BTCUSDT` 1D chart export was compared against
+the full-source local run. All 24 exported study columns (16 plots and eight
+shape series) match on the comparable rows of 2,281 overlapping daily bars,
+after applying the three Ichimoku display offsets. Two Chikou cells require
+local data beyond its end and were excluded. Batch, incremental, and
+historical realtime outputs have identical JSON hashes. The chart CSV does
+not expose alerts or drawing objects; those remain unverified. See
+[Modern Ichimoku native parity](MODERN_ICHIMOKU_NATIVE_PARITY_20260924.md).
 
 [SSL Channel Pro by TradingFinder](https://www.tradingview.com/script/PERIWBXb-SSL-Channel-Pro-TradingFinder-Semaphore-Signal-Level-Indicator/)
 is a complete public v6 indicator with 283 boosts in the same listing. Its
@@ -337,9 +471,10 @@ therefore suppresses those alert events and reports three distinct
 execution. Hashes, input selection, and counts are in
 `.local/community-coverage-20260923/tradingfinder-ssl-local-smoke-receipt.json`.
 The 60m series is a local aggregation, and no native TradingView SSL output
-has been exported for this chart and input pair. Native plot, marker, label,
-and alert parity remain unverified, so the candidate is not yet admitted to
-the independent native comparison table. The builtins, syntax, semantic,
+had been exported for that 1m chart and input pair. A later independent
+[1h default-input comparison](SSL_PRO_NATIVE_PARITY_20260924.md) matches all
+16,163 exported plot and marker positions on 2,309 confirmed hours. Native
+label text and alert firing remain unverified. The builtins, syntax, semantic,
 runtime, and CLI package suites passed after the request and alert changes;
 an additional focused test confirms an unsupported call in a different
 `switch` arm is still rejected.
@@ -480,6 +615,27 @@ the probed internal-state/event agreement for default inputs on this data,
 not pixel-level drawing, alert delivery, other inputs, or realtime parity.
 The comparison receipt is `luxalgo-smc-oracle-comparison.json`.
 
+The separate nondefault `Confluence Filter=true` run is recorded in
+`SMC_CONFLUENCE_NATIVE_PARITY_20260925.md`. On 3,282 native daily OHLCV bars,
+all eight instrumented plots match the TradingView export at every position.
+The setting changes 26 bullish and 7 bearish internal BOS events compared
+with the local default-input run. This extends the SMC evidence to one
+meaningful alternate input, while drawings and live alerts remain untested.
+
+The separate [FVG and empty-timeframe receipt](SMC_FVG_EMPTY_TIMEFRAME_NATIVE_PARITY_20260925.md)
+records a runtime fix for `request.security(..., input.timeframe(""), ...)` on
+a nondefault 1D chart. With FVG enabled, ten instrumented plots match all
+3,281 confirmed native bars, including 112 bullish and 79 bearish FVG events.
+The native test uses a private diagnostic copy with only the FVG input default
+changed and two FVG event plots appended; it does not qualify FVG box geometry.
+
+The [weekly FVG receipt](SMC_WEEKLY_FVG_NATIVE_PARITY_20260925.md) extends this
+to a `1W` request on the 1D chart. With a host weekly stream aggregated from
+the exact native daily export window, all ten SMC probes and nine additional
+request/threshold diagnostics match 3,281 confirmed bars. An initial single
+FVG mismatch used a full earlier week where the native study saw only one
+day of its first week; the receipt preserves both inputs and that boundary.
+
 Double Tap's plot equality is weak evidence because all 6,648 selected plot
 positions are blank. The native strategy export has three closed short trades
 and one open long entry; all seven entry/exit event dates and directions match
@@ -589,6 +745,29 @@ cross-currency quantity/PnL parity. This boundary is documented in
 
 ## Reproduction and next admission targets
 
+The separate [UT Bot Alerts v4 native comparison](UT_BOT_ALERTS_V4_NATIVE_PARITY_20260924.md)
+admits QuantNomad's complete 42-line public script with zero diagnostics.
+Its default 128 Buy and 127 Sell markers match TradingView at every bar in a
+2,350-hour `BINANCE:BTCUSDT` 1h export. With its Heikin Ashi option enabled,
+all 92 Buy and 91 Sell markers match across a separate 2,351-hour export using
+host-supplied Heikin Ashi bars. Batch, incremental, and historical realtime
+JSON outputs are identical on both paths. Alert delivery and bar colors remain
+outside these native comparisons.
+
+The [Supertrend ATR with Trailing Stop Loss v4 audit](LEGACY_V4_SUPERTREND_ATR_AUDIT_20260924.md)
+freezes a second popular v4 source and native daily trades. The complete
+duplicate-`transp` normalized copy now runs with zero diagnostics on
+`COINBASE:BTCUSD`: with host quantity precision six, 127 closed trades match
+native entry/exit dates, prices, and displayed quantities exactly. The open
+128th entry quantity also matches. Closed cumulative PnL is `8,575.373808`
+USD locally versus `8,575.37` displayed natively; 126 of 127 individual
+net PnLs agree within half a cent, and one differs by `0.00500176` USD. The
+original published source remains distinct; the current TradingView editor
+rejects its duplicate named arguments. Exact internal-ledger parity remains
+unproven. A separate [v6 short market order audit](PERCENT_EQUITY_SHORT_ORDER_NATIVE_AUDIT_20260925.md)
+checks the same-bar percentage-of-equity sizing rule against a visible native
+strategy report, with v1–v6 repository regressions.
+
 The ignored local directory contains source files, original UI exports, CLI
 JSON, diagnostic reports, `build_full_daily.py`, `build_double_tap_daily.py`,
 `compare_trendlines.py`, `compare_3commas.py`, `compare_3commas_trades.py`,
@@ -641,10 +820,33 @@ and 2,247 semantic fixture tests. The realtime array-loop fixtures now use
 finite growth, which exercises the documented updated-size behavior without
 creating an unbounded loop. `cargo fmt --all -- --check` and `git diff --check`
 also passed on the local candidate.
+
+DevLucem's public Pine v5 ZigZag++ and its exact public ZigLib/1 import now
+analyze and run with default inputs. The runtime gained `chart.point.copy()`
+method resolution and corrected the non-positive signs of
+`ta.highestbars()`/`ta.lowestbars()` offsets. On the 300-bar Coinbase daily
+TradingView export, the original script's direction agrees on 296 bars; the
+four differences occur only at the beginning of the truncated local history.
+See `docs/ZIGZAG_PLUS_V5_NATIVE_PARITY_20260925.md` for sources, evidence,
+verification scope, and limits.
 The rebuilt CLI's full 4,280-bar Coinbase 3Commas Bot result was previously
 JSON-equivalent to the cash-sizing candidate
 (`bjorgum-3commas-btcusd-admission-candidate-run.json` versus
 `bjorgum-3commas-btcusd-fixed-run.json`).
+The ZigZag++ original and exact library were also rerun with the full 4,282-bar
+history: all 299 confirmed bars in its native export now match the local
+direction series, including the four positions that needed earlier history.
+
+The public Pine v5 SSL Hybrid Strategy now runs with zero diagnostics on
+4,282 confirmed Coinbase daily bars. All eight exported plot columns match
+the native default run; its 475 closed trades and five open entries align in
+count and closed-trade entry ID/date/price, with all 475 exit prices exact and
+at most two cents of PnL difference. The repaired behaviors are v5 commission
+spelling, integer-division extreme lengths, per-entry full exit replacement,
+bracket preservation across reversal, and tick snapping by the new entry's
+direction. See
+`docs/SSL_HYBRID_STRATEGY_V5_NATIVE_PARITY_20260925.md` for the source,
+quantitative limits, and reproduction commands.
 
 The next high-impact work is broader SMC drawing and setting comparisons,
 default repainting
@@ -652,3 +854,37 @@ Nadaraya-Watson drawing comparison, additional complete v5/v6 community scripts,
 and longer-history table resource checks. No compatibility
 claim is made for v4 scripts, unverified visual drawings, forming ticks,
 untested settings, or a distributable artifact.
+
+LuxAlgo's complete public Pine v5 Order Blocks & Breaker Blocks source now analyzes
+and runs on 4,282 confirmed Coinbase daily bars. Supporting typed receivers with
+untyped later method parameters, `color` user-method receivers, and UDT identities
+through function-returned tuple destructuring removed the original diagnostics.
+A local-only six-plot probe matched TradingView's export on all 299 confirmed
+overlapping bars (1,794 values, zero mismatches). The original local run ended
+with 9 boxes and 18 lines; native drawing geometry is not present in the chart
+CSV and is not claimed as verified. See
+`docs/LUXALGO_ORDER_BLOCKS_BREAKER_V5_NATIVE_PARITY_20260925.md`.
+
+The complete public Pine v4 Ichimoku Kinko Hyo Strategy by mdeous now analyzes
+and runs without diagnostics. This exposed legacy `strategy.close_all(when=...)`
+and a strategy-position alert placeholder. On 299 confirmed Coinbase daily chart
+rows, all 1,121 available values across four offset-aware plots agree with
+TradingView. The full native report and local run each have 20 closed trades with
+identical entry/exit dates and prices; maximum measured quantity and profit
+differences are `2.1991e-6` units and `0.0712 USD`. See
+`docs/MDEOUS_ICHIMOKU_STRATEGY_V4_NATIVE_PARITY_20260925.md`.
+
+HPotter's complete public Pine v2 FX Sniper T3-CCI strategy now analyzes and
+runs without diagnostics. A v1/v2 declaration-graph fix propagates recursive
+types through `iff()` and `nz()`. On the full 4,282-bar Coinbase daily run,
+all 598 plot values in the 299 confirmed-bar TradingView export agree; all
+311 closed trades match native entry/exit dates, prices, quantities, signals,
+and profits. The related v2 SuperTrend Oscillator first exposed a
+`min()`/`max()` self-reference inference gap and then three recursive
+higher-timeframe `security()` admission gaps. Its unchanged source now
+analyzes and executes. At default settings, all 1,495 plot cells across 299
+confirmed Coinbase daily bars match the TradingView chart export. The optional
+monthly request setting executes with host-provided monthly bars but has not
+yet received a native numeric comparison. See
+`docs/HPOTTER_T3_CCI_V2_NATIVE_PARITY_20260925.md` and
+`docs/J1O9SB_SUPERTREND_OSCILLATOR_V2_REQUEST_ADMISSION_20260925.md`.

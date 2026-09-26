@@ -352,9 +352,10 @@ feature. Important current boundaries include:
 - Pine v4/v3 legacy-indicator profiles are previews and Pine v2/v1 profiles are
   experimental because the authorized release corpus is small and has no
   external reference-output oracle;
-- legacy strategies, lower-timeframe legacy `security`, and non-empty or
-  dynamic whole-program `study(resolution=...)` execution remain out of scope;
-  the exact Pine v4 `resolution=""` form inherits the host chart context;
+- Pine v1-v4 strategies have measured partial compatibility slices;
+  lower-timeframe legacy `security`, and non-empty or dynamic
+  whole-program `study(resolution=...)` execution remain out of scope; the
+  exact Pine v4 `resolution=""` form inherits the host chart context;
 - unsupported syntax or semantics are rejected with diagnostics rather than
   guessed.
 

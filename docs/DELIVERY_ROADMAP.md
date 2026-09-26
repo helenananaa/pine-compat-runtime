@@ -2,6 +2,16 @@
 
 Updated 2026-09-23. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
+The [September 26 indicator/strategy expansion](EXPANDED_INDICATOR_STRATEGY_NATIVE_PARITY_20260926.md)
+adds four unchanged public sources, five scenarios, and scoped native agreement
+for 334 closed trades plus one open position. It repairs explicit quantity-grid
+truncation and verifies ten historical execution-mode comparisons, without
+extending native live-tick or distribution qualification.
+The [September 26 profile indicator slice](POPULAR_PROFILE_V6_NATIVE_PARITY_20260926.md)
+repairs function-returned drawing styles, skipped-call history and nested-call
+history offsets. Two unchanged popular v6 indicators match 59,962 native state
+cells on confirmed daily bars. This is local source evidence and does not update
+the distribution receipts or native visual/realtime qualification below.
 The [September 23 complete-script expansion](SCRIPT_COVERAGE_20260923.md)
 adds three unchanged v6 built-in indicators and 4,486 independently compared
 native plot positions at `f249b3db` on local CLI artifacts. It does not update

@@ -348,7 +348,7 @@ impl<'a> HistoricalRuntime<'a> {
             requirement.series_id == series_id
                 && (requirement.max_constant_offset > 0 || requirement.has_dynamic_offsets)
         });
-        if requires_history && !self.program.execution_scoped_series.contains(&series_id) {
+        if requires_history {
             self.active_series.insert(series_id);
         }
     }
@@ -377,10 +377,13 @@ impl<'a> HistoricalRuntime<'a> {
         let series_ids = self.series_ids_to_commit();
         for series_id in series_ids {
             let max_depth = self.series_retention.max_depth_for(series_id);
-            let value = self
-                .current_series
-                .remove(&series_id)
-                .unwrap_or(PineValue::Na);
+            let value = self.current_series.remove(&series_id).unwrap_or_else(|| {
+                if self.program.execution_scoped_series.contains(&series_id) {
+                    self.series_store.read(series_id, 1)
+                } else {
+                    PineValue::Na
+                }
+            });
             let value = if matches!(max_depth, Some(0)) {
                 value
             } else {

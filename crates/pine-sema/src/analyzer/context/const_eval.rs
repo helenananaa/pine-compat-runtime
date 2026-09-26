@@ -1,4 +1,5 @@
 use super::*;
+use crate::analyzer::functions::resolve_udf_arg_indices;
 use crate::constant_values::{ConstValue, eval_pure_const_call, exact_i64_from_numeric};
 use crate::legacy::PineDialect;
 mod tuple_projection;
@@ -9,6 +10,7 @@ const MAX_STRING_VALUE_DOMAIN_VALUES: usize = 64;
 #[derive(Default)]
 struct StringValueDomainEnv {
     symbol_visiting: Vec<SymbolId>,
+    function_visiting: Vec<String>,
 }
 
 impl Analyzer {
@@ -651,8 +653,8 @@ impl Analyzer {
     /// Returns every string that a drawing-enum expression can produce when
     /// its domain is statically provable and bounded. Unlike constant folding,
     /// this deliberately follows immutable initializers and joins dynamic
-    /// branches. Calls are fail-closed except for string inputs whose explicit
-    /// `options` tuple bounds every possible runtime value.
+    /// branches. String inputs need explicit options; user functions must have
+    /// bounded return branches independent of their parameters and locals.
     pub(crate) fn known_string_value_domain(
         &self,
         expr: &pine_syntax::Expr,
@@ -669,12 +671,24 @@ impl Analyzer {
         if depth > MAX_STRING_VALUE_DOMAIN_DEPTH {
             return None;
         }
-        if let Some(value) = self.known_const_string_value(expr) {
+        let expr = expr.without_groups();
+        // A function body is inspected outside its invocation's lexical scope.
+        // Do not reuse caller constants or bindings from another invocation to
+        // narrow its result. Join every return branch instead.
+        let constant = if env.function_visiting.is_empty() {
+            self.known_const_string_value(expr)
+        } else {
+            const_string_value(expr)
+        };
+        if let Some(value) = constant {
             return Some(vec![value]);
         }
 
         match &expr.kind {
             pine_syntax::ExprKind::Identifier(name) => {
+                if !env.function_visiting.is_empty() {
+                    return None;
+                }
                 let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if env.symbol_visiting.contains(&symbol.id)
                     || self.request_reassigned_names.contains(name)
@@ -715,11 +729,45 @@ impl Analyzer {
             pine_syntax::ExprKind::Switch { selector, arms } => {
                 self.known_string_value_domain_switch(selector.as_deref(), arms, env, depth + 1)
             }
-            pine_syntax::ExprKind::Call { callee, args } => {
-                self.known_string_input_value_domain(callee, args, env, depth + 1)
-            }
+            pine_syntax::ExprKind::Call { callee, args } => self
+                .known_string_input_value_domain(callee, args, env, depth + 1)
+                .or_else(|| self.known_function_string_value_domain(callee, args, env, depth + 1)),
             _ => None,
         }
+    }
+
+    fn known_function_string_value_domain(
+        &self,
+        callee: &pine_syntax::Expr,
+        args: &[pine_syntax::CallArg],
+        env: &mut StringValueDomainEnv,
+        depth: u32,
+    ) -> Option<Vec<String>> {
+        let name = const_call_name(callee)?;
+        if env.function_visiting.contains(&name) {
+            return None;
+        }
+        let function = self.functions.get(&name)?;
+        // Without invocation-specific type information, an overload cannot be
+        // selected safely. Leave it unsupported rather than prove the wrong body.
+        if !function.overloads.is_empty() {
+            return None;
+        }
+        let completed_args = function.complete_args(args, callee.span).ok()?;
+        resolve_udf_arg_indices(&function.params, &completed_args).ok()?;
+        env.function_visiting.push(name);
+        let domain = self.with_source_context_ref(function.source_context_id, |analyzer| {
+            match &function.body {
+                pine_syntax::FunctionBody::Expr(expr) => {
+                    analyzer.known_string_value_domain_inner(expr, env, depth)
+                }
+                pine_syntax::FunctionBody::Block(statements) => {
+                    analyzer.known_string_value_domain_branch(statements, env, depth)
+                }
+            }
+        });
+        env.function_visiting.pop();
+        domain
     }
 
     fn known_string_value_domain_branch(
@@ -728,10 +776,21 @@ impl Analyzer {
         env: &mut StringValueDomainEnv,
         depth: u32,
     ) -> Option<Vec<String>> {
+        if depth > MAX_STRING_VALUE_DOMAIN_DEPTH {
+            return None;
+        }
         match &statements.last()?.kind {
             pine_syntax::StmtKind::Expr(expr) => {
                 self.known_string_value_domain_inner(expr, env, depth)
             }
+            pine_syntax::StmtKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => merge_string_value_domains(
+                self.known_string_value_domain_branch(then_branch, env, depth + 1)?,
+                self.known_string_value_domain_branch(else_branch, env, depth + 1)?,
+            ),
             _ => None,
         }
     }

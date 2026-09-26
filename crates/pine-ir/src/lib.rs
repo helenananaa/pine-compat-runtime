@@ -72,8 +72,8 @@ pub struct HirProgram {
     pub series_max_bars_back: Vec<HirSeriesMaxBarsBack>,
     pub history: HirHistoryRequirements,
     pub series_history: Vec<HirSeriesHistoryRequirement>,
-    /// Series created while inlining a UDF/method. Their history advances only
-    /// when that inline body executes, not once per chart bar.
+    /// Series used while inlining a UDF/method. After their first evaluation,
+    /// history advances per chart bar, carrying the last value on skipped bars.
     pub execution_scoped_series: Vec<SeriesId>,
 }
 

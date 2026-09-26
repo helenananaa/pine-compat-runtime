@@ -198,6 +198,59 @@ plot(close, style=style)
 }
 
 #[test]
+fn drawing_enum_domain_follows_bounded_function_returns() {
+    let analysis = analyze(
+        r#"styleFor(string s) => s == "Dotted" ? line.style_dotted : s == "Dashed" ? line.style_dashed : line.style_solid
+wrapped(string s) => styleFor(s)
+extendFor(bool enabled) =>
+    if enabled
+        extend.right
+    else
+        extend.none
+labelFor(int i) =>
+    switch i
+        0 => label.style_circle
+        => label.style_cross
+choice = input.string("Solid", options=["Solid", "Dotted", "Dashed"])
+id = line.new(bar_index, low, bar_index, high)
+line.set_style(id, wrapped(choice))
+line.set_extend(id, extendFor(close > open))
+lbl = label.new(bar_index, high)
+label.set_style(lbl, labelFor(bar_index))
+plot(close)
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn drawing_enum_domain_does_not_prove_invalid_or_unbounded_function_returns() {
+    for helper in [
+        "styleFor(string s) => s == \"Solid\" ? line.style_solid : \"invalid\"",
+        "styleFor(string s) => s",
+        "styleFor(string s) =>\n    switch s\n        \"Solid\" => line.style_solid",
+    ] {
+        let analysis = analyze(&format!(
+            "s = line.style_solid\n{helper}\nchoice = input.string(\"Solid\")\nid = line.new(bar_index, low, bar_index, high)\nline.set_style(id, styleFor(choice))\nplot(close)\n"
+        ));
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|d| d.code == "E_CALL_ARG_VALUE"),
+            "{helper}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+}
+
+#[test]
 fn accepts_dynamic_plotshape_and_hline_style_enum_domain() {
     let analysis = analyze(
         r#"shapeStyle = bar_index % 2 == 0 ? shape.circle : shape.cross

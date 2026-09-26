@@ -25,6 +25,29 @@ pub(crate) fn quantity_on_chart_grid(qty: f64, quantity_scale: Option<u32>) -> f
     })
 }
 
+pub(crate) fn explicit_quantity_on_chart_grid(qty: f64, quantity_scale: Option<u32>) -> f64 {
+    let Some(scale) = quantity_scale else {
+        return qty;
+    };
+    // Native explicit orders truncate the shortest decimal representation.
+    // Multiplying by the scale first can round a value just below a contract
+    // boundary up to that boundary (e.g. 488565 * 0.000001). Conversely, an
+    // already aligned decimal such as 0.129515 must not lose one contract.
+    // ChartContext guarantees a power-of-ten scale. Display uses ordinary
+    // decimal notation, including for very small and very large finite values.
+    let decimal = qty.to_string();
+    let Some(point) = decimal.find('.') else {
+        return qty;
+    };
+    let precision = scale.ilog10() as usize;
+    let end = if precision == 0 {
+        point
+    } else {
+        (point + 1 + precision).min(decimal.len())
+    };
+    decimal[..end].parse().expect("truncated finite quantity")
+}
+
 pub use broker::BrokerState;
 pub(crate) use broker::PendingCloseQuantity;
 pub(crate) use broker::{EntryPathTick, PathEventOutcome};

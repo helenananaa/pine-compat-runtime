@@ -33,6 +33,21 @@
 
 ## Unreleased
 
+- Explicit `strategy.entry` and `strategy.order` quantities honor host-configured
+  decimal contract precision without binary scaling boundary errors. Raw invalid
+  quantities are validated first; unspecified precision and default sizing retain
+  their existing behavior. The [native indicator/strategy expansion](EXPANDED_INDICATOR_STRATEGY_NATIVE_PARITY_20260926.md)
+  qualifies four complete v6 sources and five historical parameter scenarios,
+  including 334 closed trades and one open position, within stated tolerances.
+
+- The [September 26 native profile comparison](POPULAR_PROFILE_V6_NATIVE_PARITY_20260926.md)
+  repairs bounded drawing-style helper returns, history carried across skipped
+  UDF evaluations, and call-specific nested history offsets (including legacy
+  `offset()`). The native v4/v6 gap controls supersede the earlier claim below
+  that UDF history advances only on evaluated calls. BigBeluga and Zeiierman
+  complete v6 indicators match 59,962 exported state values over 4,283 confirmed
+  daily bars each. Visual and packaged-distribution qualification remain separate.
+
 - Pending realtime market entries and closes use a newly expanded high or low
   when exactly one side of the same bar's range expands. Unchanged extremes
   use the current close. This does not add script executions or alter historical

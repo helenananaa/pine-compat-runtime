@@ -1,5 +1,18 @@
 # TradingView community script qualification, 2026-09-23
 
+The [expanded September 26 indicator/strategy comparison](EXPANDED_INDICATOR_STRATEGY_NATIVE_PARITY_20260926.md)
+adds four complete v6 sources and five parameter scenarios: 154,180 exported
+chart cells and 334 closed trades plus one open position pass scoped native
+comparisons. Explicit entry/order quantities now honor the configured decimal
+contract grid. This remains local historical evidence for the named settings.
+
+The [September 26 popular profile indicator comparison](POPULAR_PROFILE_V6_NATIVE_PARITY_20260926.md)
+adds unchanged BigBeluga and Zeiierman v6 sources, repairs drawing-enum helper
+admission, skipped-call history and nested-call history-offset binding, and matches
+59,962 native state cells over 4,283 confirmed bars per script. Separate v4/v6
+history controls and execution-mode checks qualify the repaired semantics; native
+drawing geometry and broader release qualification remain outside this evidence.
+
 This is a local development receipt for complete public community scripts,
 starting from `f249b3db45f0f145c621000422c679557a321ec9`. At the time of
 this audit, the code changes described below were a local candidate. No wheel,

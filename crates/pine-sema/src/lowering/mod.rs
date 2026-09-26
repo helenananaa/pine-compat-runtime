@@ -1029,7 +1029,7 @@ impl Analyzer {
             }
             ExprKind::History { expr, offset } => {
                 let offset = match self
-                    .known_history_offset_int_value(offset)
+                    .lowering_history_offset_constant(offset, param_exprs)
                     .and_then(|value| u32::try_from(value).ok())
                 {
                     Some(offset) => HirHistoryOffset::Constant(offset),
@@ -1065,6 +1065,22 @@ impl Analyzer {
                 series_id,
             },
         )
+    }
+
+    /// Analysis-time symbol constants may belong to another call of an inlined
+    /// function, including constants propagated through local aliases. Within a
+    /// parameterized body fold only syntax-local constants; evaluate all other
+    /// offsets with the current call's lowered bindings.
+    pub(super) fn lowering_history_offset_constant(
+        &self,
+        offset: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+    ) -> Option<i64> {
+        if param_exprs.is_empty() {
+            self.known_history_offset_int_value(offset)
+        } else {
+            crate::types::const_int_value(offset)
+        }
     }
 
     fn lower_expr_series_id(

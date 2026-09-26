@@ -427,6 +427,20 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         }
+        // Validate the caller's value before rounding. Explicit quantities use
+        // the same host-provided contract grid as default sizing; do not round
+        // default quantities twice at floating-point grid boundaries.
+        let qty = if explicit_qty.is_some() {
+            crate::strategy::explicit_quantity_on_chart_grid(
+                qty,
+                self.request_environment.chart().configured_quantity_scale(),
+            )
+        } else {
+            qty
+        };
+        if qty == 0.0 {
+            return Ok(PineValue::Void);
+        }
         let oca_id = id.clone();
         if is_short {
             if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
@@ -545,6 +559,17 @@ impl<'a> HistoricalRuntime<'a> {
                     self.bars
                 ),
             });
+        }
+        let qty = if explicit_qty.is_some() {
+            crate::strategy::explicit_quantity_on_chart_grid(
+                qty,
+                self.request_environment.chart().configured_quantity_scale(),
+            )
+        } else {
+            qty
+        };
+        if qty == 0.0 {
+            return Ok(PineValue::Void);
         }
         let limit = match limit_expr {
             Some(expr) => Some(self.eval_expr(expr)?.as_f64().unwrap_or(f64::NAN)),

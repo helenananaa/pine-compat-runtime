@@ -3,6 +3,93 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn history_offsets_are_bound_to_each_function_call() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("history call bindings")
+read(int offset) => close[offset]
+alias(int offset) =>
+    n = offset
+    close[n]
+window(int newest, int oldest) =>
+    result = close[newest]
+    for i = newest to oldest
+        result := math.max(result, close[i])
+    result
+plot(read(2))
+plot(read(0))
+plot(alias(2))
+plot(alias(0))
+plot(window(2, 4))
+plot(window(0, 4))
+length = input.int(2)
+pivot() =>
+    int newest = length
+    window(newest, 4)
+draw() =>
+    window(0, 4)
+plot(pivot())
+plot(barstate.islast ? draw() : na)
+alias_pivot() => alias(length)
+alias_draw() => alias(0)
+plot(alias_pivot())
+plot(alias_draw())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars: Vec<_> = (1..=8).map(|n| bar(n as f64)).collect();
+    let hir = analysis.hir.expect("HIR");
+    let result = run_historical(&hir, &bars).unwrap();
+    for index in [0, 2, 4, 6, 8] {
+        assert_eq!(
+            result.plots[index].values[7],
+            PineValue::Float(6.0),
+            "plot {index}"
+        );
+        assert_eq!(
+            result.plots[index + 1].values[7],
+            PineValue::Float(8.0),
+            "plot {}",
+            index + 1
+        );
+    }
+}
+
+#[test]
+fn legacy_offset_call_preserves_nested_parameter_bindings() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=4
+study("legacy history call bindings")
+read(n) => offset(close, n)
+length = input(2)
+pivot() =>
+    newest = length
+    read(newest)
+draw() => read(0)
+plot(pivot())
+plot(draw())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars: Vec<_> = (1..=8).map(|n| bar(n as f64)).collect();
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).unwrap();
+    assert_eq!(result.plots[0].values[7], PineValue::Float(6.0));
+    assert_eq!(result.plots[1].values[7], PineValue::Float(8.0));
+}
+
+#[test]
 fn pure_const_call_drawing_limit_is_applied_at_runtime() {
     let source = SourceFile::new(
         "test.pine",

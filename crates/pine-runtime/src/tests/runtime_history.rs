@@ -3,6 +3,113 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn gapped_udf_parameter_history_carries_values_between_calls() {
+    for version in [4, 5, 6] {
+        let declaration = if version == 4 { "study" } else { "indicator" };
+        let source = SourceFile::new(
+            "gapped_parameter_history.pine",
+            format!(
+                r#"//@version={version}
+{declaration}("gapped history")
+previous(x, n) => x[n]
+plot(bar_index % 7 == 0 ? previous(bar_index, 1) : na)
+plot(bar_index % 7 == 0 ? previous(bar_index, 2) : na)
+plot(bar_index % 7 == 0 ? previous(bar_index, 5) : na)
+plot(bar_index % 7 == 0 ? previous(bar_index, 8) : na)
+"#
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let bars = (0..29).map(|i| bar(f64::from(i))).collect::<Vec<_>>();
+        let hir = analysis.hir.expect("HIR");
+        let result = run_historical(&hir, &bars).expect("gapped history");
+        for (plot, offset) in result.plots.iter().zip([1, 2, 5, 8]) {
+            for (i, value) in plot.values.iter().enumerate() {
+                let expected = if i % 7 != 0 || i < offset {
+                    PineValue::Na
+                } else {
+                    PineValue::Int((((i - offset) / 7) * 7) as i64)
+                };
+                assert_eq!(*value, expected, "v{version} bar {i}, offset {offset}");
+            }
+        }
+        let mut incremental = HistoricalRuntime::new(&hir);
+        let mut realtime = RealtimeRuntime::new(&hir);
+        for input in bars.iter().copied() {
+            incremental.append_bar(input).expect("incremental append");
+            realtime
+                .update(BarUpdate::historical(input))
+                .expect("realtime history");
+        }
+        assert_eq!(incremental.result(), result);
+        assert_eq!(realtime.result(), result);
+    }
+}
+
+#[test]
+fn gapped_function_locals_preserve_explicit_na_and_rollback_forming_values() {
+    let source = SourceFile::new(
+        "gapped_local_history.pine",
+        r#"//@version=6
+indicator("gapped local history")
+lagged(x) =>
+    y = x * 1.0
+    [y[2], (x + 0)[2]]
+float a = na
+float b = na
+if bar_index >= 2 and bar_index % 3 == 2
+    [local, expression] = lagged(bar_index == 5 ? na : close)
+    a := local
+    b := expression
+plot(a)
+plot(b)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bars = (0..12).map(|i| bar(f64::from(i + 1))).collect::<Vec<_>>();
+    let result = run_historical(&hir, &bars).expect("gapped local history");
+    for plot in &result.plots {
+        for (i, value) in plot.values.iter().enumerate() {
+            let expected = match i {
+                5 => PineValue::Float(3.0),
+                11 => PineValue::Float(9.0),
+                _ => PineValue::Na,
+            };
+            assert_eq!(*value, expected, "bar {i}");
+        }
+    }
+    let mut realtime = RealtimeRuntime::new(&hir);
+    for input in &bars[..8] {
+        realtime
+            .update(BarUpdate::historical(*input))
+            .expect("history");
+    }
+    realtime
+        .update(BarUpdate::forming(bar(100.0)))
+        .expect("first provisional value");
+    realtime
+        .update(BarUpdate::forming(bar(200.0)))
+        .expect("rollback provisional value");
+    for input in &bars[8..] {
+        realtime
+            .update(BarUpdate::confirmed(*input))
+            .expect("confirmed value");
+    }
+    assert_eq!(realtime.result(), result);
+}
+
+#[test]
 fn stores_expression_history_before_reading_previous_bars() {
     let source = SourceFile::new(
         "test.pine",
@@ -429,7 +536,7 @@ plot(level[1])
 }
 
 #[test]
-fn conditional_nested_udf_history_advances_on_function_execution() {
+fn conditional_nested_udf_history_preserves_native_fractal_control() {
     let source = SourceFile::new(
         "test.pine",
         r#"//@version=4

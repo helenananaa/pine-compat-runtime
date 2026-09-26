@@ -7,6 +7,100 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn explicit_entry_and_order_quantities_use_the_configured_contract_grid() {
+    for function in ["entry", "order"] {
+        for (direction, sign) in [("long", 1.0), ("short", -1.0)] {
+            for order_args in ["", ", limit=100", ", stop=100", ", stop=100, limit=100"] {
+                for (qty, expected) in [
+                    ("0.1234569", 0.123456),
+                    ("161253 * syminfo.mincontract", 0.161252),
+                    ("0.161253", 0.161253),
+                    ("0.123456", 0.123456),
+                    ("488565 * syminfo.mincontract", 0.488564),
+                    ("0.488565", 0.488565),
+                    ("101250 * syminfo.mincontract", 0.101249),
+                    ("0.10125", 0.10125),
+                    ("129515 * syminfo.mincontract", 0.129515),
+                    ("0.129515", 0.129515),
+                    ("0.000001", 0.000001),
+                    ("0.25 * syminfo.mincontract", 0.0),
+                ] {
+                    let source = SourceFile::new(
+                        "contract-grid.pine",
+                        format!(
+                            "//@version=6\nstrategy(\"explicit contract grid\", initial_capital=1000000)\nif bar_index == 0\n    strategy.{function}(\"E\", strategy.{direction}, qty={qty}{order_args})\nplot(strategy.position_size)\n"
+                        ),
+                    );
+                    let analysis = analyze_source(&source);
+                    assert!(
+                        analysis.diagnostics.is_empty(),
+                        "{:?}",
+                        analysis.diagnostics
+                    );
+                    let chart = ChartContext::default().with_quantity_precision(6).unwrap();
+                    let result = run_historical_with_request_environment(
+                        &analysis.hir.expect("HIR"),
+                        &[bar(100.0); 3],
+                        RequestEnvironment::default().for_chart(chart),
+                    )
+                    .unwrap();
+                    assert_eq!(
+                        result.plots[0].values[2],
+                        PineValue::Float(sign * expected),
+                        "{function} {direction} {qty}{order_args}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn explicit_quantity_grid_respects_host_precision_and_unconfigured_profile() {
+    for (qty, scale, expected) in [
+        (0.1234569, None, 0.1234569),
+        (12.99, Some(1), 12.0),
+        (0.99, Some(1), 0.0),
+        (12.999, Some(100), 12.99),
+        (0.0000000019, Some(1_000_000_000), 0.000000001),
+        (1e-100, Some(1_000_000_000), 0.0),
+        (1e12, Some(1_000_000), 1e12),
+    ] {
+        assert_eq!(
+            crate::strategy::explicit_quantity_on_chart_grid(qty, scale),
+            expected,
+            "qty={qty}, scale={scale:?}"
+        );
+    }
+}
+
+#[test]
+fn explicit_quantity_grid_does_not_mask_invalid_negative_quantities() {
+    for function in ["entry", "order"] {
+        let source = SourceFile::new(
+            "invalid-grid-quantity.pine",
+            format!(
+                "//@version=6\nstrategy(\"invalid explicit qty\")\nstrategy.{function}(\"E\", strategy.long, qty=-0.0000001)\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let chart = ChartContext::default().with_quantity_precision(6).unwrap();
+        let error = run_historical_with_request_environment(
+            &analysis.hir.expect("HIR"),
+            &[bar(100.0)],
+            RequestEnvironment::default().for_chart(chart),
+        )
+        .expect_err("invalid quantity must fail before quantization");
+        assert!(error.message.contains("invalid `qty`"), "{error:?}");
+    }
+}
+
+#[test]
 fn legacy_v4_strategy_orders_execute_inside_user_functions() {
     let source = SourceFile::new(
         "v4-udf-orders.pine",

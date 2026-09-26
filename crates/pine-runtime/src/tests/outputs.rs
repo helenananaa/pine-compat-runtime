@@ -3,6 +3,39 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn drawing_setters_apply_function_returned_styles_per_bar() {
+    let source = SourceFile::new(
+        "function_drawing_styles.pine",
+        r#"//@version=6
+indicator("function drawing styles")
+styleFor(int i) => i % 3 == 0 ? line.style_solid : i % 3 == 1 ? line.style_dotted : line.style_dashed
+var line id = line.new(bar_index, close, bar_index + 1, close)
+line.set_style(id, styleFor(bar_index))
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("function-returned drawing style");
+    assert_eq!(result.lines.len(), 1);
+    let styles: Vec<_> = result.lines[0]
+        .snapshots
+        .iter()
+        .map(|s| s.style.clone())
+        .collect();
+    assert_eq!(
+        styles,
+        ["line.style_solid", "line.style_dotted", "line.style_dashed"]
+            .map(|s| PineValue::String(s.to_owned()))
+    );
+}
+
+#[test]
 fn drawing_constructors_accept_series_style_through_udf_parameters() {
     let source = SourceFile::new(
         "series_drawing_styles.pine",

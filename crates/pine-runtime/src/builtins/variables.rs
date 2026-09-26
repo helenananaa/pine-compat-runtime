@@ -183,7 +183,10 @@ impl<'a> HistoricalRuntime<'a> {
                 true,
             ));
         }
-        if matches!(name, "timeframe.period" | "timeframe.main_period") {
+        if name == "timeframe.main_period" {
+            return PineValue::String(self.request_environment.main_timeframe().value().to_owned());
+        }
+        if name == "timeframe.period" {
             return PineValue::String(
                 self.request_environment
                     .chart()

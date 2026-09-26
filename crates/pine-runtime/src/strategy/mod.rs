@@ -1,5 +1,30 @@
 mod broker;
 
+use pine_ir::StrategyCommission;
+
+pub(crate) fn percent_of_equity_order_qty(
+    equity: f64,
+    percent: f64,
+    price: f64,
+    commission: Option<StrategyCommission>,
+    quantity_scale: Option<u32>,
+) -> f64 {
+    let budget = equity * percent / 100.0;
+    let qty = match commission {
+        Some(StrategyCommission::Percent(rate)) => budget / (price * (1.0 + rate / 100.0)),
+        Some(StrategyCommission::CashPerContract(fee)) => budget / (price + fee),
+        Some(StrategyCommission::CashPerOrder(fee)) => (budget - fee).max(0.0) / price,
+        None => budget / price,
+    };
+    quantity_on_chart_grid(qty, quantity_scale)
+}
+
+pub(crate) fn quantity_on_chart_grid(qty: f64, quantity_scale: Option<u32>) -> f64 {
+    quantity_scale.map_or(qty, |scale| {
+        (qty * f64::from(scale)).floor() / f64::from(scale)
+    })
+}
+
 pub use broker::BrokerState;
 pub(crate) use broker::PendingCloseQuantity;
 pub(crate) use broker::{EntryPathTick, PathEventOutcome};

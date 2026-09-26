@@ -653,7 +653,7 @@ mod tests {
     }
 
     #[test]
-    fn analysis_json_exposes_one_legacy_strategy_hard_stop() {
+    fn analysis_json_exposes_executable_v4_strategy() {
         let source = SourceFile::new(
             "legacy-strategy.pine",
             "//@version=4\nstrategy(\"legacy\")\nstrategy.entry(\"L\", strategy.long)\n",
@@ -664,15 +664,8 @@ mod tests {
 
         assert_eq!(parsed["languageVersion"], serde_json::json!(4));
         assert_eq!(parsed["scriptMode"], serde_json::json!("strategy"));
-        assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(1));
-        assert_eq!(
-            parsed["diagnostics"][0]["code"],
-            serde_json::json!("E_LEGACY_STRATEGY_OUT_OF_SCOPE")
-        );
-        assert_eq!(
-            parsed["compatibility"]["unsupported"][0]["feature"],
-            serde_json::json!("legacy strategy")
-        );
+        assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(0));
+        assert_eq!(parsed["executable"], serde_json::json!(true));
     }
 
     #[test]

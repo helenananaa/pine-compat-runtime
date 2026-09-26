@@ -79,13 +79,10 @@ impl BrokerState {
         spec: LossProfitBracketSpec,
         bar_index: usize,
     ) {
-        if self.position_size < 0.0 {
-            return;
-        }
-        let Some(loss_offset) = self.exit_tick_price_offset(spec.loss_ticks, spec.mintick) else {
+        let Some(loss_offset) = self.exit_tick_signed_offset(spec.loss_ticks, spec.mintick) else {
             return;
         };
-        let Some(profit_offset) = self.exit_tick_price_offset(spec.profit_ticks, spec.mintick)
+        let Some(profit_offset) = self.exit_tick_signed_offset(spec.profit_ticks, spec.mintick)
         else {
             return;
         };
@@ -163,10 +160,7 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
-            if self.has_pending_short_entry(&from_entry) {
-                return;
-            }
+        if self.has_pending_entry(&from_entry) && !self.has_open_position_for_entry(&from_entry) {
             self.place_deferred_relative_loss_profit_bracket(
                 id, from_entry, spec, quantity, bar_index,
             );

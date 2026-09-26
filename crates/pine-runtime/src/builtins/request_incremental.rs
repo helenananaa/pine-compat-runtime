@@ -1,7 +1,9 @@
 //! Reuse a checkpoint preceding the terminal requested bar. The old terminal
 //! bar is always replayed when a context grows, preserving endpoint semantics.
 use super::request_values::RequestedValue;
-use super::requests::{request_capture_values, request_dependency_initializers};
+use super::requests::{
+    request_capture_values, request_dependency_initializers, request_tuple_dependency_statements,
+};
 use crate::request::RequestCacheKey;
 use crate::runtime::append_history::AppendHistory;
 use crate::{
@@ -30,6 +32,7 @@ impl<'a> HistoricalRuntime<'a> {
         include_forming: bool,
     ) -> Result<AppendHistory<(i64, RequestedValue)>, RuntimeError> {
         let initializers = request_dependency_initializers(&self.program);
+        let tuple_dependencies = request_tuple_dependency_statements(&self.program);
         let captures = request_capture_values(
             &self.program,
             expression,
@@ -93,6 +96,7 @@ impl<'a> HistoricalRuntime<'a> {
                 expression,
                 &captures,
                 &initializers,
+                &tuple_dependencies,
             )?;
             if terminal {
                 last = Some((bar.time, value));

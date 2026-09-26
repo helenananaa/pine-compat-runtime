@@ -168,6 +168,26 @@ impl Analyzer {
         }
 
         self.script_declaration = Some((mode, span));
+        let signature = pine_builtins::get_phase_1_builtin(name).expect("script signature");
+        if let Some(value) = args.iter().enumerate().find_map(|(index, arg)| {
+            (arg.name.as_deref() == Some("dynamic_requests")
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(index)
+                        .is_some_and(|param| param.name == "dynamic_requests")))
+            .then_some(arg)
+        }) {
+            if self.legacy.dialect() < crate::PineDialect::V5 {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`dynamic_requests` requires Pine v5 or v6",
+                    value.span,
+                ));
+            } else if let Some(enabled) = self.known_const_bool_value(&value.value) {
+                self.dynamic_requests = enabled;
+            }
+        }
         if mode == ScriptMode::Strategy {
             self.validate_strategy_declaration_args(args);
         } else {
@@ -214,6 +234,8 @@ impl Analyzer {
             self.validate_strategy_order_args(args);
         } else if name == "strategy.close" {
             self.validate_strategy_close_args(args);
+        } else if name == "strategy.close_all" {
+            self.validate_strategy_close_all_args(args);
         } else if name == "strategy.exit" {
             self.validate_strategy_exit_args(args);
         } else if name == "strategy.risk.allow_entry_in" {
@@ -642,6 +664,13 @@ impl Analyzer {
                 continue;
             };
             match name {
+                "when" if self.legacy.dialect() >= crate::PineDialect::V6 => {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        "`strategy.close` argument `when` was removed in Pine v6",
+                        arg.span,
+                    ));
+                }
                 "qty" => {
                     if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && (!qty.is_finite() || qty <= 0.0)
@@ -665,6 +694,20 @@ impl Analyzer {
                     }
                 }
                 _ => {}
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_close_all_args(&mut self, args: &[CallArg]) {
+        for (index, arg) in args.iter().enumerate() {
+            if (arg.name.as_deref() == Some("when") || (arg.name.is_none() && index == 4))
+                && self.legacy.dialect() >= crate::PineDialect::V6
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`strategy.close_all` argument `when` was removed in Pine v6",
+                    arg.span,
+                ));
             }
         }
     }

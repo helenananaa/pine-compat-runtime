@@ -2,8 +2,8 @@ use std::{collections::HashMap, fs, sync::Arc};
 
 use pine_runtime::{
     BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, MagnifierInput,
-    RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe, RunningAlertConfig,
-    RuntimeProfile, RuntimeResult, input_calls, magnifier_input_from_json,
+    NoRequestDataProvider, RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe,
+    RunningAlertConfig, RuntimeProfile, RuntimeResult, input_calls, magnifier_input_from_json,
     public_runtime_profiled_result_json, public_runtime_result_json,
     session_window_input_from_json,
 };
@@ -785,7 +785,10 @@ fn request_environment_from_specs(
     chart_context: ChartContext,
 ) -> Result<RequestEnvironment, String> {
     if specs.is_empty() {
-        return Ok(RequestEnvironment::default().for_chart(chart_context));
+        return Ok(RequestEnvironment::new(
+            chart_context,
+            Arc::new(NoRequestDataProvider),
+        ));
     }
 
     let mut streams = Vec::with_capacity(specs.len());

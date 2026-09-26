@@ -163,18 +163,29 @@ impl RequestDataProvider for InMemoryRequestDataProvider {
 #[derive(Clone)]
 pub struct RequestEnvironment {
     chart: ChartContext,
+    main_timeframe: RequestTimeframe,
     provider: Arc<dyn RequestDataProvider>,
 }
 
 impl RequestEnvironment {
     #[must_use]
     pub fn new(chart: ChartContext, provider: Arc<dyn RequestDataProvider>) -> Self {
-        Self { chart, provider }
+        let main_timeframe = chart.timeframe().clone();
+        Self {
+            chart,
+            main_timeframe,
+            provider,
+        }
     }
 
     #[must_use]
     pub fn chart(&self) -> &ChartContext {
         &self.chart
+    }
+
+    #[must_use]
+    pub fn main_timeframe(&self) -> &RequestTimeframe {
+        &self.main_timeframe
     }
 
     #[must_use]
@@ -186,6 +197,7 @@ impl RequestEnvironment {
     pub fn for_chart(&self, chart: ChartContext) -> Self {
         Self {
             chart,
+            main_timeframe: self.main_timeframe.clone(),
             provider: Arc::clone(&self.provider),
         }
     }
@@ -193,8 +205,11 @@ impl RequestEnvironment {
 
 impl Default for RequestEnvironment {
     fn default() -> Self {
+        let chart = ChartContext::default();
+        let main_timeframe = chart.timeframe().clone();
         Self {
-            chart: ChartContext::default(),
+            chart,
+            main_timeframe,
             provider: Arc::new(NoRequestDataProvider),
         }
     }

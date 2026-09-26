@@ -33,6 +33,7 @@ pub(super) struct PendingEntry {
     pub(super) direction: PendingEntryDirection,
     pub(super) kind: PendingEntryKind,
     pub(super) quantity: f64,
+    pub(super) same_bar_percent_of_equity: Option<f64>,
     pub(super) created_bar_index: usize,
     pub(super) metadata: StrategyOrderMetadata,
     pub(super) enforce_pyramiding: bool,
@@ -140,6 +141,14 @@ impl PendingEntryBook {
     pub(super) fn quantity_for_id(&self, id: &str) -> Option<f64> {
         self.find_by_id(id)
             .map(|pending_entry| pending_entry.quantity)
+    }
+
+    pub(super) fn set_same_bar_percent_of_equity(&mut self, id: &str, percent: f64) {
+        if let Some(entry) = self.entries.iter_mut().find(|entry| entry.id == id) {
+            if entry.kind == PendingEntryKind::Market {
+                entry.same_bar_percent_of_equity = Some(percent);
+            }
+        }
     }
 
     pub(super) fn has_limit_long_bypassing_pyramiding(&self) -> bool {
@@ -1050,6 +1059,7 @@ impl PendingEntryBook {
             direction: placement.direction,
             kind: placement.kind,
             quantity: placement.quantity,
+            same_bar_percent_of_equity: None,
             created_bar_index: placement.created_bar_index,
             metadata: placement.metadata,
             enforce_pyramiding: matches!(placement.origin, StrategyCommandOrigin::Entry),

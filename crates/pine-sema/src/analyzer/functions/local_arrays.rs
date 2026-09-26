@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use crate::prelude::*;
 
-/// Recognize straight-line mutations of arrays allocated by this function.
-/// Unknown control flow discards the proof; aliases and parameters do not
+/// Recognize straight-line and stable `for` loop mutations of arrays allocated
+/// by this function. Unknown control flow discards the proof; aliases and parameters do not
 /// establish ownership. Argument expressions still undergo normal validation.
 pub(crate) fn local_array_mutation_spans(body: &FunctionBody) -> Vec<Span> {
     let FunctionBody::Block(statements) = body else {
@@ -11,7 +11,26 @@ pub(crate) fn local_array_mutation_spans(body: &FunctionBody) -> Vec<Span> {
     };
     let mut owned = HashSet::new();
     let mut spans = Vec::new();
-    for statement in statements {
+    for (statement_index, statement) in statements.iter().enumerate() {
+        if let StmtKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } = &statement.kind
+        {
+            if straight_expr(from)
+                && straight_expr(to)
+                && step.as_ref().is_none_or(straight_expr)
+                && let Some(loop_spans) = owned_loop_mutation_spans(body, &owned)
+            {
+                spans.extend(loop_spans);
+            } else {
+                owned.clear();
+            }
+            continue;
+        }
         let straight = match &statement.kind {
             StmtKind::Decl { value, .. }
             | StmtKind::Reassign { value, .. }
@@ -42,7 +61,9 @@ pub(crate) fn local_array_mutation_spans(body: &FunctionBody) -> Vec<Span> {
                                 | "array.new_color"
                         )
                     })
-                    && !statements.iter().any(|stmt| binding_may_change(stmt, name))
+                    && !statements.iter().enumerate().any(|(index, stmt)| {
+                        index != statement_index && binding_may_change(stmt, name)
+                    })
                 {
                     owned.insert(name.clone());
                 }
@@ -54,16 +75,8 @@ pub(crate) fn local_array_mutation_spans(body: &FunctionBody) -> Vec<Span> {
                 kind: ExprKind::Call { callee, args },
                 ..
             }) => {
-                if expr_name(callee)
-                    .is_some_and(|name| matches!(name.as_str(), "array.clear" | "array.push"))
-                    && let Some(receiver) = args
-                        .iter()
-                        .find(|arg| arg.name.as_deref() == Some("id"))
-                        .or_else(|| args.first().filter(|arg| arg.name.is_none()))
-                    && let ExprKind::Identifier(name) = &receiver.value.kind
-                    && owned.contains(name)
-                {
-                    spans.push(callee.span);
+                if let Some(span) = owned_array_mutation_span(callee, args, &owned) {
+                    spans.push(span);
                 }
             }
             StmtKind::TupleDecl { .. } => {}
@@ -71,6 +84,60 @@ pub(crate) fn local_array_mutation_spans(body: &FunctionBody) -> Vec<Span> {
         }
     }
     spans
+}
+
+fn owned_loop_mutation_spans(statements: &[Stmt], owned: &HashSet<String>) -> Option<Vec<Span>> {
+    let mut spans = Vec::new();
+    for statement in statements {
+        if owned.iter().any(|name| binding_may_change(statement, name)) {
+            return None;
+        }
+        match &statement.kind {
+            StmtKind::Decl { value, .. }
+            | StmtKind::Reassign { value, .. }
+            | StmtKind::Expr(value)
+                if straight_expr(value) =>
+            {
+                if let ExprKind::Call { callee, args } = &value.kind
+                    && let Some(span) = owned_array_mutation_span(callee, args, owned)
+                {
+                    spans.push(span);
+                }
+            }
+            StmtKind::For {
+                from,
+                to,
+                step,
+                body,
+                ..
+            } if straight_expr(from)
+                && straight_expr(to)
+                && step.as_ref().is_none_or(straight_expr) =>
+            {
+                spans.extend(owned_loop_mutation_spans(body, owned)?);
+            }
+            _ => return None,
+        }
+    }
+    Some(spans)
+}
+
+fn owned_array_mutation_span(
+    callee: &Expr,
+    args: &[CallArg],
+    owned: &HashSet<String>,
+) -> Option<Span> {
+    expr_name(callee)
+        .is_some_and(|name| matches!(name.as_str(), "array.clear" | "array.push"))
+        .then_some(())?;
+    let receiver = args
+        .iter()
+        .find(|arg| arg.name.as_deref() == Some("id"))
+        .or_else(|| args.first().filter(|arg| arg.name.is_none()))?;
+    let ExprKind::Identifier(name) = &receiver.value.kind else {
+        return None;
+    };
+    owned.contains(name).then_some(callee.span)
 }
 
 // A `var` initializer does not run again on later bars. A reassignment even
@@ -81,9 +148,12 @@ fn binding_may_change(stmt: &Stmt, name: &str) -> bool {
             name: target,
             value,
         } => target == name || expr_may_rebind(value, name),
-        StmtKind::Decl { value, .. }
-        | StmtKind::TupleDecl { value, .. }
-        | StmtKind::Expr(value) => expr_may_rebind(value, name),
+        StmtKind::Decl {
+            name: target,
+            value,
+            ..
+        } => target == name || expr_may_rebind(value, name),
+        StmtKind::Expr(value) | StmtKind::TupleDecl { value, .. } => expr_may_rebind(value, name),
         StmtKind::If {
             condition,
             then_branch,
@@ -94,6 +164,20 @@ fn binding_may_change(stmt: &Stmt, name: &str) -> bool {
                     .iter()
                     .chain(else_branch)
                     .any(|stmt| binding_may_change(stmt, name))
+        }
+        StmtKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            expr_may_rebind(from, name)
+                || expr_may_rebind(to, name)
+                || step
+                    .as_ref()
+                    .is_some_and(|expr| expr_may_rebind(expr, name))
+                || body.iter().any(|stmt| binding_may_change(stmt, name))
         }
         // Unsupported statement forms cannot establish stable ownership.
         _ => true,

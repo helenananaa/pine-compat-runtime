@@ -14,7 +14,7 @@ impl BrokerState {
         market_price: f64,
         historical_same_bar_fills: bool,
     ) -> Result<bool, RuntimeError> {
-        let before = self.public_order_event_count();
+        let before = self.public_fill_event_count();
         self.fill_pending_market_closes(bar_index, time, market_price);
         self.fill_same_bar_market_closes(bar_index, time, market_price);
         self.fill_pending_market_entries(bar_index, time, market_price);
@@ -57,6 +57,6 @@ impl BrokerState {
         self.evaluate_margin_call_long(bar_index, time, price);
         self.evaluate_margin_call_short(bar_index, time, price);
         self.flatten_if_risk_blocked(bar_index, time, price);
-        Ok(self.public_order_event_count() > before)
+        Ok(self.public_fill_event_count() > before)
     }
 }

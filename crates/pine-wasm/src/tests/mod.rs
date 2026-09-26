@@ -107,7 +107,7 @@ fn analyzes_implicit_v1_legacy_indicator_contract() {
 }
 
 #[test]
-fn analyzes_legacy_strategy_as_one_out_of_scope_error() {
+fn analyzes_executable_v4_strategy() {
     let output = analyze_script(
         "//@version=4\nstrategy(\"legacy\")\nstrategy.entry(\"L\", strategy.long)\n",
     );
@@ -116,15 +116,8 @@ fn analyzes_legacy_strategy_as_one_out_of_scope_error() {
     assert_eq!(parsed["languageVersion"], serde_json::json!(4));
     assert_eq!(parsed["dialect"], serde_json::json!("v4"));
     assert_eq!(parsed["scriptMode"], serde_json::json!("strategy"));
-    assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(1));
-    assert_eq!(
-        parsed["diagnostics"][0]["code"],
-        serde_json::json!("E_LEGACY_STRATEGY_OUT_OF_SCOPE")
-    );
-    assert_eq!(
-        parsed["compatibility"]["unsupported"][0]["feature"],
-        serde_json::json!("legacy strategy")
-    );
+    assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(0));
+    assert_eq!(parsed["executable"], serde_json::json!(true));
 }
 
 #[test]
@@ -9208,11 +9201,11 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][60]["values"],
-        serde_json::json!([null, null, 0, 0, 0])
+        serde_json::json!([0, 0, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][61]["values"],
-        serde_json::json!([null, null, 2, 2, 2])
+        serde_json::json!([0, -1, -2, -2, -2])
     );
     assert_eq!(
         parsed["plots"][62]["values"],
@@ -9584,19 +9577,19 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][147]["values"],
-        serde_json::json!([null, null, 0, 0, 0])
+        serde_json::json!([0, 0, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][148]["values"],
-        serde_json::json!([null, null, 2, 2, 2])
+        serde_json::json!([0, -1, -2, -2, -2])
     );
     assert_eq!(
         parsed["plots"][149]["values"],
-        serde_json::json!([null, null, null, null, 0])
+        serde_json::json!([null, null, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][150]["values"],
-        serde_json::json!([null, null, null, null, 1])
+        serde_json::json!([null, null, 0, 0, -1])
     );
     assert_eq!(
         parsed["plots"][151]["values"],
@@ -10072,11 +10065,11 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][248]["values"],
-        serde_json::json!([null, null, null, null, 0])
+        serde_json::json!([null, null, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][249]["values"],
-        serde_json::json!([null, null, null, null, 1])
+        serde_json::json!([null, null, 0, 0, -1])
     );
     assert_eq!(
         parsed["plots"][123]["values"],
@@ -10461,8 +10454,14 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_plot_values_close(303, &[None, Some(12.0), Some(13.0), Some(14.0), Some(15.0)]);
     assert_plot_values_close(304, &[None, Some(9.0), Some(10.0), Some(11.0), Some(12.0)]);
-    assert_plot_values_close(305, &[None, Some(0.0), Some(0.0), Some(0.0), Some(0.0)]);
-    assert_plot_values_close(306, &[None, Some(1.0), Some(1.0), Some(1.0), Some(1.0)]);
+    assert_plot_values_close(
+        305,
+        &[Some(0.0), Some(0.0), Some(0.0), Some(0.0), Some(0.0)],
+    );
+    assert_plot_values_close(
+        306,
+        &[Some(0.0), Some(-1.0), Some(-1.0), Some(-1.0), Some(-1.0)],
+    );
     assert_plot_values_close(307, &[None, Some(41.0), Some(43.0), Some(45.0), Some(47.0)]);
     assert_plot_values_close(
         308,

@@ -295,12 +295,32 @@ plot(lo)
     let bars = vec![bar(1.0), bar(3.0), bar(2.0), bar(5.0), bar(5.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(&result.plots[0].values[2..], &[1.0, 0.0, 0.0, 1.0]);
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(&result.plots[1].values[2..], &[2.0, 1.0, 2.0, 0.0]);
+    assert_values_close(&result.plots[0].values[..2], &[0.0, 0.0]);
+    assert_values_close(&result.plots[0].values[2..], &[-1.0, 0.0, 0.0, -1.0]);
+    assert_values_close(&result.plots[1].values[..2], &[0.0, -1.0]);
+    assert_values_close(&result.plots[1].values[2..], &[-2.0, -1.0, -2.0, 0.0]);
+}
+
+#[test]
+fn extreme_bar_offsets_address_history_in_v5_and_v6() {
+    let bars = vec![bar(1.0), bar(3.0), bar(2.0), bar(5.0)];
+    for version in [5, 6] {
+        let source = SourceFile::new(
+            "extreme-history.pine",
+            format!(
+                "//@version={version}\nindicator(\"extreme history\")\nplot(close[-ta.highestbars(close, 3)])\nplot(close[-ta.lowestbars(close, 3)])\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+        assert_values_close(&result.plots[0].values, &[1.0, 3.0, 3.0, 5.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 2.0]);
+    }
 }
 
 #[test]
@@ -364,10 +384,10 @@ plot(lo_offset)
     assert_values_close(&result.plots[0].values[1..], &[5.0, 4.0, 4.0]);
     assert_eq!(result.plots[1].values[0], PineValue::Na);
     assert_values_close(&result.plots[1].values[1..], &[0.0, 0.0, -1.0]);
-    assert_eq!(result.plots[2].values[0], PineValue::Na);
-    assert_values_close(&result.plots[2].values[1..], &[1.0, 0.0, 0.0]);
-    assert_eq!(result.plots[3].values[0], PineValue::Na);
-    assert_values_close(&result.plots[3].values[1..], &[0.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[2].values[..1], &[0.0]);
+    assert_values_close(&result.plots[2].values[1..], &[-1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[3].values[..1], &[0.0]);
+    assert_values_close(&result.plots[3].values[1..], &[0.0, -1.0, 0.0]);
 }
 
 #[test]

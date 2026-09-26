@@ -832,7 +832,12 @@ impl Analyzer {
         let Some(receiver_type) = receiver_type else {
             return MethodResolution::Resolved(None);
         };
-        if receiver_type.kind == ValueKind::UserType {
+        if receiver_type.kind == ValueKind::UserType
+            || (receiver_type.kind == ValueKind::Color
+                && self
+                    .methods
+                    .contains_key(&("color".to_owned(), method_name.to_owned())))
+        {
             return MethodResolution::Resolved(
                 self.analyze_user_method_call(
                     receiver_name,
@@ -1142,6 +1147,14 @@ impl Analyzer {
                 let Some(arg_type) = arg_types.first().copied().flatten() else {
                     continue;
                 };
+                if self.v5_extreme_division_length_arg(
+                    signature.name,
+                    "length",
+                    &arg.value,
+                    arg_type,
+                ) {
+                    continue;
+                }
                 if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
                     signature.name,
                     "length",
@@ -1159,6 +1172,25 @@ impl Analyzer {
             let Some(arg_type) = arg_types.get(index).copied().flatten() else {
                 continue;
             };
+
+            if self.dynamic_requests
+                && matches!(
+                    signature.name,
+                    "request.security" | "request.security_lower_tf"
+                )
+                && matches!(param.name, "symbol" | "timeframe")
+                && arg_type.kind == ValueKind::String
+            {
+                continue;
+            }
+
+            if signature.name == "timeframe.in_seconds"
+                && self.legacy.dialect() >= crate::PineDialect::V6
+                && param.name == "timeframe"
+                && arg_type.kind == ValueKind::String
+            {
+                continue;
+            }
 
             if signature.name == "array.join"
                 && param.name == "id"
@@ -1178,6 +1210,11 @@ impl Analyzer {
             }
 
             if self.legacy_numeric_bool_arg(&arg.value, arg_type, param.accepts) {
+                continue;
+            }
+
+            if self.v5_extreme_division_length_arg(signature.name, param.name, &arg.value, arg_type)
+            {
                 continue;
             }
 

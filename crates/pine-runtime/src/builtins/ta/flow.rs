@@ -392,7 +392,10 @@ impl<'a> HistoricalRuntime<'a> {
         else {
             return Ok(PineValue::Na);
         };
-        if !high_window.is_ready(length) || !low_window.is_ready(length) {
+        // Stochastic extrema use the available non-na samples in a full bar
+        // window. Requiring every sample to be non-na delays RSI-backed
+        // stochastic plots by an extra `length` bars after RSI warms up.
+        if high_window.values.len() != length || low_window.values.len() != length {
             return Ok(PineValue::Na);
         }
 
@@ -714,7 +717,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         Ok(self
             .window_extreme_offset(source, series_id, length, mode)
-            .map_or(PineValue::Na, |offset| PineValue::Int(offset as i64)))
+            .map_or(PineValue::Na, |offset| PineValue::Int(-(offset as i64))))
     }
 
     pub(crate) fn eval_extreme_source_length(
@@ -763,10 +766,19 @@ impl<'a> HistoricalRuntime<'a> {
         length: usize,
         mode: WindowExtreme,
     ) -> Option<f64> {
+        let legacy_partial_window = self.program.language_version.unwrap_or(1) <= 2;
+        if legacy_partial_window && self.bars + 1 < length {
+            return None;
+        }
         let mut extreme = finite_f64(source)?;
         let series_id = series_id?;
         for offset in 1..length {
-            let previous = finite_f64(self.series_store.read(series_id, offset))?;
+            let Some(previous) = finite_f64(self.series_store.read(series_id, offset)) else {
+                if legacy_partial_window {
+                    continue;
+                }
+                return None;
+            };
             extreme = match mode {
                 WindowExtreme::Highest => extreme.max(previous),
                 WindowExtreme::Lowest => extreme.min(previous),
@@ -786,7 +798,15 @@ impl<'a> HistoricalRuntime<'a> {
         let mut best_offset = 0usize;
         let series_id = series_id?;
         for offset in 1..length {
-            let previous = finite_f64(self.series_store.read(series_id, offset))?;
+            // TradingView evaluates highestbars/lowestbars over the bars already
+            // available at the beginning of a series. A missing prehistory bar
+            // ends the window; it does not make the current offset undefined.
+            if offset > self.bars {
+                break;
+            }
+            let Some(previous) = finite_f64(self.series_store.read(series_id, offset)) else {
+                continue;
+            };
             let better = match mode {
                 WindowExtreme::Highest => previous > extreme,
                 WindowExtreme::Lowest => previous < extreme,
@@ -815,6 +835,24 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> &RollingWindowState {
         let source = source.as_f64();
         self.update_rolling_window_key(RollingWindowKey::Single(call_site_id), source, length)
+    }
+
+    pub(crate) fn update_sum_window(
+        &mut self,
+        call_site_id: CallSiteId,
+        source: PineValue,
+        length: usize,
+    ) -> &RollingWindowState {
+        let window = self
+            .rolling_windows
+            .entry(RollingWindowKey::MathSum(call_site_id))
+            .or_default();
+        if let Some(value) = source.as_f64().filter(|value| value.is_finite()) {
+            window.push_for_bar(Some(value), length, self.bars);
+        } else {
+            window.discard_for_bar(self.bars);
+        }
+        window
     }
 
     // SMA/EMA consume one final input per executed bar. Other algorithms keep

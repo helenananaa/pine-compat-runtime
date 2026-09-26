@@ -75,6 +75,11 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
+    BuiltinParam {
+        name: "dynamic_requests",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const STRATEGY_PARAMS: &[BuiltinParam] = &[
@@ -209,8 +214,23 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "scale",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
         name: "calc_bars_count",
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "linktoseries",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "dynamic_requests",
+        accepts: Accepts::ConstBool,
         optional: true,
     },
 ];

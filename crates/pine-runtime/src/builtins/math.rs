@@ -170,7 +170,7 @@ fn eval_math_sum(
     }
 
     let length = length as usize;
-    let window = context.update_rolling_window(call_site_id, source, length);
+    let window = context.update_sum_window(call_site_id, source, length);
     if !window.is_ready(length) {
         return Ok(PineValue::Na);
     }
@@ -273,16 +273,19 @@ fn eval_math_avg(
 ) -> Result<PineValue, RuntimeError> {
     let mut total = 0.0;
     let mut count = 0.0;
+    let mut has_na = false;
 
     for expr in args.exprs() {
-        let Some(value) = context.eval_expr(expr)?.as_f64() else {
-            return Ok(PineValue::Na);
-        };
-        total += value;
-        count += 1.0;
+        match context.eval_expr(expr)?.as_f64() {
+            Some(value) => {
+                total += value;
+                count += 1.0;
+            }
+            None => has_na = true,
+        }
     }
 
-    if count == 0.0 {
+    if has_na || count == 0.0 {
         return Ok(PineValue::Na);
     }
     Ok(finite_float_or_na(total / count))
@@ -295,6 +298,7 @@ fn eval_math_extreme(
 ) -> Result<PineValue, RuntimeError> {
     let mut current_int: Option<i64> = None;
     let mut current_float: Option<f64> = None;
+    let mut has_na = false;
 
     for expr in args.exprs() {
         match context.eval_expr(expr)? {
@@ -320,9 +324,12 @@ fn eval_math_extreme(
                     value
                 });
             }
-            PineValue::Na => return Ok(PineValue::Na),
-            _ => return Ok(PineValue::Na),
+            _ => has_na = true,
         }
+    }
+
+    if has_na {
+        return Ok(PineValue::Na);
     }
 
     match (current_float, current_int) {

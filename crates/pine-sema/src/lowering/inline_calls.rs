@@ -166,7 +166,13 @@ impl Analyzer {
         let receiver_symbol = self
             .bound_symbol(receiver_name, receiver_span)
             .or_else(|| self.scope.resolve(receiver_name))?;
-        let receiver_type_name = self.symbol_user_types.get(&receiver_symbol.id)?.clone();
+        let receiver_type_name = self
+            .symbol_user_types
+            .get(&receiver_symbol.id)
+            .cloned()
+            .or_else(|| {
+                (receiver_symbol.pine_type.kind == ValueKind::Color).then(|| "color".to_owned())
+            })?;
         let receiver_expr = outer_param_exprs
             .get(receiver_name)
             .cloned()
@@ -219,7 +225,9 @@ impl Analyzer {
             &format!("{method_name}.{}", receiver.label),
             receiver.expr.pine_type,
         );
-        self.mark_symbol_id_user_type(receiver_temp.id, method.receiver_type.clone());
+        if receiver_temp.pine_type.kind == ValueKind::UserType {
+            self.mark_symbol_id_user_type(receiver_temp.id, method.receiver_type.clone());
+        }
         arg_statements.push(HirStmt {
             kind: HirStmtKind::Decl {
                 symbol: receiver_temp.id,

@@ -2794,7 +2794,9 @@ fn strategy_variable_history_profile_uses_static_trimmed_history() {
     assert_eq!(profile.history_max_bars_back, None);
     assert!(!profile.history_has_dynamic_offsets);
     assert_eq!(profile.max_series_depth, 1);
-    assert!(profile.series_buffers >= 2);
+    // The strategy position history is captured by the broker's dedicated
+    // bounded buffer; only openprofit uses the generic series store here.
+    assert!(profile.series_buffers >= 1);
     assert!(
         profile.series_values <= profile.series_buffers,
         "constant one-bar strategy variable history should retain at most one value per buffer: {:?}",

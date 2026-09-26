@@ -8,8 +8,7 @@ use pine_syntax::{
 
 use crate::analyzer::context::{FunctionInfo, MethodInfo, MethodParamInfo};
 use crate::analyzer::functions::{
-    contains_output_or_declaration_call, function_default_values, function_param_names,
-    record_default_shadowing, statement_contains_output_or_declaration_call,
+    function_default_values, function_param_names, record_default_shadowing,
 };
 use crate::legacy::SourcePolicy;
 use crate::source_graph::{AnalysisInput, SourceContextId, SourceId};

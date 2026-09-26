@@ -55,7 +55,7 @@ fn reports_unsupported_request_lower_tf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_request_lower_tf.pine",
         "request.security_lower_tf",
-        "array-returning lower-timeframe request semantics",
+        "optional policies",
     );
 }
 
@@ -4505,7 +4505,7 @@ fn reports_strategy_use_bar_magnifier_positional_rejected() {
 fn reports_strategy_use_bar_magnifier_unsupported_version() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_v4.pine",
-        &["legacy", "strategy"],
+        &["use_bar_magnifier", "requires Pine v5"],
     );
 }
 
@@ -4823,10 +4823,6 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_STRATEGY_MODE",
         ),
         (
-            "tests/fixtures/sema/unsupported_strategy_exit_trailing_function_side_effect.pine",
-            "E_UNSUPPORTED_FEATURE",
-        ),
-        (
             "tests/fixtures/sema/unsupported_request_strategy_trailing_exit.pine",
             "E_UNSUPPORTED_FEATURE",
         ),
@@ -4861,10 +4857,6 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
         (
             "tests/fixtures/sema/unsupported_strategy_close_immediately_type.pine",
             "E_CALL_ARG_TYPE",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
-            "E_UNSUPPORTED_FEATURE",
         ),
         (
             "tests/fixtures/sema/unsupported_request_strategy_exit.pine",
@@ -20740,48 +20732,48 @@ fn reports_unsupported_imperative_alert_function_side_effect_fixture() {
 }
 
 #[test]
-fn reports_unsupported_strategy_order_function_side_effect_fixture() {
-    assert_unsupported_fixture(
+fn accepts_strategy_order_function_side_effect_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_function_side_effect.pine",
-        "function_side_effect",
-        "strategy order calls",
     );
 }
 
 #[test]
-fn reports_unsupported_strategy_close_function_side_effect_fixture() {
-    assert_unsupported_fixture(
+fn accepts_strategy_close_function_side_effect_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_strategy_close_function_side_effect.pine",
-        "function_side_effect",
-        "strategy order calls",
     );
 }
 
 #[test]
-fn reports_unsupported_strategy_close_all_function_side_effect_fixture() {
-    assert_unsupported_fixture(
+fn accepts_strategy_close_all_function_side_effect_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_strategy_close_all_function_side_effect.pine",
-        "function_side_effect",
-        "strategy order calls",
     );
 }
 
 #[test]
-fn reports_unsupported_strategy_cancel_function_side_effect_fixture() {
-    assert_unsupported_fixture(
+fn accepts_strategy_cancel_function_side_effect_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_strategy_cancel_function_side_effect.pine",
-        "function_side_effect",
-        "strategy order calls",
     );
 }
 
 #[test]
-fn reports_unsupported_strategy_cancel_all_function_side_effect_fixture() {
-    assert_unsupported_fixture(
+fn accepts_strategy_cancel_all_function_side_effect_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_strategy_cancel_all_function_side_effect.pine",
-        "function_side_effect",
-        "strategy order calls",
     );
+}
+
+#[test]
+fn accepts_strategy_exit_function_side_effect_fixtures() {
+    for path in [
+        "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_trailing_function_side_effect.pine",
+    ] {
+        assert_valid_fixture(path);
+    }
 }
 
 #[test]

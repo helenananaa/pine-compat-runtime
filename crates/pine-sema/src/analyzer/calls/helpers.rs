@@ -33,6 +33,23 @@ impl Analyzer {
     }
 
     pub(crate) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
+        if (name == "input" || name.starts_with("input."))
+            && self.legacy.dialect() <= crate::PineDialect::V2
+        {
+            return true;
+        }
+        if matches!(
+            name,
+            "strategy.entry"
+                | "strategy.order"
+                | "strategy.exit"
+                | "strategy.close"
+                | "strategy.close_all"
+                | "strategy.cancel"
+                | "strategy.cancel_all"
+        ) {
+            return true;
+        }
         if self.allows_legacy_v4_udf_reference_side_effect(name) {
             return true;
         }
@@ -600,6 +617,7 @@ pub(crate) fn drawing_method_builtin_name(
     method_name: &str,
 ) -> Option<String> {
     let namespace = match receiver_kind {
+        ValueKind::ChartPoint => "chart.point",
         ValueKind::Label => "label",
         ValueKind::Line => "line",
         ValueKind::LineFill => "linefill",
@@ -612,6 +630,7 @@ pub(crate) fn drawing_method_builtin_name(
     let signature = pine_builtins::get_phase_1_builtin(&builtin_name)?;
     let first_param = signature.params.first()?;
     let accepts_receiver = match receiver_kind {
+        ValueKind::ChartPoint => first_param.accepts == Accepts::ChartPointCompatible,
         ValueKind::Label => first_param.accepts == Accepts::LabelCompatible,
         ValueKind::Line => first_param.accepts == Accepts::LineCompatible,
         ValueKind::LineFill => first_param.accepts == Accepts::LineFillCompatible,

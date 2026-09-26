@@ -308,6 +308,32 @@ fn accepts_indicator_string_metadata_ternary_constants() {
 }
 
 #[test]
+fn strategy_scale_metadata_uses_the_supported_const_values() {
+    for version in [4, 6] {
+        let source = format!(
+            "//@version={version}\nstrategy(\"Scale metadata\", overlay=true, scale=scale.left)\nplot(close)\n"
+        );
+        let analysis = analyze(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+
+        let invalid = format!(
+            "//@version={version}\nstrategy(\"Scale metadata\", overlay=true, scale=\"custom\")\nplot(close)\n"
+        );
+        let analysis = analyze(&invalid);
+        assert!(analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_VALUE"
+                && diagnostic.message
+                    == "`strategy` argument `scale` only supports scale.left, scale.right, scale.none"
+        }));
+    }
+}
+
+#[test]
 fn accepts_indicator_string_metadata_named_const_aliases() {
     let analysis = analyze(
         "fmt_base = format.percent\nfmt = fmt_base\nscale_base = scale.right\nscale_value = scale_base\nindicator(\"Format metadata\", format=fmt, scale=scale_value)\n",
@@ -2356,6 +2382,33 @@ fn accepts_strategy_numeric_metadata_constant_expressions() {
     assert_eq!(settings.margin_short.value_percent, 50.0);
     assert!(settings.margin_short.explicit);
     assert_eq!(settings.pyramiding_limit, 2);
+}
+
+#[test]
+fn v5_strategy_accepts_published_percent_commission_string() {
+    let analysis = analyze(
+        "//@version=5\nstrategy('SSL', commission_type='percent', commission_value=0.04)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .expect("v5 strategy HIR")
+            .strategy_settings
+            .commission,
+        Some(pine_ir::StrategyCommission::Percent(0.04))
+    );
+
+    let v6 = analyze("//@version=6\nstrategy('SSL', commission_type='percent')\n");
+    assert!(
+        v6.diagnostics
+            .iter()
+            .any(|item| item.code == "E_CALL_ARG_VALUE")
+    );
 }
 
 #[test]

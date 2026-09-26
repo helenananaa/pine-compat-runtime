@@ -66,6 +66,10 @@ impl<'a> HistoricalRuntime<'a> {
             ("low", PineValue::Float(bar.low)),
             ("close", PineValue::Float(bar.close)),
             ("volume", PineValue::Float(bar.volume)),
+            // Bid/ask exist only on 1T charts; supported time-based chart
+            // contexts expose TradingView's `na` values.
+            ("ask", PineValue::Na),
+            ("bid", PineValue::Na),
             ("time", PineValue::Int(bar.time)),
             ("time_close", PineValue::Int(time_close)),
             ("time_tradingday", PineValue::Int(time_tradingday)),

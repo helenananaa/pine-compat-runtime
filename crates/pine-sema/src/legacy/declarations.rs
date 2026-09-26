@@ -1,7 +1,4 @@
-use pine_syntax::{
-    CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Span, Stmt, StmtKind,
-    SwitchArmResult,
-};
+use pine_syntax::{CallArg, Diagnostic, Expr, ExprKind, Literal, Program, Span, StmtKind};
 
 use super::dialect::PineDialect;
 use super::lowering::LegacyCallArgRewrite;
@@ -319,20 +316,6 @@ pub(crate) fn legacy_admission_failure(
         return None;
     }
 
-    if let Some(span) = find_strategy_reference(program) {
-        return Some(LegacyAdmissionFailure {
-            code: "E_LEGACY_STRATEGY_OUT_OF_SCOPE",
-            message: format!(
-                "legacy {} strategy declarations and strategy.* features are out of scope; only legacy indicators are supported",
-                dialect.name()
-            ),
-            feature: "legacy strategy".to_owned(),
-            reason: "legacy strategies are excluded from the indicator compatibility pipeline"
-                .to_owned(),
-            span,
-        });
-    }
-
     let declarations = declaration_calls(program);
     match declarations.as_slice() {
         [] => Some(LegacyAdmissionFailure {
@@ -350,6 +333,15 @@ pub(crate) fn legacy_admission_failure(
         }),
         [declaration]
             if declaration.name == "study"
+                && matches!(
+                    dialect,
+                    PineDialect::V1 | PineDialect::V2 | PineDialect::V3 | PineDialect::V4
+                ) =>
+        {
+            None
+        }
+        [declaration]
+            if declaration.name == "strategy"
                 && matches!(
                     dialect,
                     PineDialect::V1 | PineDialect::V2 | PineDialect::V3 | PineDialect::V4
@@ -438,156 +430,4 @@ fn declaration_calls(program: &Program) -> Vec<DeclarationCall<'_>> {
             })
         })
         .collect()
-}
-
-fn find_strategy_reference(program: &Program) -> Option<Span> {
-    program
-        .statements
-        .iter()
-        .find_map(find_strategy_reference_in_statement)
-}
-
-fn find_strategy_reference_in_statement(statement: &Stmt) -> Option<Span> {
-    match &statement.kind {
-        StmtKind::Expr(expr)
-        | StmtKind::Decl { value: expr, .. }
-        | StmtKind::Reassign { value: expr, .. }
-        | StmtKind::FieldReassign { value: expr, .. }
-        | StmtKind::TupleDecl { value: expr, .. } => find_strategy_reference_in_expr(expr),
-        StmtKind::ArrayFieldReassign {
-            array,
-            index,
-            value,
-            ..
-        } => [array, index, value]
-            .into_iter()
-            .find_map(find_strategy_reference_in_expr),
-        StmtKind::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => find_strategy_reference_in_expr(condition).or_else(|| {
-            then_branch
-                .iter()
-                .chain(else_branch)
-                .find_map(find_strategy_reference_in_statement)
-        }),
-        StmtKind::For {
-            from,
-            to,
-            step,
-            body,
-            ..
-        } => find_strategy_reference_in_expr(from)
-            .or_else(|| find_strategy_reference_in_expr(to))
-            .or_else(|| step.as_ref().and_then(find_strategy_reference_in_expr))
-            .or_else(|| body.iter().find_map(find_strategy_reference_in_statement)),
-        StmtKind::ForIn { iterable, body, .. } => find_strategy_reference_in_expr(iterable)
-            .or_else(|| body.iter().find_map(find_strategy_reference_in_statement)),
-        StmtKind::While { condition, body } => find_strategy_reference_in_expr(condition)
-            .or_else(|| body.iter().find_map(find_strategy_reference_in_statement)),
-        StmtKind::Function { body, .. } => find_strategy_reference_in_function_body(body),
-        StmtKind::Export(export) => match &export.item {
-            pine_syntax::ExportItem::Const { value, .. } => find_strategy_reference_in_expr(value),
-            pine_syntax::ExportItem::Function { body, .. } => {
-                find_strategy_reference_in_function_body(body)
-            }
-            pine_syntax::ExportItem::UserType { .. } | pine_syntax::ExportItem::Unknown { .. } => {
-                None
-            }
-        },
-        StmtKind::Method(method) => find_strategy_reference_in_function_body(&method.body),
-        StmtKind::Import(_)
-        | StmtKind::Library(_)
-        | StmtKind::UserType(_)
-        | StmtKind::Break
-        | StmtKind::Continue
-        | StmtKind::Unsupported { .. } => None,
-    }
-}
-
-fn find_strategy_reference_in_function_body(body: &FunctionBody) -> Option<Span> {
-    match body {
-        FunctionBody::Expr(expr) => find_strategy_reference_in_expr(expr),
-        FunctionBody::Block(statements) => statements
-            .iter()
-            .find_map(find_strategy_reference_in_statement),
-    }
-}
-
-fn find_strategy_reference_in_expr(expr: &Expr) -> Option<Span> {
-    if matches!(
-        &expr.kind,
-        ExprKind::QualifiedName(parts) if parts.first().is_some_and(|part| part == "strategy")
-    ) {
-        return Some(expr.span);
-    }
-
-    match &expr.kind {
-        ExprKind::Call { callee, args } => {
-            if matches!(&callee.kind, ExprKind::Identifier(name) if name == "strategy") {
-                return Some(callee.span);
-            }
-            find_strategy_reference_in_expr(callee).or_else(|| {
-                args.iter()
-                    .find_map(|arg| find_strategy_reference_in_expr(&arg.value))
-            })
-        }
-        ExprKind::Unary { expr, .. }
-        | ExprKind::History { expr, .. }
-        | ExprKind::Group(expr)
-        | ExprKind::Member { receiver: expr, .. } => find_strategy_reference_in_expr(expr),
-        ExprKind::Binary { left, right, .. } => {
-            find_strategy_reference_in_expr(left).or_else(|| find_strategy_reference_in_expr(right))
-        }
-        ExprKind::Ternary {
-            condition,
-            then_expr,
-            else_expr,
-        } => find_strategy_reference_in_expr(condition)
-            .or_else(|| find_strategy_reference_in_expr(then_expr))
-            .or_else(|| find_strategy_reference_in_expr(else_expr)),
-        ExprKind::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => find_strategy_reference_in_expr(condition).or_else(|| {
-            then_branch
-                .iter()
-                .chain(else_branch)
-                .find_map(find_strategy_reference_in_statement)
-        }),
-        ExprKind::For {
-            from,
-            to,
-            step,
-            body,
-            ..
-        } => find_strategy_reference_in_expr(from)
-            .or_else(|| find_strategy_reference_in_expr(to))
-            .or_else(|| step.as_deref().and_then(find_strategy_reference_in_expr))
-            .or_else(|| body.iter().find_map(find_strategy_reference_in_statement)),
-        ExprKind::ForIn { iterable, body, .. } => find_strategy_reference_in_expr(iterable)
-            .or_else(|| body.iter().find_map(find_strategy_reference_in_statement)),
-        ExprKind::While { condition, body } => find_strategy_reference_in_expr(condition)
-            .or_else(|| body.iter().find_map(find_strategy_reference_in_statement)),
-        ExprKind::Switch { selector, arms } => selector
-            .as_deref()
-            .and_then(find_strategy_reference_in_expr)
-            .or_else(|| {
-                arms.iter().find_map(|arm| {
-                    arm.condition
-                        .as_ref()
-                        .and_then(find_strategy_reference_in_expr)
-                        .or_else(|| match &arm.result {
-                            SwitchArmResult::Expr(expr) => find_strategy_reference_in_expr(expr),
-                            SwitchArmResult::Block(statements) => statements
-                                .iter()
-                                .find_map(find_strategy_reference_in_statement),
-                        })
-                })
-            }),
-        ExprKind::Tuple(values) => values.iter().find_map(find_strategy_reference_in_expr),
-        ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => None,
-    }
 }

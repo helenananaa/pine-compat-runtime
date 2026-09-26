@@ -296,10 +296,11 @@ impl Parser {
                 );
                 return None;
             }
-            let Some(type_name) = param.type_name else {
-                self.error_here("E_PARSE_METHOD", "method parameters must declare a type");
+            let type_name = param.type_name.unwrap_or_default();
+            if params.is_empty() && type_name.is_empty() {
+                self.error_here("E_PARSE_METHOD", "method receiver must declare a type");
                 return None;
-            };
+            }
             params.push(MethodParam {
                 type_name,
                 name: param.name,

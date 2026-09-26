@@ -504,6 +504,23 @@ fn legacy_security_accepts_same_selector_udf_local_dependencies_only() {
 }
 
 #[test]
+fn legacy_security_global_alias_nested_request_requires_matching_selector() {
+    let supported = analyze_production(
+        "//@version=2\nstudy(\"matching global alias\")\nacc = nz(acc[1]) + close\ninner = security(\"NYSE:IBM\", \"5\", acc)\nplot(security(\"NYSE:IBM\", \"5\", inner * 2))\n",
+    );
+    assert!(
+        supported.diagnostics.is_empty(),
+        "{:?}",
+        supported.diagnostics
+    );
+
+    let mismatched = analyze_production(
+        "//@version=2\nstudy(\"mismatched global alias\")\ninner = security(\"NYSE:IBM\", \"15\", close)\nplot(security(\"NYSE:IBM\", \"5\", inner * 2))\n",
+    );
+    assert!(diagnostic_codes(&mismatched).contains(&"E_UNSUPPORTED_FEATURE"));
+}
+
+#[test]
 fn legacy_security_rejects_invalid_versioned_signatures_and_dynamic_merge_metadata() {
     let named_v2 = analyze_legacy(
         "//@version=2\nplot(security(symbol=\"NYSE:IBM\", resolution=\"5\", expression=close))\n",
@@ -1333,7 +1350,7 @@ fn v4_tostring_reshapes_historical_parameter_names() {
         ]
     );
 
-    for version in [1, 2, 3] {
+    for version in [1, 2] {
         let unavailable = analyze_production(&format!(
             "//@version={version}\nstudy(\"tostring boundary\")\nplot(tostring(close) != \"\" ? 1 : 0)\n"
         ));
@@ -1346,6 +1363,19 @@ fn v4_tostring_reshapes_historical_parameter_names() {
                 .all(|translation| translation.source_feature != "tostring")
         );
     }
+}
+
+#[test]
+fn v3_open_close_strategy_math_and_string_aliases_are_available() {
+    let analysis = analyze_production(
+        "//@version=3\nstudy(\"v3 aliases\")\nplot(alma(close, 8, 0.85, 6) + exp(-1.0) + cos(1.0) + (tostring(3, \"###D\") == \"3D\" ? 1 : 0))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3401,6 +3431,28 @@ fn v2_declaration_graph_preserves_symbol_identity_and_stable_current_order() {
 }
 
 #[test]
+fn v1_v2_allow_legacy_input_inside_udf_without_relaxing_v3() {
+    let body = "study(\"local input\")\nf() =>\n    factor = input(0.5)\n    factor\nplot(f())\n";
+    for source in [body.to_owned(), format!("//@version=2\n{body}")] {
+        let analysis = analyze_production(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+    let v3 = analyze_production(&format!("//@version=3\n{body}"));
+    assert!(v3.hir.is_none());
+    assert!(
+        v3.compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "function_side_effect")
+    );
+}
+
+#[test]
 fn v2_declaration_graph_treats_positive_const_expression_offsets_as_history() {
     let analysis = analyze_production(
         "//@version=2\nstudy(\"const history offset\")\nselfSeries = nz(selfSeries[1 + 0]) + close\nplot(selfSeries)\n",
@@ -3590,12 +3642,11 @@ fn v2_declaration_graph_enforces_the_edge_limit_independently() {
 }
 
 #[test]
-fn legacy_integer_division_is_truncated_across_the_complete_expression() {
-    for version in [1, 2, 3, 4] {
-        let source = include_str!(
-            "../../../../tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine"
-        )
-        .replacen("//@version=4", &format!("//@version={version}"), 1);
+fn v1_v3_integer_division_is_truncated_across_the_complete_expression() {
+    for version in [1, 2, 3] {
+        let source = format!(
+            "//@version={version}\nstudy(\"Legacy integer division\")\nlength = input(5, title=\"Length\")\nlag = length / 2\nweighted(source, window) => wma(source, window)\nplot(wma(close, lag))\nplot(weighted(close, length / 2))\nplot(length / 2)\nplot(close[lag])\nplot(close[5 / 2])\n"
+        );
         let analysis = analyze_production(&source);
         assert!(
             analysis.diagnostics.is_empty(),
@@ -3634,6 +3685,47 @@ fn legacy_integer_division_is_truncated_across_the_complete_expression() {
             HirExprKind::Call { ref callee, .. } if callee == "int"
         ));
     }
+}
+
+#[test]
+fn v4_integer_division_preserves_input_fractions_and_truncates_constants() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"v4 division\")\nlength = input(5)\nplot(length / 2)\nplot(5 / 2)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .filter(|emulation| emulation.feature == "v4.integer_division")
+            .count(),
+        1
+    );
+    let hir = analysis.hir.as_ref().expect("v4 division HIR");
+    let plots = hir
+        .statements
+        .iter()
+        .filter_map(|statement| match &statement.kind {
+            HirStmtKind::Expr(HirExpr {
+                kind: HirExprKind::Call { callee, args, .. },
+                ..
+            }) if callee == "plot" => args.first().map(|arg| &arg.value),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        plots[0].pine_type,
+        PineType::new(Qualifier::Input, ValueKind::Float)
+    );
+    assert_eq!(
+        plots[1].pine_type,
+        PineType::new(Qualifier::Const, ValueKind::Int)
+    );
 }
 
 #[test]

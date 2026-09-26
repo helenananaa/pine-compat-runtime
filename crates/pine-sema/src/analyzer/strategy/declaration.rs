@@ -1,3 +1,4 @@
+use crate::PineDialect;
 use crate::prelude::*;
 
 const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
@@ -9,6 +10,20 @@ const STRATEGY_NONE_ACCOUNT_CURRENCY: &str = "NONE";
 
 impl Analyzer {
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
+        let signature =
+            pine_builtins::get_phase_1_builtin("strategy").expect("strategy declaration signature");
+        let scale_index = signature
+            .params
+            .iter()
+            .position(|param| param.name == "scale")
+            .expect("strategy scale parameter");
+        self.validate_label_string_arg(
+            signature,
+            args,
+            scale_index,
+            "scale",
+            &["scale.left", "scale.right", "scale.none"],
+        );
         let mut default_qty_type_arg = None;
         let mut default_qty_value_arg = None;
         let mut default_qty_constructor: Option<fn(f64) -> pine_ir::StrategyDefaultQuantity> = None;
@@ -45,6 +60,7 @@ impl Analyzer {
                     "use_bar_magnifier",
                     "format",
                     "precision",
+                    "scale",
                     "calc_bars_count",
                 ]
                 .get(index)
@@ -157,6 +173,12 @@ impl Analyzer {
                             );
                         }
                         STRATEGY_PERCENT_COMMISSION_TYPE => {
+                            commission_constructor = Some(
+                                pine_ir::StrategyCommission::Percent
+                                    as fn(f64) -> pine_ir::StrategyCommission,
+                            );
+                        }
+                        "percent" if self.legacy.dialect() == PineDialect::V5 => {
                             commission_constructor = Some(
                                 pine_ir::StrategyCommission::Percent
                                     as fn(f64) -> pine_ir::StrategyCommission,

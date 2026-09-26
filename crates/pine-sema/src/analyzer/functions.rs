@@ -81,15 +81,7 @@ fn resolve_udf_arg_indices_with_defaults(
 pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Call { callee, args } => {
-            let name = expr_name(callee);
-            (matches!(&callee.kind, ExprKind::Member { name, .. } if member_method_may_have_side_effect(name)))
-                || name.as_deref().is_some_and(|name| {
-                    is_output_or_declaration_builtin(name)
-                        || is_array_mutation_builtin(name)
-                        || is_array_mutation_method_call_name(name)
-                        || is_map_mutation_builtin(name)
-                        || is_map_mutation_method_call_name(name)
-                })
+            call_has_side_effect(callee)
                 || contains_output_or_declaration_call(callee)
                 || args
                     .iter()
@@ -166,6 +158,17 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
         ExprKind::Tuple(items) => items.iter().any(contains_output_or_declaration_call),
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
     }
+}
+
+pub(crate) fn call_has_side_effect(callee: &Expr) -> bool {
+    matches!(&callee.kind, ExprKind::Member { name, .. } if member_method_may_have_side_effect(name))
+        || expr_name(callee).as_deref().is_some_and(|name| {
+            is_output_or_declaration_builtin(name)
+                || is_array_mutation_builtin(name)
+                || is_array_mutation_method_call_name(name)
+                || is_map_mutation_builtin(name)
+                || is_map_mutation_method_call_name(name)
+        })
 }
 
 fn member_method_may_have_side_effect(method: &str) -> bool {
@@ -848,7 +851,13 @@ impl Analyzer {
                     return None;
                 };
                 for statement in prefix {
+                    if self.legacy.dialect().version() <= 2 && self.function_depth > 0 {
+                        self.predeclare_legacy_function_self_history(statement);
+                    }
                     self.analyze_stmt(statement);
+                }
+                if self.legacy.dialect().version() <= 2 && self.function_depth > 0 {
+                    self.predeclare_legacy_function_self_history(last);
                 }
                 match &last.kind {
                     StmtKind::Expr(expr) => self.analyze_expr(expr),
@@ -925,6 +934,49 @@ impl Analyzer {
                 }
             }
         }
+    }
+
+    fn predeclare_legacy_function_self_history(&mut self, statement: &Stmt) {
+        let StmtKind::Decl {
+            mode: pine_syntax::DeclMode::Normal,
+            declared_type: None,
+            name,
+            value,
+        } = &statement.kind
+        else {
+            return;
+        };
+        let mut self_history_span = None;
+        crate::modules::visit_expression(value, &mut |expr| {
+            if let ExprKind::History { expr: target, .. } = &expr.kind
+                && matches!(&target.kind, ExprKind::Identifier(target_name) if target_name == name)
+            {
+                self_history_span = Some(expr.span);
+            }
+        });
+        let Some(history_span) = self_history_span else {
+            return;
+        };
+        // Prior locals have their actual types by this point. Seed only the
+        // current recurrence before analyzing its own initializer.
+        let seed = PineType::new(Qualifier::Series, ValueKind::Float);
+        let inferred = std::collections::HashMap::from([(name.clone(), seed)]);
+        if !self
+            .legacy_graph_type_of_expr(value, &inferred)
+            .is_some_and(|pine_type| pine_type.kind == ValueKind::Float)
+        {
+            return;
+        }
+        let symbol = self.define_local_symbol(name, seed, None, false);
+        self.legacy_v2_predeclared_symbols.insert(symbol.id);
+        self.compatibility
+            .legacy_emulations
+            .push(crate::compatibility::LegacyEmulation {
+                feature: format!("v{}.self_reference", self.legacy.dialect().version()),
+                behavior: "legacy function-local self-history uses one series identity across bars"
+                    .to_owned(),
+                span: history_span,
+            });
     }
 
     fn analyze_function_symbol_statement_return(

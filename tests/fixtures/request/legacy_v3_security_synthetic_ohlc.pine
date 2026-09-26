@@ -1,0 +1,6 @@
+//@version=3
+study("legacy provider synthetic price")
+Factor=input(2)
+Pd=input(2)
+requested=security("NYSE:IBM", "5", hl2-Factor*atr(Pd))
+plot(requested)

@@ -25,6 +25,221 @@ fn timed_close(time: i64, close: f64) -> Bar {
     }
 }
 
+#[test]
+fn legacy_v2_self_referencing_float_extrema_infer_and_run() {
+    let program = compile_fixture(
+        "v2-self-extrema.pine",
+        "//@version=2\nstudy(\"self extrema\")\nlower = close - 1\nupper = close + 1\nlowBand = close[1] > lowBand[1] ? max(lower, lowBand[1]) : lower\nhighBand = close[1] < highBand[1] ? min(upper, highBand[1]) : upper\nplot(lowBand)\nplot(highBand)\n",
+    );
+    let bars = [10.0, 11.0, 12.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+    let result = run_historical(&program, &bars).expect("v2 self extrema run");
+    assert_values_close(&result.plots[0].values, &[9.0, 10.0, 11.0]);
+    assert_values_close(&result.plots[1].values, &[11.0, 11.0, 13.0]);
+}
+
+#[test]
+fn legacy_v2_nested_iff_nz_self_reference_infers_integer_state() {
+    let program = compile_fixture(
+        "v2-self-iff-nz.pine",
+        "//@version=2\nstudy(\"self iff nz\")\npos = iff(close > 10, 1, iff(close < 10, -1, nz(pos[1], 0)))\nplot(pos)\n",
+    );
+    let bars = [9.0, 10.0, 11.0, 10.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+    let result = run_historical(&program, &bars).expect("v2 nested iff nz run");
+    assert_values_close(&result.plots[0].values, &[-1.0, -1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn legacy_v3_v4_inverse_trigonometric_names_use_math_builtins() {
+    for version in [3, 4] {
+        let source = format!(
+            "//@version={version}\nstudy(\"inverse trig\")\nplot(acos(-1))\nplot(asin(1))\nplot(atan(1))\n"
+        );
+        let program = compile_fixture("legacy-inverse-trig.pine", &source);
+        let result = run_historical(&program, &[timed_close(0, 1.0)]).expect("inverse trig run");
+        assert_values_close(&result.plots[0].values, &[std::f64::consts::PI]);
+        assert_values_close(&result.plots[1].values, &[std::f64::consts::FRAC_PI_2]);
+        assert_values_close(&result.plots[2].values, &[std::f64::consts::FRAC_PI_4]);
+    }
+}
+
+#[test]
+fn legacy_udf_input_and_prior_local_support_nested_history_recursion() {
+    let body = r#"study("legacy local input")
+smooth(x) =>
+    factor = input(0.5)
+    baseline = lowest(x, 2)
+    value = na(value[1]) ? baseline : value[1] + factor * (baseline - value[1])
+    value
+plot(smooth(close))
+"#;
+    let bars = [2.0, 4.0, 6.0, 8.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+    for source in [body.to_owned(), format!("//@version=2\n{body}")] {
+        let program = compile_fixture("legacy-udf-local-input.pine", &source);
+        let result = run_historical(&program, &bars).expect("legacy local input run");
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 3.0, 4.5]);
+    }
+}
+
+#[test]
+fn legacy_function_local_self_history_keeps_separate_call_site_series() {
+    let body = r#"study("legacy recursive average")
+wwma(length, price) =>
+    value = (nz(value[1]) * (length - 1) + price) / length
+plot(wwma(2, close))
+plot(wwma(3, close))
+"#;
+    let bars = [2.0, 4.0, 6.0, 8.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+    for source in [body.to_owned(), format!("//@version=2\n{body}")] {
+        let program = compile_fixture("legacy-udf-self-history.pine", &source);
+        let result = run_historical(&program, &bars).expect("legacy recursive average");
+        assert_values_close(&result.plots[0].values, &[1.0, 2.5, 4.25, 6.125]);
+        assert_values_close(
+            &result.plots[1].values,
+            &[2.0 / 3.0, 16.0 / 9.0, 86.0 / 27.0, 388.0 / 81.0],
+        );
+    }
+}
+
+#[test]
+fn legacy_v1_extremes_skip_na_inside_a_complete_bar_window() {
+    let source = r#"study("legacy extremes")
+source = bar_index == 0 ? na : close
+plot(highest(source, 3))
+plot(lowest(source, 3))
+"#;
+    let program = compile_fixture("legacy-v1-na-extremes.pine", source);
+    let bars = [2.0, 4.0, 6.0, 8.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+    let result = run_historical(&program, &bars).expect("legacy extrema run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[6.0, 8.0]);
+    assert_values_close(&result.plots[1].values[2..], &[4.0, 4.0]);
+}
+
+#[test]
+fn implicit_v1_sma_reversal_strategy_matches_canonical_plots_and_orders() {
+    let source =
+        include_str!("../../../../tests/fixtures/runtime/legacy_v1_strategy_sma_reversal.pine");
+    let legacy = compile_fixture("implicit-v1-sma-reversal.pine", source);
+    let explicit = compile_fixture(
+        "explicit-v1-sma-reversal.pine",
+        &format!("//@version=1\n{source}"),
+    );
+    let canonical = compile_fixture(
+        "v6-sma-reversal.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/legacy_v1_strategy_sma_reversal_canonical.pine"
+        ),
+    );
+    let bars = [10.0, 10.0, 10.0, 12.0, 14.0, 13.0, 10.0, 9.0, 12.0, 15.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+
+    let actual = run_historical(&legacy, &bars).expect("implicit v1 strategy run");
+    let expected = run_historical(&canonical, &bars).expect("canonical reversal run");
+    assert_eq!(actual, expected);
+    assert_eq!(
+        run_historical(&explicit, &bars).expect("explicit v1 strategy run"),
+        expected
+    );
+    assert!(!actual.strategy.expect("strategy output").orders.is_empty());
+}
+
+#[test]
+fn v2_v3_sma_cross_strategy_matches_canonical_orders_and_plots() {
+    let canonical = compile_fixture(
+        "v6-strategy-sma-cross.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/legacy_v2_v3_strategy_sma_cross_canonical.pine"
+        ),
+    );
+    let bars = [10.0, 10.0, 10.0, 12.0, 14.0, 13.0, 10.0, 9.0, 12.0, 15.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+    let expected = run_historical(&canonical, &bars).expect("canonical SMA cross run");
+    assert!(
+        !expected
+            .strategy
+            .as_ref()
+            .expect("strategy output")
+            .orders
+            .is_empty()
+    );
+
+    for (name, source) in [
+        (
+            "v2-strategy-sma-cross.pine",
+            include_str!("../../../../tests/fixtures/runtime/legacy_v2_strategy_sma_cross.pine"),
+        ),
+        (
+            "v3-strategy-sma-cross.pine",
+            include_str!("../../../../tests/fixtures/runtime/legacy_v3_strategy_sma_cross.pine"),
+        ),
+    ] {
+        let program = compile_fixture(name, source);
+        assert_eq!(
+            run_historical(&program, &bars).expect(name),
+            expected,
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn v4_strategy_legacy_wma_and_orders_match_canonical_execution() {
+    let legacy = compile_fixture(
+        "v4-strategy.pine",
+        include_str!("../../../../tests/fixtures/runtime/legacy_v4_strategy_hull_control.pine"),
+    );
+    let canonical = compile_fixture(
+        "v6-strategy.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/legacy_v4_strategy_hull_control_canonical.pine"
+        ),
+    );
+    let bars = [10.0, 11.0, 12.0, 13.0, 12.0, 11.0, 10.0, 12.0, 14.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+
+    let legacy_result = run_historical(&legacy, &bars).expect("v4 strategy run");
+    let canonical_result = run_historical(&canonical, &bars).expect("v6 strategy run");
+    assert_eq!(legacy_result, canonical_result);
+    assert!(
+        !legacy_result
+            .strategy
+            .expect("strategy output")
+            .orders
+            .is_empty()
+    );
+}
+
 fn legacy_security_environment(bars: Vec<Bar>) -> RequestEnvironment {
     let key = RequestKey::new(
         "NYSE:IBM",
@@ -457,11 +672,11 @@ fn legacy_v1_v2_bool_numeric_comparisons_match_explicit_float_casts() {
 }
 
 #[test]
-fn legacy_integer_division_applies_to_values_calls_and_history_offsets() {
+fn v4_const_integer_division_and_input_fractional_division_use_explicit_int_offsets() {
     let legacy = compile_fixture(
-        "contextual_integer_division_legacy.pine",
+        "contextual_integer_division_v4_native_legacy.pine",
         include_str!(
-            "../../../../tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine"
+            "../../../../tests/fixtures/legacy/v4/runtime/contextual_integer_division_v4_native_legacy.pine"
         ),
     );
     let canonical = compile_fixture(
@@ -484,12 +699,36 @@ fn legacy_integer_division_applies_to_values_calls_and_history_offsets() {
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_values_close(&result.plots[0].values[1..], &[5.0 / 3.0, 8.0 / 3.0]);
     assert_eq!(result.plots[1].values, result.plots[0].values);
-    assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[2].values, &[2.5, 2.5, 2.5]);
     assert_eq!(
         result.plots[3].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Float(1.0)]
     );
     assert_eq!(result.plots[4].values, result.plots[3].values);
+}
+
+#[test]
+fn v5_extreme_length_context_truncates_input_quotient_without_changing_value() {
+    let source = compile_fixture(
+        "v5_extreme_quotient.pine",
+        "//@version=5\nindicator('v5 quotient')\nlen = input.int(5)\ndivisor = input.int(2)\nwindow(src) => ta.lowest(src, len / divisor)\nplot(window(close))\nplot(len / divisor)\n",
+    );
+    let explicit = compile_fixture(
+        "v5_extreme_quotient_explicit.pine",
+        "//@version=5\nindicator('v5 quotient')\nlen = input.int(5)\ndivisor = input.int(2)\nwindow(src) => ta.lowest(src, int(len / divisor))\nplot(window(close))\nplot(len / divisor)\n",
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 3.0),
+        timed_close(120_000, 2.0),
+    ];
+    let result = run_historical(&source, &bars).expect("v5 contextual quotient run");
+    assert_eq!(
+        result,
+        run_historical(&explicit, &bars).expect("explicit v5 quotient run")
+    );
+    assert_eq!(result.plots[0].values[2], PineValue::Float(2.0));
+    assert_eq!(result.plots[1].values[2], PineValue::Float(2.5));
 }
 
 #[test]

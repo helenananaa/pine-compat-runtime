@@ -91,7 +91,11 @@ impl OrderBook {
 
     pub(super) fn replace_all_exit(&mut self, mut pending_exit: super::pending_exits::PendingExit) {
         self.assign_exit_key(&mut pending_exit);
-        self.exits.replace_all(pending_exit);
+        if pending_exit.from_entry.is_empty() {
+            self.exits.replace_all(pending_exit);
+        } else {
+            self.exits.replace_for_entry(pending_exit);
+        }
     }
 
     pub(super) fn replace_all_exits(
@@ -149,6 +153,16 @@ impl OrderBook {
 
     pub(super) fn clear_exits_for_entry(&mut self, entry_id: &str) {
         self.exits.clear_for_entry(entry_id);
+        self.prune_oca_membership();
+    }
+
+    pub(super) fn retain_exits_for_pending_entries(&mut self, filling_entry_id: Option<&str>) {
+        let mut pending_ids: HashSet<String> =
+            self.entries.iter().map(|entry| entry.id.clone()).collect();
+        if let Some(id) = filling_entry_id {
+            pending_ids.insert(id.to_owned());
+        }
+        self.exits.retain_for_pending_entries(&pending_ids);
         self.prune_oca_membership();
     }
 

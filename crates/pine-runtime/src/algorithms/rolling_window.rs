@@ -23,6 +23,7 @@ pub(crate) struct RollingWindowState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum RollingWindowKey {
     Single(CallSiteId),
+    MathSum(CallSiteId),
     VwmaWeighted(CallSiteId),
     VwmaVolume(CallSiteId),
     MfiPositive(CallSiteId),

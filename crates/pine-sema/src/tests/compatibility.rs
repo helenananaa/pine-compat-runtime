@@ -5,10 +5,153 @@ use pine_builtins::{Accepts, PHASE_1_BUILTINS, ReturnSpec};
 use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
+fn dynamic_request_selectors_obey_versioned_declaration_gate() {
+    for (version, declaration, accepted) in [
+        (6, "indicator(\"dynamic\")", true),
+        (6, "indicator(\"static\", dynamic_requests=false)", false),
+        (5, "indicator(\"dynamic v5\", dynamic_requests=true)", true),
+        (
+            5,
+            "strategy(\"dynamic strategy v5\", dynamic_requests=true)",
+            true,
+        ),
+        (
+            6,
+            "strategy(\"static strategy\", dynamic_requests=false)",
+            false,
+        ),
+        (5, "indicator(\"legacy\")", false),
+    ] {
+        for request in [
+            "request.security(\"NYSE:IBM\", tf, close)",
+            "request.security_lower_tf(\"NYSE:IBM\", tf, close)",
+        ] {
+            let source = format!(
+                "//@version={version}\n{declaration}\ntf = bar_index % 2 == 0 ? \"1\" : \"5\"\nx = {request}\n"
+            );
+            let analysis = analyze(&source);
+            assert_eq!(
+                analysis.hir.is_some(),
+                accepted,
+                "{source}: {:?}",
+                analysis.diagnostics
+            );
+        }
+    }
+}
+
+#[test]
+fn nested_request_context_inheritance_obeys_dynamic_requests_gate() {
+    for (version, declaration, accepted) in [
+        (6, "indicator(\"nested\")", true),
+        (6, "indicator(\"static\", dynamic_requests=false)", false),
+        (5, "indicator(\"nested v5\", dynamic_requests=true)", true),
+        (5, "indicator(\"static v5\")", false),
+    ] {
+        let nested_timeframe = if version == 5 {
+            "timeframe.period"
+        } else {
+            "timeframe.main_period"
+        };
+        let source = format!(
+            "//@version={version}\n{declaration}\ninnerTime = request.security(\"\", {nested_timeframe}, time)\nplot(request.security(\"B\", \"1\", innerTime))\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn timeframe_in_seconds_accepts_series_timeframe_in_v6_only() {
+    for (version, accepted) in [(5, false), (6, true)] {
+        let source = format!(
+            "//@version={version}\nindicator(\"series timeframe conversion\")\ntf = bar_index % 2 == 0 ? \"1\" : \"5\"\nplot(timeframe.in_seconds(tf))\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn bid_ask_are_v6_tick_variables() {
+    let v6 = analyze(
+        "//@version=6\nindicator(\"quotes\")\nplot(na(ask) ? 1 : 0)\nplot(na(bid) ? 1 : 0)\n",
+    );
+    assert!(v6.hir.is_some(), "{:?}", v6.diagnostics);
+    let v5 = analyze("//@version=5\nindicator(\"quotes\")\nplot(ask)\nplot(bid)\n");
+    assert!(v5.hir.is_none());
+    assert!(
+        v5.diagnostics
+            .iter()
+            .any(|d| d.code == "E_LEGACY_VERSION_FEATURE")
+    );
+}
+
+#[test]
+fn local_request_calls_obey_dynamic_requests_gate() {
+    for (version, declaration, accepted) in [
+        (6, "indicator(\"default dynamic\")", true),
+        (6, "indicator(\"static\", dynamic_requests=false)", false),
+        (
+            5,
+            "indicator(\"explicit dynamic\", dynamic_requests=true)",
+            true,
+        ),
+        (5, "indicator(\"default static\")", false),
+    ] {
+        let source = format!(
+            "//@version={version}\n{declaration}\nfloat value = na\nif bar_index > 0\n    value := request.security(\"B\", timeframe.period, close)\nplot(value)\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn v5_udf_wrapped_local_request_keeps_legacy_exception() {
+    for (version, declaration, accepted) in [
+        (5, "indicator(\"v5 wrapper\")", true),
+        (
+            6,
+            "indicator(\"v6 static wrapper\", dynamic_requests=false)",
+            false,
+        ),
+        (6, "indicator(\"v6 dynamic wrapper\")", true),
+    ] {
+        let source = format!(
+            "//@version={version}\n{declaration}\nfetch() => request.security(\"B\", timeframe.period, close)\nfloat value = na\nif bar_index > 0\n    value := fetch()\nplot(value)\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
 fn modern_requests_reject_unsafe_external_state_and_object_captures() {
     for source in [
         "var float saved=close\nplot(request.security(\"B\",\"5\",saved))",
         "value=close\nvalue:=open\nplot(request.security(\"B\",\"5\",value))",
+        "[up, down]=[close, open]\nup:=high\nplot(request.security(\"B\",\"5\",up))",
         "a=array.from(close)\nb=request.security(\"B\",\"5\",a)",
         "draw()=>label.new(bar_index,close)\na=request.security(\"B\",\"5\",draw())",
     ] {
@@ -25,6 +168,28 @@ fn modern_requests_reject_unsafe_external_state_and_object_captures() {
             analysis.diagnostics
         );
     }
+}
+
+#[test]
+fn modern_request_tuple_binding_distinguishes_helper_local_mutation() {
+    let prefix = "//@version=6\nindicator(\"tuple names\")\nhelper() =>\n    var float posVol = 0.0\n    posVol += volume\n    [posVol, -posVol]\nfetch() =>\n    [posVol, negVol] = helper()\n";
+    let accepted = analyze(&format!(
+        "{prefix}    [ups, downs] = request.security_lower_tf(\"B\", \"1\", [posVol, negVol])\n    ups.size() + downs.size()\nplot(fetch())\n"
+    ));
+    assert!(accepted.hir.is_some(), "{:?}", accepted.diagnostics);
+
+    let rejected = analyze(&format!(
+        "{prefix}    posVol := close\n    [ups, downs] = request.security_lower_tf(\"B\", \"1\", [posVol, negVol])\n    ups.size() + downs.size()\nplot(fetch())\n"
+    ));
+    assert!(rejected.hir.is_none());
+    assert!(
+        rejected.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_UNSUPPORTED_FEATURE"
+                && diagnostic.message.contains("request.security_lower_tf")
+        }),
+        "{:?}",
+        rejected.diagnostics
+    );
 }
 
 #[test]
@@ -760,6 +925,23 @@ fn accepts_request_security_time_function_calls() {
     );
     assert!(analysis.compatibility.unsupported.is_empty());
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_early_pine_exp_alias() {
+    for source in [
+        "//@version=1\nstudy(\"v1 exp\")\nplot(exp(close / 100))\n",
+        "//@version=2\nstudy(\"v2 exp\")\nplot(exp(close / 100))\n",
+    ] {
+        let analysis = analyze(source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
+        assert!(analysis.hir.is_some());
+    }
 }
 
 #[test]
@@ -3448,8 +3630,70 @@ fn rejects_other_request_variants() {
 }
 
 #[test]
-fn rejects_request_security_lower_tf_api() {
+fn accepts_request_security_lower_tf_scalar_api() {
     let analysis = analyze("x = request.security_lower_tf(\"NYSE:IBM\", \"30S\", close)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|item| item.feature == "request.security_lower_tf")
+    );
+}
+
+#[test]
+fn accepts_request_security_lower_tf_tuple_api() {
+    let analysis = analyze(
+        "[opens, closes] = request.security_lower_tf(\"NYSE:IBM\", \"30S\", [open, close])\nplot(array.size(opens) + array.size(closes))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_request_security_lower_tf_calc_bars_count_api() {
+    let analysis = analyze(
+        "[prices, indices] = request.security_lower_tf(\"NYSE:IBM\", \"30S\", [close, bar_index], calc_bars_count=200000)\nplot(array.size(prices) + array.size(indices))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_request_security_calc_bars_count_with_merge_policies() {
+    let analysis = analyze(
+        "[totals, indices] = request.security(\"NYSE:IBM\", \"1\", [ta.cum(close), bar_index], gaps=barmerge.gaps_on, lookahead=barmerge.lookahead_off, calc_bars_count=200000)\nplot(totals + indices)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn rejects_request_security_lower_tf_optional_policy_api() {
+    let analysis = analyze(
+        "x = request.security_lower_tf(\"NYSE:IBM\", \"30S\", close, ignore_invalid_symbol=true)\n",
+    );
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
     assert_eq!(

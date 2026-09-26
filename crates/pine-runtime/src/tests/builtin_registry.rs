@@ -276,6 +276,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "plotchar",
     "plotshape",
     "request.security",
+    "request.security_lower_tf",
     "second",
     "str.contains",
     "str.endswith",

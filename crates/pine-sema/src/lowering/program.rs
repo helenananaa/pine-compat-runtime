@@ -58,6 +58,7 @@ impl Analyzer {
             next_series_id: self.next_series_id,
             next_call_site_id: self.next_call_site_id,
             call_site_sources: self.call_site_sources.clone(),
+            lower_tf_tuple_types: self.lower_tf_tuple_types.clone(),
             next_var_slot_id: self.next_var_slot_id,
             max_bars_back,
             calc_bars_count: self.calc_bars_count,

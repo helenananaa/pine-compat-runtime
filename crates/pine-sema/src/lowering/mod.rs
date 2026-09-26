@@ -901,7 +901,16 @@ impl Analyzer {
                     && self
                         .bound_symbol(receiver_name, callee.span)
                         .or_else(|| self.scope.resolve(receiver_name))
-                        .and_then(|symbol| self.symbol_user_types.get(&symbol.id))
+                        .and_then(|symbol| {
+                            self.symbol_user_types.get(&symbol.id).cloned().or_else(|| {
+                                (symbol.pine_type.kind == ValueKind::Color
+                                    && self.methods.contains_key(&(
+                                        "color".to_owned(),
+                                        method_name.to_owned(),
+                                    )))
+                                .then(|| "color".to_owned())
+                            })
+                        })
                         .is_some()
                 {
                     let pure_call_series_id = pure_series::pure_user_method_call_series_key(
@@ -1005,6 +1014,13 @@ impl Analyzer {
                 let call_site_id = self.alloc_call_site_at(expr.span);
                 let lowered_args =
                     self.lower_builtin_call_args(&name, args, param_exprs, param_types)?;
+                if name == "request.security_lower_tf" && pine_type.kind == ValueKind::Tuple {
+                    let tuple_types = self.tuple_element_types(&args[2].value)?;
+                    self.lower_tf_tuple_types.push((
+                        call_site_id,
+                        tuple_types.into_iter().map(|ty| ty.kind).collect(),
+                    ));
+                }
                 HirExprKind::Call {
                     callee: name,
                     call_site_id,

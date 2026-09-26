@@ -889,8 +889,7 @@ fn format_number_with_mintick(value: f64, format: &str, mintick: f64) -> String 
             return "NaN".to_owned();
         }
         let ticks = value / mintick;
-        let tie_tolerance = f64::EPSILON * ticks.abs().max(1.0) * 4.0;
-        let rounded = (ticks + 0.5 + tie_tolerance).floor() * mintick;
+        let rounded = (ticks + 0.5).floor() * mintick;
         if !rounded.is_finite() {
             return "NaN".to_owned();
         }
@@ -918,6 +917,10 @@ fn format_number_with_mintick(value: f64, format: &str, mintick: f64) -> String 
     };
     let percent = format.ends_with('%');
     let pattern = format.strip_suffix('%').unwrap_or(format);
+    let suffix_start = pattern
+        .find(|ch: char| !matches!(ch, '#' | '0' | '.' | ','))
+        .unwrap_or(pattern.len());
+    let (pattern, literal_suffix) = pattern.split_at(suffix_start);
     let value = if percent { value * 100.0 } else { value };
 
     let (whole_pattern, fractional_pattern) = pattern.split_once('.').unwrap_or((pattern, ""));
@@ -963,6 +966,7 @@ fn format_number_with_mintick(value: f64, format: &str, mintick: f64) -> String 
     if percent {
         result.push('%');
     }
+    result.push_str(literal_suffix);
     result
 }
 

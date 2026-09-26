@@ -143,6 +143,7 @@ mod tests {
             next_series_id: 0,
             next_call_site_id: 0,
             call_site_sources: Vec::new(),
+            lower_tf_tuple_types: Vec::new(),
             next_var_slot_id: 0,
             max_bars_back: None,
             calc_bars_count: None,

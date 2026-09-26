@@ -1,6 +1,6 @@
 use super::PineDialect;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 33;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 38;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -97,6 +97,22 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    LegacyRule {
+        source_name: "acos",
+        canonical_name: Some("math.acos"),
+        min_version: PineDialect::V3,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "alma",
+        canonical_name: Some("ta.alma"),
+        min_version: PineDialect::V3,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
     exact_symbol("aqua", "color.aqua", PineDialect::V1, PineDialect::V3),
     exact_symbol("area", "plot.style_area", PineDialect::V1, PineDialect::V3),
     exact_symbol(
@@ -105,6 +121,22 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    LegacyRule {
+        source_name: "asin",
+        canonical_name: Some("math.asin"),
+        min_version: PineDialect::V3,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "atan",
+        canonical_name: Some("math.atan"),
+        min_version: PineDialect::V3,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
     LegacyRule {
         source_name: "atr",
         canonical_name: Some("ta.atr"),
@@ -216,6 +248,14 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    LegacyRule {
+        source_name: "cos",
+        canonical_name: Some("math.cos"),
+        min_version: PineDialect::V3,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
     exact_symbol(
         "cross",
         "plot.style_cross",
@@ -261,6 +301,14 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
     LegacyRule {
         source_name: "ema",
         canonical_name: Some("ta.ema"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "exp",
+        canonical_name: Some("math.exp"),
         min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::ExactFunctionAlias,
@@ -938,7 +986,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
     LegacyRule {
         source_name: "tostring",
         canonical_name: Some("str.tostring"),
-        min_version: PineDialect::V4,
+        min_version: PineDialect::V3,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::FocusedCall,
         support: LegacyRuleSupport::Supported,

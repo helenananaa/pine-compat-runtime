@@ -63,6 +63,8 @@ pub struct HirProgram {
     /// Original physical source and byte range of lowered source calls.
     /// Generated/manual calls may have no entry; absence is not a root location.
     pub call_site_sources: Vec<HirCallSiteSource>,
+    /// Element types for tuple-valued intrabar requests, keyed by call site.
+    pub lower_tf_tuple_types: Vec<(CallSiteId, Vec<ValueKind>)>,
     pub next_var_slot_id: u32,
     pub max_bars_back: Option<u32>,
     /// Restricts initial batch execution to the latest N bars; zero means all bars.

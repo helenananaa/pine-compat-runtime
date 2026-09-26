@@ -152,13 +152,16 @@ impl BrokerState {
         if !price.is_finite() {
             return price;
         }
-        let is_long = if self.position_size != 0.0 {
-            self.position_size > 0.0
-        } else if let Some(pending_entry) = self.order_book.entries().find_by_id(from_entry) {
-            pending_entry.direction == PendingEntryDirection::Long
-        } else {
-            return price;
-        };
+        let is_long =
+            if self.position_size != 0.0 && self.open_position_size_for_entry(from_entry) > 0.0 {
+                self.position_size > 0.0
+            } else if let Some(pending_entry) = self.order_book.entries().find_by_id(from_entry) {
+                pending_entry.direction == PendingEntryDirection::Long
+            } else if self.position_size != 0.0 {
+                self.position_size > 0.0
+            } else {
+                return price;
+            };
         let ticks = price / tick;
         if !ticks.is_finite() {
             return price;

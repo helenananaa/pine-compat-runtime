@@ -322,6 +322,35 @@ impl BrokerState {
         candidates
     }
 
+    pub(super) fn collect_same_bar_close_exit_candidates(
+        &self,
+        bar_index: usize,
+        close: f64,
+        generation: u64,
+    ) -> Vec<BrokerCandidate> {
+        let Some(direction) = self.active_close_direction() else {
+            return Vec::new();
+        };
+        let mut candidates = Vec::new();
+        for pending in self.order_book.exits().iter() {
+            if pending.last_update_bar_index > bar_index
+                || !self.has_open_position_for_entry(&pending.from_entry)
+            {
+                continue;
+            }
+            candidates.extend(exit_gap_candidates(
+                pending,
+                direction,
+                close,
+                self.limit_verification_price_offset,
+                generation,
+            ));
+        }
+        candidates.retain(|candidate| candidate.event_kind == BrokerCandidateEvent::ExitFill);
+        candidates.sort_by(|left, right| cmp_candidates(left, right, None));
+        candidates
+    }
+
     fn margin_candidate_at(
         &self,
         path_leg: u8,

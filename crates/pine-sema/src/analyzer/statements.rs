@@ -436,7 +436,20 @@ impl Analyzer {
                     is_non_scalar_typed_na_udt_varip_decl,
                     statement.span,
                 );
-                let symbol = if self.block_depth > 0 || self.function_depth > 0 {
+                let symbol = if self.function_depth > 0
+                    && self.scope.resolve(name).is_some_and(|existing| {
+                        self.legacy_v2_predeclared_symbols.contains(&existing.id)
+                    }) {
+                    let existing = self.scope.resolve(name).expect("predeclared local symbol");
+                    let updated = crate::resolver::SymbolInfo {
+                        pine_type: symbol_type,
+                        persistence,
+                        var_slot_id,
+                        ..existing
+                    };
+                    self.scope.update(name, updated);
+                    updated
+                } else if self.block_depth > 0 || self.function_depth > 0 {
                     self.define_local_symbol_with_persistence(
                         name,
                         symbol_type,
@@ -1182,7 +1195,7 @@ fn collect_request_reassigned_names(
     }
 }
 
-fn collect_request_reassigned_names_from_function_body(
+pub(crate) fn collect_request_reassigned_names_from_function_body(
     body: &FunctionBody,
     names: &mut std::collections::HashSet<String>,
 ) {

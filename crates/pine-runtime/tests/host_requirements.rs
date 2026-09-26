@@ -157,10 +157,7 @@ fn legacy_runtime_request_arguments_are_not_mislabeled_as_literal_defaults() {
 
 #[test]
 fn discovery_does_not_expand_modern_request_admission() {
-    for expr in [
-        "request.security(s, \"60\", math.random(0, 1, 7))",
-        "request.security_lower_tf(s, \"30S\", close)",
-    ] {
+    for expr in ["request.security(s, \"60\", math.random(0, 1, 7))"] {
         let source = format!(
             "//@version=6\nindicator(\"boundary\")\ns=input.symbol(\"OTHER\")\nplot({expr})\n"
         );
@@ -173,6 +170,22 @@ fn discovery_does_not_expand_modern_request_admission() {
                 .any(|d| d.code == "E_UNSUPPORTED_FEATURE")
         );
     }
+}
+
+#[test]
+fn lower_timeframe_request_is_reported_as_host_data_obligation() {
+    let hir = program(
+        "//@version=6\nindicator(\"lower timeframe\")\ns=input.symbol(\"OTHER\")\na=request.security_lower_tf(s, \"30S\", close)\nplot(array.size(a))\n",
+    );
+    let report = host_requirements(&hir);
+    assert_eq!(report.requests.len(), 1);
+    let request = &report.requests[0];
+    assert_eq!(request.function, "request.security_lower_tf");
+    assert_eq!(request.symbol, RequestArgument::RuntimeExpression);
+    assert_eq!(request.timeframe, RequestArgument::Literal("30S".into()));
+    assert_eq!(request.timeframe_relation, "sameOrLower");
+    assert_eq!(request.gaps, "notApplicable");
+    assert_eq!(request.lookahead, "notApplicable");
 }
 
 #[test]

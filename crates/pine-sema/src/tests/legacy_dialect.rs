@@ -17,6 +17,23 @@ fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
 }
 
 #[test]
+fn inverse_trigonometric_aliases_end_at_v4() {
+    for version in [3, 4] {
+        let source = format!(
+            "//@version={version}\nstudy(\"inverse trig\")\nplot(acos(-1) + asin(1) + atan(1))\n"
+        );
+        let analysis = analyze(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+    }
+    let v5 = analyze("//@version=5\nindicator(\"inverse trig\")\nplot(asin(1))\n");
+    assert!(diagnostic_codes(&v5).contains(&"E_UNKNOWN_FUNCTION"));
+}
+
+#[test]
 fn missing_directive_selects_executable_implicit_v1_profile() {
     let analysis = analyze("study(\"Legacy\")\nplot(close)\n");
 
@@ -152,37 +169,33 @@ fn invalid_versions_stop_before_ordinary_semantic_analysis() {
 }
 
 #[test]
-fn legacy_strategy_declaration_is_one_hard_stop() {
+fn v1_to_v4_strategy_declaration_and_orders_are_executable() {
     for version in 1..=4 {
         let analysis = analyze(&format!(
-            "//@version={version}\nstrategy(\"excluded\")\nstrategy.entry(\"L\", strategy.long)\n"
+            "//@version={version}\nstrategy(\"legacy\", initial_capital=100000)\nstrategy.entry(\"L\", strategy.long)\n"
         ));
 
-        assert_eq!(
-            diagnostic_codes(&analysis),
-            vec!["E_LEGACY_STRATEGY_OUT_OF_SCOPE"]
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
         );
         assert_eq!(
             analysis.compatibility.script_mode,
             ScriptModeClassification::Strategy
         );
-        assert_eq!(analysis.compatibility.unsupported.len(), 1);
-        assert_eq!(
-            analysis.compatibility.unsupported[0].feature,
-            "legacy strategy"
-        );
-        assert!(analysis.hir.is_none());
+        assert!(analysis.hir.is_some());
     }
 }
 
 #[test]
-fn legacy_strategy_reference_overrides_indicator_declaration_failure() {
-    let analysis = analyze("//@version=4\nstudy(\"excluded use\")\nplot(strategy.position_size)\n");
-
-    assert_eq!(
-        diagnostic_codes(&analysis),
-        vec!["E_LEGACY_STRATEGY_OUT_OF_SCOPE"]
-    );
+fn v1_to_v4_strategy_reference_in_indicator_is_rejected_by_strategy_mode_check() {
+    for version in 1..=4 {
+        let analysis = analyze(&format!(
+            "//@version={version}\nstudy(\"excluded use\")\nplot(strategy.position_size)\n"
+        ));
+        assert_eq!(diagnostic_codes(&analysis), vec!["E_STRATEGY_MODE"]);
+    }
 }
 
 #[test]

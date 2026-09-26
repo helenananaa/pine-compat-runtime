@@ -7,6 +7,7 @@ pub struct ChartContext {
     min_move: u32,
     price_scale: u32,
     quantity_scale: u32,
+    quantity_precision_configured: bool,
     currency: String,
 }
 
@@ -19,6 +20,7 @@ impl ChartContext {
             min_move: 1,
             price_scale: 100,
             quantity_scale: 1,
+            quantity_precision_configured: false,
             currency: "USD".to_owned(),
         }
     }
@@ -83,6 +85,7 @@ impl ChartContext {
         self.quantity_scale = 10_u32
             .checked_pow(precision)
             .ok_or("chart quantity precision must be between 0 and 9")?;
+        self.quantity_precision_configured = true;
         Ok(self)
     }
 
@@ -111,6 +114,11 @@ impl ChartContext {
         self.quantity_scale
     }
 
+    pub(crate) fn configured_quantity_scale(&self) -> Option<u32> {
+        self.quantity_precision_configured
+            .then_some(self.quantity_scale)
+    }
+
     #[must_use]
     pub fn with_symbol(mut self, symbol: impl Into<String>) -> Self {
         self.symbol = symbol.into();
@@ -132,6 +140,7 @@ impl Default for ChartContext {
             min_move: 1,
             price_scale: 100,
             quantity_scale: 1,
+            quantity_precision_configured: false,
             currency: "USD".to_owned(),
         }
     }

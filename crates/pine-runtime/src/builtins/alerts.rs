@@ -156,7 +156,11 @@ impl<'a> HistoricalRuntime<'a> {
                 self.request_environment.chart().timeframe().value(),
             )
             .replace("{{exchange}}", self.alert_exchange_placeholder())
-            .replace("{{time}}", &self.alert_time_placeholder(bar.time));
+            .replace("{{time}}", &self.alert_time_placeholder(bar.time))
+            .replace(
+                "{{strategy.position_size}}",
+                &format_number(self.strategy_broker.position_size(), ""),
+            );
         let mut rendered = String::with_capacity(message.len());
         let mut remaining = message.as_str();
         while let Some(start) = remaining.find("{{plot(\"") {

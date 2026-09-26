@@ -1,0 +1,5 @@
+//@version=6
+indicator("Bounded security")
+[totals, indices] = request.security("NYSE:IBM", "1", [ta.cum(close), bar_index], gaps=barmerge.gaps_on, lookahead=barmerge.lookahead_off, calc_bars_count=2)
+plot(totals)
+plot(indices)

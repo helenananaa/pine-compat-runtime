@@ -21,14 +21,13 @@ impl<'runtime, 'program> RuntimeCallContext<'runtime, 'program> {
         self.runtime.request_environment.chart().min_tick()
     }
 
-    pub(crate) fn update_rolling_window(
+    pub(crate) fn update_sum_window(
         &mut self,
         call_site_id: CallSiteId,
         source: PineValue,
         length: usize,
     ) -> &RollingWindowState {
-        self.runtime
-            .update_rolling_window(call_site_id, source, length)
+        self.runtime.update_sum_window(call_site_id, source, length)
     }
 
     pub(crate) fn next_random_unit(&mut self, call_site_id: CallSiteId, initial_state: u64) -> f64 {

@@ -57,22 +57,37 @@ impl Analyzer {
             }
 
             if matches!(param_name, "message" | "title") {
-                let supported_placeholders =
-                    if signature.name == "alertcondition" && param_name == "message" {
-                        &[
-                            "{{open}}",
-                            "{{high}}",
-                            "{{low}}",
-                            "{{close}}",
-                            "{{volume}}",
-                            "{{ticker}}",
-                            "{{interval}}",
-                            "{{exchange}}",
-                            "{{time}}",
-                        ][..]
-                    } else {
-                        &[][..]
-                    };
+                let supported_placeholders = if signature.name == "alertcondition"
+                    && param_name == "message"
+                    && matches!(self.script_declaration, Some((ScriptMode::Strategy, _)))
+                {
+                    &[
+                        "{{open}}",
+                        "{{high}}",
+                        "{{low}}",
+                        "{{close}}",
+                        "{{volume}}",
+                        "{{ticker}}",
+                        "{{interval}}",
+                        "{{exchange}}",
+                        "{{time}}",
+                        "{{strategy.position_size}}",
+                    ][..]
+                } else if signature.name == "alertcondition" && param_name == "message" {
+                    &[
+                        "{{open}}",
+                        "{{high}}",
+                        "{{low}}",
+                        "{{close}}",
+                        "{{volume}}",
+                        "{{ticker}}",
+                        "{{interval}}",
+                        "{{exchange}}",
+                        "{{time}}",
+                    ][..]
+                } else {
+                    &[][..]
+                };
 
                 if let Some(placeholder) = self
                     .known_const_string_value(&arg.value)

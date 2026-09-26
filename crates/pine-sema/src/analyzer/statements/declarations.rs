@@ -467,12 +467,26 @@ impl Analyzer {
 
         let local = self.block_depth > 0 || self.function_depth > 0;
         for (index, (name, pine_type)) in names.iter().zip(element_types).enumerate() {
+            let tuple_user_type = (pine_type.kind == ValueKind::UserType)
+                .then(|| self.user_type_name_of_tuple_element(value, index))
+                .flatten();
             let symbol = if local {
                 self.define_local_symbol(name, pine_type, None, self.function_depth == 0)
             } else {
                 self.define_symbol(name, pine_type, None)
             };
             self.bind_symbol(name, statement.span, symbol);
+            // A literal tuple binds each element to its own expression. Request
+            // evaluation can replay that element in the requested context.
+            if let ExprKind::Tuple(items) = &value.without_groups().kind {
+                self.symbol_init_exprs.insert(
+                    symbol.id,
+                    SourcedExpr {
+                        expr: items[index].clone(),
+                        source_context_id: self.current_source_context_id(),
+                    },
+                );
+            }
             self.symbol_tuple_value_sources.insert(
                 symbol.id,
                 (
@@ -485,6 +499,9 @@ impl Analyzer {
             );
             self.symbol_tuple_element_types.remove(&symbol.id);
             self.symbol_tuple_user_type_arrays.remove(&symbol.id);
+            if let Some(type_name) = tuple_user_type {
+                self.mark_symbol_user_type(symbol, type_name);
+            }
             if pine_type.kind != ValueKind::UserTypeArray {
                 continue;
             }

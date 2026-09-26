@@ -157,7 +157,11 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
                 | "strategy.risk.max_intraday_filled_orders"
                 | "strategy.risk.max_cons_loss_days"
         );
-        if callee == "request.security" || callee.starts_with("$legacy.security.") {
+        if matches!(
+            callee.as_str(),
+            "request.security" | "request.security_lower_tf"
+        ) || callee.starts_with("$legacy.security.")
+        {
             let argument = |index, name, symbol| {
                 crate::builtins::args::call_arg_expr(args, index, name)
                     .map_or(RequestArgument::RuntimeExpression, |value| {
@@ -174,15 +178,23 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
                 symbol: argument(0, "symbol", true),
                 timeframe: argument(1, "timeframe", false),
                 provider: "whenEvaluatedOutsideCurrentContext",
-                timeframe_relation: "sameOrHigherIntegerMultipleExceptCalendarMonths",
-                gaps: if callee == "request.security" {
+                timeframe_relation: if callee == "request.security_lower_tf" {
+                    "sameOrLower"
+                } else {
+                    "sameOrHigherIntegerMultipleExceptCalendarMonths"
+                },
+                gaps: if callee == "request.security_lower_tf" {
+                    "notApplicable"
+                } else if callee == "request.security" {
                     merge::option(program, &initializers, args, 3, "gaps", "gapsOn", "gapsOff")
                 } else if callee.contains(".gaps_on.") {
                     "gapsOn"
                 } else {
                     "gapsOff"
                 },
-                lookahead: if callee == "request.security" {
+                lookahead: if callee == "request.security_lower_tf" {
+                    "notApplicable"
+                } else if callee == "request.security" {
                     merge::option(
                         program,
                         &initializers,

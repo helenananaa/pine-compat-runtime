@@ -23,15 +23,17 @@ impl BrokerState {
         &mut self,
         deferred_exit: DeferredRelativeExit,
         entry_id: &str,
-        bar_index: usize,
+        _fill_bar_index: usize,
     ) {
         let DeferredRelativeExit {
             id,
             trigger,
             quantity,
+            last_update_bar_index,
             metadata,
             ..
         } = deferred_exit;
+        let bar_index = last_update_bar_index;
         match trigger {
             DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } => {
                 if quantity != ExitQuantityRequest::Full {
@@ -42,7 +44,7 @@ impl BrokerState {
                 else {
                     return;
                 };
-                let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                let Some(price_offset) = self.exit_tick_signed_offset(ticks, mintick) else {
                     return;
                 };
                 self.place_all_entry_resolved_profit_exit(
@@ -63,7 +65,7 @@ impl BrokerState {
                 else {
                     return;
                 };
-                let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                let Some(price_offset) = self.exit_tick_signed_offset(ticks, mintick) else {
                     return;
                 };
                 self.place_all_entry_resolved_loss_exit(
@@ -89,7 +91,7 @@ impl BrokerState {
                     return;
                 };
                 let Some(activation_offset) =
-                    self.exit_tick_price_offset(activation_ticks, mintick)
+                    self.exit_tick_signed_offset(activation_ticks, mintick)
                 else {
                     return;
                 };
@@ -126,7 +128,7 @@ impl BrokerState {
                 else {
                     return;
                 };
-                let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                let Some(price_offset) = self.exit_tick_signed_offset(ticks, mintick) else {
                     return;
                 };
                 self.place_all_entry_resolved_bracket(
@@ -153,7 +155,7 @@ impl BrokerState {
                 else {
                     return;
                 };
-                let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                let Some(price_offset) = self.exit_tick_signed_offset(ticks, mintick) else {
                     return;
                 };
                 self.place_all_entry_resolved_bracket(
@@ -320,12 +322,12 @@ impl BrokerState {
         entry_price: f64,
         spec: DeferredLossProfitBracketSpec,
     ) {
-        let Some(loss_offset) = self.exit_tick_price_offset(spec.loss_ticks, spec.loss_mintick)
+        let Some(loss_offset) = self.exit_tick_signed_offset(spec.loss_ticks, spec.loss_mintick)
         else {
             return;
         };
         let Some(profit_offset) =
-            self.exit_tick_price_offset(spec.profit_ticks, spec.profit_mintick)
+            self.exit_tick_signed_offset(spec.profit_ticks, spec.profit_mintick)
         else {
             return;
         };

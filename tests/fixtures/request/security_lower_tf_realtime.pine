@@ -1,0 +1,10 @@
+//@version=6
+indicator("live intrabar arrays")
+a = request.security_lower_tf("NYSE:IBM", "1", close)
+[b, c] = request.security_lower_tf("NYSE:IBM", "1", [ta.cum(close), bar_index], calc_bars_count=2)
+plot(array.size(a))
+plot(array.size(a) > 0 ? array.first(a) : na)
+plot(array.size(a) > 0 ? array.last(a) : na)
+plot(array.size(b))
+plot(array.size(b) > 0 ? array.last(b) : na)
+plot(array.size(c) > 0 ? array.last(c) : na)

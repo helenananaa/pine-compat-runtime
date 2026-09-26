@@ -38,6 +38,15 @@ impl RequestFeed {
             .is_some_and(|stream| stream.forming.is_some())
     }
 
+    pub(crate) fn last_update_time(&self, key: &RequestKey) -> Option<i64> {
+        self.streams.get(key).and_then(|stream| {
+            stream
+                .forming
+                .or_else(|| stream.confirmed.last().copied())
+                .map(|bar| bar.time)
+        })
+    }
+
     pub(crate) fn resolved_len(
         &self,
         key: &RequestKey,

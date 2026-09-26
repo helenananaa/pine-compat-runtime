@@ -1,0 +1,5 @@
+//@version=3
+strategy("Legacy short all-entry bracket", overlay=false, default_qty_value=1)
+if bar_index == 0
+    strategy.entry("S", strategy.short)
+strategy.exit("XS", profit=5, loss=4)

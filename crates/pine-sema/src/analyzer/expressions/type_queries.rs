@@ -818,8 +818,20 @@ impl Analyzer {
                     .legacy
                     .canonical_call_name(self.current_source_context_id(), callee.span)
                     .map_or(source_name, str::to_owned);
-                if name == "request.security" && (3..=5).contains(&args.len()) {
+                if name == "request.security" && (3..=6).contains(&args.len()) {
                     return self.tuple_element_types_with_context(&args[2].value, context);
+                }
+                if name == "request.security_lower_tf" && (3..=4).contains(&args.len()) {
+                    return self
+                        .tuple_element_types_with_context(&args[2].value, context)?
+                        .into_iter()
+                        .map(|ty| {
+                            Some(PineType::new(
+                                Qualifier::Series,
+                                ty.kind.array_kind_from_element_kind()?,
+                            ))
+                        })
+                        .collect();
                 }
                 if is_ta_vwap_bands_call(&name, args) {
                     let series_float = PineType::new(Qualifier::Series, ValueKind::Float);

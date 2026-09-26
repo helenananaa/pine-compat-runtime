@@ -88,11 +88,12 @@ impl BrokerState {
             {
                 return self.entry_reversal_with_order_commission(fill, TradeDirection::Long);
             }
-            self.close_all_position_with_slippage(
+            self.close_all_position_with_slippage_preserving_exit(
                 fill.bar_index,
                 fill.time,
                 fill.price,
                 fill.apply_slippage,
+                Some(&fill.id),
             );
         }
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && !self.can_open_long_entry() {
@@ -217,11 +218,12 @@ impl BrokerState {
             {
                 return self.entry_reversal_with_order_commission(fill, TradeDirection::Short);
             }
-            self.close_all_position_with_slippage(
+            self.close_all_position_with_slippage_preserving_exit(
                 fill.bar_index,
                 fill.time,
                 fill.price,
                 fill.apply_slippage,
+                Some(&fill.id),
             );
         }
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && !self.can_open_short_entry() {

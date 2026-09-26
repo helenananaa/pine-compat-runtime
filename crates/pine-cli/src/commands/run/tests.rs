@@ -533,6 +533,16 @@ fn rejects_mixed_strategy_alert_rendering_options() {
 }
 
 #[test]
+fn chart_timeframe_sets_main_period_without_request_bars() {
+    let chart = ChartContext::new("COINBASE:BTCUSD", RequestTimeframe::parse("1D").unwrap());
+    let environment = request_environment_from_specs(&[], chart).unwrap();
+    assert_eq!(
+        environment.main_timeframe(),
+        &RequestTimeframe::parse("1D").unwrap()
+    );
+}
+
+#[test]
 fn builds_request_environment_from_csv_specs() {
     let path = std::env::temp_dir().join(format!(
         "pine-request-bars-{}-{}.csv",
@@ -2010,7 +2020,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[0,1,0,0,0]"));
     assert!(output.contains("\"values\":[0,1,0,0,0]"));
     assert!(output.contains("\"values\":[0,0,1,0,0]"));
-    assert!(output.contains("\"values\":[null,null,null,null,0]"));
+    assert!(output.contains("\"values\":[null,null,0,0,0]"));
     assert!(output.contains("\"values\":[null,null,null,null,1]"));
     assert!(output.contains("\"values\":[null,null,null,null,300]"));
     assert!(output.contains("\"values\":[null,null,100.01,100.01,200.01]"));
@@ -2270,9 +2280,9 @@ fn runs_request_bars_integration_fixture() {
     );
     assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 8);
     assert!(output.matches("\"values\":[null,null,0,0,0]").count() >= 3);
-    assert!(output.matches("\"values\":[null,null,2,2,2]").count() >= 4);
+    assert!(output.matches("\"values\":[null,null,2,2,2]").count() >= 2);
     assert!(output.matches("\"values\":[null,null,null,22,23]").count() >= 2);
-    assert!(output.contains("\"values\":[null,null,null,null,0]"));
+    assert!(output.contains("\"values\":[null,null,0,0,0]"));
     assert!(output.contains("\"values\":[null,null,null,null,1]"));
     assert!(output.matches("\"values\":[null,null,null,0,null]").count() >= 2);
     assert!(output.contains("\"values\":[null,null,null,null,200]"));
@@ -2490,8 +2500,8 @@ fn runs_request_bars_integration_fixture() {
         ));
     assert!(output.matches("\"values\":[null,12,13,14,15]").count() >= 2);
     assert!(output.matches("\"values\":[null,9,10,11,12]").count() >= 2);
-    assert!(output.contains("\"values\":[null,0,0,0,0]"));
-    assert!(output.contains("\"values\":[null,1,1,1,1]"));
+    assert!(output.contains("\"values\":[0,0,0,0,0]"));
+    assert!(output.contains("\"values\":[0,1,1,1,1]"));
     assert!(output.matches("\"values\":[null,41,43,45,47]").count() >= 2);
     assert!(
         output

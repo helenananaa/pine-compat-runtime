@@ -78,10 +78,53 @@ impl Analyzer {
         op == BinaryOp::Div
             && left_type.kind == ValueKind::Int
             && right_type.kind == ValueKind::Int
-            && (self.legacy.dialect() <= PineDialect::V4
-                || (self.legacy.dialect() == PineDialect::V5
+            && (self.legacy.dialect() <= PineDialect::V3
+                || (matches!(self.legacy.dialect(), PineDialect::V4 | PineDialect::V5)
                     && left_type.qualifier == Qualifier::Const
                     && right_type.qualifier == Qualifier::Const))
+    }
+
+    pub(crate) fn v5_extreme_division_length_arg(
+        &mut self,
+        call_name: &str,
+        param_name: &str,
+        expr: &Expr,
+        actual_type: PineType,
+    ) -> bool {
+        if self.legacy.dialect() != PineDialect::V5
+            || !matches!(call_name, "ta.lowest" | "ta.highest")
+            || param_name != "length"
+            || actual_type.kind != ValueKind::Float
+        {
+            return false;
+        }
+        let ExprKind::Binary {
+            op: BinaryOp::Div,
+            left,
+            right,
+        } = &expr.kind
+        else {
+            return false;
+        };
+        if ![left, right].iter().all(|operand| {
+            self.analyze_expr(operand)
+                .is_some_and(|ty| ty.kind == ValueKind::Int)
+        }) {
+            return false;
+        }
+        if self
+            .legacy_integer_division_exprs
+            .insert(self.expr_key(expr.span))
+        {
+            self.compatibility
+                .legacy_emulations
+                .push(crate::compatibility::LegacyEmulation {
+                    feature: "v5.extreme_division_length".to_owned(),
+                    behavior: "Pine v5 ta.lowest/ta.highest length context truncates an integer-operand quotient; the ordinary quotient retains its fractional value".to_owned(),
+                    span: expr.span,
+                });
+        }
+        true
     }
 
     fn record_versioned_integer_division(&mut self, span: Span, qualifier: Qualifier) -> PineType {
@@ -90,9 +133,10 @@ impl Analyzer {
             .insert(self.expr_key(span))
         {
             let version = self.legacy.dialect().version();
-            let behavior = if self.legacy.dialect() == PineDialect::V5 {
-                "Pine v5 division of two const int values produces an int and discards the fractional remainder"
-                    .to_owned()
+            let behavior = if matches!(self.legacy.dialect(), PineDialect::V4 | PineDialect::V5) {
+                format!(
+                    "Pine v{version} division of two const int values produces an int and discards the fractional remainder"
+                )
             } else {
                 format!(
                     "Pine v{version} division of two int values produces an int and discards the fractional remainder"

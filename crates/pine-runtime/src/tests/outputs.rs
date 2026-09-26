@@ -838,6 +838,33 @@ plot(close)
 }
 
 #[test]
+fn chart_point_copy_method_keeps_an_independent_snapshot_in_function() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=5
+indicator("chart point method copy")
+copy_point(chart.point point) =>
+    point.copy()
+original = chart.point.now(close)
+copied = copy_point(original)
+original.price := close + 10
+plot(copied.price)
+plot(original.price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[11.0, 12.0]);
+}
+
+#[test]
 fn evicts_oldest_polyline_when_creation_exceeds_declared_limit() {
     let source = SourceFile::new(
         "test.pine",

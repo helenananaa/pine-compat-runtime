@@ -69,6 +69,7 @@ pub struct BrokerState {
     margin_long: StrategyMarginSetting,
     margin_short: StrategyMarginSetting,
     quantity_scale: u32,
+    configured_quantity_scale: Option<u32>,
     price_tick: Option<f64>,
     open_entry_commission: f64,
     slippage_price_offset: f64,
@@ -114,7 +115,7 @@ pub struct BrokerState {
 impl BrokerState {
     fn expand_persistent_all_entry_exit_for_new_entry(&mut self, bar_index: usize) {
         let position_size = self.position_size;
-        if !position_size.is_finite() || position_size <= 0.0 {
+        if !position_size.is_finite() || position_size == 0.0 {
             return;
         }
         let Some(pending_exit) = self.order_book.exits_mut().current_mut() else {
@@ -131,7 +132,7 @@ impl BrokerState {
                     | PendingExitTrigger::Trailing(_)
             )
         {
-            pending_exit.reserved_quantity = position_size;
+            pending_exit.reserved_quantity = position_size.abs();
             pending_exit.last_update_bar_index = bar_index;
         }
     }
@@ -281,6 +282,12 @@ impl BrokerState {
                 allocate,
             );
         });
+    }
+
+    pub(crate) fn set_pending_market_same_bar_percent_of_equity(&mut self, id: &str, percent: f64) {
+        self.order_book
+            .entries_mut()
+            .set_same_bar_percent_of_equity(id, percent);
     }
 
     #[allow(dead_code)]
@@ -1033,15 +1040,6 @@ impl BrokerState {
 
     fn has_pending_entry(&self, id: &str) -> bool {
         self.order_book.entries().quantity_for_id(id).is_some()
-    }
-
-    fn has_pending_short_entry(&self, id: &str) -> bool {
-        self.order_book
-            .entries()
-            .find_by_id(id)
-            .is_some_and(|pending_entry| {
-                pending_entry.direction == pending_entries::PendingEntryDirection::Short
-            })
     }
 
     fn open_position_size_for_entry(&self, id: &str) -> f64 {

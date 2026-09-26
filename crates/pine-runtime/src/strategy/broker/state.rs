@@ -121,6 +121,7 @@ impl BrokerState {
             margin_short,
             open_entry_commission: 0.0,
             quantity_scale: 1,
+            configured_quantity_scale: None,
             price_tick: None,
             slippage_price_offset,
             limit_verification_price_offset,
@@ -185,6 +186,11 @@ impl BrokerState {
     pub(crate) fn with_quantity_scale(mut self, scale: u32) -> Self {
         debug_assert!(scale > 0);
         self.quantity_scale = scale;
+        self
+    }
+
+    pub(crate) fn with_configured_quantity_scale(mut self, scale: Option<u32>) -> Self {
+        self.configured_quantity_scale = scale;
         self
     }
 
@@ -281,8 +287,8 @@ impl BrokerState {
         high >= limit_price + self.limit_verification_price_offset
     }
 
-    pub(crate) fn public_order_event_count(&self) -> usize {
-        self.orders.len()
+    pub(crate) fn public_fill_event_count(&self) -> usize {
+        self.orders.len() + self.trades.len()
     }
 
     #[must_use]

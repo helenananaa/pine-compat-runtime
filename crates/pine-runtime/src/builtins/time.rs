@@ -123,7 +123,11 @@ pub(crate) fn timeframe_bucket(timestamp_ms: i64, seconds: i64) -> Option<i64> {
     Some(timestamp_ms.div_euclid(duration_ms))
 }
 
-fn timeframe_change_bucket(timestamp_ms: i64, timeframe: &str, seconds: i64) -> Option<i64> {
+pub(crate) fn timeframe_change_bucket(
+    timestamp_ms: i64,
+    timeframe: &str,
+    seconds: i64,
+) -> Option<i64> {
     if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'W') {
         let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
         let epoch_monday = NaiveDate::from_ymd_opt(1970, 1, 5)?;

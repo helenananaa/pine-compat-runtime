@@ -10,7 +10,7 @@ use super::{
 use crate::RuntimeDiagnostic;
 
 impl BrokerState {
-    fn exit_tick_signed_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
+    pub(super) fn exit_tick_signed_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
         let price_offset = self.exit_tick_price_offset(ticks, mintick)?;
         Some(match self.active_close_direction() {
             Some(TradeDirection::Short) => -price_offset,
@@ -82,7 +82,15 @@ impl BrokerState {
             });
             return None;
         }
-        Some(ticks * mintick)
+        // A relative exit cannot trigger at a fractional tick. TradingView
+        // advances the requested distance to the next reachable price level.
+        let nearest_tick = ticks.round();
+        let whole_ticks = if (ticks - nearest_tick).abs() <= 1e-9 {
+            nearest_tick
+        } else {
+            ticks.ceil()
+        };
+        Some(whole_ticks * mintick)
     }
 
     pub(super) fn place_exit(

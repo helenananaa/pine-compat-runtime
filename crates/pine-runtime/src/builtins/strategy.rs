@@ -59,9 +59,23 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             close
         };
-        self.program
-            .strategy_settings
-            .default_entry_qty(equity, price)
+        match self.program.strategy_settings.default_qty {
+            Some(StrategyDefaultQuantity::PercentOfEquity(percent))
+                if equity.is_finite() && equity > 0.0 && price.is_finite() && price > 0.0 =>
+            {
+                Some(crate::strategy::percent_of_equity_order_qty(
+                    equity,
+                    percent,
+                    price,
+                    self.program.strategy_settings.commission,
+                    self.request_environment.chart().configured_quantity_scale(),
+                ))
+            }
+            _ => self
+                .program
+                .strategy_settings
+                .default_entry_qty(equity, price),
+        }
     }
 
     pub(crate) fn eval_strategy_call(
@@ -163,11 +177,33 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         let equity = self.strategy_broker.equity_value(bar.close);
-        Ok(self
-            .program
-            .strategy_settings
-            .default_entry_qty(equity, fill_price)
-            .map_or(PineValue::Na, PineValue::Float))
+        let qty = match self.program.strategy_settings.default_qty {
+            Some(StrategyDefaultQuantity::PercentOfEquity(percent))
+                if equity.is_finite()
+                    && equity > 0.0
+                    && fill_price.is_finite()
+                    && fill_price > 0.0 =>
+            {
+                Some(crate::strategy::percent_of_equity_order_qty(
+                    equity,
+                    percent,
+                    fill_price,
+                    self.program.strategy_settings.commission,
+                    self.request_environment.chart().configured_quantity_scale(),
+                ))
+            }
+            _ => self
+                .program
+                .strategy_settings
+                .default_entry_qty(equity, fill_price)
+                .map(|qty| {
+                    crate::strategy::quantity_on_chart_grid(
+                        qty,
+                        self.request_environment.chart().configured_quantity_scale(),
+                    )
+                }),
+        };
+        Ok(qty.map_or(PineValue::Na, PineValue::Float))
     }
 
     fn eval_strategy_risk_allow_entry_in(
@@ -435,6 +471,14 @@ impl<'a> HistoricalRuntime<'a> {
             self.strategy_broker
                 .place_pending_market_long_entry_with_metadata(id, qty, self.bars, metadata);
         }
+        if qty_expr.is_none() && limit_expr.is_none() && stop_expr.is_none() {
+            if let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =
+                self.program.strategy_settings.default_qty
+            {
+                self.strategy_broker
+                    .set_pending_market_same_bar_percent_of_equity(&oca_id, percent);
+            }
+        }
         if let Some(name) = oca_name {
             self.strategy_broker
                 .assign_pending_order_oca_named(&oca_id, name, oca_type.as_deref());
@@ -569,6 +613,14 @@ impl<'a> HistoricalRuntime<'a> {
             },
             _ => {}
         }
+        if qty_expr.is_none() && limit.is_none() && stop.is_none() {
+            if let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =
+                self.program.strategy_settings.default_qty
+            {
+                self.strategy_broker
+                    .set_pending_market_same_bar_percent_of_equity(&oca_id, percent);
+            }
+        }
         if let Some(name) = oca_name {
             self.strategy_broker
                 .assign_pending_order_oca_named(&oca_id, name, oca_type.as_deref());
@@ -582,6 +634,12 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "`strategy.close` requires an active bar".to_owned(),
             });
         };
+        if let Some(when_expr) = call_arg_expr(args, 7, "when") {
+            match self.eval_expr(when_expr)? {
+                PineValue::Bool(true) => {}
+                _ => return Ok(PineValue::Void),
+            }
+        }
         let Some(id_expr) = call_arg_expr(args, 0, "id") else {
             return Ok(PineValue::Void);
         };
@@ -643,6 +701,11 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "`strategy.close_all` requires an active bar".to_owned(),
             });
         };
+        if let Some(when_expr) = call_arg_expr(args, 4, "when") {
+            if !matches!(self.eval_expr(when_expr)?, PineValue::Bool(true)) {
+                return Ok(PineValue::Void);
+            }
+        }
         let metadata = self.eval_strategy_close_metadata(args, 0)?;
         let immediately = self.eval_strategy_immediately_arg(args, 3)?;
 

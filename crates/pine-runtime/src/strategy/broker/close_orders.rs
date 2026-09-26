@@ -159,6 +159,23 @@ impl BrokerState {
         price: f64,
         apply_slippage: bool,
     ) {
+        self.close_all_position_with_slippage_preserving_exit(
+            bar_index,
+            time,
+            price,
+            apply_slippage,
+            None,
+        );
+    }
+
+    pub(super) fn close_all_position_with_slippage_preserving_exit(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        apply_slippage: bool,
+        filling_entry_id: Option<&str>,
+    ) {
         let Some(direction) = self.active_close_direction() else {
             return;
         };
@@ -230,7 +247,8 @@ impl BrokerState {
             );
         }
 
-        self.order_book.exits_mut().clear_all();
+        self.order_book
+            .retain_exits_for_pending_entries(filling_entry_id);
         self.apply_reduction_cash_and_position(
             direction.signed_quantity(qty) * price - exit_commission,
             &allocations,

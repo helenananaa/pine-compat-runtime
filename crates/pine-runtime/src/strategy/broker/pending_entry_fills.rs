@@ -40,6 +40,30 @@ impl PathEventOutcome {
 }
 
 impl BrokerState {
+    pub(crate) fn fill_same_bar_close_exits(&mut self, bar_index: usize, time: i64, close: f64) {
+        loop {
+            let Some(candidate) = self
+                .collect_same_bar_close_exit_candidates(bar_index, close, self.event_generation)
+                .into_iter()
+                .next()
+            else {
+                break;
+            };
+            let tick = EntryPathTick {
+                bar_index,
+                time,
+                leg: PathLeg::point(close),
+                path_kind: HistoricalPathKind::OpenHighLowClose,
+                mark: close,
+                long_blocked_at_path_start: false,
+                short_blocked_at_path_start: false,
+            };
+            if !self.apply_exit_path_candidate(&candidate, tick).is_fill() {
+                break;
+            }
+        }
+    }
+
     pub(super) fn take_next_realtime_event(
         &mut self,
         tick: EntryPathTick,
@@ -142,7 +166,7 @@ impl BrokerState {
                         mark: candidate.crossing_price,
                     };
                 }
-                let before = self.public_order_event_count();
+                let before = self.public_fill_event_count();
                 let _ = self.fill_pending_generic_or_entry(
                     pending,
                     tick.bar_index,
@@ -150,7 +174,7 @@ impl BrokerState {
                     candidate.fill_price_or_mark,
                 );
                 self.bump_event_generation();
-                if self.public_order_event_count() > before {
+                if self.public_fill_event_count() > before {
                     PathEventOutcome::Filled {
                         mark: candidate.crossing_price,
                         fill_price: candidate.fill_price_or_mark,
@@ -227,7 +251,7 @@ impl BrokerState {
         let exit_id = pending.id.clone();
         let target_trade_key = pending.target_trade_key;
         let filled_qty = pending.reserved_quantity.min(self.position_size.abs());
-        let before = self.public_order_event_count();
+        let before = self.public_fill_event_count();
         self.fill_pending_exit(
             pending,
             tick.bar_index,
@@ -247,7 +271,7 @@ impl BrokerState {
         }
         self.debug_assert_ledger_aggregates();
         self.bump_event_generation();
-        if self.public_order_event_count() > before {
+        if self.public_fill_event_count() > before {
             PathEventOutcome::Filled {
                 mark: candidate.crossing_price,
                 fill_price: candidate.fill_price_or_mark,
@@ -264,7 +288,7 @@ impl BrokerState {
         candidate: &BrokerCandidate,
         tick: EntryPathTick,
     ) -> PathEventOutcome {
-        let before = self.public_order_event_count();
+        let before = self.public_fill_event_count();
         let mark = candidate.fill_price_or_mark;
         if self.position_size > 0.0 {
             self.evaluate_margin_call_long(tick.bar_index, tick.time, mark);
@@ -273,7 +297,7 @@ impl BrokerState {
         }
         self.debug_assert_ledger_aggregates();
         self.bump_event_generation();
-        if self.public_order_event_count() > before {
+        if self.public_fill_event_count() > before {
             self.order_book.entries_mut().clear_all();
             PathEventOutcome::Filled {
                 mark: candidate.crossing_price,
@@ -316,7 +340,7 @@ impl BrokerState {
             let Some(pending_entry) = pending_entry else {
                 break;
             };
-            self.fill_one_pending_market_entry(pending_entry, bar_index, time, fill_price);
+            self.fill_one_pending_market_entry(pending_entry, bar_index, time, fill_price, false);
         }
     }
 
@@ -334,7 +358,7 @@ impl BrokerState {
             let Some(pending_entry) = pending_entry else {
                 break;
             };
-            self.fill_one_pending_market_entry(pending_entry, bar_index, time, fill_price);
+            self.fill_one_pending_market_entry(pending_entry, bar_index, time, fill_price, true);
         }
     }
 
@@ -349,11 +373,35 @@ impl BrokerState {
 
     fn fill_one_pending_market_entry(
         &mut self,
-        pending_entry: super::pending_entries::PendingEntry,
+        mut pending_entry: super::pending_entries::PendingEntry,
         bar_index: usize,
         time: i64,
         fill_price: f64,
+        same_bar: bool,
     ) {
+        if same_bar {
+            if let Some(percent) = pending_entry.same_bar_percent_of_equity {
+                let execution_price = match pending_entry.direction {
+                    PendingEntryDirection::Long => self.long_entry_fill_price(fill_price),
+                    PendingEntryDirection::Short => self.short_entry_fill_price(fill_price),
+                };
+                let equity = self.equity_value(fill_price);
+                if !equity.is_finite()
+                    || !execution_price.is_finite()
+                    || equity <= 0.0
+                    || execution_price <= 0.0
+                {
+                    return;
+                }
+                pending_entry.quantity = super::super::percent_of_equity_order_qty(
+                    equity,
+                    percent,
+                    execution_price,
+                    self.commission,
+                    self.configured_quantity_scale,
+                );
+            }
+        }
         if !pending_entry.enforce_pyramiding {
             let signed_quantity = match pending_entry.direction {
                 PendingEntryDirection::Long => pending_entry.quantity,
@@ -392,6 +440,8 @@ impl BrokerState {
             );
             if filled {
                 self.order_book.apply_oca_after_fill(filled_key, filled_qty);
+                self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
+                self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
             } else {
                 self.order_book.exits_mut().clear_for_entry(&entry_id);
             }

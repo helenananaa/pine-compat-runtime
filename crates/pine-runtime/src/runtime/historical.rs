@@ -78,6 +78,7 @@ struct StrategyEvalCheckpoint {
     current_symbols: HashMap<SymbolId, PineValue>,
     current_series: HashMap<SeriesId, PineValue>,
     active_series: HashSet<SeriesId>,
+    var_store: HashMap<VarSlotId, PineValue>,
 }
 
 #[derive(Clone)]
@@ -100,6 +101,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) first_bar_close: Option<f64>,
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) request_feed: crate::request::RequestFeed,
+    pub(crate) historical_dynamic_request_contexts: HashSet<RequestCacheKey>,
     pub(crate) request_cache: HashMap<
         RequestCacheKey,
         super::append_history::AppendHistory<(
@@ -109,6 +111,8 @@ pub struct HistoricalRuntime<'a> {
     >,
     pub(crate) request_evaluations:
         HashMap<RequestCacheKey, Arc<crate::builtins::request_incremental::RequestEvaluation<'a>>>,
+    pub(crate) bounded_same_context_evaluations:
+        HashMap<RequestCacheKey, Box<HistoricalRuntime<'a>>>,
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) series_store: SeriesStore,
@@ -182,6 +186,10 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) alerts: super::append_history::AppendHistory<AlertEvent>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
+    // Strategy built-ins exist on every script pass even when a guarded
+    // history expression is not evaluated on an earlier bar.
+    pub(crate) strategy_position_size_at_script_pass: VecDeque<f64>,
+    pub(crate) strategy_position_size_history_origin: usize,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
     magnifier_diagnostics: Vec<RuntimeDiagnostic>,
@@ -350,6 +358,7 @@ impl<'a> HistoricalRuntime<'a> {
             program.strategy_settings.pyramiding_limit,
         )
         .with_quantity_scale(request_environment.chart().quantity_scale())
+        .with_configured_quantity_scale(request_environment.chart().configured_quantity_scale())
         .with_price_tick(request_environment.chart().min_tick())
         .with_close_entries_rule(program.strategy_settings.close_entries_rule)
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
@@ -372,8 +381,10 @@ impl<'a> HistoricalRuntime<'a> {
             first_bar_close: None,
             request_environment,
             request_feed: crate::request::RequestFeed::default(),
+            historical_dynamic_request_contexts: HashSet::new(),
             request_cache: HashMap::new(),
             request_evaluations: HashMap::new(),
+            bounded_same_context_evaluations: HashMap::new(),
             legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
             series_store: SeriesStore::new(),
@@ -445,6 +456,8 @@ impl<'a> HistoricalRuntime<'a> {
             alerts: Default::default(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
+            strategy_position_size_at_script_pass: VecDeque::new(),
+            strategy_position_size_history_origin: 0,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
             magnifier_diagnostics: Vec::new(),
@@ -1003,6 +1016,7 @@ impl<'a> HistoricalRuntime<'a> {
             current_symbols: self.current_symbols.clone(),
             current_series: self.current_series.clone(),
             active_series: self.active_series.clone(),
+            var_store: self.var_store.clone(),
         });
     }
 
@@ -1022,12 +1036,51 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_symbols.clone_from(&checkpoint.current_symbols);
         self.current_series.clone_from(&checkpoint.current_series);
         self.active_series.clone_from(&checkpoint.active_series);
+        // Historical fill recalculations rerun the script from the previous
+        // committed bar. Ordinary `var` assignments from an earlier pass of
+        // this bar must be discarded; `varip` deliberately survives passes.
+        for slot in self
+            .program
+            .symbols
+            .iter()
+            .filter(|symbol| symbol.persistence == PersistenceKind::Var)
+            .filter_map(|symbol| symbol.var_slot_id)
+        {
+            if let Some(value) = checkpoint.var_store.get(&slot) {
+                self.var_store.insert(slot, value.clone());
+            } else {
+                self.var_store.remove(&slot);
+            }
+        }
     }
 
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {
-        let before = self.strategy_broker.public_order_event_count();
+        let before = self.strategy_broker.public_fill_event_count();
         self.restore_strategy_eval_checkpoint();
         self.strategy_scheduler.begin_script_pass()?;
+        let position_size = self.strategy_broker.position_size();
+        let position_history_end = self.strategy_position_size_history_origin
+            + self.strategy_position_size_at_script_pass.len();
+        if position_history_end == self.bars {
+            self.strategy_position_size_at_script_pass
+                .push_back(position_size);
+        } else if let Some(slot) = self
+            .strategy_position_size_at_script_pass
+            .get_mut(self.bars - self.strategy_position_size_history_origin)
+        {
+            *slot = position_size;
+        }
+        let history_depth = if self.program.history.has_dynamic_offsets {
+            self.program.max_bars_back.map(|depth| depth as usize)
+        } else {
+            Some(self.program.history.max_constant_offset as usize)
+        };
+        if let Some(depth) = history_depth {
+            while self.strategy_position_size_at_script_pass.len() > depth.saturating_add(1) {
+                self.strategy_position_size_at_script_pass.pop_front();
+                self.strategy_position_size_history_origin += 1;
+            }
+        }
         self.trace_strategy_phase(
             crate::runtime::strategy_scheduler::StrategyBarPhase::ScriptStatements,
         );
@@ -1044,7 +1097,7 @@ impl<'a> HistoricalRuntime<'a> {
                 Err(error) => return Err(error),
             }
         }
-        Ok(self.strategy_broker.public_order_event_count() > before)
+        Ok(self.strategy_broker.public_fill_event_count() > before)
     }
 
     pub(crate) fn recalculate_after_fill(&mut self, mut filled: bool) -> Result<(), RuntimeError> {

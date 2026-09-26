@@ -714,6 +714,29 @@ impl Analyzer {
         self.user_type_name_of_expr_with_local_aliases(expr, &aliases)
     }
 
+    pub(crate) fn user_type_name_of_tuple_element(
+        &self,
+        value: &Expr,
+        index: usize,
+    ) -> Option<String> {
+        let ExprKind::Call { callee, .. } = &value.kind else {
+            return None;
+        };
+        let function = self.functions.get(&expr_name(callee)?)?;
+        if !function.overloads.is_empty() {
+            return None;
+        }
+        let FunctionBody::Block(statements) = &function.body else {
+            return None;
+        };
+        let (prefix, returned) = branch_return_expr(statements)?;
+        let ExprKind::Tuple(items) = &returned.kind else {
+            return None;
+        };
+        let aliases = self.local_user_type_aliases(prefix, &HashMap::new());
+        self.user_type_name_of_expr_with_local_aliases(items.get(index)?, &aliases)
+    }
+
     fn local_user_type_aliases(
         &self,
         prefix: &[Stmt],
@@ -721,11 +744,26 @@ impl Analyzer {
     ) -> HashMap<String, String> {
         let mut aliases = outer_aliases.clone();
         for statement in prefix {
-            if let StmtKind::Decl { name, value, .. } = &statement.kind
-                && let Some(type_name) =
-                    self.user_type_name_of_expr_with_local_aliases(value, &aliases)
+            if let StmtKind::Decl {
+                name,
+                value,
+                declared_type,
+                ..
+            } = &statement.kind
             {
-                aliases.insert(name.clone(), type_name);
+                let type_name = self
+                    .user_type_name_of_expr_with_local_aliases(value, &aliases)
+                    .or_else(|| match declared_type {
+                        Some(pine_syntax::DeclaredType::Named(type_name))
+                            if self.user_types.contains_key(type_name) =>
+                        {
+                            Some(type_name.clone())
+                        }
+                        _ => None,
+                    });
+                if let Some(type_name) = type_name {
+                    aliases.insert(name.clone(), type_name);
+                }
             }
         }
         aliases

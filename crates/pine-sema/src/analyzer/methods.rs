@@ -54,7 +54,7 @@ impl Analyzer {
                 ));
                 continue;
             };
-            if !self.user_types.contains_key(&receiver.type_name) {
+            if !self.user_types.contains_key(&receiver.type_name) && receiver.type_name != "color" {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_RECEIVER_TYPE",
                     format!(
@@ -94,11 +94,15 @@ impl Analyzer {
                     continue;
                 }
                 names.push(param.name.clone());
-                let Some((pine_type, user_type_name)) =
-                    self.method_param_type(&param.type_name, param.span)
-                else {
-                    valid = false;
-                    continue;
+                let (pine_type, user_type_name) = if param.type_name.is_empty() {
+                    (UNKNOWN, None)
+                } else {
+                    let Some(resolved) = self.method_param_type(&param.type_name, param.span)
+                    else {
+                        valid = false;
+                        continue;
+                    };
+                    resolved
                 };
                 params.push(MethodParamInfo {
                     name: param.name.clone(),
@@ -135,7 +139,13 @@ impl Analyzer {
     ) -> Option<Option<PineType>> {
         let receiver_symbol = self.scope.resolve(receiver_name)?;
         let receiver = MethodCallReceiver {
-            type_name: self.symbol_user_types.get(&receiver_symbol.id).cloned()?,
+            type_name: self
+                .symbol_user_types
+                .get(&receiver_symbol.id)
+                .cloned()
+                .or_else(|| {
+                    (receiver_symbol.pine_type.kind == ValueKind::Color).then(|| "color".to_owned())
+                })?,
             pine_type: receiver_symbol.pine_type,
             span,
         };
@@ -238,7 +248,9 @@ impl Analyzer {
         self.scope.push_scope();
         let receiver_symbol =
             self.define_local_symbol(&method.receiver_name, receiver.pine_type, None, false);
-        self.mark_symbol_user_type(receiver_symbol, method.receiver_type.clone());
+        if receiver.pine_type.kind == ValueKind::UserType {
+            self.mark_symbol_user_type(receiver_symbol, method.receiver_type.clone());
+        }
 
         let mut param_symbols = std::collections::HashSet::from([receiver_symbol.id]);
         let mut resolved_arg_types = vec![None; method.params.len()];
@@ -273,7 +285,7 @@ impl Analyzer {
             if let Some(key) = arg_const_switch_key.as_ref() {
                 self.record_symbol_const_switch_key(symbol, key);
             }
-            if !can_assign(param.pine_type, arg_type) {
+            if param.pine_type != UNKNOWN && !can_assign(param.pine_type, arg_type) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_ARG_TYPE",
                     format!(

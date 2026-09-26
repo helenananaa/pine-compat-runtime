@@ -3,6 +3,43 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn timeframe_in_seconds_evaluates_series_selector_per_bar() {
+    let source = SourceFile::new(
+        "series_timeframe.pine",
+        "//@version=6\nindicator(\"series timeframe\")\ntf = bar_index % 2 == 0 ? \"1\" : \"5\"\nplot(timeframe.in_seconds(tf))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("series timeframe HIR");
+    let result = HistoricalRuntime::new(&program)
+        .run(&[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("timeframe conversion");
+    assert_values_close(&result.plots[0].values, &[60.0, 300.0, 60.0]);
+}
+
+#[test]
+fn bid_ask_are_na_on_time_based_charts() {
+    let source = SourceFile::new(
+        "quotes.pine",
+        "//@version=6\nindicator(\"quotes\")\nplot(na(ask) ? 1 : 0)\nplot(na(bid) ? 1 : 0)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("quotes HIR");
+    let result = HistoricalRuntime::new(&program).run(&[bar(1.0)]).unwrap();
+    assert_values_close(&result.plots[0].values, &[1.0]);
+    assert_values_close(&result.plots[1].values, &[1.0]);
+}
+
+#[test]
 fn runs_utc_time_component_variables() {
     let source = SourceFile::new(
         "test.pine",

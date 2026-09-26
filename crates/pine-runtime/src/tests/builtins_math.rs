@@ -3,6 +3,39 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn math_variadic_arguments_evaluate_series_calls_after_an_early_na() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("eager math arguments")
+first = bar_index < 2 ? na : close
+plot(math.avg(first, ta.sma(close, 2)))
+plot(math.max(first, ta.sma(close, 2)))
+plot(math.min(first, ta.sma(close, 2)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("eager argument evaluation");
+
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[2..], &[2.75, 3.75]);
+    assert_values_close(&result.plots[1].values[2..], &[3.0, 4.0]);
+    assert_values_close(&result.plots[2].values[2..], &[2.5, 3.5]);
+}
+
+#[test]
 fn named_math_pow_args_bind_by_name() {
     let source = SourceFile::new(
         "test.pine",
@@ -309,6 +342,24 @@ plot(math.round(1e20))
 }
 
 #[test]
+fn legacy_v1_sum_skips_sparse_na_samples() {
+    let source = SourceFile::new(
+        "test.pine",
+        "//@version=1\nstudy(\"v1 sum\")\nvalue = close > 2 ? na : close\nplot(sum(value, 2))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(8.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[3.0, 3.0, 3.0]);
+}
+
+#[test]
 fn runs_math_sum_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",
@@ -339,10 +390,10 @@ plot(invalid)
     assert_eq!(result.plots[1].values[0], PineValue::Na);
     assert_eq!(result.plots[1].values[1], PineValue::Na);
     assert_values_close(&result.plots[1].values[2..3], &[7.0]);
-    assert_eq!(result.plots[1].values[3], PineValue::Na);
+    assert_values_close(&result.plots[1].values[3..], &[7.0]);
     assert_eq!(result.plots[2].values[0], PineValue::Na);
     assert_eq!(result.plots[2].values[1], PineValue::Na);
-    assert_eq!(result.plots[2].values[2], PineValue::Na);
+    assert_values_close(&result.plots[2].values[2..3], &[5.0]);
     assert_values_close(&result.plots[2].values[3..], &[12.0]);
     assert_eq!(result.plots[3].values, vec![PineValue::Na; 4]);
 }

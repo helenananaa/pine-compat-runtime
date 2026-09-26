@@ -57,6 +57,8 @@ impl Analyzer {
         let is_symbol_shadowed = self.lexical_symbol_shadows_legacy_call(name, callee_span);
         let is_annotation = !is_symbol_shadowed
             && (name == "alertcondition"
+                || name == "strategy"
+                || name.starts_with("strategy.")
                 || matches!(
                     resolution,
                     Some(

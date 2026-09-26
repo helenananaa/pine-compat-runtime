@@ -7,6 +7,15 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<PineType> {
+        if signature.name == "timeframe.in_seconds"
+            && arg_types
+                .first()
+                .copied()
+                .flatten()
+                .is_some_and(|ty| ty.qualifier == Qualifier::Series)
+        {
+            return Some(PineType::new(Qualifier::Series, ValueKind::Int));
+        }
         if signature.variadic {
             return self.return_type(signature, arg_types);
         }

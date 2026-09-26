@@ -6,6 +6,39 @@ impl Analyzer {
         self.modern_request_expr(expr, &HashSet::new(), &mut HashSet::new(), &mut Vec::new())
     }
 
+    fn modern_request_binding_is_reassigned(&self, name: &str, symbol_id: SymbolId) -> bool {
+        if !self.request_reassigned_names.contains(name) {
+            return false;
+        }
+        // The global prepass records names from every UDF. For a local tuple
+        // binding, a helper UDF's reassignment of the same spelling does not
+        // mutate this binding. Restrict the check to the active function body.
+        if !self.symbol_tuple_value_sources.contains_key(&symbol_id)
+            || self.scope.symbol_is_global(symbol_id)
+        {
+            return true;
+        }
+        let Some(function) = self
+            .function_stack
+            .last()
+            .and_then(|name| self.functions.get(name))
+        else {
+            return true;
+        };
+        let mut reassigned = HashSet::new();
+        crate::analyzer::statements::collect_request_reassigned_names_from_function_body(
+            &function.body,
+            &mut reassigned,
+        );
+        for overload in &function.overloads {
+            crate::analyzer::statements::collect_request_reassigned_names_from_function_body(
+                &overload.body,
+                &mut reassigned,
+            );
+        }
+        reassigned.contains(name)
+    }
+
     fn modern_request_expr(
         &self,
         expr: &Expr,
@@ -31,10 +64,14 @@ impl Analyzer {
                     // External persistent/mutable variables cannot be reconstructed
                     // from their initializer alone. Function-local state is evaluated
                     // inside the requested block and takes the locals path above.
-                    if self.request_reassigned_names.contains(name) {
+                    if self.modern_request_binding_is_reassigned(name, symbol.id) {
                         return false;
                     }
-                    let Some(initializer) = self.symbol_init_exprs.get(&symbol.id) else {
+                    let Some(initializer) = self.symbol_init_exprs.get(&symbol.id).or_else(|| {
+                        self.symbol_tuple_value_sources
+                            .get(&symbol.id)
+                            .map(|(source, _)| source)
+                    }) else {
                         return false;
                     };
                     if !is_request_scalar_type(symbol.pine_type) {
@@ -66,7 +103,13 @@ impl Analyzer {
             }
             ExprKind::QualifiedName(_) => expr_name(expr).is_some_and(|name| {
                 is_request_provider_scalar_name(&name)
-                    || matches!(name.as_str(), "syminfo.timezone")
+                    || matches!(
+                        name.as_str(),
+                        "syminfo.timezone"
+                            | "timeframe.isticks"
+                            | "timeframe.period"
+                            | "timeframe.main_period"
+                    )
                     || crate::types::const_color_value(expr).is_some()
             }),
             ExprKind::Group(value) | ExprKind::Unary { expr: value, .. } => {
@@ -148,6 +191,25 @@ impl Analyzer {
                         });
                     calls.pop();
                     return valid;
+                }
+                if name == "request.security" {
+                    return self.dynamic_requests
+                        && args.len() == 3
+                        && args.iter().all(|arg| arg.name.is_none())
+                        && (matches!(&args[0].value.without_groups().kind,
+                            ExprKind::Literal(Literal::String(symbol)) if symbol.is_empty())
+                            || expr_name(&args[0].value).as_deref() == Some("syminfo.tickerid"))
+                        && (matches!(
+                            &args[1].value.without_groups().kind,
+                            ExprKind::Literal(Literal::String(_))
+                        ) || matches!(
+                            expr_name(&args[1].value).as_deref(),
+                            Some("timeframe.main_period" | "timeframe.period")
+                        ))
+                        && matches!(
+                            expr_name(&args[2].value).as_deref(),
+                            Some("open" | "high" | "low" | "close" | "volume" | "time")
+                        );
                 }
                 let array_constructor = matches!(
                     name.as_str(),

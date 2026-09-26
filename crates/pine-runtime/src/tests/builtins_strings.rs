@@ -6,6 +6,30 @@ use crate::builtins::strings::normalize_pine_regex;
 use super::*;
 
 #[test]
+fn formats_literal_timeframe_suffixes_in_legacy_tostring() {
+    let source = SourceFile::new(
+        "test.pine",
+        r####"//@version=3
+study("legacy timeframe formatting")
+plot(tostring(3, "###D") == "3D" ? 1 : 0)
+plot(tostring(3, "###W") == "3W" ? 1 : 0)
+plot(tostring(3, "###M") == "3M" ? 1 : 0)
+"####,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("legacy timeframe format should run");
+    for plot in &result.plots {
+        assert_eq!(plot.values, vec![PineValue::Int(1)]);
+    }
+}
+
+#[test]
 fn reordered_named_string_args_use_signature_order() {
     let source = SourceFile::new(
         "test.pine",
@@ -1709,7 +1733,7 @@ plot(formatted_time_day_of_year == "1 01 001" and formatted_time_day_of_year_lat
 plot(formatted_time_weekday == "Fri Friday" and formatted_time_weekday_later == "Tue Tuesday" ? 1 : 0)
 plot(formatted_time_week_of_year == "53 53" and formatted_time_week_of_year_later == "5 05" ? 1 : 0)
 plot(formatted_time_week_of_month == "1 01" and formatted_time_week_of_month_later == "2 02" and formatted_time_clock_tokens == "13 13 1 01:04:05.123 123 PM" ? 1 : 0)
-plot(text_mintick_down == "1.23" and text_mintick_up == "1.24" and text_mintick_negative_tie == "-1.23" and text_mintick_trailing_zeros == "1.00" ? 1 : 0)
+plot(text_mintick_down == "1.23" and text_mintick_up == "1.24" and text_mintick_negative_tie == "-1.24" and text_mintick_trailing_zeros == "1.00" ? 1 : 0)
 string_values = array.from("head", "tail")
 plot(str.tostring(string_values) == "[head, tail]" ? 1 : 0)
 int_values = array.from(1, 2)
@@ -1765,6 +1789,31 @@ plot(str.format("Flags {0}", bool_values) == "Flags [true, false]" ? 1 : 0)
     assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
     for plot in &result.plots[1..] {
         assert_values_close(&plot.values, &[1.0, 1.0]);
+    }
+}
+
+#[test]
+fn formats_woodie_half_tick_like_tradingview() {
+    let source = SourceFile::new(
+        "woodie_mintick.pine",
+        r#"//@version=6
+indicator("Woodie mintick")
+woodie_pivot = (81478.87 + 62275.0 + 2.0 * 78581.3) / 4.0
+woodie_r1 = 2.0 * woodie_pivot - 62275.0
+plot(str.tostring(woodie_r1, format.mintick) == "88183.23" ? 1 : 0)
+plot(str.tostring(-1.235, format.mintick) == "-1.24" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("Woodie mintick run");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
     }
 }
 

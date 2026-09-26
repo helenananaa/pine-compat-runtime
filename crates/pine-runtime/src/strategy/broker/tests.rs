@@ -1006,6 +1006,40 @@ fn stage14e_pending_market_short_entry_reverses_long_on_fill() {
 }
 
 #[test]
+fn reversal_preserves_bracket_attached_to_pending_opposite_entry() {
+    let mut broker = BrokerState::new(100_000.0).with_price_tick(0.01);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0));
+    broker.place_exit_bracket("XL".to_owned(), "L".to_owned(), 95.0, 120.0, 0);
+    broker.place_pending_market_short_entry("S".to_owned(), 1.0, 1);
+    broker.place_exit_bracket("XS".to_owned(), "S".to_owned(), 115.002, 90.002, 1);
+
+    broker.fill_pending_market_entries(2, 20, 110.0);
+    assert_eq!(broker.position_size, -1.0);
+    assert!(broker.pending_exit_by_identity("XL", "L").is_none());
+    assert!(broker.pending_exit_by_identity("XS", "S").is_some());
+
+    broker.evaluate_pending_exits(3, 30, 116.0, 100.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.trades.len(), 2);
+    assert_eq!(broker.trades[1].exit_id, "XS");
+    assert!((broker.trades[1].exit_price - 115.01).abs() < 1e-8);
+}
+
+#[test]
+fn bracket_for_open_entry_keeps_its_direction_when_pending_id_matches() {
+    let mut broker = BrokerState::new(100_000.0).with_price_tick(0.01);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
+    broker.place_pending_market_short_entry("L".to_owned(), 1.0, 1);
+    broker.place_exit_bracket("XL".to_owned(), "L".to_owned(), 95.002, 110.002, 1);
+
+    let pending = broker.pending_exit_by_identity("XL", "L").unwrap();
+    assert!(
+        matches!(pending.trigger, PendingExitTrigger::Bracket { downside, upside }
+        if (downside - 95.0).abs() < 1e-8 && (upside - 110.01).abs() < 1e-8)
+    );
+}
+
+#[test]
 fn stage14f_short_limit_exit_covers_and_realizes_profit() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_short("S".to_owned(), 1, 10, 100.0, 2.0));
@@ -2625,6 +2659,7 @@ fn pending_market_entry_records_internal_order_without_public_fill() {
             direction: PendingEntryDirection::Long,
             kind: PendingEntryKind::Market,
             quantity: 2.0,
+            same_bar_percent_of_equity: None,
             created_bar_index: 0,
             metadata: StrategyOrderMetadata::default(),
             enforce_pyramiding: true,
@@ -2655,6 +2690,7 @@ fn pending_market_entry_replaces_same_id_without_public_fill() {
             direction: PendingEntryDirection::Long,
             kind: PendingEntryKind::Market,
             quantity: 3.0,
+            same_bar_percent_of_equity: None,
             created_bar_index: 1,
             metadata: StrategyOrderMetadata::default(),
             enforce_pyramiding: true,
@@ -3696,6 +3732,26 @@ fn pending_market_entry_stores_entry_relative_profit_attachment() {
 }
 
 #[test]
+fn reversal_defers_relative_profit_until_opposite_entry_fills() {
+    let mut broker = BrokerState::new(100_000.0).with_price_tick(0.01);
+    assert!(broker.entry_short("S".to_owned(), 0, 10, 100.0, 1.0));
+    broker.place_pending_market_long_entry("L".to_owned(), 1.0, 1);
+    broker.place_exit_profit_ticks("TP_L".to_owned(), "L".to_owned(), 10.5, 0.01, 1);
+
+    assert_eq!(deferred_relative_exit_count(&broker), 1);
+    assert_eq!(pending_exit_count(&broker), 0);
+    broker.fill_pending_market_entries(2, 20, 105.0);
+
+    assert_eq!(broker.position_size, 1.0);
+    assert_eq!(deferred_relative_exit_count(&broker), 0);
+    assert!(matches!(
+        broker.pending_exit_by_identity("TP_L", "L").map(|exit| &exit.trigger),
+        Some(PendingExitTrigger::Limit(price)) if (*price - 105.11).abs() < 1e-8
+    ));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn omitted_profit_template_clears_when_replaced_by_absolute_all_entry_exit() {
     let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
         100_000.0,
@@ -3820,6 +3876,149 @@ fn omitted_future_relative_exit_resolves_with_open_trade_key_scope() {
     assert_eq!(pending_exit.trigger, PendingExitTrigger::Limit(100.1));
     assert_eq!(pending_exit.reserved_quantity, 2.0);
     assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn omitted_short_relative_exits_use_short_prices_for_open_and_future_entries() {
+    let mut open = broker_with_short_entry();
+    open.place_all_entry_exit_profit_ticks("XP".to_owned(), 10.0, 0.01, 1);
+    assert_eq!(
+        open.pending_exit_by_identity("XP", "S").unwrap().trigger,
+        PendingExitTrigger::Limit(99.9)
+    );
+    open.place_all_entry_exit_loss_ticks("XL".to_owned(), 10.0, 0.01, 1);
+    assert_eq!(
+        open.pending_exit_by_identity("XL", "S").unwrap().trigger,
+        PendingExitTrigger::Stop(100.1)
+    );
+
+    for (profit, expected_trigger, high, low, exit_price) in [
+        (true, PendingExitTrigger::Limit(99.9), 100.0, 99.8, 99.9),
+        (false, PendingExitTrigger::Stop(100.1), 100.2, 100.0, 100.1),
+    ] {
+        let mut future = BrokerState::new(100_000.0);
+        future.place_pending_market_short_entry("S".to_owned(), 2.0, 0);
+        if profit {
+            future.place_all_entry_exit_profit_ticks("X".to_owned(), 10.0, 0.01, 0);
+        } else {
+            future.place_all_entry_exit_loss_ticks("X".to_owned(), 10.0, 0.01, 0);
+        }
+        assert_eq!(deferred_relative_exit_count(&future), 1);
+        future.fill_pending_market_entries(1, 20, 100.0);
+        assert_eq!(future.position_size, -2.0);
+        let pending = future.pending_exit_by_identity("X", "S").unwrap();
+        assert_eq!(pending.trigger, expected_trigger);
+        assert_eq!(pending.last_update_bar_index, 0);
+        future.evaluate_pending_exits(1, 20, high, low);
+        assert_eq!(future.trades[0].exit_price, exit_price);
+        assert_eq!(future.trades[0].qty, -2.0);
+    }
+}
+
+#[test]
+fn omitted_short_relative_trailing_and_mixed_brackets_keep_direction() {
+    let mut open = broker_with_short_entry();
+    open.place_all_entry_exit_trail_points("XT".to_owned(), 10.0, 5.0, 0.01, 1);
+    let trailing = &open.pending_exit_by_identity("XT", "S").unwrap().trigger;
+    assert!(matches!(
+        trailing,
+        PendingExitTrigger::Trailing(exit)
+            if matches!(exit.spec.activation,
+                PendingTrailingActivation::Points { price, .. } if price == 99.9)
+    ));
+
+    open.place_all_entry_exit_stop_profit_bracket(
+        "XP".to_owned(),
+        StopProfitBracketSpec {
+            stop_price: 101.0,
+            profit_ticks: 10.0,
+            mintick: 0.01,
+        },
+        2,
+    );
+    assert_eq!(
+        open.pending_exit_by_identity("XP", "S").unwrap().trigger,
+        PendingExitTrigger::Bracket {
+            downside: 101.0,
+            upside: 99.9,
+        }
+    );
+
+    open.place_all_entry_exit_loss_limit_bracket(
+        "XL".to_owned(),
+        LossLimitBracketSpec {
+            loss_ticks: 10.0,
+            limit_price: 99.0,
+            mintick: 0.01,
+        },
+        3,
+    );
+    assert_eq!(
+        open.pending_exit_by_identity("XL", "S").unwrap().trigger,
+        PendingExitTrigger::Bracket {
+            downside: 100.1,
+            upside: 99.0,
+        }
+    );
+
+    let mut future = BrokerState::new(100_000.0);
+    future.place_pending_market_short_entry("S".to_owned(), 2.0, 0);
+    future.place_all_entry_exit_trail_points("XT".to_owned(), 10.0, 5.0, 0.01, 0);
+    assert_eq!(deferred_relative_exit_count(&future), 1);
+    future.fill_pending_market_entries(1, 20, 100.0);
+    let trailing = &future.pending_exit_by_identity("XT", "S").unwrap().trigger;
+    assert!(matches!(
+        trailing,
+        PendingExitTrigger::Trailing(exit)
+            if matches!(exit.spec.activation,
+                PendingTrailingActivation::Points { price, .. } if price == 99.9)
+    ));
+
+    for (stop_profit, expected) in [
+        (
+            true,
+            PendingExitTrigger::Bracket {
+                downside: 101.0,
+                upside: 99.9,
+            },
+        ),
+        (
+            false,
+            PendingExitTrigger::Bracket {
+                downside: 100.1,
+                upside: 99.0,
+            },
+        ),
+    ] {
+        let mut future = BrokerState::new(100_000.0);
+        future.place_pending_market_short_entry("S".to_owned(), 2.0, 0);
+        if stop_profit {
+            future.place_all_entry_exit_stop_profit_bracket(
+                "X".to_owned(),
+                StopProfitBracketSpec {
+                    stop_price: 101.0,
+                    profit_ticks: 10.0,
+                    mintick: 0.01,
+                },
+                0,
+            );
+        } else {
+            future.place_all_entry_exit_loss_limit_bracket(
+                "X".to_owned(),
+                LossLimitBracketSpec {
+                    loss_ticks: 10.0,
+                    limit_price: 99.0,
+                    mintick: 0.01,
+                },
+                0,
+            );
+        }
+        future.fill_pending_market_entries(1, 20, 100.0);
+        assert_eq!(
+            future.pending_exit_by_identity("X", "S").unwrap().trigger,
+            expected
+        );
+    }
 }
 
 #[test]
@@ -5992,6 +6191,23 @@ fn place_exit_bracket_records_pending_bracket() {
 }
 
 #[test]
+fn full_brackets_for_distinct_entry_ids_remain_live_together() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.pyramiding_limit = 2;
+    broker.entry_short("S1".to_owned(), 0, 10, 100.0, 2.0);
+    broker.entry_short("S2".to_owned(), 0, 10, 100.0, 3.0);
+    broker.place_exit_bracket("X1".to_owned(), "S1".to_owned(), 90.0, 105.0, 0);
+    broker.place_exit_bracket("X2".to_owned(), "S2".to_owned(), 90.0, 105.0, 0);
+
+    assert_eq!(pending_exit_ids(&broker), vec!["X1", "X2"]);
+    broker.evaluate_pending_exits(1, 20, 106.0, 99.0);
+    assert_eq!(broker.trades.len(), 2);
+    assert_eq!(broker.trades[0].id, "S1");
+    assert_eq!(broker.trades[1].id, "S2");
+    assert_eq!(broker.position_size, 0.0);
+}
+
+#[test]
 fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
     let mut broker = broker_with_long_entry();
 
@@ -6022,6 +6238,19 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
         })
     );
     assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn fractional_relative_exit_ticks_advance_to_next_price_level() {
+    let mut long = broker_with_long_entry();
+    assert_eq!(long.exit_profit_price_from_ticks(3.37, 0.01), Some(100.04));
+    assert_eq!(long.exit_loss_price_from_ticks(3.37, 0.01), Some(99.96));
+
+    let mut short = broker_with_short_entry();
+    assert_eq!(short.exit_profit_price_from_ticks(3.37, 0.01), Some(99.96));
+    assert_eq!(short.exit_loss_price_from_ticks(3.37, 0.01), Some(100.04));
+
+    assert_eq!(long.exit_profit_price_from_ticks(4.0, 0.01), Some(100.04));
 }
 
 #[test]

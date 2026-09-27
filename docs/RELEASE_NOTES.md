@@ -1,5 +1,145 @@
 # Release Notes
 
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:EURUSD four-hour HMA 30 `hl2` comparison](SSL_HYBRID_FX_EURUSD_FOURHOUR_HMA30_HL2_20260927.md):
+  149,192 chart positions, 3,603 closed trades, five open entries, and 2,150
+  explicit exit fills agree on 21,338 confirmed bars. On the same frozen bars,
+  HMA 20 yields 4,645 closed trades. The three historical modes are identical.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:EURUSD four-hour HMA 20 `hl2` comparison](SSL_HYBRID_FX_EURUSD_FOURHOUR_HMA20_HL2_20260927.md):
+  149,236 chart positions, 4,645 closed trades, and five open entries agree
+  on 21,338 confirmed bars. Broker fixes cover five-decimal tick touches,
+  default FIFO attribution, and marketable gap-exit ordering. HMA 30 yields
+  3,603 closed trades on the same bars; three historical modes are identical.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [FX:EURUSD weekly HMA 20 `hl2` comparison](SSL_HYBRID_FX_EURUSD_WEEKLY_HMA20_HL2_20260927.md):
+  20,212 chart positions and 170 confirmed-week closed trades match from the
+  1971 FXCM history origin. Five forming-week exits and five new entries are
+  explicitly excluded. HMA 30 gives 140 closed trades on the same bars.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [ETHUSD weekly HMA 20 `hl2` comparison](SSL_HYBRID_LENGTH20_HL2_ETHUSD_WEEKLY_20260927.md):
+  3,643 chart values, 148 closed trades, and two open entries agree on
+  539 confirmed bars. The same frozen bars yield 98 closed trades at HMA 30.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [BTCUSD weekly HMA 20 `hl2` comparison](SSL_HYBRID_LENGTH20_HL2_BTCUSD_WEEKLY_20260927.md):
+  4,168 chart values, 168 closed trades, and two open entries agree on
+  614 confirmed bars. Reducing baseline length from 30 to 20 changes the
+  closed-trade count from 115 to 168 on the same frozen bars.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [COINBASE:BTCUSD weekly HMA 30 `hl2` comparison](SSL_HYBRID_LENGTH30_HL2_BTCUSD_WEEKLY_20260927.md):
+  4,124 chart values, 115 closed trades, and five open entries agree across
+  614 confirmed bars. Six-decimal native trade quantities match exactly;
+  the two source-dependent channels change at all 581 defined positions.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [COINBASE:ETHUSD weekly HMA 30 `hl2` comparison](SSL_HYBRID_LENGTH30_HL2_ETHUSD_WEEKLY_20260927.md):
+  3,599 chart values, 98 closed trades, and two open entries agree across
+  539 confirmed bars. Source selection changes 506 values in each channel
+  without changing the historical trade path on the same bars.
+
+- The unchanged SSL Hybrid Strategy v5 now matches a
+  [COINBASE:ETHUSD weekly HMA 30 comparison](SSL_HYBRID_LENGTH30_ETHUSD_WEEKLY_20260927.md):
+  3,599 chart values, 98 closed native trades, and two open entries agree
+  across 539 confirmed bars. `ta.cross`, `ta.crossover`, and `ta.crossunder`
+  retain per-callsite history when evaluated conditionally.
+
+- The unchanged SSL Hybrid Strategy v5 now matches a
+  [COINBASE:ETHUSD daily HMA 30 comparison](SSL_HYBRID_LENGTH30_ETHUSD_DAILY_20260927.md):
+  26,279 exported chart values, 786 closed native trade identities, dates and
+  displayed prices, and four open entries across 3,779 confirmed bars.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [BTCUSD daily baseline-length 30 comparison](SSL_HYBRID_LENGTH30_BTCUSD_DAILY_20260927.md):
+  29,814 nonblank chart values and 868 closed native trade identities, dates,
+  and displayed prices agree, with two open entries. This parameter changes
+  the trade path from the default-length control's 475 closed trades.
+
+- The unchanged Pine v5 SSL Hybrid Strategy now has a
+  [BTCUSD daily `hl2` source comparison](SSL_HYBRID_SOURCE_BTCUSD_DAILY_20260927.md).
+  Its eight CSV series match 29,682 nonblank positions on 4,284 confirmed
+  bars, while 475 closed trade identities, dates and displayed prices plus
+  five open entries agree. Three historical modes produce identical JSON.
+
+- Public analysis schema 6 adds `inputs[].isSource` across CLI, Python, and
+  WASM. Hosts can identify both generic `input(close)` and explicit
+  `input.source(close)` as chart-source selectors; numeric float inputs remain
+  distinct. See the [host-contract check](GENERIC_SOURCE_INPUT_EXPANSION_20260927.md).
+
+- The unchanged UT Bot Strategy has a
+  [complete AAPL weekly comparison](UT_BOT_AAPL_WEEKLY_EXPANSION_20260927.md):
+  four input settings match 974 native closed trades, four open trades, and
+  19,120 Buy/Sell signal positions.
+
+- Market fills now snap to the host chart's price grid before slippage and
+  broker accounting. The unchanged public UT Bot Strategy matches the
+  [AAPL daily native report](UT_BOT_AAPL_DAILY_EXPANSION_20260927.md) across
+  four input settings: 5,056 closed trades and 92,264 Buy/Sell signal positions.
+  A follow-up strict fill-price check also corrected one half-tick EURUSD
+  reversal in the [four-hour comparison](UT_BOT_FX_FOURHOUR_EXPANSION_20260927.md).
+
+- The unchanged UT Bot Strategy v4 now has a
+  [EURUSD four-hour comparison](UT_BOT_FX_FOURHOUR_EXPANSION_20260927.md)
+  across default, sensitivity, ATR, and Heikin Ashi inputs. All 7,819 native
+  closed trades and 170,704 Buy/Sell signal positions agree; no runtime change
+  was needed.
+
+- The unchanged State-Dependent EMA v6 indicator now has a
+  [EURUSD four-hour comparison](STATE_EMA_FX_FOURHOUR_EXPANSION_20260927.md)
+  across four state/source settings. All 682,750 numeric cells from the first
+  exported chart bar agree with TradingView; no runtime change was needed.
+
+- Pine v4 `ema` now accepts an integer-operand quotient in its length context,
+  as used by the unchanged Hull Suite Strategy EHMA function. The
+  [ETHUSD daily comparison](HULL_ETH_DAILY_EXPANSION_20260927.md) matches
+  358 native closed trades and 22,308 Hull plot values across three settings.
+
+- The [EURUSD four-hour Hull comparison](HULL_FX_FOURHOUR_EXPANSION_20260927.md)
+  extends that public script to forex, intraday bars, THMA, and length 89.
+  Four settings match 2,566 closed native trades and 170,180 plot values;
+  no additional runtime behavior changed in this slice.
+
+- The [Hull source-input comparison](HULL_FX_SOURCE_EXPANSION_20260927.md)
+  verifies HL2 and HLC3 against independent EURUSD four-hour native exports.
+  Both match 42,502 plot values and 578 trade times/prices/directions; HLC3
+  matches all quantities, while HL2 retains one one-unit quantity difference.
+
+- Host-side `input.source` overrides now select eight built-in chart price
+  series through Rust, CLI, Python, and WASM. The unchanged State-Dependent EMA
+  matches native ETHUSD and EURUSD weekly exports; see the
+  [source comparison](PARAMETER_TIMEFRAME_EXPANSION_20260927.md) and
+  [FX comparison](FX_SYMBOL_EXPANSION_20260927.md).
+
+- Omitted-quantity cash strategy orders now honor an explicitly configured
+  chart quantity grid. The [Bitduke EURUSD weekly receipt](FX_BITDUKE_STRATEGY_EXPANSION_20260927.md)
+  matches 116 native trades and 232 order rows.
+
+- Executed `strategy.close` orders now emit public fill events. The
+  [Bitduke EURUSD four-hour receipt](FX_BITDUKE_FOURHOUR_20260927.md)
+  matches 64 native trades and 128 order rows, including two close fills.
+
+- Two further [EURUSD four-hour parameter settings](FX_BITDUKE_PARAMETER_EXPANSION_20260927.md)
+  match 53 and 48 native Bitduke trades respectively, including a momentum
+  filter branch. No additional runtime semantics were changed for this slice.
+
+- Relative strategy exit tick distances now accept zero, matching the
+  [Bitduke EURUSD four-hour zero-input receipt](FX_BITDUKE_TRAILING_ZERO_20260927.md):
+  64 native trades, 128 order rows, and 27,212 post-warmup plot cells.
+
+- The unchanged Bitduke strategy also matches the
+  [Coinbase ETHUSD four-hour native report](ETH_BITDUKE_FOURHOUR_20260927.md):
+  78 trades, 156 order rows, and 38,204 post-warmup plot cells. This slice
+  needed no further runtime change.
+
+- On Coinbase ETHUSD daily history with the date filter disabled, the
+  [Bitduke native comparison](ETH_BITDUKE_DAILY_FULL_HISTORY_20260927.md)
+  matches 154 trades, 308 order rows, and all 7,558 plot cells from the
+  first confirmed exported chart bar.
+
 - Pine v1-v4 `strategy.entry` accepts boolean directions (`true` long,
   `false` short) while v5-v6 keep their stricter direction type. The unchanged
   public UT Bot Strategy now matches all 457 closed native trades and the

@@ -2,6 +2,140 @@
 
 Updated 2026-09-23. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
+The [FX:EURUSD four-hour HMA 30 HL2 comparison](SSL_HYBRID_FX_EURUSD_FOURHOUR_HMA30_HL2_20260927.md)
+matches 149,192 chart positions, 3,603 native closed trades, five open entries,
+and 2,150 explicit exit fills on 21,338 confirmed bars. HMA 20 produces
+4,645 closed trades on the same frozen bars; three historical modes are
+byte-identical. The two native exports have 54 revised numeric OHLCV fields,
+so each comparison uses the bars captured with its own setting.
+The [FX:EURUSD four-hour HMA 20 HL2 comparison](SSL_HYBRID_FX_EURUSD_FOURHOUR_HMA20_HL2_20260927.md)
+matches 149,236 exported chart positions, 4,645 native closed trades, and
+five open entries on 21,338 confirmed bars. It repairs exact FX tick touches,
+FIFO allocation, and marketable gap-exit priority. HMA 30 gives 3,603 closed
+trades on the same bars; three historical modes are byte-identical.
+The [generic source-input follow-up](GENERIC_SOURCE_INPUT_EXPANSION_20260927.md)
+adds host overrides for `input(close)`-style series-float inputs and reconciles
+stale broker snapshots. This local check does not expand native parity scope.
+The [SSL Hybrid `hl2` source comparison](SSL_HYBRID_SOURCE_BTCUSD_DAILY_20260927.md)
+extends the unchanged Pine v5 strategy on `COINBASE:BTCUSD` daily history.
+All 29,682 nonblank native chart positions match across 4,284 confirmed bars;
+475 closed trade identities, dates and displayed prices plus five open entries
+agree. The source changes channel values but leaves this run's trades unchanged.
+Batch, incremental and realtime-history results are byte-identical.
+The [SSL Hybrid baseline-length 30 comparison](SSL_HYBRID_LENGTH30_BTCUSD_DAILY_20260927.md)
+uses the same symbol and timeframe with a parameter that changes the trade
+path: 868 native closed trades and two open entries agree in identities, dates
+and displayed prices, alongside 29,814 matching nonblank chart positions.
+All three historical execution modes produce identical JSON.
+The [BTCUSD weekly HMA 30 HL2 comparison](SSL_HYBRID_LENGTH30_HL2_BTCUSD_WEEKLY_20260927.md)
+extends the same unchanged script to 614 confirmed weekly bars. All 4,124
+native chart positions, 115 closed trades, and five open entries match,
+including displayed quantity. Three historical modes are byte-identical.
+The [BTCUSD weekly HMA 20 HL2 comparison](SSL_HYBRID_LENGTH20_HL2_BTCUSD_WEEKLY_20260927.md)
+adds a trade-path-changing parameter on the same symbol and timeframe. All
+4,168 chart positions, 168 closed native trades, and two open entries match,
+including displayed quantity. HMA 30 produces 115 closed trades on the same
+frozen bars; three historical modes are byte-identical.
+The [ETHUSD weekly HMA 20 HL2 comparison](SSL_HYBRID_LENGTH20_HL2_ETHUSD_WEEKLY_20260927.md)
+checks that parameter on a second crypto symbol. All 3,643 chart positions,
+148 closed trades, and two open entries match, including displayed quantity.
+HMA 30 produces 98 closed trades on the same frozen bars; three historical
+modes are byte-identical.
+The [FX:EURUSD weekly HMA 20 HL2 comparison](SSL_HYBRID_FX_EURUSD_WEEKLY_HMA20_HL2_20260927.md)
+extends the unchanged strategy to forex from the first 1971 chart bar.
+All 20,212 exported chart positions and 170 confirmed-week closed trades
+match. Five entries carried into the forming week match, while that week's
+five exits and five new entries remain outside confirmed-history scope.
+Three historical modes are byte-identical.
+The [ETHUSD daily HMA 30 expansion](SSL_HYBRID_LENGTH30_ETHUSD_DAILY_20260927.md)
+checks the same unchanged script and parameter on a second Coinbase crypto
+symbol. All 26,279 exported nonblank chart positions and the identities, dates,
+and displayed prices of 786 native closed trades plus four open entries agree.
+The three historical modes again produce byte-identical JSON.
+The [ETHUSD weekly HMA 30 expansion](SSL_HYBRID_LENGTH30_ETHUSD_WEEKLY_20260927.md)
+checks the same unchanged source and parameter on 539 confirmed weekly bars.
+All 3,599 exported nonblank chart positions and 98 closed trades plus two
+open entries agree, including displayed quantity. A conditional `ta.cross*`
+call-history defect was repaired; three historical modes are byte-identical.
+The [ETHUSD weekly HMA 30 HL2 comparison](SSL_HYBRID_LENGTH30_HL2_ETHUSD_WEEKLY_20260927.md)
+changes both source-dependent channels across 506 confirmed bars each. All
+3,599 native chart positions and 98 closed trades plus two open entries match;
+the closed trade path is unchanged from the close-source control on the same
+bars. Three historical modes are byte-identical.
+The [UT Bot AAPL weekly comparison](UT_BOT_AAPL_WEEKLY_EXPANSION_20260927.md)
+extends the same unchanged strategy to a second stock timeframe. Four settings,
+including ATR-14 and Heikin Ashi signals, match 974 native closed trades and
+19,120 Buy/Sell signal positions. The later Heikin Ashi chart export records a
+revision to the final weekly volume; time and OHLC remain identical.
+The [UT Bot AAPL daily expansion](UT_BOT_AAPL_DAILY_EXPANSION_20260927.md)
+checks a stock symbol across four original-script input settings. All 5,056
+native closed trades and 92,264 Buy/Sell signal positions agree from the first
+1980 exported bar. Market fills now snap to the host chart's price grid;
+batch, incremental, and realtime-history outputs agree for each case.
+The [UT Bot EURUSD four-hour expansion](UT_BOT_FX_FOURHOUR_EXPANSION_20260927.md)
+checks a second unchanged v4 strategy on 21,338 forex intraday bars. Four
+input settings, including a host-supplied Heikin Ashi request, match 7,819
+native closed trades, four open entries, and 170,704 Buy/Sell signal positions.
+Batch, incremental, and realtime-history JSON agree for each case.
+The [EURUSD four-hour State EMA comparison](STATE_EMA_FX_FOURHOUR_EXPANSION_20260927.md)
+checks the unchanged public v6 indicator from its first 2013 chart bar through
+21,338 intraday bars. Four independently exported state/source settings match
+682,750 numeric cells; batch, incremental, and realtime-history JSON agree
+for every setting.
+The [Hull Suite ETHUSD daily expansion](HULL_ETH_DAILY_EXPANSION_20260927.md)
+compares the unchanged public v4 strategy across default long-only, both-direction,
+and EHMA both-direction inputs. All 358 closed native trades and 22,308 numeric
+plot values agree within export precision. A v4 EMA quotient-length admission
+gap was repaired; batch, incremental, and realtime-history outputs agree for
+the EHMA case.
+The [Hull Suite EURUSD four-hour expansion](HULL_FX_FOURHOUR_EXPANSION_20260927.md)
+adds forex and intraday coverage, including THMA and length 89. Four native
+settings match 2,566 closed trades and 170,180 numeric plot cells; the THMA
+cases are identical across three historical execution modes.
+The [Hull Suite source-input expansion](HULL_FX_SOURCE_EXPANSION_20260927.md)
+checks HL2 and HLC3 on the same 21,338 EURUSD four-hour bars. Both match all
+42,502 numeric plot cells and 578 closed-trade times, prices, and directions.
+HLC3 matches every quantity; HL2 has one unresolved one-unit sizing boundary
+at trade 265. All three historical execution modes agree for each source.
+The [September 27 parameter/symbol expansion](PARAMETER_SYMBOL_EXPANSION_20260927.md)
+adds two unchanged State-Dependent EMA settings on `COINBASE:ETHUSD` daily
+history. Each matches 6,208 independently exported native numeric cells after
+an explicit 213-bar warmup exclusion; this does not qualify full history or
+another timeframe.
+The [September 27 weekly/source expansion](PARAMETER_TIMEFRAME_EXPANSION_20260927.md)
+adds full-history `COINBASE:ETHUSD` weekly comparisons for four settings,
+including an `input.source` HLC3 override. Each matches 4,312 native numeric
+cells on 539 confirmed bars; the input-source override is now exposed to the
+Rust, CLI, Python, and WASM hosts for built-in chart price series.
+The [FX symbol expansion](FX_SYMBOL_EXPANSION_20260927.md) checks the unchanged
+indicator on `FX:EURUSD` weekly history from the first 1971 chart bar. Three
+settings match 72,650 native numeric cells across 2,906 confirmed bars; a
+separate trend-direction export cannot qualify colors or alerts from CSV.
+The [Bitduke FX strategy expansion](FX_BITDUKE_STRATEGY_EXPANSION_20260927.md)
+matches 116 native EURUSD weekly trades, 232 order rows, and 5,812 plot cells.
+It repairs omitted-quantity cash orders to honor an explicitly supplied chart
+quantity grid; historical batch, incremental, and realtime-history outputs agree.
+The [Bitduke four-hour FX expansion](FX_BITDUKE_FOURHOUR_20260927.md)
+matches 64 native EURUSD trades, 128 order rows, and 27,212 post-warmup plot
+cells. It records the two `strategy.close` fill events previously absent from
+the public order list; all three historical execution modes agree.
+The [Bitduke four-hour parameter expansion](FX_BITDUKE_PARAMETER_EXPANSION_20260927.md)
+adds BB Length 20 with the momentum filter off and on. Both independently
+exported settings match all 101 combined trades, 202 order rows, and 54,424
+post-warmup plot cells, with identical batch, incremental, and realtime-history
+outputs per setting.
+The [Bitduke zero-distance exit comparison](FX_BITDUKE_TRAILING_ZERO_20260927.md)
+checks `Trailing Stop=0` on EURUSD four-hour history. It repairs zero relative
+tick-distance admission and matches 64 native trades, 128 order rows, and
+27,212 post-warmup plot cells across all three historical execution modes.
+The [Bitduke ETHUSD four-hour expansion](ETH_BITDUKE_FOURHOUR_20260927.md)
+checks the unchanged default-input strategy on Coinbase crypto history. It
+matches 78 native trades, 156 order rows, and 38,204 post-warmup plot cells;
+all three historical execution modes agree.
+The [Bitduke ETHUSD daily exported-history comparison](ETH_BITDUKE_DAILY_FULL_HISTORY_20260927.md)
+disables the script's date filter and matches 154 native trades, 308 order
+rows, and every one of 7,558 plot cells across 3,779 confirmed chart bars.
+All three historical execution modes agree.
 The [Bitduke Squeeze strategy slice](BITDUKE_SQUEEZE_STRATEGY_NATIVE_20260926.md)
 aligns 14 native v4 trades and repairs positional close and unpaired trailing exit behavior.
 The [legacy Squeeze Momentum slice](SQUEEZE_LEGACY_NATIVE_20260926.md) corrects

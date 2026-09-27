@@ -1,0 +1,19 @@
+# SSL Hybrid Strategy source-input expansion (2026-09-27)
+
+The unchanged public Pine v5 [SSL Hybrid Strategy by kevinmck100](https://www.tradingview.com/script/2it69GUx-SSL-Hybrid-Strategy/) was compared on `COINBASE:BTCUSD`, `1D`, with its `Source` input set to `(H + L)/2` (`hl2`). All other inputs and strategy properties remained at the settings shown in TradingView's existing chart. The source is the same 557-line file used in the [default-input comparison](SSL_HYBRID_STRATEGY_V5_NATIVE_PARITY_20260925.md); its SHA-256 is `1b90bead338682dcc17b8c1063637e7b8354c91b35d9d2a741ae41b5274c658c`.
+
+Chrome's TradingView chart-data and List of trades exports were frozen under ignored `.local/ssl-hybrid-hl2-btcusd-daily-20260927/`. The native chart CSV SHA-256 is `a6eabf9daebd1ecd4fefab0f9d7076e1db52377d14e6f975754ab2473cc93c76`; the trade CSV SHA-256 is `93196b7ae54fc275f671d5270c306fb8836e261677b4444a233af519876395c0`. The screenshot `hl2-chart.png` records the visible `hl2` input and `COINBASE:BTCUSD` daily chart. TradingView's export held 4,285 chart rows from 2014-12-01 through 2026-09-27 UTC. The final September 27 bar was forming and excluded. The comparison uses all 4,284 confirmed bars through September 26. The chart quantity grid is not inferred from another instrument; the local run explicitly supplies the chart price grid `1/100`.
+
+`prepare_bars.py` converts the frozen chart's OHLCV to host-provided bars. Its `bars-receipt.json` checks the 4,282-bar overlap with the prior default-source chart: OHLC is identical; three recent volume values were revised, and this comparison uses the new export. `compare.py` checks the eight CSV-exposed indicator series at `1e-8` absolute tolerance. All 29,682 nonblank exported positions agree, including 4,218 values in each source-dependent upper and lower channel, with zero mismatches. The optional second moving-average column is blank throughout. The CSV flattens the script's false/`na` Candle Size condition to zero, so the comparator applies that documented export interpretation.
+
+The native report contains 475 closed trades and five open entries. Local execution has the same counts, and all closed entry IDs, UTC entry/exit dates, and entry/exit prices agree at the CSV's cent display precision. All five open entry IDs, dates, and prices agree. The maximum closed quantity difference is `0.000001103` and the maximum net-PnL difference is `$0.019801`; the native report's displayed precision does not prove exact internal quantity or cent-by-cent PnL parity. On the same chart bars, a local close-source control differs from the `hl2` run at all 4,218 values in each channel, while its order and trade arrays are identical. This setting therefore exercises the source-input semantics but does not add a distinct trade path on this data.
+
+Analysis schema 6 identifies the `Source` callsite as `isSource: true`, ID 18. The local CLI ran the unchanged source with `--input-override 18=hl2`. Batch, incremental, and realtime-history results are byte-identical (SHA-256 `227ea294d4aefb90fac15f125328701f69657519a24fc6e3b61df0cc91b90c8e` for each JSON). No runtime semantics changed in this slice. This is confirmed-bar historical evidence for one source setting, symbol, and timeframe; it does not qualify live forming-bar updates or other settings.
+
+Reproduce from the repository root:
+
+```powershell
+python .local/ssl-hybrid-hl2-btcusd-daily-20260927/prepare_bars.py
+target/debug/pine-compat.exe run .local/ssl-hybrid-hl2-btcusd-daily-20260927/ssl-hybrid-original.pine --bars .local/ssl-hybrid-hl2-btcusd-daily-20260927/bars-confirmed.csv --chart-symbol COINBASE:BTCUSD --chart-timeframe 1D --chart-price-grid 1/100 --input-override 18=hl2 > .local/ssl-hybrid-hl2-btcusd-daily-20260927/local-batch.json
+python .local/ssl-hybrid-hl2-btcusd-daily-20260927/compare.py
+```

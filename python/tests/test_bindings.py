@@ -160,7 +160,7 @@ def test_analyze_script_reports_executable_script():
         '//@version=6\nindicator("demo")\nplot(close)\n'
     )
 
-    assert report["schemaVersion"] == 5
+    assert report["schemaVersion"] == 6
     assert report["languageVersion"] == 6
     assert report["languageVersionOrigin"] == "explicit"
     assert report["dialect"] == "v6"
@@ -184,7 +184,7 @@ def test_analyze_script_reports_input_call_sites():
         'plot(close)\n'
     )
 
-    assert report["schemaVersion"] == 5
+    assert report["schemaVersion"] == 6
     assert report["diagnostics"] == []
     assert [
         {"name": item["name"], "title": item["title"]}
@@ -196,10 +196,23 @@ def test_analyze_script_reports_input_call_sites():
     assert all(isinstance(item["callSiteId"], int) for item in report["inputs"])
 
 
+def test_analyze_script_identifies_chart_source_selectors():
+    report = pine_compat.analyze_script(
+        '//@version=5\nindicator("sources")\n'
+        'a = input(close, "Generic source")\n'
+        'b = input.source(close, "Source")\n'
+        'c = input(1.5, "Scale")\n'
+        'plot(a + b + c)\n'
+    )
+    assert report["schemaVersion"] == 6
+    assert report["diagnostics"] == []
+    assert [item["isSource"] for item in report["inputs"]] == [True, True, False]
+
+
 def test_analyze_script_reports_executable_implicit_v1_legacy_indicator():
     report = pine_compat.analyze_script('study("legacy")\nplot(close)\n')
 
-    assert report["schemaVersion"] == 5
+    assert report["schemaVersion"] == 6
     assert report["languageVersion"] == 1
     assert report["languageVersionOrigin"] == "implicit"
     assert report["dialect"] == "v1"
@@ -351,7 +364,7 @@ def test_analyze_script_reports_v4_legacy_security_routing():
     )
 
 
-def test_analyze_script_reports_one_legacy_strategy_hard_stop():
+def test_analyze_script_admits_v4_strategy():
     report = pine_compat.analyze_script(
         '//@version=4\nstrategy("legacy")\n'
         'strategy.entry("L", strategy.long)\n'
@@ -361,11 +374,8 @@ def test_analyze_script_reports_one_legacy_strategy_hard_stop():
     assert report["languageVersionOrigin"] == "explicit"
     assert report["dialect"] == "v4"
     assert report["scriptMode"] == "strategy"
-    assert report["executable"] is False
-    assert [item["code"] for item in report["diagnostics"]] == [
-        "E_LEGACY_STRATEGY_OUT_OF_SCOPE"
-    ]
-    assert report["compatibility"]["unsupported"][0]["feature"] == "legacy strategy"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
 
 
 def test_program_run_accepts_call_site_keyed_input_overrides():
@@ -412,7 +422,7 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
 
 
 def test_schema_versions_and_input_constraints_are_public():
-    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 5
+    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 6
     assert pine_compat.RUNTIME_SCHEMA_VERSION == 9
     assert pine_compat.RENDER_METADATA_VERSION == 1
 
@@ -424,6 +434,7 @@ def test_schema_versions_and_input_constraints_are_public():
     assert report["inputs"][0] == {
         "callSiteId": 1,
         "name": "input.int",
+        "isSource": False,
         "title": "Length",
         "default": 3,
         "min": 1,
@@ -448,6 +459,7 @@ def test_program_run_accepts_v4_legacy_input_overrides():
     assert report["inputs"][0] == {
         "callSiteId": 1,
         "name": "input.int",
+        "isSource": False,
         "title": "Length",
         "default": 3,
         "min": 1,

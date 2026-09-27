@@ -267,19 +267,33 @@ impl BrokerState {
     }
 
     pub(super) fn long_entry_fill_price(&self, price: f64) -> f64 {
-        price + self.slippage_price_offset
+        self.snap_fill_price(price) + self.slippage_price_offset
     }
 
     pub(super) fn short_entry_fill_price(&self, price: f64) -> f64 {
-        price - self.slippage_price_offset
+        self.snap_fill_price(price) - self.slippage_price_offset
     }
 
     pub(super) fn short_exit_fill_price(&self, price: f64) -> f64 {
-        price + self.slippage_price_offset
+        self.snap_fill_price(price) + self.slippage_price_offset
     }
 
     pub(super) fn long_exit_fill_price(&self, price: f64) -> f64 {
-        price - self.slippage_price_offset
+        self.snap_fill_price(price) - self.slippage_price_offset
+    }
+
+    fn snap_fill_price(&self, price: f64) -> f64 {
+        let Some(tick) = self.price_tick else {
+            return price;
+        };
+        if !price.is_finite() {
+            return price;
+        }
+        let ticks = price / tick;
+        if (ticks - ticks.round()).abs() <= 1e-8 {
+            return price;
+        }
+        (ticks + 0.5).floor() * tick
     }
 
     #[allow(dead_code)]

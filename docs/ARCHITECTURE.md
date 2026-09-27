@@ -522,8 +522,9 @@ WASM input overrides are exposed through `runScriptCsvWithInputOverrides`,
 `Program.runCsvWithInputOverrides`, and
 `Program.runCsvWithRequestBarsAndInputOverrides`. The `inputOverridesJson`
 value is an object keyed by analysis `inputs[].callSiteId`; values are parsed
-against the analyzed `input.*` call type. Host-side `input.source` overrides
-remain unsupported.
+against the analyzed `input.*` call type. `input.source` accepts the chart's
+`open`, `high`, `low`, `close`, `hl2`, `hlc3`, `ohlc4`, and `hlcc4` series names.
+External indicator plot sources require a separate host capability contract.
 
 ## Output Model
 
@@ -531,7 +532,7 @@ The core output must remain host-neutral:
 
 ```json
 {
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -579,9 +580,9 @@ when they forward machine-readable runtime results.
 Machine-readable analysis and matrix outputs use separate schema ownership.
 `pine-sema::PUBLIC_ANALYSIS_SCHEMA_VERSION` owns CLI/Python/WASM analysis
 reports, while `PUBLIC_MATRIX_SCHEMA_VERSION` owns CLI matrix JSON. Runtime is
-currently `8`; analysis is currently `5`, adding compile-time input defaults,
-constraints, and options to the existing version, diagnostic, dialect,
-translation/emulation, and compatibility evidence; matrix
+currently `9`; analysis is currently `6`, adding `inputs[].isSource` to
+compile-time input defaults, constraints, and options alongside version,
+diagnostic, dialect, translation/emulation, and compatibility evidence; matrix
 remains `2`. These contracts can evolve independently when a runtime-only
 output field does not affect analysis or matrix contracts.
 

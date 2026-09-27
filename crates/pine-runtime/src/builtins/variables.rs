@@ -56,7 +56,7 @@ impl<'a> HistoricalRuntime<'a> {
             "input" | "input.int" | "input.float" | "input.bool" | "input.color"
             | "input.string" | "input.price" | "input.time" | "input.symbol"
             | "input.timeframe" | "input.session" | "input.text_area" | "input.source" => {
-                self.eval_input(call_site_id, args)
+                self.eval_input(callee, call_site_id, args)
             }
             "na" => self.eval_na(args),
             "nz" => self.eval_nz(args),
@@ -67,10 +67,31 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn eval_input(
         &mut self,
+        callee: &str,
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         if let Some(value) = self.input_overrides.get(call_site_id) {
+            let generic_source = callee == "input"
+                && call_arg_expr(args, 0, "defval").is_some_and(|expr| {
+                    expr.pine_type.kind == pine_ir::ValueKind::Float
+                        && expr.pine_type.qualifier == pine_ir::Qualifier::Series
+                });
+            if callee == "input.source" || generic_source {
+                return match value {
+                    PineValue::String(source) => self
+                        .current_bar
+                        .as_ref()
+                        .and_then(|bar| chart_source_value(bar, source))
+                        .map(PineValue::Float)
+                        .ok_or_else(|| RuntimeError {
+                            message: format!("unsupported input.source override `{source}`"),
+                        }),
+                    _ => Err(RuntimeError {
+                        message: "input.source override must be a chart source name".to_owned(),
+                    }),
+                };
+            }
             return Ok(value.clone());
         }
         let Some(defval) = call_arg_expr(args, 0, "defval") else {
@@ -560,6 +581,20 @@ impl<'a> HistoricalRuntime<'a> {
         }
         PineValue::Float((current_bar.close - first_close) / first_close * 100.0)
     }
+}
+
+fn chart_source_value(bar: &Bar, source: &str) -> Option<f64> {
+    Some(match source {
+        "open" => bar.open,
+        "high" => bar.high,
+        "low" => bar.low,
+        "close" => bar.close,
+        "hl2" => (bar.high + bar.low) / 2.0,
+        "hlc3" => (bar.high + bar.low + bar.close) / 3.0,
+        "ohlc4" => (bar.open + bar.high + bar.low + bar.close) / 4.0,
+        "hlcc4" => (bar.high + bar.low + bar.close + bar.close) / 4.0,
+        _ => return None,
+    })
 }
 
 impl<'a> HistoricalRuntime<'a> {

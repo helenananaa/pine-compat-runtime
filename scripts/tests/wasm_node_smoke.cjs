@@ -26,7 +26,7 @@ const bars = [
 ].join('\n');
 
 const analysis = JSON.parse(pine.analyzeScript(source));
-assert.equal(analysis.schemaVersion, 5);
+assert.equal(analysis.schemaVersion, 6);
 assert.equal(analysis.languageVersion, 6);
 assert.equal(analysis.languageVersionOrigin, 'explicit');
 assert.equal(analysis.dialect, 'v6');
@@ -265,10 +265,8 @@ const legacyStrategy = JSON.parse(
   ),
 );
 assert.equal(legacyStrategy.scriptMode, 'strategy');
-assert.deepEqual(
-  legacyStrategy.diagnostics.map(({ code }) => code),
-  ['E_LEGACY_STRATEGY_OUT_OF_SCOPE'],
-);
+assert.equal(legacyStrategy.executable, true);
+assert.deepEqual(legacyStrategy.diagnostics, []);
 
 const combinedSource = [
   '//@version=6',

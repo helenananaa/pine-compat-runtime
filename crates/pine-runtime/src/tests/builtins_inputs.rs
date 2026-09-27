@@ -363,6 +363,44 @@ plot(enabled and mode == "SMA" ? math.max(src, length) * scale : close, color=sh
 }
 
 #[test]
+fn source_override_selects_each_bars_builtin_series_and_rejects_external_sources() {
+    let source = SourceFile::new(
+        "source-override.pine",
+        "indicator(\"source override\")\nsrc = input.source(close, \"Source\")\nplot(src)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    let id = first_call_site_id(&program, "input.source");
+    let bars = [bar_ohlc(1.0, 5.0, 2.0, 4.0), bar_ohlc(3.0, 9.0, 6.0, 8.0)];
+    for (selector, expected) in [
+        ("open", [1.0, 3.0]),
+        ("high", [5.0, 9.0]),
+        ("low", [2.0, 6.0]),
+        ("close", [4.0, 8.0]),
+        ("hl2", [3.5, 7.5]),
+        ("hlc3", [11.0 / 3.0, 23.0 / 3.0]),
+        ("ohlc4", [3.0, 6.5]),
+        ("hlcc4", [3.75, 7.75]),
+    ] {
+        let overrides = InputOverrides::new().with_value(
+            id,
+            chart_source_input_override(selector).expect("chart source"),
+        );
+        let result = run_historical_with_input_overrides(&program, &bars, overrides)
+            .expect("source override result");
+        assert_values_close(&result.plots[0].values, &expected);
+    }
+    assert!(chart_source_input_override("other indicator plot").is_err());
+    let invalid = InputOverrides::new().with_value(id, PineValue::String("other plot".into()));
+    assert!(run_historical_with_input_overrides(&program, &bars, invalid).is_err());
+}
+
+#[test]
 fn runs_generic_input_series_float_source_defval() {
     let source = SourceFile::new(
         "test.pine",
@@ -383,4 +421,44 @@ plot(src)
 
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn generic_source_input_override_tracks_chart_series() {
+    let source = SourceFile::new(
+        "generic-source-override.pine",
+        "indicator(\"generic source\")\nsrc = input(close, \"Source\")\nscale = input(2.0, \"Scale\")\nplot(src * scale)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    let calls = input_calls(&program);
+    let source_call = calls
+        .iter()
+        .find(|call| call.title.as_deref() == Some("Source"))
+        .unwrap();
+    let scale_call = calls
+        .iter()
+        .find(|call| call.title.as_deref() == Some("Scale"))
+        .unwrap();
+    assert!(source_call.is_source);
+    assert!(!scale_call.is_source);
+    let bars = [bar_ohlc(1.0, 5.0, 2.0, 4.0), bar_ohlc(3.0, 9.0, 6.0, 8.0)];
+    let overrides = InputOverrides::new()
+        .with_value(
+            source_call.call_site_id,
+            chart_source_input_override("hl2").unwrap(),
+        )
+        .with_value(scale_call.call_site_id, PineValue::Float(2.0));
+    let result = run_historical_with_input_overrides(&program, &bars, overrides).unwrap();
+    assert_values_close(&result.plots[0].values, &[7.0, 15.0]);
+    let invalid = InputOverrides::new().with_value(
+        source_call.call_site_id,
+        PineValue::String("other plot".into()),
+    );
+    assert!(run_historical_with_input_overrides(&program, &bars, invalid).is_err());
 }

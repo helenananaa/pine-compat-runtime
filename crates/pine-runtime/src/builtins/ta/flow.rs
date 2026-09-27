@@ -1,3 +1,4 @@
+use crate::runtime::historical::CrossCallState;
 use pine_ir::SeriesId;
 
 use super::*;
@@ -560,6 +561,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn eval_cross(
         &mut self,
+        call_site_id: CallSiteId,
         args: &[HirCallArg],
         mode: CrossMode,
     ) -> Result<PineValue, RuntimeError> {
@@ -571,15 +573,33 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let current_left = self.eval_expr(left_arg)?;
         let current_right = self.eval_expr(right_arg)?;
-        let Some(left_series_id) = left_arg.series_id else {
+        let Some(_left_series_id) = left_arg.series_id else {
             return Ok(PineValue::Bool(false));
         };
-        let previous_left = self.read_declared_series_history(left_series_id, 1);
-        let previous_right = if let Some(right_series_id) = right_arg.series_id {
-            self.read_declared_series_history(right_series_id, 1)
+        let bar_index = self.bars;
+        let state = self
+            .cross_state
+            .entry(call_site_id)
+            .or_insert_with(|| CrossCallState {
+                bar_index,
+                current_left: PineValue::Na,
+                current_right: PineValue::Na,
+                previous_left: PineValue::Na,
+                previous_right: PineValue::Na,
+            });
+        if state.bar_index != bar_index {
+            state.previous_left = state.current_left.clone();
+            state.previous_right = state.current_right.clone();
+            state.bar_index = bar_index;
+        }
+        let previous_left = state.previous_left.clone();
+        let previous_right = if right_arg.series_id.is_some() {
+            state.previous_right.clone()
         } else {
             current_right.clone()
         };
+        state.current_left = current_left.clone();
+        state.current_right = current_right.clone();
 
         let Some(current_left) = current_left.as_f64() else {
             return Ok(PineValue::Bool(false));

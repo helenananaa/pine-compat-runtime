@@ -460,6 +460,14 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let metadata = self.take_next_close_metadata();
         let mut closed_entry_commission = 0.0;
+        self.record_order_event(
+            format!("Close entry(s) order {id}"),
+            bar_index,
+            time,
+            "strategy.close",
+            qty,
+            price,
+        );
         for allocation in &allocations {
             let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
             let commission = allocation.entry_commission + allocated_exit_commission;
@@ -524,9 +532,12 @@ impl BrokerState {
             (pine_ir::StrategyCloseEntriesRule::Any, Some(entry_id)) => self
                 .trade_ledger
                 .allocate_exit_any_for_entry_direction(direction, entry_id, requested_quantity),
+            // `from_entry` sizes/reserves the exit order. With the default
+            // FIFO rule its fill closes the oldest open trade regardless of
+            // the entry ID named by that order.
             _ => self.trade_ledger.allocate_exit_fifo_for_direction(
                 direction,
-                from_entry,
+                None,
                 requested_quantity,
             ),
         }

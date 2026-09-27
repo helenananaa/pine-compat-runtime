@@ -959,7 +959,8 @@ non-bool values stay rejected.
 `default_qty_type=strategy.cash` is also supported for positive const numeric
 `default_qty_value`; omitted supported entry `qty` resolves once at placement
 time as cash divided by the current close under the current
-no-currency-conversion boundary. `default_qty_type=strategy.percent_of_equity`
+no-currency-conversion boundary, then truncates to an explicitly configured
+chart quantity grid. `default_qty_type=strategy.percent_of_equity`
 is also supported for positive const numeric `default_qty_value`; omitted
 supported entry `qty` resolves once at placement time from current supported
 equity and current close. `strategy.default_entry_qty(fill_price)` exposes the
@@ -970,8 +971,8 @@ supported equity by `fill_price`; fixed sizing returns the configured unit
 count. The helper does not add reversal quantity for an open position. Direct,
 named, UDF, and history reads are supported. Non-positive or non-finite prices
 produce `na` for price-dependent modes, as does non-positive or non-finite
-supported equity for percent sizing. Currency conversion, symbol point value,
-precision, and lot-step handling remain outside this subset.
+supported equity for percent sizing. Currency conversion, non-unit symbol point
+value, and arbitrary lot-step handling remain outside this subset.
 `strategy(...)` accepts
 `commission_type=strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, or `strategy.commission.percent` with a
@@ -1318,13 +1319,14 @@ Rules:
   value only when explicitly supplied by the Rust, CLI, Python, or WASM host.
 - `input.session` and `input.text_area` currently execute their `defval`
   strings unless a Rust, CLI, Python, or WASM host override is supplied.
-- `input.source` returns the selected source series. Phase 1 may restrict this
-  to known OHLCV-derived series. Host-side `input.source` overrides remain
-  unsupported.
+- `input.source` returns the selected source series. Rust, CLI, Python, and WASM
+  host overrides accept `open`, `high`, `low`, `close`, `hl2`, `hlc3`, `ohlc4`,
+  and `hlcc4`; external indicator plot sources remain unsupported.
 - Generic `input(close)` (or another series float defval) infers the same
   source-input return as `input.source`. Const scalar defvals still promote to
   the `input` qualifier. Series int/bool/string/color defvals stay rejected.
-  Host-side source overrides remain unsupported.
+  Host-side overrides of generic series-float `input(...)` use the same built-in
+  chart-source selectors as `input.source`.
 
 ## Plotting
 

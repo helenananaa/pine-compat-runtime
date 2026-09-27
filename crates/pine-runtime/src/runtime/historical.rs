@@ -66,11 +66,21 @@ impl InputOverrides {
 }
 
 #[derive(Clone)]
+pub(crate) struct CrossCallState {
+    pub(crate) bar_index: usize,
+    pub(crate) current_left: PineValue,
+    pub(crate) current_right: PineValue,
+    pub(crate) previous_left: PineValue,
+    pub(crate) previous_right: PineValue,
+}
+
+#[derive(Clone)]
 struct StrategyEvalCheckpoint {
     rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
     call_state: HashMap<CallSiteId, PineValue>,
+    cross_state: HashMap<CallSiteId, CrossCallState>,
     valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
     vwap_call_state: HashMap<CallSiteId, VwapState>,
     pivot_point_state: HashMap<CallSiteId, PivotPointState>,
@@ -138,6 +148,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) map_store: HashMap<u32, MapStorage>,
     pub(crate) next_map_id: u32,
     pub(crate) call_state: HashMap<CallSiteId, PineValue>,
+    pub(crate) cross_state: HashMap<CallSiteId, CrossCallState>,
     pub(crate) valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
     pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
     pub(crate) rsi_state: HashMap<CallSiteId, RsiState>,
@@ -411,6 +422,7 @@ impl<'a> HistoricalRuntime<'a> {
             map_store: HashMap::new(),
             next_map_id: 0,
             call_state: HashMap::new(),
+            cross_state: HashMap::new(),
             valuewhen_state: HashMap::new(),
             rolling_windows: HashMap::new(),
             rsi_state: HashMap::new(),
@@ -1019,6 +1031,7 @@ impl<'a> HistoricalRuntime<'a> {
             rsi_state: self.rsi_state.clone(),
             macd_state: self.macd_state.clone(),
             call_state: self.call_state.clone(),
+            cross_state: self.cross_state.clone(),
             valuewhen_state: self.valuewhen_state.clone(),
             vwap_call_state: self.vwap_call_state.clone(),
             pivot_point_state: self.pivot_point_state.clone(),
@@ -1038,6 +1051,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.rsi_state.clone_from(&checkpoint.rsi_state);
         self.macd_state.clone_from(&checkpoint.macd_state);
         self.call_state.clone_from(&checkpoint.call_state);
+        self.cross_state.clone_from(&checkpoint.cross_state);
         self.valuewhen_state.clone_from(&checkpoint.valuewhen_state);
         self.vwap_call_state.clone_from(&checkpoint.vwap_call_state);
         self.pivot_point_state

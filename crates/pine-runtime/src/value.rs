@@ -62,6 +62,21 @@ pub enum PineValue {
     Void,
 }
 
+/// Selects one of the chart's built-in price series for `input.source`.
+/// External indicator plots require a separate host capability contract.
+pub fn chart_source_input_override(source: &str) -> Result<PineValue, String> {
+    if matches!(
+        source,
+        "open" | "high" | "low" | "close" | "hl2" | "hlc3" | "ohlc4" | "hlcc4"
+    ) {
+        Ok(PineValue::String(source.to_owned()))
+    } else {
+        Err(format!(
+            "input.source override must be open, high, low, close, hl2, hlc3, ohlc4, or hlcc4; got `{source}`"
+        ))
+    }
+}
+
 /// Encodes an RGB or RGBA literal without conflating low-valued RGBA payloads
 /// (for example transparent green) with ordinary `0xRRGGBB` colors.
 #[must_use]

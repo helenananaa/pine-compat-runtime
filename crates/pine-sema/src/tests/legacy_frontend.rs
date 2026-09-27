@@ -3785,6 +3785,26 @@ fn v4_integer_division_preserves_input_fractions_and_truncates_constants() {
 }
 
 #[test]
+fn v4_ema_length_accepts_integer_operand_quotient_in_public_hull_pattern() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"Hull EMA length\")\nlength = input(55)\nehma(src, len) => ema(2 * ema(src, len / 2) - ema(src, len), round(sqrt(len)))\nplot(ehma(close, length))\nplot(length / 2)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|emulation| emulation.feature == "v4.ema_division_length")
+    );
+}
+
+#[test]
 fn v5_integer_division_depends_on_const_qualifiers() {
     let analysis = analyze_production(include_str!(
         "../../../../tests/fixtures/runtime/v5_const_integer_division.pine"

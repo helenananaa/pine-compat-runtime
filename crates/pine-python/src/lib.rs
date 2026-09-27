@@ -462,6 +462,14 @@ fn parse_input_override_key(key: &Bound<'_, PyAny>) -> PyResult<u32> {
 }
 
 fn parse_input_override_value(input: &InputCall, value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
+    if input.is_source {
+        return pine_runtime::chart_source_input_override(
+            &value
+                .extract::<String>()
+                .map_err(|_| PyValueError::new_err("source input override must be a string"))?,
+        )
+        .map_err(PyValueError::new_err);
+    }
     match input.name.as_str() {
         "input" => parse_generic_input_override(input.value_kind, value),
         "input.int" | "input.time" => Ok(PineValue::Int(parse_int_override(&input.name, value)?)),
@@ -476,9 +484,6 @@ fn parse_input_override_value(input: &InputCall, value: &Bound<'_, PyAny>) -> Py
         | "input.text_area" => Ok(PineValue::String(value.extract().map_err(|_| {
             PyValueError::new_err(format!("{} override must be a string", input.name))
         })?)),
-        "input.source" => Err(PyValueError::new_err(
-            "input.source overrides are not supported",
-        )),
         _ => Err(PyValueError::new_err(format!(
             "input_overrides cannot override unsupported input call {}",
             input.name
@@ -691,6 +696,7 @@ fn inputs_to_py(py: Python<'_>, analysis: &Analysis) -> PyResult<Py<PyAny>> {
             let item = PyDict::new(py);
             item.set_item("callSiteId", input.call_site_id)?;
             item.set_item("name", input.name)?;
+            item.set_item("isSource", input.is_source)?;
             item.set_item("title", input.title)?;
             match &input.default_value {
                 Some(value) => item.set_item("default", value_to_py(py, value)?)?,

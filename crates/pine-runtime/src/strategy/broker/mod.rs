@@ -1074,6 +1074,17 @@ impl BrokerState {
         self.open_position_size_for_entry(id) > 0.0
     }
 
+    fn pending_exit_has_position(&self, pending: &PendingExit) -> bool {
+        if self.position_size == 0.0 || pending.reserved_quantity <= 0.0 {
+            return false;
+        }
+        if let Some(key) = pending.target_trade_key {
+            return self.trade_ledger.open_quantity_for_key(key) > 0.0;
+        }
+        self.close_entries_rule == StrategyCloseEntriesRule::Fifo
+            || self.has_open_position_for_entry(&pending.from_entry)
+    }
+
     pub(crate) fn reject_entry_relative_exit_for_pending_entry(
         &mut self,
         from_entry: &str,
@@ -1151,8 +1162,7 @@ impl BrokerState {
         if pending_exit.last_update_bar_index >= bar_index {
             return;
         }
-        if self.position_size == 0.0 || !self.has_open_position_for_entry(&pending_exit.from_entry)
-        {
+        if !self.pending_exit_has_position(&pending_exit) {
             if self.position_size == 0.0 && self.has_pending_entry(&pending_exit.from_entry) {
                 return;
             }
@@ -1215,8 +1225,14 @@ impl BrokerState {
             );
             if self.position_size == 0.0 {
                 self.order_book.exits_mut().clear_all();
-            } else {
+            } else if self.close_entries_rule == StrategyCloseEntriesRule::Any {
                 self.order_book.exits_mut().clear_for_entry(&from_entry);
+            } else {
+                self.order_book.exits_mut().remove_identities(&[(
+                    exit_id,
+                    from_entry,
+                    target_trade_key,
+                )]);
             }
         }
     }
@@ -1264,7 +1280,7 @@ impl BrokerState {
             if pending_exit.last_update_bar_index >= bar_index {
                 continue;
             }
-            if !self.has_open_position_for_entry(&pending_exit.from_entry) {
+            if !self.pending_exit_has_position(&pending_exit) {
                 self.order_book
                     .exits_mut()
                     .clear_for_entry(&pending_exit.from_entry);
@@ -1324,7 +1340,7 @@ impl BrokerState {
             if self.position_size == 0.0 {
                 break;
             }
-            if !self.has_open_position_for_entry(&pending_exit.from_entry) {
+            if !self.pending_exit_has_position(&pending_exit) {
                 self.order_book
                     .exits_mut()
                     .clear_for_entry(&pending_exit.from_entry);

@@ -165,6 +165,32 @@ fn same_price_uses_creation_sequence_not_entry_before_exit() {
 }
 
 #[test]
+fn short_gap_fills_deeper_marketable_profit_target_first() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+    assert!(broker.entry_short("A".to_owned(), 0, 10, 100.0, 87.0));
+    assert!(broker.entry_short("B".to_owned(), 0, 10, 100.0, 131.0));
+    broker.place_exit_limit("XA".to_owned(), "A".to_owned(), 98.0, 0);
+    broker.place_exit_limit("XB".to_owned(), "B".to_owned(), 95.0, 0);
+
+    let candidates =
+        broker.collect_observed_price_candidates(1, 94.0, broker.event_generation(), false);
+    let exits: Vec<_> = candidates
+        .iter()
+        .filter(|candidate| candidate.event_kind == BrokerCandidateEvent::ExitFill)
+        .map(|candidate| candidate.public_id.as_str())
+        .collect();
+    assert_eq!(exits, vec!["XB", "XA"]);
+}
+
+#[test]
 fn rising_and_falling_legs_order_crossings() {
     let mut broker = BrokerState::new(100_000.0);
     broker.place_pending_stop_long_entry("HI".to_owned(), 1.0, 10.8, 0);

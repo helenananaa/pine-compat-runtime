@@ -39,6 +39,80 @@ fn broker_with_short_entry() -> BrokerState {
     broker
 }
 
+#[test]
+fn market_reversal_snaps_split_adjusted_stock_open_to_chart_tick() {
+    let mut broker = BrokerState::new(1_000_000.0).with_price_tick(0.01);
+    broker.place_pending_market_long_entry("long".to_owned(), 1.0, 0);
+    broker.fill_pending_market_entries(1, 10, 0.142299);
+    broker.place_pending_market_short_entry("short".to_owned(), 1.0, 1);
+    broker.fill_pending_market_entries(2, 20, 0.145089);
+
+    let trade = &broker.trades[0];
+    assert!((trade.entry_price - 0.14).abs() < 1e-12);
+    assert!((trade.exit_price - 0.15).abs() < 1e-12);
+    assert!((trade.profit - 0.01).abs() < 1e-12);
+    assert!((broker.avg_price - 0.15).abs() < 1e-12);
+    assert!((broker.long_entry_fill_price(35.315) - 35.31).abs() < 1e-12);
+    assert!((broker.short_entry_fill_price(35.735) - 35.74).abs() < 1e-12);
+    assert_eq!(broker.long_entry_fill_price(341.07), 341.07);
+    let forex = BrokerState::new(1_000_000.0).with_price_tick(0.00001);
+    assert_eq!(forex.long_entry_fill_price(1.31847), 1.31847);
+    assert!((forex.long_entry_fill_price(1.0881150000000002) - 1.08812).abs() < 1e-12);
+}
+
+#[test]
+fn short_breakeven_stop_touches_exact_fx_tick_despite_average_price_roundoff() {
+    let mut broker = BrokerState::new(100_000.0).with_price_tick(0.00001);
+    assert!(broker.entry_short("S".to_owned(), 0, 10, 1.09006, 44.0));
+    broker.place_exit_stop("XS".to_owned(), "S".to_owned(), 1.0900600000000003, 0);
+
+    assert!(matches!(
+        broker.pending_exit_by_identity("XS", "S").map(|exit| &exit.trigger),
+        Some(PendingExitTrigger::Stop(price)) if *price == 1.09006
+    ));
+    broker.evaluate_pending_exits(1, 20, 1.09006, 1.08584);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 1.09006);
+}
+
+#[test]
+fn short_bracket_stop_touches_exact_fx_tick_after_outward_rounding() {
+    let mut broker = BrokerState::new(100_000.0).with_price_tick(0.00001);
+    assert!(broker.entry_short("S".to_owned(), 0, 10, 1.07836, 88.0));
+    broker.place_exit_bracket("XS".to_owned(), "S".to_owned(), 1.0810516641429269, 1.07, 0);
+
+    broker.evaluate_pending_exits(1, 20, 1.08106, 1.07665);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 1.08106);
+}
+
+#[test]
+fn default_fifo_exit_from_later_entry_reports_oldest_trade_first() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+    assert!(broker.entry_short("A".to_owned(), 0, 10, 100.0, 87.0));
+    assert!(broker.entry_short("B".to_owned(), 0, 10, 100.0, 131.0));
+    broker.place_exit_limit("XB".to_owned(), "B".to_owned(), 95.0, 0);
+    broker.evaluate_pending_exits(1, 20, 96.0, 94.0);
+
+    assert_eq!(broker.trades.len(), 2);
+    assert_eq!(
+        (broker.trades[0].id.as_str(), broker.trades[0].qty),
+        ("A", -87.0)
+    );
+    assert_eq!(
+        (broker.trades[1].id.as_str(), broker.trades[1].qty),
+        ("B", -44.0)
+    );
+}
+
 fn exit_metadata(label: &str) -> StrategyExitMetadata {
     StrategyExitMetadata {
         comment: Some(format!("{label} comment")),
@@ -1318,6 +1392,11 @@ fn stage14d_close_short_realizes_positive_cover_profit() {
     assert!(broker.entry_short("S".to_owned(), 1, 10, 100.0, 2.0));
     broker.close_long("S".to_owned(), 2, 20, 90.0);
 
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "Close entry(s) order S");
+    assert_eq!(broker.orders[1].direction, "strategy.close");
+    assert_eq!(broker.orders[1].qty, 2.0);
+    assert_eq!(broker.orders[1].price, 90.0);
     assert_eq!(broker.position_size, 0.0);
     assert_eq!(broker.trades.len(), 1);
     assert_eq!(broker.trades[0].qty, -2.0);
@@ -6367,7 +6446,7 @@ fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
 
-    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 0.0, 0.5, 1);
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, -1.0, 0.5, 1);
 
     assert_eq!(
         broker.pending_exit().cloned(),
@@ -6802,7 +6881,7 @@ fn invalid_fixed_qty_trailing_replacement_preserves_existing_pending_trailing_ex
         "L".to_owned(),
         TrailPriceExitSpec {
             activation_price: 107.0,
-            offset_ticks: 0.0,
+            offset_ticks: -1.0,
             mintick: 0.5,
         },
         1.0,
@@ -7178,7 +7257,7 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
 
-    let price = broker.exit_profit_price_from_ticks(0.0, 0.01);
+    let price = broker.exit_profit_price_from_ticks(-1.0, 0.01);
 
     assert_eq!(price, None);
     assert_eq!(
@@ -7198,6 +7277,21 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
     );
     assert_eq!(broker.diagnostics.len(), 1);
     assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_TICKS");
+}
+
+#[test]
+fn zero_profit_ticks_fill_at_entry_price() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 0.0, 0.01, 1);
+    broker.evaluate_pending_exits(2, 20, 101.0, 99.0);
+
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 100.0);
+    assert_eq!(
+        broker.orders.last().map(|order| order.id.as_str()),
+        Some("XP")
+    );
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -8314,7 +8408,7 @@ fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
 
-    broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 0.0, 0.01, 1);
+    broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), -1.0, 0.01, 1);
 
     assert_eq!(
         broker.pending_exit().cloned(),

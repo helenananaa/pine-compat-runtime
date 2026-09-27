@@ -473,9 +473,9 @@ impl<'a> HistoricalRuntime<'a> {
             }
             "ta.barssince" => self.eval_barssince(call_site_id, args),
             "ta.valuewhen" => self.eval_valuewhen(call_site_id, args),
-            "ta.cross" => self.eval_cross(args, CrossMode::Any),
-            "ta.crossover" => self.eval_cross(args, CrossMode::Over),
-            "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
+            "ta.cross" => self.eval_cross(call_site_id, args, CrossMode::Any),
+            "ta.crossover" => self.eval_cross(call_site_id, args, CrossMode::Over),
+            "ta.crossunder" => self.eval_cross(call_site_id, args, CrossMode::Under),
             "ta.highest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Highest),
             "ta.lowest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Lowest),
             "ta.highestbars" => {

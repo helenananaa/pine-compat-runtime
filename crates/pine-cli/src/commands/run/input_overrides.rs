@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use pine_runtime::{
-    InputCall, InputOverrides, PineValue, ValueKind, encode_color_literal, is_valid_public_color,
+    InputCall, InputOverrides, PineValue, ValueKind, chart_source_input_override,
+    encode_color_literal, is_valid_public_color,
 };
 
 #[derive(Debug)]
@@ -52,6 +53,9 @@ pub(super) fn input_overrides_from_specs(
 }
 
 fn parse_input_override_value(input: &InputCall, value: &str) -> Result<PineValue, String> {
+    if input.is_source {
+        return chart_source_input_override(value);
+    }
     match input.name.as_str() {
         "input" => parse_generic_input_override(input.value_kind, value),
         "input.int" | "input.time" => parse_i64_input_override(&input.name, value),
@@ -60,7 +64,6 @@ fn parse_input_override_value(input: &InputCall, value: &str) -> Result<PineValu
         "input.color" => parse_color_input_override(value),
         "input.string" | "input.symbol" | "input.timeframe" | "input.session"
         | "input.text_area" => Ok(PineValue::String(value.to_owned())),
-        "input.source" => Err("input.source overrides are not supported".to_owned()),
         _ => Err(format!(
             "input override cannot override unsupported input call {}",
             input.name

@@ -2,7 +2,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use pine_ir::{HirProgram, ValueKind};
 use pine_runtime::{
-    InputCall, InputOverrides, PineValue, encode_color_literal, input_calls, is_valid_public_color,
+    InputCall, InputOverrides, PineValue, chart_source_input_override, encode_color_literal,
+    input_calls, is_valid_public_color,
 };
 use serde_json::Value;
 
@@ -49,6 +50,13 @@ fn deterministic_entries(object: &serde_json::Map<String, Value>) -> BTreeMap<&S
 }
 
 fn parse_input_override_value(input: &InputCall, value: &Value) -> Result<PineValue, String> {
+    if input.is_source {
+        return chart_source_input_override(
+            value
+                .as_str()
+                .ok_or_else(|| "source input override must be a string".to_owned())?,
+        );
+    }
     match input.name.as_str() {
         "input" => parse_generic_input_override(input.value_kind, value),
         "input.int" | "input.time" => parse_i64_input_override(&input.name, value),
@@ -62,7 +70,6 @@ fn parse_input_override_value(input: &InputCall, value: &Value) -> Result<PineVa
                 .ok_or_else(|| format!("{} override must be a string", input.name))?
                 .to_owned(),
         )),
-        "input.source" => Err("input.source overrides are not supported".to_owned()),
         _ => Err(format!(
             "input override cannot override unsupported input call {}",
             input.name

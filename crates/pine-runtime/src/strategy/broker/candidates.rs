@@ -170,7 +170,7 @@ impl BrokerState {
             {
                 continue;
             }
-            if !self.has_open_position_for_entry(&pending.from_entry) {
+            if !self.pending_exit_has_position(pending) {
                 continue;
             }
             candidates.extend(exit_leg_candidates(
@@ -311,7 +311,7 @@ impl BrokerState {
             {
                 continue;
             }
-            if !self.has_open_position_for_entry(&pending.from_entry) {
+            if !self.pending_exit_has_position(pending) {
                 continue;
             }
             candidates.extend(exit_gap_candidates(
@@ -319,6 +319,49 @@ impl BrokerState {
             ));
         }
         candidates.sort_by(|left, right| cmp_candidates(left, right, None));
+        // Multiple profit targets can be marketable at one gap open. Their
+        // fills all use that open, while the deeper target has priority.
+        let priority = |candidate: &BrokerCandidate| {
+            (candidate.event_kind == BrokerCandidateEvent::ExitFill)
+                .then(|| {
+                    self.order_book
+                        .exits()
+                        .iter()
+                        .find(|pending| pending.key == candidate.stable_order_key)
+                        .and_then(|pending| match &pending.trigger {
+                            PendingExitTrigger::Limit(price) => Some(*price),
+                            PendingExitTrigger::Bracket { downside, upside }
+                                if !exit_stop_marketable(direction, fill, *downside)
+                                    && exit_limit_marketable(direction, fill, *upside, verify) =>
+                            {
+                                Some(*upside)
+                            }
+                            _ => None,
+                        })
+                })
+                .flatten()
+                .map(|price| match direction {
+                    TradeDirection::Short => price,
+                    TradeDirection::Long => -price,
+                })
+        };
+        let profit_slots: Vec<_> = candidates
+            .iter()
+            .enumerate()
+            .filter_map(|(index, candidate)| priority(candidate).map(|price| (index, price)))
+            .collect();
+        let mut profit_exits: Vec<_> = profit_slots
+            .iter()
+            .map(|(index, price)| (candidates[*index].clone(), *price))
+            .collect();
+        profit_exits.sort_by(|(left, left_price), (right, right_price)| {
+            left_price
+                .total_cmp(right_price)
+                .then(left.creation_sequence.cmp(&right.creation_sequence))
+        });
+        for ((index, _), (candidate, _)) in profit_slots.into_iter().zip(profit_exits) {
+            candidates[index] = candidate;
+        }
         candidates
     }
 
@@ -333,8 +376,7 @@ impl BrokerState {
         };
         let mut candidates = Vec::new();
         for pending in self.order_book.exits().iter() {
-            if pending.last_update_bar_index > bar_index
-                || !self.has_open_position_for_entry(&pending.from_entry)
+            if pending.last_update_bar_index > bar_index || !self.pending_exit_has_position(pending)
             {
                 continue;
             }

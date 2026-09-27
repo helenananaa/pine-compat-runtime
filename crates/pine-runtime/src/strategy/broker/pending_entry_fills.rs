@@ -230,9 +230,7 @@ impl BrokerState {
             .exits()
             .iter()
             .find(|pending| pending.key == candidate.stable_order_key)
-            .is_some_and(|pending| {
-                self.position_size != 0.0 && self.has_open_position_for_entry(&pending.from_entry)
-            });
+            .is_some_and(|pending| self.pending_exit_has_position(pending));
         if !eligible {
             return PathEventOutcome::Ignored {
                 mark: candidate.crossing_price,
@@ -266,7 +264,9 @@ impl BrokerState {
         );
         if self.position_size == 0.0 {
             self.order_book.exits_mut().clear_all();
-        } else if !self.has_open_position_for_entry(&from_entry) {
+        } else if self.close_entries_rule == pine_ir::StrategyCloseEntriesRule::Any
+            && !self.has_open_position_for_entry(&from_entry)
+        {
             self.order_book.exits_mut().clear_for_entry(&from_entry);
         }
         self.debug_assert_ledger_aggregates();

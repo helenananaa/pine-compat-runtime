@@ -68,10 +68,10 @@ impl BrokerState {
     }
 
     pub(super) fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
-        if !ticks.is_finite() || ticks <= 0.0 {
+        if !ticks.is_finite() || ticks < 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_TICKS".to_owned(),
-                message: "`strategy.exit` tick distance must be finite and positive".to_owned(),
+                message: "`strategy.exit` tick distance must be finite and non-negative".to_owned(),
             });
             return None;
         }

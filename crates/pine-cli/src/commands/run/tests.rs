@@ -922,6 +922,55 @@ plot(color.t(shade))
 }
 
 #[test]
+fn generic_source_input_override_uses_chart_source_selector() {
+    let script = std::env::temp_dir().join(format!(
+        "pine-generic-source-override-{}-{}.pine",
+        std::process::id(),
+        line!()
+    ));
+    fs::write(
+        &script,
+        "//@version=5\nindicator(\"source\")\nsrc = input(close, \"Source\")\nplot(src)\n",
+    )
+    .expect("write source script");
+    let input = analysis_input_from_paths(&script.to_string_lossy(), &[]).unwrap();
+    let analysis = analyze_input(&input);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("source HIR");
+    let call = input_calls(&hir).into_iter().next().expect("source input");
+    assert!(call.is_source);
+    let calls = HashMap::from([(call.call_site_id, call)]);
+    assert!(
+        input_overrides_from_specs(
+            &[
+                parse_input_override_spec(&format!("{}=hl2", calls.keys().next().unwrap()))
+                    .unwrap()
+            ],
+            &calls,
+        )
+        .is_ok()
+    );
+    assert!(
+        input_overrides_from_specs(
+            &[
+                parse_input_override_spec(&format!(
+                    "{}=another plot",
+                    calls.keys().next().unwrap()
+                ))
+                .unwrap()
+            ],
+            &calls,
+        )
+        .is_err()
+    );
+    let _ = fs::remove_file(script);
+}
+
+#[test]
 fn input_overrides_reject_duplicate_ids_and_invalid_public_colors() {
     let script = std::env::temp_dir().join(format!(
         "pine-invalid-input-overrides-{}-{}.pine",

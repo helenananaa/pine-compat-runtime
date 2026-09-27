@@ -168,7 +168,9 @@ impl BrokerState {
         }
         let nearest = ticks.round();
         if (ticks - nearest).abs() <= 1e-8 {
-            return price;
+            // Canonicalize values already on the chart grid: an average entry
+            // price can be a few ULPs above a touched high/low at that tick.
+            return canonical_tick_price(nearest, tick);
         }
         // Limits round toward a favorable price, stops toward an adverse one.
         let round_up = is_long == is_limit;
@@ -177,7 +179,7 @@ impl BrokerState {
         } else {
             ticks.floor()
         };
-        aligned * tick
+        canonical_tick_price(aligned, tick)
     }
 
     pub(crate) fn place_exit_bracket(
@@ -260,4 +262,25 @@ impl BrokerState {
             metadata,
         );
     }
+}
+
+fn canonical_tick_price(ticks: f64, tick: f64) -> f64 {
+    // Chart OHLC is parsed from decimal prices. Multiplying a tick count by
+    // a binary approximation of the tick can land one ULP past an exact high
+    // or low, making a touched order look untouched. Reconstruct decimal
+    // ticks through their integer numerator and decimal scale when possible.
+    for decimals in 0..=12 {
+        let scale = 10_f64.powi(decimals);
+        let numerator = tick * scale;
+        let rounded = numerator.round();
+        if rounded >= 1.0
+            && (numerator - rounded).abs() <= 16.0 * f64::EPSILON * numerator.abs().max(1.0)
+        {
+            let price = ticks * rounded / scale;
+            if price.is_finite() {
+                return price;
+            }
+        }
+    }
+    ticks * tick
 }

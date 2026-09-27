@@ -123,9 +123,10 @@ fn inputs_json(analysis: &Analysis) -> String {
             output.push(',');
         }
         output.push_str(&format!(
-            "{{\"callSiteId\":{},\"name\":\"{}\",\"title\":",
+            "{{\"callSiteId\":{},\"name\":\"{}\",\"isSource\":{},\"title\":",
             input.call_site_id,
-            json_escape(&input.name)
+            json_escape(&input.name),
+            input.is_source
         ));
         match input.title {
             Some(title) => output.push_str(&format!("\"{}\"", json_escape(&title))),

@@ -1,6 +1,6 @@
 //! Semantic analysis and compatibility gating scaffolding.
 
-pub const PUBLIC_ANALYSIS_SCHEMA_VERSION: u32 = 5;
+pub const PUBLIC_ANALYSIS_SCHEMA_VERSION: u32 = 6;
 
 mod analysis;
 mod analyzer;

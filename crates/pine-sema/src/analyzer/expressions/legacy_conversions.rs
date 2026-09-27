@@ -91,8 +91,10 @@ impl Analyzer {
         expr: &Expr,
         actual_type: PineType,
     ) -> bool {
-        if !matches!(self.legacy.dialect(), PineDialect::V5 | PineDialect::V6)
-            || !matches!(call_name, "ta.lowest" | "ta.highest")
+        let legacy_ema = self.legacy.dialect() == PineDialect::V4 && call_name == "ta.ema";
+        let extreme = matches!(self.legacy.dialect(), PineDialect::V5 | PineDialect::V6)
+            && matches!(call_name, "ta.lowest" | "ta.highest");
+        if !(legacy_ema || extreme)
             || param_name != "length"
             || actual_type.kind != ValueKind::Float
         {
@@ -119,8 +121,8 @@ impl Analyzer {
             self.compatibility
                 .legacy_emulations
                 .push(crate::compatibility::LegacyEmulation {
-                    feature: format!("v{}.extreme_division_length", self.legacy.dialect().version()),
-                    behavior: format!("Pine v{} ta.lowest/ta.highest length context truncates an integer-operand quotient; the ordinary quotient retains its fractional value", self.legacy.dialect().version()),
+                    feature: format!("v{}.{}division_length", self.legacy.dialect().version(), if legacy_ema { "ema_" } else { "extreme_" }),
+                    behavior: format!("Pine v{} {call_name} length context truncates an integer-operand quotient; the ordinary quotient retains its fractional value", self.legacy.dialect().version()),
                     span: expr.span,
                 });
         }

@@ -187,7 +187,8 @@ positive const numeric fixed default entry quantity.
 positive const numeric cash amount. When a supported `strategy.entry` omits
 `qty`, the cash subset calculates the absolute quantity once at placement time as
 `N / close`, using the current close and the current no-currency-conversion
-boundary.
+boundary. When the host explicitly supplies chart quantity precision, the
+result is truncated to that contract grid before placing the order.
 `strategy(..., default_qty_type=strategy.percent_of_equity, default_qty_value=N)`
 accepts a positive const numeric default entry percentage. When a supported
 `strategy.entry` omits `qty`, the percent-of-equity subset calculates the
@@ -825,8 +826,9 @@ used, it resolves against the current open position size as
 fills clamp to the current position size. Omitted `qty` and omitted
 `qty_percent` keep the previous full-position behavior.
 
-Profit/loss and trailing tick arguments convert positive tick distances from
-`strategy.position_avg_price` using the fixed default `syminfo.mintick`, then
+Profit/loss and trailing tick arguments convert finite non-negative tick
+distances from `strategy.position_avg_price` using the host-supplied chart
+`syminfo.mintick`, then
 reuse the same pending-exit lifecycle: accepted calls are not eligible on the
 bar where they are created or replaced, and a later historical bar with
 `low <= stop/loss price` or `high >= limit/profit price` fills at the selected
@@ -3025,7 +3027,9 @@ Rust runtime is run with call-site keyed `InputOverrides`, the CLI supplies
 `--input-override CALL_SITE_ID=value`, or the Python host supplies a call-site
 keyed `input_overrides` dictionary to `Program.run()` or `run_script()`, or the
 WASM host supplies an `inputOverridesJson` object to a `*WithInputOverrides` run
-API. Host-side `input.source` overrides are not implemented yet.
+API. `input.source` overrides select the chart's `open`, `high`, `low`, `close`,
+`hl2`, `hlc3`, `ohlc4`, or `hlcc4` series. External indicator plot sources are
+not yet supplied by a host contract.
 
 ## Built-In OHLCV Series
 
@@ -3164,6 +3168,12 @@ the synthetic 1/100 default; no exchange lookup is performed. Same-symbol reques
 contexts inherit the grid; other symbols retain the existing default metadata.
 Tick orders, slippage, limit verification, rounding and mintick scalar/collection
 formatting use this grid. Public output schema is unchanged.
+Broker market fill helpers snap an off-grid historical open to the nearest
+chart tick before applying configured slippage and recording the fill. Opens
+already on the chart grid keep their original floating-point value. This
+matters for adjusted stock bars whose exported OHLC carries fractional ticks;
+the [AAPL daily receipt](UT_BOT_AAPL_DAILY_EXPANSION_20260927.md) compares the
+resulting closed-trade prices and profits with TradingView.
 
 TradingView v5/v6 captures establish zero for absent closedtrades.commission
 and closedtrades.profit (including negative/out-of-range integer indices),
@@ -3188,8 +3198,9 @@ four-times cover multiplier and position clamp. Script-visible
 `strategy.margin_liquidation_price` rounds down for longs and up for shorts on
 the chart price grid; internal candidate accounting retains its raw formula.
 This field alone does not specify a tick-level liquidation event threshold.
-The quantity profile does not impose general order-size rounding or implement
-arbitrary lot steps, non-unit point values, or account-currency conversion.
+Configured quantity precision truncates supported explicit and default entry
+quantities to the chart contract grid. It does not implement arbitrary lot
+steps, non-unit point values, or account-currency conversion.
 
 Absent integer records for `strategy.closedtrades.size` and
 `strategy.opentrades.size` return zero, including negative indices. An `na`

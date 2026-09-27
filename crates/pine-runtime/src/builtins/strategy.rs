@@ -74,7 +74,13 @@ impl<'a> HistoricalRuntime<'a> {
             _ => self
                 .program
                 .strategy_settings
-                .default_entry_qty(equity, price),
+                .default_entry_qty(equity, price)
+                .map(|qty| {
+                    crate::strategy::quantity_on_chart_grid(
+                        qty,
+                        self.request_environment.chart().configured_quantity_scale(),
+                    )
+                }),
         }
     }
 

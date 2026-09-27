@@ -1,6 +1,6 @@
 use pine_ir::{
     HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt, HirStmtKind, HirUnaryOp,
-    ValueKind,
+    Qualifier, ValueKind,
 };
 
 use crate::PineValue;
@@ -15,6 +15,8 @@ pub struct InputCall {
     /// hosts must parse overrides according to the resolved `defval` type
     /// instead of guessing from a textual override.
     pub value_kind: ValueKind,
+    /// Whether this call selects a chart source, including generic `input(close)`.
+    pub is_source: bool,
     pub title: Option<String>,
     pub default_value: Option<PineValue>,
     pub min_value: Option<PineValue>,
@@ -109,6 +111,10 @@ fn collect_input_calls_from_expr(expr: &HirExpr, calls: &mut Vec<InputCall>) {
                     call_site_id: call_site_id.0,
                     name: callee.clone(),
                     value_kind: expr.pine_type.kind,
+                    is_source: callee == "input.source"
+                        || (callee == "input"
+                            && expr.pine_type.kind == ValueKind::Float
+                            && expr.pine_type.qualifier == Qualifier::Series),
                     title: input_title(args),
                     default_value: input_arg_value(args, 0, "defval"),
                     min_value: matches!(

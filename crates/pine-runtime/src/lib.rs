@@ -110,7 +110,8 @@ pub use session_windows::{
 };
 pub use strategy::BrokerState;
 pub use value::{
-    ChartPointValue, PineValue, encode_color_literal, encode_color_rgba, is_valid_public_color,
+    ChartPointValue, PineValue, chart_source_input_override, encode_color_literal,
+    encode_color_rgba, is_valid_public_color,
 };
 
 use algorithms::numeric::finite_float_or_na;

@@ -397,9 +397,12 @@ plot(strategy.position_size)
     let strategy = result.strategy.expect("strategy result");
     assert_eq!(strategy.trades.len(), 1, "{:?}", strategy.trades);
     assert_eq!(strategy.trades[0].exit_bar_index, 3);
-    assert_eq!(strategy.orders.len(), 2, "{:?}", strategy.orders);
+    assert_eq!(strategy.orders.len(), 3, "{:?}", strategy.orders);
+    assert_eq!(strategy.orders[1].id, "Close entry(s) order L");
     assert_eq!(strategy.orders[1].bar_index, 3);
     assert_eq!(strategy.orders[1].price, 13.0);
+    assert_eq!(strategy.orders[2].id, "L");
+    assert_eq!(strategy.orders[2].price, 13.0);
 }
 
 #[test]
@@ -542,7 +545,7 @@ plot(strategy.position_size)
         .filter(|order| order.bar_index == 1)
         .map(|order| order.price)
         .collect();
-    assert_eq!(fills, vec![10.0, 11.0], "{:?}", strategy.orders);
+    assert_eq!(fills, vec![10.0, 10.0, 11.0, 8.0], "{:?}", strategy.orders);
     assert!(
         strategy.trades.iter().any(|trade| {
             trade.entry_bar_index == 1
@@ -9149,6 +9152,34 @@ if bar_index == 0
 }
 
 #[test]
+fn cash_default_entry_uses_chart_quantity_grid_for_the_order() {
+    let source = SourceFile::new(
+        "cash-default-grid.pine",
+        "//@version=6\nstrategy(\"cash grid\", initial_capital=1000, default_qty_type=strategy.cash, default_qty_value=1000, process_orders_on_close=true)\nplot(strategy.default_entry_qty(close))\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let chart = ChartContext::default()
+        .with_quantity_precision(0)
+        .expect("integer contract grid");
+    let result = run_historical_with_request_environment(
+        &analysis.hir.expect("HIR"),
+        &[bar(3.0)],
+        RequestEnvironment::default().for_chart(chart),
+    )
+    .expect("cash order result");
+    assert_eq!(result.plots[0].values, vec![PineValue::Float(333.0)]);
+    assert_eq!(
+        result.strategy.expect("strategy output").orders[0].qty,
+        333.0
+    );
+}
+
+#[test]
 fn native_percent_equity_order_reserves_commission_and_uses_chart_quantity_grid() {
     for command in ["entry", "order"] {
         let source = SourceFile::new(
@@ -9693,7 +9724,8 @@ fn strategy_close_cancels_pending_limit_exit_fixture() {
     .expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
-    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "Close entry(s) order L");
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L");
     assert_eq!(strategy.trades[0].exit_id, "L");
@@ -10299,7 +10331,8 @@ if bar_index == 1
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
-    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "Close entry(s) order L");
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].exit_price, 11.0);
     assert_eq!(strategy.trades[0].profit, 0.0);
@@ -11116,7 +11149,7 @@ if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
     strategy.exit("KEEP", "L", limit=120)
 if bar_index == 1
-    strategy.exit("BAD", "L", stop=95, profit=0)
+    strategy.exit("BAD", "L", stop=95, profit=-1)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -11293,7 +11326,8 @@ if bar_index == 1
     .expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
-    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "Close entry(s) order L");
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].exit_price, 11.0);
 }

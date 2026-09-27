@@ -57,6 +57,7 @@ fn analyzes_script_input_call_sites_to_json() {
     );
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     assert_eq!(parsed["inputs"][0]["name"], serde_json::json!("input.int"));
+    assert_eq!(parsed["inputs"][0]["isSource"], serde_json::json!(false));
     assert_eq!(parsed["inputs"][0]["title"], serde_json::json!("Length"));
     assert_eq!(parsed["inputs"][0]["default"], serde_json::json!(2));
     assert_eq!(parsed["inputs"][0]["min"], serde_json::json!(1));
@@ -75,6 +76,18 @@ fn analyzes_script_input_call_sites_to_json() {
         serde_json::json!(["SMA", "EMA"])
     );
     assert!(parsed["inputs"][1]["callSiteId"].as_u64().is_some());
+}
+
+#[test]
+fn analyzes_source_input_selectors_to_json() {
+    let output = analyze_script(
+        "//@version=5\nindicator(\"sources\")\na = input(close, \"Generic source\")\nb = input.source(close, \"Source\")\nc = input(1.5, \"Scale\")\nplot(a + b + c)\n",
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["inputs"][0]["isSource"], serde_json::json!(true));
+    assert_eq!(parsed["inputs"][1]["isSource"], serde_json::json!(true));
+    assert_eq!(parsed["inputs"][2]["isSource"], serde_json::json!(false));
 }
 
 #[test]
@@ -439,6 +452,20 @@ bgcolor(shade)
             serde_json::json!([4311679104_u64, 4311679104_u64, 4311679104_u64])
         );
     }
+}
+
+#[test]
+fn generic_source_input_override_selects_chart_series() {
+    let source = "//@version=5\nindicator(\"source\")\nsrc = input(close, \"Source\")\nplot(src)\n";
+    let bars = "time,open,high,low,close,volume\n0,1,5,2,4,1\n1,3,9,6,8,1\n";
+    let input_ids = input_call_ids_by_title(source);
+    let overrides_json = input_overrides_json(&[(input_ids["Source"], serde_json::json!("hl2"))]);
+    let output = run_script_csv_with_input_overrides(source, bars, &overrides_json)
+        .expect("generic chart source override");
+    let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([3.5, 7.5]));
+    let invalid = input_overrides_json(&[(input_ids["Source"], serde_json::json!("other plot"))]);
+    assert!(run_script_csv_with_input_overrides_internal(source, bars, &invalid).is_err());
 }
 
 #[test]

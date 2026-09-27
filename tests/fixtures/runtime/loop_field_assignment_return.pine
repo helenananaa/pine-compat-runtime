@@ -1,0 +1,27 @@
+//@version=6
+indicator("Loop field return probe")
+type Cell
+    float value
+setFor(array<Cell> cells) =>
+    if cells.size() > 0
+        for i = 0 to cells.size() - 1
+            c = cells.get(i)
+            c.value := close + i
+setEach(array<Cell> cells) =>
+    for [i, c] in cells
+        c.value += i
+setWhile(array<Cell> cells) =>
+    int i = 0
+    while i < cells.size()
+        c = cells.get(i)
+        i += 1
+        c.value += i
+var cells = array.from(Cell.new(0), Cell.new(0))
+a = setFor(cells)
+b = setEach(cells)
+c = setWhile(cells)
+plot(a, "for result")
+plot(b, "each result")
+plot(c, "while result")
+plot(cells.get(0).value, "first field")
+plot(cells.get(1).value, "last field")

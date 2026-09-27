@@ -154,7 +154,7 @@ impl Analyzer {
     ) -> Option<HirExpr> {
         match &last.kind {
             StmtKind::Expr(expr) => self.lower_expr_with_params(expr, param_exprs, param_types),
-            StmtKind::If { .. } => self.lower_function_body(
+            StmtKind::If { .. } | StmtKind::FieldReassign { .. } => self.lower_function_body(
                 &FunctionBody::Block(vec![last.clone()]),
                 param_exprs,
                 param_types,
@@ -374,6 +374,9 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         let (last, prefix) = branch.split_last()?;
+        if matches!(last.kind, StmtKind::FieldReassign { .. }) {
+            return self.lower_function_branch_return(branch, param_exprs, param_types);
+        }
         let statements = prefix
             .iter()
             .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))

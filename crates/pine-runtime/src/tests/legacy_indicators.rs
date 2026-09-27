@@ -26,6 +26,114 @@ fn timed_close(time: i64, close: f64) -> Bar {
 }
 
 #[test]
+fn v4_identical_duplicate_plotshape_transp_matches_single_argument_output() {
+    let duplicate = compile_fixture(
+        "v4-repeated-transp.pine",
+        "//@version=4\nstudy(\"repeated\")\nplotshape(close > 9, color=color.green, style=shape.circle, transp=0, transp=0)\n",
+    );
+    let single = compile_fixture(
+        "v4-single-transp.pine",
+        "//@version=4\nstudy(\"single\")\nplotshape(close > 9, color=color.green, style=shape.circle, transp=0)\n",
+    );
+    let bars = [timed_close(0, 8.0), timed_close(86_400_000, 10.0)];
+    let repeated = run_historical(&duplicate, &bars).expect("duplicate v4 transparency run");
+    let normal = run_historical(&single, &bars).expect("single v4 transparency run");
+    assert_eq!(repeated.plot_shapes, normal.plot_shapes);
+    assert_eq!(
+        repeated.plot_shapes[0].values,
+        vec![PineValue::Bool(false), PineValue::Bool(true)]
+    );
+}
+
+#[test]
+fn v5_deprecated_plot_transp_and_numeric_bool_equality_run_together() {
+    let program = compile_fixture(
+        "v5-plot-transp-bool-equality.pine",
+        "//@version=5\nindicator(\"v5 deprecated plot\")\nup = close > open\nplot(up == 1 ? close : na, color=color.green, transp=40)\nplot(up == 0 ? close : na)\n",
+    );
+    let bars = [
+        Bar {
+            time: 0,
+            open: 9.0,
+            high: 10.0,
+            low: 9.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 86_400_000,
+            open: 11.0,
+            high: 11.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&program, &bars).expect("v5 legacy plot run");
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(10.0), PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Float(10.0)]
+    );
+    assert_eq!(
+        result.plots[0].colors[0],
+        PineValue::Color(crate::builtins::colors::apply_transparency(0x4caf50, 40))
+    );
+
+    let v6 = pine_sema::analyze_source(&SourceFile::new(
+        "v6-reject-removed-transp.pine",
+        "//@version=6\nindicator(\"v6\")\nplot((close > open) == 1 ? close : na, transp=40)\n",
+    ));
+    assert!(
+        v6.diagnostics
+            .iter()
+            .any(|item| item.code == "E_OPERATOR_TYPE")
+    );
+    assert!(
+        v6.diagnostics
+            .iter()
+            .any(|item| item.code == "E_CALL_ARG_NAME")
+    );
+}
+
+#[test]
+fn v6_extreme_length_integer_quotient_is_truncated_only_in_length_context() {
+    let program = compile_fixture(
+        "v6-extreme-quotient.pine",
+        "//@version=6\nindicator(\"extreme quotient\")\nlength = input.int(5)\ndivisor = input.int(2)\nplot(ta.lowest(length / divisor))\nplot(ta.highest(length / divisor))\nplot(length / divisor)\n",
+    );
+    let bars = [10.0, 9.0, 8.0]
+        .into_iter()
+        .enumerate()
+        .map(|(index, close)| timed_close(index as i64 * 86_400_000, close))
+        .collect::<Vec<_>>();
+    let result = run_historical(&program, &bars).expect("v6 extreme quotient run");
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Na, PineValue::Float(9.0), PineValue::Float(8.0)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Float(10.0), PineValue::Float(9.0)]
+    );
+    assert_values_close(&result.plots[2].values, &[2.5, 2.5, 2.5]);
+
+    let unsupported_float = pine_sema::analyze_source(&SourceFile::new(
+        "v6-series-float-extreme.pine",
+        "//@version=6\nindicator(\"float extreme\")\nplot(ta.lowest(close / 2))\n",
+    ));
+    assert!(
+        unsupported_float
+            .diagnostics
+            .iter()
+            .any(|item| item.code == "E_CALL_ARG_TYPE")
+    );
+}
+
+#[test]
 fn legacy_v2_self_referencing_float_extrema_infer_and_run() {
     let program = compile_fixture(
         "v2-self-extrema.pine",

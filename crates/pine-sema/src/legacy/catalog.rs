@@ -728,7 +728,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         source_name: "plot",
         canonical_name: Some("plot"),
         min_version: PineDialect::V4,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V5,
         kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::Supported,
     },
@@ -1079,7 +1079,11 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                 rule.source_name
             )));
         }
-        if rule.max_version > PineDialect::V4 {
+        if rule.max_version > PineDialect::V4
+            && !(rule.source_name == "plot"
+                && rule.kind == LegacyRuleKind::FocusedOutput
+                && rule.max_version == PineDialect::V5)
+        {
             errors.push(CatalogValidationError(format!(
                 "legacy rule `{}` leaks into modern dialects",
                 rule.source_name

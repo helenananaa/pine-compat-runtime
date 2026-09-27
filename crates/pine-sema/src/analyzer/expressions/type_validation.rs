@@ -95,6 +95,15 @@ impl Analyzer {
         right_type: PineType,
         span: Span,
     ) -> Option<PineType> {
+        if matches!(op, BinaryOp::Add | BinaryOp::Sub)
+            && left_type.kind == ValueKind::PlotDisplay
+            && right_type.kind == ValueKind::PlotDisplay
+        {
+            return Some(PineType::new(
+                strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                ValueKind::PlotDisplay,
+            ));
+        }
         match op {
             BinaryOp::Add => {
                 if left_type.kind == ValueKind::String && right_type.kind == ValueKind::String {
@@ -130,7 +139,13 @@ impl Analyzer {
                 }
             }
             BinaryOp::Eq | BinaryOp::NotEq => {
-                if common_kind(left_type.kind, right_type.kind).is_some() {
+                let legacy_numeric_bool = self.legacy.dialect() == PineDialect::V5
+                    && matches!(
+                        (left_type.kind, right_type.kind),
+                        (ValueKind::Bool, ValueKind::Int | ValueKind::Float)
+                            | (ValueKind::Int | ValueKind::Float, ValueKind::Bool)
+                    );
+                if common_kind(left_type.kind, right_type.kind).is_some() || legacy_numeric_bool {
                     Some(PineType::new(
                         strongest_qualifier(left_type.qualifier, right_type.qualifier),
                         ValueKind::Bool,

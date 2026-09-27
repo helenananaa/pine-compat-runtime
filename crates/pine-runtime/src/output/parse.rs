@@ -145,6 +145,11 @@ fn plots_from_values(values: &[Value]) -> Result<Vec<PlotSeries>, String> {
             PineValue::String("format.inherit".to_owned()),
         )?;
         plot.precision = optional_pine(object, "precision", PineValue::Na)?;
+        plot.linestyle = optional_pine(
+            object,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?;
         plot.metadata = metadata_from_object(object)?;
         plots.push(plot);
     }
@@ -847,6 +852,11 @@ fn series_header_from_object(object: &Map<String, Value>) -> Result<SeriesHeader
             PineValue::String("format.inherit".to_owned()),
         )?,
         precision: optional_pine(object, "precision", PineValue::Na)?,
+        linestyle: optional_pine(
+            object,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?,
     })
 }
 

@@ -7,6 +7,117 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn historical_closing_immediate_exit_does_not_recalculate_a_phantom_entry() {
+    for direction in ["long", "short"] {
+        let source = SourceFile::new(
+            "close-fill-pass.pine",
+            format!(
+                r#"//@version=6
+strategy("close fill passes", calc_on_order_fills=true)
+varip int passes = 0
+varip int flatPasses = 0
+if bar_index == 0
+    strategy.entry("E", strategy.{direction}, qty=1)
+if bar_index == 2
+    passes += 1
+    if strategy.position_size == 0
+        flatPasses += 1
+        strategy.entry("phantom", strategy.long, qty=1)
+    else
+        strategy.close_all(immediately=true)
+plot(passes)
+plot(flatPasses)
+"#
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(
+            &analysis.hir.unwrap(),
+            &[bar(10.0), bar(11.0), bar(12.0), bar(13.0)],
+        )
+        .unwrap();
+        assert_eq!(result.plots[0].values[3], PineValue::Int(1));
+        assert_eq!(result.plots[1].values[3], PineValue::Int(0));
+        let strategy = result.strategy.unwrap();
+        assert_eq!(strategy.trades.len(), 1);
+        assert_eq!(strategy.trades[0].exit_price, 12.0);
+        assert_eq!(strategy.orders.len(), 1);
+    }
+}
+
+#[test]
+fn fill_recalculation_marks_accounts_at_execution_price_and_preserves_historical_close() {
+    for direction in ["long", "short"] {
+        for immediate in [true, false] {
+            let source = SourceFile::new(
+                "fill-account-mark.pine",
+                format!(
+                    r#"//@version=6
+strategy("fill account mark", initial_capital=100000, calc_on_order_fills=true,
+ commission_type=strategy.commission.cash_per_order, commission_value=0.1)
+varip float equityAtFill = na
+varip float profitAtFill = na
+varip float tradeProfitAtFill = na
+varip float closeAtFill = na
+if bar_index == 0
+    strategy.entry("E", strategy.{direction}, qty=1)
+if strategy.position_size != 0 and na(equityAtFill)
+    equityAtFill := strategy.equity
+    profitAtFill := strategy.openprofit
+    tradeProfitAtFill := strategy.opentrades.profit(0)
+    closeAtFill := close
+    if {immediate}
+        strategy.close_all(immediately=true)
+plot(equityAtFill)
+plot(profitAtFill)
+plot(tradeProfitAtFill)
+plot(closeAtFill)
+plot(strategy.equity)
+"#
+                ),
+            );
+            let analysis = analyze_source(&source);
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{:?}",
+                analysis.diagnostics
+            );
+            let result = run_historical(
+                &analysis.hir.unwrap(),
+                &[bar(100.0), bar_ohlc(110.0, 120.0, 80.0, 90.0), bar(95.0)],
+            )
+            .unwrap();
+            assert_eq!(result.plots[0].values[1], PineValue::Float(99999.9));
+            assert_eq!(result.plots[1].values[1], PineValue::Float(0.0));
+            assert_eq!(result.plots[2].values[1], PineValue::Float(0.0));
+            assert_eq!(result.plots[3].values[1], PineValue::Float(90.0));
+            if immediate {
+                let trades = &result.strategy.as_ref().unwrap().trades;
+                assert_eq!(trades.len(), 1);
+                assert_eq!(trades[0].entry_price, 110.0);
+                assert_eq!(trades[0].exit_price, 110.0);
+                assert_eq!(trades[0].profit, -0.2);
+            } else {
+                let sign = if direction == "long" { 1.0 } else { -1.0 };
+                assert_eq!(
+                    result.plots[4].values[1],
+                    PineValue::Float(99999.9 - 20.0 * sign)
+                );
+                assert_eq!(
+                    result.plots[4].values[2],
+                    PineValue::Float(99999.9 - 15.0 * sign)
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn explicit_entry_and_order_quantities_use_the_configured_contract_grid() {
     for function in ["entry", "order"] {
         for (direction, sign) in [("long", 1.0), ("short", -1.0)] {
@@ -130,6 +241,38 @@ plot(strategy.position_size)
     assert_eq!(trades.len(), 1);
     assert_eq!(trades[0].entry_bar_index, 1);
     assert_eq!(trades[0].exit_bar_index, 3);
+    assert_eq!(trades[0].entry_price, 11.0);
+    assert_eq!(trades[0].exit_price, 13.0);
+}
+
+#[test]
+fn legacy_v4_boolean_entry_directions_open_and_reverse_positions() {
+    let source = SourceFile::new(
+        "v4-boolean-entry-direction.pine",
+        r#"//@version=4
+strategy("legacy boolean directions")
+if bar_index == 0
+    strategy.entry("L", true)
+if bar_index == 2
+    strategy.entry("S", false)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(
+        &analysis.hir.expect("v4 HIR"),
+        &[bar(10.0), bar(11.0), bar(12.0), bar(13.0)],
+    )
+    .expect("runtime result");
+    assert_eq!(result.plots[0].values[1], PineValue::Float(1.0));
+    assert_eq!(result.plots[0].values[3], PineValue::Float(-1.0));
+    let trades = &result.strategy.expect("strategy result").trades;
+    assert_eq!(trades.len(), 1);
     assert_eq!(trades[0].entry_price, 11.0);
     assert_eq!(trades[0].exit_price, 13.0);
 }
@@ -9253,7 +9396,7 @@ fn strategy_close_immediately_fills_on_signal_bar_close() {
     assert_eq!(strategy.trades[0].exit_bar_index, 2);
     assert_eq!(strategy.trades[0].exit_price, 3.0);
     assert_eq!(strategy.trades[0].profit, 2.0);
-    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 2.0, 0.0]);
 }
 
 #[test]
@@ -9315,8 +9458,8 @@ plot(strategy.position_size)
         strategy.position.last().map(|snapshot| snapshot.size),
         Some(3.0)
     );
-    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[1].values, &[0.0, 1.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 2.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 1.0, 4.0, 3.0]);
 }
 
 #[test]
@@ -9368,7 +9511,7 @@ fn strategy_process_orders_on_close_fills_close_after_script_at_bar_close() {
 }
 
 #[test]
-fn strategy_immediately_close_still_fills_during_script_when_process_orders_on_close() {
+fn strategy_immediately_close_fills_after_script_when_process_orders_on_close() {
     let source = SourceFile::new(
         "strategy_process_orders_on_close_immediately.pine",
         include_str!(
@@ -9389,7 +9532,7 @@ fn strategy_immediately_close_still_fills_during_script_when_process_orders_on_c
     let strategy = result.strategy.expect("strategy output");
     assert_eq!(strategy.trades[0].exit_bar_index, 2);
     assert_eq!(strategy.trades[0].exit_price, 3.0);
-    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 2.0, 0.0]);
 }
 
 #[test]
@@ -15376,9 +15519,9 @@ plot(strategy.position_size)
         result.plots[0].values,
         vec![
             PineValue::Float(0.0),
+            PineValue::Float(1.0),
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(1.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
@@ -16397,4 +16540,131 @@ plot(close)
         "{}",
         error.message
     );
+}
+
+#[test]
+fn immediate_close_preserves_same_pass_account_visibility() {
+    for close_call in [
+        "strategy.close(\"L\", immediately=true)",
+        "strategy.close_all(immediately=true)",
+    ] {
+        let source = SourceFile::new(
+            "immediate-visibility.pine",
+            format!(
+                r#"//@version=6
+strategy("visibility", initial_capital=1000, commission_type=strategy.commission.cash_per_order, commission_value=0.1)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    {close_call}
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.equity)
+"#
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(
+            &analysis.hir.unwrap(),
+            &[bar(10.0), bar(11.0), bar(12.0), bar(13.0)],
+        )
+        .unwrap();
+        assert_values_close(&result.plots[0].values, &[0.0, 2.0, 2.0, 0.0]);
+        assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1000.0, 999.9, 1001.9, 1001.8]);
+        let strategy = result.strategy.unwrap();
+        assert_eq!(strategy.trades.len(), 1);
+        assert_eq!(strategy.trades[0].exit_bar_index, 2);
+        assert_eq!(strategy.trades[0].exit_price, 12.0);
+    }
+}
+
+#[test]
+fn v4_close_second_positional_argument_is_when() {
+    let source = SourceFile::new(
+        "v4-close-when.pine",
+        r#"//@version=4
+strategy("v4 close when")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+strategy.close("L", bar_index == 2)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(
+        &analysis.hir.unwrap(),
+        &[bar(100.0), bar(101.0), bar(102.0), bar(103.0)],
+    )
+    .unwrap();
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 1.0, 0.0]);
+    let trades = &result.strategy.unwrap().trades;
+    assert_eq!(trades.len(), 1);
+    assert_eq!(trades[0].exit_bar_index, 3);
+    assert_eq!(trades[0].exit_price, 103.0);
+}
+
+#[test]
+fn v4_unpaired_trail_points_competes_with_fixed_profit_and_loss() {
+    let source = SourceFile::new(
+        "v4-trail-profit.pine",
+        r#"//@version=4
+strategy("v4 trail profit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+strategy.exit("X", from_entry="L", profit=1000, trail_points=20, loss=600)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(
+        &analysis.hir.unwrap(),
+        &[bar(100.0), bar_ohlc(100.0, 101.0, 100.0, 100.5), bar(100.5)],
+    )
+    .unwrap();
+    let trades = &result.strategy.unwrap().trades;
+    assert_eq!(trades.len(), 1);
+    assert_eq!(trades[0].entry_price, 100.0);
+    assert_eq!(trades[0].exit_price, 100.2);
+}
+
+#[test]
+fn v4_unpaired_trail_points_alone_has_no_order_effect() {
+    let source = SourceFile::new(
+        "v4-trail-alone.pine",
+        r#"//@version=4
+strategy("v4 trail alone")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+strategy.exit("X", from_entry="L", trail_points=20)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(
+        &analysis.hir.unwrap(),
+        &[bar(100.0), bar_ohlc(100.0, 110.0, 90.0, 100.0)],
+    )
+    .unwrap();
+    let strategy = result.strategy.unwrap();
+    assert!(strategy.trades.is_empty());
+    assert_eq!(strategy.position.last().map(|p| p.size), Some(1.0));
 }

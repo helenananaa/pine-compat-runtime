@@ -34,6 +34,7 @@ pub enum ScalarKind {
     Numeric,
     Bool,
     String,
+    PlotDisplay,
     Color,
 }
 
@@ -110,6 +111,7 @@ impl QualifierBoundScalar {
             }
             (ScalarKind::String, false) => "string",
             (ScalarKind::String, true) => "string-compatible",
+            (ScalarKind::PlotDisplay, _) => "plot_display",
             (ScalarKind::Color, false) => "color",
             (ScalarKind::Color, true) => "color-compatible",
         };
@@ -132,6 +134,7 @@ const fn scalar_kind_matches(expected: ScalarKind, actual: ValueKind) -> bool {
         ScalarKind::Numeric => matches!(actual, ValueKind::Int | ValueKind::Float),
         ScalarKind::Bool => matches!(actual, ValueKind::Bool),
         ScalarKind::String => matches!(actual, ValueKind::String),
+        ScalarKind::PlotDisplay => matches!(actual, ValueKind::PlotDisplay),
         ScalarKind::Color => matches!(actual, ValueKind::Color),
     }
 }
@@ -221,6 +224,14 @@ impl Accepts {
         ScalarKind::Numeric,
         false,
     ));
+    pub const ConstPlotDisplay: Self = Self::QualifierBoundScalar(QualifierBoundScalar::exact(
+        Qualifier::Const,
+        ScalarKind::PlotDisplay,
+        false,
+    ));
+    pub const AtMostInputPlotDisplay: Self = Self::QualifierBoundScalar(
+        QualifierBoundScalar::at_most(Qualifier::Input, ScalarKind::PlotDisplay, false),
+    );
     pub const ConstString: Self = Self::QualifierBoundScalar(QualifierBoundScalar::exact(
         Qualifier::Const,
         ScalarKind::String,

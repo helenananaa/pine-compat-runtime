@@ -3,6 +3,61 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn loop_field_assignment_returns_last_value_and_mutates_array_elements() {
+    let source = SourceFile::new(
+        "loop_field_assignment_return.pine",
+        include_str!("../../../../tests/fixtures/runtime/loop_field_assignment_return.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(10.0), bar(20.0)])
+        .expect("runtime result");
+    for (plot, expected) in result.plots.iter().zip([
+        [11.0, 21.0],
+        [12.0, 22.0],
+        [14.0, 24.0],
+        [11.0, 21.0],
+        [14.0, 24.0],
+    ]) {
+        assert_values_close(&plot.values, &expected);
+    }
+    assert_eq!(result.plots.len(), 5);
+}
+
+#[test]
+fn loop_field_returns_preserve_break_continue_and_empty_loop_semantics() {
+    for version in [5, 6] {
+        for loop_body in [
+            "for i = 0 to 3\n        if i == 1\n            continue\n        if i == 3\n            break\n        counter.value += 1",
+            "for i in array.from(0, 1, 2, 3)\n        if i == 1\n            continue\n        if i == 3\n            break\n        counter.value += 1",
+            "int i = -1\n    while i < 3\n        i += 1\n        if i == 1\n            continue\n        if i == 3\n            break\n        counter.value += 1",
+        ] {
+            let source = SourceFile::new(
+                "loop_field_control.pine",
+                format!(
+                    "//@version={version}\nindicator(\"field control\")\ntype Counter\n    int value\nstep(Counter counter) =>\n    {loop_body}\nempty(Counter counter) =>\n    while false\n        counter.value += 100\nvar counter = Counter.new(0)\nplot(step(counter))\nplot(empty(counter))\nplot(counter.value)\n"
+                ),
+            );
+            let analysis = analyze_source(&source);
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{:?}",
+                analysis.diagnostics
+            );
+            let result = run_historical(&analysis.hir.expect("HIR"), &[bar(10.0), bar(20.0)])
+                .expect("runtime result");
+            assert_values_close(&result.plots[0].values, &[2.0, 4.0]);
+            assert_eq!(result.plots[1].values, vec![PineValue::Na, PineValue::Na]);
+            assert_values_close(&result.plots[2].values, &[2.0, 4.0]);
+        }
+    }
+}
+
+#[test]
 fn udf_mutates_global_udt_fields_without_reassigning_reference() {
     let source = SourceFile::new(
         "udf_global_udt.pine",

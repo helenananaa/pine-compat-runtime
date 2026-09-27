@@ -2170,3 +2170,38 @@ plot(-x)
     let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
     assert!(result.plots[0].values[0].as_f64().is_some());
 }
+
+#[test]
+fn logical_operators_treat_missing_comparison_results_as_false_across_versions() {
+    for version in 1..=6 {
+        let declaration = if version <= 4 { "study" } else { "indicator" };
+        let source = SourceFile::new(
+            "logical-na.pine",
+            format!(
+                r#"//@version={version}
+{declaration}("logical na")
+x = close[1] > close
+plot((x and x) == false ? 1 : 0)
+plot((x or x) == false ? 1 : 0)
+plot(not x ? 1 : 0)
+plot((x and true) == false ? 1 : 0)
+plot((false or x) == false ? 1 : 0)
+plot((true or x) ? 1 : 0)
+plot((false and x) == false ? 1 : 0)
+"#
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let result =
+            run_historical(&analysis.hir.unwrap(), &[bar(1.0), bar(2.0), bar(1.0)]).unwrap();
+        for plot in &result.plots {
+            assert_eq!(plot.values[0], PineValue::Int(1), "v{version}");
+        }
+        assert_eq!(result.plots[2].values[2], PineValue::Int(0));
+    }
+}

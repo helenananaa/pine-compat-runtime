@@ -12,6 +12,7 @@ pub enum ValueKind {
     Float,
     Bool,
     String,
+    PlotDisplay,
     Color,
     Plot,
     HLine,

@@ -8,6 +8,7 @@ pub(crate) struct RollingWindowState {
     pub(crate) sum: f64,
     pub(crate) sum_squares: f64,
     pub(crate) na_count: usize,
+    nonzero_count: usize,
     /// Bar that owns the uncommitted tail sample, if any.
     open_bar: Option<usize>,
     /// Exact aggregates from before the open append. Restored by assignment on
@@ -15,6 +16,7 @@ pub(crate) struct RollingWindowState {
     prev_sum: f64,
     prev_sum_squares: f64,
     prev_na_count: usize,
+    prev_nonzero_count: usize,
     /// Items evicted by the open append only. Kept at this level (not inside
     /// `Option`) so the allocation is reused across bars.
     evicted: Vec<Option<f64>>,
@@ -75,6 +77,7 @@ impl RollingWindowState {
             self.pop_front();
         }
         self.append(value);
+        self.reset_zero_window_aggregates();
     }
 
     /// Append `value` as the sample for `bar`.
@@ -108,6 +111,7 @@ impl RollingWindowState {
         {
             self.sum = self.prev_sum + (incoming - outgoing);
         }
+        self.reset_zero_window_aggregates();
     }
 
     /// Undo the open append when it belongs to `bar`, leaving no sample for
@@ -124,9 +128,11 @@ impl RollingWindowState {
             if let Some(value) = value {
                 self.sum -= value;
                 self.sum_squares -= value * value;
+                self.nonzero_count -= usize::from(value != 0.0);
             } else {
                 self.na_count = self.na_count.saturating_sub(1);
             }
+            self.reset_zero_window_aggregates();
         }
     }
 
@@ -210,10 +216,20 @@ impl RollingWindowState {
         if let Some(value) = value {
             self.sum += value;
             self.sum_squares += value * value;
+            self.nonzero_count += usize::from(value != 0.0);
             self.values.push_back(Some(value));
         } else {
             self.na_count += 1;
             self.values.push_back(None);
+        }
+    }
+
+    fn reset_zero_window_aggregates(&mut self) {
+        // Subtracting the final nonzero sample can leave a floating residual.
+        // A window containing only exact zeros has exact zero aggregates.
+        if self.nonzero_count == 0 && self.na_count == 0 {
+            self.sum = 0.0;
+            self.sum_squares = 0.0;
         }
     }
 
@@ -222,6 +238,7 @@ impl RollingWindowState {
         self.prev_sum = self.sum;
         self.prev_sum_squares = self.sum_squares;
         self.prev_na_count = self.na_count;
+        self.prev_nonzero_count = self.nonzero_count;
         self.evicted.clear();
     }
 
@@ -230,6 +247,7 @@ impl RollingWindowState {
         self.sum = self.prev_sum;
         self.sum_squares = self.prev_sum_squares;
         self.na_count = self.prev_na_count;
+        self.nonzero_count = self.prev_nonzero_count;
         while let Some(value) = self.evicted.pop() {
             self.values.push_front(value);
         }
@@ -259,6 +277,33 @@ mod tests {
         window.pop_front();
         assert_eq!(window.values, VecDeque::from(vec![None]));
         assert_eq!(window.na_count, 1);
+    }
+
+    #[test]
+    fn exact_zero_window_clears_eviction_roundoff_and_restores_on_same_bar_replacement() {
+        let mut window = RollingWindowState::default();
+        for (bar, value) in [0.1, 0.2, 0.3, 0.0, 0.0].into_iter().enumerate() {
+            window.push_for_bar(Some(value), 3, bar);
+        }
+        let before = window.clone();
+        window.push_for_bar(Some(0.0), 3, 5);
+        assert_eq!(window.values, VecDeque::from(vec![Some(0.0); 3]));
+        assert_eq!(window.sum, 0.0);
+        assert_eq!(window.sum_squares, 0.0);
+        window.discard_for_bar(5);
+        assert_eq!(window.values, before.values);
+        assert_eq!(window.sum.to_bits(), before.sum.to_bits());
+        assert_eq!(window.sum_squares.to_bits(), before.sum_squares.to_bits());
+        assert_eq!(window.nonzero_count, before.nonzero_count);
+
+        window.push_for_bar(Some(0.0), 3, 5);
+        window.push_for_bar(Some(1.0), 3, 5);
+        assert_eq!(
+            window.values,
+            VecDeque::from(vec![Some(0.0), Some(0.0), Some(1.0)])
+        );
+        assert_eq!(window.sum, 1.0);
+        assert_eq!(window.sum_squares, 1.0);
     }
 
     #[test]

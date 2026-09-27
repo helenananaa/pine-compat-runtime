@@ -71,8 +71,16 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         }
 
-        let source = self.alert_string_arg("alertcondition", args, 1, "title")?;
-        let message = self.alert_string_arg("alertcondition", args, 2, "message")?;
+        let source = if call_arg_expr(args, 1, "title").is_some() {
+            self.alert_string_arg("alertcondition", args, 1, "title")?
+        } else {
+            "Alert".to_owned()
+        };
+        let message = if call_arg_expr(args, 2, "message").is_some() {
+            self.alert_string_arg("alertcondition", args, 2, "message")?
+        } else {
+            String::new()
+        };
         let message = match self.render_alertcondition_message(&message) {
             Ok(message) => message,
             Err(message) => {

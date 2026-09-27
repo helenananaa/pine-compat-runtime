@@ -769,13 +769,22 @@ impl Analyzer {
                 }
             }
         }
+        let legacy_unpaired_trail = self.legacy.dialect() <= crate::PineDialect::V4
+            && has_trail_points
+            && !has_trail_offset
+            && !has_trail_price;
+        let legacy_trail_profit = legacy_unpaired_trail && has_profit;
         let trigger_count = usize::from(has_stop)
             + usize::from(has_limit)
-            + usize::from(has_profit)
+            + usize::from(has_profit || legacy_trail_profit)
             + usize::from(has_loss);
         let trailing_activation_count =
             usize::from(has_trail_price) + usize::from(has_trail_points);
-        let has_trailing_args = trailing_activation_count > 0 || has_trail_offset;
+        let has_trailing_args = !legacy_unpaired_trail
+            && (has_trail_offset || (trailing_activation_count > 0 && trigger_count == 0));
+        if legacy_unpaired_trail && trigger_count == 0 {
+            return;
+        }
         if has_trailing_args {
             if trigger_count > 0 {
                 self.diagnostics.push(Diagnostic::error(

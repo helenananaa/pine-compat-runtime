@@ -1,7 +1,9 @@
 //! Built-in registry scaffolding.
 
 mod constants;
+mod display;
 mod drawing_styles;
+pub use display::combine_display_values;
 mod history;
 mod namespaces;
 mod registry;

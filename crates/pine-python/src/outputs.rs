@@ -203,6 +203,13 @@ fn plots_to_py(py: Python<'_>, plots: &[pine_runtime::PlotSeries]) -> PyResult<P
             &PineValue::String("format.inherit".to_owned()),
         )?;
         set_non_default_value(py, &item, "precision", &plot.precision, &PineValue::Na)?;
+        set_non_default_value(
+            py,
+            &item,
+            "linestyle",
+            &plot.linestyle,
+            &PineValue::String("plot.linestyle_solid".to_owned()),
+        )?;
         set_output_metadata(py, &item, &plot.metadata)?;
         output.append(item)?;
     }

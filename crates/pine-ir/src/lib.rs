@@ -288,6 +288,8 @@ pub enum HirUnaryOp {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HirBinaryOp {
+    DisplayUnion,
+    DisplayDifference,
     Add,
     Sub,
     Mul,

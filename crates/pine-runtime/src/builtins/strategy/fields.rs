@@ -137,19 +137,19 @@ impl<'a> HistoricalRuntime<'a> {
                 .open_trade_size(trade_num)
                 .map_or(PineValue::Float(0.0), PineValue::Float),
             "strategy.opentrades.profit" => {
-                let Some(bar) = self.current_bar else {
+                let Some(mark) = self.strategy_mark_price() else {
                     return Ok(PineValue::Na);
                 };
                 self.strategy_broker
-                    .open_trade_profit(trade_num, bar.close)
+                    .open_trade_profit(trade_num, mark)
                     .map_or(PineValue::Na, PineValue::Float)
             }
             "strategy.opentrades.profit_percent" => {
-                let Some(bar) = self.current_bar else {
+                let Some(mark) = self.strategy_mark_price() else {
                     return Ok(PineValue::Na);
                 };
                 self.strategy_broker
-                    .open_trade_profit_percent(trade_num, bar.close)
+                    .open_trade_profit_percent(trade_num, mark)
                     .map_or(PineValue::Na, PineValue::Float)
             }
             "strategy.opentrades.commission" => self

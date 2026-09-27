@@ -3,6 +3,7 @@ pub(crate) mod call_context;
 pub(crate) mod calls;
 pub(crate) mod context;
 pub(crate) mod display_retention;
+mod display_value;
 pub(crate) mod drawing_history;
 pub(crate) mod expressions;
 pub(crate) mod historical;

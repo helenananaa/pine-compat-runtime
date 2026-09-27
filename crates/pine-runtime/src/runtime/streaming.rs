@@ -289,6 +289,7 @@ fn plot_header(plot: &super::plot_history::RuntimePlot) -> SeriesHeader {
         join: plot.join.clone(),
         format: plot.format.clone(),
         precision: plot.precision.clone(),
+        linestyle: plot.linestyle.clone(),
     }
 }
 

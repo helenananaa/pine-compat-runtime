@@ -1909,6 +1909,43 @@ fn accepts_minimal_table_new_and_cell() {
 }
 
 #[test]
+fn table_dynamic_font_position_still_reject_invalid_constants_and_numeric_types() {
+    for (call, code) in [
+        (
+            "table.set_position(id, \"position.invalid\")",
+            "E_CALL_ARG_VALUE",
+        ),
+        (
+            "table.cell(id, 0, 0, \"A\", text_font_family=\"font.invalid\")",
+            "E_CALL_ARG_VALUE",
+        ),
+        (
+            "table.cell_set_text_font_family(id, 0, 0, \"font.invalid\")",
+            "E_CALL_ARG_VALUE",
+        ),
+        ("table.set_position(id, close)", "E_CALL_ARG_TYPE"),
+        (
+            "table.cell(id, 0, 0, \"A\", text_font_family=close)",
+            "E_CALL_ARG_TYPE",
+        ),
+        (
+            "table.cell_set_text_font_family(id, 0, 0, close)",
+            "E_CALL_ARG_TYPE",
+        ),
+    ] {
+        let analysis = analyze(&format!(
+            "//@version=6\nindicator(\"table validation\")\nvar id = table.new(position.top_right, 1, 1)\n{call}\nplot(close)\n"
+        ));
+        assert!(
+            analysis.diagnostics.iter().any(|d| d.code == code),
+            "{call}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+}
+
+#[test]
 fn rejects_invalid_table_text_wrap() {
     let analysis = analyze(
         "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\")\ntable.cell_set_text_wrap(id, 0, 0, \"text.wrap_bad\")\nplot(close)\n",

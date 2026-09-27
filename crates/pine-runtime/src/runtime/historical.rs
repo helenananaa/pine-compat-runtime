@@ -186,6 +186,9 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) alerts: super::append_history::AppendHistory<AlertEvent>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
+    // Historical OHLC remains visible during fill callbacks, but account values
+    // and immediate closes are marked at the current broker execution tick.
+    pub(crate) strategy_fill_mark: Option<f64>,
     // Strategy built-ins exist on every script pass even when a guarded
     // history expression is not evaluated on an earlier bar.
     pub(crate) strategy_position_size_at_script_pass: VecDeque<f64>,
@@ -460,6 +463,7 @@ impl<'a> HistoricalRuntime<'a> {
             strategy_position_size_history_origin: 0,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
+            strategy_fill_mark: None,
             magnifier_diagnostics: Vec::new(),
             alert_diagnostics: Vec::new(),
             #[cfg(test)]
@@ -858,7 +862,13 @@ impl<'a> HistoricalRuntime<'a> {
             );
             if !skip_normal_strategy_pass {
                 let filled = self.run_strategy_script_pass()?;
-                self.recalculate_after_fill(filled)?;
+                // An immediate close placed by the regular historical closing
+                // pass fills now, but does not introduce another script pass.
+                // Intrabar fill callbacks and realtime observations keep their
+                // own recalculation paths.
+                if update_kind != BarUpdateKind::Historical {
+                    self.recalculate_after_fill(filled, bar.close)?;
+                }
             }
         } else {
             let program = self.program.clone();
@@ -1097,17 +1107,34 @@ impl<'a> HistoricalRuntime<'a> {
                 Err(error) => return Err(error),
             }
         }
+        // Even immediate orders fill after the script pass. Statements following
+        // strategy.close still observe the account that entered this pass.
+        self.fill_current_tick_market_closes();
         Ok(self.strategy_broker.public_fill_event_count() > before)
     }
 
-    pub(crate) fn recalculate_after_fill(&mut self, mut filled: bool) -> Result<(), RuntimeError> {
+    pub(crate) fn strategy_mark_price(&self) -> Option<f64> {
+        self.strategy_fill_mark
+            .or_else(|| self.current_bar.map(|bar| bar.close))
+    }
+
+    pub(crate) fn recalculate_after_fill(
+        &mut self,
+        mut filled: bool,
+        mark: f64,
+    ) -> Result<(), RuntimeError> {
         if !self.program.strategy_settings.calc_on_order_fills {
             return Ok(());
         }
-        while filled {
-            filled = self.run_strategy_script_pass()?;
-        }
-        Ok(())
+        let previous = self.strategy_fill_mark.replace(mark);
+        let result = (|| {
+            while filled {
+                filled = self.run_strategy_script_pass()?;
+            }
+            Ok(())
+        })();
+        self.strategy_fill_mark = previous;
+        result
     }
 
     #[cfg(test)]

@@ -23,6 +23,7 @@ pub(crate) fn value_kind_name(kind: ValueKind) -> &'static str {
         ValueKind::Float => "float",
         ValueKind::Bool => "bool",
         ValueKind::String => "string",
+        ValueKind::PlotDisplay => "plot_display",
         ValueKind::Color => "color",
         ValueKind::Plot => "plot",
         ValueKind::HLine => "hline",

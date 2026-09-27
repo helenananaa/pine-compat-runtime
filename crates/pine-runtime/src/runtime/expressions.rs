@@ -236,7 +236,11 @@ pub(crate) fn eval_literal(literal: &HirLiteral) -> PineValue {
 
 pub(crate) fn eval_unary(op: HirUnaryOp, value: PineValue) -> PineValue {
     if value.is_na() {
-        return PineValue::Na;
+        return if op == HirUnaryOp::Not {
+            PineValue::Bool(true)
+        } else {
+            PineValue::Na
+        };
     }
 
     match op {
@@ -270,8 +274,8 @@ pub(crate) fn eval_binary_with_semantics(
     uses_v6_semantics: bool,
 ) -> Result<PineValue, RuntimeError> {
     Ok(match op {
-        HirBinaryOp::And => eval_logical_and(left, right, uses_v6_semantics),
-        HirBinaryOp::Or => eval_logical_or(left, right, uses_v6_semantics),
+        HirBinaryOp::And => eval_logical_and(left, right),
+        HirBinaryOp::Or => eval_logical_or(left, right),
         HirBinaryOp::Eq
         | HirBinaryOp::NotEq
         | HirBinaryOp::Gt
@@ -287,51 +291,38 @@ pub(crate) fn eval_binary_with_semantics(
             }
         }
         _ if left.is_na() || right.is_na() => PineValue::Na,
+        HirBinaryOp::DisplayUnion => super::display_value::combine(left, right, false)?,
+        HirBinaryOp::DisplayDifference => super::display_value::combine(left, right, true)?,
         HirBinaryOp::Add => add(left, right)?,
         HirBinaryOp::Sub => numeric_sub(left, right),
         HirBinaryOp::Mul => numeric_mul(left, right),
         HirBinaryOp::Div => numeric_float_binary(left, right, |left, right| left / right),
         HirBinaryOp::Mod => numeric_mod(left, right),
-        HirBinaryOp::Eq => PineValue::Bool(values_equal(&left, &right)),
-        HirBinaryOp::NotEq => PineValue::Bool(!values_equal(&left, &right)),
+        HirBinaryOp::Eq => PineValue::Bool(if uses_v6_semantics {
+            values_equal(&left, &right)
+        } else {
+            legacy_values_equal(&left, &right)
+        }),
+        HirBinaryOp::NotEq => PineValue::Bool(!if uses_v6_semantics {
+            values_equal(&left, &right)
+        } else {
+            legacy_values_equal(&left, &right)
+        }),
         HirBinaryOp::Gt | HirBinaryOp::Gte | HirBinaryOp::Lt | HirBinaryOp::Lte => {
             compare_binary(op, left, right)
         }
     })
 }
 
-fn eval_logical_and(left: PineValue, right: PineValue, uses_v6_semantics: bool) -> PineValue {
-    match (left, right) {
-        (PineValue::Bool(false), _) | (_, PineValue::Bool(false)) => PineValue::Bool(false),
-        (PineValue::Bool(true), PineValue::Bool(true)) => PineValue::Bool(true),
-        (PineValue::Na, PineValue::Na)
-        | (PineValue::Na, PineValue::Bool(true))
-        | (PineValue::Bool(true), PineValue::Na) => {
-            if uses_v6_semantics {
-                PineValue::Bool(false)
-            } else {
-                PineValue::Na
-            }
-        }
-        _ => PineValue::Na,
-    }
+// Pine logical operators treat missing boolean operands as false, including
+// versions that preserve NA for numeric comparisons. Evaluation eagerness is
+// handled separately by eval_expr (v6 short-circuits, older versions do not).
+fn eval_logical_and(left: PineValue, right: PineValue) -> PineValue {
+    PineValue::Bool(matches!(left, PineValue::Bool(true)) && matches!(right, PineValue::Bool(true)))
 }
 
-fn eval_logical_or(left: PineValue, right: PineValue, uses_v6_semantics: bool) -> PineValue {
-    match (left, right) {
-        (PineValue::Bool(true), _) | (_, PineValue::Bool(true)) => PineValue::Bool(true),
-        (PineValue::Bool(false), PineValue::Bool(false)) => PineValue::Bool(false),
-        (PineValue::Na, PineValue::Na)
-        | (PineValue::Na, PineValue::Bool(false))
-        | (PineValue::Bool(false), PineValue::Na) => {
-            if uses_v6_semantics {
-                PineValue::Bool(false)
-            } else {
-                PineValue::Na
-            }
-        }
-        _ => PineValue::Na,
-    }
+fn eval_logical_or(left: PineValue, right: PineValue) -> PineValue {
+    PineValue::Bool(matches!(left, PineValue::Bool(true)) || matches!(right, PineValue::Bool(true)))
 }
 
 fn add(left: PineValue, right: PineValue) -> Result<PineValue, RuntimeError> {
@@ -420,6 +411,16 @@ pub(crate) fn values_equal(left: &PineValue, right: &PineValue) -> bool {
             pine_ir::pine_numeric_comparison(HirBinaryOp::Eq, left, right).unwrap_or(false)
         }
         _ => left == right,
+    }
+}
+
+fn legacy_values_equal(left: &PineValue, right: &PineValue) -> bool {
+    match (left, right) {
+        (PineValue::Bool(value), PineValue::Int(number))
+        | (PineValue::Int(number), PineValue::Bool(value)) => *value == (*number != 0),
+        (PineValue::Bool(value), PineValue::Float(number))
+        | (PineValue::Float(number), PineValue::Bool(value)) => *value == (*number != 0.0),
+        _ => values_equal(left, right),
     }
 }
 

@@ -24,12 +24,12 @@ const ALERTCONDITION_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "title",
         accepts: Accepts::ConstString,
-        optional: false,
+        optional: true,
     },
     BuiltinParam {
         name: "message",
         accepts: Accepts::ConstString,
-        optional: false,
+        optional: true,
     },
 ];
 

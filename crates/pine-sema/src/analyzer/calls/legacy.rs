@@ -564,6 +564,12 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> FocusedLegacyCallAnalysis {
+        if self.legacy.dialect() == crate::PineDialect::V5
+            && name == "plot"
+            && !args.iter().any(|arg| arg.name.as_deref() == Some("transp"))
+        {
+            return FocusedLegacyCallAnalysis::NotApplicable;
+        }
         let Some(resolution) = self.legacy.resolve_call(name) else {
             return FocusedLegacyCallAnalysis::NotApplicable;
         };

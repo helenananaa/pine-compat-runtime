@@ -108,6 +108,7 @@ pub struct SeriesHeader {
     pub join: PineValue,
     pub format: PineValue,
     pub precision: PineValue,
+    pub linestyle: PineValue,
 }
 
 impl Default for SeriesHeader {
@@ -121,6 +122,7 @@ impl Default for SeriesHeader {
             join: PineValue::Bool(false),
             format: PineValue::String("format.inherit".to_owned()),
             precision: PineValue::Na,
+            linestyle: PineValue::String("plot.linestyle_solid".to_owned()),
         }
     }
 }
@@ -655,6 +657,7 @@ fn apply_plot_header(plot: &mut PlotSeries, header: &SeriesHeader) {
     plot.join = header.join.clone();
     plot.format = header.format.clone();
     plot.precision = header.precision.clone();
+    plot.linestyle = header.linestyle.clone();
 }
 
 fn apply_plot_char(result: &mut RuntimeResult, change: &SeriesChange) {

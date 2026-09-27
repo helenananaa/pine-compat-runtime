@@ -273,7 +273,7 @@ const INPUT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -331,7 +331,7 @@ const INPUT_INT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -394,7 +394,7 @@ const INPUT_FLOAT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -437,7 +437,7 @@ const INPUT_BOOL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -480,7 +480,7 @@ const INPUT_COLOR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -528,7 +528,7 @@ const INPUT_STRING_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -566,7 +566,7 @@ const INPUT_TEXT_AREA_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -609,7 +609,7 @@ const INPUT_SOURCE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {

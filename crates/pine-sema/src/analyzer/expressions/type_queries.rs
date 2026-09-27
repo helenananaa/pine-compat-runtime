@@ -63,8 +63,16 @@ impl Analyzer {
                             .map(|_| PineType::new(Qualifier::Const, ValueKind::Int))
                     })
                     .or_else(|| {
-                        pine_builtins::named_string_constant(&name)
-                            .map(|_| PineType::new(Qualifier::Const, ValueKind::String))
+                        pine_builtins::named_string_constant(&name).map(|_| {
+                            PineType::new(
+                                Qualifier::Const,
+                                if name.starts_with("display.") {
+                                    ValueKind::PlotDisplay
+                                } else {
+                                    ValueKind::String
+                                },
+                            )
+                        })
                     })
             }
             ExprKind::Unary { op, expr } => {
@@ -84,6 +92,15 @@ impl Analyzer {
                 let left_type = self.type_of_expr_with_params(left, param_types)?;
                 let right_type = self.type_of_expr_with_params(right, param_types)?;
                 match op {
+                    BinaryOp::Add | BinaryOp::Sub
+                        if left_type.kind == ValueKind::PlotDisplay
+                            && right_type.kind == ValueKind::PlotDisplay =>
+                    {
+                        Some(PineType::new(
+                            strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                            ValueKind::PlotDisplay,
+                        ))
+                    }
                     BinaryOp::Add
                         if left_type.kind == ValueKind::String
                             && right_type.kind == ValueKind::String =>
@@ -684,6 +701,20 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
         match &statement.kind {
+            StmtKind::FieldReassign {
+                receiver,
+                path,
+                field,
+                ..
+            } => self.type_of_expr_with_params(
+                &crate::analyzer::functions::field_reassign_result_expr(
+                    receiver,
+                    path,
+                    field,
+                    statement.span,
+                ),
+                param_types,
+            ),
             StmtKind::If {
                 condition,
                 then_branch,

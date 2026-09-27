@@ -60,7 +60,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::AtMostInputString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -76,6 +76,11 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "force_overlay",
         accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "linestyle",
+        accepts: Accepts::AtMostInputString,
         optional: true,
     },
 ];
@@ -108,7 +113,7 @@ const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -171,7 +176,7 @@ const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -234,7 +239,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::AtMostInputString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -292,7 +297,7 @@ const PLOTARROW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -345,7 +350,7 @@ const PLOTBAR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -403,7 +408,7 @@ const PLOTCANDLE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::AtMostInputString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
 ];
@@ -441,7 +446,7 @@ const HLINE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -484,7 +489,7 @@ const FILL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::AtMostInputString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -545,7 +550,7 @@ pub(crate) const GRADIENT_FILL_SIGNATURE: BuiltinSignature = BuiltinSignature {
         },
         BuiltinParam {
             name: "display",
-            accepts: Accepts::AtMostInputString,
+            accepts: Accepts::AtMostInputPlotDisplay,
             optional: true,
         },
     ],

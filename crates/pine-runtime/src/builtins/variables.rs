@@ -402,14 +402,14 @@ impl<'a> HistoricalRuntime<'a> {
                 .map_or(PineValue::Na, PineValue::Float);
         }
         if name == "strategy.openprofit" {
-            return self.current_bar.map_or(PineValue::Na, |bar| {
-                PineValue::Float(self.strategy_broker.open_profit(bar.close))
+            return self.strategy_mark_price().map_or(PineValue::Na, |mark| {
+                PineValue::Float(self.strategy_broker.open_profit(mark))
             });
         }
         if name == "strategy.openprofit_percent" {
-            return self.current_bar.map_or(PineValue::Na, |bar| {
+            return self.strategy_mark_price().map_or(PineValue::Na, |mark| {
                 self.strategy_broker
-                    .open_profit_percent(bar.close)
+                    .open_profit_percent(mark)
                     .map_or(PineValue::Na, PineValue::Float)
             });
         }
@@ -492,8 +492,8 @@ impl<'a> HistoricalRuntime<'a> {
             return PineValue::Float(self.strategy_broker.max_contracts_held_short());
         }
         if name == "strategy.equity" {
-            return self.current_bar.map_or(PineValue::Na, |bar| {
-                PineValue::Float(self.strategy_broker.equity_value(bar.close))
+            return self.strategy_mark_price().map_or(PineValue::Na, |mark| {
+                PineValue::Float(self.strategy_broker.equity_value(mark))
             });
         }
         if name == "ta.accdist" {

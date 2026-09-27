@@ -26,6 +26,7 @@ pub(crate) struct RuntimePlot {
     pub(crate) join: PineValue,
     pub(crate) format: PineValue,
     pub(crate) precision: PineValue,
+    pub(crate) linestyle: PineValue,
 }
 impl RuntimePlot {
     pub(crate) fn new(id: u32, values: Vec<PineValue>) -> Self {
@@ -42,6 +43,7 @@ impl RuntimePlot {
             join: public.join,
             format: public.format,
             precision: public.precision,
+            linestyle: public.linestyle,
         }
     }
     pub(crate) fn snapshot_from(&self, skip: usize) -> PlotSeries {
@@ -57,6 +59,7 @@ impl RuntimePlot {
             join: self.join.clone(),
             format: self.format.clone(),
             precision: self.precision.clone(),
+            linestyle: self.linestyle.clone(),
         }
     }
 }

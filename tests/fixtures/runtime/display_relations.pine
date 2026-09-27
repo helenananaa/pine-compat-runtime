@@ -1,0 +1,12 @@
+//@version=6
+indicator("Display relation probe")
+plot((display.pane+display.pane==display.pane)?1:0,"duplicate")
+plot((display.pane-display.data_window==display.pane)?1:0,"subtract absent")
+plot((display.all-display.pane-display.pane==display.all-display.pane)?1:0,"remove twice")
+plot((display.pane+display.price_scale+display.status_line+display.data_window==display.all)?1:0,"all sum")
+plot((display.pane-display.pane==display.none)?1:0,"subtract self")
+plot((display.all-display.all==display.none)?1:0,"all subtract all")
+plot((display.pane+display.data_window==display.data_window+display.pane)?1:0,"commute")
+plot((display.all+display.pane==display.all)?1:0,"all identity")
+plot((display.none+display.pane==display.pane)?1:0,"none identity")
+plot((display.all-display.none==display.all)?1:0,"all none")

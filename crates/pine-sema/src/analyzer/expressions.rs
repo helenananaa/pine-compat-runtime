@@ -414,6 +414,9 @@ impl Analyzer {
             self.analyze_stmt(statement);
         }
         let pine_type = match &last.kind {
+            StmtKind::FieldReassign { .. } => {
+                self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span)
+            }
             StmtKind::If { .. } if allow_void => {
                 self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span)
             }
@@ -501,6 +504,9 @@ impl Analyzer {
         allow_void: bool,
     ) -> Option<PineType> {
         match &last.kind {
+            StmtKind::FieldReassign { .. } => {
+                self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span)
+            }
             StmtKind::If { .. } => {
                 let ty =
                     self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span);
@@ -1144,7 +1150,7 @@ impl Analyzer {
                 self.analyze_stmt(statement);
             }
             match &last.kind {
-                StmtKind::If { .. } => {
+                StmtKind::If { .. } | StmtKind::FieldReassign { .. } => {
                     self.analyze_loop_expr_body_return(last, "for...in", allow_void)
                 }
                 StmtKind::Expr(expr) => {

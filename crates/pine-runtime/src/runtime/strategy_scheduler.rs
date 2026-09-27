@@ -343,7 +343,7 @@ impl HistoricalRuntime<'_> {
             low: bar.close,
             ..bar
         });
-        self.recalculate_after_fill(filled)
+        self.recalculate_after_fill(filled, bar.close)
     }
 
     pub(crate) fn run_pre_script_strategy_phases(
@@ -396,7 +396,7 @@ impl HistoricalRuntime<'_> {
                 self.strategy_broker
                     .flatten_if_risk_blocked(bar_index, bar.time, open_price);
             }
-            self.recalculate_after_fill(filled)?;
+            self.recalculate_after_fill(filled, open_price)?;
             if step == HistoricalFillStep::MarketEntriesAtOpen
                 && filled
                 && self.program.strategy_settings.calc_on_order_fills
@@ -409,6 +409,7 @@ impl HistoricalRuntime<'_> {
                     .fill_same_bar_market_closes(bar_index, bar.time, open_price);
                 self.recalculate_after_fill(
                     self.strategy_broker.public_fill_event_count() > before,
+                    open_price,
                 )?;
             }
         }
@@ -572,7 +573,7 @@ impl HistoricalRuntime<'_> {
                     chart_time,
                     fill_price,
                 );
-                self.recalculate_after_fill(true)?;
+                self.recalculate_after_fill(true, gap.next_open)?;
             }
         }
         Ok(())
@@ -630,7 +631,7 @@ impl HistoricalRuntime<'_> {
                     self.strategy_broker
                         .flatten_if_risk_blocked(chart_bar_index, chart_time, mark);
                 }
-                self.recalculate_after_fill(filled)?;
+                self.recalculate_after_fill(filled, mark)?;
             }
             self.strategy_scheduler.set_host_path_cursor(
                 host.host_bar_index,
@@ -707,7 +708,7 @@ impl HistoricalRuntime<'_> {
                         chart_time,
                         fill_price,
                     );
-                    self.recalculate_after_fill(true)?;
+                    self.recalculate_after_fill(true, mark)?;
                 }
             }
         }
@@ -746,9 +747,13 @@ impl HistoricalRuntime<'_> {
         if self.program.script_mode != ScriptMode::Strategy {
             return;
         }
-        self.trace_strategy_phase(StrategyBarPhase::CurrentTickMarketFills);
+        let before = self.strategy_broker.public_fill_event_count();
+        let mark = self.strategy_mark_price().unwrap_or(bar.close);
         self.strategy_broker
-            .fill_immediate_market_closes(self.bars, bar.time, bar.close);
+            .fill_immediate_market_closes(self.bars, bar.time, mark);
+        if self.strategy_broker.public_fill_event_count() > before {
+            self.trace_strategy_phase(StrategyBarPhase::CurrentTickMarketFills);
+        }
     }
 
     pub(crate) fn run_post_script_strategy_phases(
@@ -772,7 +777,7 @@ impl HistoricalRuntime<'_> {
                     self.strategy_broker
                         .flatten_if_risk_blocked(bar_index, bar.time, bar.close);
                 }
-                self.recalculate_after_fill(filled)?;
+                self.recalculate_after_fill(filled, bar.close)?;
             }
         }
         self.trace_strategy_phase(StrategyBarPhase::ExitFills);

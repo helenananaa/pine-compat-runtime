@@ -206,13 +206,20 @@ pub(crate) fn const_string_value(expr: &Expr) -> Option<String> {
             pine_builtins::named_string_constant(&parts.join(".")).map(str::to_owned)
         }
         ExprKind::Binary {
-            op: BinaryOp::Add,
+            op: op @ (BinaryOp::Add | BinaryOp::Sub),
             left,
             right,
         } => {
             let mut value = const_string_value(left)?;
-            value.push_str(&const_string_value(right)?);
-            Some(value)
+            let right_value = const_string_value(right)?;
+            if syntactic_display_expr(left) && syntactic_display_expr(right) {
+                pine_builtins::combine_display_values(&value, &right_value, *op == BinaryOp::Sub)
+            } else if *op == BinaryOp::Add {
+                value.push_str(&right_value);
+                Some(value)
+            } else {
+                None
+            }
         }
         ExprKind::Ternary {
             condition,
@@ -259,5 +266,22 @@ pub(crate) fn literal_type(literal: &Literal) -> PineType {
         Literal::Bool(_) => PineType::new(Qualifier::Const, ValueKind::Bool),
         Literal::String(_) => PineType::new(Qualifier::Const, ValueKind::String),
         Literal::ColorHex(_) => PineType::new(Qualifier::Const, ValueKind::Color),
+    }
+}
+
+fn syntactic_display_expr(expr: &Expr) -> bool {
+    match &expr.without_groups().kind {
+        ExprKind::QualifiedName(parts) => parts.first().is_some_and(|name| name == "display"),
+        ExprKind::Binary {
+            op: BinaryOp::Add | BinaryOp::Sub,
+            left,
+            right,
+        } => syntactic_display_expr(left) && syntactic_display_expr(right),
+        ExprKind::Ternary {
+            then_expr,
+            else_expr,
+            ..
+        } => syntactic_display_expr(then_expr) && syntactic_display_expr(else_expr),
+        _ => false,
     }
 }

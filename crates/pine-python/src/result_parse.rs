@@ -220,6 +220,12 @@ pub(crate) fn series_header_from_py(
             PineValue::String("format.inherit".to_owned()),
         )?,
         precision: dict_opt_value(py, dict, "precision", PineValue::Na)?,
+        linestyle: dict_opt_value(
+            py,
+            dict,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?,
     })
 }
 
@@ -256,6 +262,12 @@ fn plots_from_py(py: Python<'_>, list: Bound<'_, PyList>) -> PyResult<Vec<PlotSe
             PineValue::String("format.inherit".to_owned()),
         )?;
         plot.precision = dict_opt_value(py, dict, "precision", PineValue::Na)?;
+        plot.linestyle = dict_opt_value(
+            py,
+            dict,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?;
         plot.metadata = metadata_from_py(py, dict)?;
         plots.push(plot);
     }

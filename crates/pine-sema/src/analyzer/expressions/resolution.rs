@@ -48,7 +48,14 @@ impl Analyzer {
                 feature: name.to_owned(),
                 span,
             });
-            return Some(PineType::new(Qualifier::Const, ValueKind::String));
+            return Some(PineType::new(
+                Qualifier::Const,
+                if name.starts_with("display.") {
+                    ValueKind::PlotDisplay
+                } else {
+                    ValueKind::String
+                },
+            ));
         }
         if let Some(resolution) = self.legacy.resolve_value(name) {
             return self.resolve_legacy_value(name, span, resolution);

@@ -980,6 +980,53 @@ plot(close)
 }
 
 #[test]
+fn table_dynamic_font_and_position_follow_input_and_series_values() {
+    let source = SourceFile::new(
+        "table_dynamic_font_position.pine",
+        include_str!("../../../../tests/fixtures/runtime/table_dynamic_font_position.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    let bars = [bar(1.0), bar(2.0), bar(3.0)];
+    for length in 1..=3 {
+        let result = run_historical(&program, &bars[..length]).expect("runtime result");
+        let even = (length - 1) % 2 == 0;
+        let table = &result.tables[0];
+        assert_eq!(
+            table.position,
+            PineValue::String(
+                if even {
+                    "position.top_left"
+                } else {
+                    "position.bottom_right"
+                }
+                .into()
+            )
+        );
+        let cells = &table.snapshots.last().expect("table snapshot").cells;
+        assert_eq!(cells.len(), 2);
+        for cell in cells {
+            assert_eq!(
+                cell.text_font_family,
+                PineValue::String(
+                    if even {
+                        "font.family_default"
+                    } else {
+                        "font.family_monospace"
+                    }
+                    .into()
+                )
+            );
+        }
+    }
+}
+
+#[test]
 fn collects_table_cell_snapshots() {
     let source = SourceFile::new(
         "test.pine",

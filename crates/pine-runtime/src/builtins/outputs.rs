@@ -200,6 +200,12 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String("format.inherit".to_owned()),
         )?;
         let precision = self.eval_output_arg(args, 13, "precision", PineValue::Na)?;
+        let linestyle = self.eval_output_arg(
+            args,
+            15,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?;
         let bar_index = self.bars - self.stored_origin;
         let plots = self.plots_mut();
         push_plot_value(plots, bar_index, call_site_id.0, value, color);
@@ -215,6 +221,7 @@ impl<'a> HistoricalRuntime<'a> {
         output.join = join;
         output.format = format;
         output.precision = precision;
+        output.linestyle = linestyle;
         Ok(PineValue::Plot(call_site_id.0))
     }
 

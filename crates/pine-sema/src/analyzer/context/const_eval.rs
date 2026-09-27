@@ -637,6 +637,19 @@ impl Analyzer {
 
     pub(crate) fn known_const_string_value(&self, expr: &pine_syntax::Expr) -> Option<String> {
         let expr = expr.without_groups();
+        if let pine_syntax::ExprKind::Binary { op, left, right } = &expr.kind
+            && matches!(op, pine_syntax::BinaryOp::Add | pine_syntax::BinaryOp::Sub)
+            && self
+                .type_of_expr_with_params(expr, &HashMap::new())
+                .is_some_and(|ty| ty.kind == pine_ir::ValueKind::PlotDisplay)
+        {
+            return pine_builtins::combine_display_values(
+                &self.known_const_string_value(left)?,
+                &self.known_const_string_value(right)?,
+                *op == pine_syntax::BinaryOp::Sub,
+            );
+        }
+
         self.legacy
             .canonical_string_value(self.current_source_context_id(), expr.span)
             .map(str::to_owned)

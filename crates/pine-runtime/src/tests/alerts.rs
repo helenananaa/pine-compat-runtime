@@ -4,6 +4,61 @@ use std::sync::Arc;
 use super::*;
 
 #[test]
+fn native_optional_alert_fixture_emits_only_on_matching_bars() {
+    let result = run_alert_script(
+        include_str!("../../../../tests/fixtures/runtime/alertcondition_optional_arguments.pine"),
+        &[
+            Bar {
+                time: 0,
+                open: 2.0,
+                high: 2.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 1000,
+                open: 1.0,
+                high: 2.0,
+                low: 1.0,
+                close: 2.0,
+                volume: 1.0,
+            },
+        ],
+    );
+    assert_eq!(result.alerts.len(), 4);
+    assert!(result.alerts.iter().all(|event| event.bar_index == 1));
+    assert_eq!(result.alerts[2].source, "Alert");
+    assert_eq!(result.alerts[2].message, "Message only");
+}
+
+#[test]
+fn alertcondition_optional_strings_keep_defaults_and_named_binding() {
+    let result = run_alert_script(
+        r#"indicator("optional alert strings")
+alertcondition(close > 1)
+alertcondition(close > 1, "Named")
+alertcondition(condition=close > 1, message="Close {{close}}")
+alertcondition(close > 1, "", "")
+"#,
+        &timed_bars(&[1.0, 2.0]),
+    );
+    assert_eq!(result.alerts.len(), 4);
+    let actual: Vec<_> = result
+        .alerts
+        .iter()
+        .map(|event| {
+            assert_eq!(event.bar_index, 1);
+            (event.source.as_str(), event.message.as_str())
+        })
+        .collect();
+    assert_eq!(
+        actual,
+        vec![("Alert", ""), ("Named", ""), ("Alert", "Close 2"), ("", "")]
+    );
+}
+
+#[test]
 fn collects_alertcondition_events_when_condition_is_true() {
     let result = run_alert_script(
         r#"indicator("alerts")

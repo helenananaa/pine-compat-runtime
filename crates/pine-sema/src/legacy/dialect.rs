@@ -249,6 +249,7 @@ impl PineDialect {
             // Display and text option families also have member-level version
             // boundaries despite sharing one namespace.
             "display.all" | "display.none" => Some(4),
+            "display.pine_screener" => Some(6),
             "display.pane"
             | "display.price_scale"
             | "display.status_line"

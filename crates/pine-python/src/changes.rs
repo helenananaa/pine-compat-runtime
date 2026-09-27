@@ -115,6 +115,13 @@ fn series_header_to_py(py: Python<'_>, header: &SeriesHeader) -> PyResult<Py<PyA
         &header.precision,
         &defaults.precision,
     )?;
+    set_non_default_value(
+        py,
+        &item,
+        "linestyle",
+        &header.linestyle,
+        &defaults.linestyle,
+    )?;
     Ok(item.into_any().unbind())
 }
 

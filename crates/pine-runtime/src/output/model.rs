@@ -47,6 +47,7 @@ pub struct PlotSeries {
     pub join: PineValue,
     pub format: PineValue,
     pub precision: PineValue,
+    pub linestyle: PineValue,
 }
 
 impl PlotSeries {
@@ -64,6 +65,7 @@ impl PlotSeries {
             join: PineValue::Bool(false),
             format: PineValue::String("format.inherit".to_owned()),
             precision: PineValue::Na,
+            linestyle: PineValue::String("plot.linestyle_solid".to_owned()),
         }
     }
 }

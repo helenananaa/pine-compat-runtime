@@ -244,6 +244,13 @@ fn series_header_json(header: &SeriesHeader) -> String {
         &header.precision,
         &defaults.precision,
     );
+    push_object_value(
+        &mut output,
+        &mut first,
+        "linestyle",
+        &header.linestyle,
+        &defaults.linestyle,
+    );
     output.push('}');
     output
 }
@@ -517,6 +524,12 @@ fn plots_json(plots: &[PlotSeries]) -> String {
             &PineValue::String("format.inherit".to_owned()),
         );
         push_non_default_value_field(&mut output, "precision", &plot.precision, &PineValue::Na);
+        push_non_default_value_field(
+            &mut output,
+            "linestyle",
+            &plot.linestyle,
+            &PineValue::String("plot.linestyle_solid".to_owned()),
+        );
         output_metadata_json_into(&mut output, &plot.metadata);
         output.push('}');
     }

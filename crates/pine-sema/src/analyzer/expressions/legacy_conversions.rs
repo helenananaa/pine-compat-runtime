@@ -84,14 +84,14 @@ impl Analyzer {
                     && right_type.qualifier == Qualifier::Const))
     }
 
-    pub(crate) fn v5_extreme_division_length_arg(
+    pub(crate) fn extreme_division_length_arg(
         &mut self,
         call_name: &str,
         param_name: &str,
         expr: &Expr,
         actual_type: PineType,
     ) -> bool {
-        if self.legacy.dialect() != PineDialect::V5
+        if !matches!(self.legacy.dialect(), PineDialect::V5 | PineDialect::V6)
             || !matches!(call_name, "ta.lowest" | "ta.highest")
             || param_name != "length"
             || actual_type.kind != ValueKind::Float
@@ -119,8 +119,8 @@ impl Analyzer {
             self.compatibility
                 .legacy_emulations
                 .push(crate::compatibility::LegacyEmulation {
-                    feature: "v5.extreme_division_length".to_owned(),
-                    behavior: "Pine v5 ta.lowest/ta.highest length context truncates an integer-operand quotient; the ordinary quotient retains its fractional value".to_owned(),
+                    feature: format!("v{}.extreme_division_length", self.legacy.dialect().version()),
+                    behavior: format!("Pine v{} ta.lowest/ta.highest length context truncates an integer-operand quotient; the ordinary quotient retains its fractional value", self.legacy.dialect().version()),
                     span: expr.span,
                 });
         }

@@ -111,7 +111,7 @@ impl Analyzer {
             ]);
         }
 
-        let lowered_args: Vec<_> = args
+        let mut lowered_args: Vec<_> = args
             .iter()
             .map(|arg| {
                 Some(HirCallArg {
@@ -121,7 +121,14 @@ impl Analyzer {
             })
             .collect::<Option<_>>()?;
 
-        if !args.iter().any(|arg| arg.name.is_some())
+        if builtin_name == "strategy.close"
+            && self.legacy.dialect() <= crate::PineDialect::V4
+            && lowered_args.get(1).is_some_and(|arg| arg.name.is_none())
+        {
+            lowered_args[1].name = Some("when".to_owned());
+        }
+
+        if !lowered_args.iter().any(|arg| arg.name.is_some())
             || matches!(builtin_name, "array.min" | "array.max")
         {
             return Some(lowered_args);

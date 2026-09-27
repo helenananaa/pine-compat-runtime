@@ -134,7 +134,7 @@ const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "text_font_family",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -152,7 +152,7 @@ const TABLE_SET_POSITION_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "position",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];
@@ -470,7 +470,7 @@ const TABLE_CELL_SET_TEXT_FONT_FAMILY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "text_font_family",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];

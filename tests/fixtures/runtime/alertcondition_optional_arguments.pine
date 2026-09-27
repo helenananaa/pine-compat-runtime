@@ -1,0 +1,7 @@
+//@version=6
+indicator("Optional alert parameters probe")
+alertcondition(close > open)
+alertcondition(close > open, "Named only")
+alertcondition(condition=close > open, message="Message only")
+alertcondition(close > open, "Explicit empty", "")
+plot(close)

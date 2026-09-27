@@ -408,6 +408,19 @@ impl Analyzer {
     ) -> Option<PineType> {
         self.check_feature_name(name, callee_span);
         let signature = self.select_fill_signature(signature, args, arg_types);
+        // In Pine v4 and earlier, the second positional strategy.close
+        // argument is `when`. The modern signature uses that slot for `qty`.
+        let legacy_close_args = if name == "strategy.close"
+            && self.legacy.dialect() <= crate::PineDialect::V4
+            && args.get(1).is_some_and(|arg| arg.name.is_none())
+        {
+            let mut normalized = args.to_vec();
+            normalized[1].name = Some("when".to_owned());
+            Some(normalized)
+        } else {
+            None
+        };
+        let args = legacy_close_args.as_deref().unwrap_or(args);
         self.validate_script_declaration_call(name, callee_span, args);
         self.validate_strategy_order_call(name, callee_span, args);
         self.validate_strategy_value_function_call(name, callee_span);
@@ -1147,12 +1160,8 @@ impl Analyzer {
                 let Some(arg_type) = arg_types.first().copied().flatten() else {
                     continue;
                 };
-                if self.v5_extreme_division_length_arg(
-                    signature.name,
-                    "length",
-                    &arg.value,
-                    arg_type,
-                ) {
+                if self.extreme_division_length_arg(signature.name, "length", &arg.value, arg_type)
+                {
                     continue;
                 }
                 if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
@@ -1199,6 +1208,16 @@ impl Analyzer {
                 continue;
             }
 
+            // In legacy Pine, strategy.long/short were boolean direction values.
+            // Public v4 strategies also pass true/false directly to this slot.
+            if signature.name == "strategy.entry"
+                && param.name == "direction"
+                && self.legacy.dialect().version() <= 4
+                && arg_type.kind == ValueKind::Bool
+            {
+                continue;
+            }
+
             if self.v4_v5_series_output_offset_arg(
                 signature.name,
                 param.name,
@@ -1213,8 +1232,7 @@ impl Analyzer {
                 continue;
             }
 
-            if self.v5_extreme_division_length_arg(signature.name, param.name, &arg.value, arg_type)
-            {
+            if self.extreme_division_length_arg(signature.name, param.name, &arg.value, arg_type) {
                 continue;
             }
 

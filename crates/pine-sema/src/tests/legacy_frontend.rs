@@ -2130,6 +2130,7 @@ fn qualified_builtin_version_inventory_covers_registered_namespaces() {
             ("display.price_scale", 5),
             ("display.status_line", 5),
             ("display.data_window", 5),
+            ("display.pine_screener", 6),
         ],
     );
     assert_registered_value_namespace_versions(
@@ -2836,6 +2837,35 @@ barcolor(color.red, title="bars")
 }
 
 #[test]
+fn v4_plotshape_tolerates_identical_duplicate_literal_transparency_only() {
+    let accepted = analyze_production(
+        "//@version=4\nstudy(\"legacy\")\nplotshape(close > open, transp=0, color=color.green, transp=0)\n",
+    );
+    assert!(
+        accepted.diagnostics.is_empty(),
+        "{:?}",
+        accepted.diagnostics
+    );
+    assert!(accepted.hir.is_some());
+
+    for source in [
+        "//@version=4\nstudy(\"conflict\")\nplotshape(close > open, transp=0, transp=10)\n",
+        "//@version=4\nstudy(\"other argument\")\nplotshape(close > open, color=color.red, color=color.red)\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&"E_CALL_ARG_DUPLICATE"),
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+    let modern = analyze_production(
+        "//@version=5\nindicator(\"modern\")\nplotshape(close > open, transp=0, transp=0)\n",
+    );
+    assert!(diagnostic_codes(&modern).contains(&"E_CALL_ARG_NAME"));
+}
+
+#[test]
 fn v4_v5_series_output_offsets_use_the_final_value_while_v3_v6_stay_strict() {
     for (version, source) in [
         (
@@ -3019,17 +3049,43 @@ fn v4_output_binder_rejects_unsupported_arguments_and_invalid_legacy_values() {
 #[test]
 fn legacy_output_compatibility_does_not_weaken_modern_unique_types() {
     for version in [5, 6] {
-        for call in [
-            "plot(close, transp=40)",
-            "plot(close, style=1)",
-            "hline(1, linestyle=1)",
-        ] {
+        for call in ["plot(close, style=1)", "hline(1, linestyle=1)"] {
             let source = format!("//@version={version}\nindicator(\"modern\")\n{call}\n");
             let analysis = analyze_production(&source);
             assert!(!analysis.diagnostics.is_empty(), "{version}: {call}");
             assert!(analysis.compatibility.legacy_translations.is_empty());
             assert!(analysis.compatibility.legacy_emulations.is_empty());
         }
+    }
+    let deprecated_v5 = analyze_production(
+        "//@version=5\nindicator(\"deprecated transparency\")\nplot(close, transp=40)\n",
+    );
+    assert!(deprecated_v5.diagnostics.is_empty());
+    assert!(deprecated_v5.hir.is_some());
+    let removed_v6 = analyze_production(
+        "//@version=6\nindicator(\"removed transparency\")\nplot(close, transp=40)\n",
+    );
+    assert!(diagnostic_codes(&removed_v6).contains(&"E_CALL_ARG_NAME"));
+}
+
+#[test]
+fn v4_strategy_entry_accepts_boolean_directions_without_weakening_v5_v6() {
+    let legacy = analyze_production(
+        "//@version=4\nstrategy(\"legacy direction\")\nstrategy.entry(\"L\", true)\nstrategy.entry(\"S\", false)\n",
+    );
+    assert!(legacy.diagnostics.is_empty(), "{:?}", legacy.diagnostics);
+    assert!(legacy.hir.is_some());
+
+    for version in [5, 6] {
+        let source = format!(
+            "//@version={version}\nstrategy(\"modern direction\")\nstrategy.entry(\"L\", true)\n"
+        );
+        let analysis = analyze_production(&source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&"E_CALL_ARG_TYPE"),
+            "{version}: {:?}",
+            analysis.diagnostics
+        );
     }
 }
 

@@ -973,7 +973,8 @@ compile-time int-index/string-name selector resolving to an int/float/string fie
 pop/remove/shift return field reads, clear size reset, copy independent field
 reads, reverse reordered field reads, slice window field reads, concat appended
 field reads, and statement/expression/index-value for-in value-copy field reads.
-It intentionally excludes remote lookup, re-exports, unaliased imports,
+It infers an omitted import alias from the library name in the import path.
+It intentionally excludes remote lookup, re-exports,
 side-effecting exported functions, imported UDT flow outside the covered same-identity scalar-tree paths, collections,
 direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset, and alias-qualified imported method receiver type
 mismatches.

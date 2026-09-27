@@ -2663,20 +2663,11 @@ def test_compile_script_reports_unsupported_user_type_varip_fixture():
         raise AssertionError("unsupported UDT varip fixture should fail")
 
 
-def test_compile_script_reports_unsupported_user_type_field_mutation_fixture():
+def test_compile_script_accepts_user_type_field_mutation_fixture():
     source = (
-        ROOT / "tests/fixtures/sema/unsupported_user_type_field_mutation.pine"
+        ROOT / "tests/fixtures/sema/supported_user_type_field_mutation.pine"
     ).read_text()
-
-    try:
-        pine_compat.compile_script(source)
-    except ValueError as error:
-        message = str(error)
-        assert "E_UNSUPPORTED_FEATURE" in message
-        assert "`function_side_effect` is not supported" in message
-        assert "mutating fields on global user-defined type values" in message
-    else:
-        raise AssertionError("unsupported UDT field mutation fixture should fail")
+    assert pine_compat.compile_script(source) is not None
 
 
 def test_compile_script_reports_unsupported_user_method_side_effect_fixture():
@@ -4991,6 +4982,22 @@ def test_run_script_returns_strategy_pyramiding_close_contract():
             "qty": 3.0,
             "price": 3.0,
         },
+        {
+            "id": "Close entry(s) order L1",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.close",
+            "qty": 1.0,
+            "price": 4.0,
+        },
+        {
+            "id": "Close entry(s) order L2",
+            "barIndex": 4,
+            "time": 5,
+            "direction": "strategy.close",
+            "qty": 3.0,
+            "price": 5.0,
+        },
     ]
     assert result["strategy"]["trades"] == [
         {
@@ -6057,15 +6064,15 @@ def test_run_script_returns_strategy_exit_slippage_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, None, 2.0, 2.0],
-        [0.0, 0.0, -2.0, -2.0],
-        [1000000.0, 999998.0, 999998.0, 999998.0],
+        [None, None, 3.0, 3.0],
+        [0.0, 0.0, 0.0, 0.0],
+        [1000000.0, 999998.0, 1000000.0, 1000000.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
-    assert result["strategy"]["orders"][1]["price"] == 2.0
+    assert result["strategy"]["orders"][1]["price"] == 3.0
     assert result["strategy"]["trades"][0]["entryPrice"] == 3.0
-    assert result["strategy"]["trades"][0]["exitPrice"] == 2.0
-    assert result["strategy"]["trades"][0]["profit"] == -2.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
+    assert result["strategy"]["trades"][0]["profit"] == 0.0
 
 
 def test_run_script_returns_strategy_limit_verification_entry_plots():
@@ -10554,18 +10561,14 @@ def test_run_script_returns_omitted_trail_points_persistent_fixture_contract():
     assert result == expected
 
 
-def test_run_script_returns_strategy_runtime_diagnostics():
+def test_run_script_treats_zero_entry_quantity_as_noop():
     result = pine_compat.run_script(
         '//@version=5\nstrategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
         BARS,
     )
 
-    assert result["strategy"]["diagnostics"] == [
-        {
-            "code": "E_STRATEGY_QTY",
-            "message": "`strategy.entry` quantity must be positive",
-        }
-    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert result["strategy"]["orders"] == []
 
 
 def test_run_script_treats_strategy_exit_missing_entry_as_noop():
@@ -10966,16 +10969,15 @@ def test_analyze_script_accepts_library_sources_without_import_use():
     assert report["diagnostics"] == []
 
 
-def test_compile_script_requires_import_alias_for_library_source():
-    try:
-        pine_compat.compile_script(
-            'import user/lib/1\nindicator("root")\n',
-            library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
-        )
-    except ValueError as error:
-        assert "E_IMPORT_ALIAS_REQUIRED" in str(error)
-    else:
-        raise AssertionError("unaliased import should fail")
+def test_run_script_infers_import_alias_from_library_path():
+    result = pine_compat.run_script(
+        '//@version=5\nindicator("root")\nimport user/lib/1\nplot(lib.scale(close))\n',
+        BARS,
+        library_sources={
+            "user/lib/1": '//@version=5\nlibrary("lib")\nexport scale(value) => value * 2\n'
+        },
+    )
+    assert result["plots"][0]["values"] == [2.0, 4.0, 6.0]
 
 
 def test_run_script_accepts_imported_pure_function_subset():
@@ -11408,8 +11410,8 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][57]["values"] == [None, None, None, None, None]
     assert result["plots"][58]["values"] == [None, None, None, None, None]
     assert result["plots"][59]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][60]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][61]["values"] == [None, None, 2.0, 2.0, 2.0]
+    assert result["plots"][60]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][61]["values"] == [0.0, -1.0, -2.0, -2.0, -2.0]
     assert result["plots"][62]["values"] == [None, None, None, 22.0, 23.0]
     assert result["plots"][63]["values"] == [20.0, 20.5, 21.0, 21.5, 22.0]
     assert result["plots"][64]["values"] == [1000.0, 2000.0, 3000.0, 4000.0, 5000.0]
@@ -11535,10 +11537,10 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][144]["values"] == [None, None, None, 22.0, 23.0]
     assert result["plots"][145]["values"] == [None, None, 0.0, 0.0, 0.0]
     assert result["plots"][146]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][147]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][148]["values"] == [None, None, 2.0, 2.0, 2.0]
-    assert result["plots"][149]["values"] == [None, None, None, None, 0.0]
-    assert result["plots"][150]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][147]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][148]["values"] == [0.0, -1.0, -2.0, -2.0, -2.0]
+    assert result["plots"][149]["values"] == [None, None, 0.0, 0.0, 0.0]
+    assert result["plots"][150]["values"] == [None, None, 0.0, 0.0, -1.0]
     assert result["plots"][151]["values"] == [None, None, None, 0.0, None]
     assert result["plots"][152]["values"] == [None, None, None, 0.0, None]
     assert result["plots"][153]["values"] == [None, None, None, None, 200.0]
@@ -11774,8 +11776,8 @@ def test_run_script_request_fixture_matches_cli_contract():
     ]
     assert result["plots"][246]["values"] == [None, None, None, None, 210.0]
     assert result["plots"][247]["values"] == [None, None, None, None, 80.0]
-    assert result["plots"][248]["values"] == [None, None, None, None, 0.0]
-    assert result["plots"][249]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][248]["values"] == [None, None, 0.0, 0.0, 0.0]
+    assert result["plots"][249]["values"] == [None, None, 0.0, 0.0, -1.0]
     assert result["plots"][123]["values"] == [None, None, None, None, 300.0]
     assert result["plots"][124]["values"] == [None, None, 100.01, 100.01, 200.01]
     assert result["plots"][250]["values"] == [None, None, 33.0, 33.0, 66.0]
@@ -12027,8 +12029,8 @@ def test_run_script_request_fixture_matches_cli_contract():
     ]
     assert result["plots"][303]["values"] == [None, 12.0, 13.0, 14.0, 15.0]
     assert result["plots"][304]["values"] == [None, 9.0, 10.0, 11.0, 12.0]
-    assert result["plots"][305]["values"] == [None, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][306]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
+    assert result["plots"][305]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][306]["values"] == [0.0, -1.0, -1.0, -1.0, -1.0]
     assert result["plots"][307]["values"] == [None, 41.0, 43.0, 45.0, 47.0]
     assert result["plots"][308]["values"] == [20.01, 21.01, 22.01, 23.01, 24.01]
 

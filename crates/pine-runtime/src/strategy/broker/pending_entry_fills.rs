@@ -41,14 +41,11 @@ impl PathEventOutcome {
 
 impl BrokerState {
     pub(crate) fn fill_same_bar_close_exits(&mut self, bar_index: usize, time: i64, close: f64) {
-        loop {
-            let Some(candidate) = self
-                .collect_same_bar_close_exit_candidates(bar_index, close, self.event_generation)
-                .into_iter()
-                .next()
-            else {
-                break;
-            };
+        while let Some(candidate) = self
+            .collect_same_bar_close_exit_candidates(bar_index, close, self.event_generation)
+            .into_iter()
+            .next()
+        {
             let tick = EntryPathTick {
                 bar_index,
                 time,
@@ -379,28 +376,26 @@ impl BrokerState {
         fill_price: f64,
         same_bar: bool,
     ) {
-        if same_bar {
-            if let Some(percent) = pending_entry.same_bar_percent_of_equity {
-                let execution_price = match pending_entry.direction {
-                    PendingEntryDirection::Long => self.long_entry_fill_price(fill_price),
-                    PendingEntryDirection::Short => self.short_entry_fill_price(fill_price),
-                };
-                let equity = self.equity_value(fill_price);
-                if !equity.is_finite()
-                    || !execution_price.is_finite()
-                    || equity <= 0.0
-                    || execution_price <= 0.0
-                {
-                    return;
-                }
-                pending_entry.quantity = super::super::percent_of_equity_order_qty(
-                    equity,
-                    percent,
-                    execution_price,
-                    self.commission,
-                    self.configured_quantity_scale,
-                );
+        if same_bar && let Some(percent) = pending_entry.same_bar_percent_of_equity {
+            let execution_price = match pending_entry.direction {
+                PendingEntryDirection::Long => self.long_entry_fill_price(fill_price),
+                PendingEntryDirection::Short => self.short_entry_fill_price(fill_price),
+            };
+            let equity = self.equity_value(fill_price);
+            if !equity.is_finite()
+                || !execution_price.is_finite()
+                || equity <= 0.0
+                || execution_price <= 0.0
+            {
+                return;
             }
+            pending_entry.quantity = super::super::percent_of_equity_order_qty(
+                equity,
+                percent,
+                execution_price,
+                self.commission,
+                self.configured_quantity_scale,
+            );
         }
         if !pending_entry.enforce_pyramiding {
             let signed_quantity = match pending_entry.direction {

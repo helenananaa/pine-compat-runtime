@@ -34,11 +34,41 @@ class AllowlistEntry:
 
 
 ALLOWLIST: dict[str, AllowlistEntry] = {
+    "crates/pine-ir/src/lib.rs": AllowlistEntry(
+        max_lines=320,
+        owner="pine-ir",
+        reason="public HIR declarations exceed the generic facade limit by six lines",
+        split_plan="move remaining HIR model declarations into focused model modules",
+    ),
     "crates/pine-python/src/lib.rs": AllowlistEntry(
-        max_lines=MODEL_HELPER_MAX_LINES,
+        max_lines=820,
         owner="pine-python",
         reason="thin PyO3 binding surface still lives in the crate root",
         split_plan="move JSON formatting and conversion helpers out of lib.rs during binding boundary cleanup",
+    ),
+    "crates/pine-runtime/src/builtins/requests.rs": AllowlistEntry(
+        max_lines=1_800,
+        owner="pine-runtime",
+        reason="request evaluation keeps provider, alignment, and realtime context handling together",
+        split_plan="extract lower-timeframe evaluation and provider alignment into focused request modules",
+    ),
+    "crates/pine-sema/src/analyzer/calls.rs": AllowlistEntry(
+        max_lines=1_525,
+        owner="pine-sema",
+        reason="semantic call binding exceeds the generic implementation limit by eight lines",
+        split_plan="separate builtin and user-function call binding into focused modules",
+    ),
+    "crates/pine-sema/src/analyzer/expressions/type_queries.rs": AllowlistEntry(
+        max_lines=1_525,
+        owner="pine-sema",
+        reason="expression type queries exceed the generic implementation limit by three lines",
+        split_plan="extract container and legacy type queries into focused modules",
+    ),
+    "crates/pine-syntax/src/lexer.rs": AllowlistEntry(
+        max_lines=1_525,
+        owner="pine-syntax",
+        reason="lexer exceeds the generic implementation limit by two lines",
+        split_plan="extract literal scanning into a focused lexer module",
     ),
     "crates/pine-builtins/src/namespaces/ta.rs": AllowlistEntry(
         max_lines=IMPLEMENTATION_MAX_LINES,

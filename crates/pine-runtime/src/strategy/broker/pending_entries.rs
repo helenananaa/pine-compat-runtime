@@ -144,10 +144,10 @@ impl PendingEntryBook {
     }
 
     pub(super) fn set_same_bar_percent_of_equity(&mut self, id: &str, percent: f64) {
-        if let Some(entry) = self.entries.iter_mut().find(|entry| entry.id == id) {
-            if entry.kind == PendingEntryKind::Market {
-                entry.same_bar_percent_of_equity = Some(percent);
-            }
+        if let Some(entry) = self.entries.iter_mut().find(|entry| entry.id == id)
+            && entry.kind == PendingEntryKind::Market
+        {
+            entry.same_bar_percent_of_equity = Some(percent);
         }
     }
 

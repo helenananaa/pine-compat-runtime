@@ -494,13 +494,14 @@ impl<'a> HistoricalRuntime<'a> {
             self.strategy_broker
                 .place_pending_market_long_entry_with_metadata(id, qty, self.bars, metadata);
         }
-        if qty_expr.is_none() && limit_expr.is_none() && stop_expr.is_none() {
-            if let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =
+        if qty_expr.is_none()
+            && limit_expr.is_none()
+            && stop_expr.is_none()
+            && let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =
                 self.program.strategy_settings.default_qty
-            {
-                self.strategy_broker
-                    .set_pending_market_same_bar_percent_of_equity(&oca_id, percent);
-            }
+        {
+            self.strategy_broker
+                .set_pending_market_same_bar_percent_of_equity(&oca_id, percent);
         }
         if let Some(name) = oca_name {
             self.strategy_broker
@@ -647,13 +648,14 @@ impl<'a> HistoricalRuntime<'a> {
             },
             _ => {}
         }
-        if qty_expr.is_none() && limit.is_none() && stop.is_none() {
-            if let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =
+        if qty_expr.is_none()
+            && limit.is_none()
+            && stop.is_none()
+            && let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =
                 self.program.strategy_settings.default_qty
-            {
-                self.strategy_broker
-                    .set_pending_market_same_bar_percent_of_equity(&oca_id, percent);
-            }
+        {
+            self.strategy_broker
+                .set_pending_market_same_bar_percent_of_equity(&oca_id, percent);
         }
         if let Some(name) = oca_name {
             self.strategy_broker
@@ -734,10 +736,10 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "`strategy.close_all` requires an active bar".to_owned(),
             });
         };
-        if let Some(when_expr) = call_arg_expr(args, 4, "when") {
-            if !matches!(self.eval_expr(when_expr)?, PineValue::Bool(true)) {
-                return Ok(PineValue::Void);
-            }
+        if let Some(when_expr) = call_arg_expr(args, 4, "when")
+            && !matches!(self.eval_expr(when_expr)?, PineValue::Bool(true))
+        {
+            return Ok(PineValue::Void);
         }
         let metadata = self.eval_strategy_close_metadata(args, 0)?;
         let immediately = self.eval_strategy_immediately_arg(args, 3)?;
@@ -1152,8 +1154,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
 
             let downside_price = if let Some(stop_expr) = stop_expr {
-                let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
-                stop_price
+                self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN)
             } else if let Some(loss_expr) = loss_expr {
                 let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
                 let mintick = self.request_environment.chart().min_tick();
@@ -1169,8 +1170,7 @@ impl<'a> HistoricalRuntime<'a> {
             };
 
             let upside_price = if let Some(limit_expr) = limit_expr {
-                let limit_price = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
-                limit_price
+                self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN)
             } else if let Some(profit_expr) = profit_expr {
                 let profit_ticks =
                     self.eval_strategy_profit_ticks(profit_expr, extra_profit_expr)?;

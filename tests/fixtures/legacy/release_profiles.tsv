@@ -9,8 +9,8 @@ v2_bool_numeric_comparisons	2	experimental	runtime	tests/fixtures/legacy/v2/runt
 v2_core	2	experimental	runtime	tests/fixtures/legacy/v2/runtime/core_legacy.pine	v2_core	none	none	parity	original	4096
 v2_security_lookahead	2	experimental	mtf	tests/fixtures/legacy/legacy_v2_security_lookahead.pine	legacy_chart	test_daily	none	legacy_lookahead_safe	original	4096
 v2_shared	2	experimental	runtime	tests/fixtures/legacy/v2/runtime/shared_v2.pine	default	none	none	parity	original	4096
-v3_core	3	preview	runtime	tests/fixtures/legacy/v3/runtime/core_legacy.pine	v3_core	none	none	parity	original	4096
 v3_contextual_integer_division	3	preview	runtime	tests/fixtures/legacy/v3/runtime/contextual_integer_division_legacy.pine	default	none	none	parity	original	4096
+v3_core	3	preview	runtime	tests/fixtures/legacy/v3/runtime/core_legacy.pine	v3_core	none	none	parity	original	4096
 v3_security_same_context	3	preview	mtf	tests/fixtures/legacy/legacy_v3_security.pine	legacy_chart	test_chart	none	parity	original	4096
 v4_aliases	4	preview	runtime	tests/fixtures/legacy/v4/runtime/aliases_legacy.pine	default	none	none	parity	original	4096
 v4_array_insert_series_index	4	preview	runtime	tests/fixtures/legacy/v4/runtime/array_insert_series_index_legacy.pine	default	none	none	parity	original	4096

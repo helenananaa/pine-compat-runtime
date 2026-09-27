@@ -138,6 +138,10 @@ impl BrokerState {
         self.record_position_snapshot(fill.bar_index);
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "broker fill accounting needs explicit order and tick fields"
+    )]
     pub(crate) fn apply_generic_market_order_netting(
         &mut self,
         id: String,

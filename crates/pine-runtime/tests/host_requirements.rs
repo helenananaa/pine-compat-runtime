@@ -157,19 +157,17 @@ fn legacy_runtime_request_arguments_are_not_mislabeled_as_literal_defaults() {
 
 #[test]
 fn discovery_does_not_expand_modern_request_admission() {
-    for expr in ["request.security(s, \"60\", math.random(0, 1, 7))"] {
-        let source = format!(
-            "//@version=6\nindicator(\"boundary\")\ns=input.symbol(\"OTHER\")\nplot({expr})\n"
-        );
-        let analysis = analyze_source(&SourceFile::new("boundary.pine", source));
-        assert!(analysis.hir.is_none());
-        assert!(
-            analysis
-                .diagnostics
-                .iter()
-                .any(|d| d.code == "E_UNSUPPORTED_FEATURE")
-        );
-    }
+    let expr = "request.security(s, \"60\", math.random(0, 1, 7))";
+    let source =
+        format!("//@version=6\nindicator(\"boundary\")\ns=input.symbol(\"OTHER\")\nplot({expr})\n");
+    let analysis = analyze_source(&SourceFile::new("boundary.pine", source));
+    assert!(analysis.hir.is_none());
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_UNSUPPORTED_FEATURE")
+    );
 }
 
 #[test]

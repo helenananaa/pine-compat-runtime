@@ -166,14 +166,13 @@ impl<'a> HistoricalRuntime<'a> {
             .lower_tf_tuple_types
             .iter()
             .find(|(id, _)| *id == call_site_id)
-            .map(|(_, kinds)| {
+            .and_then(|(_, kinds)| {
                 kinds
                     .iter()
                     .copied()
                     .map(lower_tf_array_kind)
                     .collect::<Option<Vec<_>>>()
-            })
-            .flatten();
+            });
         if scalar_kind.is_none() && tuple_kinds.is_none() {
             return Err(RuntimeError {
                 message:
@@ -555,6 +554,10 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "request context and merge settings are independent inputs"
+    )]
     fn eval_provider_security(
         &mut self,
         call_site_id: CallSiteId,
@@ -652,6 +655,10 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.import_requested_value(&aligned))
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "realtime request replay needs explicit context and merge inputs"
+    )]
     fn eval_realtime_lower_security(
         &mut self,
         call_site_id: CallSiteId,

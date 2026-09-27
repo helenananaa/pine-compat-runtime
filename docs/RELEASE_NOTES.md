@@ -1,5 +1,25 @@
 # Release Notes
 
+- Pine v1-v4 `strategy.entry` accepts boolean directions (`true` long,
+  `false` short) while v5-v6 keep their stricter direction type. The unchanged
+  public UT Bot Strategy now matches all 457 closed native trades and the
+  remaining open entry; see [the native receipt](UT_BOT_STRATEGY_NATIVE_20260926.md).
+
+- Pine v4 `strategy.close` binds its second positional boolean as `when`.
+  Unpaired `trail_points` competes with a fixed profit target in the observed
+  legacy combination. The [native Bitduke receipt](BITDUKE_SQUEEZE_STRATEGY_NATIVE_20260926.md)
+  covers 14 complete strategy trades.
+
+- Logical operators treat missing boolean operands as false, including legacy
+  Pine versions; missing numeric comparisons retain their versioned semantics.
+  [Squeeze native evidence](SQUEEZE_LEGACY_NATIVE_20260926.md) covers the
+  full public script and an independent v5 probe.
+
+- Immediate strategy closes now fill after the script pass; later statements
+  preserve pre-fill account visibility. Native Ichimoku qualification covers
+  150 trades and 239,700 state cells; see
+  [the evidence receipt](ICHIMOKU_NATIVE_PARITY_20260926.md).
+
 ## Unreleased streaming additions (integrated 2026-09-11)
 
 - Separate streaming updates from complete result snapshots in Rust/Python/WASM.
@@ -32,6 +52,33 @@
 
 
 ## Unreleased
+
+- Implement nominal display values and set addition/subtraction, including
+  `display.pine_screener` in v6. Preserve `all` as distinct from named-location
+  sums and carry canonical composite expressions in output metadata. The
+  [native display receipt](DISPLAY_ALGEBRA_NATIVE_20260926.md) records 3,588 exact
+  comparisons and zero admission diagnostics for the TASC source.
+
+- Preserve `plot(linestyle=...)` through snapshot, streaming and Python output
+  contracts. Native probes accept input-controlled styles and reject series
+  styles. The additive `linestyle` wire field defaults to solid; see the
+  [line-style receipt](PLOT_LINESTYLE_NATIVE_20260926.md).
+
+- `alertcondition` now accepts omitted title/message arguments, including a
+  named message with omitted title. The title defaults to `Alert`; explicit
+  empty strings remain empty. See the [optional alert receipt](OPTIONAL_ALERT_NATIVE_20260926.md).
+
+- Accept dynamic table position/font strings and mark strategy accounts at the
+  current fill price during fill callbacks. Historical closing-pass immediate
+  exits no longer generate a phantom recalculation. The
+  [Fractional EMA native receipt](FRACTIONAL_EMA_NATIVE_PARITY_20260926.md)
+  records agreement for all 70 trades and 5,348 original plot cells.
+
+- Accept UDT field assignments as the result of `for`, `for...in`, and `while`
+  expression bodies, preserving the assigned value and single mutation. This
+  admits the complete public Reaction Level Matrix indicator. See the
+  [native Reaction/Memory evidence](REACTION_MEMORY_NATIVE_PARITY_20260926.md)
+  for two full-script state comparisons and remaining candidate blockers.
 
 - Explicit `strategy.entry` and `strategy.order` quantities honor host-configured
   decimal contract precision without binary scaling boundary errors. Raw invalid

@@ -292,8 +292,8 @@ table.new(position: string-compatible, columns: int-compatible, rows: int-compat
 table.delete(id: table-compatible) -> void
 table.clear(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
 table.merge_cells(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
-table.cell(table_id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: const string, text_formatting?: int-compatible) -> void
-table.set_position(id: table-compatible, position: const string) -> void
+table.cell(table_id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: string-compatible, text_formatting?: int-compatible) -> void
+table.set_position(id: table-compatible, position: string-compatible) -> void
 table.set_bgcolor(id: table-compatible, bgcolor: color-compatible) -> void
 table.set_frame_color(id: table-compatible, frame_color: color-compatible) -> void
 table.set_frame_width(id: table-compatible, frame_width: int-compatible) -> void
@@ -309,7 +309,7 @@ table.cell_set_text_halign(id: table-compatible, column: int-compatible, row: in
 table.cell_set_text_valign(id: table-compatible, column: int-compatible, row: int-compatible, text_valign: const string) -> void
 table.cell_set_text_wrap(id: table-compatible, column: int-compatible, row: int-compatible, text_wrap: const string) -> void
 table.cell_set_tooltip(id: table-compatible, column: int-compatible, row: int-compatible, tooltip: string-compatible) -> void
-table.cell_set_text_font_family(id: table-compatible, column: int-compatible, row: int-compatible, text_font_family: const string) -> void
+table.cell_set_text_font_family(id: table-compatible, column: int-compatible, row: int-compatible, text_font_family: string-compatible) -> void
 table.cell_set_text_formatting(id: table-compatible, column: int-compatible, row: int-compatible, text_formatting: int-compatible) -> void
 table.all -> simple array<table>
 polyline.new(points: array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
@@ -802,6 +802,9 @@ max_bars_back(source: series numeric, num: const int)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: numeric-compatible, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, when?: bool-compatible v5 hidden)
 -> void
+  Pine v1-v4 additionally accept boolean `direction` (`true` = long,
+  `false` = short), as used by the original UT Bot Strategy. Pine v5-v6 retain
+  the modern string-compatible direction rule.
 strategy.order(id: simple string, direction: string-compatible, qty?: numeric-compatible, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
 strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool)
@@ -1286,19 +1289,19 @@ unsupported. Other open-trade namespace functions outside `entry_price`,
 ## Inputs
 
 ```text
-input(defval: const int/float/bool/string/color or series float, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input defval kind, or series float when defval is a source
-input.int(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
-input.float(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
-input.bool(defval: const bool, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input bool
-input.color(defval: const color, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input color
-input.string(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.price(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
-input.time(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
-input.symbol(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.timeframe(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.session(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.text_area(defval: const string, title?: const string, tooltip?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> series float
+input(defval: const int/float/bool/string/color or series float, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input defval kind, or series float when defval is a source
+input.int(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input int
+input.float(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input float
+input.bool(defval: const bool, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input bool
+input.color(defval: const color, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input color
+input.string(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.price(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input float
+input.time(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input int
+input.symbol(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.timeframe(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.session(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.text_area(defval: const string, title?: const string, tooltip?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> series float
 ```
 
 Rules:
@@ -1326,38 +1329,38 @@ Rules:
 ## Plotting
 
 ```text
-alertcondition(condition: bool-compatible, title: const string, message: const string)
+alertcondition(condition: bool-compatible, title: const string?, message: const string?)
   -> void
 
 alert(message: string-compatible, freq?: const string)
   -> void
 
-plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: input/const int, style?: string-compatible, trackprice?: const bool, histbase?: input/const numeric, offset?: simple integer-compatible, join?: const bool, editable?: const bool, show_last?: input/const int, display?: const string, format?: const string, precision?: simple integer-compatible, force_overlay?: const bool)
+plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: input/const int, style?: string-compatible, trackprice?: const bool, histbase?: input/const numeric, offset?: simple integer-compatible, join?: const bool, editable?: const bool, show_last?: input/const int, display?: const plot_display, format?: const string, precision?: simple integer-compatible, force_overlay?: const bool, linestyle?: input/const string)
   -> plot
 
-plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string)
+plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const plot_display)
   -> void
 
-plotshape(series: series/simple numeric-or-bool, title?: const string, style?: string-compatible, location?: const string, color?: color-compatible, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string, force_overlay?: const bool)
+plotshape(series: series/simple numeric-or-bool, title?: const string, style?: string-compatible, location?: const string, color?: color-compatible, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const plot_display, force_overlay?: const bool)
   -> void
 
-plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple integer-compatible, minheight?: simple integer-compatible, maxheight?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string, force_overlay?: const bool)
+plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple integer-compatible, minheight?: simple integer-compatible, maxheight?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display, force_overlay?: const bool)
   -> void
 
-plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: input/const int, display?: const string)
+plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display)
   -> void
 
-plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: input/const string)
+plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: input/const plot_display)
   -> void
 
-hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const string)
+hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const plot_display)
   -> hline
 
-fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string, transp?: simple integer-compatible v5 hidden)
+fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const plot_display, transp?: simple integer-compatible v5 hidden)
   -> void
 
-bgcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
-barcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
+bgcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display) -> void
+barcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display) -> void
 ```
 
 v5 `fill(..., transp=N)` applies simple-int transparency after the base color

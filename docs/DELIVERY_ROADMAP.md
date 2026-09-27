@@ -2,6 +2,32 @@
 
 Updated 2026-09-23. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
+The [Bitduke Squeeze strategy slice](BITDUKE_SQUEEZE_STRATEGY_NATIVE_20260926.md)
+aligns 14 native v4 trades and repairs positional close and unpaired trailing exit behavior.
+The [legacy Squeeze Momentum slice](SQUEEZE_LEGACY_NATIVE_20260926.md) corrects
+logical NA handling, aligning 95,880 native state cells and 311,610 v5 probe cells.
+The [Ichimoku strategy slice](ICHIMOKU_NATIVE_PARITY_20260926.md) aligns 150
+native trades and 239,700 state cells, fixing immediate-close same-pass visibility.
+The [Ichimoku strategy slice](ICHIMOKU_NATIVE_PARITY_20260926.md) aligns 150
+native trades and 239,700 state cells, fixing immediate-close same-pass visibility.
+The [native display-algebra slice](DISPLAY_ALGEBRA_NATIVE_20260926.md) implements
+nominal display values, union/difference and the v6 Pine Screener member.
+All 3,588 native relation cells agree, and TASC now analyzes without diagnostics.
+Its benchmark data and complete numerical qualification remain outstanding.
+The [plot line-style slice](PLOT_LINESTYLE_NATIVE_20260926.md) carries solid,
+dotted and dashed plot metadata through snapshot/streaming outputs, removing
+the TASC line-style admission errors.
+The [optional alertcondition slice](OPTIONAL_ALERT_NATIVE_20260926.md) removes
+two TASC admission errors. The later display slice closes the remaining
+admission work; complete native qualification remains outstanding.
+The [Fractional EMA strategy slice](FRACTIONAL_EMA_NATIVE_PARITY_20260926.md)
+repairs table string qualifiers and fill-time account/closing-pass semantics.
+Its 70 native trades and 5,348 original plot cells agree within stated tolerances;
+Ichimoku hourly qualification is recorded above; TASC numerical qualification remains pending.
+The [Reaction/Memory indicator slice](REACTION_MEMORY_NATIVE_PARITY_20260926.md)
+repairs loop-final UDT field returns and adds 55,679 native state comparisons
+across two complete public indicators. Its candidate blockers are subsequently
+tracked by the Fractional EMA slice; no distribution or realtime claim is made.
 The [September 26 indicator/strategy expansion](EXPANDED_INDICATOR_STRATEGY_NATIVE_PARITY_20260926.md)
 adds four unchanged public sources, five scenarios, and scoped native agreement
 for 334 closed trades plus one open position. It repairs explicit quantity-grid

@@ -36,6 +36,8 @@ Every variant matches 2,350/2,350 native OHLC rows; each has only the final form
 
 The repo-local copy of the author's `MLExtensions.pine` and the frozen public `/3` proxy have 140 identical executable lines before their backtest/statistics section after whitespace and comment removal. This supports the proxy's feature and filter calculations, but neither it nor the TradingView publication page exposes the exact immutable `/2` source. The page's version notes describe the v2 backtest signature and v3 additions without showing a selectable v2 source. The native chart's hidden prehistory and exact library version therefore remain unresolved; no interpreter semantic change is inferred from these four signals.
 
+On September 26, the author-affiliated [lorentzian-classification Git repository](https://github.com/artificial-intelligence-edge/lorentzian-classification) was unshallowed and its complete fetched history inspected. It has 23 reachable commits, but `ports/pinescript/libraries/MLExtensions.pine` first appears in commit `7d02a36` on June 25, 2026, with no earlier revision of that path. This checkout cannot establish the immutable TradingView `jdehorty/MLExtensions/2` source. It supplies no basis for attributing the remaining signal differences to the interpreter.
+
 To reproduce the controlled proxy run from the repository root:
 
 ```powershell

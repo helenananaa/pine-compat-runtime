@@ -173,9 +173,29 @@ impl BrokerState {
             if !self.pending_exit_has_position(pending) {
                 continue;
             }
-            candidates.extend(exit_leg_candidates(
-                pending, direction, leg, high, low, verify, generation,
-            ));
+            // Decimal chart extremes can arrive one binary ULP either side
+            // of a tick. Fixed exit triggers compare on that tick, but their
+            // crossing marks must remain inside the original host path.
+            let mut exit_leg = leg;
+            if !matches!(pending.trigger, PendingExitTrigger::Trailing(_))
+                && let Some(tick) = self.price_tick
+            {
+                exit_leg.from.price = canonical_grid_endpoint(leg.from.price, tick);
+                exit_leg.to.price = canonical_grid_endpoint(leg.to.price, tick);
+            }
+            let mut exits = exit_leg_candidates(
+                pending,
+                direction,
+                exit_leg,
+                exit_leg.from.price.max(exit_leg.to.price),
+                exit_leg.from.price.min(exit_leg.to.price),
+                verify,
+                generation,
+            );
+            for candidate in &mut exits {
+                candidate.crossing_price = candidate.crossing_price.clamp(low, high);
+            }
+            candidates.extend(exits);
         }
         if let Some(candidate) = self.margin_candidate_at(leg.index, low, high, generation) {
             candidates.push(candidate);
@@ -423,6 +443,18 @@ impl BrokerState {
             origin: StrategyCommandOrigin::MarginCall,
             public_id: "Margin Call".to_owned(),
         })
+    }
+}
+
+fn canonical_grid_endpoint(price: f64, tick: f64) -> f64 {
+    if !price.is_finite() || !tick.is_finite() || tick <= 0.0 {
+        return price;
+    }
+    let canonical = super::exit_price_orders::canonical_tick_price((price / tick).round(), tick);
+    if (price - canonical).abs() <= 8.0 * f64::EPSILON * price.abs().max(tick) {
+        canonical
+    } else {
+        price
     }
 }
 

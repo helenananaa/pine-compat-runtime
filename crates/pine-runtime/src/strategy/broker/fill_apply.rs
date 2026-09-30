@@ -16,6 +16,7 @@ impl BrokerState {
         pyramiding_mode: EntryPyramidingMode,
         direction: TradeDirection,
         order_direction: &str,
+        closing_qty: f64,
     ) -> bool {
         let entry_commission = self.entry_commission_for_fill(fill.qty, fill_price);
         let snapshot = PositionSnapshot {
@@ -48,6 +49,7 @@ impl BrokerState {
                     direction,
                     order_direction,
                     equity_on_entry,
+                    closing_qty,
                 );
                 true
             }
@@ -61,6 +63,7 @@ impl BrokerState {
                     direction,
                     order_direction,
                     equity_on_entry,
+                    closing_qty,
                 );
                 true
             }
@@ -78,6 +81,7 @@ impl BrokerState {
         direction: TradeDirection,
         order_direction: &str,
         equity_on_entry: f64,
+        closing_qty: f64,
     ) {
         let min_equity_before_entry = self.min_equity_before_open_trade;
         let max_equity_before_entry = self.max_equity_before_open_trade;
@@ -113,12 +117,15 @@ impl BrokerState {
             }
             (TradeDirection::Short, false) => self.record_open_short_trade(open_trade),
         }
+        // Reversing entries transact both the closed exposure and new entry.
+        // The ledger and entry fee still use only the new trade's quantity.
+        let transaction_qty = closing_qty + fill.qty;
         self.record_order_event(
             fill.id,
             fill.bar_index,
             fill.time,
             order_direction,
-            fill.qty,
+            transaction_qty,
             fill_price,
         );
         self.record_order_fill_alert_from_order_metadata(
@@ -128,7 +135,7 @@ impl BrokerState {
                 bar_index: fill.bar_index,
                 time: fill.time,
                 direction: order_direction.to_owned(),
-                qty: fill.qty,
+                qty: transaction_qty,
                 price: fill_price,
                 entry_id: Some(alert_id),
                 exit_id: None,
@@ -151,6 +158,46 @@ impl BrokerState {
         raw_price: f64,
         metadata: StrategyOrderMetadata,
         apply_slippage: bool,
+    ) -> bool {
+        self.apply_order_netting_with_exit_policy(
+            id,
+            signed_quantity,
+            bar_index,
+            time,
+            raw_price,
+            metadata,
+            apply_slippage,
+            false,
+        )
+    }
+
+    pub(super) fn apply_entry_closing_transaction(&mut self, fill: EntryFill) -> bool {
+        self.apply_order_netting_with_exit_policy(
+            fill.id,
+            -self.position_size,
+            fill.bar_index,
+            fill.time,
+            fill.price,
+            fill.metadata,
+            fill.apply_slippage,
+            true,
+        )
+    }
+
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "fill accounting and pending-entry exit policy"
+    )]
+    fn apply_order_netting_with_exit_policy(
+        &mut self,
+        id: String,
+        signed_quantity: f64,
+        bar_index: usize,
+        time: i64,
+        raw_price: f64,
+        metadata: StrategyOrderMetadata,
+        apply_slippage: bool,
+        preserve_pending_entry_exits: bool,
     ) -> bool {
         if !signed_quantity.is_finite() || signed_quantity == 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -259,7 +306,11 @@ impl BrokerState {
 
         if transition.close_quantity > 0.0 {
             if transition.close_quantity >= snapshot.signed_size.abs() {
-                self.order_book.exits_mut().clear_all();
+                if preserve_pending_entry_exits {
+                    self.order_book.retain_exits_for_pending_entries(Some(&id));
+                } else {
+                    self.order_book.exits_mut().clear_all();
+                }
             }
             let mut closed_entry_commission = 0.0;
             for allocation in &transition.closed_allocations {

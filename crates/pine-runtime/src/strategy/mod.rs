@@ -10,6 +10,16 @@ pub(crate) fn percent_of_equity_order_qty(
     quantity_scale: Option<u32>,
 ) -> f64 {
     let budget = equity * percent / 100.0;
+    // Native percent sizing rounds the cash budget to ten significant decimal
+    // digits before dividing by the execution price. This can move an order
+    // across a contract boundary in either direction.
+    let budget = if budget.is_finite() {
+        format!("{budget:.9e}")
+            .parse::<f64>()
+            .expect("formatted finite budget")
+    } else {
+        budget
+    };
     let qty = match commission {
         Some(StrategyCommission::Percent(rate)) => budget / (price * (1.0 + rate / 100.0)),
         Some(StrategyCommission::CashPerContract(fee)) => budget / (price + fee),

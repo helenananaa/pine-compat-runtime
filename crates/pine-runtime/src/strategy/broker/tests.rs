@@ -40,6 +40,51 @@ fn broker_with_short_entry() -> BrokerState {
 }
 
 #[test]
+fn reversal_receipts_use_transaction_quantity_across_commission_types() {
+    use pine_ir::StrategyCommission;
+    for commission in [
+        None,
+        Some(StrategyCommission::Percent(0.1)),
+        Some(StrategyCommission::CashPerContract(0.0001)),
+        Some(StrategyCommission::CashPerOrder(0.0)),
+        Some(StrategyCommission::CashPerOrder(10.0)),
+    ] {
+        for first_long in [true, false] {
+            let mut broker = BrokerState::new(2_000_000.0);
+            broker.commission = commission;
+            let entered = if first_long {
+                broker.entry_long("E".to_owned(), 0, 10, 1.09, 100_000.0)
+            } else {
+                broker.entry_short("E".to_owned(), 0, 10, 1.09, 100_000.0)
+            };
+            assert!(entered);
+            broker.close_long_qty_percent("E".to_owned(), 1, 20, 1.08, 25.0);
+            assert_eq!(broker.position_size.abs(), 75_000.0);
+            let metadata = order_metadata("reversal", false);
+            let reversed = if first_long {
+                broker.entry_short_with_metadata("R".to_owned(), 2, 30, 1.07, 30_000.0, metadata)
+            } else {
+                broker.entry_long_with_metadata("R".to_owned(), 2, 30, 1.07, 30_000.0, metadata)
+            };
+            assert!(reversed);
+            assert_eq!(
+                broker.position_size,
+                if first_long { -30_000.0 } else { 30_000.0 }
+            );
+            assert_eq!(broker.orders.last().unwrap().qty, 105_000.0);
+            let alert = broker.order_fill_alerts.last().unwrap();
+            assert_eq!(alert.id, "R");
+            assert_eq!(alert.qty, 105_000.0);
+            assert_eq!(alert.message, "reversal alert");
+            assert_eq!(broker.trades.len(), 2);
+            assert_eq!(broker.trades[1].qty.abs(), 75_000.0);
+            broker.assert_ledger_aggregates();
+            assert!(broker.diagnostics.is_empty());
+        }
+    }
+}
+
+#[test]
 fn market_reversal_snaps_split_adjusted_stock_open_to_chart_tick() {
     let mut broker = BrokerState::new(1_000_000.0).with_price_tick(0.01);
     broker.place_pending_market_long_entry("long".to_owned(), 1.0, 0);
@@ -446,7 +491,7 @@ fn stage14e_market_short_entry_reverses_long() {
     assert_eq!(broker.orders.len(), 2);
     assert_eq!(broker.orders[0].direction, "strategy.long");
     assert_eq!(broker.orders[1].direction, "strategy.short");
-    assert_eq!(broker.orders[1].qty, 1.0);
+    assert_eq!(broker.orders[1].qty, 3.0);
     assert_eq!(broker.cash, 100_130.0);
     assert_eq!(broker.equity_value(110.0), 100_020.0);
 }
@@ -466,7 +511,7 @@ fn stage14e_market_long_entry_reverses_short() {
     assert_eq!(broker.trades[0].profit, 20.0);
     assert_eq!(broker.orders.len(), 2);
     assert_eq!(broker.orders[1].direction, "strategy.long");
-    assert_eq!(broker.orders[1].qty, 1.0);
+    assert_eq!(broker.orders[1].qty, 3.0);
     assert_eq!(broker.cash, 99_930.0);
     assert_eq!(broker.equity_value(90.0), 100_020.0);
 }
@@ -531,7 +576,7 @@ fn stage14j_pending_limit_short_entry_reverses_while_net_long() {
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.position_size, -2.0);
     assert_eq!(broker.closed_trade_count(), 1);
-    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(3.0));
 }
 
 #[test]
@@ -608,7 +653,7 @@ fn stage14k_pending_stop_short_entry_reverses_while_net_long() {
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.position_size, -2.0);
     assert_eq!(broker.closed_trade_count(), 1);
-    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(3.0));
 }
 
 #[test]
@@ -711,7 +756,7 @@ fn stage14l_pending_stop_limit_short_entry_reverses_while_net_long() {
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.position_size, -2.0);
     assert_eq!(broker.closed_trade_count(), 1);
-    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(3.0));
 }
 
 #[test]
@@ -4712,7 +4757,7 @@ fn open_trade_fields_read_trade_ledger_entries() {
     assert_eq!(broker.open_trade_entry_bar_index(0), Some(100));
     assert_eq!(broker.open_trade_entry_time(0), Some(1000));
     assert_eq!(broker.open_trade_size(0), Some(1.0));
-    assert_eq!(broker.open_trade_profit(0, 112.0), Some(12.0));
+    assert_eq!(broker.open_trade_profit(0, 112.0), Some(10.0));
     assert_eq!(broker.open_trade_commission(0), Some(2.0));
     assert_eq!(broker.open_trade_max_runup(0), Some(12.0));
     assert_eq!(broker.open_trade_max_drawdown(0), Some(5.0));
@@ -4722,7 +4767,7 @@ fn open_trade_fields_read_trade_ledger_entries() {
     assert_eq!(broker.open_trade_entry_bar_index(1), Some(110));
     assert_eq!(broker.open_trade_entry_time(1), Some(1100));
     assert_eq!(broker.open_trade_size(1), Some(3.0));
-    assert_eq!(broker.open_trade_profit(1, 112.0), Some(6.0));
+    assert_eq!(broker.open_trade_profit(1, 112.0), Some(0.0));
     assert_eq!(broker.open_trade_commission(1), Some(6.0));
     assert_eq!(broker.open_trade_max_runup(1), Some(0.0));
     assert_eq!(broker.open_trade_max_drawdown(1), Some(0.0));

@@ -447,9 +447,9 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             qty
         };
-        if qty == 0.0 {
-            return Ok(PineValue::Void);
-        }
+        // A positive explicit request can truncate to zero opening contracts.
+        // Keep it pending: an opposite position still contributes the closing
+        // transaction when this entry becomes eligible to fill.
         let oca_id = id.clone();
         if is_short {
             if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {

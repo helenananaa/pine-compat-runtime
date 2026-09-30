@@ -69,7 +69,12 @@ impl BrokerState {
             }
             super::risk::EntryDirectionAdmission::Allow => {}
         }
-        if !fill.qty.is_finite() || fill.qty <= 0.0 {
+        if fill.qty == 0.0 {
+            return pyramiding_mode == EntryPyramidingMode::EnforceLimit
+                && self.position_size < 0.0
+                && self.apply_entry_closing_transaction(fill);
+        }
+        if !fill.qty.is_finite() || fill.qty < 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_QTY".to_owned(),
                 message: "`strategy.entry` quantity must be positive".to_owned(),
@@ -83,11 +88,13 @@ impl BrokerState {
             });
             return false;
         }
+        let mut closing_qty = 0.0;
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && self.position_size < 0.0 {
             if matches!(self.commission, Some(pine_ir::StrategyCommission::CashPerOrder(value)) if value > 0.0)
             {
                 return self.entry_reversal_with_order_commission(fill, TradeDirection::Long);
             }
+            closing_qty = self.position_size.abs();
             self.close_all_position_with_slippage_preserving_exit(
                 fill.bar_index,
                 fill.time,
@@ -133,6 +140,7 @@ impl BrokerState {
             pyramiding_mode,
             TradeDirection::Long,
             "strategy.long",
+            closing_qty,
         )
     }
 
@@ -199,7 +207,12 @@ impl BrokerState {
             }
             super::risk::EntryDirectionAdmission::Allow => {}
         }
-        if !fill.qty.is_finite() || fill.qty <= 0.0 {
+        if fill.qty == 0.0 {
+            return pyramiding_mode == EntryPyramidingMode::EnforceLimit
+                && self.position_size > 0.0
+                && self.apply_entry_closing_transaction(fill);
+        }
+        if !fill.qty.is_finite() || fill.qty < 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_QTY".to_owned(),
                 message: "`strategy.entry` quantity must be positive".to_owned(),
@@ -213,11 +226,13 @@ impl BrokerState {
             });
             return false;
         }
+        let mut closing_qty = 0.0;
         if pyramiding_mode == EntryPyramidingMode::EnforceLimit && self.position_size > 0.0 {
             if matches!(self.commission, Some(pine_ir::StrategyCommission::CashPerOrder(value)) if value > 0.0)
             {
                 return self.entry_reversal_with_order_commission(fill, TradeDirection::Short);
             }
+            closing_qty = self.position_size.abs();
             self.close_all_position_with_slippage_preserving_exit(
                 fill.bar_index,
                 fill.time,
@@ -266,6 +281,7 @@ impl BrokerState {
             pyramiding_mode,
             TradeDirection::Short,
             "strategy.short",
+            closing_qty,
         )
     }
 

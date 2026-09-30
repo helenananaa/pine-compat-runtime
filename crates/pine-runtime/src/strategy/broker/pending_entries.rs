@@ -1031,7 +1031,10 @@ impl PendingEntryBook {
         diagnostics: &mut Vec<RuntimeDiagnostic>,
         allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
-        if !placement.quantity.is_finite() || placement.quantity <= 0.0 {
+        if !placement.quantity.is_finite()
+            || placement.quantity < 0.0
+            || (placement.quantity == 0.0 && placement.origin != StrategyCommandOrigin::Entry)
+        {
             diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_QTY".to_owned(),
                 message: "`strategy.entry` quantity must be positive".to_owned(),

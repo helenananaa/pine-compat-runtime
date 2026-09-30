@@ -264,7 +264,7 @@ impl BrokerState {
     }
 }
 
-fn canonical_tick_price(ticks: f64, tick: f64) -> f64 {
+pub(super) fn canonical_tick_price(ticks: f64, tick: f64) -> f64 {
     // Chart OHLC is parsed from decimal prices. Multiplying a tick count by
     // a binary approximation of the tick can land one ULP past an exact high
     // or low, making a touched order look untouched. Reconstruct decimal

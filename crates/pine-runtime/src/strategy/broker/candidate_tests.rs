@@ -24,6 +24,51 @@ fn rising_leg() -> crate::runtime::strategy_path::PathLeg {
 }
 
 #[test]
+fn fixed_fx_exit_touches_roundoff_bar_extreme_but_not_a_subtick_miss() {
+    for (short, extreme, should_fill) in [
+        (false, 1.3494599999999999, true),
+        (false, 1.349459, false),
+        (true, 1.3494600000000003, true),
+        (true, 1.349461, false),
+    ] {
+        let mut broker = BrokerState::new(5_000.0).with_price_tick(0.00001);
+        let leg = if short {
+            assert!(broker.entry_short("E".to_owned(), 0, 0, 1.36, 106.0));
+            HistoricalPath::from_ohlc(1.35, 1.36, extreme, 1.355)
+                .unwrap()
+                .legs()[0]
+        } else {
+            assert!(broker.entry_long("E".to_owned(), 0, 0, 1.34274, 106.0));
+            HistoricalPath::from_ohlc(1.34807, extreme, 1.34542, 1.3475)
+                .unwrap()
+                .legs()[0]
+        };
+        broker.place_exit_limit("X".to_owned(), "E".to_owned(), 1.34946, 0);
+        let outcome = broker.take_next_entry_path_event(super::EntryPathTick {
+            bar_index: 1,
+            time: 1,
+            leg,
+            path_kind: if short {
+                HistoricalPathKind::OpenLowHighClose
+            } else {
+                HistoricalPathKind::OpenHighLowClose
+            },
+            mark: leg.from.price,
+            long_blocked_at_path_start: false,
+            short_blocked_at_path_start: false,
+        });
+        assert_eq!(
+            outcome.is_some_and(|event| event.is_fill()),
+            should_fill,
+            "short={short} extreme={extreme}"
+        );
+        if should_fill {
+            assert_eq!(broker.trades[0].exit_price, 1.34946);
+        }
+    }
+}
+
+#[test]
 fn collecting_candidates_does_not_mutate_broker_state() {
     let mut broker = BrokerState::new(100_000.0);
     broker.place_pending_limit_long_entry("LIM".to_owned(), 1.0, 9.5, 0);

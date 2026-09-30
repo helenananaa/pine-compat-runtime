@@ -786,25 +786,24 @@ impl<'a> HistoricalRuntime<'a> {
         length: usize,
         mode: WindowExtreme,
     ) -> Option<f64> {
-        let legacy_partial_window = self.program.language_version.unwrap_or(1) <= 2;
-        if legacy_partial_window && self.bars + 1 < length {
+        if self.bars + 1 < length {
             return None;
         }
-        let mut extreme = finite_f64(source)?;
+        let mut extreme = finite_f64(source);
         let series_id = series_id?;
         for offset in 1..length {
             let Some(previous) = finite_f64(self.series_store.read(series_id, offset)) else {
-                if legacy_partial_window {
-                    continue;
-                }
-                return None;
+                // Missing source samples do not extend or invalidate the bar
+                // window, including while an upstream average warms up.
+                continue;
             };
-            extreme = match mode {
-                WindowExtreme::Highest => extreme.max(previous),
-                WindowExtreme::Lowest => extreme.min(previous),
-            };
+            extreme = Some(match (mode, extreme) {
+                (_, None) => previous,
+                (WindowExtreme::Highest, Some(current)) => current.max(previous),
+                (WindowExtreme::Lowest, Some(current)) => current.min(previous),
+            });
         }
-        Some(extreme)
+        extreme
     }
 
     fn window_extreme_offset(

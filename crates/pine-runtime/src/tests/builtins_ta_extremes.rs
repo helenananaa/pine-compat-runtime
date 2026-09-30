@@ -275,6 +275,38 @@ plot(held)
 }
 
 #[test]
+fn window_extremes_skip_na_without_extending_the_bar_window() {
+    for version in [3, 4, 5, 6] {
+        let declaration = if version < 5 { "study" } else { "indicator" };
+        let namespace = if version < 5 { "" } else { "ta." };
+        let source = SourceFile::new(
+            "na-extremes.pine",
+            format!(
+                "//@version={version}\n{declaration}(\"na extremes\")\nsource = bar_index == 2 or bar_index == 4 ? close : na\nplot({namespace}highest(source, 3))\nplot({namespace}lowest(source, 3))\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let bars = [1.0, 2.0, 3.0, 4.0, 7.0, 6.0, 5.0, 4.0]
+            .into_iter()
+            .map(bar)
+            .collect::<Vec<_>>();
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+        for plot in &result.plots {
+            assert_eq!(plot.values[0], PineValue::Na);
+            assert_eq!(plot.values[1], PineValue::Na);
+            assert_eq!(plot.values[7], PineValue::Na);
+        }
+        assert_values_close(&result.plots[0].values[2..7], &[3.0, 3.0, 7.0, 7.0, 7.0]);
+        assert_values_close(&result.plots[1].values[2..7], &[3.0, 3.0, 3.0, 7.0, 7.0]);
+    }
+}
+
+#[test]
 fn runs_highestbars_lowestbars_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",

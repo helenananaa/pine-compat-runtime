@@ -1,5 +1,10 @@
 # Hull Suite Strategy: EURUSD four-hour source inputs
 
+September 29 follow-up: [current-core replay and a new native equity probe](HULL_CURRENT_CORE_EQUITY_PROBE_20260929.md)
+confirm that the quantity residual remains, but native full-precision equity and
+net profit agree before the differing entry. The earlier hidden-ledger
+hypothesis below is superseded; the next investigation is isolated order sizing.
+
 Date: 2026-09-27. This local historical comparison extends the [EURUSD four-hour Hull receipt](HULL_FX_FOURHOUR_EXPANSION_20260927.md) with two `input.source` choices. The unchanged public Pine v4 [Hull Suite Strategy by DashTrader](https://www.tradingview.com/script/Q9OQye4C-Hull-Suite-Strategy/) has source SHA-256 `235a18e8a69aa6479d446bebc8c023eb0ce1b4a6e293e706cec079293354037d`.
 
 Both new TradingView runs use `FX:EURUSD`, `240` minutes, `Strategy Direction=all`, `Hull Variation=Thma`, length 89, and the script's default 2016-01-01 to 2030-12-30 backtest window. The source input alone changes from `close` to `(H+L)/2` or `(H+L+C)/3`. The properties dialog retained 1,000,000 USD initial capital, 100% equity order size, pyramiding 1, zero commission/slippage, and on-bar-close execution. Each official chart export has the same 21,338 UTC time/OHLCV rows as the earlier close-source export, checked field by field. The host runs use the exported bars, `FX:EURUSD`, `240`, USD, price grid `1/100000`, and integer quantity precision. Native trade-report times are UTC+8.

@@ -1,5 +1,10 @@
 # SSL Hybrid Strategy HMA 30 on ETHUSD daily history (2026-09-27)
 
+Current-source follow-up: [crypto precision requalification, September 29](SSL_HYBRID_CRYPTO_PRECISION_AND_T3_20260929.md)
+reruns this frozen capture with explicit four-decimal quantities and checks
+quantities, displayed PnL/commission, entry values and explicit exits more
+strictly. The results below remain the original capture's historical results.
+
 The unchanged public Pine v5 [SSL Hybrid Strategy by kevinmck100](https://www.tradingview.com/script/2it69GUx-SSL-Hybrid-Strategy/) was run in Chrome on `COINBASE:ETHUSD`, `1D`. Only `SSL1 / Baseline Length` changed from default 60 to 30; `SSL1 / Baseline Type` remained `HMA`, `Source` remained `close`, and all other input values were retained. The 557-line source is frozen at `.local/ssl-hybrid-length30-ethusd-daily-20260927/ssl-hybrid-original.pine` with SHA-256 `1b90bead338682dcc17b8c1063637e7b8354c91b35d9d2a741ae41b5274c658c`, identical to the [BTCUSD HMA 30 comparison](SSL_HYBRID_LENGTH30_BTCUSD_DAILY_20260927.md).
 
 The ignored evidence directory retains the original TradingView chart CSV (`native-chart.csv`, SHA-256 `d936e2de40fb5f780b4f394b965e73b6ce06e26f0f492f7dd6548167a8096aed`), the List of trades CSV (`native-trades.csv`, SHA-256 `42b3e20c7a5813ce64455596ad69eca7f99cddef8c5b1d49140d89ad7f53943a`), a screenshot, and the visible TradingView Inputs and Properties panels as text. The Properties panel shows USD 5,000 initial capital, 10% of equity default order size, pyramiding 10, 0.04% commission, zero slippage, default four-tick historical bar detail, and one-tick order delay. The chart used the Coinbase ETHUSD feed; the local host contract explicitly supplied symbol, daily timeframe, USD chart currency by default, and a `1/100` price grid.

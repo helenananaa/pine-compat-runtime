@@ -1,5 +1,10 @@
 # SSL Hybrid Strategy baseline-length expansion (2026-09-27)
 
+Current-source follow-up: [crypto precision requalification, September 29](SSL_HYBRID_CRYPTO_PRECISION_AND_T3_20260929.md)
+reruns this frozen capture with explicit six-decimal quantities and checks
+quantities, displayed PnL/commission, entry values and explicit exits more
+strictly. The results below remain the original capture's historical results.
+
 The unchanged public Pine v5 [SSL Hybrid Strategy by kevinmck100](https://www.tradingview.com/script/2it69GUx-SSL-Hybrid-Strategy/) was run in Chrome on `COINBASE:BTCUSD`, `1D`. `SSL1 / Baseline Type` remained `HMA`, `Source` remained `close`, and `SSL1 / Baseline Length` changed from its default 60 to 30. All other displayed script inputs and strategy properties were left at the prior chart settings. The frozen 557-line source is `.local/ssl-hybrid-length30-btcusd-daily-20260927/ssl-hybrid-original.pine`, SHA-256 `1b90bead338682dcc17b8c1063637e7b8354c91b35d9d2a741ae41b5274c658c`. The prior [default](SSL_HYBRID_STRATEGY_V5_NATIVE_PARITY_20260925.md) and [`hl2` source](SSL_HYBRID_SOURCE_BTCUSD_DAILY_20260927.md) comparisons provide separate controls.
 
 The original TradingView chart CSV and List of trades CSV are frozen in ignored `.local/ssl-hybrid-length30-btcusd-daily-20260927/`; their respective SHA-256 values are `5f332c8337d9c2ac603226db8b34d4244f5f07f5e6491d0ec9f25bc016f067ba` and `f8e300e8f826ce205bcaa2ecf53321761c461b24979a57a62eb1f7d4a88ff530`. `length30-chart.png` records the visible HMA 30 setting and Coinbase daily chart. The export has 4,285 rows beginning 2014-12-01 UTC. Its final 2026-09-27 bar was forming and excluded, leaving 4,284 confirmed bars through September 26. `prepare_bars.py` converts this frozen export to host-provided OHLCV. Against the preceding `hl2` export, historical OHLC is identical; seven recent volume values were revised, and this run uses its own chart export. The host-neutral CLI was given the chart price grid `1/100` explicitly.

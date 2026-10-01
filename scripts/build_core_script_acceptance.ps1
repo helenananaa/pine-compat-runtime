@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] [string] $OutputDirectory,
-    [string] $Python = 'python'
+    [string] $Python = 'python',
+    [ValidateSet('debug','release')] [string] $Profile = 'debug',
+    [string] $MatrixPlan = 'docs/CORE_SCRIPT_ACCEPTANCE_PLAN.json'
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
@@ -24,11 +26,14 @@ try {
     Import-Module (Join-Path $vs 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
     Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=amd64'
     Checked powershell.exe @('-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/verify.ps1','-Python',$Python)
-    Checked cargo @('build','--locked','-p','pine-cli')
-    Copy-Item -LiteralPath 'target/debug/pine-compat.exe' -Destination (Join-Path $root 'pine-compat.exe')
+    $optimization = @()
+    if ($Profile -eq 'release') { $optimization = @('--release') }
+    Checked cargo (@('build','--locked','-p','pine-cli') + $optimization)
+    Copy-Item -LiteralPath "target/$Profile/pine-compat.exe" -Destination (Join-Path $root 'pine-compat.exe')
     New-Item -ItemType Directory -Path (Join-Path $root 'wasm'),(Join-Path $root 'wheels'),(Join-Path $root 'rust-probe') | Out-Null
-    Checked cargo @('run','--locked','--quiet','-p','pine-wasm','--example','generate_node_bindings','--target','x86_64-pc-windows-msvc','--',(Join-Path $repo 'target/wasm32-unknown-unknown/debug/pine_wasm.wasm'),(Join-Path $root 'wasm'))
-    Checked maturin @('build','--locked','--manifest-path','crates/pine-python/Cargo.toml','--out',(Join-Path $root 'wheels'))
+    Checked cargo (@('build','--locked','-p','pine-wasm','--target','wasm32-unknown-unknown') + $optimization)
+    Checked cargo @('run','--locked','--quiet','-p','pine-wasm','--example','generate_node_bindings','--target','x86_64-pc-windows-msvc','--',(Join-Path $repo "target/wasm32-unknown-unknown/$Profile/pine_wasm.wasm"),(Join-Path $root 'wasm'))
+    Checked maturin (@('build','--locked','--manifest-path','crates/pine-python/Cargo.toml','--out',(Join-Path $root 'wheels')) + $optimization)
     Checked $Python @('-m','venv','--system-site-packages',(Join-Path $root 'venv'))
     $py = Join-Path $root 'venv/Scripts/python.exe'
     $wheels = @(Get-ChildItem -LiteralPath (Join-Path $root 'wheels') -Filter '*.whl')
@@ -44,13 +49,13 @@ try {
     }
     $manifest = @('[package]','name="core-script-probe"','version="0.0.0"','edition="2024"','[workspace]','[[bin]]','name="core-script-probe"','path="main.rs"','[dependencies]') + $dependencies + @('serde_json="1"')
     $manifest | Set-Content -LiteralPath (Join-Path $probeRoot 'Cargo.toml') -Encoding UTF8
-    Checked cargo @('build','--offline','--manifest-path',(Join-Path $probeRoot 'Cargo.toml'),'--target-dir',(Join-Path $repo 'target'))
-    Copy-Item -LiteralPath 'target/debug/core-script-probe.exe' -Destination (Join-Path $root 'core-script-probe.exe')
+    Checked cargo (@('build','--offline','--manifest-path',(Join-Path $probeRoot 'Cargo.toml'),'--target-dir',(Join-Path $repo 'target')) + $optimization)
+    Copy-Item -LiteralPath "target/$Profile/core-script-probe.exe" -Destination (Join-Path $root 'core-script-probe.exe')
     foreach ($name in $names) {
         if ((Get-FileHash -LiteralPath $name).Hash.ToLowerInvariant() -ne $coreHashes[$name]) { throw "Source changed: $name" }
     }
     if ((git rev-parse HEAD).Trim() -ne $commit) { throw 'HEAD changed during build.' }
-    @{ sourceCommit=$commit; coreFiles=$coreHashes; profile='debug'; platform='Windows x86_64'; gateExitCode=0; installedWheelTests='passed'; probeSourceSha256=(Get-FileHash scripts/core_script_probe.rs).Hash.ToLowerInvariant() } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root 'artifact-build-receipt.json') -Encoding UTF8
-    Checked $Python @('scripts/requalify_core_scripts.py','--artifacts',$root)
+    @{ sourceCommit=$commit; coreFiles=$coreHashes; profile=$Profile; platform='Windows x86_64'; gateExitCode=0; installedWheelTests='passed'; probeSourceSha256=(Get-FileHash scripts/core_script_probe.rs).Hash.ToLowerInvariant() } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root 'artifact-build-receipt.json') -Encoding UTF8
+    Checked $Python @('scripts/requalify_core_scripts.py','--artifacts',$root,'--plan',$MatrixPlan,'--profile',$Profile)
 }
 finally { Pop-Location }

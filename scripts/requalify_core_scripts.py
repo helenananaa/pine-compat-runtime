@@ -131,6 +131,7 @@ def main():
     parser.add_argument("--python-case", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--resume", action="store_true", help="Audit and reuse completed cross-surface rows; rerun native comparators")
+    parser.add_argument("--profile", choices=("debug", "release"), default="debug")
     args = parser.parse_args()
     if args.python_case:
         python_case(args.python_case, args.output)
@@ -149,7 +150,8 @@ def main():
             raise RuntimeError("frozen reference changed: " + path)
     files = [root / "pine-compat.exe", root / "core-script-probe.exe", *sorted((root / "wheels").glob("*.whl")),
              *sorted((root / "wasm").glob("*"))]
-    provenance = {"sourceCommit": head, "profile": "debug", "platform": "Windows x86_64",
+    import platform
+    provenance = {"sourceCommit": head, "profile": args.profile, "platform": platform.system() + " " + platform.machine(),
                   "coreFiles": core_hashes, "artifacts": [{"path": str(p), "sha256": sha(p)} for p in files if p.is_file()]}
     previous = None
     if args.resume:

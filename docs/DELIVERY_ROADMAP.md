@@ -1,7 +1,46 @@
 # Independent runtime delivery
 
-Updated 2026-09-30. This is the single current delivery-status entry point.
+Updated 2026-10-01. This is the single current delivery-status entry point.
 Current classification: **locally qualified prerelease for the named scope**.
+
+## Current-core acceptance index
+
+[Offline intrabar/MTF acceptance](INTRABAR_MTF_ACCEPTANCE_20261001.md)
+records the working-tree candidate based on `5c3ab3b6`, with a request-refresh
+opening-context correction. Its source/patch/artifact hashes and event results
+are indexed separately: six cases, 36 Rust/Python/actual-WASM replays and 4,392
+full event snapshots agree. Both broker controls exercise two executions within
+one host event. The full gate and independent state/hash audit pass.
+Request refresh is a subsequent forming observation,
+preserves the latest chart timestamp and cannot confirm chart history. The
+prior committed-core matrix below retains its original source pin; its native
+comparisons do not automatically qualify this patched candidate. Native live
+Tick, long-session resources and optimized cross-platform delivery remain open.
+
+[Unified core-script acceptance](CORE_SCRIPT_ACCEPTANCE.md) requalifies core
+`5c3ab3b628b626619c34481d23f30dd002e362fe` on newly built Windows debug artifacts.
+Five complete scripts, twelve unchanged script/settings cases, one Pivot
+observer and two fee controls produce 90 primary complete outputs across direct
+Rust, three CLI historical modes, installed Python and actual Node/WASM, with
+zero cross-surface mismatches. Frozen native comparisons are rerun; both SSL
+open-leg checks are repaired with independent read-only observers rather than
+equating leg size to reversal transaction size. Core code is unchanged.
+
+Use the [indexed results](CORE_SCRIPT_ACCEPTANCE_RESULTS.json) and
+[frozen plan](CORE_SCRIPT_ACCEPTANCE_PLAN.json) for current source, parameters,
+data boundaries, modes, output categories and artifact/reference hashes. Hull
+displayed PnL residuals remain open (maximum 0.006690 USD). Native live Tick,
+native drawing geometry, Linux reruns, long-session resource acceptance and
+optimized distribution are not qualified by this matrix. SMC/Double Tap and
+other cases outside it retain historical source-specific evidence.
+
+## Source-specific qualification history
+
+The entries below preserve their original source/artifact pins and remaining
+work at that checkpoint. A later repair or the current index supersedes an older
+failure only for the named requalified fields. Their old "next" and "blocked"
+statements are historical observations, not additional current-status entries.
+
 [Reversal order quantity fix](REVERSAL_ORDER_QUANTITY_FIX_20260930.md)
 repairs order/entry-alert transaction size across commission types. A fresh
 full release gate passes. Six native fee-probe outputs and twelve complete
@@ -639,7 +678,7 @@ CLI/wheel/WASM artifacts built from `b091d2832` pass these suites and prior
 RSI/member/tuple references. Richer reference-bearing collections, request
 graph transfer, resource bounds and complete Pivot Points remain open.
 
-## Latest retained streaming qualification
+## Retained streaming qualification (historical source pins)
 
 [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records 6,715 Rust / 755
 installed Python / 130 tool tests, actual generated WASM streaming, and 18
@@ -687,7 +726,7 @@ the streaming results above supplement them without relabeling older artifacts.
 - Current Linux artifact: `manylinux_2_35_x86_64`. The earlier
   `manylinux_2_17_x86_64` candidate has older semantics and is historical evidence.
 
-## Product scope and current ledger
+## September 10 product scope and delivery ledger (historical)
 
 The first stable scope is standard-candle v5/v6 indicators and strategies,
 explicit host-supplied data/libraries and price grid, same-currency linear
@@ -710,7 +749,7 @@ not 482 failed comparisons. B1 observable behavior has independent evidence;
 private sequencing remains `UNVERIFIED_INTERNAL_ORDER`, not a requirement to
 prove an inaccessible implementation.
 
-## Next delivery work
+## Historical delivery follow-ups
 
 1. Select the final distribution floor and qualify all shipped artifacts from
    one implementation revision, including retained reference workloads relevant

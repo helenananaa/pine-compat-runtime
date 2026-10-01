@@ -56,6 +56,14 @@ like forming updates, then commit current series values to historical buffers.
 
 ## State Partitions
 
+Request-provider forming or confirmed updates can re-execute an existing
+forming chart bar. This re-execution is a subsequent observation:
+`opening_update` is false and the chart's latest explicit execution timestamp
+is retained. A provider confirmation does not confirm the chart bar or advance
+its committed history. The host must send a chart `Confirmed` update separately.
+The regression and offline cross-surface receipt are recorded in
+[intrabar/MTF acceptance](INTRABAR_MTF_ACCEPTANCE_20261001.md).
+
 Realtime execution needs explicit state partitions:
 
 - committed series history

@@ -1,0 +1,906 @@
+{
+  "schemaVersion": 1,
+  "state": "named scope qualified with explicit gaps",
+  "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+  "coreUnmodified": true,
+  "platform": "Windows x86_64",
+  "profile": "debug",
+  "nativeRecaptured": false,
+  "unchangedCompleteScripts": 5,
+  "unchangedCompleteScriptCases": 12,
+  "observerCases": 1,
+  "brokerControlCases": 2,
+  "crossSurfaceCases": 15,
+  "primaryCompleteOutputs": 90,
+  "crossSurfaceMismatches": 0,
+  "runtimeSchemaVersion": 9,
+  "renderMetadataVersion": 1,
+  "wholeOutputTolerance": {
+    "absolute": 1e-09,
+    "relative": 1e-12
+  },
+  "gate": {
+    "status": "passed",
+    "runtimeUnitTests": 1989,
+    "cliUnitTests": 242,
+    "installedPythonTests": 774,
+    "toolTestsBeforeNewComparatorTests": 130,
+    "finalToolTests": 133,
+    "actualNodeWasmSmoke": "passed",
+    "logSha256": "24bd19202e5eae3ac3da5734b09778fc1215b24ed1b576fd96b50dca9cf96242"
+  },
+  "artifacts": [
+    {
+      "path": "E:\\projects\\pine-interpreter\\.local\\core-requalification-20260930\\pine-compat.exe",
+      "sha256": "761eda9d6c57b1177a5be17b24fa5ee9c2a0c0c45fb802a0995e8eb6cb45a528"
+    },
+    {
+      "path": "E:\\projects\\pine-interpreter\\.local\\core-requalification-20260930\\core-script-probe.exe",
+      "sha256": "b833f653bfa780158b4e19823ab338b0443c5dfa0b9e8122268f256acc222c56"
+    },
+    {
+      "path": "E:\\projects\\pine-interpreter\\.local\\core-requalification-20260930\\wheels\\pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl",
+      "sha256": "c15f6d65b8bb16d43afad9470b3a25168cbac97f571d003f075edac859a340f0"
+    },
+    {
+      "path": "E:\\projects\\pine-interpreter\\.local\\core-requalification-20260930\\wasm\\pine_wasm.js",
+      "sha256": "0b161f3108056527da485b5a399650194715925ea83b0d6441f59f537d1c8e50"
+    },
+    {
+      "path": "E:\\projects\\pine-interpreter\\.local\\core-requalification-20260930\\wasm\\pine_wasm_bg.wasm",
+      "sha256": "aed71f89dbf3447f7fb5cd43ae7b0bf3af575dbf9cac4b386af6a60363c5b863"
+    }
+  ],
+  "planSha256": "f541f514672d8f6c7892137f1fb666278ca90eabf656dd4bd7ea74c7f1c31e93",
+  "matrixResultsSha256": "2e8c6028c7e0c12d5e78280c5d2db4ddb3525497c3cc3a2cf79554cf7e66ea58",
+  "referenceChainReceiptSha256": "1f0ed25dc0e6aed3a05441f2525869a7714ab4ecfe9741f7a1d6a72a24355064",
+  "runnerHashes": {
+    "scripts/requalify_core_scripts.py": "8bb8716dd35fc9ca83a24fded681f1944b351d20957c53da6766f81610881fbc",
+    "scripts/core_script_probe.rs": "8a85ea737015f526dcaa2be32847d43687189d10b5786793490b2b46ba2e012d",
+    "scripts/core_script_wasm.cjs": "d06dcd353f1463493bdafd5133d24e4b122c093aae98be2202a38bb4a68f167a",
+    "scripts/compare_core_ssl_open_trades.py": "c33cf07b859edde88008fa89ae658f667ffa73bbce3d88e4287781d17a15bec5",
+    "scripts/build_core_script_acceptance.ps1": "4a89ec339855a425ecf456f1fb749403861bfebeb95ca5f85dee57460f2e95d4"
+  },
+  "cases": [
+    {
+      "id": "hull-thma89-all",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "1": "all",
+        "12": "Thma",
+        "13": 89,
+        "11": "close"
+      },
+      "bars": 21338,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790355600000,
+      "sourceSha256": "235a18e8a69aa6479d446bebc8c023eb0ce1b4a6e293e706cec079293354037d",
+      "payloadSha256": "bed05acf1330696d0e04b2a9f3f19622b77c8f64ff032a5f82d36d517e17cc94",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "numericPlotPositions": 42502,
+        "closedTrades": 584,
+        "qualifiedFields": [
+          "plots",
+          "closed trade time/price/direction/quantity"
+        ],
+        "maxDisplayedPnlDifferenceUsd": 0.006690000009257346
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "Hull monetary display/ledger residual; no rounding-only conclusion"
+      ],
+      "outputSha256": {
+        "run": "6a8b241d63ff0fb31c71e70ae97d47403aaf202bf77f06620b6033e32e0c6221",
+        "run-incremental": "6a8b241d63ff0fb31c71e70ae97d47403aaf202bf77f06620b6033e32e0c6221",
+        "run-realtime-history": "6a8b241d63ff0fb31c71e70ae97d47403aaf202bf77f06620b6033e32e0c6221",
+        "installedPython": "6bb61e30d7a5404c39a0b4906d74185834957e642c0e9c087b737886f6fc28d4",
+        "actualNodeWasm": "0cc7167d86312544b8c18b76011a53ae781c5ee4ca1d393d90a54a23fb1e8ae6",
+        "directRust": "6a8b241d63ff0fb31c71e70ae97d47403aaf202bf77f06620b6033e32e0c6221"
+      }
+    },
+    {
+      "id": "hull-thma89-hl2-all",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "1": "all",
+        "12": "Thma",
+        "13": 89,
+        "11": "hl2"
+      },
+      "bars": 21338,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790355600000,
+      "sourceSha256": "235a18e8a69aa6479d446bebc8c023eb0ce1b4a6e293e706cec079293354037d",
+      "payloadSha256": "a49eb34f89733dee3545dbfaf762c1fb7fb6318e9eef683332ce3c4f6d7865ad",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "numericPlotPositions": 42502,
+        "closedTrades": 578,
+        "qualifiedFields": [
+          "plots",
+          "closed trade time/price/direction/quantity"
+        ],
+        "maxDisplayedPnlDifferenceUsd": 0.0055999999422056135
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "Hull monetary display/ledger residual; no rounding-only conclusion"
+      ],
+      "outputSha256": {
+        "run": "d88e54dd9ae1da5b82b86658ea0476fd3f129a896bf1df1e9da152d4174f26f4",
+        "run-incremental": "d88e54dd9ae1da5b82b86658ea0476fd3f129a896bf1df1e9da152d4174f26f4",
+        "run-realtime-history": "d88e54dd9ae1da5b82b86658ea0476fd3f129a896bf1df1e9da152d4174f26f4",
+        "installedPython": "c096a8cc9cfaeb08f02b3994e507968036213b71d50cd576cc3bc0c3522dd0c1",
+        "actualNodeWasm": "fd33d96dc600a0f88b71e1cbd37fb47129b3c6fca92cbea8d32506353271a5b0",
+        "directRust": "d88e54dd9ae1da5b82b86658ea0476fd3f129a896bf1df1e9da152d4174f26f4"
+      }
+    },
+    {
+      "id": "hull-thma89-hlc3-all",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "1": "all",
+        "12": "Thma",
+        "13": 89,
+        "11": "hlc3"
+      },
+      "bars": 21338,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790355600000,
+      "sourceSha256": "235a18e8a69aa6479d446bebc8c023eb0ce1b4a6e293e706cec079293354037d",
+      "payloadSha256": "87dcb6919dfeba266965979528ccc87f7559846f812f9f1a08459bc250dcce53",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "numericPlotPositions": 42502,
+        "closedTrades": 578,
+        "qualifiedFields": [
+          "plots",
+          "closed trade time/price/direction/quantity"
+        ],
+        "maxDisplayedPnlDifferenceUsd": 0.006140000055893324
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "Hull monetary display/ledger residual; no rounding-only conclusion"
+      ],
+      "outputSha256": {
+        "run": "c86c9b574349439c30565cd43c6f8010fe9d3113ff3688cdeb0f970a6f5536b0",
+        "run-incremental": "c86c9b574349439c30565cd43c6f8010fe9d3113ff3688cdeb0f970a6f5536b0",
+        "run-realtime-history": "c86c9b574349439c30565cd43c6f8010fe9d3113ff3688cdeb0f970a6f5536b0",
+        "installedPython": "700e26e1883149aea50b5e1e22177b01ecce8efa8918cac917540aa813755951",
+        "actualNodeWasm": "b21f5e5311843e6af155a90951095dd6b0c57d28f2a054c627c20ed572a04db5",
+        "directRust": "c86c9b574349439c30565cd43c6f8010fe9d3113ff3688cdeb0f970a6f5536b0"
+      }
+    },
+    {
+      "id": "ut-default",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {},
+      "bars": 21338,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790355600000,
+      "sourceSha256": "f38916e28d6550bd91ce2b26cfd0abe5052e3a1bb517ca16f814f76e908b4523",
+      "payloadSha256": "2f93af7a9b656a200fcea0fa7d4313a2dabbc177c4afe9e18d61258a981330aa",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "signalCells": 42676,
+        "closedTrades": 2459,
+        "openEntries": 1,
+        "maxDisplayedPnlDifferenceUsd": 0.005000000000000107
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity"
+      ],
+      "outputSha256": {
+        "run": "7cdd35e8e7b66309d8857149c9d1a99bcc22afe741006ae7eef303c174f3a5ec",
+        "run-incremental": "7cdd35e8e7b66309d8857149c9d1a99bcc22afe741006ae7eef303c174f3a5ec",
+        "run-realtime-history": "7cdd35e8e7b66309d8857149c9d1a99bcc22afe741006ae7eef303c174f3a5ec",
+        "installedPython": "d06dbae69df1f66d8065c2799950ba77e4717906d0a62102602ed87966b29a4a",
+        "actualNodeWasm": "4856572bf825ad1364f1cfdbae4c4a827d98f317f2b69cf37bd2d6eabbff1489",
+        "directRust": "7cdd35e8e7b66309d8857149c9d1a99bcc22afe741006ae7eef303c174f3a5ec"
+      }
+    },
+    {
+      "id": "ut-sensitivity2",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "1": 2
+      },
+      "bars": 21338,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790355600000,
+      "sourceSha256": "f38916e28d6550bd91ce2b26cfd0abe5052e3a1bb517ca16f814f76e908b4523",
+      "payloadSha256": "2f9a23331ef1c1263809e386c727e441de14779e0f2058c926e7ba34b98fc6ec",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "signalCells": 42676,
+        "closedTrades": 1074,
+        "openEntries": 1,
+        "maxDisplayedPnlDifferenceUsd": 0.005000000000000098
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity"
+      ],
+      "outputSha256": {
+        "run": "08152002a47a02ef0c697d07c1d58daf8093f72280def1284e0c8434171e9f05",
+        "run-incremental": "08152002a47a02ef0c697d07c1d58daf8093f72280def1284e0c8434171e9f05",
+        "run-realtime-history": "08152002a47a02ef0c697d07c1d58daf8093f72280def1284e0c8434171e9f05",
+        "installedPython": "c171c6b006f17849a712cadc9e4335f63036b34dda3e35db1c9d12d206be1e1d",
+        "actualNodeWasm": "d46373f93e5d93cd781cd306085bc3cea3af327471a1f6837c8bdb083fa9ecb1",
+        "directRust": "08152002a47a02ef0c697d07c1d58daf8093f72280def1284e0c8434171e9f05"
+      }
+    },
+    {
+      "id": "ut-atr14",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "2": 14
+      },
+      "bars": 21338,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790355600000,
+      "sourceSha256": "f38916e28d6550bd91ce2b26cfd0abe5052e3a1bb517ca16f814f76e908b4523",
+      "payloadSha256": "a066dc8be415d539e6bde7760709fa1a43425885461651fc5ee42d31512d7732",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "signalCells": 42676,
+        "closedTrades": 2471,
+        "openEntries": 1,
+        "maxDisplayedPnlDifferenceUsd": 0.005000000000000107
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity"
+      ],
+      "outputSha256": {
+        "run": "c736f8b2ad4d2e2b76f5961bb9a60d6efc424f3d46ee32739249e8f513fb9fe3",
+        "run-incremental": "c736f8b2ad4d2e2b76f5961bb9a60d6efc424f3d46ee32739249e8f513fb9fe3",
+        "run-realtime-history": "c736f8b2ad4d2e2b76f5961bb9a60d6efc424f3d46ee32739249e8f513fb9fe3",
+        "installedPython": "3b54b4b5eb29af9fb455a063ecf5e42c0fa2498ee69412ae316f21b6fa7f375f",
+        "actualNodeWasm": "783367768313b3649152ac4f9070f247a6fda30d5e484f0ef552ed89f0ac2de8",
+        "directRust": "c736f8b2ad4d2e2b76f5961bb9a60d6efc424f3d46ee32739249e8f513fb9fe3"
+      }
+    },
+    {
+      "id": "ut-heikin-ashi",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "3": true
+      },
+      "bars": 21338,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790355600000,
+      "sourceSha256": "f38916e28d6550bd91ce2b26cfd0abe5052e3a1bb517ca16f814f76e908b4523",
+      "payloadSha256": "28f20ee2c40c952f875cde933b3a78a08aa427ad655ca37033be2ae8e2a54c29",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "signalCells": 42676,
+        "closedTrades": 1815,
+        "openEntries": 1,
+        "maxDisplayedPnlDifferenceUsd": 0.004999999999999911
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity"
+      ],
+      "outputSha256": {
+        "run": "4470034fb3f91b0c684ca698cdc7eb60ee4f32db2b65db2c230a0a6e2036b937",
+        "run-incremental": "4470034fb3f91b0c684ca698cdc7eb60ee4f32db2b65db2c230a0a6e2036b937",
+        "run-realtime-history": "4470034fb3f91b0c684ca698cdc7eb60ee4f32db2b65db2c230a0a6e2036b937",
+        "installedPython": "1034a9a2caf0378e1602d5acec12dfee0e5d103b8d614b13cc0f0f488fc24ca1",
+        "actualNodeWasm": "142e80be6f6faaa52ff68816965dde206cf124492ab424f66450356c8335436a",
+        "directRust": "4470034fb3f91b0c684ca698cdc7eb60ee4f32db2b65db2c230a0a6e2036b937"
+      }
+    },
+    {
+      "id": "ssl-vama",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:AUDUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "12": "VAMA",
+        "13": 30,
+        "18": "hl2"
+      },
+      "bars": 21344,
+      "firstTimeMs": 1357092000000,
+      "lastTimeMs": 1790629200000,
+      "sourceSha256": "1b90bead338682dcc17b8c1063637e7b8354c91b35d9d2a741ae41b5274c658c",
+      "payloadSha256": "35b85f491a765bf925f743e9dbb67f6bfd17845c39ee19ce8a026d380ca494b7",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "nonblankSeriesPositions": 149248,
+        "closedTrades": 3890,
+        "openLegs": 5,
+        "explicitExitOrders": 2112,
+        "openLegComparison": "independent read-only size/id/entry-price/entry-time observer",
+        "crossDotPositions": 0
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "native reversal transaction order list; trade CSV contains leg sizes"
+      ],
+      "outputSha256": {
+        "run": "8af5fe615262d0601dac98b97661c45c2007f0984138b46798228cbeee284e2b",
+        "run-incremental": "8af5fe615262d0601dac98b97661c45c2007f0984138b46798228cbeee284e2b",
+        "run-realtime-history": "8af5fe615262d0601dac98b97661c45c2007f0984138b46798228cbeee284e2b",
+        "installedPython": "5d8f6a6654e27b70fbebfb172dba7d3f5d29c9584440d80b266b394b878e8cd8",
+        "actualNodeWasm": "e58bbebfcb5017e0f5cae13d39b1a96d1918b1262a58ab0fb7492033dae17715",
+        "directRust": "8af5fe615262d0601dac98b97661c45c2007f0984138b46798228cbeee284e2b"
+      }
+    },
+    {
+      "id": "ssl-kijun",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "COINBASE:BTCUSD",
+        "timeframe": "1W",
+        "minMove": 1,
+        "priceScale": 100,
+        "quantityPrecision": 6,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {
+        "12": "Kijun v2",
+        "13": 30,
+        "18": "hl2",
+        "20": 3,
+        "21": 2,
+        "19": 3,
+        "587": true,
+        "589": 20,
+        "590": 7,
+        "591": 6,
+        "594": 2,
+        "595": true,
+        "597": 55,
+        "598": 7,
+        "599": 4,
+        "603": true,
+        "652": true,
+        "669": true,
+        "671": true
+      },
+      "bars": 615,
+      "firstTimeMs": 1417392000000,
+      "lastTimeMs": 1789948800000,
+      "sourceSha256": "1b90bead338682dcc17b8c1063637e7b8354c91b35d9d2a741ae41b5274c658c",
+      "payloadSha256": "0f397fb860389191d2354ef200f1324a8bd7b6b7354db5e36a2f43fa7e8da061",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "nonblankSeriesPositions": 4700,
+        "closedTrades": 60,
+        "openLegs": 5,
+        "explicitExitOrders": 34,
+        "openLegComparison": "independent read-only size/id/entry-price/entry-time observer",
+        "crossDotPositions": 9
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "native reversal transaction order list; trade CSV contains leg sizes"
+      ],
+      "outputSha256": {
+        "run": "9a034f276dac0586f5610edd4dcf443a66634db6998ab809b78ef4432ad3881b",
+        "run-incremental": "9a034f276dac0586f5610edd4dcf443a66634db6998ab809b78ef4432ad3881b",
+        "run-realtime-history": "9a034f276dac0586f5610edd4dcf443a66634db6998ab809b78ef4432ad3881b",
+        "installedPython": "8ee765559618479c3ca7ec9363b6891a152c44cae74d6db0d44bc65a21a99fb2",
+        "actualNodeWasm": "49edc07d3cac7be6cede50375d07361a489308c60a8f063afccb4a7237675cc9",
+        "directRust": "9a034f276dac0586f5610edd4dcf443a66634db6998ab809b78ef4432ad3881b"
+      }
+    },
+    {
+      "id": "fee-percent",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {},
+      "bars": 8,
+      "firstTimeMs": 1688014800000,
+      "lastTimeMs": 1688115600000,
+      "sourceSha256": "e522933e4bb79bd7e1b1bc646e6bb3e6696135d1d8fa4b85f7140ad674beea6b",
+      "payloadSha256": "d7d6706c3c945d5650fdc28454965bd208ad2da4b231c773d4abb1742e9af1bd",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "plotCells": 232,
+        "closedAllocations": 3,
+        "localReversalTransactionQuantity": 105000,
+        "quantityEvidence": "Native position/allocation plots establish both legs; local order and alert tests check sum. No newly captured native order list or alert."
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "new native live fill-alert capture"
+      ],
+      "outputSha256": {
+        "run": "4158fe1c273bdc8e2da3028bb05f15054d4604df8044a9a96eaa4898e3af716b",
+        "run-incremental": "4158fe1c273bdc8e2da3028bb05f15054d4604df8044a9a96eaa4898e3af716b",
+        "run-realtime-history": "4158fe1c273bdc8e2da3028bb05f15054d4604df8044a9a96eaa4898e3af716b",
+        "installedPython": "2faf0ab71f93d9b4e3e2314a89803562a39e7f4789cda17b29b9afd74943348a",
+        "actualNodeWasm": "a28183d693b50d28dbb1290501607a0d726f433664b4f6b050cae0d22a4a1c14",
+        "directRust": "4158fe1c273bdc8e2da3028bb05f15054d4604df8044a9a96eaa4898e3af716b"
+      }
+    },
+    {
+      "id": "fee-contract",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "FX:EURUSD",
+        "timeframe": "240",
+        "minMove": 1,
+        "priceScale": 100000,
+        "quantityPrecision": 0,
+        "pointValue": 1.0
+      },
+      "inputOverrides": {},
+      "bars": 8,
+      "firstTimeMs": 1688014800000,
+      "lastTimeMs": 1688115600000,
+      "sourceSha256": "a7b33ca7baf81c620669deb45e1fc6cb6c4c97a24b4020d8ef9575b04a1961c2",
+      "payloadSha256": "003cf4a9a6114302ac385d8be3f71e31040bc220aa0d0f6cd2b0944d808d704c",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "plotCells": 232,
+        "closedAllocations": 3,
+        "localReversalTransactionQuantity": 105000,
+        "quantityEvidence": "Native position/allocation plots establish both legs; local order and alert tests check sum. No newly captured native order list or alert."
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "new native live fill-alert capture"
+      ],
+      "outputSha256": {
+        "run": "eeb00609104e19756d90396fcd5fd914c869d9097ec3a430d52c7838f5fa6d0e",
+        "run-incremental": "eeb00609104e19756d90396fcd5fd914c869d9097ec3a430d52c7838f5fa6d0e",
+        "run-realtime-history": "eeb00609104e19756d90396fcd5fd914c869d9097ec3a430d52c7838f5fa6d0e",
+        "installedPython": "31c174934682665f6cf06abb71ef2ff9d2b386e37929c1134cf1129d4f2e56e0",
+        "actualNodeWasm": "d06a29d9f20048f4d6066f1ec3154548bfdb1bccbebb5593a0d6e9a9417833f3",
+        "directRust": "eeb00609104e19756d90396fcd5fd914c869d9097ec3a430d52c7838f5fa6d0e"
+      }
+    },
+    {
+      "id": "rsi-default",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "BINANCE:BTCUSDT",
+        "timeframe": "1M",
+        "minMove": 1,
+        "priceScale": 100
+      },
+      "inputOverrides": {},
+      "bars": 109,
+      "firstTimeMs": 1501545600000,
+      "lastTimeMs": 1785542400000,
+      "sourceSha256": "85c6f9f6a7284ce8c943d15dccb3a7018ee936f55487c39e773144e9b02f2589",
+      "payloadSha256": "e6a2dc71f823788b67c2a69de58301cb6c68f9ec0204683568c614469b901396",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "referenceValues": 218,
+        "mismatches": 0
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity"
+      ],
+      "outputSha256": {
+        "run": "d2c2cf29586a62d24b91975e506421f93dd12daf93f187fa77f2d53b0097f708",
+        "run-incremental": "d2c2cf29586a62d24b91975e506421f93dd12daf93f187fa77f2d53b0097f708",
+        "run-realtime-history": "d2c2cf29586a62d24b91975e506421f93dd12daf93f187fa77f2d53b0097f708",
+        "installedPython": "926fdd85c46f76658b9831c0385309b6f5444bd9c1e5868919aa19cee51a94c2",
+        "actualNodeWasm": "c2aaccc4d6bc15fa23803d664215b28c5bc1ab7da8a6916a072435b1026931f8",
+        "directRust": "d2c2cf29586a62d24b91975e506421f93dd12daf93f187fa77f2d53b0097f708"
+      }
+    },
+    {
+      "id": "rsi-alternate",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "BINANCE:BTCUSDT",
+        "timeframe": "1M",
+        "minMove": 1,
+        "priceScale": 100
+      },
+      "inputOverrides": {
+        "23": "SMA + Bollinger Bands",
+        "3": true
+      },
+      "bars": 109,
+      "firstTimeMs": 1501545600000,
+      "lastTimeMs": 1785542400000,
+      "sourceSha256": "85c6f9f6a7284ce8c943d15dccb3a7018ee936f55487c39e773144e9b02f2589",
+      "payloadSha256": "4a363ae8d413d8b8e7e0f3fc448b2d8f887bbefa3a65ca29fc6470bdd7adde68",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "passed-for-listed-fields",
+        "referenceValues": 852,
+        "mismatches": 0
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity"
+      ],
+      "outputSha256": {
+        "run": "547bcd89681f298122209615eae51afc6f4d9446acba4df44370826efc2a8aeb",
+        "run-incremental": "547bcd89681f298122209615eae51afc6f4d9446acba4df44370826efc2a8aeb",
+        "run-realtime-history": "547bcd89681f298122209615eae51afc6f4d9446acba4df44370826efc2a8aeb",
+        "installedPython": "40947ee4e4a806f52add1dccd942d28001c4571449d6f28faf351dfe9b297eba",
+        "actualNodeWasm": "585cad5c094aaa32c7c40952d04eb5ac0008849619dcd9f699c41ccf58ea6266",
+        "directRust": "547bcd89681f298122209615eae51afc6f4d9446acba4df44370826efc2a8aeb"
+      }
+    },
+    {
+      "id": "pivot-original",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "BINANCE:BTCUSDT",
+        "timeframe": "1M",
+        "minMove": 1,
+        "priceScale": 100
+      },
+      "inputOverrides": {},
+      "bars": 109,
+      "firstTimeMs": 1501545600000,
+      "lastTimeMs": 1785542400000,
+      "sourceSha256": "4a1355ba774eafbf3548e27118e84814e8128ada216a762207f5751757567dc1",
+      "payloadSha256": "9c7f06ecbc69e0f42689d0192657bcacb468cb01a3904d247e93639bd6a0126a",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "paired-original-and-observer-passed",
+        "referenceValues": 0,
+        "originalEvidence": "Read-only observed source matches 3161 native positions; removing observer plots equals original complete output",
+        "labels": 99,
+        "lines": 99
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "native live multi-timeframe provider feed",
+        "all Pivot options",
+        "native line/label geometry"
+      ],
+      "outputSha256": {
+        "run": "78626d5da78c3141c97a17fedad4d726446514d1032ef4bbc2f204342e64633f",
+        "run-incremental": "78626d5da78c3141c97a17fedad4d726446514d1032ef4bbc2f204342e64633f",
+        "run-realtime-history": "78626d5da78c3141c97a17fedad4d726446514d1032ef4bbc2f204342e64633f",
+        "installedPython": "68fdee0cfc5f0efef549c0fc50737d0a15cb0bfb4ed21aee5ad49890bc3c8600",
+        "actualNodeWasm": "b5fa7e7b936dc04addbe177aa24ea8c004332d0dd89f3bc0ca8e7cf5f55d686e",
+        "directRust": "78626d5da78c3141c97a17fedad4d726446514d1032ef4bbc2f204342e64633f"
+      }
+    },
+    {
+      "id": "pivot-observed",
+      "coreCommit": "5c3ab3b628b626619c34481d23f30dd002e362fe",
+      "chart": {
+        "symbol": "BINANCE:BTCUSDT",
+        "timeframe": "1M",
+        "minMove": 1,
+        "priceScale": 100
+      },
+      "inputOverrides": {},
+      "bars": 109,
+      "firstTimeMs": 1501545600000,
+      "lastTimeMs": 1785542400000,
+      "sourceSha256": "f9420c499f5f081e724b6443411df579adfb01c9753b564623fd86a91925e300",
+      "payloadSha256": "7c2bc3847c3a63eb8493e2eb624288d607dca53842ec328921cf6b7645fde48e",
+      "schemaVersion": 9,
+      "renderMetadataVersion": 1,
+      "executionModes": [
+        "batch",
+        "incremental",
+        "realtime-history"
+      ],
+      "crossSurfaceStatus": "passed",
+      "surfaces": [
+        "direct Rust API",
+        "CLI",
+        "installed Python wheel",
+        "actual Node/WASM"
+      ],
+      "native": {
+        "status": "paired-original-and-observer-passed",
+        "referenceValues": 3161,
+        "originalEvidence": "Read-only observed source matches 3161 native positions; removing observer plots equals original complete output",
+        "labels": 99,
+        "lines": 99
+      },
+      "unverifiedOrUnresolved": [
+        "native drawing/visual parity",
+        "general live Tick parity",
+        "native live multi-timeframe provider feed",
+        "all Pivot options",
+        "native line/label geometry"
+      ],
+      "outputSha256": {
+        "run": "a23176021bf4f88ede3edcb542860b65e3a9b32290075802b921ef456fbeb269",
+        "run-incremental": "a23176021bf4f88ede3edcb542860b65e3a9b32290075802b921ef456fbeb269",
+        "run-realtime-history": "a23176021bf4f88ede3edcb542860b65e3a9b32290075802b921ef456fbeb269",
+        "installedPython": "82f8e0d1e170dcc75f04438978fa1134b47afd791ef1881a5025a4866cb5bb07",
+        "actualNodeWasm": "a4d8e62d44edc9fe3d23e6bbbd3be1b8f271b6f950f5ca793c62386a1842d7ed",
+        "directRust": "a23176021bf4f88ede3edcb542860b65e3a9b32290075802b921ef456fbeb269"
+      }
+    }
+  ],
+  "remaining": [
+    "Hull displayed monetary residual",
+    "current Linux execution/artifact requalification",
+    "optimized distribution acceptance",
+    "general native live Tick/multi-timeframe parity",
+    "long-session resource acceptance",
+    "broader script/options/native visuals"
+  ],
+  "historicalOnlyOutsideThisMatrix": [
+    "SMC",
+    "Double Tap",
+    "other older script/parameter/platform receipts"
+  ]
+}

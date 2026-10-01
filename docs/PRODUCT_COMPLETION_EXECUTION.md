@@ -16,12 +16,28 @@ real-script adoption. Missing references remain unverified, not passed.
 
 | Work | Acceptance | State |
 | --- | --- | --- |
-| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | RSI configurations accepted at the retained checkpoint; original Pivot now compiles/runs and its v6 Traditional/Auto snapshot matches 3161 native values; broader options, visual output and new artifact qualification remain open |
-| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | Request arrays/dependencies/local state and merge policies implemented with bounded controls; original Pivot batch/incremental/realtime-history agree; full-script forming-feed qualification remains open |
+| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | Current core 5c3ab3b6: five complete scripts, twelve unchanged settings, one Pivot observer and two broker controls requalified on Windows debug; 90 primary complete outputs agree across Rust/CLI/installed Python/actual WASM. See CORE_SCRIPT_ACCEPTANCE.md. Hull monetary residual, broader options and native visuals remain open |
+| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | 2026-10-01 working-tree request-refresh patch: six offline SSL/state/broker cases, 36 direct Rust/installed Python/actual WASM replays, 4,392 event snapshots agree; independent state/hash audit and full gate pass. Native live Tick/multi-timeframe feed qualification remains open. Prior committed-core historical matrix retains its source pin |
 | Host capabilities | Describe supported input/account profiles and readiness checks precisely; implement deterministic capabilities demanded by frozen scripts | Modern merge-policy discovery defect repaired in schema 2; full qualification and full-script readiness checks in progress |
 | Resources | Freeze finite workload, latency and memory budgets before acceptance; qualify Windows/Linux and multiple independent sessions; report full snapshots separately | PRODUCT_STANDARD_CANDLE_RESOURCE_PLAN.json frozen before measurements; acceptance not evaluated |
-| Unified local distribution | Build selected Rust/CLI/Python/WASM outputs from one committed implementation; run installed-wheel, actual-WASM and retained independent reference gates | Windows/Linux debug artifacts at 4f32668a7 pass retained reference gates; current discovery repair and optimized resource/distribution acceptance remain open |
-| Consumption and closeout | Match version, source identity, hashes, installation examples, schema migration and evidence; retain explicit unsupported profiles | Pending |
+| Unified local distribution | Build selected Rust/CLI/Python/WASM outputs from one committed implementation; run installed-wheel, actual-WASM and retained independent reference gates | Current 5c3ab3b6 Windows debug CLI/wheel/WASM/direct-Rust probe have artifact hashes and pass the named matrix plus a fresh full gate. Linux 4f32668a7 receipts remain historical; current Linux, optimized distribution and resource acceptance remain open |
+| Consumption and closeout | Match version, source identity, hashes, installation examples, schema migration and evidence; retain explicit unsupported profiles | Current local matrix binds source, artifacts, reference/output hashes and schemas 9/1; optimized cross-platform installation/distribution closeout remains pending |
+
+The latest working-tree candidate and offline intrabar/MTF scope are indexed
+separately in [INTRABAR_MTF_ACCEPTANCE_20261001.md](INTRABAR_MTF_ACCEPTANCE_20261001.md).
+It fixes provider refresh after an explicit chart opening; native live evidence
+remains open. The committed-core acceptance is indexed by [CORE_SCRIPT_ACCEPTANCE_RESULTS.json](CORE_SCRIPT_ACCEPTANCE_RESULTS.json)
+and [CORE_SCRIPT_ACCEPTANCE_PLAN.json](CORE_SCRIPT_ACCEPTANCE_PLAN.json). Unsupported
+account profiles remain explicit. The 2026-09-30 matrix changed tooling and
+documentation only. The 2026-10-01 candidate additionally changes request-refresh
+semantics and adds a regression. Neither slice recaptured native data or
+published artifacts.
+
+## Historical execution notes (source-specific)
+
+The notes below preserve their checkpoint results and next actions. Older RSI,
+Pivot, SMC and Double Tap blockers do not override later named qualification or
+the current matrix; cases outside the current matrix are not automatically rerun.
 
 2026-09-23: [complete-script native reference expansion](SCRIPT_COVERAGE_20260923.md)
 admits three additional unchanged built-in v6 indicators on the named monthly

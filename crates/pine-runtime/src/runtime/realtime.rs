@@ -223,9 +223,12 @@ impl<'a> RealtimeRuntime<'a> {
         if self.forming.is_none() {
             return Ok(None);
         }
-        let Some((bar, context)) = self.live_chart else {
+        let Some((bar, mut context)) = self.live_chart else {
             return Ok(None);
         };
+        // Provider updates re-execute the existing forming bar; they are not a
+        // second opening observation. Keep its latest execution timestamp.
+        context.opening_update = Some(false);
         self.update_inner(BarUpdate::forming(bar), context)?;
         self.revision += 1;
         self.apply_output_retention();

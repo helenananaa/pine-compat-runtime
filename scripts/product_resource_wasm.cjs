@@ -11,7 +11,8 @@ function timed(key, fn) {
   (metrics[key] ??= []).push(performance.now()-start); return value;
 }
 function shift(b, i) {
-  return {...b,open:b.open+i*.125,high:b.high+i*.125,low:b.low+i*.125,close:b.close+i*.125};
+  const d=i*.125*(Math.floor(b.time/60000)%17-8);
+  return {...b,open:b.open+d,high:b.high+d,low:b.low+d,close:b.close+d};
 }
 const columns = ['time','open','high','low','close','volume'];
 const csv = bars => columns.join(',')+'\n'+bars.map(b=>columns.map(k=>b[k]).join(',')).join('\n')+'\n';
@@ -45,5 +46,6 @@ for(let i=0;i<count;i++) {
   assert.equal(sessions[i].confirmedBars,p.bars.length+p.tail.length);
   results.push(result);
 }
+if(count>1)for(let i=1;i<count;i++)assert.notDeepEqual(results[0],results[i]);
 fs.writeFileSync(process.argv[5],JSON.stringify({metrics,results,confirmedBars:p.bars.length+p.tail.length,
   historicalAppend:'not exposed by this binding; separately checked by native probe'}));

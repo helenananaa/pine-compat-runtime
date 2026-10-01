@@ -1,9 +1,47 @@
 # Independent runtime delivery
 
 Updated 2026-10-01. This is the single current delivery-status entry point.
-Current classification: **locally qualified prerelease for the named scope**.
+Current classification: **compatibility/install-qualified local prerelease; resource acceptance notPassed**.
 
 ## Current-core acceptance index
+
+[Optimized delivery acceptance](OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md) and its
+[machine-readable index](OPTIMIZED_DELIVERY_ACCEPTANCE_RESULTS.json) qualify
+runtime `e73206f0c839e42811ba1375832c6a514f49ae2a` on Windows x86_64 and Ubuntu
+22.04 x86_64 under WSL. Fresh optimized CLI, direct Rust consumers, installed
+Python wheels and actual Node/WASM rerun fifteen frozen script/settings/control
+cases. All 180 complete outputs agree across both platforms; retained native
+comparators pass their named assertions. Both canonical gates and both retained
+optimized wheels' 774 Python tests pass. No native data is recaptured.
+
+The 216 frozen resource trials are closed: 212 complete and four Windows
+Rust/WASM long-history four-session Pivot trials time out. Completed outputs
+agree across surfaces and platforms; nine session-zero isolation controls pass.
+Resource qualification is **notPassed**: long-history process-memory budgets,
+selected Pivot p95/growth budgets and the same-context historical Pivot
+append/batch control remain open. Peaks include input/report/verification copies
+and cannot be attributed entirely to core state. Interrupted or invalid observer
+trials and tool repairs remain preserved. Linux uses a buffered probe reader;
+Windows native receipts retain the original probe and its input-loading cost.
+
+A local optimized prerelease archive binds the source, 120 payload hashes,
+schemas 9/4/1/1, frozen references and resource evidence. Fresh environments
+installed the extracted wheels without network access; packaged CLI/Python/WASM
+examples agree with an independent SMA oracle on both platforms. This is local
+consumption qualification, not resource release acceptance or publication.
+
+Hull displayed-PnL residuals remain open (maximum 0.006690 USD). Native live Tick,
+native visual geometry, arbitrary Pine compatibility, indefinite resource bounds
+and Linux environments outside the tested WSL profile remain unqualified. The
+frozen plan retains its inherited debug/platform label; current execution scope
+is defined by the new index and build provenance, without rewriting old pins.
+
+## Source-specific qualification history
+
+The checkpoint text below retains its original "current" and "open" wording.
+Only the current-core acceptance index above defines today's status.
+
+### Prior debug and offline intrabar checkpoints
 
 [Offline intrabar/MTF acceptance](INTRABAR_MTF_ACCEPTANCE_20261001.md)
 records the working-tree candidate based on `5c3ab3b6`, with a request-refresh
@@ -33,8 +71,6 @@ displayed PnL residuals remain open (maximum 0.006690 USD). Native live Tick,
 native drawing geometry, Linux reruns, long-session resource acceptance and
 optimized distribution are not qualified by this matrix. SMC/Double Tap and
 other cases outside it retain historical source-specific evidence.
-
-## Source-specific qualification history
 
 The entries below preserve their original source/artifact pins and remaining
 work at that checkpoint. A later repair or the current index supersedes an older

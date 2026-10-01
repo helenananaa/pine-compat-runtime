@@ -85,7 +85,8 @@ def prepare(root):
 
 
 def shifted(bar, offset):
-    return {k:v+offset if k in ('open','high','low','close') else v for k,v in bar.items()}
+    delta=offset*((bar['time']//60000)%17-8)
+    return {k:v+delta if k in ('open','high','low','close') else v for k,v in bar.items()}
 
 
 def shifted_request(request, offset):
@@ -104,6 +105,7 @@ def python_worker(payload, count, output):
     sessions=[];replicas=[]
     for i in range(count):
         request=shifted_request(p['request'],i*0.125);chart=request.pop('$chart')
+        request['$chart']={k:v for k,v in chart.items() if k not in ('symbol','timeframe')}
         session=program.realtime_session(request_bars=request,input_overrides={int(k):v for k,v in p['overrides'].items()},chart_symbol=chart['symbol'],chart_timeframe=chart['timeframe'])
         timed(metrics,'seed',lambda:session.seed([shifted(b,i*0.125) for b in p['bars']]))
         sessions.append(session);replicas.append(session.replica())
@@ -125,39 +127,41 @@ def python_worker(payload, count, output):
         timed(metrics,'serialization',lambda:json.dumps(result,allow_nan=False))
         assert session.confirmed_bars==len(p['bars'])+len(p['tail'])
         results.append(result)
+    if count>1:assert all(differences(results[0],r) for r in results[1:]),'independent streams must produce distinct outputs'
     write(output,dict(metrics=metrics,results=results,confirmedBars=len(p['bars'])+len(p['tail']),
                       historicalAppend='not exposed by this binding; separately checked by native probe'))
 
 
 def sample_peak(process, box, stop):
     if sys.platform=='win32':
-        import ctypes
-        from ctypes import wintypes
-        class Counters(ctypes.Structure):
-            _fields_=[('cb',wintypes.DWORD),('PageFaultCount',wintypes.DWORD)]+[(n,ctypes.c_size_t) for n in ('PeakWorkingSetSize','WorkingSetSize','QuotaPeakPagedPoolUsage','QuotaPagedPoolUsage','QuotaPeakNonPagedPoolUsage','QuotaNonPagedPoolUsage','PagefileUsage','PeakPagefileUsage')]
-        kernel=ctypes.WinDLL('kernel32',use_last_error=True);kernel.OpenProcess.restype=wintypes.HANDLE
-        kernel.OpenProcess.argtypes=[wintypes.DWORD,wintypes.BOOL,wintypes.DWORD]
-        kernel.CloseHandle.argtypes=[wintypes.HANDLE]
-        api=ctypes.WinDLL('psapi');api.GetProcessMemoryInfo.argtypes=[wintypes.HANDLE,ctypes.POINTER(Counters),wintypes.DWORD]
-        handle=kernel.OpenProcess(0x410,False,process.pid)
-        try:
-            while not stop.is_set():
-                c=Counters();c.cb=ctypes.sizeof(c)
-                if handle and api.GetProcessMemoryInfo(handle,ctypes.byref(c),c.cb):box[0]=max(box[0],c.PeakWorkingSetSize)
-                stop.wait(.02)
-        finally:
-            if handle:kernel.CloseHandle(handle)
+        import psutil
+        # The Windows venv launcher spawns the actual interpreter. Track every
+        # descendant and retain each OS high-water mark after process exit.
+        peaks={};tracked={process.pid:psutil.Process(process.pid)}
+        while not stop.is_set():
+            for pid, item in list(tracked.items()):
+                try:
+                    for descendant in item.children(recursive=True):
+                        tracked.setdefault(descendant.pid,descendant)
+                    peaks[pid]=max(peaks.get(pid,0),item.memory_info().peak_wset)
+                except (psutil.NoSuchProcess,psutil.AccessDenied):pass
+            box[0]=max(box[0],sum(peaks.values()))
+            stop.wait(.02)
     else:
         while not stop.is_set():
             try:
                 for line in Path(f'/proc/{process.pid}/status').read_text().splitlines():
                     if line.startswith('VmHWM:'):box[0]=max(box[0],int(line.split()[1])*1024)
-            except FileNotFoundError:pass
+            except (FileNotFoundError,ProcessLookupError):pass
             stop.wait(.02)
 
 
 def measure(root, artifacts, surface, resume=False):
     plan=read(root/'plan.json');outdir=root/platform.system()/surface;outdir.mkdir(parents=True,exist_ok=True)
+    provenance=read(artifacts/'build-provenance.json')
+    assert provenance['sourceCommit']==plan['coreCommit'] and provenance['profile']=='release'
+    assert all(sha(REPO/p)==h for p,h in provenance['coreFiles'].items()),'core differs from built artifact source'
+    initial_tool_hashes={p:sha(REPO/p) for p in ['scripts/product_resource_acceptance.py','scripts/product_resource_wasm.cjs','scripts/product_resource_probe.rs']}
     receipt=outdir/'results.json'
     report=read(receipt) if resume and receipt.exists() else dict(platform=platform.platform(),processor=platform.processor(),surface=surface,coreCommit=plan['coreCommit'],planSha256=sha(root/'plan.json'),rows=[],failures=[])
     assert report['planSha256']==sha(root/'plan.json')
@@ -181,6 +185,13 @@ def measure(root, artifacts, surface, resume=False):
                     sampler=threading.Thread(target=sample_peak,args=(child,box,stop));sampler.start()
                     try:code=child.wait(timeout=plan['processTimeoutSeconds'])
                     except subprocess.TimeoutExpired:
+                        if os.name=='nt':
+                            import psutil
+                            try:
+                                for descendant in psutil.Process(child.pid).children(recursive=True):
+                                    try:descendant.kill()
+                                    except psutil.NoSuchProcess:pass
+                            except psutil.NoSuchProcess:pass
                         child.kill();child.wait();raise RuntimeError('frozen process timeout exceeded')
                     finally:stop.set();sampler.join()
                 assert code==0,f'worker exit {code}; see {progress.name}'
@@ -200,7 +211,7 @@ def measure(root, artifacts, surface, resume=False):
                 if box[0]==0 or box[0]>memory:issues.append('peak RSS unavailable or exceeds budget')
                 if repeat==1:
                     prior=read(outdir/(case['id']+'-0.json'));assert not differences(prior['results'],value['results']),'repeat output differs'
-                row.update(status='measured',metrics=stats,peakRssBytes=box[0],budgetFailures=issues,outputSha256=sha(output))
+                row.update(status='measured',metrics=stats,peakRssBytes=box[0],budgetFailures=issues,outputSha256=sha(output),historicalAppendMatches=value.get('historicalAppendMatches'))
                 if issues:report['failures'].append(dict(id=tag,errors=issues))
             except Exception as exc:
                 row['error']=str(exc);report['failures'].append(dict(id=tag,errors=[str(exc)]))
@@ -208,6 +219,10 @@ def measure(root, artifacts, surface, resume=False):
             row['progressSha256']=sha(progress)
             write(receipt,report);print(surface,tag,row['status'],row.get('budgetFailures',row.get('error')),flush=True)
     report['completed']=True
+    assert initial_tool_hashes=={p:sha(REPO/p) for p in initial_tool_hashes},'benchmark tools changed during measurement'
+    assert all(sha(REPO/p)==h for p,h in provenance['coreFiles'].items()),'core changed during measurement'
+    report['buildProvenanceSha256']=sha(artifacts/'build-provenance.json')
+    report['host']={'uname':list(platform.uname()),'python':sys.version,'memoryCounters':'windowsSumOfProcessTreePeakWorkingSetUpperBound' if os.name=='nt' else 'linuxVmHWM','samplingIntervalMs':20,'note':'process-wide peaks include input conversion and verification; not per-runtime retained allocation'}
     growth=[]
     for name in {c['script'] for c in plan['cases']}:
         for sessions in (1,4):

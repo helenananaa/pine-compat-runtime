@@ -50,11 +50,40 @@ console.log(JSON.stringify(result));
         platforms.append(dict(name=label,files={p.relative_to(dest).as_posix():sha(p) for p in sorted(dest.rglob('*')) if p.is_file()}))
     assert len(commits)==1
     commit=commits.pop()
+    evidence=output/'evidence';evidence.mkdir()
+    shutil.copyfile(root/'plan.json',evidence/'compatibility-plan.json')
+    cross=read(root/'cross-platform-audit.json');assert cross['status']=='passed' and cross['outputsCompared']==180
+    shutil.copyfile(root/'cross-platform-audit.json',evidence/'cross-platform-audit.json')
+    write(evidence/'qualification-scope.json',dict(coreCommit=commit,profile='release',platforms=['Windows x86_64','Ubuntu 22.04 x86_64 under WSL'],compatibilityCases=15,completeOutputs=180,planSha256=sha(root/'plan.json'),inheritedPlanScope=read(root/'plan.json')['platformScope'],scopeNote='The frozen workload plan retains its prior debug/platform status label. This current qualification scope and built-artifact provenance supersede that inherited label; original receipts remain unchanged.'))
+    for label in ('windows','linux'):
+        shutil.copyfile(root/label/'matrix-results.json',evidence/f'compatibility-{label}.json')
+        shutil.copyfile(root/label/'build-provenance.json',evidence/f'build-provenance-{label}.json')
+    references=output/'references'
+    for relative,digest in read(root/'plan.json')['frozenFiles'].items():
+        source=REPO/relative;assert sha(source)==digest
+        dest=references/relative;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,dest)
+    resource=REPO/'.local/resource-20261001-final'
+    assert (resource/'summary.json').exists(),'Complete and audit resource measurements before packaging'
+    resource_result=read(resource/'summary.json');assert resource_result['coreCommit']==commit
+    shutil.copyfile(resource/'summary.json',evidence/'resources.json')
+    shutil.copyfile(resource/'plan.json',evidence/'resource-plan.json')
+    for name in ['sampler-repair.json','worker-frozen.py','worker-repaired-frozen.py','generator-frozen.py','execution-interruption.json','probe-buffering-repair.json','probe-unbuffered-frozen.rs','probe-buffered-frozen.rs']:
+        shutil.copyfile(resource/name,evidence/name)
+    tools=output/'resource-tools';tools.mkdir()
+    for name in ['product_resource_acceptance.py','product_resource_wasm.cjs','product_resource_probe.rs','requalify_core_scripts.py']:
+        source=resource/'worker-repaired-frozen.py' if name=='product_resource_acceptance.py' else REPO/'scripts'/name
+        shutil.copyfile(source,tools/name)
+    verification=output/'verification-tools';verification.mkdir()
+    for name in ['verify_local_delivery.py','requalify_core_scripts.py']:
+        shutil.copyfile(REPO/'scripts'/name,verification/name)
     subprocess.run(['git','archive','--format=tar','--output',str(output/'source.tar'),commit],cwd=REPO,check=True)
     (output/'README.md').write_text(f'''# Local optimized prerelease
 
 Source commit: `{commit}`. Runtime result schema 9, changes schema 4,
 realtime session schema 1, render metadata version 1.
+Compatibility qualification: passed for the frozen fifteen-case corpus on both
+platforms. Resource qualification: **{resource_result['status']}**; see
+`evidence/resources.json` for measured failures and missing controls.
 
 Choose the matching platform directory. Python requires CPython 3.10+;
 the wheel filename declares the exact ABI/platform tag. Install into a fresh
@@ -69,9 +98,20 @@ Linux CLI: `chmod +x bin/pine-compat` then
 scripts. Build the native CLI with `cargo build --release --locked -p pine-cli`.
 Embedding code uses pine-syntax/pine-sema/pine-runtime without a concrete host.
 Cargo dependencies must be available to the build environment.
+Documents inside the source archive retain that commit's historical checkpoint.
+This README and `evidence/qualification-scope.json` define the current packaged
+qualification; inherited debug/Linux status labels in the frozen workload plan
+do not override the optimized platform receipts.
 
 `MANIFEST.json` hashes every distributed payload. Platform qualification records
-bind the compatibility receipts; resource evidence is separate and may contain
+bind the compatibility receipts. Frozen source/reference inputs are retained
+under `references`, with their original corpus-relative paths and hashes.
+Verify extracted bytes and fresh installation with
+`python verification-tools/verify_local_delivery.py . windows <new receipt directory>`
+(use `linux` on Linux). This creates a fresh venv, installs the local wheel
+without network access and checks CLI/Python/Node outputs against an SMA oracle.
+The measured resource tools are retained separately from the committed source
+archive and have their own hashes. Resource evidence is separate and may contain
 failed or unverified budgets. The qualified script/settings corpus does not
 claim arbitrary Pine compatibility or native live Tick parity.
 This artifact is local and has not been published.

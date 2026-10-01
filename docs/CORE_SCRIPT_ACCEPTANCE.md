@@ -1,5 +1,9 @@
 # Committed-core script acceptance — 2026-09-30
 
+Source-specific historical receipt. The current optimized Windows/Linux
+qualification is tracked in
+[optimized delivery acceptance](OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md).
+
 This receipt remains pinned to the core below. The subsequent working-tree
 request-refresh patch has a separate
 [offline intrabar/MTF receipt](INTRABAR_MTF_ACCEPTANCE_20261001.md); this native

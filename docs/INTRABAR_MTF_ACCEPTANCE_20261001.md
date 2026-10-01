@@ -1,5 +1,10 @@
 # Offline intrabar and multi-timeframe acceptance
 
+Source-specific historical candidate receipt, recorded before the patch was
+committed as `bd690cb99`. Current optimized artifact qualification is tracked in
+[optimized delivery acceptance](OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md);
+the exact event corpus below retains its original source/artifact pins.
+
 This receipt qualifies a Windows working-tree candidate based on
 `5c3ab3b628b626619c34481d23f30dd002e362fe`, plus the request-refresh patch
 in `crates/pine-runtime/src/runtime/realtime.rs`. The candidate is not a clean

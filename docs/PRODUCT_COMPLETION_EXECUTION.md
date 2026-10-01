@@ -16,22 +16,22 @@ real-script adoption. Missing references remain unverified, not passed.
 
 | Work | Acceptance | State |
 | --- | --- | --- |
-| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | Current core 5c3ab3b6: five complete scripts, twelve unchanged settings, one Pivot observer and two broker controls requalified on Windows debug; 90 primary complete outputs agree across Rust/CLI/installed Python/actual WASM. See CORE_SCRIPT_ACCEPTANCE.md. Hull monetary residual, broader options and native visuals remain open |
-| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | 2026-10-01 working-tree request-refresh patch: six offline SSL/state/broker cases, 36 direct Rust/installed Python/actual WASM replays, 4,392 event snapshots agree; independent state/hash audit and full gate pass. Native live Tick/multi-timeframe feed qualification remains open. Prior committed-core historical matrix retains its source pin |
+| Complete-script compatibility | Freeze original sources/dependencies with hashes; measure admission and execution before changes; repair high-impact combinations with independent controls | Current runtime e73206f0c: fifteen frozen cases requalified on Windows/Linux optimized artifacts; 180 complete Rust/CLI/Python/actual-WASM outputs agree across platforms. Named native assertions pass. Hull monetary residual and native visuals remain open; see OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md |
+| Execution and requests | Preserve existing native references; capture independent new cases for admitted combinations; distinguish unavailable tick path information from implementation defects | Request-refresh opening-context patch committed in bd690cb99 and included in e73206f0c. Current full gates include its regression; current resource request/forming sequences agree across completed surfaces. Six-case offline intrabar receipt retains its original candidate/source pins. Native live Tick evidence remains open |
 | Host capabilities | Describe supported input/account profiles and readiness checks precisely; implement deterministic capabilities demanded by frozen scripts | Modern merge-policy discovery defect repaired in schema 2; full qualification and full-script readiness checks in progress |
-| Resources | Freeze finite workload, latency and memory budgets before acceptance; qualify Windows/Linux and multiple independent sessions; report full snapshots separately | PRODUCT_STANDARD_CANDLE_RESOURCE_PLAN.json frozen before measurements; acceptance not evaluated |
-| Unified local distribution | Build selected Rust/CLI/Python/WASM outputs from one committed implementation; run installed-wheel, actual-WASM and retained independent reference gates | Current 5c3ab3b6 Windows debug CLI/wheel/WASM/direct-Rust probe have artifact hashes and pass the named matrix plus a fresh full gate. Linux 4f32668a7 receipts remain historical; current Linux, optimized distribution and resource acceptance remain open |
-| Consumption and closeout | Match version, source identity, hashes, installation examples, schema migration and evidence; retain explicit unsupported profiles | Current local matrix binds source, artifacts, reference/output hashes and schemas 9/1; optimized cross-platform installation/distribution closeout remains pending |
+| Resources | Freeze finite workload, latency and memory budgets before acceptance; qualify Windows/Linux and multiple independent sessions; report full snapshots separately | 216 frozen trials closed: 212 completed, four Windows native/WASM four-session long Pivot timeouts. Qualification notPassed: process-memory and selected Pivot p95/growth budgets exceeded; historical Pivot dataset-end contexts remain unequal. No budgets relaxed; raw failures and observer repairs retained |
+| Unified local distribution | Build selected Rust/CLI/Python/WASM outputs from one committed implementation; run installed-wheel, actual-WASM and retained independent reference gates | Same runtime e73206f0c optimized Windows/Linux CLI, wheel, actual WASM and direct Rust probes; both full gates and retained wheels' 774 Python tests pass. Local prerelease ZIP and 120-file manifest generated; resource qualification remains notPassed |
+| Consumption and closeout | Match version, source identity, hashes, installation examples, schema migration and evidence; retain explicit unsupported profiles | Extracted archive checked on both platforms in fresh venvs with local wheel installation; packaged CLI/Python/Node outputs match full JSON and independent SMA oracle. Schema versions 9/4/1/1, source/reference/artifact hashes and resource evidence indexed. No publication |
 
-The latest working-tree candidate and offline intrabar/MTF scope are indexed
-separately in [INTRABAR_MTF_ACCEPTANCE_20261001.md](INTRABAR_MTF_ACCEPTANCE_20261001.md).
-It fixes provider refresh after an explicit chart opening; native live evidence
-remains open. The committed-core acceptance is indexed by [CORE_SCRIPT_ACCEPTANCE_RESULTS.json](CORE_SCRIPT_ACCEPTANCE_RESULTS.json)
-and [CORE_SCRIPT_ACCEPTANCE_PLAN.json](CORE_SCRIPT_ACCEPTANCE_PLAN.json). Unsupported
-account profiles remain explicit. The 2026-09-30 matrix changed tooling and
-documentation only. The 2026-10-01 candidate additionally changes request-refresh
-semantics and adds a regression. Neither slice recaptured native data or
-published artifacts.
+The current optimized qualification is indexed in
+[OPTIMIZED_DELIVERY_ACCEPTANCE_RESULTS.json](OPTIMIZED_DELIVERY_ACCEPTANCE_RESULTS.json)
+and [OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md](OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md).
+The older committed debug and offline intrabar receipts retain their own source
+pins; they are historical checkpoints. Current optimized/native comparisons do
+not automatically qualify their whole event corpus or any case outside the
+frozen fifteen-case set. Unsupported account profiles remain explicit. No slice
+recaptured native data, introduced a concrete host dependency or published
+artifacts. Resource acceptance is evaluated and remains notPassed.
 
 ## Historical execution notes (source-specific)
 

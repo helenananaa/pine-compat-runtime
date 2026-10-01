@@ -28,7 +28,7 @@ fn bars(value: &Value) -> Vec<Bar> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
-    let p: Value = serde_json::from_reader(std::fs::File::open(&args[1])?)?;
+    let p: Value = serde_json::from_reader(std::io::BufReader::new(std::fs::File::open(&args[1])?))?;
     let count: usize = args[2].parse()?;
     let compile_started = std::time::Instant::now();
     let source = SourceFile::new("acceptance.pine", p["source"].as_str().unwrap());
@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     metrics.entry("compile".into()).or_default().push(compile_started.elapsed().as_secs_f64()*1000.0);
     let mut sessions = Vec::new();
     let mut replicas = Vec::new();
-    let offset = |mut b: Bar, i: usize| { let d = i as f64 * 0.125; b.open += d; b.high += d; b.low += d; b.close += d; b };
+    let offset = |mut b: Bar, i: usize| { let d = i as f64 * 0.125 * ((b.time/60000)%17-8) as f64; b.open += d; b.high += d; b.low += d; b.close += d; b };
     for i in 0..count {
         let mut streams = Vec::new();
         for (key, value) in p["request"].as_object().unwrap() {
@@ -147,8 +147,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(session.confirmed_bar_count(),p["bars"].as_array().unwrap().len()+p["tail"].as_array().unwrap().len());
         results.push(serde_json::from_str::<Value>(&text)?);
     }
+    if count > 1 { for r in &results[1..] { assert_ne!(&results[0],r); } }
     // Historical append and batch have identical immutable provider inputs.
     let expected_count = p["bars"].as_array().unwrap().len()+p["tail"].as_array().unwrap().len();
+    let mut historical_matches = true;
+    let mut historical_contexts = Vec::new();
     for i in 0..count {
       let mut historical = HistoricalRuntime::with_request_environment_and_input_overrides(&hir,env.clone(),overrides.clone());
       let seed: Vec<Bar> = bars(&p["bars"]).into_iter().map(|b|offset(b,i)).collect(); historical.append_bars(&seed).map_err(|e|e.message)?;
@@ -159,8 +162,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
       let mut batch = HistoricalRuntime::with_request_environment_and_input_overrides(&hir,env.clone(),overrides.clone());
     let all: Vec<Bar> = seed.into_iter().chain(tail).collect();batch.append_bars(&all).map_err(|e|e.message)?;
-    assert_eq!(public_runtime_result_json(&batch.result()),public_runtime_result_json(&historical.result()));
+    let batch_json = public_runtime_result_json(&batch.result());
+    let incremental_json = public_runtime_result_json(&historical.result());
+    let matches = batch_json == incremental_json;
+    historical_matches &= matches;
+    historical_contexts.push(serde_json::json!({"stream":i,"matches":matches,
+        "batchDatasetEnd":expected_count-1,"initialSeedDatasetEnd":p["bars"].as_array().unwrap().len()-1,
+        "batch":serde_json::from_str::<Value>(&batch_json)?,"incremental":serde_json::from_str::<Value>(&incremental_json)?}));
     }
-    std::fs::write(&args[3],serde_json::to_string(&serde_json::json!({"metrics":metrics,"results":results,"historicalAppendMatches":true,"confirmedBars":expected_count}))?)?;
+    std::fs::write(&args[3],serde_json::to_string(&serde_json::json!({"metrics":metrics,"results":results,"historicalAppendMatches":historical_matches,"historicalContexts":historical_contexts,"confirmedBars":expected_count}))?)?;
     Ok(())
 }

@@ -166,8 +166,16 @@ impl HistoricalRuntime<'_> {
             .values()
             .map(VecDeque::capacity)
             .sum::<usize>();
-        let array_values = self.array_store.values().map(Vec::len).sum::<usize>();
-        let array_value_capacity = self.array_store.values().map(Vec::capacity).sum::<usize>();
+        let array_values = self
+            .array_store
+            .values()
+            .map(|values| values.len())
+            .sum::<usize>();
+        let array_value_capacity = self
+            .array_store
+            .values()
+            .map(|values| values.capacity())
+            .sum::<usize>();
         let matrix_profile = self.matrix_store_profile();
         let label_snapshots = self
             .labels

@@ -30,7 +30,7 @@ impl<'a> HistoricalRuntime<'a> {
         ) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
         let result = match mode {
@@ -75,7 +75,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(None);
         };
         let value = self.eval_array_value(&args[1].value, kind)?;
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(None);
         };
         let index = match mode {
@@ -104,7 +104,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Int(-1));
         }
         let value = self.eval_array_value(&args[1].value, kind)?;
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Int(-1));
         };
         if values.is_empty() {
@@ -177,7 +177,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -316,7 +316,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -363,7 +363,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
         let mut numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
@@ -416,7 +416,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
         let Some(target) = values.get(index as usize).and_then(PineValue::as_f64) else {
@@ -449,7 +449,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -511,8 +511,7 @@ impl<'a> HistoricalRuntime<'a> {
         {
             return Ok(PineValue::Na);
         }
-        let (Some(values1), Some(values2)) =
-            (self.array_values_clone(id1)?, self.array_values_clone(id2)?)
+        let (Some(values1), Some(values2)) = (self.array_values(id1)?, self.array_values(id2)?)
         else {
             return Ok(PineValue::Na);
         };
@@ -559,7 +558,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
 

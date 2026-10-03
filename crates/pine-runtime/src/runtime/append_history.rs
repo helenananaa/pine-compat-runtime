@@ -14,6 +14,9 @@ pub(crate) struct AppendHistory<T> {
 
 #[derive(Debug, Clone)]
 enum Node<T> {
+    // A pruned subtree keeps its address span in its parent, but needs no
+    // allocated chain of empty branches. Appends expand only their write path.
+    Empty,
     Leaf(Vec<T>),
     // A uniform leaf owns one value, including one string allocation. Public
     // snapshots still materialize independent values for every logical point.
@@ -51,6 +54,7 @@ impl<T> AppendHistory<T> {
     pub(crate) fn capacity(&self) -> usize {
         fn slots<T>(node: &Node<T>) -> usize {
             match node {
+                Node::Empty => 0,
                 Node::Leaf(values) => values.capacity(),
                 Node::Repeat { .. } => 1,
                 Node::Branch { left, right } => {
@@ -77,6 +81,11 @@ impl<T> AppendHistory<T> {
             capacity: self.capacity,
             index: self.start,
             len: self.start + self.len,
+            pending: (!self.is_empty()).then_some((&self.root, self.capacity, 0)),
+            stack: Vec::new(),
+            leaf: LeafIter::Empty,
+            #[cfg(test)]
+            node_visits: 0,
         }
     }
 
@@ -159,8 +168,15 @@ impl<T: Clone> AppendHistory<T> {
             *self = Self::default();
             return;
         }
+        let previous_start = self.start;
         self.start += count;
         self.len -= count;
+        // A partial leaf remains allocated until its last value expires. If
+        // that leaf did not change, only the logical window changes: touching
+        // shared branch paths here would allocate without reclaiming anything.
+        if previous_start / APPEND_LEAF_SIZE == self.start / APPEND_LEAF_SIZE {
+            return;
+        }
         // Re-root at a surviving right subtree before pruning. The address
         // space remains bounded by the live window rather than session age.
         while self.capacity > APPEND_LEAF_SIZE && self.start >= self.capacity / 2 {
@@ -221,6 +237,7 @@ fn insert_compact(
     index: usize,
     value: crate::PineValue,
 ) {
+    expand_empty(node, span);
     match Arc::make_mut(node) {
         Node::Repeat { value: old, len } if same_plot_value(old, &value) => {
             debug_assert_eq!(*len, index);
@@ -234,12 +251,7 @@ fn insert_compact(
             if index < half {
                 insert_compact(left, half, index, value);
             } else {
-                insert_compact(
-                    right.get_or_insert_with(|| empty(half)),
-                    half,
-                    index - half,
-                    value,
-                );
+                insert_compact(right.get_or_insert_with(empty), half, index - half, value);
             }
         }
         _ => insert(node, span, index, value),
@@ -273,6 +285,80 @@ pub(crate) struct Iter<'a, T> {
     capacity: usize,
     index: usize,
     len: usize,
+    pending: Option<(&'a Node<T>, usize, usize)>,
+    stack: Vec<(&'a Node<T>, usize, usize)>,
+    leaf: LeafIter<'a, T>,
+    #[cfg(test)]
+    node_visits: usize,
+}
+
+enum LeafIter<'a, T> {
+    Empty,
+    Values(std::slice::Iter<'a, T>),
+    Repeat { value: &'a T, remaining: usize },
+}
+
+impl<'a, T> LeafIter<'a, T> {
+    fn next(&mut self) -> Option<&'a T> {
+        match self {
+            Self::Empty => None,
+            Self::Values(values) => values.next(),
+            Self::Repeat { value, remaining } => {
+                if *remaining == 0 {
+                    return None;
+                }
+                *remaining -= 1;
+                Some(*value)
+            }
+        }
+    }
+}
+
+impl<'a, T> Iter<'a, T> {
+    fn enter_subtree(&mut self, mut node: &'a Node<T>, mut span: usize, mut base: usize) {
+        loop {
+            #[cfg(test)]
+            {
+                self.node_visits += 1;
+            }
+            match node {
+                Node::Empty => {
+                    self.leaf = LeafIter::Empty;
+                    return;
+                }
+                Node::Leaf(values) => {
+                    let from = self.index.saturating_sub(base).min(values.len());
+                    let to = self.len.saturating_sub(base).min(values.len());
+                    self.leaf = LeafIter::Values(values[from..to].iter());
+                    return;
+                }
+                Node::Repeat { value, len } => {
+                    let from = self.index.saturating_sub(base).min(*len);
+                    let to = self.len.saturating_sub(base).min(*len);
+                    self.leaf = LeafIter::Repeat {
+                        value,
+                        remaining: to.saturating_sub(from),
+                    };
+                    return;
+                }
+                Node::Branch { left, right } => {
+                    span /= 2;
+                    let split = base + span;
+                    if self.index < split {
+                        if self.len > split
+                            && let Some(right) = right
+                        {
+                            self.stack.push((right, span, split));
+                        }
+                        node = left;
+                    } else {
+                        node = right.as_ref().expect("occupied iterator path");
+                        base = split;
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -282,13 +368,24 @@ impl<'a, T> Iterator for Iter<'a, T> {
         if self.index >= self.len {
             return None;
         }
-        let item = element(self.root, self.capacity, self.index);
-        self.index += 1;
-        Some(item)
+        loop {
+            if let Some(item) = self.leaf.next() {
+                self.index += 1;
+                return Some(item);
+            }
+            let (node, span, base) = self.pending.take().or_else(|| self.stack.pop())?;
+            self.enter_subtree(node, span, base);
+        }
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        if n == 0 {
+            return self.next();
+        }
         self.index = self.index.saturating_add(n).min(self.len);
+        self.pending = (self.index < self.len).then_some((self.root, self.capacity, 0));
+        self.stack.clear();
+        self.leaf = LeafIter::Empty;
         self.next()
     }
 
@@ -300,12 +397,16 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
 impl<T> ExactSizeIterator for Iter<'_, T> {}
 
+#[cfg(test)]
+#[path = "append_history_walk_tests.rs"]
+mod walk_tests;
+
 fn prune_prefix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, count: usize) {
-    if count == 0 {
+    if count == 0 || matches!(node.as_ref(), Node::Empty) {
         return;
     }
     if count >= span {
-        *node = empty(span);
+        *node = empty();
         return;
     }
     // A partial boundary leaf retains at most 127 expired values. No surviving
@@ -324,20 +425,28 @@ fn prune_prefix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, count: usize) {
     }
 }
 
-fn empty<T>(span: usize) -> Arc<Node<T>> {
-    if span == APPEND_LEAF_SIZE {
-        Arc::new(Node::Leaf(Vec::new()))
-    } else {
-        Arc::new(Node::Branch {
-            left: empty(span / 2),
-            right: None,
-        })
+fn empty<T>() -> Arc<Node<T>> {
+    Arc::new(Node::Empty)
+}
+
+fn expand_empty<T: Clone>(node: &mut Arc<Node<T>>, span: usize) {
+    if matches!(node.as_ref(), Node::Empty) {
+        *Arc::make_mut(node) = if span == APPEND_LEAF_SIZE {
+            Node::Leaf(Vec::new())
+        } else {
+            Node::Branch {
+                left: empty(),
+                right: None,
+            }
+        };
     }
 }
 
 fn insert<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize, value: T) {
+    expand_empty(node, span);
     expand_repeat(node);
     match Arc::make_mut(node) {
+        Node::Empty => unreachable!("expanded subtree"),
         Node::Leaf(values) => {
             debug_assert_eq!(values.len(), index);
             values.push(value);
@@ -348,12 +457,7 @@ fn insert<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize, value: T
             if index < half {
                 insert(left, half, index, value);
             } else {
-                insert(
-                    right.get_or_insert_with(|| empty(half)),
-                    half,
-                    index - half,
-                    value,
-                );
+                insert(right.get_or_insert_with(empty), half, index - half, value);
             }
         }
     }
@@ -361,6 +465,7 @@ fn insert<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize, value: T
 
 fn element<T>(node: &Node<T>, span: usize, index: usize) -> &T {
     match node {
+        Node::Empty => unreachable!("occupied append path"),
         Node::Leaf(values) => &values[index],
         Node::Repeat { value, len } => {
             assert!(index < *len);
@@ -384,6 +489,7 @@ fn element<T>(node: &Node<T>, span: usize, index: usize) -> &T {
 fn element_mut<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize) -> &mut T {
     expand_repeat(node);
     match Arc::make_mut(node) {
+        Node::Empty => unreachable!("occupied append path"),
         Node::Leaf(values) => &mut values[index],
         Node::Repeat { .. } => unreachable!("expanded leaf"),
         Node::Branch { left, right } => {
@@ -406,6 +512,7 @@ fn collect<T: Clone>(node: &Node<T>, span: usize, start: usize, out: &mut Vec<T>
         return;
     }
     match node {
+        Node::Empty => {}
         Node::Leaf(values) => out.extend(values.get(start..).unwrap_or(&[]).iter().cloned()),
         Node::Repeat { value, len } => {
             out.extend(std::iter::repeat_n(

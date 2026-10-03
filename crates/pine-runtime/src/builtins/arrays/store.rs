@@ -1,4 +1,5 @@
 use super::{ArrayElementKind, ArraySlice, normalize_array_index, normalize_array_insert_index};
+use crate::runtime::array_values::ArrayView;
 use crate::{HistoricalRuntime, MAX_ARRAY_ELEMENTS, PineValue, RuntimeError};
 
 impl<'a> HistoricalRuntime<'a> {
@@ -12,16 +13,23 @@ impl<'a> HistoricalRuntime<'a> {
         &self,
         id: u32,
     ) -> Result<Option<Vec<PineValue>>, RuntimeError> {
+        Ok(self
+            .array_values(id)?
+            .map(|values| values.iter().cloned().collect()))
+    }
+
+    pub(crate) fn array_values(&self, id: u32) -> Result<Option<ArrayView<'_>>, RuntimeError> {
         if let Some(slice) = self.array_slices.get(&id).copied() {
             self.validate_array_slice(slice)?;
-            let end = slice.start + slice.len;
             return Ok(self
                 .array_store
                 .get(&slice.parent_id)
-                .map(|values| values[slice.start..end].to_vec()));
+                .map(|values| values.view(slice.start, slice.len)));
         }
-
-        Ok(self.array_store.get(&id).cloned())
+        Ok(self
+            .array_store
+            .get(&id)
+            .map(|values| values.view(0, values.len())))
     }
 
     #[cfg(test)]
@@ -70,7 +78,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(Some(slice.len));
         }
 
-        Ok(self.array_store.get(&id).map(Vec::len))
+        Ok(self.array_store.get(&id).map(|values| values.len()))
     }
 
     fn validate_array_slice(&self, slice: ArraySlice) -> Result<(), RuntimeError> {
@@ -137,7 +145,7 @@ impl<'a> HistoricalRuntime<'a> {
             .array_slices
             .get(&id)
             .map_or(id, |slice| slice.parent_id);
-        self.array_store.get(&target_id).map(Vec::len)
+        self.array_store.get(&target_id).map(|values| values.len())
     }
 
     pub(crate) fn array_get_cloned(
@@ -242,8 +250,29 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(());
         }
 
-        if let Some(values) = self.array_store.get_mut(&id) {
-            *values = replacement;
+        if self.array_store.contains_key(&id) {
+            // Replacing a payload must not first clone its discarded contents.
+            self.array_store.insert(id, replacement.into());
+        }
+        Ok(())
+    }
+
+    pub(super) fn array_clear_values(&mut self, id: u32) -> Result<(), RuntimeError> {
+        if let Some(slice) = self.array_slices.get(&id).copied() {
+            self.validate_array_slice(slice)?;
+            if slice.len == 0 {
+                return Ok(());
+            }
+            let mut values = self
+                .array_store
+                .get(&slice.parent_id)
+                .expect("validated slice parent")
+                .to_vec();
+            values.drain(slice.start..slice.start + slice.len);
+            self.array_store.insert(slice.parent_id, values.into());
+            self.array_slices.get_mut(&id).expect("existing slice").len = 0;
+        } else if self.array_store.contains_key(&id) {
+            self.array_store.insert(id, Vec::new().into());
         }
         Ok(())
     }

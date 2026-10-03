@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 
+use crate::runtime::array_values::ArrayView;
 use crate::{PineValue, finite_float_or_na};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -262,7 +263,7 @@ pub(crate) fn is_array_sort_special(kind: ArrayElementKind, value: &PineValue) -
         )
 }
 
-pub(crate) fn array_numeric_lower_bound(values: &[PineValue], target: &PineValue) -> usize {
+pub(crate) fn array_numeric_lower_bound(values: &ArrayView<'_>, target: &PineValue) -> usize {
     let mut left = 0;
     let mut right = values.len();
     while left < right {
@@ -276,7 +277,7 @@ pub(crate) fn array_numeric_lower_bound(values: &[PineValue], target: &PineValue
     left
 }
 
-pub(crate) fn array_numeric_upper_bound(values: &[PineValue], target: &PineValue) -> usize {
+pub(crate) fn array_numeric_upper_bound(values: &ArrayView<'_>, target: &PineValue) -> usize {
     let mut left = 0;
     let mut right = values.len();
     while left < right {

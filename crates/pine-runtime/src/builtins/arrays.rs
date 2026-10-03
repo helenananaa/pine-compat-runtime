@@ -8,6 +8,8 @@ use crate::*;
 mod calls;
 mod constructors;
 mod ordering;
+#[cfg(test)]
+mod paged_tests;
 mod statistics;
 mod store;
 mod support;
@@ -404,7 +406,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             ",".to_owned()
         };
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
         let user_type_name = self.array_user_types.get(&id).map(String::as_str);
@@ -434,11 +436,7 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Void);
         };
-        if let Some(len) = self.array_len(id)? {
-            for _ in 0..len {
-                let _ = self.array_remove_value(id, 0)?;
-            }
-        }
+        self.array_clear_values(id)?;
         Ok(PineValue::Void)
     }
 

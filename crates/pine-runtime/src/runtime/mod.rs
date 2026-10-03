@@ -1,4 +1,5 @@
 pub(crate) mod append_history;
+pub(crate) mod array_values;
 pub(crate) mod call_context;
 pub(crate) mod calls;
 mod collection_gc;

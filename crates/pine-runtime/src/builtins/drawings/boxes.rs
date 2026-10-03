@@ -426,6 +426,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let Some(box_output) = drawing_by_id_mut(&mut self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });
@@ -452,6 +455,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let Some(box_output) = drawing_by_id(&self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Na);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });
@@ -638,6 +644,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let Some(box_output) = drawing_by_id_mut(&mut self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });
@@ -670,6 +679,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let Some(box_output) = drawing_by_id(&self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Na);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });

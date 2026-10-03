@@ -124,9 +124,10 @@ mod tests {
     #[test]
     fn seed_intrabar_array_preserves_user_type_array_metadata() {
         let mut previous = runtime();
-        previous
-            .array_store
-            .insert(3, vec![PineValue::UserType(vec![PineValue::Float(1.0)])]);
+        previous.array_store.insert(
+            3,
+            vec![PineValue::UserType(vec![PineValue::Float(1.0)])].into(),
+        );
         previous.array_kinds.insert(3, ArrayElementKind::UserType);
         previous.mark_array_user_type_for_test(3, "Point");
         previous.array_slices.insert(

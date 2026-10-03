@@ -69,6 +69,109 @@ impl<V: Clone> IdStore<V> {
             .map(Arc::make_mut)
     }
 
+    pub(crate) fn remove(&mut self, key: u32) {
+        if self.get(&key).is_none() {
+            return;
+        }
+        fn remove<V: Clone>(root: &mut Option<Arc<Node<V>>>, bit: u32, key: u32) {
+            let Some(node) = root else { return };
+            let empty = match Arc::make_mut(node) {
+                Node::Leaf(values) => {
+                    values[key as usize & (LEAF_SIZE - 1)] = None;
+                    values.iter().all(Option::is_none)
+                }
+                Node::Branch { left, right } => {
+                    remove(
+                        if key & (1 << bit) == 0 {
+                            &mut *left
+                        } else {
+                            &mut *right
+                        },
+                        bit - 1,
+                        key,
+                    );
+                    left.is_none() && right.is_none()
+                }
+            };
+            if empty {
+                *root = None;
+            }
+        }
+        remove(&mut self.root, 31, key);
+        self.len -= 1;
+    }
+
+    /// Visit changed identities in key order, skipping shared subtrees and
+    /// shared entries. Identity, rather than PartialEq, detects replacements
+    /// with equal lengths or values containing NaN. Returns visited node pairs.
+    pub(crate) fn visit_differences(
+        &self,
+        previous: &Self,
+        mut visit: impl FnMut(u32, Option<&V>, Option<&V>),
+    ) -> usize {
+        fn walk<V>(
+            previous: Option<&Arc<Node<V>>>,
+            current: Option<&Arc<Node<V>>>,
+            bit: u32,
+            prefix: u32,
+            visit: &mut impl FnMut(u32, Option<&V>, Option<&V>),
+        ) -> usize {
+            if previous
+                .zip(current)
+                .is_some_and(|(a, b)| Arc::ptr_eq(a, b))
+                || (previous.is_none() && current.is_none())
+            {
+                return 1;
+            }
+            if bit < LEAF_BITS {
+                let previous = match previous.map(AsRef::as_ref) {
+                    Some(Node::Leaf(values)) => Some(values),
+                    None => None,
+                    _ => unreachable!("leaf depth invariant"),
+                };
+                let current = match current.map(AsRef::as_ref) {
+                    Some(Node::Leaf(values)) => Some(values),
+                    None => None,
+                    _ => unreachable!("leaf depth invariant"),
+                };
+                for index in 0..LEAF_SIZE {
+                    let old = previous.and_then(|values| values[index].as_ref());
+                    let new = current.and_then(|values| values[index].as_ref());
+                    if old.zip(new).is_some_and(|(a, b)| Arc::ptr_eq(a, b))
+                        || (old.is_none() && new.is_none())
+                    {
+                        continue;
+                    }
+                    visit(
+                        prefix | index as u32,
+                        old.map(AsRef::as_ref),
+                        new.map(AsRef::as_ref),
+                    );
+                }
+                return 1;
+            }
+            let (old_left, old_right) = match previous.map(AsRef::as_ref) {
+                Some(Node::Branch { left, right }) => (left.as_ref(), right.as_ref()),
+                None => (None, None),
+                _ => unreachable!("branch depth invariant"),
+            };
+            let (new_left, new_right) = match current.map(AsRef::as_ref) {
+                Some(Node::Branch { left, right }) => (left.as_ref(), right.as_ref()),
+                None => (None, None),
+                _ => unreachable!("branch depth invariant"),
+            };
+            1 + walk(old_left, new_left, bit - 1, prefix, visit)
+                + walk(old_right, new_right, bit - 1, prefix | (1 << bit), visit)
+        }
+        walk(
+            previous.root.as_ref(),
+            self.root.as_ref(),
+            31,
+            0,
+            &mut visit,
+        )
+    }
+
     /// Copy one retained identity between checkpoints without cloning payloads.
     pub(crate) fn copy_entry_from(&mut self, previous: &Self, key: u32) -> bool {
         let mut node = previous.root.as_deref();
@@ -222,6 +325,79 @@ impl<'a, V> Iterator for Values<'a, V> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn differences_skip_shared_history_and_visit_rollback_removals() {
+        let mut base = IdStore::new();
+        for id in 0..32_768 {
+            base.insert(id, id);
+        }
+        let cursor = base.clone();
+        let mut seen = Vec::new();
+        assert_eq!(base.visit_differences(&cursor, |id, _, _| seen.push(id)), 1);
+        assert!(seen.is_empty());
+        *base.get_mut(&16_384).unwrap() = 99;
+        let visits = base.visit_differences(&cursor, |id, old, new| {
+            seen.push(id);
+            assert_eq!(old, Some(&16_384));
+            assert_eq!(new, Some(&99));
+        });
+        assert_eq!(seen, [16_384]);
+        assert!(
+            visits <= 51,
+            "one changed leaf must not scan all nodes: {visits}"
+        );
+        base.insert(u32::MAX, 55);
+        base.remove(127);
+        let mut changes = Vec::new();
+        cursor.visit_differences(&base, |id, old, new| {
+            changes.push((id, old.copied(), new.copied()))
+        });
+        assert_eq!(
+            changes,
+            [
+                (127, None, Some(127)),
+                (16_384, Some(99), Some(16_384)),
+                (u32::MAX, Some(55), None)
+            ]
+        );
+        assert_eq!(cursor.len(), 32_768);
+    }
+
+    #[test]
+    fn removing_sparse_handles_preserves_checkpoints_and_reclaims_empty_paths() {
+        let mut store = IdStore::new();
+        for id in [0, 127, 128, 65_536, u32::MAX] {
+            store.insert(id, id);
+        }
+        let checkpoint = store.clone();
+        for id in [0, 127, 128, 65_536, u32::MAX] {
+            store.remove(id);
+            store.remove(id);
+        }
+        assert_eq!(store.len(), 0);
+        assert_eq!(store.capacity(), 0);
+        assert_eq!(checkpoint.len(), 5);
+        assert_eq!(checkpoint.get(&u32::MAX), Some(&u32::MAX));
+    }
+
+    #[test]
+    fn differences_use_version_identity_for_nan_payloads() {
+        let mut store = IdStore::new();
+        store.insert(5, f64::NAN);
+        let previous = store.clone();
+        assert_eq!(
+            store.visit_differences(&previous, |_, _, _| panic!("shared NaN")),
+            1
+        );
+        store.insert(5, f64::NAN);
+        let mut visited = 0;
+        store.visit_differences(&previous, |id, old, new| {
+            visited += 1;
+            assert_eq!(id, 5);
+            assert!(old.unwrap().is_nan() && new.unwrap().is_nan());
+        });
+        assert_eq!(visited, 1);
+    }
     #[test]
     fn retaining_sparse_handles_prunes_storage_without_mutating_checkpoints() {
         let mut store = IdStore::new();

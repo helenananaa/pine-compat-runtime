@@ -93,30 +93,36 @@ impl HistoricalRuntime<'_> {
 
     fn trim_drawing_snapshots(&mut self) {
         let origin = self.display_origin;
-        for item in &mut self.labels {
-            drop_snapshots(&mut item.snapshots, origin);
+        macro_rules! trim {
+            ($items:expr) => {{
+                // Read-only inspection preserves identity for unaffected
+                // drawings; only histories whose prefix changes are copied.
+                let drops: Vec<_> = $items
+                    .iter()
+                    .filter_map(|item| {
+                        let count = dropped_snapshot_count(&item.snapshots, origin);
+                        (count > 0).then_some((item.id, count, item.snapshots.len()))
+                    })
+                    .collect();
+                for (id, count, len) in drops {
+                    if count == len {
+                        $items.remove(id);
+                    } else {
+                        $items
+                            .get_mut(id)
+                            .expect("retained drawing")
+                            .snapshots
+                            .drop_prefix(count);
+                    }
+                }
+            }};
         }
-        self.labels.retain(|item| !item.snapshots.is_empty());
-        for item in &mut self.lines {
-            drop_snapshots(&mut item.snapshots, origin);
-        }
-        self.lines.retain(|item| !item.snapshots.is_empty());
-        for item in &mut self.line_fills {
-            drop_snapshots(&mut item.snapshots, origin);
-        }
-        self.line_fills.retain(|item| !item.snapshots.is_empty());
-        for item in &mut self.polylines {
-            drop_snapshots(&mut item.snapshots, origin);
-        }
-        self.polylines.retain(|item| !item.snapshots.is_empty());
-        for item in &mut self.boxes {
-            drop_snapshots(&mut item.snapshots, origin);
-        }
-        self.boxes.retain(|item| !item.snapshots.is_empty());
-        for item in &mut self.tables {
-            drop_snapshots(&mut item.snapshots, origin);
-        }
-        self.tables.retain(|item| !item.snapshots.is_empty());
+        trim!(self.labels);
+        trim!(self.lines);
+        trim!(self.line_fills);
+        trim!(self.polylines);
+        trim!(self.boxes);
+        trim!(self.tables);
     }
 
     pub(crate) fn display_alerts(&self) -> Vec<crate::AlertEvent> {
@@ -193,7 +199,7 @@ impl HistoricalRuntime<'_> {
     }
 }
 
-trait HasBar {
+pub(crate) trait HasBar {
     fn bar_index(&self) -> usize;
     fn exists(&self) -> bool;
 }
@@ -264,10 +270,13 @@ fn retain_snapshots<S: HasBar>(snapshots: &mut Vec<S>, origin: usize) {
     }
 }
 
-fn drop_snapshots<S: Clone + HasBar>(history: &mut AppendHistory<S>, origin: usize) {
+pub(crate) fn dropped_snapshot_count<S: Clone + HasBar>(
+    history: &AppendHistory<S>,
+    origin: usize,
+) -> usize {
     let mut count = history.partition_point(|snapshot| snapshot.bar_index() < origin);
     if count == history.len() && history.last().is_some_and(HasBar::exists) {
         count = count.saturating_sub(1);
     }
-    history.drop_prefix(count);
+    count
 }

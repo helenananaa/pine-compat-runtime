@@ -1,5 +1,49 @@
 use crate::*;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum IntrabarReference {
+    Object(u32),
+    Array(u32),
+    Map(u32),
+    Matrix(u32),
+}
+
+fn enqueue_intrabar_references(
+    pending: &mut Vec<(IntrabarReference, bool)>,
+    value: &PineValue,
+    retain_contents: bool,
+) {
+    let reference = match value {
+        PineValue::UserTypeRef(id) => IntrabarReference::Object(*id),
+        PineValue::Array(id) => IntrabarReference::Array(*id),
+        PineValue::Map(id) => IntrabarReference::Map(*id),
+        PineValue::Matrix(id) => IntrabarReference::Matrix(*id),
+        PineValue::UserType(fields) | PineValue::Tuple(fields) => {
+            for field in fields {
+                enqueue_intrabar_references(pending, field, retain_contents);
+            }
+            return;
+        }
+        // Drawing handles and chart points are value leaves in this transfer;
+        // their runtime families have separate rollback rules.
+        _ => return,
+    };
+    pending.push((reference, retain_contents));
+}
+
+fn scalar_array_kind(kind: Option<&ArrayElementKind>) -> bool {
+    matches!(
+        kind,
+        Some(
+            ArrayElementKind::Float
+                | ArrayElementKind::Int
+                | ArrayElementKind::Bool
+                | ArrayElementKind::String
+                | ArrayElementKind::Color
+        )
+    )
+}
+
 impl HistoricalRuntime<'_> {
     pub(crate) fn reject_request_object_graph(
         &self,
@@ -98,12 +142,12 @@ impl HistoricalRuntime<'_> {
         Ok(PineValue::UserTypeRef(id))
     }
 
-    pub(crate) fn seed_intrabar_objects_from(
-        &mut self,
-        previous: &Self,
-        mut roots: Vec<PineValue>,
-    ) {
+    pub(crate) fn seed_intrabar_objects_from(&mut self, previous: &Self, roots: Vec<PineValue>) {
         self.next_object_id = self.next_object_id.max(previous.next_object_id);
+        let mut pending = Vec::new();
+        for value in &roots {
+            enqueue_intrabar_references(&mut pending, value, true);
+        }
         // Field-level varip on committed objects survives reassignment during
         // a forming pass. Ordinary fields still roll back to committed state.
         let varip_ids = self.object_varip_ids.clone();
@@ -115,16 +159,15 @@ impl HistoricalRuntime<'_> {
                 for (index, varip) in flags.iter().enumerate() {
                     if *varip && let Some(value) = fields.get(index) {
                         self.object_store.get_mut(&id).unwrap()[index] = value.clone();
-                        roots.push(value.clone());
+                        enqueue_intrabar_references(&mut pending, value, true);
                     }
                 }
             }
         }
         let mut seen = std::collections::HashSet::new();
-        let mut pending: Vec<_> = roots.into_iter().map(|value| (value, true)).collect();
         while let Some((value, retain_contents)) = pending.pop() {
             match value {
-                PineValue::UserTypeRef(id) if seen.insert((0, id)) => {
+                IntrabarReference::Object(id) if seen.insert((0, id)) => {
                     let imported = !self.object_store.contains_key(&id);
                     if imported {
                         // Import only retained identities. Sparse storage leaves
@@ -138,54 +181,59 @@ impl HistoricalRuntime<'_> {
                     }
                     if let Some(fields) = self.object_store.get(&id) {
                         let flags = self.object_varip_fields.get(&id);
-                        pending.extend(fields.iter().enumerate().map(|(index, value)| {
-                            (
-                                value.clone(),
+                        for (index, value) in fields.iter().enumerate() {
+                            enqueue_intrabar_references(
+                                &mut pending,
+                                value,
                                 imported || flags.is_some_and(|flags| flags[index]),
-                            )
-                        }));
+                            );
+                        }
                     }
                 }
-                PineValue::UserType(fields) | PineValue::Tuple(fields) => {
-                    pending.extend(fields.into_iter().map(|value| (value, retain_contents)));
-                }
-                PineValue::Array(id) if seen.insert((if retain_contents { 1 } else { 4 }, id)) => {
+                IntrabarReference::Array(id)
+                    if seen.insert((if retain_contents { 1 } else { 4 }, id)) =>
+                {
                     if retain_contents {
                         self.seed_intrabar_array_from(previous, id);
                     }
                     if let Some(slice) = self.array_slices.get(&id) {
-                        pending.push((PineValue::Array(slice.parent_id), retain_contents));
+                        pending.push((IntrabarReference::Array(slice.parent_id), retain_contents));
+                    }
+                    // Array construction and writes enforce these scalar kinds.
+                    // Their payload cannot add graph roots, so a 100k-element
+                    // varip array needs neither an element scan nor a work queue.
+                    if scalar_array_kind(self.array_kinds.get(&id)) {
+                        continue;
                     }
                     if let Some(values) = self.array_store.get(&id) {
-                        pending
-                            .extend(values.iter().cloned().map(|value| (value, retain_contents)));
+                        for value in values {
+                            enqueue_intrabar_references(&mut pending, value, retain_contents);
+                        }
                     }
                 }
-                PineValue::Map(id) if seen.insert((if retain_contents { 2 } else { 5 }, id)) => {
+                IntrabarReference::Map(id)
+                    if seen.insert((if retain_contents { 2 } else { 5 }, id)) =>
+                {
                     if retain_contents {
                         self.seed_intrabar_map_from(previous, id);
                     }
                     if let Some(map) = self.map_store.get(&id) {
-                        pending.extend(
-                            map.entries
-                                .iter()
-                                .flat_map(|(key, value)| [key.clone(), value.clone()])
-                                .map(|value| (value, retain_contents)),
-                        );
+                        for (key, value) in &map.entries {
+                            enqueue_intrabar_references(&mut pending, key, retain_contents);
+                            enqueue_intrabar_references(&mut pending, value, retain_contents);
+                        }
                     }
                 }
-                PineValue::Matrix(id) if seen.insert((if retain_contents { 3 } else { 6 }, id)) => {
+                IntrabarReference::Matrix(id)
+                    if seen.insert((if retain_contents { 3 } else { 6 }, id)) =>
+                {
                     if retain_contents {
                         self.seed_intrabar_matrix_from(previous, id);
                     }
                     if let Some(matrix) = self.matrix_store.get(&id) {
-                        pending.extend(
-                            matrix
-                                .values
-                                .iter()
-                                .cloned()
-                                .map(|value| (value, retain_contents)),
-                        );
+                        for value in &matrix.values {
+                            enqueue_intrabar_references(&mut pending, value, retain_contents);
+                        }
                     }
                 }
                 _ => {}
@@ -220,6 +268,10 @@ impl HistoricalRuntime<'_> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "objects_transfer_tests.rs"]
+mod transfer_tests;
 
 #[cfg(test)]
 mod varip_index_tests {

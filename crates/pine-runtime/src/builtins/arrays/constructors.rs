@@ -176,7 +176,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> PineValue {
         let id = self.next_array_id;
         self.next_array_id += 1;
-        self.array_store.insert(id, values);
+        self.array_store.insert(id, values.into());
         self.array_kinds.insert(id, kind);
         PineValue::Array(id)
     }
@@ -222,7 +222,8 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> PineValue {
         let id = self.next_array_id;
         self.next_array_id += 1;
-        self.array_store.insert(id, vec![initial_value; size]);
+        self.array_store
+            .insert(id, vec![initial_value; size].into());
         self.array_kinds.insert(id, kind);
         PineValue::Array(id)
     }

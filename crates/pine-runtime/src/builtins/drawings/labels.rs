@@ -345,6 +345,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let Some(label) = drawing_by_id_mut(&mut self.labels, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_label_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });
@@ -374,6 +377,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let Some(label) = drawing_by_id(&self.labels, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_label_id) {
+                return Ok(PineValue::Na);
+            }
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });
@@ -532,6 +538,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let Some(label) = drawing_by_id_mut(&mut self.labels, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_label_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });
@@ -564,6 +573,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let Some(label) = drawing_by_id(&self.labels, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_label_id) {
+                return Ok(PineValue::Na);
+            }
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });

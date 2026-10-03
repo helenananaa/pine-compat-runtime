@@ -11,7 +11,8 @@ import threading
 import time
 from pathlib import Path
 
-from requalify_core_scripts import read, write, sha, differences
+from requalify_core_scripts import read, write, sha
+from resource_report import expected_spool_names, validate_report
 
 REPO = Path(__file__).resolve().parents[1]
 MINUTE = 60000
@@ -99,16 +100,41 @@ def timed(metrics, key, fn):
     return value
 
 
+def same_files(first, second):
+    with first.open('rb') as left, second.open('rb') as right:
+        while True:
+            chunk=left.read(65536)
+            if chunk!=right.read(65536):return False
+            if not chunk:return True
+
+
+def resource_metadata(output, count, confirmed):
+    value=read(output.with_name(output.name+'.metadata.json'))
+    assert all(type(value[key]) is int for key in ['resourceMetadataVersion','resultCount','confirmedBars'])
+    assert value['resourceMetadataVersion']==1
+    assert value['resultCount']==count and value['confirmedBars']==confirmed
+    assert isinstance(value['metrics'],dict)
+    for group in [value['metrics'], value.get('overheadMetrics', {})]:
+        assert isinstance(group, dict)
+        for values in group.values():
+            assert isinstance(values,list)
+            assert all(type(v) in (int,float) and math.isfinite(v) and v>=0 for v in values)
+    return value
+
+
 def python_worker(payload, count, output):
     import pine_compat as pine
-    p=read(payload);metrics={};program=timed(metrics,'compile',lambda:pine.compile_script(p['source']))
+    from resource_json import dump_public_json
+    serializer_sha = sha(Path(dump_public_json.__code__.co_filename))
+    overhead={}
+    p=timed(overhead,'inputParse',lambda:read(payload));metrics={};program=timed(metrics,'compile',lambda:pine.compile_script(p['source']))
     sessions=[];replicas=[]
     for i in range(count):
         request=shifted_request(p['request'],i*0.125);chart=request.pop('$chart')
         request['$chart']={k:v for k,v in chart.items() if k not in ('symbol','timeframe')}
         session=program.realtime_session(request_bars=request,input_overrides={int(k):v for k,v in p['overrides'].items()},chart_symbol=chart['symbol'],chart_timeframe=chart['timeframe'])
-        timed(metrics,'seed',lambda:session.seed([shifted(b,i*0.125) for b in p['bars']]))
-        sessions.append(session);replicas.append(session.replica())
+        timed(metrics,'seed',lambda:session.seed(p['bars'] if i==0 else [shifted(b,i*0.125) for b in p['bars']]))
+        sessions.append(session);replicas.append(timed(overhead,'replicaSnapshot',session.replica))
     for index,event in enumerate(p['events']):
         for i,(session,replica) in enumerate(zip(sessions,replicas)):
             before=session.confirmed_bars;b=shifted(event['bar'],i*0.125)
@@ -119,17 +145,43 @@ def python_worker(payload, count, output):
             if changes is not None:timed(metrics,'replica',lambda:replica.apply(changes))
             assert session.confirmed_bars==before+(event['kind']=='confirmed')
         if index%1024==0:print(f'events {index}/{len(p["events"])}',file=sys.stderr,flush=True)
+    parts=output.with_name(output.name+'.parts');parts.mkdir(parents=True,exist_ok=True)
+    expected_count=len(p['bars'])+len(p['tail'])
+    del p,request,chart
+    for index in range(len(replicas)):
+        replica=replicas[index];replicas[index]=None
+        replica_result=timed(overhead,'replicaExport',replica.result)
+        def serialize_replica():
+            with (parts/f'replica-{index}.json').open('w',encoding='utf-8') as stream:
+                dump_public_json(replica_result,stream)
+        timed(overhead,'replicaWrite',serialize_replica)
+        del replica_result,replica
+    replicas.clear()
     results=[]
-    for session,replica in zip(sessions,replicas):
+    for index,session in enumerate(sessions):
         result=timed(metrics,'snapshot',session.result)
-        assert not differences(result,replica.result())
         assert not result['diagnostics'] and not (result.get('strategy') or {}).get('diagnostics')
-        timed(metrics,'serialization',lambda:json.dumps(result,allow_nan=False))
-        assert session.confirmed_bars==len(p['bars'])+len(p['tail'])
-        results.append(result)
-    if count>1:assert all(differences(results[0],r) for r in results[1:]),'independent streams must produce distinct outputs'
-    write(output,dict(metrics=metrics,results=results,confirmedBars=len(p['bars'])+len(p['tail']),
-                      historicalAppend='not exposed by this binding; separately checked by native probe'))
+        result_path=parts/f'live-{index}.json'
+        def serialize():
+            with result_path.open('w',encoding='utf-8') as stream:
+                dump_public_json(result,stream)
+        timed(metrics,'serialization',serialize)
+        assert timed(overhead,'comparison',lambda:same_files(result_path,parts/f'replica-{index}.json')),'complete replica output differs'
+        assert session.confirmed_bars==expected_count
+        if index>0:assert not timed(overhead,'comparison',lambda:same_files(results[0],result_path)),'independent streams must produce distinct outputs'
+        results.append(result_path)
+        del result
+    sessions.clear();del session
+    historical_append='not exposed by this binding; separately checked by native probe'
+    manifest=dict(resourceReportVersion=2,metadata={'path':output.name+'.metadata.json'},
+        results=[{'path':path.relative_to(output.parent).as_posix()} for path in results],
+        confirmedBars=expected_count,historicalAppend=historical_append)
+    timed(overhead,'reportWrite',lambda:write(output,manifest))
+    assert serializer_sha == sha(Path(dump_public_json.__code__.co_filename)), 'serializer changed during measurement'
+    with output.with_name(output.name+'.metadata.json').open('w',encoding='utf-8') as stream:
+        json.dump(dict(resourceMetadataVersion=1,serializerSourceSha256=serializer_sha,metrics=metrics,
+            overheadMetrics=overhead,resultCount=count,confirmedBars=expected_count,
+            historicalAppend=historical_append),stream,separators=(',',':'),allow_nan=False)
 
 
 def sample_peak(process, box, stop):
@@ -156,15 +208,42 @@ def sample_peak(process, box, stop):
             stop.wait(.02)
 
 
+def measurement_directory(root, surface, resume):
+    outdir=root/platform.system()/surface
+    if resume:
+        if not (outdir/'results.json').is_file():
+            raise ValueError('resume requires an existing compatible receipt')
+    elif outdir.exists() and any(outdir.iterdir()):
+        raise ValueError('measurement output is not empty; use a new root or explicit resume')
+    outdir.mkdir(parents=True,exist_ok=True)
+    return outdir
+
+
+def require_fresh_trial(output, progress):
+    for path in [output,progress,output.with_name(output.name+'.metadata.json'),
+                 output.with_name(output.name+'.parts')]:
+        if path.exists():
+            raise ValueError(f'refusing to overwrite unregistered trial evidence: {path}')
+
+
 def measure(root, artifacts, surface, resume=False):
-    plan=read(root/'plan.json');outdir=root/platform.system()/surface;outdir.mkdir(parents=True,exist_ok=True)
+    plan=read(root/'plan.json');outdir=measurement_directory(root,surface,resume)
     provenance=read(artifacts/'build-provenance.json')
     assert provenance['sourceCommit']==plan['coreCommit'] and provenance['profile']=='release'
     assert all(sha(REPO/p)==h for p,h in provenance['coreFiles'].items()),'core differs from built artifact source'
-    initial_tool_hashes={p:sha(REPO/p) for p in ['scripts/product_resource_acceptance.py','scripts/product_resource_wasm.cjs','scripts/product_resource_probe.rs']}
+    initial_tool_hashes={p:sha(REPO/p) for p in ['scripts/product_resource_acceptance.py',
+        'scripts/product_resource_wasm.cjs','scripts/product_resource_probe.rs',
+        'scripts/requalify_core_scripts.py','scripts/resource_json.py','scripts/resource_report.py']}
+    for name,digest in plan.get('workerSourceHashes',{}).items():
+        assert sha(REPO/name)==digest, 'plan pins different worker source; prepare a new measurement plan'
+    for name,digest in plan.get('workerAuxiliarySourceHashes',{}).items():
+        assert sha(REPO/name)==digest, 'plan pins different helper source; prepare a new measurement plan'
+    if surface=='rust':
+        assert provenance['resourceProbeSourceSha256']==initial_tool_hashes['scripts/product_resource_probe.rs'], 'rebuild the native collector before measuring'
     receipt=outdir/'results.json'
-    report=read(receipt) if resume and receipt.exists() else dict(platform=platform.platform(),processor=platform.processor(),surface=surface,coreCommit=plan['coreCommit'],planSha256=sha(root/'plan.json'),rows=[],failures=[])
+    report=read(receipt) if resume and receipt.exists() else dict(platform=platform.platform(),processor=platform.processor(),surface=surface,coreCommit=plan['coreCommit'],planSha256=sha(root/'plan.json'),rows=[],failures=[],collectorContractVersion=2,workerHashBindings=initial_tool_hashes)
     assert report['planSha256']==sha(root/'plan.json')
+    assert report.get('collectorContractVersion')==2 and report.get('workerHashBindings')==initial_tool_hashes, 'cannot resume measurements from different collectors'
     budgets=plan['budgets']['budgets']
     for case in plan['cases']:
         for repeat in range(plan['repetitions']):
@@ -172,13 +251,14 @@ def measure(root, artifacts, surface, resume=False):
             if any(r['id']==tag for r in report['rows']):continue
             payload=root/case['payload'];assert sha(payload)==case['payloadSha256']
             output=outdir/(tag+'.json');progress=outdir/(tag+'.progress.log')
+            require_fresh_trial(output,progress)
             if surface=='python':
                 py=artifacts/('venv/Scripts/python.exe' if os.name=='nt' else 'venv/bin/python')
                 command=[str(py),str(Path(__file__).resolve()),'--python-worker',str(payload),'--sessions',str(case['sessions']),'--output',str(output)]
             elif surface=='wasm':command=['node',str(REPO/'scripts/product_resource_wasm.cjs'),str(artifacts/'wasm/pine_wasm.js'),str(payload),str(case['sessions']),str(output)]
             else:command=[str(artifacts/('resource-probe.exe' if os.name=='nt' else 'resource-probe')),str(payload),str(case['sessions']),str(output)]
             row=dict(id=tag,case=case['id'],repeat=repeat,status='failed',command=command);report['rows'].append(row)
-            start=time.monotonic();box=[0];stop=threading.Event()
+            start=time.monotonic();box=[0];stop=threading.Event();controller_metrics={}
             try:
                 with progress.open('wb') as log:
                     child=subprocess.Popen(command,cwd=REPO,stdout=log,stderr=log)
@@ -195,27 +275,51 @@ def measure(root, artifacts, surface, resume=False):
                         child.kill();child.wait();raise RuntimeError('frozen process timeout exceeded')
                     finally:stop.set();sampler.join()
                 assert code==0,f'worker exit {code}; see {progress.name}'
-                value=read(output);samples=value['metrics'];issues=[]
-                counts={k:sum(e['phase']==k for e in read(payload)['events'])*case['sessions'] for k in ('forming','replacement','confirmation','request')}
+                controller_metrics['workerWallMs']=(time.monotonic()-start)*1000
+                validation_start=time.monotonic()
+                value=resource_metadata(output,case['sessions'],case['history']+case['tail']);samples=value['metrics'];issues=[]
+                manifest=validate_report(output,case['sessions'],case['history']+case['tail'],surface=='rust',case['history'])
+                # Parse the large workload once, rather than once for each phase.
+                events=read(payload)['events']
+                counts={k:sum(e['phase']==k for e in events)*case['sessions'] for k in ('forming','replacement','confirmation','request')}
+                del events
                 counts.update(compile=1,seed=case['sessions'],snapshot=case['sessions'],serialization=case['sessions'])
                 counts['replica']=(case['tail']*3+(counts['request']//case['sessions']-case['tail'] if case['script'].startswith('pivot') else 0))*case['sessions']
-                if surface=='rust':counts['append']=case['tail']*case['sessions']
+                if surface=='rust':
+                    counts['append']=case['tail']*case['sessions']
+                    counts['sameContextAppend']=case['tail']*case['sessions']
+                    assert value.get('historicalSameContextMatches') is True,'known-dataset append/batch differs'
                 for key,count in counts.items():assert len(samples.get(key,[]))==count,(key,count)
                 stats={k:dict(count=len(v),p50Ms=statistics.median(v),p95Ms=sorted(v)[math.ceil(.95*len(v))-1],maxMs=max(v)) for k,v in samples.items() if v}
-                for key,budget in [('append','appendP95Ms'),('forming','formingP95Ms'),('replacement','replacementP95Ms'),('confirmation','confirmationP95Ms'),('request','requestUpdateP95Ms'),('replica','replicaApplyP95Ms')]:
+                for key,budget in [('append','appendP95Ms'),('sameContextAppend','appendP95Ms'),('forming','formingP95Ms'),('replacement','replacementP95Ms'),('confirmation','confirmationP95Ms'),('request','requestUpdateP95Ms'),('replica','replicaApplyP95Ms')]:
                     if key in stats and stats[key]['p95Ms']>budgets[budget]:issues.append(f'{key} p95 exceeds {budgets[budget]} ms')
                 for key,limit in [('compile',budgets['compileMaxSeconds']*1000),('seed',budgets['historicalSeedMaxSecondsPerSession']*1000)]:
                     if stats[key]['maxMs']>limit:issues.append(f'{key} exceeds budget')
                 if any(a+b>budgets['fullSnapshotAndSerializationMaxSecondsPerSession']*1000 for a,b in zip(samples['snapshot'],samples['serialization'])):issues.append('snapshot and serialization exceeds budget')
                 memory=budgets['peakRssBytesPerSingleSessionProcess' if case['sessions']==1 else 'peakRssBytesPerFourSessionProcess']
                 if box[0]==0 or box[0]>memory:issues.append('peak RSS unavailable or exceeds budget')
+                controller_metrics['validationMs']=(time.monotonic()-validation_start)*1000
+                comparison_start=time.monotonic()
                 if repeat==1:
-                    prior=read(outdir/(case['id']+'-0.json'));assert not differences(prior['results'],value['results']),'repeat output differs'
-                row.update(status='measured',metrics=stats,peakRssBytes=box[0],budgetFailures=issues,outputSha256=sha(output),historicalAppendMatches=value.get('historicalAppendMatches'))
+                    for stream in range(case['sessions']):
+                        prior=outdir/(case['id']+f'-0.json.parts/live-{stream}.json')
+                        current=outdir/(tag+f'.json.parts/live-{stream}.json')
+                        assert same_files(prior,current),'complete repeat output differs'
+                controller_metrics['repeatComparisonMs']=(time.monotonic()-comparison_start)*1000
+                hash_start=time.monotonic()
+                row.update(metrics=stats,resourceReportVersion=manifest['resourceReportVersion'],
+                    overheadMetrics={key:dict(count=len(v),totalMs=sum(v),maxMs=max(v)) for key,v in value.get('overheadMetrics',{}).items() if v},
+                    peakRssBytes=box[0],budgetFailures=issues,outputSha256=sha(output),metadataSha256=sha(output.with_name(output.name+'.metadata.json')),historicalAppendMatches=value.get('historicalAppendMatches'),historicalSameContextMatches=value.get('historicalSameContextMatches'))
+                parts=output.with_name(output.name+'.parts')
+                row['spoolOutputSha256']={item.name:sha(item) for item in parts.glob('*.json')}
+                assert set(row['spoolOutputSha256'])==expected_spool_names(case['sessions'],surface=='rust')
+                controller_metrics['outputHashMs']=(time.monotonic()-hash_start)*1000
+                row['status']='measured'
                 if issues:report['failures'].append(dict(id=tag,errors=issues))
             except Exception as exc:
                 row['error']=str(exc);report['failures'].append(dict(id=tag,errors=[str(exc)]))
             row['wallSeconds']=time.monotonic()-start;row['peakRssBytes']=box[0]
+            row['controllerMetrics']=controller_metrics
             row['progressSha256']=sha(progress)
             write(receipt,report);print(surface,tag,row['status'],row.get('budgetFailures',row.get('error')),flush=True)
     report['completed']=True

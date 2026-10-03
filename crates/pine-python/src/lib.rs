@@ -26,7 +26,7 @@ mod tables;
 mod tests;
 use alerts::{render_strategy_order_fill_alert_template, render_strategy_order_fill_running_alert};
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
-use outputs::{runtime_result_to_py, value_to_py};
+use outputs::{runtime_result_into_py, value_to_py};
 use realtime::PyRealtimeSession;
 
 #[pyclass(name = "Program", skip_from_py_object)]
@@ -94,7 +94,7 @@ impl PyProgram {
             None => runtime.append_bars(&bars),
         }
         .map_err(|err| PyValueError::new_err(err.message))?;
-        runtime_result_to_py(py, &runtime.result())
+        runtime_result_into_py(py, runtime.result())
     }
 
     #[pyo3(signature = (

@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{BTreeSet, HashMap, HashSet, VecDeque},
     ops::Deref,
     sync::Arc,
 };
@@ -63,6 +63,10 @@ impl InputOverrides {
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
+
+    pub(crate) fn values(&self) -> impl Iterator<Item = &PineValue> {
+        self.values.values()
+    }
 }
 
 #[derive(Clone)]
@@ -94,6 +98,7 @@ struct StrategyEvalCheckpoint {
 #[derive(Clone)]
 pub struct HistoricalRuntime<'a> {
     pub(crate) program: RuntimeProgram<'a>,
+    pub(crate) metadata: Arc<super::metadata::RuntimeMetadata>,
     pub(crate) input_overrides: InputOverrides,
     pub(crate) magnifier_input: MagnifierInput,
     pub(crate) magnifier_chart_bar_count: Option<usize>,
@@ -123,6 +128,9 @@ pub struct HistoricalRuntime<'a> {
         HashMap<RequestCacheKey, Arc<crate::builtins::request_incremental::RequestEvaluation<'a>>>,
     pub(crate) bounded_same_context_evaluations:
         HashMap<RequestCacheKey, Box<HistoricalRuntime<'a>>>,
+    // Captures belong to this runtime's handle namespace, unlike child state.
+    pub(crate) bounded_same_context_captures:
+        HashMap<RequestCacheKey, HashMap<SymbolId, PineValue>>,
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) series_store: SeriesStore,
@@ -139,13 +147,16 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) array_user_types: IdStore<String>,
     pub(crate) array_slices: IdStore<ArraySlice>,
     pub(crate) next_array_id: u32,
-    pub(crate) object_store: Vec<Vec<PineValue>>,
-    pub(crate) object_varip_fields: Vec<Vec<bool>>,
+    pub(crate) collection_gc_next_id: u64,
+    pub(crate) object_store: IdStore<Vec<PineValue>>,
+    pub(crate) object_varip_fields: IdStore<Vec<bool>>,
+    pub(crate) object_varip_ids: IdStore<u32>,
+    pub(crate) next_object_id: u64,
     #[allow(dead_code)]
-    pub(crate) matrix_store: HashMap<u32, MatrixStorage>,
+    pub(crate) matrix_store: IdStore<MatrixStorage>,
     #[allow(dead_code)]
     pub(crate) next_matrix_id: u32,
-    pub(crate) map_store: HashMap<u32, MapStorage>,
+    pub(crate) map_store: IdStore<MapStorage>,
     pub(crate) next_map_id: u32,
     pub(crate) call_state: HashMap<CallSiteId, PineValue>,
     pub(crate) cross_state: HashMap<CallSiteId, CrossCallState>,
@@ -187,10 +198,13 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) hlines: Vec<HLineOutput>,
     pub(crate) fills: Vec<RuntimeFill>,
     pub(crate) labels: Vec<RuntimeLabel>,
+    pub(crate) active_labels: Arc<BTreeSet<u32>>,
     pub(crate) lines: Vec<RuntimeLine>,
+    pub(crate) active_lines: Arc<BTreeSet<u32>>,
     pub(crate) line_fills: Vec<RuntimeLineFill>,
     pub(crate) polylines: Vec<RuntimePolyline>,
     pub(crate) boxes: Vec<RuntimeBox>,
+    pub(crate) active_boxes: Arc<BTreeSet<u32>>,
     pub(crate) tables: Vec<RuntimeTable>,
     pub(crate) display_origin: usize,
     pub(crate) stored_origin: usize,
@@ -354,6 +368,7 @@ impl<'a> HistoricalRuntime<'a> {
         request_environment: RequestEnvironment,
     ) -> Self {
         let series_retention = SeriesRetention::from_program(&program);
+        let metadata = Arc::new(super::metadata::RuntimeMetadata::from_program(&program));
         let strategy_settings = if program.script_mode == ScriptMode::Strategy {
             program
                 .strategy_settings
@@ -378,6 +393,7 @@ impl<'a> HistoricalRuntime<'a> {
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
         Self {
             program,
+            metadata,
             input_overrides: InputOverrides::new(),
             magnifier_input: MagnifierInput::new(),
             magnifier_chart_bar_count: None,
@@ -399,6 +415,7 @@ impl<'a> HistoricalRuntime<'a> {
             request_cache: HashMap::new(),
             request_evaluations: HashMap::new(),
             bounded_same_context_evaluations: HashMap::new(),
+            bounded_same_context_captures: HashMap::new(),
             legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
             series_store: SeriesStore::new(),
@@ -415,11 +432,14 @@ impl<'a> HistoricalRuntime<'a> {
             array_user_types: IdStore::new(),
             array_slices: IdStore::new(),
             next_array_id: 0,
-            object_store: Vec::new(),
-            object_varip_fields: Vec::new(),
-            matrix_store: HashMap::new(),
+            collection_gc_next_id: 1024,
+            object_store: IdStore::new(),
+            object_varip_fields: IdStore::new(),
+            object_varip_ids: IdStore::new(),
+            next_object_id: 0,
+            matrix_store: IdStore::new(),
             next_matrix_id: 0,
-            map_store: HashMap::new(),
+            map_store: IdStore::new(),
             next_map_id: 0,
             call_state: HashMap::new(),
             cross_state: HashMap::new(),
@@ -461,10 +481,13 @@ impl<'a> HistoricalRuntime<'a> {
             hlines: Vec::new(),
             fills: Vec::new(),
             labels: Vec::new(),
+            active_labels: Arc::new(BTreeSet::new()),
             lines: Vec::new(),
+            active_lines: Arc::new(BTreeSet::new()),
             line_fills: Vec::new(),
             polylines: Vec::new(),
             boxes: Vec::new(),
+            active_boxes: Arc::new(BTreeSet::new()),
             tables: Vec::new(),
             display_origin: 0,
             stored_origin: 0,
@@ -708,6 +731,31 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        for result in self.historical_dataset_inner(bars, execution_times)? {
+            result?;
+        }
+        Ok(())
+    }
+
+    /// Execute a known historical dataset one bar at a time, with the same
+    /// dataset endpoint and initial-window selection as `append_bars`.
+    ///
+    /// Each iterator step executes one bar. Dropping the iterator stops execution
+    /// and releases the dataset context; bars already executed remain committed.
+    /// This differs from appending newly discovered bars via `append_bar`, where
+    /// each new bar is the latest known bar. No data acquisition is performed.
+    pub fn historical_dataset<'runtime, 'bars>(
+        &'runtime mut self,
+        bars: &'bars [Bar],
+    ) -> Result<HistoricalDataset<'runtime, 'bars, 'a>, RuntimeError> {
+        self.historical_dataset_inner(bars, None)
+    }
+
+    fn historical_dataset_inner<'runtime, 'bars>(
+        &'runtime mut self,
+        bars: &'bars [Bar],
+        execution_times: Option<&'bars [i64]>,
+    ) -> Result<HistoricalDataset<'runtime, 'bars, 'a>, RuntimeError> {
         // A batch supplies the complete initial dataset. Restrict its first
         // execution window before any series, bar indices or strategy state
         // are created. Later incremental appends extend that window normally.
@@ -743,19 +791,13 @@ impl<'a> HistoricalRuntime<'a> {
             self.last_bar_time = Some(last.time);
             self.chart_visible_right_time = Some(last.time);
         }
-        let result = (|| {
-            for (index, bar) in bars.iter().enumerate() {
-                self.append_bar_with_context(
-                    *bar,
-                    BarUpdateKind::Historical,
-                    true,
-                    execution_times.map(|times| times[index]),
-                )?;
-            }
-            Ok(())
-        })();
-        self.historical_end = previous_historical_end;
-        result
+        Ok(HistoricalDataset {
+            runtime: self,
+            bars,
+            execution_times,
+            index: 0,
+            previous_historical_end,
+        })
     }
 
     pub fn append_bar(&mut self, bar: Bar) -> Result<(), RuntimeError> {
@@ -909,6 +951,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;
+        self.collect_temporary_collections();
         self.current_bar_update_kind = BarUpdateKind::Historical;
         self.current_bar_is_new = true;
         self.current_bar = None;

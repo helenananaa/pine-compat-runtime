@@ -1,6 +1,6 @@
 # Independent runtime delivery
 
-Updated 2026-10-01. This is the single current delivery-status entry point.
+Updated 2026-10-02. This is the single current delivery-status entry point.
 Current classification: **compatibility/install-qualified local prerelease; resource acceptance notPassed**.
 
 ## Current-core acceptance index
@@ -14,15 +14,28 @@ cases. All 180 complete outputs agree across both platforms; retained native
 comparators pass their named assertions. Both canonical gates and both retained
 optimized wheels' 774 Python tests pass. No native data is recaptured.
 
-The 216 frozen resource trials are closed: 212 complete and four Windows
-Rust/WASM long-history four-session Pivot trials time out. Completed outputs
-agree across surfaces and platforms; nine session-zero isolation controls pass.
-Resource qualification is **notPassed**: long-history process-memory budgets,
-selected Pivot p95/growth budgets and the same-context historical Pivot
-append/batch control remain open. Peaks include input/report/verification copies
-and cannot be attributed entirely to core state. Interrupted or invalid observer
-trials and tool repairs remain preserved. Linux uses a buffered probe reader;
-Windows native receipts retain the original probe and its input-loading cost.
+[Performance resource follow-up](PERFORMANCE_RESOURCE_CLOSURE_20261002.md) and
+its [result index](PERFORMANCE_RESOURCE_CLOSURE_RESULTS_20261002.json) close the
+hash-pinned working-tree measurements based on `a0184633ae267be13aefda083a880ca7786f605c`.
+All 216 selected trials complete and meet individual time/memory budgets:
+144 unchanged Rust/WASM trials and 72 fresh Python trials after a collector-only
+serialization repair. Resource acceptance remains **notPassed**: Linux Python
+Pivot four-session forming/replacement/confirmation growth is 4.288/4.578/4.456,
+above the original limit of four. The earlier Python serialization failure is
+resolved; the remaining growth checks are explicitly retained.
+
+All 540 complete live output files agree across surfaces, platforms and repeats;
+108 stream-zero isolation comparisons and 180 known-dataset historical controls
+match. Both canonical gates pass 7,047 Rust, 152 tooling and 776 installed-wheel
+tests, including actual Node/WASM checks. Core and binary artifact hashes are
+unchanged from V13; strict AST and receipt-hash checks qualify retained evidence.
+The earlier 212-complete/four-timeout matrix and intervening failed candidates
+remain preserved on their own source/artifact pins.
+
+The `e73206f0` compatibility, native-reference and local prerelease installation
+qualification above keeps its own artifacts and inputs. It does not automatically
+qualify native-reference compatibility or prerelease installation for this
+performance working tree.
 
 A local optimized prerelease archive binds the source, 120 payload hashes,
 schemas 9/4/1/1, frozen references and resource evidence. Fresh environments

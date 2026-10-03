@@ -25,7 +25,11 @@ def read(p):
 
 
 def sha(p):
-    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+    digest = hashlib.sha256()
+    with Path(p).open("rb") as stream:
+        while chunk := stream.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def write(p, obj):

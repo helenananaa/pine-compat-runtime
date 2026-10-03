@@ -1,3 +1,6 @@
+mod owned;
+pub(crate) use owned::runtime_result_into_py;
+
 use crate::tables::tables_to_py;
 use pine_runtime::{PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue};
 use pyo3::prelude::*;
@@ -721,10 +724,38 @@ pub(crate) fn alerts_to_py(
 
 pub(crate) fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for value in values {
-        output.append(value_to_py(py, value)?)?;
+    // Repeated immutable scalars (especially color histories) can share one
+    // Python object. Containers must remain independently mutable, and float
+    // identity uses bits so negative zero is not replaced with positive zero.
+    let mut previous: Option<(&PineValue, Py<PyAny>)> = None;
+    for (index, value) in values.iter().enumerate() {
+        if let Some((old, item)) = &previous
+            && same_python_scalar(old, value)
+        {
+            output.append(item.bind(py))?;
+        } else {
+            append_value(py, &output, value)?;
+            previous = None;
+        }
+        if previous.is_none()
+            && values
+                .get(index + 1)
+                .is_some_and(|next| same_python_scalar(value, next))
+        {
+            previous = Some((value, output.get_item(index)?.unbind()));
+        }
     }
     Ok(output.into_any().unbind())
+}
+
+fn same_python_scalar(left: &PineValue, right: &PineValue) -> bool {
+    match (left, right) {
+        (PineValue::Int(left), PineValue::Int(right)) => left == right,
+        (PineValue::Float(left), PineValue::Float(right)) => left.to_bits() == right.to_bits(),
+        (PineValue::Color(left), PineValue::Color(right)) => left == right,
+        (PineValue::String(left), PineValue::String(right)) => left == right,
+        _ => false,
+    }
 }
 
 pub(crate) fn value_to_py(py: Python<'_>, value: &PineValue) -> PyResult<Py<PyAny>> {

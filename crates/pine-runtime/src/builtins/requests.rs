@@ -505,6 +505,10 @@ impl<'a> HistoricalRuntime<'a> {
                     &tuple_dependencies,
                 )?;
                 self.bounded_same_context_evaluations.insert(key, runtime);
+                self.bounded_same_context_captures.insert(
+                    RequestCacheKey::new(call_site_id, &chart_symbol, chart_timeframe.value()),
+                    captures,
+                );
                 return Ok(self.import_requested_value(&value));
             }
             let value = self.eval_expr(expression)?;
@@ -829,6 +833,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;
+        self.collect_temporary_collections();
         self.current_bar_update_kind = BarUpdateKind::Historical;
         self.current_bar_is_new = true;
         self.current_bar = None;

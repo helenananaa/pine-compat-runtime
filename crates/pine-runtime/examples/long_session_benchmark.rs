@@ -69,6 +69,7 @@ fn progress(start: Instant, phase: &str, repetition: usize, completed: usize, to
 fn memory_checkpoint(phase: &str, repetition: usize) -> Value {
     let reading = memory::read();
     json!({"phase":phase,"repetition":repetition,"source":memory::SOURCE,
+        "rssKiB":reading.resident_kib,"commitKiB":reading.commit_kib,
         "peakRssKiB":reading.peak_resident_kib,"peakCommitKiB":reading.peak_commit_kib})
 }
 

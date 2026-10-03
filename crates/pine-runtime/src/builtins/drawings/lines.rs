@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use pine_builtins::LINE_STYLES;
 use pine_ir::{HirCallArg, HirExpr};
 
-use crate::runtime::drawing_history::RuntimeLine;
+use crate::runtime::drawing_history::{RuntimeLine, drawing_by_id, drawing_by_id_mut};
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -104,6 +106,7 @@ impl<'a> HistoricalRuntime<'a> {
                 extend: fields.extend,
             },
         ));
+        Arc::make_mut(&mut self.active_lines).insert(id);
         Ok(PineValue::Line(id))
     }
 
@@ -272,7 +275,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(line) = self.lines.iter_mut().find(|line| line.id == id) else {
+        let Some(line) = drawing_by_id_mut(&mut self.lines, id) else {
             return Err(RuntimeError {
                 message: format!("invalid line id `{id}`"),
             });
@@ -289,6 +292,7 @@ impl<'a> HistoricalRuntime<'a> {
         next.bar_index = self.bars;
         next.exists = false;
         line.snapshots.push(next);
+        Arc::make_mut(&mut self.active_lines).remove(&id);
         Ok(PineValue::Void)
     }
 
@@ -300,7 +304,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+        let Some(line) = drawing_by_id(&self.lines, id) else {
             return Err(RuntimeError {
                 message: format!("invalid line id `{id}`"),
             });
@@ -325,19 +329,18 @@ impl<'a> HistoricalRuntime<'a> {
         copied.bar_index = self.bars;
         self.lines
             .push(RuntimeLine::from_snapshot(copied_id, copied));
+        Arc::make_mut(&mut self.active_lines).insert(copied_id);
         Ok(PineValue::Line(copied_id))
     }
 
     fn evict_oldest_lines_at_limit(&mut self) -> Result<(), RuntimeError> {
         let limit = self.max_line_count();
-        while self.active_line_count() >= limit {
-            let Some(line) = self.lines.iter_mut().find(|line| {
-                line.snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            }) else {
+        while self.active_lines.len() >= limit {
+            let Some(id) = Arc::make_mut(&mut self.active_lines).pop_first() else {
                 break;
             };
+            let line = drawing_by_id_mut(&mut self.lines, id)
+                .expect("active drawing identity must exist in history");
             let Some(latest) = line.snapshots.last().cloned() else {
                 return Err(RuntimeError {
                     message: format!("line `{}` has no snapshots", line.id),
@@ -349,17 +352,6 @@ impl<'a> HistoricalRuntime<'a> {
             line.snapshots.push(next);
         }
         Ok(())
-    }
-
-    fn active_line_count(&self) -> usize {
-        self.lines
-            .iter()
-            .filter(|line| {
-                line.snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            })
-            .count()
     }
 
     fn max_line_count(&self) -> usize {
@@ -421,7 +413,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+        let Some(line) = drawing_by_id(&self.lines, id) else {
             return Err(RuntimeError {
                 message: format!("invalid line id `{id}`"),
             });
@@ -526,7 +518,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+        let Some(line) = drawing_by_id(&self.lines, id) else {
             return Err(RuntimeError {
                 message: format!("invalid line id `{id}`"),
             });
@@ -569,7 +561,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(line) = self.lines.iter_mut().find(|line| line.id == id) else {
+        let Some(line) = drawing_by_id_mut(&mut self.lines, id) else {
             return Err(RuntimeError {
                 message: format!("invalid line id `{id}`"),
             });

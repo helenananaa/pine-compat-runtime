@@ -1,8 +1,8 @@
 use pine_ir::HirProgram;
 use pine_runtime::{
     Bar, BarUpdate, OutputRetention, RealtimeRuntime, RealtimeUpdateContext, RequestKey,
-    RequestTimeframe, RuntimeReplica, public_runtime_changes_json, public_runtime_result_json,
-    runtime_changes_from_json, runtime_result_from_json, session_window_input_from_json,
+    RequestTimeframe, RuntimeReplica, public_runtime_changes_json, runtime_changes_from_json,
+    runtime_result_from_json, session_window_input_from_json,
 };
 use serde_json::Value;
 use wasm_bindgen::prelude::*;
@@ -12,6 +12,7 @@ use crate::request_bars::{
     bar_from_json, execution_times_from_json, request_environment_and_execution_times_from_json,
 };
 use crate::run::{WasmProgram, parse_bars_csv};
+use crate::snapshot::owned_snapshot_json;
 
 pub(crate) const REALTIME_SESSION_SCHEMA_VERSION: u32 = 1;
 
@@ -134,7 +135,7 @@ impl WasmRealtimeSession {
         self.seeded = true;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        Ok(public_runtime_result_json(&result))
+        Ok(owned_snapshot_json(result))
     }
 
     pub(crate) fn replay_internal(
@@ -154,7 +155,7 @@ impl WasmRealtimeSession {
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        Ok(public_runtime_result_json(&result))
+        Ok(owned_snapshot_json(result))
     }
 
     pub(crate) fn correct_internal(
@@ -175,7 +176,7 @@ impl WasmRealtimeSession {
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        Ok(public_runtime_result_json(&result))
+        Ok(owned_snapshot_json(result))
     }
 
     fn parse_from_time(from_time: f64) -> Result<i64, String> {
@@ -212,7 +213,7 @@ impl WasmRealtimeSession {
                 .runtime
                 .update_with_context(update, context)
                 .map_err(|err| err.message)?;
-            public_runtime_result_json(&result)
+            owned_snapshot_json(result)
         };
         if forming {
             self.forming_time = Some(bar.time);
@@ -405,7 +406,7 @@ impl WasmRealtimeSession {
             "{{\"revision\":{},\"retainedFrom\":{},\"result\":{}}}",
             self.runtime.revision(),
             self.runtime.display_origin(),
-            public_runtime_result_json(&self.runtime.result())
+            owned_snapshot_json(self.runtime.result())
         )
     }
 
@@ -434,12 +435,12 @@ impl WasmRealtimeSession {
 
     #[wasm_bindgen(js_name = result)]
     pub fn result(&self) -> String {
-        public_runtime_result_json(&self.runtime.result())
+        owned_snapshot_json(self.runtime.result())
     }
 
     #[wasm_bindgen(js_name = confirmedResult)]
     pub fn confirmed_result(&self) -> String {
-        public_runtime_result_json(&self.runtime.confirmed_result())
+        owned_snapshot_json(self.runtime.confirmed_result())
     }
 
     #[wasm_bindgen(js_name = lastChanges)]
@@ -509,7 +510,14 @@ impl WasmRuntimeReplica {
 
     #[wasm_bindgen]
     pub fn result(&self) -> String {
-        public_runtime_result_json(self.inner.result())
+        crate::snapshot::borrowed_snapshot_json(self.inner.result())
+    }
+
+    /// Finalize this replica and return its complete output. The JavaScript
+    /// handle is consumed; use `result` to keep receiving stream updates.
+    #[wasm_bindgen(js_name = intoResult)]
+    pub fn into_result(self) -> String {
+        pine_runtime::into_public_runtime_result_json(self.inner.into_result())
     }
 
     #[wasm_bindgen]

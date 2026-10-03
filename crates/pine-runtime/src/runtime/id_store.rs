@@ -69,11 +69,103 @@ impl<V: Clone> IdStore<V> {
             .map(Arc::make_mut)
     }
 
+    /// Copy one retained identity between checkpoints without cloning payloads.
+    pub(crate) fn copy_entry_from(&mut self, previous: &Self, key: u32) -> bool {
+        let mut node = previous.root.as_deref();
+        for bit in (LEAF_BITS..32).rev() {
+            let Some(Node::Branch { left, right }) = node else {
+                return false;
+            };
+            node = if key & (1 << bit) == 0 { left } else { right }.as_deref();
+        }
+        let Some(Node::Leaf(values)) = node else {
+            return false;
+        };
+        let Some(value) = &values[(key as usize) & (LEAF_SIZE - 1)] else {
+            return false;
+        };
+        let slot = slot_mut(&mut self.root, 31, key);
+        self.len += usize::from(slot.is_none());
+        *slot = Some(value.clone());
+        true
+    }
+
     pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
         Values {
             stack: self.root.as_deref().into_iter().collect(),
             leaf: None,
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn entries(&self) -> impl Iterator<Item = (u32, &V)> {
+        let mut entries = Vec::with_capacity(self.len);
+        fn visit<'a, V>(node: &'a Node<V>, bit: u32, prefix: u32, out: &mut Vec<(u32, &'a V)>) {
+            match node {
+                Node::Leaf(values) => {
+                    for (index, value) in values.iter().enumerate() {
+                        if let Some(value) = value {
+                            out.push((prefix | index as u32, value.as_ref()));
+                        }
+                    }
+                }
+                Node::Branch { left, right } => {
+                    if let Some(left) = left {
+                        visit(left, bit - 1, prefix, out);
+                    }
+                    if let Some(right) = right {
+                        visit(right, bit - 1, prefix | (1 << bit), out);
+                    }
+                }
+            }
+        }
+        if let Some(root) = &self.root {
+            visit(root, 31, 0, &mut entries);
+        }
+        entries.into_iter()
+    }
+
+    pub(crate) fn retain(&mut self, mut keep: impl FnMut(u32, &V) -> bool) {
+        fn visit<V: Clone>(
+            root: &mut Option<Arc<Node<V>>>,
+            bit: u32,
+            prefix: u32,
+            keep: &mut impl FnMut(u32, &V) -> bool,
+        ) -> usize {
+            let Some(node) = root else { return 0 };
+            let count = match Arc::make_mut(node) {
+                Node::Leaf(values) => {
+                    let mut count = 0;
+                    for (index, value) in values.iter_mut().enumerate() {
+                        if value
+                            .as_ref()
+                            .is_some_and(|value| !keep(prefix | index as u32, value))
+                        {
+                            *value = None;
+                        }
+                        count += usize::from(value.is_some());
+                    }
+                    count
+                }
+                Node::Branch { left, right } => {
+                    visit(left, bit - 1, prefix, keep)
+                        + visit(right, bit - 1, prefix | (1 << bit), keep)
+                }
+            };
+            if count == 0 {
+                *root = None;
+            }
+            count
+        }
+        self.len = visit(&mut self.root, 31, 0, &mut keep);
+    }
+}
+
+#[cfg(test)]
+impl<V: Clone> std::ops::Index<&u32> for IdStore<V> {
+    type Output = V;
+    fn index(&self, key: &u32) -> &Self::Output {
+        self.get(key).expect("valid runtime handle")
     }
 }
 
@@ -131,6 +223,26 @@ impl<'a, V> Iterator for Values<'a, V> {
 mod tests {
     use super::*;
     #[test]
+    fn retaining_sparse_handles_prunes_storage_without_mutating_checkpoints() {
+        let mut store = IdStore::new();
+        for id in [0, 127, 128, 65536, u32::MAX] {
+            store.insert(id, vec![id]);
+        }
+        let original = store.clone();
+        store.retain(|id, _| id == 128 || id == u32::MAX);
+        assert_eq!(
+            store.entries().map(|(id, _)| id).collect::<Vec<_>>(),
+            [128, u32::MAX]
+        );
+        assert_eq!(store.len(), 2);
+        assert_eq!(store.capacity(), 2 * LEAF_SIZE);
+        store.get_mut(&128).unwrap().push(5);
+        assert_eq!(original.get(&128), Some(&vec![128]));
+        assert_eq!(original.len(), 5);
+        store.retain(|_, _| false);
+        assert_eq!(store.capacity(), 0);
+    }
+    #[test]
     fn sparse_ids_and_checkpoint_mutations_stay_independent() {
         let mut store = IdStore::new();
         for id in [0, 127, 128, 65536, u32::MAX] {
@@ -165,6 +277,10 @@ mod tests {
         }
         let original = store.clone();
         store.insert(10000, Payload(clones.clone()));
+        let mut imported = IdStore::new();
+        assert!(imported.copy_entry_from(&original, 0));
+        assert!(!imported.copy_entry_from(&original, 20000));
+        assert_eq!(imported.len(), 1);
         assert_eq!(clones.load(Ordering::Relaxed), 0);
         store.get_mut(&0).unwrap();
         assert_eq!(clones.load(Ordering::Relaxed), 1);

@@ -26,13 +26,13 @@ impl HistoricalRuntime<'_> {
             .series_store
             .buffers
             .values()
-            .map(Vec::len)
+            .map(|values| values.len())
             .sum::<usize>();
         let series_capacity = self
             .series_store
             .buffers
             .values()
-            .map(Vec::capacity)
+            .map(|values| values.capacity())
             .sum::<usize>();
         let plot_values = self
             .plots

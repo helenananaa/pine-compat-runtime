@@ -41,6 +41,21 @@ in main by `7b70095f6`; the retained a2a1ba5fb wheels do not include them.
 The streaming artifact inventory preserves its original pre-commit source
 digest and does not claim a fresh build of the merged main revision.
 
+The performance working-tree candidate adds `RuntimeReplica::into_result()`
+in Rust and `replica.intoResult()` in WASM. They finalize a completed replica
+and transfer its full output; the WASM handle is consumed and must not receive
+updates or another `free()` call. Read revision/origin beforehand if needed.
+Use `result()` when the replica will continue receiving updates. Rust also
+exposes `write_public_runtime_result_json` for a caller-owned sink and
+`into_public_runtime_result_json` for an owned complete String. These additions
+are covered by the [performance candidate record](PERFORMANCE_RESOURCE_CLOSURE_20261002.md);
+older retained artifacts keep their own interface and source pins.
+
+For known historical slices, `HistoricalRuntime::historical_dataset(&bars)`
+executes one borrowed iterator step per bar while retaining the complete
+dataset endpoint used by `append_bars`. Ordinary `append_bar` discovers a new
+latest bar, which can differ for scripts that inspect the dataset endpoint.
+
 ## Minimal examples
 
 - Rust: `cargo run --locked --release -p pine-runtime --example embed_runtime`

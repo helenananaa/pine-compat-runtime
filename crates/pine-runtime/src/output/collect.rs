@@ -12,12 +12,12 @@ pub(crate) fn push_plot_value(
 ) {
     if let Some(output) = outputs.iter_mut().find(|output| output.id == id) {
         while output.values.len() < current_bar {
-            output.values.push(PineValue::Na);
-            output.colors.push(PineValue::Na);
+            output.values.push_compact(PineValue::Na);
+            output.colors.push_compact(PineValue::Na);
         }
         if output.values.len() == current_bar {
-            output.values.push(value);
-            output.colors.push(color);
+            output.values.push_compact(value);
+            output.colors.push_compact(color);
         } else {
             if let Some(current) = output.values.last_mut() {
                 *current = value;
@@ -38,12 +38,12 @@ pub(crate) fn push_plot_value(
 pub(crate) fn finalize_plot_values(outputs: &mut [RuntimePlot], current_bar: usize) {
     for output in outputs {
         while output.values.len() < current_bar {
-            output.values.push(PineValue::Na);
-            output.colors.push(PineValue::Na);
+            output.values.push_compact(PineValue::Na);
+            output.colors.push_compact(PineValue::Na);
         }
         if output.values.len() == current_bar {
-            output.values.push(PineValue::Na);
-            output.colors.push(PineValue::Na);
+            output.values.push_compact(PineValue::Na);
+            output.colors.push_compact(PineValue::Na);
         }
     }
 }
@@ -57,16 +57,16 @@ pub(crate) fn push_series_value<T: SeriesOutput>(
     if let Some(output) = outputs.iter_mut().find(|output| output.id() == id) {
         let values = output.values_mut();
         while values.len() < current_bar {
-            values.push(PineValue::Na);
+            values.push_compact(PineValue::Na);
         }
         if values.len() == current_bar {
-            values.push(value);
+            values.push_compact(value);
         } else if let Some(current) = values.last_mut() {
             *current = value;
         }
     } else {
         let mut values = na_history(current_bar);
-        values.push(value);
+        values.push_compact(value);
         outputs.push(T::new(id, values));
     }
 }
@@ -75,10 +75,10 @@ pub(crate) fn finalize_series_values<T: SeriesOutput>(outputs: &mut [T], current
     for output in outputs {
         let values = output.values_mut();
         while values.len() < current_bar {
-            values.push(PineValue::Na);
+            values.push_compact(PineValue::Na);
         }
         if values.len() == current_bar {
-            values.push(PineValue::Na);
+            values.push_compact(PineValue::Na);
         }
     }
 }

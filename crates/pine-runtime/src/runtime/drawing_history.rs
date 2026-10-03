@@ -19,6 +19,21 @@ impl<S: Clone> RuntimeDrawing<S> {
     }
 }
 
+// Drawing identities increase monotonically. Retention only removes entries,
+// so the historical output stays sorted even when its IDs have gaps.
+pub(crate) fn drawing_by_id<S>(items: &[RuntimeDrawing<S>], id: u32) -> Option<&RuntimeDrawing<S>> {
+    let index = items.binary_search_by_key(&id, |item| item.id).ok()?;
+    items.get(index)
+}
+
+pub(crate) fn drawing_by_id_mut<S>(
+    items: &mut [RuntimeDrawing<S>],
+    id: u32,
+) -> Option<&mut RuntimeDrawing<S>> {
+    let index = items.binary_search_by_key(&id, |item| item.id).ok()?;
+    items.get_mut(index)
+}
+
 pub(crate) type RuntimeLabel = RuntimeDrawing<LabelSnapshot>;
 pub(crate) type RuntimeLine = RuntimeDrawing<LineSnapshot>;
 pub(crate) type RuntimeLineFill = RuntimeDrawing<LineFillSnapshot>;

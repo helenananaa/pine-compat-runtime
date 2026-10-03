@@ -1,14 +1,18 @@
 pub(crate) mod append_history;
 pub(crate) mod call_context;
 pub(crate) mod calls;
+mod collection_gc;
 pub(crate) mod context;
 pub(crate) mod display_retention;
 mod display_value;
 pub(crate) mod drawing_history;
 pub(crate) mod expressions;
 pub(crate) mod historical;
+mod historical_dataset;
+pub use historical_dataset::HistoricalDataset;
 pub(crate) mod history;
 pub(crate) mod id_store;
+mod metadata;
 mod objects;
 pub(crate) mod persistence;
 pub(crate) mod plot_history;

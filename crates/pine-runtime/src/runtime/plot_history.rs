@@ -10,7 +10,7 @@ use crate::{
 use std::sync::Arc;
 
 pub(crate) fn na_history(len: usize) -> AppendHistory<PineValue> {
-    AppendHistory::from_values(std::iter::repeat_n(PineValue::Na, len))
+    AppendHistory::from_compact_values(std::iter::repeat_n(PineValue::Na, len))
 }
 
 #[derive(Debug, Clone)]
@@ -33,8 +33,8 @@ impl RuntimePlot {
         let public = PlotSeries::new(id, values);
         Self {
             id: public.id,
-            values: AppendHistory::from_values(public.values),
-            colors: AppendHistory::from_values(public.colors),
+            values: AppendHistory::from_compact_values(public.values),
+            colors: AppendHistory::from_compact_values(public.colors),
             metadata: public.metadata,
             linewidth: public.linewidth,
             style: public.style,
@@ -125,13 +125,13 @@ impl BarAlignedOutput for RuntimePlotChar {
     }
 
     fn push_point(&mut self, point: Self::Point) {
-        self.values.push(point.value);
-        self.chars.push(point.char_value);
-        self.colors.push(point.color);
-        self.locations.push(point.location);
-        self.texts.push(point.text);
-        self.text_colors.push(point.text_color);
-        self.sizes.push(point.size);
+        self.values.push_compact(point.value);
+        self.chars.push_compact(point.char_value);
+        self.colors.push_compact(point.color);
+        self.locations.push_compact(point.location);
+        self.texts.push_compact(point.text);
+        self.text_colors.push_compact(point.text_color);
+        self.sizes.push_compact(point.size);
     }
 
     fn update_point(&mut self, point: Self::Point) {
@@ -159,13 +159,13 @@ impl BarAlignedOutput for RuntimePlotChar {
     }
 
     fn push_na_point(&mut self) {
-        self.values.push(PineValue::Na);
-        self.chars.push(PineValue::Na);
-        self.colors.push(PineValue::Na);
-        self.locations.push(PineValue::Na);
-        self.texts.push(PineValue::Na);
-        self.text_colors.push(PineValue::Na);
-        self.sizes.push(PineValue::Na);
+        self.values.push_compact(PineValue::Na);
+        self.chars.push_compact(PineValue::Na);
+        self.colors.push_compact(PineValue::Na);
+        self.locations.push_compact(PineValue::Na);
+        self.texts.push_compact(PineValue::Na);
+        self.text_colors.push_compact(PineValue::Na);
+        self.sizes.push_compact(PineValue::Na);
     }
 }
 
@@ -230,13 +230,13 @@ impl BarAlignedOutput for RuntimePlotShape {
     }
 
     fn push_point(&mut self, point: Self::Point) {
-        self.values.push(point.value);
-        self.styles.push(point.style);
-        self.locations.push(point.location);
-        self.colors.push(point.color);
-        self.texts.push(point.text);
-        self.text_colors.push(point.text_color);
-        self.sizes.push(point.size);
+        self.values.push_compact(point.value);
+        self.styles.push_compact(point.style);
+        self.locations.push_compact(point.location);
+        self.colors.push_compact(point.color);
+        self.texts.push_compact(point.text);
+        self.text_colors.push_compact(point.text_color);
+        self.sizes.push_compact(point.size);
     }
 
     fn update_point(&mut self, point: Self::Point) {
@@ -264,13 +264,13 @@ impl BarAlignedOutput for RuntimePlotShape {
     }
 
     fn push_na_point(&mut self) {
-        self.values.push(PineValue::Na);
-        self.styles.push(PineValue::Na);
-        self.locations.push(PineValue::Na);
-        self.colors.push(PineValue::Na);
-        self.texts.push(PineValue::Na);
-        self.text_colors.push(PineValue::Na);
-        self.sizes.push(PineValue::Na);
+        self.values.push_compact(PineValue::Na);
+        self.styles.push_compact(PineValue::Na);
+        self.locations.push_compact(PineValue::Na);
+        self.colors.push_compact(PineValue::Na);
+        self.texts.push_compact(PineValue::Na);
+        self.text_colors.push_compact(PineValue::Na);
+        self.sizes.push_compact(PineValue::Na);
     }
 }
 
@@ -329,11 +329,11 @@ impl BarAlignedOutput for RuntimePlotArrow {
     }
 
     fn push_point(&mut self, point: Self::Point) {
-        self.values.push(point.value);
-        self.color_ups.push(point.color_up);
-        self.color_downs.push(point.color_down);
-        self.min_heights.push(point.min_height);
-        self.max_heights.push(point.max_height);
+        self.values.push_compact(point.value);
+        self.color_ups.push_compact(point.color_up);
+        self.color_downs.push_compact(point.color_down);
+        self.min_heights.push_compact(point.min_height);
+        self.max_heights.push_compact(point.max_height);
     }
 
     fn update_point(&mut self, point: Self::Point) {
@@ -355,11 +355,11 @@ impl BarAlignedOutput for RuntimePlotArrow {
     }
 
     fn push_na_point(&mut self) {
-        self.values.push(PineValue::Na);
-        self.color_ups.push(PineValue::Na);
-        self.color_downs.push(PineValue::Na);
-        self.min_heights.push(PineValue::Na);
-        self.max_heights.push(PineValue::Na);
+        self.values.push_compact(PineValue::Na);
+        self.color_ups.push_compact(PineValue::Na);
+        self.color_downs.push_compact(PineValue::Na);
+        self.min_heights.push_compact(PineValue::Na);
+        self.max_heights.push_compact(PineValue::Na);
     }
 }
 
@@ -418,11 +418,11 @@ impl BarAlignedOutput for RuntimePlotBar {
     }
 
     fn push_point(&mut self, point: Self::Point) {
-        self.opens.push(point.open);
-        self.highs.push(point.high);
-        self.lows.push(point.low);
-        self.closes.push(point.close);
-        self.colors.push(point.color);
+        self.opens.push_compact(point.open);
+        self.highs.push_compact(point.high);
+        self.lows.push_compact(point.low);
+        self.closes.push_compact(point.close);
+        self.colors.push_compact(point.color);
     }
 
     fn update_point(&mut self, point: Self::Point) {
@@ -444,11 +444,11 @@ impl BarAlignedOutput for RuntimePlotBar {
     }
 
     fn push_na_point(&mut self) {
-        self.opens.push(PineValue::Na);
-        self.highs.push(PineValue::Na);
-        self.lows.push(PineValue::Na);
-        self.closes.push(PineValue::Na);
-        self.colors.push(PineValue::Na);
+        self.opens.push_compact(PineValue::Na);
+        self.highs.push_compact(PineValue::Na);
+        self.lows.push_compact(PineValue::Na);
+        self.closes.push_compact(PineValue::Na);
+        self.colors.push_compact(PineValue::Na);
     }
 }
 
@@ -513,13 +513,13 @@ impl BarAlignedOutput for RuntimePlotCandle {
     }
 
     fn push_point(&mut self, point: Self::Point) {
-        self.opens.push(point.open);
-        self.highs.push(point.high);
-        self.lows.push(point.low);
-        self.closes.push(point.close);
-        self.colors.push(point.color);
-        self.wick_colors.push(point.wick_color);
-        self.border_colors.push(point.border_color);
+        self.opens.push_compact(point.open);
+        self.highs.push_compact(point.high);
+        self.lows.push_compact(point.low);
+        self.closes.push_compact(point.close);
+        self.colors.push_compact(point.color);
+        self.wick_colors.push_compact(point.wick_color);
+        self.border_colors.push_compact(point.border_color);
     }
 
     fn update_point(&mut self, point: Self::Point) {
@@ -547,13 +547,13 @@ impl BarAlignedOutput for RuntimePlotCandle {
     }
 
     fn push_na_point(&mut self) {
-        self.opens.push(PineValue::Na);
-        self.highs.push(PineValue::Na);
-        self.lows.push(PineValue::Na);
-        self.closes.push(PineValue::Na);
-        self.colors.push(PineValue::Na);
-        self.wick_colors.push(PineValue::Na);
-        self.border_colors.push(PineValue::Na);
+        self.opens.push_compact(PineValue::Na);
+        self.highs.push_compact(PineValue::Na);
+        self.lows.push_compact(PineValue::Na);
+        self.closes.push_compact(PineValue::Na);
+        self.colors.push_compact(PineValue::Na);
+        self.wick_colors.push_compact(PineValue::Na);
+        self.border_colors.push_compact(PineValue::Na);
     }
 }
 

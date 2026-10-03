@@ -9,8 +9,11 @@ use crate::runtime::append_history::AppendHistory;
 use crate::{
     HistoricalRuntime, PineValue, RequestDataError, RequestEnvironment, RequestKey, RuntimeError,
 };
-use pine_ir::{HirExpr, HirExprKind, HirHistoryOffset, SymbolId};
-use std::{collections::HashMap, sync::Arc};
+use pine_ir::{HirExpr, HirExprKind, HirHistoryOffset, HirStmt, HirStmtKind, SymbolId};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 #[derive(Clone)]
 pub(crate) struct RequestEvaluation<'a> {
@@ -20,6 +23,12 @@ pub(crate) struct RequestEvaluation<'a> {
     provider_len: usize,
     #[cfg(test)]
     replayed_bars: usize,
+}
+
+impl RequestEvaluation<'_> {
+    pub(crate) fn capture_values(&self) -> impl Iterator<Item = &PineValue> {
+        self.captures.values()
+    }
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -121,8 +130,9 @@ impl<'a> HistoricalRuntime<'a> {
     }
 }
 
-// Admission is unchanged. Complex/nested and dataset-end-dependent expressions
-// retain the complete evaluator; only this optimization is conservative.
+// Replay only expressions whose effects live in the requested checkpoint and
+// whose inputs do not depend on the dataset endpoint. Other expressions retain
+// the complete evaluator.
 fn incremental_expression(
     expr: &HirExpr,
     initializers: &HashMap<SymbolId, &HirExpr>,
@@ -130,15 +140,36 @@ fn incremental_expression(
     symbols: &[pine_ir::HirSymbol],
     depth: usize,
 ) -> bool {
+    incremental_scoped_expression(
+        expr,
+        initializers,
+        captures,
+        symbols,
+        &HashSet::new(),
+        depth,
+    )
+}
+
+fn incremental_scoped_expression(
+    expr: &HirExpr,
+    initializers: &HashMap<SymbolId, &HirExpr>,
+    captures: &HashMap<SymbolId, PineValue>,
+    symbols: &[pine_ir::HirSymbol],
+    locals: &HashSet<SymbolId>,
+    depth: usize,
+) -> bool {
     if depth > 64 {
         return false;
     }
-    let visit = |expr| incremental_expression(expr, initializers, captures, symbols, depth + 1);
+    let visit = |expr| {
+        incremental_scoped_expression(expr, initializers, captures, symbols, locals, depth + 1)
+    };
     match &expr.kind {
         HirExprKind::Literal(_) => true,
         HirExprKind::Builtin(name) => stable_builtin(name),
         HirExprKind::Symbol(symbol) => {
-            captures.contains_key(symbol)
+            locals.contains(symbol)
+                || captures.contains_key(symbol)
                 || initializers.get(symbol).map_or_else(
                     || {
                         symbols
@@ -165,8 +196,82 @@ fn incremental_expression(
                 }
         }
         HirExprKind::Call { callee, args, .. } => {
-            (callee.starts_with("ta.") || (callee.starts_with("math.") && callee != "math.random"))
+            (callee.starts_with("ta.")
+                || (callee.starts_with("math.") && callee != "math.random")
+                || matches!(callee.as_str(), "timeframe.change" | "year"))
                 && args.iter().all(|arg| visit(&arg.value))
+        }
+        HirExprKind::Block { statements, result } => {
+            let mut bound = locals.clone();
+            statements.iter().all(|statement| {
+                incremental_statement(
+                    statement,
+                    initializers,
+                    captures,
+                    symbols,
+                    &mut bound,
+                    depth + 1,
+                )
+            }) && incremental_scoped_expression(
+                result,
+                initializers,
+                captures,
+                symbols,
+                &bound,
+                depth + 1,
+            )
+        }
+        _ => false,
+    }
+}
+
+// Lowered scalar UDFs keep their local state in the checkpoint. Admit only
+// declarations, local assignments and conditional branches with stable inputs.
+// Mutations of external state, loops, nested requests and endpoint reads retain
+// the complete evaluator.
+fn incremental_statement(
+    statement: &HirStmt,
+    initializers: &HashMap<SymbolId, &HirExpr>,
+    captures: &HashMap<SymbolId, PineValue>,
+    symbols: &[pine_ir::HirSymbol],
+    locals: &mut HashSet<SymbolId>,
+    depth: usize,
+) -> bool {
+    if depth > 64 {
+        return false;
+    }
+    let visit = |expr, bound: &HashSet<SymbolId>| {
+        incremental_scoped_expression(expr, initializers, captures, symbols, bound, depth + 1)
+    };
+    match &statement.kind {
+        HirStmtKind::Decl { symbol, value } => {
+            if !visit(value, locals) {
+                return false;
+            }
+            locals.insert(*symbol);
+            true
+        }
+        HirStmtKind::Reassign { symbol, value } => locals.contains(symbol) && visit(value, locals),
+        HirStmtKind::Expr(value) => visit(value, locals),
+        HirStmtKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            visit(condition, locals)
+                && [then_branch, else_branch].into_iter().all(|branch| {
+                    let mut bound = locals.clone();
+                    branch.iter().all(|statement| {
+                        incremental_statement(
+                            statement,
+                            initializers,
+                            captures,
+                            symbols,
+                            &mut bound,
+                            depth + 1,
+                        )
+                    })
+                })
         }
         _ => false,
     }
@@ -181,6 +286,7 @@ fn stable_builtin(name: &str) -> bool {
             | "close"
             | "volume"
             | "time"
+            | "time_tradingday"
             | "bar_index"
             | "hl2"
             | "hlc3"
@@ -296,6 +402,80 @@ mod tests {
         );
         let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment);
         runtime.append_bar(bar(240_000, 1.)).unwrap();
+        assert!(runtime.request_evaluations.is_empty());
+    }
+
+    #[test]
+    fn live_udf_tuple_checkpoint_matches_full_replay_with_local_counter() {
+        let source = SourceFile::new(
+            "udf.pine",
+            "//@version=6\nindicator(\"udf\")\ncount(bool anchor) =>\n    var int n = 0\n    if anchor\n        n += 1\n    n\nvalues() =>\n    bool anchor = timeframe.change(\"5\") and year(time_tradingday, syminfo.timezone) % 1 == 0\n    [ta.pivot_point_levels(\"Traditional\", anchor), ta.pivot_point_levels(\"Traditional\", anchor, developing=true), count(anchor)]\n[a,b,n] = request.security(\"B\", \"5\", values(), lookahead=barmerge.lookahead_on)\nplot(array.get(a, 0))\nplot(array.get(b, 0))\nplot(n)\n",
+        );
+        let hir = analyze_source(&source).hir.unwrap();
+        let key = RequestKey::new("B", RequestTimeframe::parse("5").unwrap());
+        let provider = InMemoryRequestDataProvider::from_streams(vec![(
+            key.clone(),
+            (0..128)
+                .map(|i| bar(i * 300_000, 10.0 + i as f64))
+                .collect(),
+        )])
+        .unwrap();
+        let environment = RequestEnvironment::new(
+            ChartContext::new("A", RequestTimeframe::parse("1").unwrap()),
+            Arc::new(provider),
+        );
+        let mut fast = HistoricalRuntime::with_request_environment(&hir, environment.clone());
+        let mut full = HistoricalRuntime::with_request_environment(&hir, environment);
+        fast.append_bar(bar(0, 1.0)).unwrap();
+        full.append_bar(bar(0, 1.0)).unwrap();
+        for index in 128..144 {
+            for bump in [0.0, 0.5, 1.0] {
+                let requested = bar(index * 300_000, index as f64 + bump);
+                fast.apply_request_update(key.clone(), BarUpdate::forming(requested))
+                    .unwrap();
+                full.apply_request_update(key.clone(), BarUpdate::forming(requested))
+                    .unwrap();
+                full.request_evaluations.clear();
+                let chart = bar(index * 300_000 + 240_000, 1.0);
+                fast.append_bar_with_kind(chart, BarUpdateKind::Forming)
+                    .unwrap();
+                full.append_bar_with_kind(chart, BarUpdateKind::Forming)
+                    .unwrap();
+                assert_eq!(fast.result().plots, full.result().plots, "{index}/{bump}");
+                assert!(!fast.request_evaluations.is_empty());
+                assert!(
+                    fast.request_evaluations
+                        .values()
+                        .all(|state| state.replayed_bars <= 2)
+                );
+            }
+            let requested = bar(index * 300_000, index as f64 + 1.0);
+            fast.apply_request_update(key.clone(), BarUpdate::confirmed(requested))
+                .unwrap();
+            full.apply_request_update(key.clone(), BarUpdate::confirmed(requested))
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn endpoint_read_inside_udf_branch_keeps_complete_evaluator() {
+        let source = SourceFile::new(
+            "endpoint-udf.pine",
+            "//@version=6\nindicator(\"end\")\nf() =>\n    var float n = 0\n    if barstate.islast\n        n += close\n    n\nplot(request.security(\"B\", \"5\", f(), lookahead=barmerge.lookahead_on))\n",
+        );
+        let hir = analyze_source(&source).hir.unwrap();
+        let key = RequestKey::new("B", RequestTimeframe::parse("5").unwrap());
+        let provider = InMemoryRequestDataProvider::from_streams(vec![(
+            key,
+            vec![bar(0, 1.0), bar(300_000, 2.0)],
+        )])
+        .unwrap();
+        let environment = RequestEnvironment::new(
+            ChartContext::new("A", RequestTimeframe::parse("1").unwrap()),
+            Arc::new(provider),
+        );
+        let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment);
+        runtime.append_bar(bar(240_000, 1.0)).unwrap();
         assert!(runtime.request_evaluations.is_empty());
     }
 }

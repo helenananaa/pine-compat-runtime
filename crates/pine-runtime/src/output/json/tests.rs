@@ -4,7 +4,7 @@ use crate::{
     StrategyOrderFillAlertOutput, StrategyPositionSnapshot, StrategyTrade,
 };
 
-fn empty_result() -> RuntimeResult {
+pub(super) fn empty_result() -> RuntimeResult {
     RuntimeResult {
         plots: Vec::new(),
         plot_chars: Vec::new(),

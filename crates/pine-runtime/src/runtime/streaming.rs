@@ -1,6 +1,55 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
-type DrawingCursor = BTreeMap<u32, (usize, usize)>;
+#[derive(Debug, Clone, Default)]
+struct DrawingCursor(Vec<(u32, (usize, usize))>);
+
+impl FromIterator<(u32, (usize, usize))> for DrawingCursor {
+    fn from_iter<T: IntoIterator<Item = (u32, (usize, usize))>>(iter: T) -> Self {
+        let mut entries: Vec<_> = iter.into_iter().collect();
+        entries.sort_unstable_by_key(|entry| entry.0);
+        Self(entries)
+    }
+}
+
+impl DrawingCursor {
+    fn keys(&self) -> impl Iterator<Item = &u32> {
+        self.0.iter().map(|entry| &entry.0)
+    }
+
+    fn lookup(&self) -> DrawingLookup<'_> {
+        DrawingLookup {
+            cursor: self,
+            index: 0,
+        }
+    }
+}
+
+struct DrawingLookup<'a> {
+    cursor: &'a DrawingCursor,
+    index: usize,
+}
+
+impl<'a> DrawingLookup<'a> {
+    // Runtime drawings are appended in identity order; walk the sorted cursor
+    // once rather than performing a tree search per drawing. A backwards query
+    // uses binary search, keeping lookup correct even for reordered input.
+    fn get(&mut self, id: &u32) -> Option<&'a (usize, usize)> {
+        let entries = &self.cursor.0;
+        if entries.get(self.index).is_some_and(|entry| entry.0 > *id)
+            || (self.index == entries.len() && entries.last().is_some_and(|entry| entry.0 >= *id))
+        {
+            self.index = entries.partition_point(|entry| entry.0 < *id);
+        } else {
+            while entries.get(self.index).is_some_and(|entry| entry.0 < *id) {
+                self.index += 1;
+            }
+        }
+        entries
+            .get(self.index)
+            .filter(|entry| entry.0 == *id)
+            .map(|entry| &entry.1)
+    }
+}
 
 use super::historical::HistoricalRuntime;
 use crate::output::changes::{
@@ -98,8 +147,11 @@ impl OutputCursor {
                     (
                         item.id,
                         (
-                            item.snapshots
-                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            stable_drawing_len(
+                                &item.snapshots,
+                                runtime.bars.saturating_sub(1),
+                                |s| s.bar_index,
+                            ),
                             item.snapshots.len(),
                         ),
                     )
@@ -112,8 +164,11 @@ impl OutputCursor {
                     (
                         item.id,
                         (
-                            item.snapshots
-                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            stable_drawing_len(
+                                &item.snapshots,
+                                runtime.bars.saturating_sub(1),
+                                |s| s.bar_index,
+                            ),
                             item.snapshots.len(),
                         ),
                     )
@@ -126,8 +181,11 @@ impl OutputCursor {
                     (
                         item.id,
                         (
-                            item.snapshots
-                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            stable_drawing_len(
+                                &item.snapshots,
+                                runtime.bars.saturating_sub(1),
+                                |s| s.bar_index,
+                            ),
                             item.snapshots.len(),
                         ),
                     )
@@ -140,8 +198,11 @@ impl OutputCursor {
                     (
                         item.id,
                         (
-                            item.snapshots
-                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            stable_drawing_len(
+                                &item.snapshots,
+                                runtime.bars.saturating_sub(1),
+                                |s| s.bar_index,
+                            ),
                             item.snapshots.len(),
                         ),
                     )
@@ -154,8 +215,11 @@ impl OutputCursor {
                     (
                         item.id,
                         (
-                            item.snapshots
-                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            stable_drawing_len(
+                                &item.snapshots,
+                                runtime.bars.saturating_sub(1),
+                                |s| s.bar_index,
+                            ),
                             item.snapshots.len(),
                         ),
                     )
@@ -168,8 +232,11 @@ impl OutputCursor {
                     (
                         item.id,
                         (
-                            item.snapshots
-                                .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
+                            stable_drawing_len(
+                                &item.snapshots,
+                                runtime.bars.saturating_sub(1),
+                                |s| s.bar_index,
+                            ),
                             item.snapshots.len(),
                         ),
                     )
@@ -578,7 +645,7 @@ fn delta_start(old_len: usize, new_len: usize) -> usize {
 fn push_drawing(
     changes: &mut RuntimeChanges,
     family: DrawingFamily,
-    cursor: &DrawingCursor,
+    previous: Option<&(usize, usize)>,
     id: u32,
     stable_len: usize,
     total_len: usize,
@@ -588,13 +655,13 @@ fn push_drawing(
     // Keep empty SetTail updates when they retract a prior forming snapshot.
     // Table metadata lives outside snapshots and still needs its own updates.
     if family != DrawingFamily::Table
-        && cursor.get(&id).is_some_and(|(old_stable, old_total)| {
+        && previous.is_some_and(|(old_stable, old_total)| {
             old_stable == old_total && *old_total == stable_len && stable_len == total_len
         })
     {
         return;
     }
-    let action = match cursor.get(&id) {
+    let action = match previous {
         None => DrawingAction::Add(tail(0)),
         Some(_) => {
             let start = stable_len;
@@ -629,20 +696,34 @@ fn delete_missing(
     }
 }
 
+// Snapshot indices are chronological. If the last snapshot is already
+// stable, every snapshot is stable and there is no boundary to search.
+fn stable_drawing_len<S>(
+    history: &super::append_history::AppendHistory<S>,
+    bar: usize,
+    index: impl Fn(&S) -> usize,
+) -> usize {
+    if history.last().is_none_or(|last| index(last) < bar) {
+        history.len()
+    } else {
+        history.partition_point(|snapshot| index(snapshot) < bar)
+    }
+}
+
 fn diff_label_drawings(
     changes: &mut RuntimeChanges,
     cursor: &DrawingCursor,
     items: &[super::drawing_history::RuntimeLabel],
     bar: usize,
 ) {
+    let mut lookup = cursor.lookup();
     for item in items {
         push_drawing(
             changes,
             DrawingFamily::Label,
-            cursor,
+            lookup.get(&item.id),
             item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
+            stable_drawing_len(&item.snapshots, bar, |s| s.bar_index),
             item.snapshots.len(),
             |start| {
                 DrawingObject::Label(crate::LabelOutput {
@@ -666,14 +747,14 @@ fn diff_line_drawings(
     items: &[super::drawing_history::RuntimeLine],
     bar: usize,
 ) {
+    let mut lookup = cursor.lookup();
     for item in items {
         push_drawing(
             changes,
             DrawingFamily::Line,
-            cursor,
+            lookup.get(&item.id),
             item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
+            stable_drawing_len(&item.snapshots, bar, |s| s.bar_index),
             item.snapshots.len(),
             |start| {
                 DrawingObject::Line(crate::LineOutput {
@@ -697,14 +778,14 @@ fn diff_line_fill_drawings(
     items: &[super::drawing_history::RuntimeLineFill],
     bar: usize,
 ) {
+    let mut lookup = cursor.lookup();
     for item in items {
         push_drawing(
             changes,
             DrawingFamily::LineFill,
-            cursor,
+            lookup.get(&item.id),
             item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
+            stable_drawing_len(&item.snapshots, bar, |s| s.bar_index),
             item.snapshots.len(),
             |start| {
                 DrawingObject::LineFill(crate::LineFillOutput {
@@ -728,14 +809,14 @@ fn diff_polyline_drawings(
     items: &[super::drawing_history::RuntimePolyline],
     bar: usize,
 ) {
+    let mut lookup = cursor.lookup();
     for item in items {
         push_drawing(
             changes,
             DrawingFamily::Polyline,
-            cursor,
+            lookup.get(&item.id),
             item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
+            stable_drawing_len(&item.snapshots, bar, |s| s.bar_index),
             item.snapshots.len(),
             |start| {
                 DrawingObject::Polyline(crate::PolylineOutput {
@@ -759,14 +840,14 @@ fn diff_box_drawings(
     items: &[super::drawing_history::RuntimeBox],
     bar: usize,
 ) {
+    let mut lookup = cursor.lookup();
     for item in items {
         push_drawing(
             changes,
             DrawingFamily::Box,
-            cursor,
+            lookup.get(&item.id),
             item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
+            stable_drawing_len(&item.snapshots, bar, |s| s.bar_index),
             item.snapshots.len(),
             |start| {
                 DrawingObject::Box(crate::BoxOutput {
@@ -790,14 +871,14 @@ fn diff_table_drawings(
     items: &[super::drawing_history::RuntimeTable],
     bar: usize,
 ) {
+    let mut lookup = cursor.lookup();
     for item in items {
         push_drawing(
             changes,
             DrawingFamily::Table,
-            cursor,
+            lookup.get(&item.id),
             item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
+            stable_drawing_len(&item.snapshots, bar, |s| s.bar_index),
             item.snapshots.len(),
             |start| {
                 DrawingObject::Table(Box::new(crate::TableOutput {
@@ -913,4 +994,46 @@ fn fill_alert_splice(
         start,
         items: broker.fill_alerts_from(start),
     })
+}
+
+#[cfg(test)]
+mod drawing_cursor_tests {
+    use super::DrawingCursor;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn stable_boundary_matches_chronological_reference_after_trim() {
+        use crate::runtime::append_history::AppendHistory;
+        let mut history = AppendHistory::<usize>::default();
+        assert_eq!(super::stable_drawing_len(&history, 0, |value| *value), 0);
+        for index in 0..1400 {
+            history.push(index / 3);
+        }
+        for trim in [0, 500] {
+            history.drop_prefix(trim);
+            for bar in [0, 1, 127, 128, 255, 400, 466, 467, 2000] {
+                let expected = history.iter().take_while(|value| **value < bar).count();
+                assert_eq!(
+                    super::stable_drawing_len(&history, bar, |value| *value),
+                    expected
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn sparse_and_reordered_lookups_match_identity_map() {
+        for entries in [vec![], vec![(127, (2, 3)), (0, (1, 1)), (65_536, (9, 10))]] {
+            let expected: BTreeMap<_, _> = entries.iter().copied().collect();
+            let cursor: DrawingCursor = entries.into_iter().collect();
+            assert_eq!(
+                cursor.keys().collect::<Vec<_>>(),
+                expected.keys().collect::<Vec<_>>()
+            );
+            let mut lookup = cursor.lookup();
+            for id in [0, 1, 127, 128, 65_536, u32::MAX, 65_536, 127, 0, 65_535] {
+                assert_eq!(lookup.get(&id), expected.get(&id));
+            }
+        }
+    }
 }

@@ -15,6 +15,12 @@ pub(crate) struct AppendHistory<T> {
 #[derive(Debug, Clone)]
 enum Node<T> {
     Leaf(Vec<T>),
+    // A uniform leaf owns one value, including one string allocation. Public
+    // snapshots still materialize independent values for every logical point.
+    Repeat {
+        value: T,
+        len: usize,
+    },
     Branch {
         left: Arc<Node<T>>,
         right: Option<Arc<Node<T>>>,
@@ -46,6 +52,7 @@ impl<T> AppendHistory<T> {
         fn slots<T>(node: &Node<T>) -> usize {
             match node {
                 Node::Leaf(values) => values.capacity(),
+                Node::Repeat { .. } => 1,
                 Node::Branch { left, right } => {
                     slots(left) + right.as_ref().map_or(0, |r| slots(r))
                 }
@@ -117,6 +124,18 @@ impl<T: Clone> AppendHistory<T> {
         ))
     }
 
+    #[cfg(test)]
+    pub(crate) fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        if index >= self.len {
+            return None;
+        }
+        Some(element_mut(
+            &mut self.root,
+            self.capacity,
+            self.start + index,
+        ))
+    }
+
     pub(crate) fn tail(&self, start: usize) -> Vec<T> {
         let mut values = Vec::with_capacity(self.len.saturating_sub(start));
         collect(
@@ -162,6 +181,74 @@ impl<T> Index<usize> for AppendHistory<T> {
     fn index(&self, index: usize) -> &Self::Output {
         self.get(index)
             .unwrap_or_else(|| panic!("index {index} out of bounds"))
+    }
+}
+
+impl AppendHistory<crate::PineValue> {
+    pub(crate) fn from_compact_values(values: impl IntoIterator<Item = crate::PineValue>) -> Self {
+        let mut history = Self::default();
+        for value in values {
+            history.push_compact(value);
+        }
+        history
+    }
+
+    pub(crate) fn push_compact(&mut self, value: crate::PineValue) {
+        if self.start + self.len == self.capacity {
+            self.root = Arc::new(Node::Branch {
+                left: self.root.clone(),
+                right: None,
+            });
+            self.capacity *= 2;
+        }
+        insert_compact(&mut self.root, self.capacity, self.start + self.len, value);
+        self.len += 1;
+    }
+}
+
+fn same_plot_value(left: &crate::PineValue, right: &crate::PineValue) -> bool {
+    use crate::PineValue;
+    match (left, right) {
+        (PineValue::Float(left), PineValue::Float(right)) => left.to_bits() == right.to_bits(),
+        (PineValue::Tuple(_) | PineValue::UserType(_) | PineValue::ChartPoint(_), _) => false,
+        _ => left == right,
+    }
+}
+
+fn insert_compact(
+    node: &mut Arc<Node<crate::PineValue>>,
+    span: usize,
+    index: usize,
+    value: crate::PineValue,
+) {
+    match Arc::make_mut(node) {
+        Node::Repeat { value: old, len } if same_plot_value(old, &value) => {
+            debug_assert_eq!(*len, index);
+            *len += 1;
+        }
+        Node::Leaf(values) if values.len() == 1 && same_plot_value(&values[0], &value) => {
+            *node = Arc::new(Node::Repeat { value, len: 2 });
+        }
+        Node::Branch { left, right } => {
+            let half = span / 2;
+            if index < half {
+                insert_compact(left, half, index, value);
+            } else {
+                insert_compact(
+                    right.get_or_insert_with(|| empty(half)),
+                    half,
+                    index - half,
+                    value,
+                );
+            }
+        }
+        _ => insert(node, span, index, value),
+    }
+}
+
+fn expand_repeat<T: Clone>(node: &mut Arc<Node<T>>) {
+    if let Node::Repeat { value, len } = node.as_ref() {
+        *node = Arc::new(Node::Leaf(vec![value.clone(); *len]));
     }
 }
 
@@ -223,7 +310,7 @@ fn prune_prefix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, count: usize) {
     }
     // A partial boundary leaf retains at most 127 expired values. No surviving
     // values are cloned when trimming; checkpoints keep their original tree.
-    if matches!(node.as_ref(), Node::Leaf(_)) {
+    if matches!(node.as_ref(), Node::Leaf(_) | Node::Repeat { .. }) {
         return;
     }
     if let Node::Branch { left, right } = Arc::make_mut(node) {
@@ -249,11 +336,13 @@ fn empty<T>(span: usize) -> Arc<Node<T>> {
 }
 
 fn insert<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize, value: T) {
+    expand_repeat(node);
     match Arc::make_mut(node) {
         Node::Leaf(values) => {
             debug_assert_eq!(values.len(), index);
             values.push(value);
         }
+        Node::Repeat { .. } => unreachable!("expanded leaf"),
         Node::Branch { left, right } => {
             let half = span / 2;
             if index < half {
@@ -273,6 +362,10 @@ fn insert<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize, value: T
 fn element<T>(node: &Node<T>, span: usize, index: usize) -> &T {
     match node {
         Node::Leaf(values) => &values[index],
+        Node::Repeat { value, len } => {
+            assert!(index < *len);
+            value
+        }
         Node::Branch { left, right } => {
             let half = span / 2;
             if index < half {
@@ -289,8 +382,10 @@ fn element<T>(node: &Node<T>, span: usize, index: usize) -> &T {
 }
 
 fn element_mut<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize) -> &mut T {
+    expand_repeat(node);
     match Arc::make_mut(node) {
         Node::Leaf(values) => &mut values[index],
+        Node::Repeat { .. } => unreachable!("expanded leaf"),
         Node::Branch { left, right } => {
             let half = span / 2;
             if index < half {
@@ -312,6 +407,12 @@ fn collect<T: Clone>(node: &Node<T>, span: usize, start: usize, out: &mut Vec<T>
     }
     match node {
         Node::Leaf(values) => out.extend(values.get(start..).unwrap_or(&[]).iter().cloned()),
+        Node::Repeat { value, len } => {
+            out.extend(std::iter::repeat_n(
+                value.clone(),
+                len.saturating_sub(start),
+            ));
+        }
         Node::Branch { left, right } => {
             let half = span / 2;
             if start < half {
@@ -328,6 +429,108 @@ fn collect<T: Clone>(node: &Node<T>, span: usize, start: usize, out: &mut Vec<T>
 mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn shared_payload_writes_clone_one_value_and_preserve_checkpoint() {
+        struct Payload {
+            clones: Arc<AtomicUsize>,
+            value: usize,
+        }
+        impl Clone for Payload {
+            fn clone(&self) -> Self {
+                self.clones.fetch_add(1, Ordering::Relaxed);
+                Self {
+                    clones: self.clones.clone(),
+                    value: self.value,
+                }
+            }
+        }
+        let clones = Arc::new(AtomicUsize::new(0));
+        let mut history = AppendHistory::from_values((0..5000).map(|value| {
+            Arc::new(Payload {
+                clones: clones.clone(),
+                value,
+            })
+        }));
+        let checkpoint = history.clone();
+        history.drop_prefix(1000);
+        Arc::make_mut(history.get_mut(3000).unwrap()).value = 7;
+        assert_eq!(clones.load(Ordering::Relaxed), 1);
+        assert_eq!(checkpoint[4000].value, 4000);
+        assert_eq!(history[3000].value, 7);
+        assert!(history.get_mut(4000).is_none());
+    }
+
+    #[test]
+    fn compact_values_preserve_tail_mutations_trimming_and_float_bits() {
+        use crate::PineValue;
+        let mut history = AppendHistory::from_compact_values(std::iter::repeat_n(
+            PineValue::String("constant".into()),
+            1024,
+        ));
+        assert_eq!(history.capacity(), 8);
+        let checkpoint = history.clone();
+        *history.last_mut().unwrap() = PineValue::String("changed".into());
+        history.push_compact(PineValue::Na);
+        history.drop_prefix(1022);
+        assert_eq!(
+            history.to_vec(),
+            vec![
+                PineValue::String("constant".into()),
+                PineValue::String("changed".into()),
+                PineValue::Na
+            ]
+        );
+        assert_eq!(checkpoint.len(), 1024);
+        assert!(
+            checkpoint
+                .iter()
+                .all(|value| value == &PineValue::String("constant".into()))
+        );
+        let mut snapshot = checkpoint.to_vec();
+        snapshot[0] = PineValue::Na;
+        assert_eq!(checkpoint[0], PineValue::String("constant".into()));
+        let bits = [
+            0.0_f64.to_bits(),
+            (-0.0_f64).to_bits(),
+            0x7ff8000000000001,
+            0x7ff8000000000002,
+        ];
+        let history = AppendHistory::from_compact_values(
+            bits.into_iter()
+                .map(|bits| PineValue::Float(f64::from_bits(bits))),
+        );
+        let observed: Vec<_> = history
+            .iter()
+            .map(|value| value.as_f64().unwrap().to_bits())
+            .collect();
+        assert_eq!(observed, bits);
+    }
+
+    #[test]
+    fn compact_mixed_history_matches_plain_history_across_leaf_boundaries() {
+        use crate::PineValue;
+        let mut compact = AppendHistory::default();
+        let mut expected = Vec::new();
+        for i in 0..4096 {
+            let value = if i % 263 < 130 {
+                PineValue::Na
+            } else {
+                PineValue::Int(i)
+            };
+            compact.push_compact(value.clone());
+            expected.push(value);
+            if i % 19 == 0 {
+                *compact.last_mut().unwrap() = PineValue::Bool(true);
+                *expected.last_mut().unwrap() = PineValue::Bool(true);
+            }
+            if expected.len() > 257 {
+                expected.remove(0);
+                compact.drop_prefix(1);
+            }
+            assert_eq!(compact.to_vec(), expected);
+        }
+    }
 
     #[test]
     fn branches_and_tail_replacement_preserve_checkpoints() {

@@ -465,7 +465,10 @@ udtVaripReplica.free(); udtVaripSession.free(); udtVaripProgram.free();
   assert.deepEqual(JSON.parse(consumer.result()), JSON.parse(session.result()));
   consumer.apply(session.applyConfirmed(update));
   assert.deepEqual(JSON.parse(consumer.result()), JSON.parse(session.result()));
-  consumer.free(); session.free(); precisionProgram.free();
+  const complete = consumer.result();
+  assert.equal(consumer.intoResult(), complete);
+  assert.throws(()=>consumer.result());
+  session.free(); precisionProgram.free();
 }
 
 {

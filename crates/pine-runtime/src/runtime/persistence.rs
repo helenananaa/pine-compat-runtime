@@ -27,30 +27,11 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn seed_intrabar_persistence_from(&mut self, previous: &Self) {
         let mut object_roots = Vec::new();
-        let mut retained_array_ids = Vec::new();
-        let mut retained_map_ids = Vec::new();
-        let mut retained_matrix_ids = Vec::new();
         for var_slot_id in self.persistent_slots_for_kind(PersistenceKind::Varip) {
             if let Some(value) = previous.var_store.get(&var_slot_id).cloned() {
                 object_roots.push(value.clone());
-                match value {
-                    PineValue::Array(id) => retained_array_ids.push(id),
-                    PineValue::Map(id) => retained_map_ids.push(id),
-                    PineValue::Matrix(id) => retained_matrix_ids.push(id),
-                    _ => {}
-                }
                 self.var_store.insert(var_slot_id, value);
             }
-        }
-
-        for id in retained_array_ids {
-            self.seed_intrabar_array_from(previous, id);
-        }
-        for id in retained_map_ids {
-            self.seed_intrabar_map_from(previous, id);
-        }
-        for id in retained_matrix_ids {
-            self.seed_intrabar_matrix_from(previous, id);
         }
         self.seed_intrabar_objects_from(previous, object_roots);
     }
@@ -59,11 +40,7 @@ impl<'a> HistoricalRuntime<'a> {
         &self,
         symbol_id: SymbolId,
     ) -> Option<(PersistenceKind, VarSlotId)> {
-        let symbol = self
-            .program
-            .symbols
-            .iter()
-            .find(|symbol| symbol.id == symbol_id)?;
+        let symbol = &self.program.symbols[self.metadata.symbol_index(symbol_id)?];
 
         match symbol.persistence {
             PersistenceKind::None => None,
@@ -74,15 +51,10 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn persistent_slots_for_kind(&self, kind: PersistenceKind) -> Vec<VarSlotId> {
-        self.program
-            .symbols
-            .iter()
-            .filter(|symbol| symbol.persistence == kind)
-            .filter_map(|symbol| symbol.var_slot_id)
-            .collect()
+        self.metadata.persistent_slots(kind).to_vec()
     }
 
-    fn seed_intrabar_array_from(&mut self, previous: &Self, id: u32) {
+    pub(crate) fn seed_intrabar_array_from(&mut self, previous: &Self, id: u32) {
         self.next_array_id = self.next_array_id.max(id.saturating_add(1));
         if let Some(slice) = previous.array_slices.get(&id).copied() {
             let Some(kind) = previous.array_kinds.get(&id).copied() else {
@@ -94,31 +66,25 @@ impl<'a> HistoricalRuntime<'a> {
             self.seed_intrabar_array_from(previous, slice.parent_id);
             return;
         }
-        let (Some(values), Some(kind)) = (
-            previous.array_store.get(&id).cloned(),
-            previous.array_kinds.get(&id).copied(),
-        ) else {
+        let Some(kind) = previous.array_kinds.get(&id).copied() else {
             return;
         };
-        self.array_store.insert(id, values);
+        if !self.array_store.copy_entry_from(&previous.array_store, id) {
+            return;
+        }
         self.array_kinds.insert(id, kind);
         self.copy_array_user_type_metadata_from(previous, id, id);
     }
 
-    fn seed_intrabar_map_from(&mut self, previous: &Self, id: u32) {
+    pub(crate) fn seed_intrabar_map_from(&mut self, previous: &Self, id: u32) {
         self.next_map_id = self.next_map_id.max(id.saturating_add(1));
-        let Some(storage) = previous.map_store.get(&id).cloned() else {
-            return;
-        };
-        self.map_store.insert(id, storage);
+        self.map_store.copy_entry_from(&previous.map_store, id);
     }
 
-    fn seed_intrabar_matrix_from(&mut self, previous: &Self, id: u32) {
+    pub(crate) fn seed_intrabar_matrix_from(&mut self, previous: &Self, id: u32) {
         self.next_matrix_id = self.next_matrix_id.max(id.saturating_add(1));
-        let Some(storage) = previous.matrix_store.get(&id).cloned() else {
-            return;
-        };
-        self.matrix_store.insert(id, storage);
+        self.matrix_store
+            .copy_entry_from(&previous.matrix_store, id);
     }
 }
 

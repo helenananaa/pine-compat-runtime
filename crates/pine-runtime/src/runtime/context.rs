@@ -110,14 +110,13 @@ impl<'a> HistoricalRuntime<'a> {
         ];
 
         for (name, value) in builtins {
-            let symbol = self
-                .program
-                .symbols
-                .iter()
-                .find(|symbol| symbol.name == name)
+            let index = self
+                .metadata
+                .named_symbol_index(name)
                 .ok_or_else(|| RuntimeError {
                     message: format!("missing builtin symbol `{name}`"),
                 })?;
+            let symbol = &self.program.symbols[index];
             self.current_symbols.insert(symbol.id, value.clone());
             if let Some(series_id) = symbol.series_id {
                 self.activate_bar_aligned_series(series_id);
@@ -328,11 +327,8 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn series_id_for_symbol(&self, symbol_id: SymbolId) -> Option<SeriesId> {
-        self.program
-            .symbols
-            .iter()
-            .find(|symbol| symbol.id == symbol_id)
-            .and_then(|symbol| symbol.series_id)
+        let index = self.metadata.symbol_index(symbol_id)?;
+        self.program.symbols[index].series_id
     }
 
     pub(crate) fn set_symbol_value(&mut self, symbol: SymbolId, value: PineValue) {
@@ -344,11 +340,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn activate_bar_aligned_series(&mut self, series_id: SeriesId) {
-        let requires_history = self.program.series_history.iter().any(|requirement| {
-            requirement.series_id == series_id
-                && (requirement.max_constant_offset > 0 || requirement.has_dynamic_offsets)
-        });
-        if requires_history {
+        if self.metadata.requires_history(series_id) {
             self.active_series.insert(series_id);
         }
     }
@@ -366,7 +358,8 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn commit_current_series(&mut self) -> Result<(), RuntimeError> {
-        if self.projected_series_values_after_commit() > MAX_SERIES_HISTORY_VALUES {
+        let series_ids = self.series_ids_to_commit();
+        if self.projected_series_values_after_commit(&series_ids) > MAX_SERIES_HISTORY_VALUES {
             return Err(RuntimeError {
                 message: format!(
                     "series history limit exceeded: at most {MAX_SERIES_HISTORY_VALUES} committed values are retained"
@@ -374,11 +367,10 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let series_ids = self.series_ids_to_commit();
         for series_id in series_ids {
             let max_depth = self.series_retention.max_depth_for(series_id);
             let value = self.current_series.remove(&series_id).unwrap_or_else(|| {
-                if self.program.execution_scoped_series.contains(&series_id) {
+                if self.metadata.execution_scoped(series_id) {
                     self.series_store.read(series_id, 1)
                 } else {
                     PineValue::Na
@@ -394,9 +386,9 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(())
     }
 
-    pub(crate) fn projected_series_values_after_commit(&self) -> usize {
+    fn projected_series_values_after_commit(&self, series_ids: &[SeriesId]) -> usize {
         let mut total = self.series_store.values_len();
-        for series_id in self.series_ids_to_commit() {
+        for &series_id in series_ids {
             let current_len = self.series_store.len(series_id);
             let next_len = current_len.saturating_add(1);
             let retained_len = self
@@ -411,20 +403,12 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn current_builtin_f64(&self, name: &str) -> Option<f64> {
-        let symbol = self
-            .program
-            .symbols
-            .iter()
-            .find(|symbol| symbol.name == name)?;
+        let symbol = &self.program.symbols[self.metadata.named_symbol_index(name)?];
         self.current_symbols.get(&symbol.id)?.as_f64()
     }
 
     pub(crate) fn builtin_f64_at(&self, name: &str, offset: usize) -> Option<f64> {
-        let symbol = self
-            .program
-            .symbols
-            .iter()
-            .find(|symbol| symbol.name == name)?;
+        let symbol = &self.program.symbols[self.metadata.named_symbol_index(name)?];
         let series_id = symbol.series_id?;
         self.read_declared_series_history(series_id, offset)
             .as_f64()
@@ -451,11 +435,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn current_builtin_i64(&self, name: &str) -> Option<i64> {
-        let symbol = self
-            .program
-            .symbols
-            .iter()
-            .find(|symbol| symbol.name == name)?;
+        let symbol = &self.program.symbols[self.metadata.named_symbol_index(name)?];
         self.current_symbols.get(&symbol.id)?.as_i64()
     }
 

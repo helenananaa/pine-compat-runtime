@@ -277,28 +277,17 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "label.all" {
             let labels = self
-                .labels
+                .active_labels
                 .iter()
-                .filter(|label| {
-                    label
-                        .snapshots
-                        .last()
-                        .is_some_and(|snapshot| snapshot.exists)
-                })
-                .map(|label| PineValue::Label(label.id))
+                .map(|id| PineValue::Label(*id))
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Label, labels);
         }
         if name == "line.all" {
             let lines = self
-                .lines
+                .active_lines
                 .iter()
-                .filter(|line| {
-                    line.snapshots
-                        .last()
-                        .is_some_and(|snapshot| snapshot.exists)
-                })
-                .map(|line| PineValue::Line(line.id))
+                .map(|id| PineValue::Line(*id))
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Line, lines);
         }
@@ -332,15 +321,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "box.all" {
             let boxes = self
-                .boxes
+                .active_boxes
                 .iter()
-                .filter(|drawing_box| {
-                    drawing_box
-                        .snapshots
-                        .last()
-                        .is_some_and(|snapshot| snapshot.exists)
-                })
-                .map(|drawing_box| PineValue::Box(drawing_box.id))
+                .map(|id| PineValue::Box(*id))
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Box, boxes);
         }

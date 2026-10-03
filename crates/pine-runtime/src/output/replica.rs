@@ -44,6 +44,13 @@ impl RuntimeReplica {
         &self.result
     }
 
+    /// Consume a completed replica, transferring its full snapshot without a
+    /// copy. Its stream cursor and retransmission state are discarded.
+    #[must_use]
+    pub fn into_result(self) -> RuntimeResult {
+        self.result
+    }
+
     /// Replace state with an authoritative snapshot after a gap or reconnect.
     pub fn reset(&mut self, result: RuntimeResult, revision: u64) {
         *self = Self::new(result, revision);

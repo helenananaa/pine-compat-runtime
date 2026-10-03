@@ -58,12 +58,9 @@ impl HistoricalRuntime<'_> {
                 message: "cyclic UDT cannot be materialized as a value tree".to_owned(),
             });
         }
-        let fields = self
-            .object_store
-            .get(*id as usize)
-            .ok_or_else(|| RuntimeError {
-                message: "invalid UDT object reference".to_owned(),
-            })?;
+        let fields = self.object_store.get(id).ok_or_else(|| RuntimeError {
+            message: "invalid UDT object reference".to_owned(),
+        })?;
         let fields = fields
             .iter()
             .map(|field| self.materialize_object_inner(field, seen))
@@ -77,7 +74,7 @@ impl HistoricalRuntime<'_> {
         fields: Vec<PineValue>,
         identity: &pine_ir::HirUserTypeIdentity,
     ) -> Result<PineValue, RuntimeError> {
-        let id = u32::try_from(self.object_store.len()).map_err(|_| RuntimeError {
+        let id = u32::try_from(self.next_object_id).map_err(|_| RuntimeError {
             message: "UDT object identity space exhausted".to_owned(),
         })?;
         let flags = self
@@ -92,8 +89,12 @@ impl HistoricalRuntime<'_> {
                 || vec![false; fields.len()],
                 |ty| ty.fields.iter().map(|field| field.varip).collect(),
             );
-        self.object_store.push(fields);
-        self.object_varip_fields.push(flags);
+        if flags.iter().any(|flag| *flag) {
+            self.object_varip_ids.insert(id, id);
+        }
+        self.next_object_id += 1;
+        self.object_store.insert(id, fields);
+        self.object_varip_fields.insert(id, flags);
         Ok(PineValue::UserTypeRef(id))
     }
 
@@ -102,56 +103,89 @@ impl HistoricalRuntime<'_> {
         previous: &Self,
         mut roots: Vec<PineValue>,
     ) {
-        let committed_count = self.object_store.len();
-        for id in 0..committed_count {
+        self.next_object_id = self.next_object_id.max(previous.next_object_id);
+        // Field-level varip on committed objects survives reassignment during
+        // a forming pass. Ordinary fields still roll back to committed state.
+        let varip_ids = self.object_varip_ids.clone();
+        for &id in varip_ids.values() {
             if let (Some(fields), Some(flags)) = (
-                previous.object_store.get(id),
-                self.object_varip_fields.get(id),
+                previous.object_store.get(&id),
+                self.object_varip_fields.get(&id),
             ) {
                 for (index, varip) in flags.iter().enumerate() {
                     if *varip && let Some(value) = fields.get(index) {
-                        self.object_store[id][index] = value.clone();
+                        self.object_store.get_mut(&id).unwrap()[index] = value.clone();
                         roots.push(value.clone());
                     }
                 }
             }
         }
         let mut seen = std::collections::HashSet::new();
-        while let Some(value) = roots.pop() {
+        let mut pending: Vec<_> = roots.into_iter().map(|value| (value, true)).collect();
+        while let Some((value, retain_contents)) = pending.pop() {
             match value {
                 PineValue::UserTypeRef(id) if seen.insert((0, id)) => {
-                    let end = id as usize + 1;
-                    if end > self.object_store.len() && end <= previous.object_store.len() {
-                        // Preserve identity allocation slots. New varip-retained objects
-                        // have no committed field state to roll back to.
-                        let start = self.object_store.len();
+                    let imported = !self.object_store.contains_key(&id);
+                    if imported {
+                        // Import only retained identities. Sparse storage leaves
+                        // abandoned speculative allocations out of checkpoints.
                         self.object_store
-                            .extend_from_slice(&previous.object_store[start..end]);
+                            .copy_entry_from(&previous.object_store, id);
                         self.object_varip_fields
-                            .extend_from_slice(&previous.object_varip_fields[start..end]);
+                            .copy_entry_from(&previous.object_varip_fields, id);
+                        self.object_varip_ids
+                            .copy_entry_from(&previous.object_varip_ids, id);
                     }
-                    if let Some(fields) = self.object_store.get(id as usize) {
-                        roots.extend(fields.clone());
+                    if let Some(fields) = self.object_store.get(&id) {
+                        let flags = self.object_varip_fields.get(&id);
+                        pending.extend(fields.iter().enumerate().map(|(index, value)| {
+                            (
+                                value.clone(),
+                                imported || flags.is_some_and(|flags| flags[index]),
+                            )
+                        }));
                     }
                 }
-                PineValue::UserType(fields) | PineValue::Tuple(fields) => roots.extend(fields),
-                PineValue::Array(id) if seen.insert((1, id)) => {
+                PineValue::UserType(fields) | PineValue::Tuple(fields) => {
+                    pending.extend(fields.into_iter().map(|value| (value, retain_contents)));
+                }
+                PineValue::Array(id) if seen.insert((if retain_contents { 1 } else { 4 }, id)) => {
+                    if retain_contents {
+                        self.seed_intrabar_array_from(previous, id);
+                    }
+                    if let Some(slice) = self.array_slices.get(&id) {
+                        pending.push((PineValue::Array(slice.parent_id), retain_contents));
+                    }
                     if let Some(values) = self.array_store.get(&id) {
-                        roots.extend(values.clone());
+                        pending
+                            .extend(values.iter().cloned().map(|value| (value, retain_contents)));
                     }
                 }
-                PineValue::Map(id) if seen.insert((2, id)) => {
+                PineValue::Map(id) if seen.insert((if retain_contents { 2 } else { 5 }, id)) => {
+                    if retain_contents {
+                        self.seed_intrabar_map_from(previous, id);
+                    }
                     if let Some(map) = self.map_store.get(&id) {
-                        roots.extend(
+                        pending.extend(
                             map.entries
                                 .iter()
-                                .flat_map(|(key, value)| [key.clone(), value.clone()]),
+                                .flat_map(|(key, value)| [key.clone(), value.clone()])
+                                .map(|value| (value, retain_contents)),
                         );
                     }
                 }
-                PineValue::Matrix(id) if seen.insert((3, id)) => {
+                PineValue::Matrix(id) if seen.insert((if retain_contents { 3 } else { 6 }, id)) => {
+                    if retain_contents {
+                        self.seed_intrabar_matrix_from(previous, id);
+                    }
                     if let Some(matrix) = self.matrix_store.get(&id) {
-                        roots.extend(matrix.values.clone());
+                        pending.extend(
+                            matrix
+                                .values
+                                .iter()
+                                .cloned()
+                                .map(|value| (value, retain_contents)),
+                        );
                     }
                 }
                 _ => {}
@@ -161,7 +195,7 @@ impl HistoricalRuntime<'_> {
 
     pub(crate) fn object_field(&self, id: u32, index: usize) -> Result<PineValue, RuntimeError> {
         self.object_store
-            .get(id as usize)
+            .get(&id)
             .and_then(|fields| fields.get(index))
             .cloned()
             .ok_or_else(|| RuntimeError {
@@ -177,12 +211,184 @@ impl HistoricalRuntime<'_> {
     ) -> Result<(), RuntimeError> {
         let field = self
             .object_store
-            .get_mut(id as usize)
+            .get_mut(&id)
             .and_then(|fields| fields.get_mut(index))
             .ok_or_else(|| RuntimeError {
                 message: "invalid UDT object reference or field".to_owned(),
             })?;
         *field = value;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod varip_index_tests {
+    use super::*;
+
+    #[test]
+    fn field_varip_index_preserves_rollback_and_imported_identity_slots() {
+        let source = pine_syntax::SourceFile::new(
+            "varip-index.pine",
+            "//@version=6\nindicator(\"index\")\ntype Plain\n    int n\ntype Sticky\n    varip int ticks\n    int n\nplot(close)\n",
+        );
+        let hir = pine_sema::analyze_source(&source).hir.unwrap();
+        let plain = &hir
+            .user_types
+            .iter()
+            .find(|ty| ty.declaration_name == "Plain")
+            .unwrap()
+            .identity;
+        let sticky = &hir
+            .user_types
+            .iter()
+            .find(|ty| ty.declaration_name == "Sticky")
+            .unwrap()
+            .identity;
+        let mut committed = HistoricalRuntime::new(&hir);
+        for _ in 0..2048 {
+            committed
+                .allocate_object(vec![PineValue::Int(0)], plain)
+                .unwrap();
+        }
+        let PineValue::UserTypeRef(first) = committed
+            .allocate_object(vec![PineValue::Int(1), PineValue::Int(10)], sticky)
+            .unwrap()
+        else {
+            panic!("object")
+        };
+        let checkpoint = committed.clone();
+        let mut forming = committed.clone();
+        forming
+            .set_object_field(first, 0, PineValue::Int(7))
+            .unwrap();
+        forming
+            .set_object_field(first, 1, PineValue::Int(20))
+            .unwrap();
+        forming
+            .allocate_object(vec![PineValue::Int(30)], plain)
+            .unwrap();
+        let retained = forming
+            .allocate_object(vec![PineValue::Int(99), PineValue::Int(40)], sticky)
+            .unwrap();
+        committed.seed_intrabar_objects_from(&forming, vec![retained.clone(), retained]);
+        assert_eq!(committed.object_field(first, 0).unwrap(), PineValue::Int(7));
+        assert_eq!(
+            committed.object_field(first, 1).unwrap(),
+            PineValue::Int(10)
+        );
+        assert_eq!(
+            checkpoint.object_field(first, 0).unwrap(),
+            PineValue::Int(1)
+        );
+        assert_eq!(committed.object_store.len() + 1, forming.object_store.len());
+        assert_eq!(committed.next_object_id, forming.next_object_id);
+        let expected: Vec<_> = committed
+            .object_varip_fields
+            .entries()
+            .filter(|(_, flags)| flags.iter().any(|flag| *flag))
+            .map(|(index, _)| index)
+            .collect();
+        assert_eq!(expected.len(), 2);
+        assert_eq!(
+            committed
+                .object_varip_ids
+                .values()
+                .copied()
+                .collect::<Vec<_>>(),
+            expected
+        );
+        assert_eq!(
+            checkpoint
+                .object_varip_ids
+                .values()
+                .copied()
+                .collect::<Vec<_>>(),
+            vec![first]
+        );
+    }
+
+    #[test]
+    fn nested_sticky_graph_is_imported_while_ordinary_collection_fields_roll_back() {
+        use crate::builtins::maps::MapStorage;
+        use crate::builtins::matrices::{MatrixElementKind, MatrixStorage};
+        let source = pine_syntax::SourceFile::new(
+            "nested.pine",
+            "//@version=6\nindicator(\"nested\")\ntype Holder\n    varip int sticky\n    int ordinary\nplot(close)\n",
+        );
+        let hir = pine_sema::analyze_source(&source).hir.unwrap();
+        let identity = &hir.user_types[0].identity;
+        let mut committed = HistoricalRuntime::new(&hir);
+        // Synthetic graph isolates the storage/rollback contract from language
+        // restrictions on which reference kinds each UDT declaration accepts.
+        committed.map_store.insert(
+            0,
+            MapStorage {
+                key_kind: ArrayElementKind::String,
+                value_kind: ArrayElementKind::UserType,
+                entries: vec![],
+            },
+        );
+        committed.matrix_store.insert(
+            0,
+            MatrixStorage {
+                kind: MatrixElementKind::Float,
+                rows: 1,
+                columns: 1,
+                values: vec![PineValue::Float(7.)],
+            },
+        );
+        let held = committed
+            .allocate_object(vec![PineValue::Map(0), PineValue::Matrix(0)], identity)
+            .unwrap();
+        let checkpoint = committed.clone();
+        assert!(std::ptr::eq(
+            committed.map_store.get(&0).unwrap(),
+            checkpoint.map_store.get(&0).unwrap()
+        ));
+        assert!(std::ptr::eq(
+            committed.matrix_store.get(&0).unwrap(),
+            checkpoint.matrix_store.get(&0).unwrap()
+        ));
+        let mut forming = committed.clone();
+        forming.matrix_store.get_mut(&0).unwrap().values[0] = PineValue::Float(8.);
+        let nested_array =
+            forming.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(99.)]);
+        forming.matrix_store.insert(
+            1,
+            MatrixStorage {
+                kind: MatrixElementKind::UserType(0),
+                rows: 1,
+                columns: 1,
+                values: vec![PineValue::UserType(vec![nested_array])],
+            },
+        );
+        let nested = forming
+            .allocate_object(vec![PineValue::Matrix(1), PineValue::Na], identity)
+            .unwrap();
+        forming
+            .map_store
+            .get_mut(&0)
+            .unwrap()
+            .entries
+            .push((PineValue::String("nested".into()), nested));
+        committed.seed_intrabar_objects_from(&forming, vec![held]);
+        assert_eq!(
+            committed.matrix_store.get(&0).unwrap().values,
+            [PineValue::Float(7.)]
+        );
+        assert_eq!(committed.object_field(1, 0).unwrap(), PineValue::Matrix(1));
+        assert_eq!(
+            committed.array_get_cloned(0, 0).unwrap(),
+            Some(PineValue::Float(99.))
+        );
+        assert!(checkpoint.map_store.get(&0).unwrap().entries.is_empty());
+        assert!(checkpoint.matrix_store.get(&1).is_none());
+        // Intrabar imports share storage until the next actual mutation.
+        assert!(std::ptr::eq(
+            committed.map_store.get(&0).unwrap(),
+            forming.map_store.get(&0).unwrap()
+        ));
+        committed.map_store.get_mut(&0).unwrap().entries.clear();
+        assert_eq!(forming.map_store.get(&0).unwrap().entries.len(), 1);
     }
 }

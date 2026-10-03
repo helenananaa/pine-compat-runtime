@@ -1,4 +1,6 @@
-use crate::runtime::drawing_history::RuntimeLabel;
+use std::sync::Arc;
+
+use crate::runtime::drawing_history::{RuntimeLabel, drawing_by_id, drawing_by_id_mut};
 use crate::*;
 use pine_builtins::LABEL_STYLES;
 use pine_ir::{HirCallArg, HirExpr};
@@ -158,6 +160,7 @@ impl<'a> HistoricalRuntime<'a> {
                 text_formatting: fields.text_formatting,
             },
         ));
+        Arc::make_mut(&mut self.active_labels).insert(id);
         Ok(PineValue::Label(id))
     }
 
@@ -341,7 +344,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(label) = self.labels.iter_mut().find(|label| label.id == id) else {
+        let Some(label) = drawing_by_id_mut(&mut self.labels, id) else {
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });
@@ -358,6 +361,7 @@ impl<'a> HistoricalRuntime<'a> {
         next.bar_index = self.bars;
         next.exists = false;
         label.snapshots.push(next);
+        Arc::make_mut(&mut self.active_labels).remove(&id);
         Ok(PineValue::Void)
     }
 
@@ -369,7 +373,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(label) = self.labels.iter().find(|label| label.id == id) else {
+        let Some(label) = drawing_by_id(&self.labels, id) else {
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });
@@ -394,20 +398,18 @@ impl<'a> HistoricalRuntime<'a> {
         copied.bar_index = self.bars;
         self.labels
             .push(RuntimeLabel::from_snapshot(copied_id, copied));
+        Arc::make_mut(&mut self.active_labels).insert(copied_id);
         Ok(PineValue::Label(copied_id))
     }
 
     fn evict_oldest_labels_at_limit(&mut self) -> Result<(), RuntimeError> {
         let limit = self.max_label_count();
-        while self.active_label_count() >= limit {
-            let Some(label) = self.labels.iter_mut().find(|label| {
-                label
-                    .snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            }) else {
+        while self.active_labels.len() >= limit {
+            let Some(id) = Arc::make_mut(&mut self.active_labels).pop_first() else {
                 break;
             };
+            let label = drawing_by_id_mut(&mut self.labels, id)
+                .expect("active drawing identity must exist in history");
             let Some(latest) = label.snapshots.last().cloned() else {
                 return Err(RuntimeError {
                     message: format!("label `{}` has no snapshots", label.id),
@@ -419,18 +421,6 @@ impl<'a> HistoricalRuntime<'a> {
             label.snapshots.push(next);
         }
         Ok(())
-    }
-
-    fn active_label_count(&self) -> usize {
-        self.labels
-            .iter()
-            .filter(|label| {
-                label
-                    .snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            })
-            .count()
     }
 
     fn max_label_count(&self) -> usize {
@@ -541,7 +531,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(label) = self.labels.iter_mut().find(|label| label.id == id) else {
+        let Some(label) = drawing_by_id_mut(&mut self.labels, id) else {
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });
@@ -573,7 +563,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(label) = self.labels.iter().find(|label| label.id == id) else {
+        let Some(label) = drawing_by_id(&self.labels, id) else {
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
             });

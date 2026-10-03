@@ -1,3 +1,4 @@
+use crate::runtime::drawing_history::drawing_by_id;
 use pine_ir::{HirCallArg, HirExpr};
 
 use crate::runtime::drawing_history::RuntimeLineFill;
@@ -198,7 +199,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn line_exists(&self, id: u32) -> Result<bool, RuntimeError> {
-        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+        let Some(line) = drawing_by_id(&self.lines, id) else {
             return Err(RuntimeError {
                 message: format!("invalid line id `{id}`"),
             });

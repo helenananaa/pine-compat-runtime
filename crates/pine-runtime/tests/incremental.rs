@@ -268,9 +268,9 @@ fn runtime_fixtures_match_incremental_append_execution() {
         };
         let mut runtime = HistoricalRuntime::new(&hir);
         if has_latest_known_bar_state {
-            runtime
-                .append_bars(bars)
-                .expect("append execution should succeed");
+            for result in runtime.historical_dataset(bars).unwrap() {
+                result.expect("known-dataset step execution should succeed");
+            }
         } else {
             for bar in bars.iter().copied() {
                 runtime

@@ -129,7 +129,11 @@ they are not requalified here and must not be described as generally unable to
 run from their older admission failures. Earlier Pivot admission blockers are
 historical; current Pivot runs and passes the named paired comparison above.
 
-Next acceptance work is native intrabar/multi-timeframe combinations and the
-already [frozen resource plan](PRODUCT_STANDARD_CANDLE_RESOURCE_PLAN.json), with
-current Linux and optimized artifact qualification tracked separately. Market
-data acquisition, reconnection, persistence and scheduling remain host-owned.
+The [frozen resource plan](PRODUCT_STANDARD_CANDLE_RESOURCE_PLAN.json) has a
+complete [Windows/Linux performance follow-up](PERFORMANCE_RESOURCE_CLOSURE_20261002.md).
+All individual time/memory checks pass, but resource acceptance remains
+`notPassed` because three Linux Python Pivot four-session growth checks exceed
+the original limit. That resource matrix retains its own working-tree source
+and artifact pins; this native-reference receipt retains its original source.
+Native intrabar/multi-timeframe combinations remain separate acceptance work.
+Market-data acquisition, reconnection, persistence and scheduling remain host-owned.

@@ -11,6 +11,7 @@ mod builtins_ta_conditionals;
 mod builtins_ta_extremes;
 mod builtins_ta_flow;
 mod builtins_time;
+mod drawing_indexes;
 mod execution_clock;
 mod imports;
 mod legacy_indicators;

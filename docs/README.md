@@ -74,6 +74,10 @@ cargo run -p pine-cli -- matrix --format json
 
 ## Status And Roadmap Documents
 
+- [Interpreter Performance Resource Closure](PERFORMANCE_RESOURCE_CLOSURE_20261002.md):
+  allocation, rollback, output conversion and collector fixes; frozen-budget
+  Windows/Linux Rust, installed Python and actual WASM candidate evidence.
+
 - [Modern Function Default Parameters](STRATEGY_MODERN_DEFAULT_PARAMETERS_AUDIT.md): scalar optional arguments, caller scope and v5/v6 reference validation; its next-blocker wording is historical.
 
 - [Modern Strategy Next Cycle](STRATEGY_MODERN_NEXT_CYCLE_AUDIT.md): current G3 worktree closeout, real-strategy reference expansion, and explicit series parameter slice.

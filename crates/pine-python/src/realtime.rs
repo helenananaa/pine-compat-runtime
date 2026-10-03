@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyModule};
 
 use crate::changes::runtime_changes_to_py;
-use crate::outputs::runtime_result_to_py;
+use crate::outputs::runtime_result_into_py;
 use crate::{compile_script, parse_bar, parse_bars, parse_execution_times};
 
 fn execution_timestamp(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<i64>> {
@@ -175,7 +175,7 @@ impl PyRealtimeSession {
         self.seeded = true;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        runtime_result_to_py(py, &result)
+        runtime_result_into_py(py, result)
     }
 
     #[pyo3(signature = (bars, *, execution_times=None))]
@@ -198,7 +198,7 @@ impl PyRealtimeSession {
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        runtime_result_to_py(py, &result)
+        runtime_result_into_py(py, result)
     }
 
     #[pyo3(signature = (from_time, bars, *, execution_times=None))]
@@ -230,7 +230,7 @@ impl PyRealtimeSession {
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        runtime_result_to_py(py, &result)
+        runtime_result_into_py(py, result)
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -255,7 +255,7 @@ impl PyRealtimeSession {
             )
             .map_err(|err| PyValueError::new_err(err.message))?;
         self.forming_time = Some(bar.time);
-        runtime_result_to_py(py, &result)
+        runtime_result_into_py(py, result)
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -282,7 +282,7 @@ impl PyRealtimeSession {
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        runtime_result_to_py(py, &result)
+        runtime_result_into_py(py, result)
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -367,7 +367,7 @@ impl PyRealtimeSession {
         let envelope = pyo3::types::PyDict::new(py);
         envelope.set_item("revision", self.runtime.revision())?;
         envelope.set_item("retainedFrom", self.runtime.display_origin())?;
-        envelope.set_item("result", runtime_result_to_py(py, &self.runtime.result())?)?;
+        envelope.set_item("result", runtime_result_into_py(py, self.runtime.result())?)?;
         Ok(envelope.into_any().unbind())
     }
 
@@ -385,11 +385,11 @@ impl PyRealtimeSession {
     }
 
     fn result(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        runtime_result_to_py(py, &self.runtime.result())
+        runtime_result_into_py(py, self.runtime.result())
     }
 
     fn confirmed_result(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        runtime_result_to_py(py, &self.runtime.confirmed_result())
+        runtime_result_into_py(py, self.runtime.confirmed_result())
     }
 
     #[getter]

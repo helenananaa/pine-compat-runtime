@@ -201,6 +201,7 @@ impl<'a> HistoricalRuntime<'a> {
         let cells = rows.checked_mul(columns).ok_or_else(|| RuntimeError {
             message: "matrix reshape dimensions must preserve element count".to_owned(),
         })?;
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
@@ -211,6 +212,8 @@ impl<'a> HistoricalRuntime<'a> {
         }
         matrix.rows = rows;
         matrix.columns = columns;
+        let bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -222,6 +225,8 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(source) = self.matrix_store.get(&source_id).cloned() else {
             return Ok(None);
         };
+        self.record_collection_values(source.values.clone_allocation_values());
+        let cloned_target = self.matrix_store.get_mut_clones_value(&target_id);
         let Some(target) = self.matrix_store.get_mut(&target_id) else {
             return Ok(None);
         };
@@ -254,8 +259,17 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
             });
         }
-        target.values.extend(source.values);
+        let bytes = target
+            .cloned_entry_allocation_bytes(cloned_target)
+            .saturating_add(collection_values_allocation_bytes(source.values.iter()))
+            .saturating_add(if source.values.is_empty() {
+                0
+            } else {
+                collection_values_allocation_bytes(target.values.append_allocation_values(false))
+            });
+        target.values.extend(source.values.iter().cloned());
         target.rows = new_rows;
+        self.record_collection_bytes(bytes);
         Ok(Some(target_id))
     }
 
@@ -265,6 +279,7 @@ impl<'a> HistoricalRuntime<'a> {
         row: i64,
         values: Vec<PineValue>,
     ) -> Result<(), RuntimeError> {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
@@ -295,14 +310,25 @@ impl<'a> HistoricalRuntime<'a> {
         }
         let offset = row * columns;
         let kind = matrix.kind;
-        matrix.values.splice(
-            offset..offset,
+        let copied_values = if offset < matrix.values.len() {
+            collection_values_allocation_bytes(matrix.values.iter())
+        } else {
+            collection_values_allocation_bytes(matrix.values.append_allocation_values(false))
+        };
+        let bytes = matrix
+            .cloned_entry_allocation_bytes(cloned_matrix)
+            .saturating_add(copied_values)
+            .saturating_add(collection_values_allocation_bytes(&values));
+        matrix.values.replace_range(
+            offset,
+            offset,
             values
                 .into_iter()
                 .map(|value| eval_matrix_value_for_kind(kind, value)),
         );
         matrix.rows += 1;
         matrix.columns = columns;
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -312,6 +338,7 @@ impl<'a> HistoricalRuntime<'a> {
         column: i64,
         values: Vec<PineValue>,
     ) -> Result<(), RuntimeError> {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
@@ -341,6 +368,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let kind = matrix.kind;
+        let copied_entry_bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
         let mut inserted_values = values
             .into_iter()
             .map(|value| eval_matrix_value_for_kind(kind, value));
@@ -348,44 +376,73 @@ impl<'a> HistoricalRuntime<'a> {
         for row in 0..rows {
             let start = row * matrix.columns;
             let insert_offset = start + column;
-            next_values.extend_from_slice(&matrix.values[start..insert_offset]);
+            next_values.extend(matrix.values.view(start, column).iter().cloned());
             next_values.push(inserted_values.next().unwrap_or(PineValue::Na));
-            next_values.extend_from_slice(&matrix.values[insert_offset..start + matrix.columns]);
+            next_values.extend(
+                matrix
+                    .values
+                    .view(insert_offset, matrix.columns - column)
+                    .iter()
+                    .cloned(),
+            );
         }
+        let bytes =
+            copied_entry_bytes.saturating_add(collection_values_allocation_bytes(&next_values));
         matrix.columns = new_columns;
         matrix.rows = rows;
-        matrix.values = next_values;
+        matrix.values = next_values.into();
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
     pub(crate) fn matrix_remove_row(&mut self, id: u32, row: i64) -> Result<(), RuntimeError> {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
         let row = matrix_index("row", row, matrix.rows)?;
         let start = row * matrix.columns;
         let end = start + matrix.columns;
-        matrix.values.drain(start..end);
+        let bytes = matrix
+            .cloned_entry_allocation_bytes(cloned_matrix)
+            .saturating_add(collection_values_allocation_bytes(
+                matrix.values.view(0, start),
+            ))
+            .saturating_add(collection_values_allocation_bytes(
+                matrix.values.view(end, matrix.values.len() - end),
+            ));
+        matrix.values.replace_range(start, end, std::iter::empty());
         matrix.rows -= 1;
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
     pub(crate) fn matrix_remove_col(&mut self, id: u32, column: i64) -> Result<(), RuntimeError> {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
         let column = matrix_index("column", column, matrix.columns)?;
         let new_columns = matrix.columns - 1;
+        let copied_entry_bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
         let mut next_values = Vec::with_capacity(matrix.rows * new_columns);
         for row in 0..matrix.rows {
             let start = row * matrix.columns;
             let remove_offset = start + column;
-            next_values.extend_from_slice(&matrix.values[start..remove_offset]);
-            next_values
-                .extend_from_slice(&matrix.values[remove_offset + 1..start + matrix.columns]);
+            next_values.extend(matrix.values.view(start, column).iter().cloned());
+            next_values.extend(
+                matrix
+                    .values
+                    .view(remove_offset + 1, matrix.columns - column - 1)
+                    .iter()
+                    .cloned(),
+            );
         }
+        let bytes =
+            copied_entry_bytes.saturating_add(collection_values_allocation_bytes(&next_values));
         matrix.columns = new_columns;
-        matrix.values = next_values;
+        matrix.values = next_values.into();
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -395,20 +452,24 @@ impl<'a> HistoricalRuntime<'a> {
         row1: i64,
         row2: i64,
     ) -> Result<(), RuntimeError> {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
         let row1 = matrix_index("row", row1, matrix.rows)?;
         let row2 = matrix_index("row", row2, matrix.rows)?;
+        let mut bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
         if row1 == row2 || matrix.columns == 0 {
+            self.record_collection_bytes(bytes);
             return Ok(());
         }
         for column in 0..matrix.columns {
-            matrix.values.swap(
+            bytes = bytes.saturating_add(matrix.swap_values_allocation_bytes(
                 row1 * matrix.columns + column,
                 row2 * matrix.columns + column,
-            );
+            ));
         }
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -418,20 +479,24 @@ impl<'a> HistoricalRuntime<'a> {
         column1: i64,
         column2: i64,
     ) -> Result<(), RuntimeError> {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
         let column1 = matrix_index("column", column1, matrix.columns)?;
         let column2 = matrix_index("column", column2, matrix.columns)?;
+        let mut bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
         if column1 == column2 || matrix.rows == 0 {
+            self.record_collection_bytes(bytes);
             return Ok(());
         }
         for row in 0..matrix.rows {
-            matrix.values.swap(
+            bytes = bytes.saturating_add(matrix.swap_values_allocation_bytes(
                 row * matrix.columns + column1,
                 row * matrix.columns + column2,
-            );
+            ));
         }
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -441,11 +506,14 @@ impl<'a> HistoricalRuntime<'a> {
         column: i64,
         descending: bool,
     ) -> Result<(), RuntimeError> {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         let Some(matrix) = self.matrix_store.get_mut(&id) else {
             return Ok(());
         };
         let column = matrix_index("column", column, matrix.columns)?;
         if matrix.rows <= 1 || matrix.columns == 0 {
+            let bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
+            self.record_collection_bytes(bytes);
             return Ok(());
         }
 
@@ -460,9 +528,13 @@ impl<'a> HistoricalRuntime<'a> {
         let mut next_values = Vec::with_capacity(matrix.values.len());
         for row in row_indexes {
             let start = row * matrix.columns;
-            next_values.extend_from_slice(&matrix.values[start..start + matrix.columns]);
+            next_values.extend(matrix.values.view(start, matrix.columns).iter().cloned());
         }
-        matrix.values = next_values;
+        let bytes = matrix
+            .cloned_entry_allocation_bytes(cloned_matrix)
+            .saturating_add(collection_values_allocation_bytes(&next_values));
+        matrix.values = next_values.into();
+        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -477,6 +549,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(matrix) = self.matrix_store.get(&id).cloned() else {
             return Ok(PineValue::Na);
         };
+        self.record_collection_values(matrix.values.clone_allocation_values());
         let from_row = matrix_slice_index("row", from_row, matrix.rows)?;
         let to_row = matrix_slice_index("row", to_row, matrix.rows)?;
         let from_column = matrix_slice_index("column", from_column, matrix.columns)?;
@@ -497,7 +570,7 @@ impl<'a> HistoricalRuntime<'a> {
         let mut values = Vec::with_capacity(rows * columns);
         for row in from_row..to_row {
             let start = row * matrix.columns + from_column;
-            values.extend_from_slice(&matrix.values[start..start + columns]);
+            values.extend(matrix.values.view(start, columns).iter().cloned());
         }
         Ok(self.insert_matrix_storage(matrix.kind, rows, columns, values))
     }

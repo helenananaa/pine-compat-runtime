@@ -5,6 +5,7 @@ use pine_ir::{HirProgram, PersistenceKind, SeriesId, SymbolId, VarSlotId};
 
 #[derive(Debug)]
 pub(crate) struct RuntimeMetadata {
+    pub(crate) calls: super::call_plan::CallPlan,
     symbols: HashMap<SymbolId, usize>,
     names: HashMap<String, usize>,
     history: HashSet<SeriesId>,
@@ -15,6 +16,7 @@ pub(crate) struct RuntimeMetadata {
 impl RuntimeMetadata {
     pub(crate) fn from_program(program: &HirProgram) -> Self {
         let mut metadata = Self {
+            calls: super::call_plan::CallPlan::from_program(program),
             symbols: HashMap::with_capacity(program.symbols.len()),
             names: HashMap::with_capacity(program.symbols.len()),
             history: program

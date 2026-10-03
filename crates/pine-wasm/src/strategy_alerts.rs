@@ -1,7 +1,7 @@
-use pine_runtime::{
+use pine_host_support::{
     RunningAlertConfig, RunningAlertEventSelection, RunningAlertRealtimePolicy,
-    StrategyOrderFillAlertOutput,
 };
+use pine_runtime::StrategyOrderFillAlertOutput;
 use serde_json::Value;
 
 pub(crate) fn render_strategy_order_fill_alert_template(
@@ -19,7 +19,7 @@ pub(crate) fn render_strategy_order_fill_running_alert(
 ) -> Result<String, String> {
     let config = running_alert_config_from_json(config_json)?;
     let alert = strategy_order_fill_alert_from_json(alert_json)?;
-    pine_runtime::render_strategy_order_fill_running_alert(&config, &alert)
+    pine_host_support::render_strategy_order_fill_running_alert(&config, &alert)
         .map_err(|err| err.to_string())
 }
 

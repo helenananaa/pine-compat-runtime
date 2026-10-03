@@ -1,0 +1,4175 @@
+{
+  "sourceCommit": "af636c7456e7a0aa89a5befce06fe3c71b515a00",
+  "sourceState": "workingTreeHashPinned",
+  "sourceFiles": 5752,
+  "sourceIdentitySha256": "be4879ad96bc973bc7289119c9a8fe7f2c6797a8fe8b88866d63b7c0533acbef",
+  "provenance": {
+    "sourceIdentitySha256": "be4879ad96bc973bc7289119c9a8fe7f2c6797a8fe8b88866d63b7c0533acbef",
+    "baselineCommit": "af636c7456e7a0aa89a5befce06fe3c71b515a00",
+    "sourceState": "workingTreeHashPinned",
+    "sourceFiles": 5752,
+    "compiler": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "compilerArguments": [
+      "--edition=2024",
+      "-O",
+      "-C",
+      "lto=thin",
+      "-C",
+      "codegen-units=1"
+    ],
+    "hashes": {
+      ".local\\hotspot-repair-20261003\\baseline\\execution.exe": "3cf24503302a0d9112acfa91d4c76af439199f9e38008a64f834eb2f4a2e3cca",
+      ".local\\hotspot-repair-20261003\\baseline\\heap.exe": "0496ba7d88d71d35dd0880ec7281dd48fe4ce01b03c0a34de8bce582637f0cfc",
+      ".local\\hotspot-repair-20261003\\baseline\\differential.exe": "3c0946d0d0cbdb7fe2ec598b59553661bd4a071c1c5fb902e7466a3d294d7ee2",
+      ".local\\hotspot-repair-20261003\\execution.rs": "2f162fd1cea0ecf462e9a0f5b677fe6945d2d8acf56ee4371409aaad76584f77",
+      ".local\\hotspot-repair-20261003\\heap.rs": "9df6c5ef461bb747cd7cc543560da996b0d7327af1204a2b381a4c0fbc5e5194",
+      ".local\\state-performance-20261003\\differential.rs": "75d9b5fc4e3c530236faf645c301dd5a19d2cfa028e0853a3a9eb8d926a361cf",
+      ".local\\hotspot-repair-20261003\\execution-after.exe": "727af86faa73aa514ecfcd23bd30bf2926afe685bb3fdc123282b16a53dc6c91",
+      ".local\\hotspot-repair-20261003\\heap-after.exe": "5d3b2c5dd355135801ea7b750ee0db46eaf164ce05e336a732321e2d79751429",
+      ".local\\hotspot-repair-20261003\\differential-after.exe": "5d062eabc3ed81b1c7bbc534fe915fbc1b4ca1be3dc5b18e4a11f3940e9c103a",
+      "target\\release\\libpine_runtime.rlib": "c3dfdcf68defcae2e4ab4939acb0bcb0650e42958c424d0d0f4ae8143df8472d",
+      "target\\release\\libpine_sema.rlib": "784fb453cec8704d4207a329051ad205e068a05d6b92b8f2e86583621ff7511e",
+      "target\\release\\libpine_syntax.rlib": "ccc27d1ddfc27aebaa8a73031fecadee5ee4dfc0022be808abe9ae2d1b2bde1e"
+    }
+  },
+  "gates": {
+    "windows": {
+      "exitCode": 0,
+      "rustPassed": 7141,
+      "pythonPassed": 782,
+      "toolPassed": 166,
+      "wasmNode": "passed",
+      "structure": "passed",
+      "hostParity": "passed",
+      "receipt": "gate-windows-05.log",
+      "receiptSha256": "9d2cd808c1075a13223868288489d82b07697a6b409ee8878ba624bad393ad12"
+    },
+    "linux": {
+      "exitCode": 0,
+      "rustPassed": 7141,
+      "pythonPassed": 782,
+      "toolPassed": 166,
+      "wasmNode": "passed",
+      "structure": "passed",
+      "hostParity": "passed",
+      "receipt": "gate-linux-initial.log",
+      "receiptSha256": "db4dee7dc9fcf02ae2a7c5e1d75c5d4cc24d03515a29db3bbc818b0bc6b86309"
+    }
+  },
+  "differential": {
+    "cases": 222,
+    "passed": 222,
+    "failures": [],
+    "equalSnapshots": 7326
+  },
+  "measurements": {
+    "schemaVersion": 1,
+    "generatedUtc": "2026-10-03T10:05:55.118475+00:00",
+    "manifest": {
+      "schemaVersion": 1,
+      "startedUtc": "2026-10-03T10:05:09.450201+00:00",
+      "rounds": 3,
+      "perProcessTimeoutSeconds": 15.0,
+      "interleave": "per invocation: before/after in round 0, after/before in round 1, before/after in round 2",
+      "freshProcesses": true,
+      "expectedProcessCount": 66,
+      "expectedCases": [
+        "execution:sma:16:24000",
+        "execution:sma:512:24000",
+        "execution:sma:5000:24000",
+        "execution:highest:16:24000",
+        "execution:highest:512:24000",
+        "execution:highest:5000:24000",
+        "execution:wma:16:24000",
+        "execution:wma:512:24000",
+        "execution:wma:5000:24000",
+        "execution:stdev:16:24000",
+        "execution:stdev:512:24000",
+        "execution:stdev:5000:24000",
+        "execution:median:16:24000",
+        "execution:median:512:24000",
+        "execution:median:5000:24000",
+        "execution:indicator:0:1024",
+        "execution:strategy:0:1024",
+        "execution:strategy_dynamic:0:1024",
+        "execution:indicator:0:16384",
+        "execution:strategy:0:16384",
+        "execution:strategy_dynamic:0:16384",
+        "execution:indicator:0:100000",
+        "execution:strategy:0:100000",
+        "execution:strategy_dynamic:0:100000",
+        "execution:matrix_set:64:4",
+        "execution:matrix_set:4096:4",
+        "execution:matrix_set:65536:4",
+        "heap:map512:historical:1",
+        "heap:map4096:historical:1",
+        "heap:map8192:historical:1",
+        "heap:constant_regex:historical:8192",
+        "heap:unused_array256:historical:128",
+        "heap:unused_array256:historical:1023",
+        "heap:unused_array256:historical:1024",
+        "heap:matrix65536:realtime:4",
+        "heap:dynamic_strategy:historical:100000",
+        "heap:dynamic_strategy:realtime:100000"
+      ],
+      "fixedExecutionWorkloads": [
+        {
+          "kind": "sma",
+          "size": 16,
+          "bars": 24000
+        },
+        {
+          "kind": "sma",
+          "size": 512,
+          "bars": 24000
+        },
+        {
+          "kind": "sma",
+          "size": 5000,
+          "bars": 24000
+        },
+        {
+          "kind": "highest",
+          "size": 16,
+          "bars": 24000
+        },
+        {
+          "kind": "highest",
+          "size": 512,
+          "bars": 24000
+        },
+        {
+          "kind": "highest",
+          "size": 5000,
+          "bars": 24000
+        },
+        {
+          "kind": "wma",
+          "size": 16,
+          "bars": 24000
+        },
+        {
+          "kind": "wma",
+          "size": 512,
+          "bars": 24000
+        },
+        {
+          "kind": "wma",
+          "size": 5000,
+          "bars": 24000
+        },
+        {
+          "kind": "stdev",
+          "size": 16,
+          "bars": 24000
+        },
+        {
+          "kind": "stdev",
+          "size": 512,
+          "bars": 24000
+        },
+        {
+          "kind": "stdev",
+          "size": 5000,
+          "bars": 24000
+        },
+        {
+          "kind": "median",
+          "size": 16,
+          "bars": 24000
+        },
+        {
+          "kind": "median",
+          "size": 512,
+          "bars": 24000
+        },
+        {
+          "kind": "median",
+          "size": 5000,
+          "bars": 24000
+        },
+        {
+          "kind": "indicator",
+          "size": 0,
+          "bars": 1024
+        },
+        {
+          "kind": "strategy",
+          "size": 0,
+          "bars": 1024
+        },
+        {
+          "kind": "strategy_dynamic",
+          "size": 0,
+          "bars": 1024
+        },
+        {
+          "kind": "indicator",
+          "size": 0,
+          "bars": 16384
+        },
+        {
+          "kind": "strategy",
+          "size": 0,
+          "bars": 16384
+        },
+        {
+          "kind": "strategy_dynamic",
+          "size": 0,
+          "bars": 16384
+        },
+        {
+          "kind": "indicator",
+          "size": 0,
+          "bars": 100000
+        },
+        {
+          "kind": "strategy",
+          "size": 0,
+          "bars": 100000
+        },
+        {
+          "kind": "strategy_dynamic",
+          "size": 0,
+          "bars": 100000
+        },
+        {
+          "kind": "matrix_set",
+          "size": 64,
+          "bars": 4
+        },
+        {
+          "kind": "matrix_set",
+          "size": 4096,
+          "bars": 4
+        },
+        {
+          "kind": "matrix_set",
+          "size": 65536,
+          "bars": 4
+        }
+      ],
+      "heapCases": [
+        {
+          "name": "map512",
+          "source": "map-512.pine",
+          "bars": 1,
+          "mode": "historical"
+        },
+        {
+          "name": "map4096",
+          "source": "map-4096.pine",
+          "bars": 1,
+          "mode": "historical"
+        },
+        {
+          "name": "map8192",
+          "source": "map-8192.pine",
+          "bars": 1,
+          "mode": "historical"
+        },
+        {
+          "name": "constant_regex",
+          "source": "match.pine",
+          "bars": 8192,
+          "mode": "historical"
+        },
+        {
+          "name": "unused_array256",
+          "source": "gc.pine",
+          "bars": 128,
+          "mode": "historical"
+        },
+        {
+          "name": "unused_array256",
+          "source": "gc.pine",
+          "bars": 1023,
+          "mode": "historical"
+        },
+        {
+          "name": "unused_array256",
+          "source": "gc.pine",
+          "bars": 1024,
+          "mode": "historical"
+        },
+        {
+          "name": "matrix65536",
+          "source": "matrix65536.pine",
+          "bars": 4,
+          "mode": "realtime"
+        },
+        {
+          "name": "dynamic_strategy",
+          "source": "dynamic-strategy.pine",
+          "bars": 100000,
+          "mode": "historical"
+        },
+        {
+          "name": "dynamic_strategy",
+          "source": "dynamic-strategy.pine",
+          "bars": 100000,
+          "mode": "realtime"
+        }
+      ],
+      "auditDirectory": "E:\\CacheVault\\Temp\\pine-audit-20261003-af636c745",
+      "workloadSha256": {
+        "dynamic-strategy.pine": "0a15a6e2337d09b4939e820d24d09aec6f74a4cd7a0e6559d08ecb433f00c02e",
+        "gc.pine": "3dde16c422ae8ab40b5865ddaee1ef6c1782797fd2c950cf77b6bdf981c3e18d",
+        "map-4096.pine": "448518958ef603b09ca24e2a103d6138ca6fe948325b90b4b421e0d7ee25833f",
+        "map-512.pine": "a728930fb1e5bc794c14de35cf6cb5849fdc527da3733e68147081d93b96e4c6",
+        "map-8192.pine": "37d67f060a6bbb456115bd69af8655f872d6768c996817ef5101b0f19a337b73",
+        "match.pine": "8d558c7003f6273371c812150488993fe172f3b3ed882072c994c839c7aaed34",
+        "matrix65536.pine": "198df4dc3900d59376006476885964dc43c692adc5e4127ed2f73c9f9e36f127"
+      },
+      "probeSourceSha256": {
+        "execution.rs": "2f162fd1cea0ecf462e9a0f5b677fe6945d2d8acf56ee4371409aaad76584f77",
+        "heap.rs": "9df6c5ef461bb747cd7cc543560da996b0d7327af1204a2b381a4c0fbc5e5194"
+      },
+      "probeBinaries": {
+        "execution": {
+          "before": {
+            "path": "E:\\projects\\pine-interpreter\\.local\\hotspot-repair-20261003\\baseline\\execution.exe",
+            "sha256": "3cf24503302a0d9112acfa91d4c76af439199f9e38008a64f834eb2f4a2e3cca"
+          },
+          "after": {
+            "path": "E:\\projects\\pine-interpreter\\.local\\hotspot-repair-20261003\\execution-after.exe",
+            "sha256": "727af86faa73aa514ecfcd23bd30bf2926afe685bb3fdc123282b16a53dc6c91"
+          }
+        },
+        "heap": {
+          "before": {
+            "path": "E:\\projects\\pine-interpreter\\.local\\hotspot-repair-20261003\\baseline\\heap.exe",
+            "sha256": "0496ba7d88d71d35dd0880ec7281dd48fe4ce01b03c0a34de8bce582637f0cfc"
+          },
+          "after": {
+            "path": "E:\\projects\\pine-interpreter\\.local\\hotspot-repair-20261003\\heap-after.exe",
+            "sha256": "5d3b2c5dd355135801ea7b750ee0db46eaf164ce05e336a732321e2d79751429"
+          }
+        }
+      },
+      "baselineHead": "af636c7456e7a0aa89a5befce06fe3c71b515a00",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+      "measurementDriverSha256": "049ba18c6551e540c3a189f260af715364fa77a43ff82eb6059b922301c40435",
+      "finishedUtc": "2026-10-03T10:05:55.098637+00:00"
+    },
+    "processCount": 66,
+    "failedProcesses": [],
+    "incompleteCases": [],
+    "cases": [
+      {
+        "caseId": "execution:sma:16:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0042,
+            "afterMedian": 0.0042,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.001,
+            "afterMedian": 0.0009,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000005,
+            "afterOverBefore": 0.8999999999999999,
+            "percentChange": -10.000000000000009,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 71.3841,
+            "afterMedian": 68.02,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -3.3641000000000076,
+            "afterOverBefore": 0.9528732588909854,
+            "percentChange": -4.71267411090146,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 17,
+            "afterMedian": 17,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:sma:512:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0043,
+            "afterMedian": 0.0040999999999999995,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00020000000000000052,
+            "afterOverBefore": 0.9534883720930232,
+            "percentChange": -4.651162790697683,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0014,
+            "afterMedian": 0.0012,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0002000000000000001,
+            "afterOverBefore": 0.8571428571428571,
+            "percentChange": -14.28571428571429,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 67.8896,
+            "afterMedian": 71.68900000000001,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 3.7994000000000057,
+            "afterOverBefore": 1.0559643892437134,
+            "percentChange": 5.596438924371339,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 513,
+            "afterMedian": 513,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:sma:5000:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0047,
+            "afterMedian": 0.0045000000000000005,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00019999999999999966,
+            "afterOverBefore": 0.9574468085106383,
+            "percentChange": -4.255319148936165,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0251,
+            "afterMedian": 0.0222,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0029,
+            "afterOverBefore": 0.8844621513944223,
+            "percentChange": -11.55378486055777,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 68.7758,
+            "afterMedian": 67.2793,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -1.4964999999999975,
+            "afterOverBefore": 0.9782408928722022,
+            "percentChange": -2.1759107127797828,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 5001,
+            "afterMedian": 5001,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:highest:16:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0051,
+            "afterMedian": 0.005,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000026,
+            "afterOverBefore": 0.9803921568627451,
+            "percentChange": -1.9607843137254943,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.001,
+            "afterMedian": 0.001,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 95.29700000000001,
+            "afterMedian": 86.8439,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -8.453100000000006,
+            "afterOverBefore": 0.9112973126121493,
+            "percentChange": -8.87026873878507,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 15,
+            "afterMedian": 15,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:highest:512:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0135,
+            "afterMedian": 0.0072,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0063,
+            "afterOverBefore": 0.5333333333333333,
+            "percentChange": -46.666666666666664,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0009,
+            "afterMedian": 0.0009,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 276.6771,
+            "afterMedian": 133.8691,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -142.808,
+            "afterOverBefore": 0.48384597062785467,
+            "percentChange": -51.61540293721454,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 511,
+            "afterMedian": 511,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:highest:5000:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0959,
+            "afterMedian": 0.0235,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.07239999999999999,
+            "afterOverBefore": 0.24504692387904067,
+            "percentChange": -75.49530761209593,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.001,
+            "afterMedian": 0.0009,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000005,
+            "afterOverBefore": 0.8999999999999999,
+            "percentChange": -10.000000000000009,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 1824.2064999999998,
+            "afterMedian": 452.767,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -1371.4394999999997,
+            "afterOverBefore": 0.248199422598264,
+            "percentChange": -75.1800577401736,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 4999,
+            "afterMedian": 4999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:wma:16:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0042,
+            "afterMedian": 0.0038,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00039999999999999975,
+            "afterOverBefore": 0.9047619047619048,
+            "percentChange": -9.523809523809524,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0009,
+            "afterMedian": 0.0009,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 66.6259,
+            "afterMedian": 62.7615,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -3.8644000000000034,
+            "afterOverBefore": 0.9419985321023806,
+            "percentChange": -5.800146789761939,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 16,
+            "afterMedian": 16,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:wma:512:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0044,
+            "afterMedian": 0.0044,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0013,
+            "afterMedian": 0.0012,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000005,
+            "afterOverBefore": 0.923076923076923,
+            "percentChange": -7.692307692307699,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 80.51270000000001,
+            "afterMedian": 74.6201,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -5.892600000000016,
+            "afterOverBefore": 0.9268115465013592,
+            "percentChange": -7.318845349864079,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 512,
+            "afterMedian": 512,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:wma:5000:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0079,
+            "afterMedian": 0.0076,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0003000000000000008,
+            "afterOverBefore": 0.9620253164556961,
+            "percentChange": -3.797468354430389,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0024,
+            "afterMedian": 0.0039,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0015,
+            "afterOverBefore": 1.625,
+            "percentChange": 62.5,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 137.3106,
+            "afterMedian": 131.44400000000002,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -5.866599999999977,
+            "afterOverBefore": 0.9572749663900676,
+            "percentChange": -4.272503360993241,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 5000,
+            "afterMedian": 5000,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:stdev:16:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0043,
+            "afterMedian": 0.004,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0002999999999999999,
+            "afterOverBefore": 0.9302325581395349,
+            "percentChange": -6.976744186046513,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0009,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000005,
+            "afterOverBefore": 0.8888888888888888,
+            "percentChange": -11.111111111111116,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 69.3943,
+            "afterMedian": 63.6004,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -5.793900000000001,
+            "afterOverBefore": 0.9165075517729843,
+            "percentChange": -8.349244822701573,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 16,
+            "afterMedian": 16,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:stdev:512:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0043,
+            "afterMedian": 0.0042,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000026,
+            "afterOverBefore": 0.9767441860465116,
+            "percentChange": -2.3255813953488413,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0012,
+            "afterMedian": 0.0011,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -9.999999999999983e-05,
+            "afterOverBefore": 0.9166666666666669,
+            "percentChange": -8.333333333333314,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 71.3357,
+            "afterMedian": 71.1826,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.15310000000000912,
+            "afterOverBefore": 0.9978538095231418,
+            "percentChange": -0.21461904768581563,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 512,
+            "afterMedian": 512,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:stdev:5000:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0066,
+            "afterMedian": 0.0061,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0004999999999999996,
+            "afterOverBefore": 0.9242424242424243,
+            "percentChange": -7.575757575757569,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0043,
+            "afterMedian": 0.0039,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0004000000000000002,
+            "afterOverBefore": 0.9069767441860465,
+            "percentChange": -9.302325581395355,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 116.3587,
+            "afterMedian": 106.6361,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -9.7226,
+            "afterOverBefore": 0.9164428615995194,
+            "percentChange": -8.355713840048063,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 5000,
+            "afterMedian": 5000,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:median:16:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0085,
+            "afterMedian": 0.0046,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0039000000000000007,
+            "afterOverBefore": 0.5411764705882353,
+            "percentChange": -45.88235294117647,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0015,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0007000000000000001,
+            "afterOverBefore": 0.5333333333333333,
+            "percentChange": -46.666666666666664,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 91.2824,
+            "afterMedian": 68.2339,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -23.04849999999999,
+            "afterOverBefore": 0.7475033522343848,
+            "percentChange": -25.24966477656152,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 16,
+            "afterMedian": 16,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:median:512:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0156,
+            "afterMedian": 0.0065,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0091,
+            "afterOverBefore": 0.4166666666666667,
+            "percentChange": -58.33333333333333,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0021,
+            "afterMedian": 0.0012,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0009,
+            "afterOverBefore": 0.5714285714285714,
+            "percentChange": -42.85714285714286,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 323.20959999999997,
+            "afterMedian": 151.804,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -171.40559999999996,
+            "afterOverBefore": 0.4696766432680218,
+            "percentChange": -53.03233567319783,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 512,
+            "afterMedian": 512,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:median:5000:24000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.1196,
+            "afterMedian": 0.0244,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.09519999999999999,
+            "afterOverBefore": 0.2040133779264214,
+            "percentChange": -79.59866220735786,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0095,
+            "afterMedian": 0.0023,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0072,
+            "afterOverBefore": 0.24210526315789474,
+            "percentChange": -75.78947368421053,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 1824.1206000000002,
+            "afterMedian": 592.8484000000001,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -1231.2722,
+            "afterOverBefore": 0.325005046267226,
+            "percentChange": -67.4994953732774,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 5000,
+            "afterMedian": 5000,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:indicator:0:1024",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0061,
+            "afterMedian": 0.0031999999999999997,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0029000000000000007,
+            "afterOverBefore": 0.5245901639344261,
+            "percentChange": -47.54098360655738,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0013,
+            "afterMedian": 0.0007,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0006,
+            "afterOverBefore": 0.5384615384615384,
+            "percentChange": -46.15384615384615,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 4.7904,
+            "afterMedian": 2.5634,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -2.227,
+            "afterOverBefore": 0.5351118904475618,
+            "percentChange": -46.48881095524382,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:strategy:0:1024",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0073,
+            "afterMedian": 0.0037,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0036,
+            "afterOverBefore": 0.5068493150684932,
+            "percentChange": -49.31506849315068,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0013,
+            "afterMedian": 0.0007,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0006,
+            "afterOverBefore": 0.5384615384615384,
+            "percentChange": -46.15384615384615,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 5.7621,
+            "afterMedian": 2.7298,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -3.0323,
+            "afterOverBefore": 0.4737508894326721,
+            "percentChange": -52.62491105673279,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:strategy_dynamic:0:1024",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0111,
+            "afterMedian": 0.0053,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0058000000000000005,
+            "afterOverBefore": 0.4774774774774775,
+            "percentChange": -52.25225225225225,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.002,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0012000000000000001,
+            "afterOverBefore": 0.39999999999999997,
+            "percentChange": -60.00000000000001,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 6.3889000000000005,
+            "afterMedian": 4.1642,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -2.2247000000000003,
+            "afterOverBefore": 0.6517866925448825,
+            "percentChange": -34.821330745511744,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 1024,
+            "afterMedian": 1024,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:indicator:0:16384",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0068000000000000005,
+            "afterMedian": 0.0035,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0033000000000000004,
+            "afterOverBefore": 0.5147058823529411,
+            "percentChange": -48.529411764705884,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0014,
+            "afterMedian": 0.0007,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0007,
+            "afterOverBefore": 0.5,
+            "percentChange": -50.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 74.6123,
+            "afterMedian": 41.0318,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -33.58050000000001,
+            "afterOverBefore": 0.5499334560119443,
+            "percentChange": -45.006654398805566,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:strategy:0:16384",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.008,
+            "afterMedian": 0.0042,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0038000000000000004,
+            "afterOverBefore": 0.5249999999999999,
+            "percentChange": -47.50000000000001,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0013,
+            "afterMedian": 0.0007,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0006,
+            "afterOverBefore": 0.5384615384615384,
+            "percentChange": -46.15384615384615,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 88.9451,
+            "afterMedian": 47.135799999999996,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -41.8093,
+            "afterOverBefore": 0.5299426275309151,
+            "percentChange": -47.00573724690849,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:strategy_dynamic:0:16384",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0123,
+            "afterMedian": 0.0059,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0064,
+            "afterOverBefore": 0.4796747967479675,
+            "percentChange": -52.032520325203244,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0068000000000000005,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.006,
+            "afterOverBefore": 0.1176470588235294,
+            "percentChange": -88.23529411764706,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 138.8382,
+            "afterMedian": 74.0489,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -64.7893,
+            "afterOverBefore": 0.5333467302226621,
+            "percentChange": -46.66532697773379,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 16384,
+            "afterMedian": 16384,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:indicator:0:100000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.007500000000000001,
+            "afterMedian": 0.0038,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0037000000000000006,
+            "afterOverBefore": 0.5066666666666666,
+            "percentChange": -49.33333333333334,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0014,
+            "afterMedian": 0.0007,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0007,
+            "afterOverBefore": 0.5,
+            "percentChange": -50.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 470.8877,
+            "afterMedian": 266.2307,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -204.65699999999998,
+            "afterOverBefore": 0.5653804505830159,
+            "percentChange": -43.46195494169841,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:strategy:0:100000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0063,
+            "afterMedian": 0.0048,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0015000000000000005,
+            "afterOverBefore": 0.7619047619047619,
+            "percentChange": -23.809523809523814,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0011,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00030000000000000014,
+            "afterOverBefore": 0.7272727272727272,
+            "percentChange": -27.27272727272728,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 550.2086,
+            "afterMedian": 308.18640000000005,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -242.0222,
+            "afterOverBefore": 0.5601264683976224,
+            "percentChange": -43.98735316023776,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:strategy_dynamic:0:100000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.1751,
+            "afterMedian": 0.0133,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.1618,
+            "afterOverBefore": 0.07595659623072529,
+            "percentChange": -92.40434037692748,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0356,
+            "afterMedian": 0.0013,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0343,
+            "afterOverBefore": 0.03651685393258427,
+            "percentChange": -96.34831460674157,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 896.122,
+            "afterMedian": 879.1831,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -16.93889999999999,
+            "afterOverBefore": 0.9810975514494679,
+            "percentChange": -1.8902448550532136,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 100000,
+            "afterMedian": 100000,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:matrix_set:64:4",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.0085,
+            "afterMedian": 0.01,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0014999999999999996,
+            "afterOverBefore": 1.1764705882352942,
+            "percentChange": 17.647058823529417,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0013,
+            "afterMedian": 0.0012,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000005,
+            "afterOverBefore": 0.923076923076923,
+            "percentChange": -7.692307692307699,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 0.0897,
+            "afterMedian": 0.0996,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.009899999999999992,
+            "afterOverBefore": 1.1103678929765886,
+            "percentChange": 11.036789297658856,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:matrix_set:4096:4",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.06770000000000001,
+            "afterMedian": 0.011399999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.05630000000000001,
+            "afterOverBefore": 0.16838995568685372,
+            "percentChange": -83.16100443131462,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0015999999999999999,
+            "afterMedian": 0.0013,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0002999999999999999,
+            "afterOverBefore": 0.8125,
+            "percentChange": -18.75,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 0.08789999999999999,
+            "afterMedian": 0.1332,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.04530000000000002,
+            "afterOverBefore": 1.5153583617747444,
+            "percentChange": 51.53583617747444,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "execution:matrix_set:65536:4",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "appendMedianMs",
+            "beforeMedian": 0.7115,
+            "afterMedian": 0.0145,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.6970000000000001,
+            "afterOverBefore": 0.020379479971890373,
+            "percentChange": -97.96205200281096,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0038,
+            "afterMedian": 0.0015,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0023,
+            "afterOverBefore": 0.39473684210526316,
+            "percentChange": -60.526315789473685,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "executionMs",
+            "beforeMedian": 0.6443,
+            "afterMedian": 1.8966,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 1.2523,
+            "afterOverBefore": 2.943659785814062,
+            "percentChange": 194.3659785814062,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "rollingValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:map512:historical:1",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 7,
+            "afterMedian": 7,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 4164,
+            "afterMedian": 4164,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0007999999999999999,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 1,
+            "afterMedian": 1,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 628,
+            "afterMedian": 628,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 0.016900000000000002,
+            "afterMedian": 0.0229,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.005999999999999998,
+            "afterOverBefore": 1.3550295857988164,
+            "percentChange": 35.502958579881636,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 44664,
+            "afterMedian": 86597,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 41933,
+            "afterOverBefore": 1.9388545584811034,
+            "percentChange": 93.88545584811034,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 0.4341,
+            "afterMedian": 0.5492,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.11510000000000004,
+            "afterOverBefore": 1.265146279659065,
+            "percentChange": 26.51462796590649,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:map4096:historical:1",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 7,
+            "afterMedian": 7,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 4164,
+            "afterMedian": 4164,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0007999999999999999,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 1,
+            "afterMedian": 1,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 628,
+            "afterMedian": 628,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 0.016,
+            "afterMedian": 0.0172,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0011999999999999997,
+            "afterOverBefore": 1.075,
+            "percentChange": 7.499999999999996,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 274040,
+            "afterMedian": 604037,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 329997,
+            "afterOverBefore": 2.2041928185666326,
+            "percentChange": 120.41928185666326,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 5.3323,
+            "afterMedian": 3.4608999999999996,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -1.8714000000000004,
+            "afterOverBefore": 0.6490445023723346,
+            "percentChange": -35.095549762766545,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:map8192:historical:1",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 7,
+            "afterMedian": 7,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 4164,
+            "afterMedian": 4164,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0009,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.00010000000000000005,
+            "afterOverBefore": 0.8888888888888888,
+            "percentChange": -11.111111111111116,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 1,
+            "afterMedian": 1,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 628,
+            "afterMedian": 628,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 0.0176,
+            "afterMedian": 0.0135,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.004100000000000001,
+            "afterOverBefore": 0.7670454545454545,
+            "percentChange": -23.295454545454554,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 536184,
+            "afterMedian": 1195397,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 659213,
+            "afterOverBefore": 2.229452948987661,
+            "percentChange": 122.94529489876611,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 17.509400000000003,
+            "afterMedian": 6.7069,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -10.802500000000002,
+            "afterOverBefore": 0.3830456783213588,
+            "percentChange": -61.695432167864126,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 6,
+            "afterMedian": 7,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 1,
+            "afterOverBefore": 1.1666666666666667,
+            "percentChange": 16.666666666666675,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 2672,
+            "afterMedian": 2756,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 84,
+            "afterOverBefore": 1.031437125748503,
+            "percentChange": 3.1437125748503103,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0007,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 9.999999999999994e-05,
+            "afterOverBefore": 1.1428571428571428,
+            "percentChange": 14.28571428571428,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 8192,
+            "afterMedian": 8192,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 524852,
+            "afterMedian": 524852,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 0.19799999999999998,
+            "afterMedian": 0.1711,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.02689999999999998,
+            "afterOverBefore": 0.8641414141414142,
+            "percentChange": -13.58585858585858,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 22130,
+            "afterMedian": 30998,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 8868,
+            "afterOverBefore": 1.4007230004518754,
+            "percentChange": 40.07230004518754,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 353.1977,
+            "afterMedian": 23.9527,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -329.245,
+            "afterOverBefore": 0.06781669303056051,
+            "percentChange": -93.21833069694395,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:unused_array256:historical:128",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 128,
+            "afterMedian": 128,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 32768,
+            "afterMedian": 32768,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 6,
+            "afterMedian": 6,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 2672,
+            "afterMedian": 2672,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0007,
+            "afterMedian": 0.0007,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 128,
+            "afterMedian": 128,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 8756,
+            "afterMedian": 8756,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 0.018000000000000002,
+            "afterMedian": 0.013699999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0043000000000000035,
+            "afterOverBefore": 0.761111111111111,
+            "percentChange": -23.888888888888903,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 1090418,
+            "afterMedian": 1090962,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 544,
+            "afterOverBefore": 1.000498891250878,
+            "percentChange": 0.04988912508780974,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 0.9475,
+            "afterMedian": 0.9556,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.008099999999999996,
+            "afterOverBefore": 1.0085488126649076,
+            "percentChange": 0.854881266490759,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:unused_array256:historical:1023",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 1023,
+            "afterMedian": 255,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -768,
+            "afterOverBefore": 0.24926686217008798,
+            "percentChange": -75.0733137829912,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 261888,
+            "afterMedian": 65280,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -196608,
+            "afterOverBefore": 0.24926686217008798,
+            "percentChange": -75.0733137829912,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 6,
+            "afterMedian": 6,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 2672,
+            "afterMedian": 2672,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0007999999999999999,
+            "afterMedian": 0.0007999999999999999,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 1023,
+            "afterMedian": 1023,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 66036,
+            "afterMedian": 66036,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 0.0462,
+            "afterMedian": 0.0369,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.009299999999999996,
+            "afterOverBefore": 0.7987012987012988,
+            "percentChange": -20.12987012987012,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 8646714,
+            "afterMedian": 2189114,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -6457600,
+            "afterOverBefore": 0.25317293945422503,
+            "percentChange": -74.6827060545775,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 6.311599999999999,
+            "afterMedian": 7.2889,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0.9773000000000005,
+            "afterOverBefore": 1.154841878446036,
+            "percentChange": 15.484187844603593,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:unused_array256:historical:1024",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 6,
+            "afterMedian": 6,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 2672,
+            "afterMedian": 2672,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.0007999999999999999,
+            "afterMedian": 0.0007,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -9.999999999999994e-05,
+            "afterOverBefore": 0.8750000000000001,
+            "percentChange": -12.49999999999999,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 1024,
+            "afterMedian": 1024,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 66100,
+            "afterMedian": 66100,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 0.0445,
+            "afterMedian": 0.0353,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.0092,
+            "afterOverBefore": 0.7932584269662921,
+            "percentChange": -20.674157303370787,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 42354,
+            "afterMedian": 42898,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 544,
+            "afterOverBefore": 1.012844123341361,
+            "percentChange": 1.284412334136098,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 8.299100000000001,
+            "afterMedian": 8.0198,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.279300000000001,
+            "afterOverBefore": 0.9663457483341567,
+            "percentChange": -3.365425166584335,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:matrix65536:realtime:4",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "applyAllocatedMedianBytes",
+            "beforeMedian": 2108240,
+            "afterMedian": 19360,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -2088880,
+            "afterOverBefore": 0.009183015216483893,
+            "percentChange": -99.08169847835161,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "applyUpdateMedianMs",
+            "beforeMedian": 0.7546,
+            "afterMedian": 0.013600000000000001,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.7410000000000001,
+            "afterOverBefore": 0.018022793532997614,
+            "percentChange": -98.19772064670023,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 1,
+            "afterMedian": 1,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 2107839,
+            "afterMedian": 2133185,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 25346,
+            "afterOverBefore": 1.012024637555335,
+            "percentChange": 1.2024637555335005,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "updateAllocatedMedianBytes",
+            "beforeMedian": 2104456,
+            "afterMedian": 15576,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -2088880,
+            "afterOverBefore": 0.007401437711218481,
+            "percentChange": -99.25985622887815,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "updateMedianMs",
+            "beforeMedian": 0.7782,
+            "afterMedian": 0.0133,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.7649,
+            "afterOverBefore": 0.01709072217938833,
+            "percentChange": -98.29092778206116,
+            "lowerIsBetter": true,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:dynamic_strategy:historical:100000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "arraySlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "arrayValues",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "cloneAllocations",
+            "beforeMedian": 11,
+            "afterMedian": 8,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -3,
+            "afterOverBefore": 0.7272727272727273,
+            "percentChange": -27.27272727272727,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneHeapBytes",
+            "beforeMedian": 803040,
+            "afterMedian": 2920,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -800120,
+            "afterOverBefore": 0.0036361825064753937,
+            "percentChange": -99.63638174935247,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "cloneMedianMs",
+            "beforeMedian": 0.1855,
+            "afterMedian": 0.0009,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.1846,
+            "afterOverBefore": 0.004851752021563342,
+            "percentChange": -99.51482479784367,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixCells",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "plotValues",
+            "beforeMedian": 100000,
+            "afterMedian": 100000,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "resultHeapBytes",
+            "beforeMedian": 10400564,
+            "afterMedian": 10400564,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "resultMs",
+            "beforeMedian": 3.3224,
+            "afterMedian": 3.0897,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.2326999999999999,
+            "afterOverBefore": 0.9299602696845654,
+            "percentChange": -7.003973031543465,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 11833134,
+            "afterMedian": 10785086,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -1048048,
+            "afterOverBefore": 0.9114310714304427,
+            "percentChange": -8.856892856955733,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "seedMs",
+            "beforeMedian": 460.9268,
+            "afterMedian": 470.74129999999997,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 9.814499999999953,
+            "afterOverBefore": 1.0212929688618668,
+            "percentChange": 2.1292968861866823,
+            "lowerIsBetter": true,
+            "increased": true
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 100000,
+            "afterMedian": 100000,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          }
+        ]
+      },
+      {
+        "caseId": "heap:dynamic_strategy:realtime:100000",
+        "expectedSamplesPerSide": 3,
+        "beforeCompletedSamples": 3,
+        "afterCompletedSamples": 3,
+        "metrics": [
+          {
+            "metric": "applyAllocatedMedianBytes",
+            "beforeMedian": 2418828,
+            "afterMedian": 18708,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -2400120,
+            "afterOverBefore": 0.00773432422644355,
+            "percentChange": -99.22656757735564,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "applyUpdateMedianMs",
+            "beforeMedian": 0.4275,
+            "afterMedian": 0.0441,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.38339999999999996,
+            "afterOverBefore": 0.1031578947368421,
+            "percentChange": -89.6842105263158,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "matrixSlots",
+            "beforeMedian": 0,
+            "afterMedian": 0,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": null,
+            "percentChange": null,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "retainedHeapBytes",
+            "beforeMedian": 16633150,
+            "afterMedian": 15585102,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -1048048,
+            "afterOverBefore": 0.9369904077099046,
+            "percentChange": -6.300959229009539,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "seriesValues",
+            "beforeMedian": 100001,
+            "afterMedian": 100001,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": 0,
+            "afterOverBefore": 1.0,
+            "percentChange": 0.0,
+            "lowerIsBetter": false,
+            "increased": false
+          },
+          {
+            "metric": "updateAllocatedMedianBytes",
+            "beforeMedian": 12814748,
+            "afterMedian": 10414628,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -2400120,
+            "afterOverBefore": 0.8127064223190343,
+            "percentChange": -18.729357768096566,
+            "lowerIsBetter": true,
+            "increased": false
+          },
+          {
+            "metric": "updateMedianMs",
+            "beforeMedian": 3.6126,
+            "afterMedian": 3.1487,
+            "beforeSamples": 3,
+            "afterSamples": 3,
+            "absoluteDelta": -0.4639000000000002,
+            "afterOverBefore": 0.8715883297348169,
+            "percentChange": -12.841167026518308,
+            "lowerIsBetter": true,
+            "increased": false
+          }
+        ]
+      }
+    ],
+    "allMeasuredCostIncreases": [
+      {
+        "caseId": "execution:sma:512:24000",
+        "metric": "executionMs",
+        "beforeMedian": 67.8896,
+        "afterMedian": 71.68900000000001,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 3.7994000000000057,
+        "afterOverBefore": 1.0559643892437134,
+        "percentChange": 5.596438924371339,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:wma:5000:24000",
+        "metric": "cloneMedianMs",
+        "beforeMedian": 0.0024,
+        "afterMedian": 0.0039,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.0015,
+        "afterOverBefore": 1.625,
+        "percentChange": 62.5,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:64:4",
+        "metric": "appendMedianMs",
+        "beforeMedian": 0.0085,
+        "afterMedian": 0.01,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.0014999999999999996,
+        "afterOverBefore": 1.1764705882352942,
+        "percentChange": 17.647058823529417,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:64:4",
+        "metric": "executionMs",
+        "beforeMedian": 0.0897,
+        "afterMedian": 0.0996,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.009899999999999992,
+        "afterOverBefore": 1.1103678929765886,
+        "percentChange": 11.036789297658856,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:4096:4",
+        "metric": "executionMs",
+        "beforeMedian": 0.08789999999999999,
+        "afterMedian": 0.1332,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.04530000000000002,
+        "afterOverBefore": 1.5153583617747444,
+        "percentChange": 51.53583617747444,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:65536:4",
+        "metric": "executionMs",
+        "beforeMedian": 0.6443,
+        "afterMedian": 1.8966,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 1.2523,
+        "afterOverBefore": 2.943659785814062,
+        "percentChange": 194.3659785814062,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map512:historical:1",
+        "metric": "resultMs",
+        "beforeMedian": 0.016900000000000002,
+        "afterMedian": 0.0229,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.005999999999999998,
+        "afterOverBefore": 1.3550295857988164,
+        "percentChange": 35.502958579881636,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map512:historical:1",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 44664,
+        "afterMedian": 86597,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 41933,
+        "afterOverBefore": 1.9388545584811034,
+        "percentChange": 93.88545584811034,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map512:historical:1",
+        "metric": "seedMs",
+        "beforeMedian": 0.4341,
+        "afterMedian": 0.5492,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.11510000000000004,
+        "afterOverBefore": 1.265146279659065,
+        "percentChange": 26.51462796590649,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map4096:historical:1",
+        "metric": "resultMs",
+        "beforeMedian": 0.016,
+        "afterMedian": 0.0172,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.0011999999999999997,
+        "afterOverBefore": 1.075,
+        "percentChange": 7.499999999999996,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map4096:historical:1",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 274040,
+        "afterMedian": 604037,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 329997,
+        "afterOverBefore": 2.2041928185666326,
+        "percentChange": 120.41928185666326,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map8192:historical:1",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 536184,
+        "afterMedian": 1195397,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 659213,
+        "afterOverBefore": 2.229452948987661,
+        "percentChange": 122.94529489876611,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "metric": "cloneAllocations",
+        "beforeMedian": 6,
+        "afterMedian": 7,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 1,
+        "afterOverBefore": 1.1666666666666667,
+        "percentChange": 16.666666666666675,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "metric": "cloneHeapBytes",
+        "beforeMedian": 2672,
+        "afterMedian": 2756,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 84,
+        "afterOverBefore": 1.031437125748503,
+        "percentChange": 3.1437125748503103,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "metric": "cloneMedianMs",
+        "beforeMedian": 0.0007,
+        "afterMedian": 0.0007999999999999999,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 9.999999999999994e-05,
+        "afterOverBefore": 1.1428571428571428,
+        "percentChange": 14.28571428571428,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 22130,
+        "afterMedian": 30998,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 8868,
+        "afterOverBefore": 1.4007230004518754,
+        "percentChange": 40.07230004518754,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:unused_array256:historical:128",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 1090418,
+        "afterMedian": 1090962,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 544,
+        "afterOverBefore": 1.000498891250878,
+        "percentChange": 0.04988912508780974,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:unused_array256:historical:128",
+        "metric": "seedMs",
+        "beforeMedian": 0.9475,
+        "afterMedian": 0.9556,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.008099999999999996,
+        "afterOverBefore": 1.0085488126649076,
+        "percentChange": 0.854881266490759,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:unused_array256:historical:1023",
+        "metric": "seedMs",
+        "beforeMedian": 6.311599999999999,
+        "afterMedian": 7.2889,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.9773000000000005,
+        "afterOverBefore": 1.154841878446036,
+        "percentChange": 15.484187844603593,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:unused_array256:historical:1024",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 42354,
+        "afterMedian": 42898,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 544,
+        "afterOverBefore": 1.012844123341361,
+        "percentChange": 1.284412334136098,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:matrix65536:realtime:4",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 2107839,
+        "afterMedian": 2133185,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 25346,
+        "afterOverBefore": 1.012024637555335,
+        "percentChange": 1.2024637555335005,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:dynamic_strategy:historical:100000",
+        "metric": "seedMs",
+        "beforeMedian": 460.9268,
+        "afterMedian": 470.74129999999997,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 9.814499999999953,
+        "afterOverBefore": 1.0212929688618668,
+        "percentChange": 2.1292968861866823,
+        "lowerIsBetter": true,
+        "increased": true
+      }
+    ],
+    "costIncreasesAbove10Percent": [
+      {
+        "caseId": "execution:wma:5000:24000",
+        "metric": "cloneMedianMs",
+        "beforeMedian": 0.0024,
+        "afterMedian": 0.0039,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.0015,
+        "afterOverBefore": 1.625,
+        "percentChange": 62.5,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:64:4",
+        "metric": "appendMedianMs",
+        "beforeMedian": 0.0085,
+        "afterMedian": 0.01,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.0014999999999999996,
+        "afterOverBefore": 1.1764705882352942,
+        "percentChange": 17.647058823529417,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:64:4",
+        "metric": "executionMs",
+        "beforeMedian": 0.0897,
+        "afterMedian": 0.0996,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.009899999999999992,
+        "afterOverBefore": 1.1103678929765886,
+        "percentChange": 11.036789297658856,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:4096:4",
+        "metric": "executionMs",
+        "beforeMedian": 0.08789999999999999,
+        "afterMedian": 0.1332,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.04530000000000002,
+        "afterOverBefore": 1.5153583617747444,
+        "percentChange": 51.53583617747444,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "execution:matrix_set:65536:4",
+        "metric": "executionMs",
+        "beforeMedian": 0.6443,
+        "afterMedian": 1.8966,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 1.2523,
+        "afterOverBefore": 2.943659785814062,
+        "percentChange": 194.3659785814062,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map512:historical:1",
+        "metric": "resultMs",
+        "beforeMedian": 0.016900000000000002,
+        "afterMedian": 0.0229,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.005999999999999998,
+        "afterOverBefore": 1.3550295857988164,
+        "percentChange": 35.502958579881636,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map512:historical:1",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 44664,
+        "afterMedian": 86597,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 41933,
+        "afterOverBefore": 1.9388545584811034,
+        "percentChange": 93.88545584811034,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map512:historical:1",
+        "metric": "seedMs",
+        "beforeMedian": 0.4341,
+        "afterMedian": 0.5492,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.11510000000000004,
+        "afterOverBefore": 1.265146279659065,
+        "percentChange": 26.51462796590649,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map4096:historical:1",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 274040,
+        "afterMedian": 604037,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 329997,
+        "afterOverBefore": 2.2041928185666326,
+        "percentChange": 120.41928185666326,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:map8192:historical:1",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 536184,
+        "afterMedian": 1195397,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 659213,
+        "afterOverBefore": 2.229452948987661,
+        "percentChange": 122.94529489876611,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "metric": "cloneAllocations",
+        "beforeMedian": 6,
+        "afterMedian": 7,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 1,
+        "afterOverBefore": 1.1666666666666667,
+        "percentChange": 16.666666666666675,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "metric": "cloneMedianMs",
+        "beforeMedian": 0.0007,
+        "afterMedian": 0.0007999999999999999,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 9.999999999999994e-05,
+        "afterOverBefore": 1.1428571428571428,
+        "percentChange": 14.28571428571428,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:constant_regex:historical:8192",
+        "metric": "retainedHeapBytes",
+        "beforeMedian": 22130,
+        "afterMedian": 30998,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 8868,
+        "afterOverBefore": 1.4007230004518754,
+        "percentChange": 40.07230004518754,
+        "lowerIsBetter": true,
+        "increased": true
+      },
+      {
+        "caseId": "heap:unused_array256:historical:1023",
+        "metric": "seedMs",
+        "beforeMedian": 6.311599999999999,
+        "afterMedian": 7.2889,
+        "beforeSamples": 3,
+        "afterSamples": 3,
+        "absoluteDelta": 0.9773000000000005,
+        "afterOverBefore": 1.154841878446036,
+        "percentChange": 15.484187844603593,
+        "lowerIsBetter": true,
+        "increased": true
+      }
+    ],
+    "limitations": [
+      "Counting allocator bytes are heap allocation counters, not RSS or peak process memory.",
+      "Each process reports 31 clone/update samples internally; this summary takes medians across fresh processes.",
+      "Clock/timing increases are descriptive; tiny values and scheduler noise require interpretation.",
+      "Profile counts are included without calling all state representation changes regressions.",
+      "Failed or partial processes remain in raw receipts and failure tables; they do not silently contribute partial medians.",
+      "This probe excludes compilation and does not establish cross-platform or release qualification."
+    ]
+  },
+  "fullResourceMatrixRequalified": false
+}

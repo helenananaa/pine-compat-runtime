@@ -120,3 +120,95 @@ plot(array.get(sticky, 129))
         assert_eq!(result.plots[3].values.last(), Some(&PineValue::Float(0.0)));
     }
 }
+
+#[test]
+fn string_page_writes_collect_orphans_and_preserve_slice_and_checkpoint_values() {
+    let program = program("//@version=6\nindicator(\"string pages\")\nplot(close)\n");
+    let mut runtime = HistoricalRuntime::new(&program);
+    let PineValue::Array(id) = runtime.new_array_from_values(
+        ArrayElementKind::String,
+        vec![PineValue::String("x".repeat(32768)); 257],
+    ) else {
+        panic!("array");
+    };
+    let PineValue::Array(slice) = runtime.new_array_slice(id, 127, 130) else {
+        panic!("slice");
+    };
+    runtime
+        .call_state
+        .insert(pine_ir::CallSiteId(0), PineValue::Array(slice));
+    runtime.collect_temporary_collections();
+    let checkpoint = runtime.clone();
+    runtime.new_array_from_values(
+        ArrayElementKind::String,
+        vec![PineValue::String(String::new())],
+    );
+    runtime.collection_gc_allocated_bytes = 0;
+    assert!(
+        runtime
+            .array_set_value(slice, 3, PineValue::String("invalid".into()))
+            .is_err()
+    );
+    assert_eq!(runtime.collection_gc_allocated_bytes, 0);
+    // The replacement is small; pressure comes from its shared old String page.
+    runtime
+        .array_set_value(slice, 1, PineValue::String("changed".into()))
+        .unwrap();
+    runtime.collect_temporary_collections();
+    assert_eq!(runtime.array_store.len(), 1);
+    assert_eq!(
+        runtime.array_get_cloned(id, 128).unwrap(),
+        Some(PineValue::String("changed".into()))
+    );
+    assert_eq!(
+        checkpoint.array_get_cloned(slice, 1).unwrap(),
+        Some(PineValue::String("x".repeat(32768)))
+    );
+    assert_eq!(runtime.array_len(slice).unwrap(), Some(3));
+    // Clearing a slice rebuilds the remaining parent payload with owned values.
+    runtime.new_array_from_values(
+        ArrayElementKind::String,
+        vec![PineValue::String(String::new())],
+    );
+    runtime.collection_gc_allocated_bytes = 0;
+    runtime.array_clear_values(slice).unwrap();
+    runtime.collect_temporary_collections();
+    assert_eq!(runtime.array_store.len(), 1);
+    assert_eq!(runtime.array_len(id).unwrap(), Some(254));
+    assert_eq!(runtime.array_len(slice).unwrap(), Some(0));
+    assert_eq!(checkpoint.array_len(id).unwrap(), Some(257));
+    assert!(runtime.next_array_id < 1024);
+}
+
+#[test]
+fn replacing_short_lived_array_with_strings_triggers_payload_collection() {
+    let program = program("//@version=6\nindicator(\"replacement\")\nplot(close)\n");
+    let mut runtime = HistoricalRuntime::new(&program);
+    let kept = runtime.new_array_from_values(
+        ArrayElementKind::String,
+        vec![PineValue::String("kept".into())],
+    );
+    runtime
+        .call_state
+        .insert(pine_ir::CallSiteId(0), kept.clone());
+    for _ in 0..4 {
+        let PineValue::Array(id) =
+            runtime.new_array_from_values(ArrayElementKind::String, vec![PineValue::Na; 128])
+        else {
+            panic!("array");
+        };
+        runtime
+            .array_replace_values(id, vec![PineValue::String("x".repeat(32768)); 128])
+            .unwrap();
+        runtime.collect_temporary_collections();
+        assert_eq!(runtime.array_store.len(), 1);
+    }
+    let PineValue::Array(id) = kept else {
+        panic!("array");
+    };
+    assert_eq!(
+        runtime.array_get_cloned(id, 0).unwrap(),
+        Some(PineValue::String("kept".into()))
+    );
+    assert!(runtime.next_array_id < 1024);
+}

@@ -115,7 +115,7 @@ fn redacted_provider_status_class(status_code: &str) -> Option<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::output::delivery::{DeliveryEventKind, ExternalDeliveryResult};
+    use crate::delivery::{DeliveryEventKind, ExternalDeliveryResult};
 
     fn attempt(attempt_number: u32) -> DeliveryAttemptRecord {
         DeliveryAttemptRecord::new(

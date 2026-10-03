@@ -271,13 +271,22 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let mut values: Vec<_> = window.values.iter().flatten().copied().collect();
-        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
-        let middle = values.len() / 2;
-        let median = if values.len() % 2 == 0 {
-            (values[middle - 1] + values[middle]) / 2.0
+        let middle = length / 2;
+        let lower = if length.is_multiple_of(2) {
+            middle - 1
         } else {
-            values[middle]
+            middle
+        };
+        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
+        let (low, high) = self.selection_scratch.select_pair(
+            window.values.iter().flatten().copied(),
+            lower,
+            middle,
+        );
+        let median = if length.is_multiple_of(2) {
+            (low + high) / 2.0
+        } else {
+            high
         };
         Ok(finite_float_or_na(median))
     }
@@ -353,26 +362,38 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let mut values: Vec<_> = window.values.iter().flatten().copied().collect();
-        if values.is_empty() {
+        let count = window.values.len() - window.na_count;
+        if count == 0 {
             return Ok(PineValue::Na);
         }
-        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
         match mode {
             ArrayPercentileMode::NearestRank => {
-                let rank = ((percentage / 100.0) * values.len() as f64).ceil();
-                let index = (rank as usize).saturating_sub(1).min(values.len() - 1);
-                Ok(finite_float_or_na(values[index]))
+                let rank = ((percentage / 100.0) * count as f64).ceil();
+                let index = (rank as usize).saturating_sub(1).min(count - 1);
+                let (value, _) = self.selection_scratch.select_pair(
+                    window.values.iter().flatten().copied(),
+                    index,
+                    index,
+                );
+                Ok(finite_float_or_na(value))
             }
             ArrayPercentileMode::LinearInterpolation => {
-                if values.len() == 1 {
-                    return Ok(finite_float_or_na(values[0]));
+                if count == 1 {
+                    return Ok(finite_float_or_na(
+                        *window.values.iter().flatten().next().unwrap(),
+                    ));
                 }
-                let rank = (percentage / 100.0) * (values.len() - 1) as f64;
+                let rank = (percentage / 100.0) * (count - 1) as f64;
                 let lower = rank.floor() as usize;
                 let upper = rank.ceil() as usize;
                 let fraction = rank - lower as f64;
-                let value = values[lower] + (values[upper] - values[lower]) * fraction;
+                let (low, high) = self.selection_scratch.select_pair(
+                    window.values.iter().flatten().copied(),
+                    lower,
+                    upper,
+                );
+                let value = low + (high - low) * fraction;
                 Ok(finite_float_or_na(value))
             }
         }

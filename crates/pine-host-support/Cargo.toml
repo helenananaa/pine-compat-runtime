@@ -1,0 +1,17 @@
+[package]
+name = "pine-host-support"
+version = "0.3.0-rc.1"
+description = "Optional host-side running-alert and delivery helpers for Pine Compat Runtime."
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+pine-runtime = { path = "../pine-runtime" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lib]
+name = "pine_host_support"
+path = "src/lib.rs"

@@ -2,8 +2,8 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use super::strategy::StrategyOrderFillAlertOutput;
-use super::strategy_alert_templates::{
+use pine_runtime::StrategyOrderFillAlertOutput;
+use pine_runtime::{
     StrategyOrderFillAlertTemplateError, render_strategy_order_fill_alert_template,
 };
 

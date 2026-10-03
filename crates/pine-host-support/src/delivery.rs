@@ -2,10 +2,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-use super::running_alerts::{
+use crate::running_alerts::{
     RunningAlertConfig, RunningAlertEvaluationError, render_strategy_order_fill_running_alert,
 };
-use super::strategy::StrategyOrderFillAlertOutput;
+use pine_runtime::StrategyOrderFillAlertOutput;
 
 mod diagnostics;
 mod webhook;
@@ -557,8 +557,8 @@ impl DeliverySink for InMemoryDeliverySink {
 
 #[cfg(test)]
 mod tests {
-    use super::super::running_alerts::{RunningAlertConfig, RunningAlertEventSelection};
     use super::*;
+    use crate::running_alerts::{RunningAlertConfig, RunningAlertEventSelection};
 
     fn candidate(message: &str) -> DeliveryCandidate {
         DeliveryCandidate::new(

@@ -155,7 +155,8 @@ impl HistoricalRuntime<'_> {
             .rolling_windows
             .values()
             .map(RollingWindowState::retained_capacity)
-            .sum::<usize>();
+            .sum::<usize>()
+            + self.selection_scratch.capacity();
         let valuewhen_state_values = self
             .valuewhen_state
             .values()

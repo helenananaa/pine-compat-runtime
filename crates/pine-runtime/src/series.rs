@@ -1,4 +1,7 @@
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    sync::Arc,
+};
 
 use pine_ir::SeriesId;
 
@@ -83,6 +86,13 @@ impl SeriesBuffer {
             Self::Shared(values) => SeriesIter::Shared(values.iter()),
         }
     }
+
+    pub(crate) fn iter_rev(&self) -> SeriesRevIter<'_> {
+        match self {
+            Self::Small(values) => SeriesRevIter::Small(values.iter().rev()),
+            Self::Shared(values) => SeriesRevIter::Shared(values.iter_rev()),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -114,6 +124,31 @@ impl<'a> Iterator for SeriesIter<'a> {
 
 impl ExactSizeIterator for SeriesIter<'_> {}
 
+pub(crate) enum SeriesRevIter<'a> {
+    Small(std::iter::Rev<std::collections::vec_deque::Iter<'a, PineValue>>),
+    Shared(crate::runtime::append_history::RevIter<'a, PineValue>),
+}
+
+impl<'a> Iterator for SeriesRevIter<'a> {
+    type Item = &'a PineValue;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Small(values) => values.next(),
+            Self::Shared(values) => values.next(),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            Self::Small(values) => values.size_hint(),
+            Self::Shared(values) => values.size_hint(),
+        }
+    }
+}
+
+impl ExactSizeIterator for SeriesRevIter<'_> {}
+
 impl<'a> IntoIterator for &'a SeriesBuffer {
     type Item = &'a PineValue;
     type IntoIter = SeriesIter<'a>;
@@ -123,10 +158,19 @@ impl<'a> IntoIterator for &'a SeriesBuffer {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone)]
 pub struct SeriesStore {
     current_bar: usize,
     pub(crate) buffers: HashMap<SeriesId, SeriesBuffer>,
+    // Conservative: once a buffer held references, it remains a possible GC
+    // root until explicitly removed. Scalar-only histories never need a walk.
+    collection_root_series: Arc<HashSet<SeriesId>>,
+}
+
+impl PartialEq for SeriesStore {
+    fn eq(&self, other: &Self) -> bool {
+        self.current_bar == other.current_bar && self.buffers == other.buffers
+    }
 }
 
 impl SeriesStore {
@@ -147,11 +191,24 @@ impl SeriesStore {
     pub fn commit(&mut self, series_id: SeriesId, value: PineValue, max_depth: Option<usize>) {
         if matches!(max_depth, Some(0)) {
             self.buffers.remove(&series_id);
+            if self.collection_root_series.contains(&series_id) {
+                Arc::make_mut(&mut self.collection_root_series).remove(&series_id);
+            }
             return;
+        }
+
+        if value.can_reference_collection() && !self.collection_root_series.contains(&series_id) {
+            Arc::make_mut(&mut self.collection_root_series).insert(series_id);
         }
 
         let buffer = self.buffers.entry(series_id).or_default();
         buffer.commit(value, max_depth);
+    }
+
+    pub(crate) fn collection_root_buffers(&self) -> impl Iterator<Item = &SeriesBuffer> {
+        self.collection_root_series
+            .iter()
+            .filter_map(|id| self.buffers.get(id))
     }
 
     #[must_use]
@@ -193,5 +250,17 @@ impl SeriesStore {
             .get(buffer.len() - offset)
             .expect("valid history offset")
             .clone()
+    }
+
+    pub(crate) fn history_window(
+        &self,
+        series_id: SeriesId,
+        length: usize,
+    ) -> impl Iterator<Item = &PineValue> {
+        self.buffers
+            .get(&series_id)
+            .into_iter()
+            .flat_map(SeriesBuffer::iter_rev)
+            .take(length)
     }
 }

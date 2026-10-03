@@ -69,6 +69,31 @@ impl<V: Clone> IdStore<V> {
             .map(Arc::make_mut)
     }
 
+    /// A shared path duplicates entry Arcs before making the value mutable,
+    /// even when its current entry Arc still has only one direct owner.
+    pub(crate) fn get_mut_clones_value(&self, key: &u32) -> bool {
+        let Some(mut node) = self.root.as_ref() else {
+            return false;
+        };
+        let mut shared = Arc::strong_count(node) > 1;
+        for bit in (LEAF_BITS..32).rev() {
+            let Node::Branch { left, right } = node.as_ref() else {
+                unreachable!("branch depth invariant")
+            };
+            let Some(next) = (if key & (1 << bit) == 0 { left } else { right }).as_ref() else {
+                return false;
+            };
+            node = next;
+            shared |= Arc::strong_count(node) > 1;
+        }
+        let Node::Leaf(values) = node.as_ref() else {
+            unreachable!("leaf depth invariant")
+        };
+        values[(*key as usize) & (LEAF_SIZE - 1)]
+            .as_ref()
+            .is_some_and(|value| shared || Arc::strong_count(value) > 1)
+    }
+
     pub(crate) fn remove(&mut self, key: u32) {
         if self.get(&key).is_none() {
             return;

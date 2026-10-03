@@ -365,3 +365,67 @@ fn wasm_correct_from_keeps_prefix_and_matches_rust() {
         .expect("rust correct");
     assert_eq!(corrected, public_runtime_result_json(&rust_corrected));
 }
+
+#[test]
+fn wasm_state_seed_and_unicode_snapshot_match_core_bytes_and_replicas() {
+    let text = "图🚀 café \"quoted\"\\path\nnext";
+    let literal = serde_json::to_string(text).unwrap();
+    let source = format!(
+        "//@version=6\nindicator(\"state-only snapshot\")\nvar total = 0.0\ntotal += close\nplot(total, title={literal})\nlabel.new(bar_index, close, text={literal})\nalert({literal}, alert.freq_all)\n"
+    );
+    let seed = [bar(0, 1.0), bar(60_000, 2.0), bar(120_000, 3.0)];
+    let mut rust = RealtimeRuntime::from_program(hir(&source));
+    rust.seed_historical_without_output(&seed).unwrap();
+    let core_json = public_runtime_result_json(&rust.result());
+    let program = compile_script(&source).unwrap();
+    let mut session = program.realtime_session().unwrap();
+    session.seed_state_internal(&bars_csv(&seed), None).unwrap();
+    assert_eq!(session.result(), core_json);
+    assert_eq!(session.confirmed_result(), core_json);
+    let encoded = session.stream_snapshot();
+    assert_eq!(
+        encoded,
+        format!(
+            "{{\"revision\":{},\"retainedFrom\":0,\"result\":{core_json}}}",
+            rust.revision()
+        )
+    );
+    let parsed: Value = serde_json::from_str(&encoded).unwrap();
+    assert_eq!(parsed["result"]["plots"][0]["title"], text);
+    assert_eq!(parsed["result"]["alerts"][2]["message"], text);
+    let mut replica = session.replica();
+    let changes = session.apply_forming(&bar_json(180_000, 4.0)).unwrap();
+    assert!(replica.apply_internal(&changes).unwrap());
+    assert_eq!(replica.result(), session.result());
+}
+
+#[test]
+fn wasm_state_seed_execution_times_match_snapshot_seed_and_reject_bad_clocks() {
+    let source = "//@version=6\nindicator(\"state seed clock\")\nplot(timenow)\n";
+    let program = compile_script(source).unwrap();
+    let mut state = program.realtime_session().unwrap();
+    let mut ordinary = program.realtime_session().unwrap();
+    let csv = bars_csv(&[bar(0, 1.0), bar(60_000, 2.0)]);
+    assert!(
+        state
+            .seed_state_internal(&csv, None)
+            .unwrap_err()
+            .contains("explicit execution timestamp")
+    );
+    assert!(!state.is_seeded());
+    assert_eq!(state.confirmed_bars(), 0);
+    assert!(
+        state
+            .seed_state_internal(&csv, Some(&[101]))
+            .unwrap_err()
+            .contains("timestamp count")
+    );
+    assert!(!state.is_seeded());
+    state
+        .seed_state_internal(&csv, Some(&[101, 60_202]))
+        .unwrap();
+    let snapshot = ordinary.seed_internal(&csv, Some(&[101, 60_202])).unwrap();
+    assert_eq!(state.result(), snapshot);
+    assert_eq!(plot_values(&snapshot), serde_json::json!([101, 60202]));
+    assert_eq!(state.revision(), ordinary.revision());
+}

@@ -1,4 +1,3 @@
-use pine_ir::HirProgram;
 use pine_runtime::{
     Bar, BarUpdate, OutputRetention, RealtimeRuntime, RealtimeUpdateContext, RequestKey,
     RequestTimeframe, RuntimeReplica, public_runtime_changes_json, runtime_changes_from_json,
@@ -42,7 +41,7 @@ pub struct WasmRuntimeReplica {
 
 impl WasmRealtimeSession {
     pub(crate) fn from_program(
-        hir: HirProgram,
+        hir: pine_runtime::PreparedProgram,
         request_bars_json: &str,
         input_overrides_json: &str,
     ) -> Result<Self, String> {
@@ -65,8 +64,8 @@ impl WasmRealtimeSession {
         }
         let input_overrides = input_overrides_from_json(overrides_json, &hir)?;
         let mut runtime =
-            RealtimeRuntime::from_program_with_request_environment_and_input_overrides(
-                hir,
+            RealtimeRuntime::from_prepared_with_request_environment_and_input_overrides(
+                &hir,
                 parsed.environment,
                 input_overrides,
             );
@@ -121,21 +120,30 @@ impl WasmRealtimeSession {
         bars_csv: &str,
         execution_times: Option<&[i64]>,
     ) -> Result<String, String> {
+        self.seed_state_internal(bars_csv, execution_times)?;
+        Ok(owned_snapshot_json(self.runtime.result()))
+    }
+
+    pub(crate) fn seed_state_internal(
+        &mut self,
+        bars_csv: &str,
+        execution_times: Option<&[i64]>,
+    ) -> Result<(), String> {
         if self.seeded {
             return Err("realtime session history has already been seeded".to_owned());
         }
         let bars = parse_bars_csv(bars_csv)?;
-        let result = match execution_times {
+        match execution_times {
             Some(times) => self
                 .runtime
-                .seed_historical_with_execution_times(&bars, times),
-            None => self.runtime.seed_historical(&bars),
+                .seed_historical_with_execution_times_without_output(&bars, times),
+            None => self.runtime.seed_historical_without_output(&bars),
         }
         .map_err(|err| err.message)?;
         self.seeded = true;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        Ok(owned_snapshot_json(result))
+        Ok(())
     }
 
     pub(crate) fn replay_internal(
@@ -254,6 +262,23 @@ impl WasmRealtimeSession {
 
 #[wasm_bindgen]
 impl WasmRealtimeSession {
+    #[wasm_bindgen(js_name = seedState)]
+    pub fn seed_state(&mut self, bars_csv: &str) -> Result<(), JsValue> {
+        self.seed_state_internal(bars_csv, None)
+            .map_err(|err| JsValue::from_str(&err))
+    }
+
+    #[wasm_bindgen(js_name = seedStateWithExecutionTimes)]
+    pub fn seed_state_with_execution_times(
+        &mut self,
+        bars_csv: &str,
+        execution_times_json: &str,
+    ) -> Result<(), JsValue> {
+        let times = execution_times_from_json(execution_times_json)
+            .map_err(|err| JsValue::from_str(&err))?;
+        self.seed_state_internal(bars_csv, Some(&times))
+            .map_err(|err| JsValue::from_str(&err))
+    }
     #[wasm_bindgen(js_name = seed)]
     pub fn seed(&mut self, bars_csv: &str) -> Result<String, JsValue> {
         self.seed_internal(bars_csv, None)
@@ -402,11 +427,10 @@ impl WasmRealtimeSession {
 
     #[wasm_bindgen(js_name = streamSnapshot)]
     pub fn stream_snapshot(&self) -> String {
-        format!(
-            "{{\"revision\":{},\"retainedFrom\":{},\"result\":{}}}",
+        crate::snapshot::stream_snapshot_json(
+            self.runtime.result(),
             self.runtime.revision(),
             self.runtime.display_origin(),
-            owned_snapshot_json(self.runtime.result())
         )
     }
 

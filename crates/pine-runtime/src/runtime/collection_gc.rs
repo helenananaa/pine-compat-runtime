@@ -5,13 +5,66 @@ use std::collections::HashSet;
 
 use crate::{HistoricalRuntime, PineValue};
 
+const COLLECTION_GC_MIN_BYTES: usize = 2 * 1024 * 1024;
+
+pub(crate) fn value_allocation_bytes(value: &PineValue) -> usize {
+    let extra = match value {
+        PineValue::String(value) => value.capacity(),
+        PineValue::Tuple(values) | PineValue::UserType(values) => {
+            collection_values_allocation_bytes(values)
+        }
+        PineValue::ChartPoint(point) => value_allocation_bytes(&point.time)
+            .saturating_add(value_allocation_bytes(&point.index))
+            .saturating_add(value_allocation_bytes(&point.price)),
+        _ => 0,
+    };
+    std::mem::size_of::<PineValue>().saturating_add(extra)
+}
+
+pub(crate) fn collection_values_allocation_bytes<'v>(
+    values: impl IntoIterator<Item = &'v PineValue>,
+) -> usize {
+    values.into_iter().fold(0usize, |bytes, value| {
+        bytes.saturating_add(value_allocation_bytes(value))
+    })
+}
+
+fn can_reference_collection(value: &&PineValue) -> bool {
+    value.can_reference_collection()
+}
+
 impl HistoricalRuntime<'_> {
+    // Allocation pressure is conservative, not a retained-heap measurement.
+    // Collection is deferred until the script-bar boundary so local handles
+    // cannot disappear halfway through evaluating their enclosing expression.
+    pub(crate) fn record_collection_allocation(&mut self, elements: usize) {
+        self.record_collection_bytes(elements.saturating_mul(std::mem::size_of::<PineValue>()));
+    }
+
+    pub(crate) fn record_collection_bytes(&mut self, bytes: usize) {
+        self.collection_gc_allocated_bytes =
+            self.collection_gc_allocated_bytes.saturating_add(bytes);
+    }
+
+    pub(crate) fn record_collection_values<'v>(
+        &mut self,
+        values: impl IntoIterator<Item = &'v PineValue>,
+    ) {
+        self.record_collection_bytes(collection_values_allocation_bytes(values));
+    }
+
+    pub(crate) fn record_collection_repeated_value(&mut self, value: &PineValue, count: usize) {
+        self.record_collection_bytes(value_allocation_bytes(value).saturating_mul(count));
+    }
+
     pub(crate) fn collect_temporary_collections(&mut self) {
         let allocated = u64::from(self.next_array_id)
             + u64::from(self.next_map_id)
             + u64::from(self.next_matrix_id)
             + self.next_object_id;
-        if allocated < self.collection_gc_next_id {
+        if allocated < self.collection_gc_next_id
+            && self.collection_gc_allocated_bytes < self.collection_gc_next_bytes
+        {
             return;
         }
         // Fill callbacks may still restore their evaluator checkpoint. The
@@ -23,12 +76,13 @@ impl HistoricalRuntime<'_> {
             .chain(self.var_store.values())
             .chain(self.call_state.values())
             .chain(self.input_overrides.values())
+            .filter(can_reference_collection)
             .collect();
-        for values in self.series_store.buffers.values() {
-            pending.extend(values);
+        for values in self.series_store.collection_root_buffers() {
+            pending.extend(values.iter().filter(can_reference_collection));
         }
         for values in self.valuewhen_state.values() {
-            pending.extend(values);
+            pending.extend(values.iter().filter(can_reference_collection));
         }
         for cross in self.cross_state.values() {
             pending.extend([
@@ -39,12 +93,12 @@ impl HistoricalRuntime<'_> {
             ]);
         }
         for evaluation in self.request_evaluations.values() {
-            pending.extend(evaluation.capture_values());
+            pending.extend(evaluation.capture_values().filter(can_reference_collection));
         }
         // Child runtimes have independent ID spaces. Only their parent-side
         // captures are roots here; their stores are collected independently.
         for captures in self.bounded_same_context_captures.values() {
-            pending.extend(captures.values());
+            pending.extend(captures.values().filter(can_reference_collection));
         }
         let mut arrays = HashSet::new();
         let mut objects = HashSet::new();
@@ -57,7 +111,7 @@ impl HistoricalRuntime<'_> {
             for &id in self.object_varip_ids.values() {
                 objects.insert(id);
                 if let Some(fields) = self.object_store.get(&id) {
-                    pending.extend(fields);
+                    pending.extend(fields.iter().filter(can_reference_collection));
                 }
             }
         }
@@ -66,8 +120,10 @@ impl HistoricalRuntime<'_> {
                 PineValue::Array(id) => {
                     let mut id = *id;
                     while arrays.insert(id) {
-                        if let Some(values) = self.array_store.get(&id) {
-                            pending.extend(values);
+                        if !super::objects::scalar_array_kind(self.array_kinds.get(&id))
+                            && let Some(values) = self.array_store.get(&id)
+                        {
+                            pending.extend(values.iter().filter(can_reference_collection));
                         }
                         let Some(slice) = self.array_slices.get(&id) else {
                             break;
@@ -77,22 +133,33 @@ impl HistoricalRuntime<'_> {
                 }
                 PineValue::UserTypeRef(id) if objects.insert(*id) => {
                     if let Some(fields) = self.object_store.get(id) {
-                        pending.extend(fields);
+                        pending.extend(fields.iter().filter(can_reference_collection));
                     }
                 }
                 PineValue::Matrix(id) if matrices.insert(*id) => {
-                    if let Some(matrix) = self.matrix_store.get(id) {
-                        pending.extend(&matrix.values);
+                    if let Some(matrix) = self.matrix_store.get(id)
+                        && matches!(
+                            matrix.kind,
+                            crate::builtins::matrices::MatrixElementKind::UserType(_)
+                        )
+                    {
+                        pending.extend(matrix.values.iter().filter(can_reference_collection));
                     }
                 }
                 PineValue::Map(id) if maps.insert(*id) => {
-                    if let Some(map) = self.map_store.get(id) {
+                    if let Some(map) = self.map_store.get(id)
+                        && (!super::objects::scalar_array_kind(Some(&map.key_kind))
+                            || !super::objects::scalar_array_kind(Some(&map.value_kind)))
+                    {
                         for (key, value) in &map.entries {
-                            pending.extend([key, value]);
+                            pending
+                                .extend([key, value].into_iter().filter(can_reference_collection));
                         }
                     }
                 }
-                PineValue::Tuple(values) | PineValue::UserType(values) => pending.extend(values),
+                PineValue::Tuple(values) | PineValue::UserType(values) => {
+                    pending.extend(values.iter().filter(can_reference_collection));
+                }
                 PineValue::ChartPoint(point) => pending.extend([
                     point.time.as_ref(),
                     point.index.as_ref(),
@@ -123,6 +190,25 @@ impl HistoricalRuntime<'_> {
             + self.matrix_store.len()
             + self.map_store.len();
         self.collection_gc_next_id = allocated.saturating_add((live as u64).max(1024));
+        let live_elements: usize = self
+            .array_store
+            .values()
+            .map(|values| values.len())
+            .sum::<usize>()
+            + self.object_store.values().map(Vec::len).sum::<usize>()
+            + self
+                .matrix_store
+                .values()
+                .map(|matrix| matrix.values.len())
+                .sum::<usize>()
+            + self
+                .map_store
+                .values()
+                .map(|map| map.entries.len().saturating_mul(2))
+                .sum::<usize>();
+        self.collection_gc_allocated_bytes = 0;
+        self.collection_gc_next_bytes = COLLECTION_GC_MIN_BYTES
+            .max(live_elements.saturating_mul(std::mem::size_of::<PineValue>()));
     }
 }
 
@@ -264,7 +350,7 @@ mod tests {
                 kind: MatrixElementKind::UserType(0),
                 rows: 1,
                 columns: 1,
-                values: vec![PineValue::UserType(vec![PineValue::Array(ids[2])])],
+                values: vec![PineValue::UserType(vec![PineValue::Array(ids[2])])].into(),
             },
         );
         runtime.map_store.insert(
@@ -275,7 +361,8 @@ mod tests {
                 entries: vec![(
                     PineValue::String("root".into()),
                     PineValue::UserType(vec![PineValue::Array(ids[3])]),
-                )],
+                )]
+                .into(),
             },
         );
         runtime.call_state.insert(
@@ -350,6 +437,178 @@ mod tests {
             close: index as f64,
             volume: 1.,
         }
+    }
+
+    #[test]
+    fn large_temporary_arrays_trigger_payload_collection_before_handle_count() {
+        let program = program(
+            "//@version=6\nindicator(\"pressure\")\nvar kept = array.new_float(1, 7)\ntemp = array.new_float(100000, close)\nplot(array.get(kept, 0) + array.get(temp, 99999))\n",
+        );
+        let mut runtime = HistoricalRuntime::new(&program);
+        for index in 0..12 {
+            runtime.append_bar(bar(index)).unwrap();
+            assert!(runtime.array_store.len() <= 3);
+            assert!(
+                runtime
+                    .array_store
+                    .values()
+                    .map(|values| values.len())
+                    .sum::<usize>()
+                    <= 200001
+            );
+        }
+        assert!(runtime.next_array_id < 1024);
+        assert_eq!(
+            runtime.result().plots[0].values.last(),
+            Some(&PineValue::Float(18.))
+        );
+    }
+
+    #[test]
+    fn long_string_payloads_trigger_collection_even_in_small_arrays() {
+        let program = program("//@version=6\nindicator(\"pressure\")\nplot(close)\n");
+        let mut runtime = HistoricalRuntime::new(&program);
+        let root = runtime.new_array_from_values(
+            ArrayElementKind::String,
+            vec![PineValue::String("kept".into())],
+        );
+        runtime.call_state.insert(CallSiteId(0), root.clone());
+        for _ in 0..4 {
+            runtime.new_array_from_values(
+                ArrayElementKind::String,
+                vec![PineValue::String("x".repeat(COLLECTION_GC_MIN_BYTES))],
+            );
+            runtime.collect_temporary_collections();
+            assert_eq!(runtime.array_store.len(), 1);
+        }
+        let PineValue::Array(id) = root else {
+            panic!("array");
+        };
+        assert_eq!(
+            runtime.array_get_cloned(id, 0).unwrap(),
+            Some(PineValue::String("kept".into()))
+        );
+        assert_eq!(runtime.next_array_id, 5);
+    }
+
+    #[test]
+    fn string_array_fill_and_set_collect_short_lived_payloads_before_handle_limit() {
+        for mutation in [
+            "array.fill(temp, payload)",
+            "for index = 0 to 127\n    array.set(temp, index, payload)",
+        ] {
+            let program = program(&format!(
+                "//@version=6\nindicator(\"mutation pressure\")\nvar kept = array.from(\"kept\")\npayload = str.repeat(\"x\", 32768)\ntemp = array.new_string(128, \"\")\n{mutation}\nplot(str.length(array.get(kept, 0)) + str.length(array.get(temp, 127)))\n",
+            ));
+            let mut runtime = HistoricalRuntime::new(&program);
+            for index in 0..12 {
+                runtime.append_bar(bar(index)).unwrap();
+                assert!(runtime.array_store.len() <= 3, "{mutation}");
+            }
+            assert!(runtime.next_array_id < 1024);
+            assert_eq!(
+                runtime.result().plots[0].values.last(),
+                Some(&PineValue::Int(32772)),
+            );
+        }
+    }
+
+    #[test]
+    fn object_field_mutation_and_checkpoint_clones_account_for_string_payloads() {
+        let program = program(
+            "//@version=6\nindicator(\"object pressure\")\ntype Payload\n    string text\n    int n\nplot(close)\n",
+        );
+        let identity = &program.user_types[0].identity;
+        let mut runtime = HistoricalRuntime::new(&program);
+        let root = runtime
+            .allocate_object(
+                vec![PineValue::String("kept".into()), PineValue::Int(0)],
+                identity,
+            )
+            .unwrap();
+        runtime.call_state.insert(CallSiteId(0), root.clone());
+        for _ in 0..4 {
+            for _ in 0..64 {
+                let PineValue::UserTypeRef(id) = runtime
+                    .allocate_object(
+                        vec![PineValue::String(String::new()), PineValue::Int(0)],
+                        identity,
+                    )
+                    .unwrap()
+                else {
+                    panic!("object");
+                };
+                runtime
+                    .set_object_field(id, 0, PineValue::String("x".repeat(32768)))
+                    .unwrap();
+            }
+            runtime.collect_temporary_collections();
+            assert_eq!(runtime.object_store.len(), 1);
+        }
+        assert!(runtime.next_object_id < 1024);
+        let PineValue::UserTypeRef(id) = root else {
+            panic!("object");
+        };
+        runtime
+            .set_object_field(
+                id,
+                0,
+                PineValue::String("y".repeat(COLLECTION_GC_MIN_BYTES)),
+            )
+            .unwrap();
+        runtime.collect_temporary_collections();
+        let checkpoint = runtime.clone();
+        runtime
+            .allocate_object(vec![PineValue::Na, PineValue::Int(0)], identity)
+            .unwrap();
+        runtime.collection_gc_allocated_bytes = 0;
+        let before = runtime.collection_gc_allocated_bytes;
+        assert!(runtime.set_object_field(id, 2, PineValue::Int(99)).is_err());
+        assert_eq!(runtime.collection_gc_allocated_bytes, before);
+        runtime.set_object_field(id, 1, PineValue::Int(7)).unwrap();
+        runtime.collect_temporary_collections();
+        assert_eq!(runtime.object_store.len(), 1);
+        assert_eq!(runtime.object_field(id, 1).unwrap(), PineValue::Int(7));
+        assert_eq!(checkpoint.object_field(id, 1).unwrap(), PineValue::Int(0));
+        assert_eq!(
+            runtime.object_field(id, 0).unwrap(),
+            checkpoint.object_field(id, 0).unwrap(),
+        );
+    }
+
+    #[test]
+    fn collection_root_queue_excludes_scalar_history_values() {
+        let values = [
+            PineValue::Float(1.),
+            PineValue::String("scalar".into()),
+            PineValue::Tuple(vec![PineValue::Array(1)]),
+        ];
+        assert_eq!(values.iter().filter(can_reference_collection).count(), 1);
+        let program = program("//@version=6\nindicator(\"pressure\")\nplot(close)\n");
+        let mut runtime = HistoricalRuntime::new(&program);
+        for _ in 0..100000 {
+            runtime
+                .series_store
+                .commit(SeriesId(0), PineValue::Float(1.), None);
+        }
+        assert_eq!(runtime.series_store.collection_root_buffers().count(), 0);
+        let nested =
+            runtime.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(7.)]);
+        runtime
+            .series_store
+            .commit(SeriesId(1), PineValue::Tuple(vec![nested.clone()]), None);
+        assert_eq!(runtime.series_store.collection_root_buffers().count(), 1);
+        runtime.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(99.)]);
+        runtime.collection_gc_next_id = 0;
+        runtime.collect_temporary_collections();
+        assert_eq!(runtime.array_store.len(), 1);
+        let PineValue::Array(id) = nested else {
+            panic!("array");
+        };
+        assert_eq!(
+            runtime.array_get_cloned(id, 0).unwrap(),
+            Some(PineValue::Float(7.))
+        );
     }
 
     #[test]

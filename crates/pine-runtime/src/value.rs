@@ -119,6 +119,19 @@ pub const fn is_valid_public_color(value: u64) -> bool {
 }
 
 impl PineValue {
+    pub(crate) fn can_reference_collection(&self) -> bool {
+        matches!(
+            self,
+            Self::Array(_)
+                | Self::Map(_)
+                | Self::Matrix(_)
+                | Self::UserTypeRef(_)
+                | Self::Tuple(_)
+                | Self::UserType(_)
+                | Self::ChartPoint(_)
+        )
+    }
+
     #[must_use]
     pub fn is_na(&self) -> bool {
         matches!(self, Self::Na)

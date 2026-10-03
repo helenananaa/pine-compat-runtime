@@ -18,6 +18,7 @@ mod legacy_dialect;
 mod legacy_frontend;
 mod lowering;
 mod methods;
+mod request_strings;
 mod scopes;
 mod type_arrays;
 mod type_core;

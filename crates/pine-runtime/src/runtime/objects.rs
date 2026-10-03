@@ -1,3 +1,4 @@
+use super::collection_gc::collection_values_allocation_bytes;
 use crate::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -31,7 +32,7 @@ fn enqueue_intrabar_references(
     pending.push((reference, retain_contents));
 }
 
-fn scalar_array_kind(kind: Option<&ArrayElementKind>) -> bool {
+pub(super) fn scalar_array_kind(kind: Option<&ArrayElementKind>) -> bool {
     matches!(
         kind,
         Some(
@@ -67,7 +68,7 @@ impl HistoricalRuntime<'_> {
                 }
                 PineValue::Matrix(id) if seen.insert((1, id)) => {
                     if let Some(matrix) = self.matrix_store.get(&id) {
-                        pending.extend(matrix.values.clone());
+                        pending.extend(matrix.values.iter().cloned());
                     }
                 }
                 PineValue::Map(id) if seen.insert((2, id)) => {
@@ -137,6 +138,7 @@ impl HistoricalRuntime<'_> {
             self.object_varip_ids.insert(id, id);
         }
         self.next_object_id += 1;
+        self.record_collection_values(&fields);
         self.object_store.insert(id, fields);
         self.object_varip_fields.insert(id, flags);
         Ok(PineValue::UserTypeRef(id))
@@ -154,11 +156,12 @@ impl HistoricalRuntime<'_> {
         for &id in varip_ids.values() {
             if let (Some(fields), Some(flags)) = (
                 previous.object_store.get(&id),
-                self.object_varip_fields.get(&id),
+                self.object_varip_fields.get(&id).cloned(),
             ) {
                 for (index, varip) in flags.iter().enumerate() {
                     if *varip && let Some(value) = fields.get(index) {
-                        self.object_store.get_mut(&id).unwrap()[index] = value.clone();
+                        self.set_object_field(id, index, value.clone())
+                            .expect("existing varip field");
                         enqueue_intrabar_references(&mut pending, value, true);
                     }
                 }
@@ -257,14 +260,21 @@ impl HistoricalRuntime<'_> {
         index: usize,
         value: PineValue,
     ) -> Result<(), RuntimeError> {
-        let field = self
+        let fields = self
             .object_store
-            .get_mut(&id)
-            .and_then(|fields| fields.get_mut(index))
+            .get(&id)
+            .filter(|fields| index < fields.len())
             .ok_or_else(|| RuntimeError {
                 message: "invalid UDT object reference or field".to_owned(),
             })?;
-        *field = value;
+        let copied = if self.object_store.get_mut_clones_value(&id) {
+            collection_values_allocation_bytes(fields)
+        } else {
+            0
+        };
+        self.record_collection_bytes(copied);
+        self.record_collection_values(std::iter::once(&value));
+        self.object_store.get_mut(&id).expect("validated object")[index] = value;
         Ok(())
     }
 }
@@ -377,7 +387,7 @@ mod varip_index_tests {
             MapStorage {
                 key_kind: ArrayElementKind::String,
                 value_kind: ArrayElementKind::UserType,
-                entries: vec![],
+                entries: vec![].into(),
             },
         );
         committed.matrix_store.insert(
@@ -386,7 +396,7 @@ mod varip_index_tests {
                 kind: MatrixElementKind::Float,
                 rows: 1,
                 columns: 1,
-                values: vec![PineValue::Float(7.)],
+                values: vec![PineValue::Float(7.)].into(),
             },
         );
         let held = committed
@@ -411,7 +421,7 @@ mod varip_index_tests {
                 kind: MatrixElementKind::UserType(0),
                 rows: 1,
                 columns: 1,
-                values: vec![PineValue::UserType(vec![nested_array])],
+                values: vec![PineValue::UserType(vec![nested_array])].into(),
             },
         );
         let nested = forming
@@ -422,10 +432,10 @@ mod varip_index_tests {
             .get_mut(&0)
             .unwrap()
             .entries
-            .push((PineValue::String("nested".into()), nested));
+            .put(PineValue::String("nested".into()), nested);
         committed.seed_intrabar_objects_from(&forming, vec![held]);
         assert_eq!(
-            committed.matrix_store.get(&0).unwrap().values,
+            committed.matrix_store.get(&0).unwrap().values.to_vec(),
             [PineValue::Float(7.)]
         );
         assert_eq!(committed.object_field(1, 0).unwrap(), PineValue::Matrix(1));

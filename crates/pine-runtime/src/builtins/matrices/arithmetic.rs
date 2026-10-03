@@ -135,7 +135,8 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let result = matrix_multiply_storage(&left, &right)?;
-        Ok(self.insert_matrix_storage(
+        self.record_collection_allocation(result.values.len());
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             result.rows,
             result.columns,
@@ -318,7 +319,7 @@ impl<'a> HistoricalRuntime<'a> {
                     PineValue::Na
                 }
             })
-            .collect();
+            .collect::<Vec<_>>();
 
         Ok(self.insert_matrix_storage(MatrixElementKind::Float, left.rows, left.columns, values))
     }
@@ -354,7 +355,7 @@ impl<'a> HistoricalRuntime<'a> {
                     PineValue::Na
                 }
             })
-            .collect();
+            .collect::<Vec<_>>();
 
         Ok(self.insert_matrix_storage(
             MatrixElementKind::Float,
@@ -382,7 +383,7 @@ impl<'a> HistoricalRuntime<'a> {
             ));
         }
         if power == 1 {
-            return Ok(self.insert_matrix_storage(
+            return Ok(self.insert_matrix_payload(
                 MatrixElementKind::Float,
                 source.rows,
                 source.columns,
@@ -394,7 +395,7 @@ impl<'a> HistoricalRuntime<'a> {
             kind: MatrixElementKind::Float,
             rows: source.rows,
             columns: source.columns,
-            values: identity_matrix_values(source.rows),
+            values: identity_matrix_values(source.rows).into(),
         };
         let mut base = source;
         let mut exponent = power;
@@ -408,7 +409,8 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        Ok(self.insert_matrix_storage(
+        self.record_collection_allocation(result.values.len());
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             result.rows,
             result.columns,
@@ -493,6 +495,6 @@ fn matrix_multiply_storage(
         kind: MatrixElementKind::Float,
         rows: left.rows,
         columns: right.columns,
-        values,
+        values: values.into(),
     })
 }

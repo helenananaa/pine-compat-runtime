@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 pine-builtins = { path = "../pine-builtins" }
+pine-host-support = { path = "../pine-host-support" }
 pine-runtime = { path = "../pine-runtime" }
 pine-sema = { path = "../pine-sema" }
 pine-syntax = { path = "../pine-syntax" }

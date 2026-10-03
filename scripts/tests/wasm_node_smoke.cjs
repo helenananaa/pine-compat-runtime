@@ -203,6 +203,101 @@ realtime.free();
 replica.free();
 program.free();
 
+// State-only seeding crosses the generated JS ABI without returning a snapshot.
+// Snapshot envelopes preserve the exact result bytes, including UTF-8 and escapes.
+{
+  const text = '图🚀 café "quoted"\\path\nnext';
+  const code = [
+    '//@version=6',
+    'indicator("state seed unicode")',
+    'var total = 0.0',
+    'total += close',
+    `plot(total, title=${JSON.stringify(text)})`,
+    `label.new(bar_index, close, text=${JSON.stringify(text)})`,
+    `alert(${JSON.stringify(text)}, alert.freq_all)`,
+    '',
+  ].join('\n');
+  const compiled = pine.compileScript(code);
+  const ordinary = compiled.realtimeSession();
+  const stateOnly = compiled.realtimeSession();
+  ordinary.setOutputRetention(2);
+  stateOnly.setOutputRetention(2);
+  assert.equal(typeof stateOnly.seedState, 'function');
+  const ordinarySeed = ordinary.seed(bars);
+  assert.equal(stateOnly.seedState(bars), undefined);
+  assert.equal(stateOnly.isSeeded, true);
+  assert.equal(stateOnly.confirmedBars, 3);
+  assert.equal(stateOnly.lastConfirmedTime, 2);
+  assert.equal(stateOnly.formingTime, undefined);
+  assert.equal(stateOnly.lastChanges(), 'null');
+  assert.equal(stateOnly.revision, ordinary.revision);
+  assert.equal(stateOnly.displayOrigin, 1);
+  assert.equal(stateOnly.result(), ordinarySeed);
+  assert.equal(stateOnly.confirmedResult(), ordinary.confirmedResult());
+  assert.throws(() => stateOnly.seedState(bars), /already been seeded/);
+  const consumer = stateOnly.replica();
+  assert.equal(consumer.result(), stateOnly.result());
+
+  const assertEnvelope = () => {
+    const result = stateOnly.result();
+    const encoded = stateOnly.streamSnapshot();
+    const expected = `{"revision":${stateOnly.revision},"retainedFrom":${stateOnly.displayOrigin},"result":${result}}`;
+    assert.deepEqual(Buffer.from(encoded, 'utf8'), Buffer.from(expected, 'utf8'));
+    const snapshot = JSON.parse(encoded);
+    assert.deepEqual(Object.keys(snapshot), ['revision', 'retainedFrom', 'result']);
+    assert.equal(snapshot.revision, Number(stateOnly.revision));
+    assert.equal(snapshot.retainedFrom, stateOnly.displayOrigin);
+    assert.deepEqual(snapshot.result, JSON.parse(result));
+    assert.equal(snapshot.result.plots[0].title, text);
+    assert.equal(snapshot.result.alerts.at(-1).message, text);
+    assert.equal(snapshot.result.labels.at(-1).snapshots.at(-1).text, text);
+    assert.ok(Buffer.byteLength(encoded, 'utf8') > encoded.length);
+  };
+  assertEnvelope();
+  for (const [method, close] of [['applyForming', 4], ['applyForming', 5], ['applyConfirmed', 5]]) {
+    const update = JSON.stringify({time:3, open:close, high:close, low:close, close, volume:1});
+    const changes = stateOnly[method](update);
+    assert.equal(changes, ordinary[method](update));
+    assert.equal(consumer.apply(changes), true);
+    assert.equal(consumer.result(), stateOnly.result());
+    assert.equal(stateOnly.result(), ordinary.result());
+    assertEnvelope();
+  }
+  consumer.free(); stateOnly.free(); ordinary.free(); compiled.free();
+}
+
+// Execution timestamps supplied with state-only seed remain the replay clock.
+{
+  const compiled = pine.compileScript('//@version=6\nindicator("state seed clock")\nplot(timenow)\nplot(timenow-time)\n');
+  const ordinary = compiled.realtimeSession();
+  const stateOnly = compiled.realtimeSession();
+  assert.equal(typeof stateOnly.seedStateWithExecutionTimes, 'function');
+  assert.throws(() => stateOnly.seedState(bars), /explicit execution timestamp/);
+  assert.equal(stateOnly.isSeeded, false);
+  assert.equal(stateOnly.confirmedBars, 0);
+  assert.throws(() => stateOnly.seedStateWithExecutionTimes(bars, '[101]'), /count 1.*bar count 3/);
+  assert.equal(stateOnly.isSeeded, false);
+  assert.equal(stateOnly.confirmedBars, 0);
+  const times = '[101,202,303]';
+  const ordinarySeed = ordinary.seedWithExecutionTimes(bars, times);
+  assert.equal(stateOnly.seedStateWithExecutionTimes(bars, times), undefined);
+  assert.equal(stateOnly.result(), ordinarySeed);
+  assert.deepEqual(JSON.parse(ordinarySeed).plots.map(plot => plot.values), [[101,202,303], [101,201,301]]);
+  assert.equal(stateOnly.revision, ordinary.revision);
+  const consumer = stateOnly.replica();
+  const update = JSON.stringify({time:3, open:4, high:4, low:4, close:4, volume:1});
+  const context = JSON.stringify({executionTime:707, openingUpdate:true});
+  const changes = stateOnly.applyFormingWithContext(update, context);
+  assert.equal(changes, ordinary.applyFormingWithContext(update, context));
+  assert.equal(consumer.apply(changes), true);
+  assert.equal(consumer.result(), stateOnly.result());
+  assert.equal(JSON.parse(stateOnly.result()).plots[0].values.at(-1), 707);
+  const envelope = JSON.parse(stateOnly.streamSnapshot());
+  assert.deepEqual(envelope.result, JSON.parse(consumer.result()));
+  assert.equal(envelope.revision, Number(consumer.revision));
+  consumer.free(); stateOnly.free(); ordinary.free(); compiled.free();
+}
+
 // Physical prefix pruning and alert retention through the real generated module.
 {
   const code = '//@version=6\nindicator("bounded")\nalert("event", alert.freq_all)\nplot(close)';

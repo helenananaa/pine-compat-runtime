@@ -300,9 +300,19 @@ name = "pine-cli"
 version = "0.3.0-rc.1"
 dependencies = [
  "pine-builtins",
+ "pine-host-support",
  "pine-runtime",
  "pine-sema",
  "pine-syntax",
+ "serde_json",
+]
+
+[[package]]
+name = "pine-host-support"
+version = "0.3.0-rc.1"
+dependencies = [
+ "pine-runtime",
+ "serde",
  "serde_json",
 ]
 
@@ -314,6 +324,7 @@ version = "0.3.0-rc.1"
 name = "pine-python"
 version = "0.3.0-rc.1"
 dependencies = [
+ "pine-host-support",
  "pine-ir",
  "pine-runtime",
  "pine-sema",
@@ -355,6 +366,7 @@ version = "0.3.0-rc.1"
 name = "pine-wasm"
 version = "0.3.0-rc.1"
 dependencies = [
+ "pine-host-support",
  "pine-ir",
  "pine-runtime",
  "pine-sema",

@@ -386,12 +386,21 @@ impl<'a> RealtimeRuntime<'a> {
         let mut runtime = self.confirmed.clone();
         if let Some(previous_forming) = &self.forming {
             runtime.seed_intrabar_persistence_from(previous_forming);
+            // Compiled patterns are pure caches, independent of Pine rollback.
+            runtime
+                .regex_cache
+                .clone_from(&previous_forming.regex_cache);
             runtime
                 .strategy_broker
                 .clone_from(&previous_forming.strategy_broker);
             runtime
                 .strategy_scheduler
                 .clone_from(&previous_forming.strategy_scheduler);
+        }
+        if let Some(previous_forming) = &mut self.forming {
+            // Selection scratch is not script state; reuse its allocation while
+            // evaluating repeated replacements of the same forming bar.
+            runtime.selection_scratch = std::mem::take(&mut previous_forming.selection_scratch);
         }
         let script_passes = runtime.strategy_scheduler.script_passes();
         runtime.append_bar_with_context(
@@ -614,7 +623,8 @@ impl<'a> RealtimeRuntime<'a> {
     }
 
     pub fn seed_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
-        self.seed_historical_inner(bars, None)
+        self.seed_historical_without_output(bars)?;
+        Ok(self.confirmed.result())
     }
 
     pub fn seed_historical_with_execution_times(
@@ -622,6 +632,21 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<RuntimeResult, RuntimeError> {
+        self.seed_historical_with_execution_times_without_output(bars, execution_times)?;
+        Ok(self.confirmed.result())
+    }
+
+    /// Commit known historical bars without materializing an owned snapshot.
+    /// Revision, rollback, retention and subsequent replicas match `seed_historical`.
+    pub fn seed_historical_without_output(&mut self, bars: &[Bar]) -> Result<(), RuntimeError> {
+        self.seed_historical_inner(bars, None)
+    }
+
+    pub fn seed_historical_with_execution_times_without_output(
+        &mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<(), RuntimeError> {
         self.seed_historical_inner(bars, Some(execution_times))
     }
 
@@ -629,7 +654,7 @@ impl<'a> RealtimeRuntime<'a> {
         &mut self,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         self.validate_seed_clocks(bars.len(), execution_times)?;
         let mut runtime = self.confirmed.clone();
         match execution_times {
@@ -651,7 +676,7 @@ impl<'a> RealtimeRuntime<'a> {
         self.apply_output_retention();
         self.sync_cursor();
         self.last_changes = None;
-        Ok(self.confirmed.result())
+        Ok(())
     }
 
     fn validate_seed_clocks(
@@ -735,9 +760,31 @@ impl RealtimeRuntime<'static> {
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
     ) -> Self {
+        Self::from_prepared_with_request_environment_and_input_overrides(
+            &PreparedProgram::new(program),
+            request_environment,
+            input_overrides,
+        )
+    }
+
+    #[must_use]
+    pub fn from_prepared(program: &PreparedProgram) -> Self {
+        Self::from_prepared_with_request_environment_and_input_overrides(
+            program,
+            RequestEnvironment::default(),
+            InputOverrides::new(),
+        )
+    }
+
+    #[must_use]
+    pub fn from_prepared_with_request_environment_and_input_overrides(
+        program: &PreparedProgram,
+        request_environment: RequestEnvironment,
+        input_overrides: InputOverrides,
+    ) -> Self {
         Self {
             confirmed:
-                HistoricalRuntime::with_owned_program_and_request_environment_and_input_overrides(
+                HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
                     program,
                     request_environment,
                     input_overrides,

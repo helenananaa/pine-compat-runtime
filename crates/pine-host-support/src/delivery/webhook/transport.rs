@@ -1,4 +1,4 @@
-use crate::output::delivery::{
+use crate::delivery::{
     DeliveryAttemptRecord, DeliveryCandidate, ExternalDeliveryAdapter, ExternalDeliveryResult,
 };
 
@@ -144,8 +144,8 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
-    use crate::output::delivery::webhook::{WebhookBodyMode, WebhookSecretResolverError};
-    use crate::output::delivery::{
+    use crate::delivery::webhook::{WebhookBodyMode, WebhookSecretResolverError};
+    use crate::delivery::{
         DeliveryAttemptStatus, DeliveryEventKind, ExternalDeliveryStatus,
         InMemoryDeliveryAttemptStore, deliver_candidate_with_attempt_store,
     };

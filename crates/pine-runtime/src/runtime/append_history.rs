@@ -89,6 +89,20 @@ impl<T> AppendHistory<T> {
         }
     }
 
+    /// Walk the newest retained values first without re-entering the tree for
+    /// each history offset. The leaf cursor also handles compact repeat leaves.
+    pub(crate) fn iter_rev(&self) -> RevIter<'_, T> {
+        RevIter {
+            start: self.start,
+            end: self.start + self.len,
+            pending: (!self.is_empty()).then_some((&self.root, self.capacity, 0)),
+            stack: Vec::new(),
+            leaf: RevLeafIter::Empty,
+            #[cfg(test)]
+            node_visits: 0,
+        }
+    }
+
     pub(crate) fn partition_point(&self, predicate: impl Fn(&T) -> bool) -> usize {
         let (mut lo, mut hi) = (0, self.len);
         while lo < hi {
@@ -396,6 +410,108 @@ impl<'a, T> Iterator for Iter<'a, T> {
 }
 
 impl<T> ExactSizeIterator for Iter<'_, T> {}
+
+pub(crate) struct RevIter<'a, T> {
+    start: usize,
+    end: usize,
+    pending: Option<(&'a Node<T>, usize, usize)>,
+    stack: Vec<(&'a Node<T>, usize, usize)>,
+    leaf: RevLeafIter<'a, T>,
+    #[cfg(test)]
+    node_visits: usize,
+}
+
+enum RevLeafIter<'a, T> {
+    Empty,
+    Values(std::iter::Rev<std::slice::Iter<'a, T>>),
+    Repeat { value: &'a T, remaining: usize },
+}
+
+impl<'a, T> RevLeafIter<'a, T> {
+    fn next(&mut self) -> Option<&'a T> {
+        match self {
+            Self::Empty => None,
+            Self::Values(values) => values.next(),
+            Self::Repeat { value, remaining } => {
+                if *remaining == 0 {
+                    return None;
+                }
+                *remaining -= 1;
+                Some(*value)
+            }
+        }
+    }
+}
+
+impl<'a, T> RevIter<'a, T> {
+    fn enter_subtree(&mut self, mut node: &'a Node<T>, mut span: usize, mut base: usize) {
+        loop {
+            #[cfg(test)]
+            {
+                self.node_visits += 1;
+            }
+            match node {
+                Node::Empty => {
+                    self.leaf = RevLeafIter::Empty;
+                    return;
+                }
+                Node::Leaf(values) => {
+                    let from = self.start.saturating_sub(base).min(values.len());
+                    let to = self.end.saturating_sub(base).min(values.len());
+                    self.leaf = RevLeafIter::Values(values[from..to].iter().rev());
+                    return;
+                }
+                Node::Repeat { value, len } => {
+                    let from = self.start.saturating_sub(base).min(*len);
+                    let to = self.end.saturating_sub(base).min(*len);
+                    self.leaf = RevLeafIter::Repeat {
+                        value,
+                        remaining: to.saturating_sub(from),
+                    };
+                    return;
+                }
+                Node::Branch { left, right } => {
+                    span /= 2;
+                    let split = base + span;
+                    if self.end > split {
+                        if self.start < split {
+                            self.stack.push((left, span, base));
+                        }
+                        node = right.as_ref().expect("occupied reverse iterator path");
+                        base = split;
+                    } else {
+                        node = left;
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl<'a, T> Iterator for RevIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.end <= self.start {
+            return None;
+        }
+        loop {
+            if let Some(item) = self.leaf.next() {
+                self.end -= 1;
+                return Some(item);
+            }
+            let (node, span, base) = self.pending.take().or_else(|| self.stack.pop())?;
+            self.enter_subtree(node, span, base);
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.end.saturating_sub(self.start);
+        (remaining, Some(remaining))
+    }
+}
+
+impl<T> ExactSizeIterator for RevIter<'_, T> {}
 
 #[cfg(test)]
 #[path = "append_history_walk_tests.rs"]

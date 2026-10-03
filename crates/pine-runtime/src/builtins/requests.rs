@@ -475,6 +475,7 @@ impl<'a> HistoricalRuntime<'a> {
                     expression,
                     &self.current_symbols,
                     &initializers,
+                    &tuple_dependencies,
                 );
                 for value in captures.values() {
                     self.reject_request_object_graph(value)?;
@@ -776,6 +777,7 @@ impl<'a> HistoricalRuntime<'a> {
             expression,
             &self.current_symbols,
             &dependency_initializers,
+            &tuple_dependencies,
         );
         for value in captures.values() {
             self.reject_request_object_graph(value)?;
@@ -937,16 +939,16 @@ pub(crate) fn request_capture_values(
     expression: &HirExpr,
     current_symbols: &HashMap<SymbolId, PineValue>,
     dependency_initializers: &HashMap<SymbolId, &HirExpr>,
+    tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
 ) -> HashMap<SymbolId, PineValue> {
     let mut candidates = HashSet::new();
-    let tuple_dependencies = request_tuple_dependency_statements(program);
     collect_request_capture_symbols(
         program,
         expression,
         &mut HashSet::new(),
         &mut candidates,
         dependency_initializers,
-        &tuple_dependencies,
+        tuple_dependencies,
     );
     candidates
         .into_iter()

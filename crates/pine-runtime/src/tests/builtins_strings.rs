@@ -1868,6 +1868,86 @@ plot(str.length(str.match("abc", "(")))
 }
 
 #[test]
+fn string_match_cache_reuses_patterns_shares_checkpoints_and_keeps_dynamic_replacement_bounded() {
+    let source = SourceFile::new(
+        "cached-match.pine",
+        r#"indicator("cached match")
+plot(str.length(str.match("tail\n", "tail$")))
+pattern = bar_index < 2 ? "a+" : "b+"
+plot(str.length(str.match("aaabbb", pattern)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.unwrap();
+    let mut runtime = HistoricalRuntime::new(&hir);
+    runtime.append_bar(bar(1.0)).unwrap();
+    assert_eq!(runtime.regex_cache.len(), 2);
+    let initial = runtime.regex_cache.clone();
+    let checkpoint = runtime.clone();
+    for (call_site, compiled) in &initial {
+        assert!(std::sync::Arc::ptr_eq(
+            compiled,
+            &checkpoint.regex_cache[call_site]
+        ));
+    }
+    runtime.append_bar(bar(1.0)).unwrap();
+    for (call_site, compiled) in &initial {
+        assert!(std::sync::Arc::ptr_eq(
+            compiled,
+            &runtime.regex_cache[call_site]
+        ));
+    }
+    runtime.append_bar(bar(1.0)).unwrap();
+    assert_eq!(runtime.regex_cache.len(), 2);
+    assert_eq!(
+        initial
+            .iter()
+            .filter(|(call_site, compiled)| {
+                std::sync::Arc::ptr_eq(compiled, &runtime.regex_cache[call_site])
+            })
+            .count(),
+        1
+    );
+    let result = runtime.result();
+    assert_eq!(result.plots.len(), 2);
+    for (plot, length) in result.plots.iter().zip([4.0, 3.0]) {
+        assert_values_close(&plot.values, &[length; 3]);
+    }
+}
+
+#[test]
+fn invalid_match_patterns_are_compiled_only_when_the_source_and_call_execute() {
+    let source = SourceFile::new(
+        "lazy-match-error.pine",
+        r#"indicator("lazy error")
+float score = 0
+if bar_index > 0
+    score := str.length(str.match(bar_index < 2 ? na : "abc", "("))
+plot(score)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.unwrap();
+    let mut runtime = HistoricalRuntime::new(&hir);
+    runtime.append_bar(bar(1.0)).unwrap();
+    runtime.append_bar(bar(1.0)).unwrap();
+    assert!(runtime.regex_cache.is_empty());
+    let error = runtime.append_bar(bar(1.0)).unwrap_err();
+    assert!(error.message.contains("str.match invalid regex"));
+    assert_eq!(runtime.regex_cache.len(), 1);
+}
+
+#[test]
 fn formats_iana_str_format_time_timezones() {
     let source = SourceFile::new(
         "test.pine",

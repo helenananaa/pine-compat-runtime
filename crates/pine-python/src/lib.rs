@@ -4,8 +4,8 @@ use pine_ir::{HirProgram, ValueKind};
 use pine_runtime::{
     Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, InputCall, InputOverrides,
     MagnifierInput, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue,
-    RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal, input_calls,
-    is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
+    PreparedProgram, RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal,
+    input_calls, is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -32,7 +32,7 @@ use realtime::PyRealtimeSession;
 #[pyclass(name = "Program", skip_from_py_object)]
 #[derive(Clone)]
 struct PyProgram {
-    hir: HirProgram,
+    hir: PreparedProgram,
 }
 
 #[pymethods]
@@ -74,11 +74,12 @@ impl PyProgram {
         let execution_times = parse_execution_times(execution_times)?;
         let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
         let session_windows = parse_session_windows(py, session_windows)?;
-        let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
-            &self.hir,
-            request_environment,
-            input_overrides,
-        );
+        let mut runtime =
+            HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
+                &self.hir,
+                request_environment,
+                input_overrides,
+            );
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
         }
@@ -87,14 +88,14 @@ impl PyProgram {
                 .with_session_windows(session_windows)
                 .map_err(|err| PyValueError::new_err(err.message))?;
         }
-        match execution_times.as_deref() {
+        py.detach(|| match execution_times.as_deref() {
             Some(execution_times) => {
                 runtime.append_bars_with_execution_times(&bars, execution_times)
             }
             None => runtime.append_bars(&bars),
-        }
+        })
         .map_err(|err| PyValueError::new_err(err.message))?;
-        runtime_result_into_py(py, runtime.result())
+        runtime_result_into_py(py, py.detach(|| runtime.result()))
     }
 
     #[pyo3(signature = (
@@ -146,7 +147,9 @@ fn compile_script(source: &str, library_sources: Option<&Bound<'_, PyAny>>) -> P
     let hir = analysis
         .hir
         .ok_or_else(|| PyValueError::new_err("analysis did not produce executable HIR"))?;
-    Ok(PyProgram { hir })
+    Ok(PyProgram {
+        hir: PreparedProgram::new(hir),
+    })
 }
 #[pyfunction(signature = (source, library_sources=None))]
 fn analyze_script(

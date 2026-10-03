@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use crate::output::delivery::DeliveryCandidate;
+use crate::delivery::DeliveryCandidate;
 
 use super::{
     WebhookAdapterConfig, WebhookAdapterConfigError, WebhookPayloadError, render_webhook_payload,
@@ -173,7 +173,7 @@ where
 mod tests {
     use super::super::WebhookBodyMode;
     use super::*;
-    use crate::output::delivery::DeliveryEventKind;
+    use crate::delivery::DeliveryEventKind;
 
     fn candidate(message: &str) -> DeliveryCandidate {
         DeliveryCandidate::new(

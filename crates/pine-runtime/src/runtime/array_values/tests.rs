@@ -71,7 +71,7 @@ fn page_boundary_growth_shrink_middle_mutation_and_views_match_values() {
             view.iter().rev().copied().collect::<Vec<_>>(),
             expected[127..130].iter().rev().copied().collect::<Vec<_>>()
         );
-        while values.len() != 0 {
+        while !values.is_empty() {
             assert_eq!(values.remove(values.len() - 1), expected.pop().unwrap());
         }
         values.insert(0, 42);
@@ -123,4 +123,34 @@ fn page_copy_preserves_nan_bits_and_owned_nested_value_independence() {
         };
         assert_eq!(value.to_bits(), nan.to_bits());
     }
+}
+
+#[test]
+fn paged_bulk_operations_preserve_checkpoints_and_cross_page_values() {
+    let original: ArrayValues<_> = (0..513).collect::<Vec<_>>().into();
+    let mut values = original.clone();
+    let mut expected = (0..513).collect::<Vec<_>>();
+    values.replace_range(127, 130, [900, 901]);
+    expected.splice(127..130, [900, 901]);
+    values.swap(127, 256);
+    expected.swap(127, 256);
+    values.swap(385, 129);
+    expected.swap(385, 129);
+    values.swap(128, 129);
+    expected.swap(128, 129);
+    values.reverse();
+    expected.reverse();
+    values.extend([800, 801]);
+    expected.extend([800, 801]);
+    assert_eq!(values.to_vec(), expected);
+    values.fill(42);
+    assert!(values.iter().all(|value| *value == 42));
+    assert_eq!(original.to_vec(), (0..513).collect::<Vec<_>>());
+    // Equality compares logical contents even when shrinking leaves pages.
+    let mut paged = original.clone();
+    while paged.len() > 128 {
+        paged.remove(paged.len() - 1);
+    }
+    let flat: ArrayValues<_> = (0..128).collect::<Vec<_>>().into();
+    assert_eq!(paged, flat);
 }

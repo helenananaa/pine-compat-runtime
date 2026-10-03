@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
 [dependencies]
+pine-host-support = { path = "../pine-host-support" }
 pine-ir = { path = "../pine-ir" }
 pine-runtime = { path = "../pine-runtime" }
 pine-sema = { path = "../pine-sema" }

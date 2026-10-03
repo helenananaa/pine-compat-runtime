@@ -47,6 +47,7 @@ impl<'a> HistoricalRuntime<'a> {
             expression,
             &self.current_symbols,
             &initializers,
+            &tuple_dependencies,
         );
         for value in captures.values() {
             self.reject_request_object_graph(value)?;
@@ -198,6 +199,7 @@ fn incremental_scoped_expression(
         HirExprKind::Call { callee, args, .. } => {
             (callee.starts_with("ta.")
                 || (callee.starts_with("math.") && callee != "math.random")
+                || pine_builtins::is_pure_scalar_string_builtin(callee)
                 || matches!(callee.as_str(), "timeframe.change" | "year"))
                 && args.iter().all(|arg| visit(&arg.value))
         }
@@ -324,13 +326,21 @@ mod tests {
             "ta.ema(close, 5)",
             "ta.rsi(close, 7)",
             "ta.cum(close)",
+            "str.tonumber(str.tostring(close))",
+            "str.length(str.upper(str.format(\"value={0}\", close)))",
+            r#"str.length(str.match(str.tostring(close), close % 2 == 0 ? "[0-9]+" : "[0-9]+\\.[0-9]+"))"#,
+            "str.tonumber(str.replace_all(str.tostring(close), \".\", \"\"))",
         ] {
             let source = format!(
                 "//@version=6\nindicator(\"cache\")\nplot(request.security(\"B\", \"5\", {expression}))"
             );
-            let hir = analyze_source(&SourceFile::new("cache.pine", source))
-                .hir
-                .unwrap();
+            let analysis = analyze_source(&SourceFile::new("cache.pine", source));
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{expression}: {:?}",
+                analysis.diagnostics
+            );
+            let hir = analysis.hir.expect("supported request expression");
             let key = RequestKey::new("B", RequestTimeframe::parse("5").unwrap());
             let mut provider = InMemoryRequestDataProvider::new();
             provider
@@ -383,6 +393,22 @@ mod tests {
                     .unwrap();
                 full.apply_request_update(key.clone(), BarUpdate::confirmed(requested))
                     .unwrap();
+                full.request_evaluations.clear();
+                let chart = bar(index * 300_000 + 240_000, 1.0);
+                fast.append_bar_with_kind(chart, BarUpdateKind::Confirmed)
+                    .unwrap();
+                full.append_bar_with_kind(chart, BarUpdateKind::Confirmed)
+                    .unwrap();
+                assert_eq!(
+                    fast.result().plots,
+                    full.result().plots,
+                    "{expression}/{index}/confirmed"
+                );
+                assert!(
+                    fast.request_evaluations
+                        .values()
+                        .all(|state| state.replayed_bars <= 2)
+                );
             }
         }
     }
@@ -477,5 +503,81 @@ mod tests {
         let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment);
         runtime.append_bar(bar(240_000, 1.0)).unwrap();
         assert!(runtime.request_evaluations.is_empty());
+    }
+
+    #[test]
+    fn string_endpoint_reads_inside_arguments_and_udf_branches_keep_complete_evaluator() {
+        for (expression, expected_values) in [
+            (
+                "str.tonumber(str.tostring(barstate.islast ? close : close[1]))",
+                [4.0, 6.0, 5.0],
+            ),
+            (
+                "str.length(str.match(str.tostring(close), barstate.islast ? \"[0-9]+\" : \".\"))",
+                [1.0, 1.0, 1.0],
+            ),
+            ("f()", [2.0, 2.0, 2.0]),
+        ] {
+            let source = SourceFile::new(
+                "string-endpoint.pine",
+                format!(
+                    "//@version=6\nindicator(\"string endpoint\")\nf() =>\n    string result = str.tostring(close)\n    if barstate.islast\n        result := str.tostring(close[1])\n    str.tonumber(result)\nplot(request.security(\"B\", \"5\", {expression}, lookahead=barmerge.lookahead_on))\n"
+                ),
+            );
+            let analysis = analyze_source(&source);
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{expression}: {:?}",
+                analysis.diagnostics
+            );
+            let hir = analysis.hir.unwrap();
+            let key = RequestKey::new("B", RequestTimeframe::parse("5").unwrap());
+            let provider = InMemoryRequestDataProvider::from_streams(vec![(
+                key.clone(),
+                vec![bar(0, 1.0), bar(300_000, 2.0)],
+            )])
+            .unwrap();
+            let environment = RequestEnvironment::new(
+                ChartContext::new("A", RequestTimeframe::parse("1").unwrap()),
+                Arc::new(provider),
+            );
+            let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment);
+            runtime.append_bar(bar(240_000, 1.0)).unwrap();
+            for (close, expected) in [4.0, 6.0, 5.0].into_iter().zip(expected_values) {
+                runtime
+                    .apply_request_update(key.clone(), BarUpdate::forming(bar(600_000, close)))
+                    .unwrap();
+                runtime
+                    .append_bar_with_kind(bar(840_000, 1.0), BarUpdateKind::Forming)
+                    .unwrap();
+                assert!(runtime.request_evaluations.is_empty(), "{expression}");
+                assert_eq!(
+                    runtime.result().plots[0]
+                        .values
+                        .last()
+                        .and_then(PineValue::as_f64),
+                    Some(expected),
+                    "{expression}/{close}"
+                );
+            }
+            runtime
+                .apply_request_update(key.clone(), BarUpdate::confirmed(bar(600_000, 5.0)))
+                .unwrap();
+            runtime
+                .append_bar_with_kind(bar(840_000, 1.0), BarUpdateKind::Confirmed)
+                .unwrap();
+            assert!(
+                runtime.request_evaluations.is_empty(),
+                "{expression}/confirmed"
+            );
+            assert_eq!(
+                runtime.result().plots[0]
+                    .values
+                    .last()
+                    .and_then(PineValue::as_f64),
+                Some(expected_values[2]),
+                "{expression}/confirmed"
+            );
+        }
     }
 }

@@ -350,6 +350,16 @@ Initial namespaces:
 Built-ins must be implemented against runtime abstractions instead of directly
 depending on host charting code.
 
+### `pine-host-support`
+
+Optional host-side running-alert configuration and delivery policy. It depends
+on public runtime events and the neutral template renderer; `pine-runtime` has
+no dependency on it. It owns delivery candidates and dedupe, attempt stores,
+adapter orchestration, retry policy, webhook HTTP classification, and
+secret/transport interfaces. Concrete network clients and durable infrastructure
+remain application responsibilities. See the
+[0.3 prerelease import migration](HOST_SUPPORT_MIGRATION_20261003.md).
+
 ### `pine-cli`
 
 Owns command line usage.

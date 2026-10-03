@@ -1,10 +1,11 @@
 mod collection_format;
+mod regex_cache;
 use collection_format::{stringify_array_with_mintick, stringify_matrix_with_mintick};
+pub(crate) use regex_cache::CachedPineRegex;
 
 use std::fmt::Write as _;
 
 use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
-use regex::Regex;
 
 use super::{
     regex_character_classes::{
@@ -998,6 +999,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_string_call(
         &mut self,
         callee: &str,
+        call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         if !callee.starts_with("str.") {
@@ -1020,7 +1022,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.tonumber" => self.eval_str_tonumber(args),
             "str.tostring" => self.eval_str_tostring(args),
             "str.format" => self.eval_str_format(args),
-            "str.match" => self.eval_str_match_regex(args),
+            "str.match" => self.eval_str_match_regex(call_site_id, args),
             "str.split" => self.eval_str_split(args),
             "str.format_time" => self.eval_str_format_time(args),
             _ => return None,
@@ -1277,35 +1279,6 @@ impl<'a> HistoricalRuntime<'a> {
         self.string_value_or_error(result, "str.format")
     }
 
-    pub(crate) fn eval_str_match_regex(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
-            return Ok(PineValue::Na);
-        };
-        let PineValue::String(regex) = self.eval_expr(&args[1].value)? else {
-            return Ok(PineValue::Na);
-        };
-        let normalized = normalize_pine_regex_with_metadata(&regex);
-        let regex = Regex::new(&normalized.pattern).map_err(|err| RuntimeError {
-            message: format!("str.match invalid regex: {err}"),
-        })?;
-        let Some(captures) = regex.captures(&source) else {
-            return Ok(PineValue::String(String::new()));
-        };
-        let matched = captures
-            .get(0)
-            .expect("successful regex captures contain the complete match");
-        let consumed_final_newline = normalized
-            .final_newline_captures
-            .iter()
-            .any(|name| captures.name(name).is_some());
-        let end = matched.end() - usize::from(consumed_final_newline);
-
-        Ok(PineValue::String(source[matched.start()..end].to_owned()))
-    }
-
     pub(crate) fn eval_str_split(
         &mut self,
         args: &[HirCallArg],
@@ -1407,12 +1380,12 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Bool(value) => value.to_string(),
             PineValue::String(value) => value.clone(),
             PineValue::Array(id) => self
-                .array_values_clone(*id)
+                .array_values(*id)
                 .ok()
                 .flatten()
                 .map(|values| {
                     stringify_array_with_mintick(
-                        &values,
+                        values.iter(),
                         format,
                         self.request_environment.chart().min_tick(),
                     )

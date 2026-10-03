@@ -2,6 +2,7 @@
 members = [
     "crates/pine-builtins",
     "crates/pine-cli",
+    "crates/pine-host-support",
     "crates/pine-ir",
     "crates/pine-python",
     "crates/pine-runtime",

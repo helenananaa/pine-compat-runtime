@@ -1,5 +1,7 @@
 use pine_ir::HirProgram;
-use pine_runtime::{Bar, HistoricalRuntime, InputOverrides, MagnifierInput, RequestEnvironment};
+use pine_runtime::{
+    Bar, HistoricalRuntime, InputOverrides, MagnifierInput, PreparedProgram, RequestEnvironment,
+};
 use wasm_bindgen::prelude::*;
 
 use crate::input_overrides::input_overrides_from_json;
@@ -10,12 +12,14 @@ use crate::{analysis_input, compile_program};
 
 #[wasm_bindgen(js_name = Program)]
 pub struct WasmProgram {
-    pub(crate) hir: HirProgram,
+    pub(crate) hir: PreparedProgram,
 }
 
 impl WasmProgram {
     pub(crate) fn new(hir: HirProgram) -> Self {
-        Self { hir }
+        Self {
+            hir: PreparedProgram::new(hir),
+        }
     }
 }
 
@@ -395,11 +399,12 @@ impl WasmProgram {
         session_windows: Option<pine_runtime::SessionWindowInput>,
     ) -> Result<String, String> {
         let bars = parse_bars_csv(bars_csv)?;
-        let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
-            &self.hir,
-            request_environment,
-            input_overrides,
-        );
+        let mut runtime =
+            HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
+                &self.hir,
+                request_environment,
+                input_overrides,
+            );
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
         }

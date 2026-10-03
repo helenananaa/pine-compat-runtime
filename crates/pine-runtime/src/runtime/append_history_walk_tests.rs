@@ -37,6 +37,57 @@ fn sequential_iteration_visits_each_subtree_once_without_cloning_payloads() {
 }
 
 #[test]
+fn reverse_iteration_visits_each_subtree_once_and_seeks_to_the_tail() {
+    let clones = Arc::new(AtomicUsize::new(0));
+    let mut history = AppendHistory::from_values((0..100_003).map(|value| Counted {
+        value,
+        clones: clones.clone(),
+    }));
+    history.drop_prefix(10_001);
+    let mut iter = history.iter_rev();
+    for expected in (10_001..100_003).rev() {
+        assert_eq!(iter.next().unwrap().value, expected);
+        assert_eq!(iter.len(), expected - 10_001);
+    }
+    assert!(iter.next().is_none());
+    assert!(iter.node_visits <= 2 * history.len().div_ceil(APPEND_LEAF_SIZE) + 64);
+    let mut tail = history.iter_rev();
+    assert_eq!(tail.next().unwrap().value, 100_002);
+    assert!(tail.node_visits <= usize::BITS as usize);
+    assert_eq!(clones.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn reverse_iteration_handles_repeat_leaves_pruning_and_checkpoint_replacement() {
+    use crate::PineValue;
+    let mut history =
+        AppendHistory::from_compact_values((0..1600).map(|index| PineValue::Int(index / 131)));
+    for drop in [1, 126, 1, 129, 255, 1, 512] {
+        history.drop_prefix(drop);
+        let checkpoint = history.clone();
+        let previous = history.to_vec();
+        *history.last_mut().unwrap() = PineValue::Int(-1);
+        history.push_compact(PineValue::Int(-2));
+        assert_eq!(
+            history.iter_rev().cloned().collect::<Vec<_>>(),
+            history.to_vec().into_iter().rev().collect::<Vec<_>>()
+        );
+        assert_eq!(
+            checkpoint.iter_rev().cloned().collect::<Vec<_>>(),
+            previous.into_iter().rev().collect::<Vec<_>>()
+        );
+    }
+    history.drop_prefix(usize::MAX);
+    assert!(history.iter_rev().next().is_none());
+    assert_eq!(history.iter_rev().len(), 0);
+    history.push(PineValue::Int(-3));
+    assert_eq!(
+        history.iter_rev().cloned().collect::<Vec<_>>(),
+        [PineValue::Int(-3)]
+    );
+}
+
+#[test]
 #[allow(clippy::iter_nth_zero)] // Exercise the custom nth zero-offset branch explicitly.
 fn iterator_nth_seeks_without_walking_skipped_leaves_and_can_resume() {
     let mut history = AppendHistory::from_values(0..100_003);
@@ -165,6 +216,13 @@ fn repeat_and_mixed_leaves_preserve_float_bits_and_checkpoint_branches() {
             .map(|value| value.as_f64().unwrap().to_bits())
             .collect();
         assert_eq!(observed, expected);
+        assert_eq!(
+            history
+                .iter_rev()
+                .map(|value| value.as_f64().unwrap().to_bits())
+                .collect::<Vec<_>>(),
+            expected.iter().rev().copied().collect::<Vec<_>>()
+        );
         assert_eq!(checkpoint.len() + 1, history.len());
         assert_eq!(
             checkpoint

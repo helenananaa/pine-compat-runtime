@@ -226,6 +226,13 @@ impl Analyzer {
                         | "array.new<color>"
                         | "ta.pivot_point_levels"
                 );
+                if pine_builtins::is_pure_scalar_string_builtin(&name) {
+                    return args.iter().all(|arg| {
+                        self.type_of_expr_with_params(&arg.value, &HashMap::new())
+                            .is_some_and(is_request_scalar_type)
+                            && self.modern_request_expr(&arg.value, locals, visiting, calls)
+                    });
+                }
                 (array_constructor
                     || request_scalar_call_is_supported(&name)
                     || request_tuple_call_is_supported(&name)

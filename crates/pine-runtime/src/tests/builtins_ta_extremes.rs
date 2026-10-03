@@ -334,6 +334,97 @@ plot(lo)
 }
 
 #[test]
+fn deep_conditional_extreme_windows_use_source_bar_history_and_recent_ties() {
+    let source = SourceFile::new(
+        "deep-extremes.pine",
+        r#"indicator("deep conditional extrema")
+source = bar_index % 13 == 0 ? na : close
+float hi = na
+float lo = na
+float hibars = na
+float lobars = na
+if bar_index % 3 != 0
+    hi := ta.highest(source, 257)
+    lo := ta.lowest(source, 257)
+    hibars := ta.highestbars(source, 257)
+    lobars := ta.lowestbars(source, 257)
+plot(hi)
+plot(lo)
+plot(hibars)
+plot(lobars)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.unwrap();
+    let bars: Vec<_> = (0..700)
+        .map(|index| {
+            let mut bar = bar(match index % 7 {
+                0 => -0.0,
+                1 => 0.0,
+                _ => (index * 137 % 17) as f64,
+            });
+            bar.time = index as i64 * 60_000;
+            bar
+        })
+        .collect();
+    let result = run_historical(&hir, &bars).unwrap();
+    for index in 0..bars.len() {
+        for (plot_index, highest) in [(0, true), (1, false)] {
+            let mut best = None;
+            let mut offset = 0;
+            for candidate in (index.saturating_sub(256)..=index).rev() {
+                if candidate % 13 == 0 {
+                    continue;
+                }
+                let value = bars[candidate].close;
+                if best.is_none_or(|current| {
+                    if highest {
+                        value > current
+                    } else {
+                        value < current
+                    }
+                }) {
+                    best = Some(value);
+                    offset = index - candidate;
+                }
+            }
+            let values = &result.plots[plot_index].values;
+            let offsets = &result.plots[plot_index + 2].values;
+            if index % 3 == 0 {
+                assert_eq!(values[index], PineValue::Na);
+                assert_eq!(offsets[index], PineValue::Na);
+                continue;
+            }
+            if index < 256 {
+                assert_eq!(values[index], PineValue::Na);
+            } else {
+                assert_eq!(values[index].as_f64().unwrap(), best.unwrap());
+            }
+            if index % 13 == 0 {
+                assert_eq!(offsets[index], PineValue::Na);
+            } else {
+                assert_eq!(offsets[index].as_f64().unwrap(), -(offset as f64));
+            }
+        }
+    }
+
+    let mut live = RealtimeRuntime::new(&hir);
+    live.seed_historical(&bars[..698]).unwrap();
+    for close in [31.0, -5.0, 12.0] {
+        let update = Bar { close, ..bars[698] };
+        let observed = live.update(BarUpdate::forming(update)).unwrap();
+        let mut input = bars[..698].to_vec();
+        input.push(update);
+        assert_eq!(observed, run_historical(&hir, &input).unwrap());
+    }
+}
+
+#[test]
 fn extreme_bar_offsets_address_history_in_v5_and_v6() {
     let bars = vec![bar(1.0), bar(3.0), bar(2.0), bar(5.0)];
     for version in [5, 6] {

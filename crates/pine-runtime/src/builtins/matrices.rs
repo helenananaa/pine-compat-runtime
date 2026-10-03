@@ -4,9 +4,13 @@ use std::cmp::Ordering;
 
 use pine_ir::HirCallArg;
 
+use crate::runtime::array_values::ArrayValues;
+use crate::runtime::collection_gc::{collection_values_allocation_bytes, value_allocation_bytes};
 use crate::*;
 
 mod arithmetic;
+#[cfg(test)]
+mod checkpoint_tests;
 mod linalg;
 mod linear_algebra;
 mod mutation;
@@ -29,7 +33,28 @@ pub(crate) struct MatrixStorage {
     pub(crate) kind: MatrixElementKind,
     pub(crate) rows: usize,
     pub(crate) columns: usize,
-    pub(crate) values: Vec<PineValue>,
+    pub(crate) values: ArrayValues<PineValue>,
+}
+
+impl MatrixStorage {
+    fn cloned_entry_allocation_bytes(&self, cloned_entry: bool) -> usize {
+        if cloned_entry {
+            collection_values_allocation_bytes(self.values.clone_allocation_values())
+        } else {
+            0
+        }
+    }
+
+    fn swap_values_allocation_bytes(&mut self, left: usize, right: usize) -> usize {
+        let left_values = self.values.write_allocation_values(left, false);
+        let right_values = self.values.write_allocation_values(right, false);
+        let mut bytes = collection_values_allocation_bytes(left_values);
+        if !std::ptr::eq(left_values, right_values) {
+            bytes = bytes.saturating_add(collection_values_allocation_bytes(right_values));
+        }
+        self.values.swap(left, right);
+        bytes
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -576,18 +601,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let id = self.next_matrix_id;
-        self.next_matrix_id += 1;
-        self.matrix_store.insert(
-            id,
-            MatrixStorage {
-                kind,
-                rows,
-                columns,
-                values: vec![initial_value; cells],
-            },
-        );
-        Ok(PineValue::Matrix(id))
+        Ok(self.insert_matrix_storage(kind, rows, columns, vec![initial_value; cells]))
     }
 
     fn insert_matrix_storage(
@@ -596,6 +610,17 @@ impl<'a> HistoricalRuntime<'a> {
         rows: usize,
         columns: usize,
         values: Vec<PineValue>,
+    ) -> PineValue {
+        self.record_collection_values(&values);
+        self.insert_matrix_payload(kind, rows, columns, values.into())
+    }
+
+    fn insert_matrix_payload(
+        &mut self,
+        kind: MatrixElementKind,
+        rows: usize,
+        columns: usize,
+        values: ArrayValues<PineValue>,
     ) -> PineValue {
         let id = self.next_matrix_id;
         self.next_matrix_id += 1;
@@ -848,6 +873,14 @@ impl<'a> HistoricalRuntime<'a> {
         else {
             return Ok(());
         };
+        let copied_cells = self.matrix_store.get(&id).map_or(0, |matrix| {
+            collection_values_allocation_bytes(
+                matrix
+                    .values
+                    .write_allocation_values(offset, self.matrix_store.get_mut_clones_value(&id)),
+            )
+        });
+        self.record_collection_bytes(copied_cells.saturating_add(value_allocation_bytes(&value)));
         if let Some(slot) = self
             .matrix_store
             .get_mut(&id)
@@ -859,6 +892,14 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn matrix_fill_value(&mut self, id: u32, value: PineValue) {
+        let Some(matrix) = self.matrix_store.get(&id) else {
+            return;
+        };
+        let cells = matrix.values.len();
+        let copied_cells =
+            matrix.cloned_entry_allocation_bytes(self.matrix_store.get_mut_clones_value(&id));
+        self.record_collection_bytes(copied_cells);
+        self.record_collection_repeated_value(&value, cells);
         if let Some(matrix) = self.matrix_store.get_mut(&id) {
             matrix.values.fill(value);
         }
@@ -870,6 +911,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let id = self.next_matrix_id;
         self.next_matrix_id += 1;
+        self.record_collection_values(source.values.clone_allocation_values());
         self.matrix_store.insert(id, source);
         PineValue::Matrix(id)
     }
@@ -878,6 +920,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(source) = self.matrix_store.get(&source_id).cloned() else {
             return PineValue::Na;
         };
+        self.record_collection_values(source.values.clone_allocation_values());
 
         let mut values = Vec::with_capacity(source.values.len());
         for row in 0..source.columns {
@@ -890,8 +933,15 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn matrix_reverse(&mut self, id: u32) {
+        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
         if let Some(matrix) = self.matrix_store.get_mut(&id) {
+            let bytes = matrix
+                .cloned_entry_allocation_bytes(cloned_matrix)
+                .saturating_add(collection_values_allocation_bytes(
+                    matrix.values.all_write_allocation_values(false),
+                ));
             matrix.values.reverse();
+            self.record_collection_bytes(bytes);
         }
     }
 
@@ -905,8 +955,14 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let row = matrix_index("row", row, matrix.rows)?;
         let start = row * matrix.columns;
-        let end = start + matrix.columns;
-        Ok(Some(matrix.values[start..end].to_vec()))
+        Ok(Some(
+            matrix
+                .values
+                .view(start, matrix.columns)
+                .iter()
+                .cloned()
+                .collect(),
+        ))
     }
 
     pub(crate) fn matrix_col_values(

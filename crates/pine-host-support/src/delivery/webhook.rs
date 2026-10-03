@@ -494,7 +494,7 @@ fn header_value_looks_secret(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::output::delivery::{
+    use crate::delivery::{
         DeliveryAdapterRun, DeliveryEventKind, ExternalDeliveryStatus, InMemoryDeliveryAttemptStore,
     };
 

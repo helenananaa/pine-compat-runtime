@@ -1,6 +1,9 @@
 //! Array payloads keep small arrays flat and share pages in large checkpoints.
 //! A sparse write copies one page and the page directory, not every element.
-use std::{ops::Index, sync::Arc};
+use std::{
+    ops::{Index, IndexMut},
+    sync::Arc,
+};
 
 const PAGE_SIZE: usize = 128;
 
@@ -46,6 +49,10 @@ impl<T> ArrayValues<T> {
         }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub(crate) fn capacity(&self) -> usize {
         match &self.storage {
             Storage::Small(values) => values.capacity(),
@@ -74,6 +81,71 @@ impl<T> ArrayValues<T> {
     pub(crate) fn iter(&self) -> ArrayIter<'_, T> {
         self.view(0, self.len()).iter()
     }
+
+    /// Cells copied by cloning this payload; paged clones share their directory.
+    pub(crate) fn clone_allocation_values(&self) -> &[T] {
+        match &self.storage {
+            Storage::Small(values) => values,
+            Storage::Paged { .. } => &[],
+        }
+    }
+
+    /// An append only copies an existing page when that partial tail is shared.
+    pub(crate) fn append_allocation_values(&self, cloned_self: bool) -> &[T] {
+        match &self.storage {
+            Storage::Small(values) if cloned_self => values,
+            Storage::Paged { len, .. } if !len.is_multiple_of(PAGE_SIZE) => {
+                self.write_allocation_values(*len - 1, cloned_self)
+            }
+            _ => &[],
+        }
+    }
+
+    /// Cells copied by mutating every page; uniquely owned pages are skipped.
+    pub(crate) fn all_write_allocation_values(
+        &self,
+        cloned_self: bool,
+    ) -> impl Iterator<Item = &T> {
+        let small = match &self.storage {
+            Storage::Small(values) if cloned_self => Some(values.as_slice()),
+            _ => None,
+        };
+        let pages = match &self.storage {
+            Storage::Paged { pages, .. } => Some((
+                pages.as_slice(),
+                cloned_self || Arc::strong_count(pages) > 1,
+            )),
+            _ => None,
+        };
+        small
+            .into_iter()
+            .flatten()
+            .chain(pages.into_iter().flat_map(|(pages, shared)| {
+                pages
+                    .iter()
+                    .filter(move |page| shared || Arc::strong_count(page) > 1)
+                    .flat_map(|page| page.iter())
+            }))
+    }
+
+    /// Values deep-cloned by a sparse write after an optional store-entry
+    /// clone. Large payloads expose only the affected bounded page.
+    pub(crate) fn write_allocation_values(&self, index: usize, cloned_self: bool) -> &[T] {
+        match &self.storage {
+            Storage::Small(values) if cloned_self => values,
+            Storage::Paged { pages, len }
+                if index < *len || (index == *len && !len.is_multiple_of(PAGE_SIZE)) =>
+            {
+                let page = &pages[index / PAGE_SIZE];
+                if cloned_self || Arc::strong_count(pages) > 1 || Arc::strong_count(page) > 1 {
+                    page
+                } else {
+                    &[]
+                }
+            }
+            _ => &[],
+        }
+    }
 }
 
 impl<T: Clone> ArrayValues<T> {
@@ -92,6 +164,81 @@ impl<T: Clone> ArrayValues<T> {
 
     pub(crate) fn to_vec(&self) -> Vec<T> {
         self.iter().cloned().collect()
+    }
+
+    pub(crate) fn fill(&mut self, value: T) {
+        match &mut self.storage {
+            Storage::Small(values) => values.fill(value),
+            Storage::Paged { pages, .. } => {
+                for page in Arc::make_mut(pages) {
+                    if let Some(values) = Arc::get_mut(page) {
+                        values.fill(value.clone());
+                    } else {
+                        // A full overwrite does not need to clone old cells.
+                        *page = Arc::new(vec![value.clone(); page.len()]);
+                    }
+                }
+            }
+        }
+    }
+
+    pub(crate) fn swap(&mut self, left: usize, right: usize) {
+        assert!(left < self.len() && right < self.len());
+        if left == right {
+            return;
+        }
+        match &mut self.storage {
+            Storage::Small(values) => values.swap(left, right),
+            Storage::Paged { pages, .. } => {
+                let pages = Arc::make_mut(pages);
+                let (left_page, right_page) = (left / PAGE_SIZE, right / PAGE_SIZE);
+                if left_page == right_page {
+                    Arc::make_mut(&mut pages[left_page]).swap(left % PAGE_SIZE, right % PAGE_SIZE);
+                } else {
+                    let (low, high, low_offset, high_offset) = if left_page < right_page {
+                        (left_page, right_page, left % PAGE_SIZE, right % PAGE_SIZE)
+                    } else {
+                        (right_page, left_page, right % PAGE_SIZE, left % PAGE_SIZE)
+                    };
+                    let (prefix, suffix) = pages.split_at_mut(high);
+                    std::mem::swap(
+                        &mut Arc::make_mut(&mut prefix[low])[low_offset],
+                        &mut Arc::make_mut(&mut suffix[0])[high_offset],
+                    );
+                }
+            }
+        }
+    }
+
+    pub(crate) fn reverse(&mut self) {
+        for left in 0..self.len() / 2 {
+            self.swap(left, self.len() - left - 1);
+        }
+    }
+
+    pub(crate) fn extend(&mut self, values: impl IntoIterator<Item = T>) {
+        for value in values {
+            self.insert(self.len(), value);
+        }
+    }
+
+    pub(crate) fn replace_range(
+        &mut self,
+        start: usize,
+        end: usize,
+        values: impl IntoIterator<Item = T>,
+    ) {
+        assert!(start <= end && end <= self.len());
+        if start == self.len() {
+            self.extend(values);
+            return;
+        }
+        let values = values.into_iter();
+        let mut next = Vec::with_capacity(self.len() - (end - start) + values.size_hint().0);
+        next.extend(self.view(0, start).iter().cloned());
+        next.extend(values);
+        next.extend(self.view(end, self.len() - end).iter().cloned());
+        *self = next.into();
     }
 
     pub(crate) fn insert(&mut self, index: usize, value: T) {
@@ -161,6 +308,27 @@ impl<T: Clone> ArrayValues<T> {
                 removed
             }
         }
+    }
+}
+
+impl<T: PartialEq> PartialEq for ArrayValues<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.len() == other.len() && self.iter().eq(other.iter())
+    }
+}
+
+impl<T: Eq> Eq for ArrayValues<T> {}
+
+impl<T> Index<usize> for ArrayValues<T> {
+    type Output = T;
+    fn index(&self, index: usize) -> &T {
+        self.get(index).expect("array values index")
+    }
+}
+
+impl<T: Clone> IndexMut<usize> for ArrayValues<T> {
+    fn index_mut(&mut self, index: usize) -> &mut T {
+        self.get_mut(index).expect("array values index")
     }
 }
 

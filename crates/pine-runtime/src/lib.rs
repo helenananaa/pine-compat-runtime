@@ -41,22 +41,6 @@ pub use output::changes::{
     PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION, RuntimeChanges, SeriesChange, SeriesChangeOp,
     SeriesFamily, SeriesFields, SeriesHeader, StrategyChanges, StreamingVisibility,
 };
-pub use output::delivery::{
-    DeliveryAdapterRun, DeliveryAttemptRecord, DeliveryAttemptStatus, DeliveryAttemptStore,
-    DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
-    ExternalDeliveryAdapter, ExternalDeliveryIdentity, ExternalDeliveryResult,
-    ExternalDeliveryStatus, HostDeliveryDiagnostic, HostDeliveryDiagnosticSeverity,
-    InMemoryDeliveryAttemptStore, InMemoryDeliverySink, TestCollectorDeliveryAdapter,
-    TestCollectorDeliveryRecord, WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode,
-    WebhookDeliveryAdapter, WebhookDeliveryFailure, WebhookPayload, WebhookPayloadError,
-    WebhookRequest, WebhookRequestError, WebhookResolvedHeaders, WebhookResolvedHeadersError,
-    WebhookRetryDecision, WebhookRetryPolicy, WebhookRetryPolicyError, WebhookRetryRecordError,
-    WebhookSecretResolver, WebhookSecretResolverError, WebhookTransport, WebhookTransportOutcome,
-    build_webhook_request, classify_webhook_delivery_failure, classify_webhook_http_status,
-    deliver_candidate_with_attempt_store, host_delivery_diagnostic_from_result,
-    plan_and_record_webhook_retry, plan_webhook_retry, render_webhook_payload,
-    resolve_webhook_headers, strategy_order_fill_delivery_candidate,
-};
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineFillOutput, LineFillSnapshot,
     LineOutput, LineSnapshot, PolylineOutput, PolylineSnapshot, TableCellSnapshot,
@@ -74,10 +58,6 @@ pub use output::model::{
     PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeDiagnostic, RuntimeResult,
 };
 pub use output::parse::{runtime_changes_from_json, runtime_result_from_json};
-pub use output::running_alerts::{
-    RunningAlertConfig, RunningAlertEvaluationError, RunningAlertEventSelection,
-    RunningAlertRealtimePolicy, render_strategy_order_fill_running_alert,
-};
 pub use output::strategy::{
     StrategyEquitySnapshot, StrategyOrderEvent, StrategyOrderFillAlertOutput,
     StrategyPositionSnapshot, StrategyResult, StrategyTrade,
@@ -95,6 +75,7 @@ pub use request::{
 };
 pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::HistoricalDataset;
+pub use runtime::PreparedProgram;
 pub use runtime::historical::{
     HistoricalRuntime, InputOverrides, run_historical, run_historical_profiled,
     run_historical_profiled_with_execution_times, run_historical_profiled_with_request_environment,

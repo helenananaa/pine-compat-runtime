@@ -396,6 +396,10 @@ owns language semantics and normalized output.
   retention, requested contexts, and historical correction
 - [Delivery Surfaces](docs/DELIVERY_SURFACES.md) — Rust, CLI, Python and WASM
   entry points, schemas, and platform qualification
+- [Host Support Migration](docs/HOST_SUPPORT_MIGRATION_20261003.md) — optional
+  running-alert and delivery helpers, with 0.3 prerelease Rust import changes
+- [Hotspot Performance Repairs](docs/HOTSPOT_PERFORMANCE_REPAIR_20261003.md) —
+  measured runtime improvements, costs, verification and remaining hotspots
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md) — stable diagnostic reference
 - [Release Notes](docs/RELEASE_NOTES.md) — changes in each release
 - [Releasing Binary Wheels](docs/RELEASING.md) — wheel matrix, checksums, and

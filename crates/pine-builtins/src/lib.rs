@@ -19,6 +19,7 @@ pub use history::{
     BUILTIN_HISTORY_METADATA, BuiltinHistoryMetadata, BuiltinHistoryRequirement,
     BuiltinSeriesHistoryRequirement, builtin_history_requirement,
 };
+pub use namespaces::strings::is_pure_scalar_string_builtin;
 pub use registry::{PHASE_1_BUILTINS, get_phase_1_builtin, is_phase_1_builtin};
 pub use returns::{
     change_return_for_arg, color_return_for_arg, fallback_bool_for_arg, input_return_for_arg,

@@ -1,9 +1,10 @@
 use std::{collections::HashMap, fs, sync::Arc};
 
+use pine_host_support::RunningAlertConfig;
 use pine_runtime::{
     BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, MagnifierInput,
     NoRequestDataProvider, RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe,
-    RunningAlertConfig, RuntimeProfile, RuntimeResult, input_calls, magnifier_input_from_json,
+    RuntimeProfile, RuntimeResult, input_calls, magnifier_input_from_json,
     public_runtime_profiled_result_json, public_runtime_result_json,
     session_window_input_from_json,
 };
@@ -460,7 +461,7 @@ fn render_strategy_running_alert(
             strategy.alerts.len()
         )
     })?;
-    pine_runtime::render_strategy_order_fill_running_alert(&running_alert.config, alert)
+    pine_host_support::render_strategy_order_fill_running_alert(&running_alert.config, alert)
         .map_err(|err| err.to_string())
 }
 

@@ -21,7 +21,7 @@ use crate::*;
 #[derive(Clone)]
 pub(crate) enum RuntimeProgram<'a> {
     Borrowed(&'a HirProgram),
-    Owned(Arc<HirProgram>),
+    Owned(crate::PreparedProgram),
 }
 
 impl Deref for RuntimeProgram<'_> {
@@ -136,7 +136,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) series_store: SeriesStore,
-    pub(crate) series_retention: SeriesRetention,
+    pub(crate) series_retention: Arc<SeriesRetention>,
     pub(crate) history_dynamic_retention_misses: usize,
     pub(crate) history_dynamic_retention_max_bars_back: Option<usize>,
     pub(crate) history_dynamic_retention_max_missed_offset: Option<usize>,
@@ -150,6 +150,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) array_slices: IdStore<ArraySlice>,
     pub(crate) next_array_id: u32,
     pub(crate) collection_gc_next_id: u64,
+    pub(crate) collection_gc_allocated_bytes: usize,
+    pub(crate) collection_gc_next_bytes: usize,
     pub(crate) object_store: IdStore<Vec<PineValue>>,
     pub(crate) object_varip_fields: IdStore<Vec<bool>>,
     pub(crate) object_varip_ids: IdStore<u32>,
@@ -164,6 +166,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) cross_state: HashMap<CallSiteId, CrossCallState>,
     pub(crate) valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
     pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
+    pub(crate) selection_scratch: crate::algorithms::order_statistics::SelectionScratch,
+    pub(crate) regex_cache: HashMap<CallSiteId, Arc<crate::builtins::strings::CachedPineRegex>>,
     pub(crate) rsi_state: HashMap<CallSiteId, RsiState>,
     pub(crate) macd_state: HashMap<CallSiteId, MacdState>,
     pub(crate) vwap_call_state: HashMap<CallSiteId, VwapState>,
@@ -219,7 +223,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) strategy_fill_mark: Option<f64>,
     // Strategy built-ins exist on every script pass even when a guarded
     // history expression is not evaluated on an earlier bar.
-    pub(crate) strategy_position_size_at_script_pass: VecDeque<f64>,
+    pub(crate) strategy_position_size_at_script_pass: super::append_history::AppendHistory<f64>,
+    pub(crate) strategy_position_size_history_depth: Option<usize>,
     pub(crate) strategy_position_size_history_origin: usize,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
@@ -370,8 +375,22 @@ impl<'a> HistoricalRuntime<'a> {
         program: RuntimeProgram<'a>,
         request_environment: RequestEnvironment,
     ) -> Self {
-        let series_retention = SeriesRetention::from_program(&program);
-        let metadata = Arc::new(super::metadata::RuntimeMetadata::from_program(&program));
+        let (series_retention, metadata) = match &program {
+            RuntimeProgram::Borrowed(program) => (
+                Arc::new(SeriesRetention::from_program(program)),
+                Arc::new(super::metadata::RuntimeMetadata::from_program(program)),
+            ),
+            RuntimeProgram::Owned(program) => (
+                Arc::clone(&program.retention),
+                Arc::clone(&program.metadata),
+            ),
+        };
+        let strategy_position_size_history_depth = match &program {
+            RuntimeProgram::Borrowed(program) => {
+                super::strategy_history::position_history_depth(program)
+            }
+            RuntimeProgram::Owned(program) => program.position_history_depth,
+        };
         let strategy_settings = if program.script_mode == ScriptMode::Strategy {
             program
                 .strategy_settings
@@ -436,6 +455,8 @@ impl<'a> HistoricalRuntime<'a> {
             array_slices: IdStore::new(),
             next_array_id: 0,
             collection_gc_next_id: 1024,
+            collection_gc_allocated_bytes: 0,
+            collection_gc_next_bytes: 2 * 1024 * 1024,
             object_store: IdStore::new(),
             object_varip_fields: IdStore::new(),
             object_varip_ids: IdStore::new(),
@@ -448,6 +469,8 @@ impl<'a> HistoricalRuntime<'a> {
             cross_state: HashMap::new(),
             valuewhen_state: HashMap::new(),
             rolling_windows: HashMap::new(),
+            selection_scratch: crate::algorithms::order_statistics::SelectionScratch::default(),
+            regex_cache: HashMap::new(),
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
             vwap_call_state: HashMap::new(),
@@ -498,7 +521,8 @@ impl<'a> HistoricalRuntime<'a> {
             alerts: Default::default(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
-            strategy_position_size_at_script_pass: VecDeque::new(),
+            strategy_position_size_at_script_pass: Default::default(),
+            strategy_position_size_history_depth,
             strategy_position_size_history_origin: 0,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
@@ -1130,26 +1154,26 @@ impl<'a> HistoricalRuntime<'a> {
         self.restore_strategy_eval_checkpoint();
         self.strategy_scheduler.begin_script_pass()?;
         let position_size = self.strategy_broker.position_size();
-        let position_history_end = self.strategy_position_size_history_origin
-            + self.strategy_position_size_at_script_pass.len();
-        if position_history_end == self.bars {
-            self.strategy_position_size_at_script_pass
-                .push_back(position_size);
-        } else if let Some(slot) = self
-            .strategy_position_size_at_script_pass
-            .get_mut(self.bars - self.strategy_position_size_history_origin)
-        {
-            *slot = position_size;
-        }
-        let history_depth = if self.program.history.has_dynamic_offsets {
-            self.program.max_bars_back.map(|depth| depth as usize)
-        } else {
-            Some(self.program.history.max_constant_offset as usize)
-        };
-        if let Some(depth) = history_depth {
-            while self.strategy_position_size_at_script_pass.len() > depth.saturating_add(1) {
-                self.strategy_position_size_at_script_pass.pop_front();
-                self.strategy_position_size_history_origin += 1;
+        if self.strategy_position_size_history_depth != Some(0) {
+            let position_history_end = self.strategy_position_size_history_origin
+                + self.strategy_position_size_at_script_pass.len();
+            if position_history_end == self.bars {
+                self.strategy_position_size_at_script_pass
+                    .push(position_size);
+            } else if position_history_end == self.bars + 1 {
+                *self
+                    .strategy_position_size_at_script_pass
+                    .last_mut()
+                    .expect("current strategy pass") = position_size;
+            }
+            if let Some(depth) = self.strategy_position_size_history_depth {
+                let expired = self
+                    .strategy_position_size_at_script_pass
+                    .len()
+                    .saturating_sub(depth.saturating_add(1));
+                self.strategy_position_size_at_script_pass
+                    .drop_prefix(expired);
+                self.strategy_position_size_history_origin += expired;
             }
         }
         self.trace_strategy_phase(
@@ -1328,15 +1352,23 @@ impl<'a> HistoricalRuntime<'a> {
 }
 
 impl HistoricalRuntime<'static> {
-    pub(crate) fn with_owned_program_and_request_environment_and_input_overrides(
-        program: HirProgram,
+    #[must_use]
+    pub fn from_prepared(program: &crate::PreparedProgram) -> Self {
+        Self::from_prepared_with_request_environment_and_input_overrides(
+            program,
+            RequestEnvironment::default(),
+            InputOverrides::new(),
+        )
+    }
+
+    #[must_use]
+    pub fn from_prepared_with_request_environment_and_input_overrides(
+        program: &crate::PreparedProgram,
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
     ) -> Self {
-        let mut runtime = Self::with_runtime_program(
-            RuntimeProgram::Owned(Arc::new(program)),
-            request_environment,
-        );
+        let mut runtime =
+            Self::with_runtime_program(RuntimeProgram::Owned(program.clone()), request_environment);
         runtime.input_overrides = input_overrides;
         runtime
     }

@@ -1,6 +1,26 @@
 use super::*;
 
 #[test]
+fn scalar_history_is_skipped_by_gc_and_later_reference_writes_are_tracked() {
+    let mut store = SeriesStore::new();
+    let id = SeriesId(17);
+    for value in 0..100000 {
+        store.commit(id, PineValue::Int(value), None);
+    }
+    assert_eq!(store.collection_root_buffers().count(), 0);
+    let checkpoint = store.clone();
+    store.commit(id, PineValue::Tuple(vec![PineValue::Map(7)]), Some(1));
+    assert_eq!(store.collection_root_buffers().count(), 1);
+    assert_eq!(checkpoint.collection_root_buffers().count(), 0);
+    store.commit(id, PineValue::Int(1), Some(1));
+    let mut equivalent = SeriesStore::new();
+    equivalent.commit(id, PineValue::Int(1), Some(1));
+    assert_eq!(store, equivalent); // Conservative GC metadata is not store content.
+    store.commit(id, PineValue::Na, Some(0));
+    assert_eq!(store.collection_root_buffers().count(), 0);
+}
+
+#[test]
 fn checkpoint_sharing_preserves_nan_equality_and_float_bits() {
     for count in [1, 129] {
         let mut store = SeriesStore::new();
@@ -140,4 +160,39 @@ fn retention_changes_keep_exact_logical_roots_and_checkpoint_values() {
             assert_eq!(store.values_len(), expected.len());
         }
     }
+}
+
+#[test]
+fn borrowed_history_windows_match_offsets_across_retention_and_tree_boundaries() {
+    let mut store = SeriesStore::new();
+    let id = SeriesId(123);
+    for depth in [Some(1), Some(128), Some(129), Some(257), None, Some(0)] {
+        for value in 0..700 {
+            store.commit(id, PineValue::Int(value), depth);
+        }
+        for length in [0, 1, 127, 128, 129, 1000] {
+            let expected: Vec<_> = (1..=length.min(store.len(id)))
+                .map(|offset| store.read(id, offset))
+                .collect();
+            assert_eq!(
+                store
+                    .history_window(id, length)
+                    .cloned()
+                    .collect::<Vec<_>>(),
+                expected
+            );
+        }
+        let checkpoint = store.clone();
+        store.commit(id, PineValue::Int(-1), depth);
+        assert_eq!(
+            checkpoint
+                .history_window(id, usize::MAX)
+                .cloned()
+                .collect::<Vec<_>>(),
+            (1..=checkpoint.len(id))
+                .map(|offset| checkpoint.read(id, offset))
+                .collect::<Vec<_>>()
+        );
+    }
+    assert!(store.history_window(SeriesId(999), 3).next().is_none());
 }

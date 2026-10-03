@@ -791,8 +791,8 @@ impl<'a> HistoricalRuntime<'a> {
         }
         let mut extreme = finite_f64(source);
         let series_id = series_id?;
-        for offset in 1..length {
-            let Some(previous) = finite_f64(self.series_store.read(series_id, offset)) else {
+        for previous in self.series_store.history_window(series_id, length - 1) {
+            let Some(previous) = previous.as_f64().filter(|value| value.is_finite()) else {
                 // Missing source samples do not extend or invalidate the bar
                 // window, including while an upstream average warms up.
                 continue;
@@ -816,14 +816,16 @@ impl<'a> HistoricalRuntime<'a> {
         let mut extreme = finite_f64(source)?;
         let mut best_offset = 0usize;
         let series_id = series_id?;
-        for offset in 1..length {
+        for (index, previous) in self
+            .series_store
+            .history_window(series_id, (length - 1).min(self.bars))
+            .enumerate()
+        {
+            let offset = index + 1;
             // TradingView evaluates highestbars/lowestbars over the bars already
             // available at the beginning of a series. A missing prehistory bar
             // ends the window; it does not make the current offset undefined.
-            if offset > self.bars {
-                break;
-            }
-            let Some(previous) = finite_f64(self.series_store.read(series_id, offset)) else {
+            let Some(previous) = previous.as_f64().filter(|value| value.is_finite()) else {
                 continue;
             };
             let better = match mode {

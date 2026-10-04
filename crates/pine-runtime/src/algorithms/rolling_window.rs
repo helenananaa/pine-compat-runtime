@@ -245,7 +245,12 @@ impl RollingWindowState {
             .map(|(index, value)| *value * (index + 1) as f64)
             .sum::<f64>();
         let denominator = length * (length + 1) / 2;
-        weighted_sum / denominator as f64
+        let mean = weighted_sum / denominator as f64;
+        if mean.is_finite() {
+            mean
+        } else {
+            self.recovered_weighted_mean(length, 0).unwrap_or(mean)
+        }
     }
 
     /// Full and tail weighted means in one traversal. Each accumulator keeps
@@ -267,10 +272,103 @@ impl RollingWindowState {
         }
         let denominator = length * (length + 1) / 2;
         let tail_denominator = tail_length * (tail_length + 1) / 2;
+        let full_mean = weighted_sum / denominator as f64;
+        let tail_mean = tail_weighted_sum / tail_denominator as f64;
         (
-            weighted_sum / denominator as f64,
-            tail_weighted_sum / tail_denominator as f64,
+            if full_mean.is_finite() {
+                full_mean
+            } else {
+                self.recovered_weighted_mean(length, 0).unwrap_or(full_mean)
+            },
+            if tail_mean.is_finite() {
+                tail_mean
+            } else {
+                self.recovered_weighted_mean(length, tail_start)
+                    .unwrap_or(tail_mean)
+            },
         )
+    }
+
+    /// Recover an overflowing weighted scan only for a complete finite window.
+    /// A suffix uses its own weights, as in HMA's half window. This is a cold,
+    /// stateless calculation; the finite legacy scan above keeps its exact bits.
+    fn recovered_weighted_mean(&self, length: usize, start: usize) -> Option<f64> {
+        if length == 0 || start >= length || !self.is_ready(length) {
+            return None;
+        }
+        // A finite constant full window proves every nonempty suffix has the
+        // same exact weighted mean, even when its weighted numerator overflows.
+        if self.is_constant_ready(length) {
+            return self
+                .values
+                .back()
+                .copied()
+                .flatten()
+                .filter(|value| value.is_finite());
+        }
+        let mut maximum = 0.0_f64;
+        for sample in self.values.range(start..) {
+            let value = (*sample)?;
+            if !value.is_finite() {
+                return None;
+            }
+            maximum = maximum.max(value.abs());
+        }
+        if maximum == 0.0 {
+            return Some(0.0);
+        }
+        let exponent = maximum.to_bits() & 0x7ff0_0000_0000_0000;
+        let scale = if exponent == 0 {
+            f64::from_bits(1_u64 << maximum.to_bits().ilog2())
+        } else {
+            f64::from_bits(exponent)
+        };
+        let mut total = 0.0;
+        let mut correction = 0.0;
+        let mut minimum = f64::INFINITY;
+        let mut maximum = f64::NEG_INFINITY;
+        for (index, sample) in self.values.range(start..).enumerate() {
+            let value = (*sample)?;
+            let scaled = value / scale;
+            // Mixed scales are qualified only if every original input survives.
+            if (scaled * scale).to_bits() != value.to_bits() {
+                return None;
+            }
+            minimum = minimum.min(scaled);
+            maximum = maximum.max(scaled);
+            let weight = (index + 1) as f64;
+            let term = scaled * weight;
+            let product_error = scaled.mul_add(weight, -term);
+            // Capture both weighted-product and addition rounding in an exact
+            // two-component sum. A third component makes this window unqualified.
+            for component in [term, product_error] {
+                let (next, error) = two_sum(total, component);
+                let (next_correction, correction_error) = two_sum(correction, error);
+                if !next.is_finite() || !next_correction.is_finite() || correction_error != 0.0 {
+                    return None;
+                }
+                total = next;
+                correction = next_correction;
+            }
+        }
+        // The exact expansion is rounded once before division.
+        let rounded = two_sum(total, correction).0;
+        let weighted_length = length - start;
+        let denominator = (weighted_length * (weighted_length + 1) / 2) as f64;
+        let numerator = rounded * scale;
+        if numerator.is_finite() && (numerator / scale).to_bits() == rounded.to_bits() {
+            // Restore first when cancellation leaves a small numerator: dividing
+            // in the normalized scale could otherwise round through subnormal.
+            let mean = numerator / denominator;
+            return mean
+                .is_finite()
+                .then(|| mean.clamp(minimum * scale, maximum * scale));
+        }
+        // The numerator can exceed f64 while its convex weighted mean fits.
+        // Bound the rounded quotient before restoring the original scale.
+        let normalized_mean = (rounded / denominator).clamp(minimum, maximum);
+        let mean = normalized_mean * scale;
+        (mean.is_finite() && (mean / scale).to_bits() == normalized_mean.to_bits()).then_some(mean)
     }
 
     fn append(&mut self, value: Option<f64>) {
@@ -672,3 +770,7 @@ mod legacy_equivalence_tests;
 #[cfg(test)]
 #[path = "rolling_window_recovery_tests.rs"]
 mod recovery_tests;
+
+#[cfg(test)]
+#[path = "rolling_window_weighted_recovery_tests.rs"]
+mod weighted_recovery_tests;

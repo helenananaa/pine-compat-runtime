@@ -629,3 +629,6 @@ fn assert_builtin_series_history(
         requirement
     );
 }
+
+#[path = "weighted_averages_recovery_tests.rs"]
+mod weighted_recovery_tests;

@@ -228,7 +228,16 @@ impl<'a> HistoricalRuntime<'a> {
                 // The half window is always this suffix. Once the full window
                 // is ready, its half suffix is ready too, even after length changes.
                 let (full_mean, half_mean) = full.weighted_mean_with_tail(length, half_length);
-                Some(2.0 * half_mean - full_mean)
+                let diff = 2.0 * half_mean - full_mean;
+                Some(
+                    if !diff.is_finite() && half_mean.is_finite() && full_mean.is_finite() {
+                        // Doubling can overflow although the final HMA difference
+                        // fits, including a constant extreme finite source.
+                        (half_mean - full_mean) + half_mean
+                    } else {
+                        diff
+                    },
+                )
             }
             _ => None,
         };

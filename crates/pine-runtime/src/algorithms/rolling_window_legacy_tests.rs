@@ -236,10 +236,24 @@ fn assert_hma_scan_pair(current: &RollingWindowState, legacy: &LegacySamples, le
         ..Default::default()
     };
     let (full_mean, half_mean) = current.weighted_mean_with_tail(length, half_length);
-    assert_eq!(full_mean.to_bits(), legacy.weighted_mean(length).to_bits());
-    assert_eq!(
-        half_mean.to_bits(),
-        old_half.weighted_mean(half_length).to_bits()
+    let assert_scan = |actual: f64, old: f64, values: &[Option<f64>]| {
+        if old.is_finite() || !current.is_ready(length) || !actual.is_finite() {
+            assert_eq!(actual.to_bits(), old.to_bits());
+        } else {
+            // A complete finite source may now recover an overflowing legacy
+            // scan. Independent exact Fraction oracles qualify the recovered
+            // values in weighted_recovery_tests; retain the convex bound here.
+            assert!(values.iter().all(|value| value.is_some_and(f64::is_finite)));
+            let minimum = values.iter().flatten().copied().reduce(f64::min).unwrap();
+            let maximum = values.iter().flatten().copied().reduce(f64::max).unwrap();
+            assert!((minimum..=maximum).contains(&actual));
+        }
+    };
+    assert_scan(full_mean, legacy.weighted_mean(length), &legacy.values);
+    assert_scan(
+        half_mean,
+        old_half.weighted_mean(half_length),
+        &old_half.values,
     );
 }
 

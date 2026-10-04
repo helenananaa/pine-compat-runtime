@@ -162,10 +162,10 @@ impl<'a> HistoricalRuntime<'a> {
         let product_mean = product.mean(length);
         let mean_product = left.mean(length) * right.mean(length);
         let covariance = product_mean - mean_product;
-        let cancellation = cancellation_budget(covariance, product_mean, mean_product, length)
-            .is_some_and(|budget| {
-                left_variance > 0.0 && right_variance > 0.0 && budget >= denominator
-            });
+        let budget = cancellation_budget(covariance, product_mean, mean_product, length)
+            .unwrap_or(0.0)
+            .max(partial_precision_budget(covariance, product_mean, mean_product).unwrap_or(0.0));
+        let cancellation = left_variance > 0.0 && right_variance > 0.0 && budget >= denominator;
         if !covariance.is_finite() || !mean_product.is_finite() || cancellation {
             return Ok(centered_pair_moments(left, right, length)
                 .and_then(CenteredPairMoments::correlation)
@@ -233,7 +233,10 @@ impl<'a> HistoricalRuntime<'a> {
                 .and_then(CenteredPairMoments::covariance)
                 .map_or(PineValue::Na, finite_float_or_na));
         }
-        if let Some(budget) = cancellation_budget(covariance, product_mean, mean_product, length) {
+        let budget = cancellation_budget(covariance, product_mean, mean_product, length)
+            .unwrap_or(0.0)
+            .max(partial_precision_budget(covariance, product_mean, mean_product).unwrap_or(0.0));
+        if budget > 0.0 {
             if left.is_constant_ready(length) || right.is_constant_ready(length) {
                 // A finite constant-source result keeps the existing raw
                 // arithmetic, including small residuals in golden outputs.
@@ -465,8 +468,8 @@ impl<'a> HistoricalRuntime<'a> {
 // A finite raw-moment result is reconsidered only when subtraction is within
 // four machine epsilons per window sample of its operands AND that uncertainty
 // covers the whole standard-deviation product. Length accounts heuristically
-// for accumulation; this is not a bound on all rolling-sum error. Resolved
-// covariance outside that screen retains its original arithmetic and bits.
+// for accumulation; this is not a bound on all rolling-sum error. Keep this
+// complete-loss screen alongside the independent partial-precision screen below.
 fn cancellation_budget(
     covariance: f64,
     product_mean: f64,
@@ -478,6 +481,21 @@ fn cancellation_budget(
     }
     let budget =
         (4.0 * f64::EPSILON) * length.max(1) as f64 * product_mean.abs().max(mean_product.abs());
+    (budget > 0.0 && covariance.abs() <= budget).then_some(budget)
+}
+
+// The complete-loss screen above misses partial cancellation, e.g. operands
+// near 1e16 whose difference is 5504 but is quantized in steps of 2. Independently
+// qualify windows where one operand epsilon is at least 2^-20 of the centered
+// SD product: raw subtraction then has at most about 20 effective binary bits
+// at that covariance scale. This bounded precision heuristic is independent of
+// length and is not a complete rolling-sum error bound. The sampled spread only
+// rejects candidates; the full centered SD product must confirm eligibility.
+// Resolved raw covariance outside that budget retains the cheap legacy path.
+fn partial_precision_budget(covariance: f64, product_mean: f64, mean_product: f64) -> Option<f64> {
+    const MIN_RELATIVE_PRECISION: f64 = 1.0 / 1_048_576.0;
+    let budget =
+        (f64::EPSILON / MIN_RELATIVE_PRECISION) * product_mean.abs().max(mean_product.abs());
     (budget > 0.0 && covariance.abs() <= budget).then_some(budget)
 }
 

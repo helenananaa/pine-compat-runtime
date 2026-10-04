@@ -56,6 +56,161 @@ fn window(values: &[f64]) -> RollingWindowState {
 }
 
 #[test]
+fn partial_precision_recovery_uses_centered_scale_for_multiple_periods_and_offsets() {
+    for period in [37, 127, 257, 511] {
+        let variance = (period * period - 1) as f64 / 12.0;
+        for (left_offset, right_offset, slope) in
+            [(1e8, 2e8, 1.0), (-1e8, 3e8, 2.0), (1e9, -2e9, -3.0)]
+        {
+            let pairs = (0..2 * period)
+                .map(|index| {
+                    let phase = (index % period) as f64;
+                    (left_offset + phase, right_offset + slope * phase)
+                })
+                .collect::<Vec<_>>();
+            let result = run_pairs(&pairs, period);
+            for index in 0..pairs.len() {
+                if index + 1 < period {
+                    assert_eq!(result.plots[0].values[index], PineValue::Na);
+                    assert_eq!(result.plots[1].values[index], PineValue::Na);
+                } else {
+                    assert_close(&result.plots[0].values[index], slope.signum());
+                    assert_close(&result.plots[1].values[index], slope * variance);
+                }
+            }
+        }
+    }
+
+    // Distinct permutations of 0..256 have the same variance 5504. Doubling
+    // modulo the odd period gives covariance exactly half that variance.
+    let pairs = (0..514)
+        .map(|index| (1e8 + (index % 257) as f64, -2e8 + (2 * index % 257) as f64))
+        .collect::<Vec<_>>();
+    let result = run_pairs(&pairs, 257);
+    for index in 256..pairs.len() {
+        assert_close(&result.plots[0].values[index], 0.5);
+        assert_close(&result.plots[1].values[index], 2752.0);
+    }
+
+    let orthogonal = [
+        (1e8 - 1.0, -2e8 - 3.0),
+        (1e8 - 1.0, -2e8 + 3.0),
+        (1e8 + 1.0, -2e8 - 3.0),
+        (1e8 + 1.0, -2e8 + 3.0),
+    ];
+    let result = run_pairs(&orthogonal, 4);
+    assert_close(result.plots[0].values.last().unwrap(), 0.0);
+    assert_close(result.plots[1].values.last().unwrap(), 0.0);
+
+    // The previously missed window fails the old complete-loss heuristic.
+    assert!(cancellation_budget(5502.0, 1e16, 1e16, 257).is_none());
+    assert!(partial_precision_budget(5502.0, 1e16, 1e16).unwrap() >= 5504.0);
+}
+
+#[test]
+fn partial_precision_screen_preserves_moderate_offsets_and_constant_residual_bits() {
+    let pairs = (0..257)
+        .map(|index| (1e6 + 0.1 + index as f64, 2e6 + 0.3 + 1.25 * index as f64))
+        .collect::<Vec<_>>();
+    let length = pairs.len();
+    let left = window(&pairs.iter().map(|pair| pair.0).collect::<Vec<_>>());
+    let right = window(&pairs.iter().map(|pair| pair.1).collect::<Vec<_>>());
+    let product = window(&pairs.iter().map(|pair| pair.0 * pair.1).collect::<Vec<_>>());
+    let mean_product = left.mean(length) * right.mean(length);
+    let covariance = product.mean(length) - mean_product;
+    let denominator = (left.variance(length, true) * right.variance(length, true)).sqrt();
+    assert!(partial_precision_budget(covariance, product.mean(length), mean_product).is_none());
+    let budget = partial_precision_budget(0.0, product.mean(length), mean_product).unwrap();
+    assert!(budget < denominator);
+    let result = run_pairs(&pairs, length);
+    assert_eq!(
+        result.plots[1]
+            .values
+            .last()
+            .unwrap()
+            .as_f64()
+            .unwrap()
+            .to_bits(),
+        covariance.to_bits()
+    );
+    assert_eq!(
+        result.plots[0]
+            .values
+            .last()
+            .unwrap()
+            .as_f64()
+            .unwrap()
+            .to_bits(),
+        (covariance / denominator).to_bits()
+    );
+
+    let pairs = [(0.1, 0.2), (0.1, 0.4), (0.1, 0.6)];
+    let left = window(&[0.1, 0.1, 0.1]);
+    let right = window(&[0.2, 0.4, 0.6]);
+    let product = window(&pairs.map(|pair| pair.0 * pair.1));
+    let covariance = product.mean(3) - left.mean(3) * right.mean(3);
+    assert_ne!(covariance, 0.0);
+    let result = run_pairs(&pairs, 3);
+    assert_eq!(result.plots[0].values.last(), Some(&PineValue::Na));
+    assert_eq!(
+        result.plots[1]
+            .values
+            .last()
+            .unwrap()
+            .as_f64()
+            .unwrap()
+            .to_bits(),
+        covariance.to_bits()
+    );
+
+    // Large raw operands do not alone certify small centered variance. A
+    // sparsely placed outlier can escape the constant-time sampled screen;
+    // the full centered SD product still rejects numerical recovery.
+    let mut left_sparse = vec![1e8; 257];
+    let mut right_sparse = vec![1e8; 257];
+    left_sparse[73] += 1e7;
+    left_sparse[74] -= 1e7;
+    right_sparse[75] += 1e7;
+    right_sparse[76] -= 1e7;
+    let left_sparse = window(&left_sparse);
+    let right_sparse = window(&right_sparse);
+    let budget = partial_precision_budget(0.0, 1e16, 1e16).unwrap();
+    assert!(!observed_spread_excludes_cancellation(
+        &left_sparse,
+        &right_sparse,
+        257,
+        budget
+    ));
+    assert!(
+        centered_pair_moments(&left_sparse, &right_sparse, 257)
+            .unwrap()
+            .standard_deviation_product()
+            > budget
+    );
+    let pairs = left_sparse
+        .values
+        .iter()
+        .zip(&right_sparse.values)
+        .map(|(left, right)| (left.unwrap(), right.unwrap()))
+        .collect::<Vec<_>>();
+    let product = window(&pairs.iter().map(|pair| pair.0 * pair.1).collect::<Vec<_>>());
+    let mean_product = left_sparse.mean(257) * right_sparse.mean(257);
+    let covariance = product.mean(257) - mean_product;
+    assert!(partial_precision_budget(covariance, product.mean(257), mean_product).is_some());
+    let result = run_pairs(&pairs, 257);
+    assert_eq!(
+        result.plots[1]
+            .values
+            .last()
+            .unwrap()
+            .as_f64()
+            .unwrap()
+            .to_bits(),
+        covariance.to_bits()
+    );
+}
+
+#[test]
 fn cancellation_recovery_handles_distinct_shifted_and_opposite_sources() {
     // For two points covariance = (x1-x0)*(y1-y0)/4, independent
     // of either offset. No identity shortcut can produce these three answers.
@@ -180,6 +335,22 @@ fn ordinary_results_keep_the_original_float_order_and_zero_covariance_fast_rejec
         let result = run_pairs(&pairs, 512);
         assert_eq!(result.plots[0].values.last(), Some(&PineValue::Float(0.0)));
         assert_eq!(result.plots[1].values.last(), Some(&PineValue::Float(0.0)));
+    }
+
+    // The additional partial-loss criterion must also retain a constant-time
+    // rejection for ordinary large windows, in every phase of the sources.
+    for phase in 0..4 {
+        let pairs = (0..8192)
+            .map(|index| orthogonal[(index + phase) % orthogonal.len()])
+            .collect::<Vec<_>>();
+        let left = window(&pairs.iter().map(|pair| pair.0).collect::<Vec<_>>());
+        let right = window(&pairs.iter().map(|pair| pair.1).collect::<Vec<_>>());
+        let budget = cancellation_budget(0.0, 20_000.0, 20_000.0, 8192)
+            .unwrap()
+            .max(partial_precision_budget(0.0, 20_000.0, 20_000.0).unwrap());
+        assert!(observed_spread_excludes_cancellation(
+            &left, &right, 8192, budget
+        ));
     }
 }
 
@@ -334,6 +505,84 @@ plot(request.security(syminfo.tickerid, timeframe.period, ta.covariance(source, 
             } else {
                 assert_eq!(*value, PineValue::Na);
             }
+        }
+    }
+}
+
+#[test]
+fn partial_precision_recovery_restores_large_forming_windows_after_length_and_na_changes() {
+    let program = program(
+        r#"//@version=6
+indicator("partial precision forming state")
+length = close > 1e8 + 300 ? 127 : 257
+source = close < 1e8 ? na : close
+plot(ta.correlation(source, open, length))
+plot(ta.covariance(source, open, length))
+plot(request.security(syminfo.tickerid, timeframe.period, ta.correlation(source, open, length)))
+plot(request.security(syminfo.tickerid, timeframe.period, ta.covariance(source, open, length)))
+"#,
+    );
+    let mut confirmed = (0..514)
+        .map(|index| {
+            bar(
+                index,
+                1e8 + (index % 257) as f64,
+                2e8 + (2 * index % 257) as f64,
+            )
+        })
+        .collect::<Vec<_>>();
+    let mut runtime = RealtimeRuntime::new(&program);
+    runtime.seed_historical(&confirmed).unwrap();
+    for (left_delta, right_delta, commit) in [
+        (128.5, 64.25, false),
+        (400.0, 200.5, false),
+        (-1.0, 0.0, false),
+        (255.5, 140.5, false),
+        (129.0, 101.0, true),
+    ] {
+        let current = bar(514, 1e8 + left_delta, 2e8 + right_delta);
+        runtime
+            .apply_update(if commit {
+                BarUpdate::confirmed(current)
+            } else {
+                BarUpdate::forming(current)
+            })
+            .unwrap();
+        let result = runtime.result();
+        if left_delta < 0.0 {
+            for plot in &result.plots {
+                assert_eq!(plot.values.last(), Some(&PineValue::Na));
+            }
+            continue;
+        }
+        let length = if left_delta > 300.0 { 127 } else { 257 };
+        let mut reference = confirmed.clone();
+        reference.push(current);
+        // Independent offset-free two-pass arithmetic uses the actual tail
+        // after every replacement, without any production rolling helper.
+        let reference = &reference[reference.len() - length..];
+        let left_mean = reference.iter().map(|bar| bar.close - 1e8).sum::<f64>() / length as f64;
+        let right_mean = reference.iter().map(|bar| bar.open - 2e8).sum::<f64>() / length as f64;
+        let mut cross_sum = 0.0;
+        let mut left_square_sum = 0.0;
+        let mut right_square_sum = 0.0;
+        for sample in reference {
+            let left = sample.close - 1e8 - left_mean;
+            let right = sample.open - 2e8 - right_mean;
+            cross_sum += left * right;
+            left_square_sum += left * left;
+            right_square_sum += right * right;
+        }
+        let covariance = cross_sum / length as f64;
+        let correlation = cross_sum / (left_square_sum * right_square_sum).sqrt();
+        for index in [0, 2] {
+            assert_close(result.plots[index].values.last().unwrap(), correlation);
+        }
+        for index in [1, 3] {
+            assert_close(result.plots[index].values.last().unwrap(), covariance);
+        }
+        if commit {
+            confirmed.push(current);
         }
     }
 }

@@ -1661,7 +1661,10 @@ the parent window, slice insertions widen the window and insert into the parent,
 invalid creation bounds return `na`, and later parent mutations that move the
 window out of bounds are runtime errors.
 `array.concat` requires two arrays of the same kind,
-appends `id2` values to `id` in place, and returns `id`. Numeric array
+appends `id2` values to `id` in place, and returns `id`. The source is snapshotted
+before insertion, including self-concat and overlapping slices. A slice target
+widens its own range and inserts the batch into its parent; other slice ranges
+keep their existing offsets and lengths. Numeric array
 `binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev`
 helpers may also be called with method syntax on float and int array receivers.
 `every/some` may also be called with method syntax on float, int, and bool
@@ -1718,7 +1721,10 @@ to `,`, uses the default numeric string format, and renders colors as their
 normalized integer color values. The semantic analyzer also allows `array.join`
 for same-local scalar-tree UDT arrays; those elements render as
 `TypeName(field0, field1, ...)`, with `NaN` for `na` elements. Drawing-id,
-chart.point, map, and matrix arrays remain outside the join subset. Array assignment passes the runtime array
+chart.point, map, and matrix arrays remain outside the join subset. Join output
+is limited to 40,960 Unicode characters. Each separator and borrowed element
+field is checked before appending, so rejected output does not first expand
+into a complete oversized string. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same
 current element values.
 Same-local and same-imported scalar-tree UDT array element identities are
@@ -1756,7 +1762,11 @@ same scalar key/value template. `map.keys` and `map.values` return independent
 array snapshots in insertion order. `map.put_all` merges entries from a source
 map into a target map with the same scalar key/value template; existing keys
 replace values without moving order, and new keys append in source insertion
-order. Scalar `map<K,V>` typed declarations are supported with compatible or
+order. Maps have a maximum of 50,000 key-value pairs. At capacity, `map.put`
+still permits replacement of an existing key. After argument evaluation,
+`map.put_all` checks the distinct new keys before applying any overwrite or
+append; an oversized merge raises a runtime error with the target entries and
+their order unchanged. Scalar `map<K,V>` typed declarations are supported with compatible or
 `na` initialization and later same-template reassignment. Same-template map
 metadata is preserved through ternary, `if`, `switch`, `for`, `for...in`, and
 `while` expression results, including `map`/`na` branches and block-local map

@@ -7,7 +7,7 @@ use pine_ir::{
 };
 
 use crate::builtins::args::call_arg_expr;
-use crate::builtins::time::{calendar_timeframe_close, timeframe_change_bucket};
+use crate::builtins::time::timeframe_change_bucket;
 use crate::runtime::append_history::AppendHistory;
 use crate::*;
 
@@ -488,6 +488,7 @@ impl<'a> HistoricalRuntime<'a> {
                             self.fork_with_request_environment(self.request_environment.clone()),
                         )
                     });
+                runtime.inherit_execution_budget(self);
                 if runtime.bars != self.bars - start {
                     return Err(RuntimeError {
                         message: "request.security bounded equal-timeframe expression must execute on every retained chart bar"
@@ -498,13 +499,15 @@ impl<'a> HistoricalRuntime<'a> {
                 let bar = self.current_bar.ok_or_else(|| RuntimeError {
                     message: "request.security has no current chart bar".to_owned(),
                 })?;
-                let value = runtime.eval_requested_bar_expression(
+                let result = runtime.eval_requested_bar_expression(
                     bar,
                     expression,
                     &captures,
                     &initializers,
                     &tuple_dependencies,
-                )?;
+                );
+                self.accept_execution_budget(&runtime);
+                let value = result?;
                 self.bounded_same_context_evaluations.insert(key, runtime);
                 self.bounded_same_context_captures.insert(
                     RequestCacheKey::new(call_site_id, &chart_symbol, chart_timeframe.value()),
@@ -770,8 +773,9 @@ impl<'a> HistoricalRuntime<'a> {
         expression: &HirExpr,
         requested_environment: RequestEnvironment,
     ) -> Result<Vec<(i64, RequestedValue)>, RuntimeError> {
-        let dependency_initializers = request_dependency_initializers(&self.program);
-        let tuple_dependencies = request_tuple_dependency_statements(&self.program);
+        let program = self.program.clone();
+        let dependency_initializers = request_dependency_initializers(&program);
+        let tuple_dependencies = request_tuple_dependency_statements(&program);
         let captures = request_capture_values(
             &self.program,
             expression,
@@ -786,16 +790,17 @@ impl<'a> HistoricalRuntime<'a> {
         runtime.historical_end = Some(requested_bars.len());
         let mut values = Vec::with_capacity(requested_bars.len());
         for bar in requested_bars {
-            values.push((
-                bar.time,
-                runtime.eval_requested_bar_expression(
-                    *bar,
-                    expression,
-                    &captures,
-                    &dependency_initializers,
-                    &tuple_dependencies,
-                )?,
-            ));
+            let result = runtime.eval_requested_bar_expression(
+                *bar,
+                expression,
+                &captures,
+                &dependency_initializers,
+                &tuple_dependencies,
+            );
+            // Requested history is part of this chart execution's work. Do
+            // not grant each requested bar a fresh chart-sized allowance.
+            self.accept_execution_budget(&runtime);
+            values.push((bar.time, result?));
         }
         self.legacy_security_repaint_warnings
             .extend(runtime.legacy_security_repaint_warnings);
@@ -1729,8 +1734,7 @@ fn align_lower_timeframe_value(
 }
 
 fn request_bar_nominal_close(open_time: i64, timeframe: &RequestTimeframe) -> i64 {
-    calendar_timeframe_close(open_time, timeframe.value(), timeframe.seconds())
-        .unwrap_or_else(|| open_time.saturating_add(timeframe.seconds().saturating_mul(1000)))
+    timeframe.nominal_close(open_time)
 }
 
 fn requested_bar_close(

@@ -2224,3 +2224,111 @@ plot(str.length(str.repeat("x", 40961)))
         error.message
     );
 }
+
+#[test]
+fn huge_empty_repeat_returns_empty_after_separator_evaluation_and_type_validation() {
+    let source = SourceFile::new(
+        "empty_repeat.pine",
+        r#"//@version=6
+indicator("empty repeat")
+mark(array<int> receiver) =>
+    array.push(receiver, 1)
+    ""
+effects = array.new_int()
+first = str.repeat("", 9223372036854775807)
+second = str.repeat("", 9223372036854775807, mark(effects))
+third = str.repeat("", 9223372036854775807, "")
+fourth = str.repeat("", 1, "nonempty")
+fifth = str.repeat("payload", 0, "separator")
+missing = str.repeat("", 9223372036854775807, na)
+missingZero = str.repeat("", 0, na)
+plot(first == "" and second == "" and third == "" and fourth == "" and fifth == "" ? 1 : 0)
+plot(array.size(effects))
+plot(na(missing) and na(missingZero) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap();
+    for plot in result.plots {
+        assert_eq!(plot.values, [PineValue::Int(1)]);
+    }
+}
+
+#[test]
+fn empty_source_with_nonempty_separator_obeys_unicode_repeat_limit() {
+    let source = SourceFile::new(
+        "separator_repeat.pine",
+        "//@version=6\nindicator(\"separator repeat\")\nplot(str.length(str.repeat(\"\", 40961, \"界\")))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap();
+    assert_eq!(result.plots[0].values, [PineValue::Int(40960)]);
+    for count in [40962_i64, 4294967296, i64::MAX] {
+        let source = SourceFile::new(
+            "separator_repeat_limit.pine",
+            format!(
+                "//@version=6\nindicator(\"separator repeat limit\")\nplot(str.length(str.repeat(\"\", {count}, \"界\")))\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let error = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap_err();
+        assert_eq!(
+            error.message,
+            "str.repeat result cannot exceed 40960 characters"
+        );
+    }
+}
+
+#[test]
+fn large_nonempty_repeat_counts_cannot_wrap_to_empty_on_32_bit_targets() {
+    for count in [4294967296_i64, i64::MAX] {
+        let source = SourceFile::new(
+            "repeat_count_width.pine",
+            format!(
+                "//@version=6\nindicator(\"repeat count width\")\nplot(str.length(str.repeat(\"x\", {count})))\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let error = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap_err();
+        assert_eq!(
+            error.message,
+            "str.repeat result cannot exceed 40960 characters"
+        );
+    }
+}
+
+#[test]
+fn empty_repeat_still_rejects_negative_count() {
+    let source = SourceFile::new(
+        "empty_repeat_negative.pine",
+        "//@version=6\nindicator(\"negative empty repeat\")\nplot(str.length(str.repeat(\"\", -1, \"\")))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let error = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap_err();
+    assert_eq!(error.message, "str.repeat count cannot be negative: -1");
+}

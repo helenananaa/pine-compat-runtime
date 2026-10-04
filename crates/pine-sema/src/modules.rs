@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
@@ -74,6 +75,7 @@ fn validate_modules_inner(
     let root_program = root_parse.program;
     modules.push(ModuleInfo {
         id: graph.root().id(),
+        source: Arc::new(graph.root().source().clone()),
         key: None,
         program: root_program.clone(),
         exports: HashMap::new(),
@@ -86,10 +88,12 @@ fn validate_modules_inner(
 
     let mut library_index = HashMap::new();
     for library in graph.libraries() {
+        let diagnostic_start = diagnostics.len();
         let parsed = parse_source(library.source());
         diagnostics.extend(parsed.diagnostics.clone());
         let mut module = ModuleInfo {
             id: library.id(),
+            source: Arc::new(library.source().clone()),
             key: library.import_key().map(str::to_owned),
             program: parsed.program,
             exports: HashMap::new(),
@@ -100,6 +104,7 @@ fn validate_modules_inner(
             constants: HashMap::new(),
         };
         collect_library_declarations(&mut module, &mut diagnostics);
+        module.attach_diagnostics(&mut diagnostics[diagnostic_start..]);
         if let Some(key) = &module.key {
             library_index.insert(key.clone(), modules.len());
         }
@@ -126,9 +131,9 @@ fn validate_modules_inner(
     let root_program = rewrite_program(&root_program, &import_plan.root_rewrites);
 
     ModuleValidation {
-        source_texts: std::iter::once(graph.root())
-            .chain(graph.libraries())
-            .map(|source| (source.id(), source.source().text().to_owned()))
+        source_texts: modules
+            .iter()
+            .map(|module| (module.id, Arc::clone(&module.source)))
             .collect(),
         source_context_origins: import_plan.source_context_origins,
         diagnostics,
@@ -474,6 +479,7 @@ fn build_import_plan(
     );
     for (alias, module_index, source_context_id, is_root_import) in contexts {
         let module = &modules[module_index];
+        let diagnostic_start = diagnostics.len();
         plan.source_context_origins
             .insert(source_context_id, (module.id, module.key.clone()));
         let mut module_context = rewrite_context_for_module(&alias, module);
@@ -591,6 +597,7 @@ fn build_import_plan(
                 method_info,
             );
         }
+        module.attach_diagnostics(&mut diagnostics[diagnostic_start..]);
     }
     debug_assert!(plan.imported_functions.values().all(|function| {
         function.source_id != SourceId::root()

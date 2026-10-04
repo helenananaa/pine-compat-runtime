@@ -1,5 +1,7 @@
 use pine_ir::HirProgram;
 
+mod without_output;
+
 use super::streaming::OutputCursor;
 use crate::*;
 
@@ -67,6 +69,20 @@ impl<'a> RealtimeRuntime<'a> {
             .as_ref()
             .unwrap_or(&self.confirmed)
             .request_environment()
+    }
+
+    #[must_use]
+    pub fn with_execution_limits(mut self, limits: ExecutionLimits) -> Self {
+        self.confirmed.execution_limits = limits;
+        if let Some(forming) = &mut self.forming {
+            forming.execution_limits = limits;
+        }
+        self
+    }
+
+    #[must_use]
+    pub fn execution_limits(&self) -> ExecutionLimits {
+        self.confirmed.execution_limits()
     }
 
     #[must_use]
@@ -285,11 +301,7 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         context: RealtimeUpdateContext,
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, context)?;
-        self.revision += 1;
-        self.apply_output_retention();
-        self.sync_cursor();
-        self.last_changes = None;
+        self.update_with_context_without_output(update, context)?;
         Ok(self.result())
     }
 
@@ -448,7 +460,8 @@ impl<'a> RealtimeRuntime<'a> {
         from_time: i64,
         bars: &[Bar],
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.correct_historical_inner(from_time, bars, None)
+        self.correct_historical_inner(from_time, bars, None)?;
+        Ok(self.confirmed.result())
     }
 
     pub fn correct_historical_with_execution_times(
@@ -457,7 +470,8 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.correct_historical_inner(from_time, bars, Some(execution_times))
+        self.correct_historical_inner(from_time, bars, Some(execution_times))?;
+        Ok(self.confirmed.result())
     }
 
     fn correct_historical_inner(
@@ -465,7 +479,7 @@ impl<'a> RealtimeRuntime<'a> {
         from_time: i64,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         let (combined, combined_times) =
             self.corrected_history(from_time, bars, execution_times)?;
         match combined_times {
@@ -480,6 +494,17 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(Vec<Bar>, Option<Vec<i64>>), RuntimeError> {
+        if let Some(times) = execution_times
+            && times.len() != bars.len()
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "execution timestamp count {} does not match bar count {}",
+                    times.len(),
+                    bars.len()
+                ),
+            });
+        }
         if let Some(last) = self.chart_bars.last()
             && from_time > last.time
         {
@@ -519,19 +544,8 @@ impl<'a> RealtimeRuntime<'a> {
                 ),
             });
         }
-        let mut combined = self.chart_bars[..cut].to_vec();
-        combined.extend_from_slice(bars);
         let combined_times = match (&self.chart_execution_times, execution_times) {
             (Some(stored), Some(suffix)) => {
-                if suffix.len() != bars.len() {
-                    return Err(RuntimeError {
-                        message: format!(
-                            "execution timestamp count {} does not match bar count {}",
-                            suffix.len(),
-                            bars.len()
-                        ),
-                    });
-                }
                 let mut times = stored[..cut].to_vec();
                 times.extend_from_slice(suffix);
                 Some(times)
@@ -551,6 +565,8 @@ impl<'a> RealtimeRuntime<'a> {
                 });
             }
         };
+        let mut combined = self.chart_bars[..cut].to_vec();
+        combined.extend_from_slice(bars);
         Ok((combined, combined_times))
     }
 
@@ -559,7 +575,8 @@ impl<'a> RealtimeRuntime<'a> {
     /// windows are kept. Replicas cannot apply this as a delta; reset them from
     /// the returned snapshot and `revision`.
     pub fn replay_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
-        self.replay_historical_inner(bars, None)
+        self.replay_historical_inner(bars, None)?;
+        Ok(self.confirmed.result())
     }
 
     pub fn replay_historical_with_execution_times(
@@ -567,45 +584,37 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.replay_historical_inner(bars, Some(execution_times))
+        self.replay_historical_inner(bars, Some(execution_times))?;
+        Ok(self.confirmed.result())
     }
 
     fn replay_historical_inner(
         &mut self,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
-        let confirmed = self.confirmed.clone();
-        let forming = self.forming.clone();
-        let cursor = self.cursor.clone();
-        let last_changes = self.last_changes.clone();
-        let revision = self.revision;
-        let live_chart = self.live_chart;
-        let chart_bars = self.chart_bars.clone();
-        let chart_execution_times = self.chart_execution_times.clone();
-        let result = self.replay_historical_apply(bars, execution_times);
-        if result.is_err() {
-            self.confirmed = confirmed;
-            self.forming = forming;
-            self.cursor = cursor;
-            self.last_changes = last_changes;
-            self.revision = revision;
-            self.live_chart = live_chart;
-            self.chart_bars = chart_bars;
-            self.chart_execution_times = chart_execution_times;
+    ) -> Result<(), RuntimeError> {
+        if let Some(times) = execution_times
+            && times.len() != bars.len()
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "execution timestamp count {} does not match bar count {}",
+                    times.len(),
+                    bars.len()
+                ),
+            });
         }
-        result
-    }
-
-    fn replay_historical_apply(
-        &mut self,
-        bars: &[Bar],
-        execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
+        // All fallible execution happens on the candidate. The old session stays
+        // untouched until it is ready, so no second rollback copy is needed.
         let mut runtime = self.confirmed.blank_for_replay();
-        runtime
-            .request_feed
-            .trim_after(bars.last().map(|bar| bar.time));
+        let chart_close = bars.last().map(|bar| {
+            runtime
+                .request_environment
+                .chart()
+                .timeframe()
+                .nominal_close(bar.time)
+        });
+        runtime.request_feed.trim_after(chart_close);
         match execution_times {
             Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
             None => runtime.append_bars(bars)?,
@@ -619,7 +628,7 @@ impl<'a> RealtimeRuntime<'a> {
         self.apply_output_retention();
         self.sync_cursor();
         self.last_changes = None;
-        Ok(self.confirmed.result())
+        Ok(())
     }
 
     pub fn seed_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
@@ -711,6 +720,18 @@ impl<'a> RealtimeRuntime<'a> {
     #[must_use]
     pub fn last_confirmed_bar_time(&self) -> Option<i64> {
         self.chart_bars.last().map(|bar| bar.time)
+    }
+
+    /// Borrow visible output without copying historical values.
+    #[must_use]
+    pub fn result_view(&self) -> RuntimeResultView<'_> {
+        self.live().result_view()
+    }
+
+    /// Borrow confirmed output, excluding the forming bar.
+    #[must_use]
+    pub fn confirmed_result_view(&self) -> RuntimeResultView<'_> {
+        self.confirmed.result_view()
     }
 
     #[must_use]

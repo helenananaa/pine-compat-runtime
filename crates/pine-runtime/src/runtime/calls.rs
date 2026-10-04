@@ -11,7 +11,8 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let result = match self.metadata.calls.family(call_site_id, callee) {
+        let dispatch = self.metadata.calls.dispatch(call_site_id, callee, args);
+        let result = match dispatch.family {
             CallFamily::Legacy => self.eval_legacy_call(callee, args),
             CallFamily::Variable => self.eval_variable_call(callee, call_site_id, args),
             CallFamily::RuntimeError => self.eval_runtime_error_call(callee, args),
@@ -32,6 +33,7 @@ impl<'a> HistoricalRuntime<'a> {
                 callee,
                 call_site_id,
                 args,
+                dispatch.positional_args,
             ),
             CallFamily::Ta => self.eval_ta_call(callee, call_site_id, args),
             CallFamily::Array => self.eval_array_call(callee, args),

@@ -32,6 +32,8 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_NAME`: invalid qualified name.
 - `E_PARSE_SWITCH`: invalid switch expression.
 - `E_PARSE_STMT`: invalid statement.
+- `E_PARSE_STMT_DEPTH`: recursive statement nesting exceeds the parser resource
+  limit, including `else if` chains, expression blocks, and inline switch arms.
 - `E_PARSE_TYPE`: invalid user-defined type declaration.
 - `E_LANGUAGE_VERSION_DUPLICATE`: more than one recognized `//@version=N`
   directive, including the spaced-equals compatibility form, was found.
@@ -310,3 +312,10 @@ revision. They do not change the existing runtime output schema.
   history, or the replacement bars do not follow the retained prefix.
 - `E_HISTORY_CLOCK`: historical correction mixed execution timestamps with a
   prefix recorded without them, or omitted timestamps when the prefix has them.
+- `E_RUNTIME_POISONED`: a historical runtime is asked to execute after an earlier
+  bar execution error. Rebuild it before retrying; validation failures before
+  execution do not disable the runtime, and realtime transactions retain their
+  previous session on failure.
+- `E_EXECUTION_BUDGET`: a chart-bar execution exhausted its configured evaluation
+  steps or aggregate loop iterations. Requested evaluation and strategy fill
+  recalculation share this allowance; see EXECUTION_LIMITS.md.

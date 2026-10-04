@@ -2346,25 +2346,185 @@ fn parses_default_statement_block_switch_arm() {
 
 #[test]
 fn rejects_expression_nesting_past_depth_limit() {
-    let parsed = std::thread::Builder::new()
-        .stack_size(8 * 1024 * 1024)
-        .spawn(|| {
-            let depth = 257;
-            let source = format!("x = {}close{}\n", "(".repeat(depth), ")".repeat(depth));
-            parse(&source)
-        })
-        .expect("spawn depth-limit parser thread")
-        .join()
-        .expect("depth-limit parser thread");
+    for (case, source) in [
+        (
+            "deep-parentheses",
+            format!("x = {}close{}\n", "(".repeat(257), ")".repeat(257)),
+        ),
+        ("deep-unary", format!("x = {}close\n", "-".repeat(257))),
+    ] {
+        let diagnostics = std::thread::Builder::new()
+            .name(case.to_owned())
+            .stack_size(1024 * 1024)
+            .spawn(move || parse(&source).diagnostics)
+            .expect("spawn depth-limit parser thread")
+            .join()
+            .expect("depth-limit parser thread");
 
-    assert!(
-        parsed
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR_DEPTH"),
-        "{:?}",
-        parsed.diagnostics
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR_DEPTH"),
+            "{case}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn accepts_ordinary_expression_nesting_on_a_host_sized_stack() {
+    for (case, source) in [
+        (
+            "ordinary-parentheses",
+            format!("x = {}close{}\n", "(".repeat(32), ")".repeat(32)),
+        ),
+        ("ordinary-unary", format!("x = {}close\n", "-".repeat(32))),
+    ] {
+        let diagnostics = std::thread::Builder::new()
+            .name(case.to_owned())
+            .stack_size(1024 * 1024)
+            .spawn(move || parse(&source).diagnostics)
+            .expect("spawn parser on host sized stack")
+            .join()
+            .expect("ordinary expression nesting stays within the resource bound");
+        assert!(diagnostics.is_empty(), "{case}: {diagnostics:?}");
+    }
+}
+
+#[test]
+fn rejects_mixed_expression_and_statement_nesting_on_a_host_sized_stack() {
+    let mut parenthesized_if = format!("x = {}if true\n", "(".repeat(32));
+    for depth in 1..256 {
+        parenthesized_if.push_str(&format!("{}x = if true\n", "    ".repeat(depth)));
+    }
+    parenthesized_if.push_str(&format!("{}1{}\n", "    ".repeat(256), ")".repeat(32)));
+    let mut nested_if = String::new();
+    for depth in 0..24 {
+        nested_if.push_str(&format!("{}if true\n", "    ".repeat(depth)));
+    }
+    let nested_parentheses = format!(
+        "{nested_if}{}x = {}close{}\n",
+        "    ".repeat(24),
+        "(".repeat(128),
+        ")".repeat(128)
     );
+    let nested_unary = format!(
+        "{nested_if}{}x = {}close\n",
+        "    ".repeat(24),
+        "-".repeat(128)
+    );
+    let nested_condition = format!(
+        "{nested_if}{}if {}true{}\n{}x = 1\n",
+        "    ".repeat(24),
+        "(".repeat(128),
+        ")".repeat(128),
+        "    ".repeat(25)
+    );
+    for (case, source) in [
+        ("mixed-parentheses-if-expression", parenthesized_if),
+        ("mixed-nested-if-parentheses", nested_parentheses),
+        ("mixed-nested-if-unary", nested_unary),
+        ("mixed-nested-if-condition", nested_condition),
+    ] {
+        let diagnostics = std::thread::Builder::new()
+            .name(case.to_owned())
+            .stack_size(1024 * 1024)
+            .spawn(move || parse(&source).diagnostics)
+            .expect("spawn parser on host sized stack")
+            .join()
+            .expect("mixed parser nesting returns a depth diagnostic");
+        assert!(
+            diagnostics.iter().any(|diagnostic| matches!(
+                diagnostic.code.as_str(),
+                "E_PARSE_EXPR_DEPTH" | "E_PARSE_STMT_DEPTH"
+            )),
+            "{case}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn rejects_deep_statement_forms_on_a_host_sized_stack() {
+    let mut else_if = String::from("if true\n    x = 1\n");
+    for _ in 0..256 {
+        else_if.push_str("else if false\n    x = 2\n");
+    }
+    let mut nested_blocks = String::new();
+    let mut nested_expressions = String::new();
+    for depth in 0..256 {
+        let indent = "    ".repeat(depth);
+        nested_blocks.push_str(&format!("{indent}if true\n"));
+        nested_expressions.push_str(&format!("{indent}x = if true\n"));
+    }
+    nested_blocks.push_str(&format!("{}x = 1\n", "    ".repeat(256)));
+    nested_expressions.push_str(&format!("{}1\n", "    ".repeat(256)));
+    let mut inline_switch = String::from("x = switch\n");
+    for depth in 1..=256 {
+        inline_switch.push_str(&format!("{}=> switch\n", "    ".repeat(depth)));
+    }
+    inline_switch.push_str(&format!("{}=> 1\n", "    ".repeat(257)));
+    for (case, source) in [
+        ("else-if", else_if),
+        ("nested-if", nested_blocks),
+        ("nested-if-expression", nested_expressions),
+        ("inline-switch-expression", inline_switch),
+    ] {
+        let diagnostics = std::thread::Builder::new()
+            .name(case.to_owned())
+            .stack_size(1024 * 1024)
+            .spawn(move || parse(&source).diagnostics)
+            .expect("spawn parser on host sized stack")
+            .join()
+            .expect("parser returns a diagnostic without overflowing");
+        assert!(
+            diagnostics.iter().any(|diagnostic| matches!(
+                diagnostic.code.as_str(),
+                "E_PARSE_EXPR_DEPTH" | "E_PARSE_STMT_DEPTH"
+            )),
+            "{case}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn accepts_ordinary_nested_statements_and_else_if_chains() {
+    let mut else_if = String::from("if true\n    x = 1\n");
+    for _ in 0..16 {
+        else_if.push_str("else if false\n    x = 2\n");
+    }
+    let mut nested_blocks = String::new();
+    let mut nested_expressions = String::new();
+    let mut inline_switch = String::from("x = switch\n");
+    for depth in 0..16 {
+        let indent = "    ".repeat(depth);
+        nested_blocks.push_str(&format!("{indent}if true\n"));
+        nested_expressions.push_str(&format!("{indent}x = if true\n"));
+        inline_switch.push_str(&format!("{}=> switch\n", "    ".repeat(depth + 1)));
+    }
+    nested_blocks.push_str(&format!("{}x = 1\n", "    ".repeat(16)));
+    nested_expressions.push_str(&format!("{}1\n", "    ".repeat(16)));
+    for depth in (0..16).rev() {
+        nested_expressions.push_str(&format!(
+            "{}else\n{}2\n",
+            "    ".repeat(depth),
+            "    ".repeat(depth + 1)
+        ));
+    }
+    inline_switch.push_str(&format!("{}=> 1\n", "    ".repeat(17)));
+    for (case, source) in [
+        ("ordinary-else-if", else_if),
+        ("ordinary-nested-if", nested_blocks),
+        ("ordinary-if-expression", nested_expressions),
+        ("ordinary-inline-switch", inline_switch),
+    ] {
+        let diagnostics = std::thread::Builder::new()
+            .name(case.to_owned())
+            .stack_size(1024 * 1024)
+            .spawn(move || parse(&source).diagnostics)
+            .expect("spawn parser on host sized stack")
+            .join()
+            .expect("ordinary parser nesting stays within the resource bound");
+        assert!(diagnostics.is_empty(), "{case}: {diagnostics:?}");
+    }
 }
 
 #[test]

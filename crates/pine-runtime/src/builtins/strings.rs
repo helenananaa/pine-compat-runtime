@@ -1,11 +1,13 @@
+mod bounded_join;
 mod collection_format;
 mod regex_cache;
+pub(crate) use bounded_join::BoundedJoin;
 use collection_format::{stringify_array_with_mintick, stringify_matrix_with_mintick};
 pub(crate) use regex_cache::CachedPineRegex;
 
 use std::fmt::Write as _;
 
-use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
+use pine_ir::{HirCallArg, HirExpr};
 
 use super::{
     regex_character_classes::{
@@ -656,69 +658,6 @@ pub(crate) fn stringify_array_element(value: &PineValue, format: &str) -> String
     }
 }
 
-pub(crate) fn stringify_array_join_element(value: &PineValue) -> String {
-    match value {
-        PineValue::Int(value) => format_number(*value as f64, "#.########"),
-        PineValue::Float(value) => format_number(*value, "#.########"),
-        PineValue::Bool(value) => value.to_string(),
-        PineValue::String(value) => value.clone(),
-        PineValue::Color(value) => value.to_string(),
-        PineValue::Na => "NaN".to_owned(),
-        _ => "NaN".to_owned(),
-    }
-}
-
-pub(crate) fn stringify_user_type_array_join_element(
-    value: &PineValue,
-    type_name: &str,
-    user_types: &[HirUserTypeInfo],
-) -> String {
-    stringify_user_type_array_join_element_with_seen(value, type_name, user_types, &mut Vec::new())
-}
-
-fn stringify_user_type_array_join_element_with_seen(
-    value: &PineValue,
-    type_name: &str,
-    user_types: &[HirUserTypeInfo],
-    seen: &mut Vec<String>,
-) -> String {
-    let PineValue::UserType(fields) = value else {
-        return stringify_array_join_element(value);
-    };
-
-    if seen.iter().any(|seen_type| seen_type == type_name) {
-        return stringify_array_join_element(value);
-    }
-    seen.push(type_name.to_owned());
-    let shape = user_types
-        .iter()
-        .find(|user_type| user_type.identity.type_name == type_name);
-    let mut result = String::new();
-    result.push_str(type_name);
-    result.push('(');
-    for (index, field) in fields.iter().enumerate() {
-        if index > 0 {
-            result.push_str(", ");
-        }
-        if let Some(field_type_name) = shape
-            .and_then(|shape| shape.fields.get(index))
-            .and_then(|field| field.user_type_name.as_deref())
-        {
-            result.push_str(&stringify_user_type_array_join_element_with_seen(
-                field,
-                field_type_name,
-                user_types,
-                seen,
-            ));
-        } else {
-            result.push_str(&stringify_array_join_element(field));
-        }
-    }
-    result.push(')');
-    seen.pop();
-    result
-}
-
 pub(crate) fn format_string_placeholders(
     format_string: &str,
     values: &[PineValue],
@@ -1165,20 +1104,27 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let repeat = repeat as usize;
+        // Keep the Pine count wide until the character bound is established;
+        // casting to usize first can wrap a large count on wasm32.
+        let repeat = repeat as u64;
         let result_chars = repeat
-            .saturating_mul(source.chars().count())
+            .saturating_mul(source.chars().count() as u64)
             .saturating_add(
                 repeat
                     .saturating_sub(1)
-                    .saturating_mul(separator.chars().count()),
+                    .saturating_mul(separator.chars().count() as u64),
             );
-        if result_chars > MAX_STRING_CHARS {
+        if result_chars > MAX_STRING_CHARS as u64 {
             return Err(RuntimeError {
                 message: format!("str.repeat result cannot exceed {MAX_STRING_CHARS} characters"),
             });
         }
+        if result_chars == 0 {
+            return Ok(PineValue::String(String::new()));
+        }
 
+        // Nonempty output bounds count to at most MAX_STRING_CHARS + 1.
+        let repeat = usize::try_from(repeat).expect("bounded nonempty repeat count");
         let mut result = String::new();
         for index in 0..repeat {
             if index > 0 {

@@ -1,8 +1,6 @@
 use pine_ir::{HirCallArg, HirExpr};
 
-use crate::builtins::strings::{
-    stringify_array_join_element, stringify_user_type_array_join_element,
-};
+use crate::builtins::strings::BoundedJoin;
 use crate::*;
 
 mod calls;
@@ -365,9 +363,7 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("array.concat cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
             });
         }
-        for (offset, value) in source_values.into_iter().enumerate() {
-            self.array_insert_value(target_id, (target_len + offset) as i64, value)?;
-        }
+        self.array_insert_values(target_id, target_len as i64, source_values)?;
         Ok(PineValue::Array(target_id))
     }
 
@@ -410,22 +406,14 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let user_type_name = self.array_user_types.get(&id).map(String::as_str);
-        let mut result = String::new();
+        let mut result = BoundedJoin::default();
         for (index, value) in values.iter().enumerate() {
             if index > 0 {
-                result.push_str(&separator);
+                result.push_str(&separator)?;
             }
-            if let Some(type_name) = user_type_name {
-                result.push_str(&stringify_user_type_array_join_element(
-                    &self.materialize_object(value)?,
-                    type_name,
-                    &self.program.user_types,
-                ));
-            } else {
-                result.push_str(&stringify_array_join_element(value));
-            }
+            result.push_element(value, user_type_name, self)?;
         }
-        self.string_value_or_error(result, "array.join")
+        Ok(result.finish())
     }
 
     pub(crate) fn eval_array_clear(

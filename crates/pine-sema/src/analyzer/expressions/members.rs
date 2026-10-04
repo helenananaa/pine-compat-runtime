@@ -113,6 +113,7 @@ impl Analyzer {
         let text = self
             .source_texts
             .get(&source_id)?
+            .text()
             .get(callee.span.start..callee.span.end)?;
         let fragment = pine_syntax::SourceFile::new("qualified member", text);
         let spans = pine_syntax::lex(&fragment)

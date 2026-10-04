@@ -660,29 +660,32 @@ impl Analyzer {
             }
             if let Some(expected_type) = expected_type {
                 if !can_assign(expected_type.pine_type, arg_type) {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_FUNCTION_ARG_TYPE",
-                        format!(
-                            "cannot pass {} to function parameter `{}` of type {}",
-                            pine_type_name(arg_type),
-                            param,
-                            pine_type_name(expected_type.pine_type)
+                    self.push_diagnostic_in_context(
+                        Diagnostic::error(
+                            "E_FUNCTION_ARG_TYPE",
+                            format!(
+                                "cannot pass {} to function parameter `{}` of type {}",
+                                pine_type_name(arg_type),
+                                param,
+                                pine_type_name(expected_type.pine_type)
+                            ),
+                            expected_type.span,
                         ),
-                        expected_type.span,
-                    ));
+                        function.source_context_id,
+                    );
                 }
                 if expected_type.pine_type.kind == ValueKind::UserTypeArray {
                     if let Some(expected_type_name) = &expected_type.user_type_name {
                         if arg_user_type_array.as_deref() == Some(expected_type_name.as_str()) {
                             self.mark_symbol_user_type_array(symbol, expected_type_name.clone());
                         } else if arg_type.kind == ValueKind::UserTypeArray {
-                            self.diagnostics.push(Diagnostic::error(
+                            self.push_diagnostic_in_context(Diagnostic::error(
                                 "E_FUNCTION_ARG_TYPE",
                                 format!(
                                     "cannot pass a different user-defined type array to function parameter `{param}`",
                                 ),
                                 expected_type.span,
-                            ));
+                            ), function.source_context_id);
                         }
                     }
                 } else {

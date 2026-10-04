@@ -150,12 +150,22 @@ impl HistoricalRuntime<'_> {
             .rolling_windows
             .values()
             .map(RollingWindowState::retained_values)
-            .sum::<usize>();
+            .sum::<usize>()
+            + self
+                .extreme_windows
+                .values()
+                .map(crate::algorithms::rolling_extreme::RollingExtremeState::retained_values)
+                .sum::<usize>();
         let rolling_window_value_capacity = self
             .rolling_windows
             .values()
             .map(RollingWindowState::retained_capacity)
             .sum::<usize>()
+            + self
+                .extreme_windows
+                .values()
+                .map(crate::algorithms::rolling_extreme::RollingExtremeState::retained_capacity)
+                .sum::<usize>()
             + self.selection_scratch.capacity();
         let valuewhen_state_values = self
             .valuewhen_state
@@ -295,8 +305,9 @@ impl HistoricalRuntime<'_> {
             valuewhen_state_capacity: self.valuewhen_state.capacity(),
             valuewhen_state_values,
             valuewhen_state_value_capacity,
-            rolling_window_slots: self.rolling_windows.len(),
-            rolling_window_capacity: self.rolling_windows.capacity(),
+            rolling_window_slots: self.rolling_windows.len() + self.extreme_windows.len(),
+            rolling_window_capacity: self.rolling_windows.capacity()
+                + self.extreme_windows.capacity(),
             rolling_window_values,
             rolling_window_value_capacity,
             rsi_state_slots: self.rsi_state.len(),

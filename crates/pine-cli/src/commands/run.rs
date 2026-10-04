@@ -151,15 +151,7 @@ fn run_profiled_json_with_options_in_mode(
     let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         for diagnostic in analysis.diagnostics {
-            let line_col = source.line_col(diagnostic.span.start);
-            eprintln!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            );
+            eprintln!("{}", diagnostic.format(&source));
         }
         return Err("analysis failed".to_owned());
     }
@@ -216,15 +208,7 @@ fn run_result_with_options_in_mode(
     let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         for diagnostic in analysis.diagnostics {
-            let line_col = source.line_col(diagnostic.span.start);
-            eprintln!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            );
+            eprintln!("{}", diagnostic.format(&source));
         }
         return Err("analysis failed".to_owned());
     }
@@ -276,15 +260,7 @@ fn run_non_batch_with_options(
     let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         for diagnostic in analysis.diagnostics {
-            let line_col = source.line_col(diagnostic.span.start);
-            eprintln!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            );
+            eprintln!("{}", diagnostic.format(&source));
         }
         return Err("analysis failed".to_owned());
     }

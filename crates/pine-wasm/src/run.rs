@@ -7,7 +7,6 @@ use wasm_bindgen::prelude::*;
 use crate::input_overrides::input_overrides_from_json;
 use crate::library_sources::analysis_input_with_libraries;
 use crate::request_bars::request_environment_and_execution_times_from_json;
-use crate::snapshot::owned_snapshot_json;
 use crate::{analysis_input, compile_program};
 
 #[wasm_bindgen(js_name = Program)]
@@ -420,7 +419,9 @@ impl WasmProgram {
             None => runtime.append_bars(&bars),
         }
         .map_err(|err| format!("runtime failed: {}", err.message))?;
-        Ok(owned_snapshot_json(runtime.result()))
+        Ok(crate::snapshot::result_view_snapshot_json(
+            &runtime.result_view(),
+        ))
     }
 }
 

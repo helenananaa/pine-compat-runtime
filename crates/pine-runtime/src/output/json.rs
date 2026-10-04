@@ -1,74 +1,31 @@
+use crate::output::view::*;
 use crate::{PineValue, RuntimeProfile};
 
+mod drawings_writer;
 mod profile;
 mod series_writer;
+mod value_writer;
 mod writer;
-pub use writer::{into_public_runtime_result_json, write_public_runtime_result_json};
+pub use writer::{
+    into_public_runtime_result_json, public_runtime_result_view_json,
+    write_public_runtime_result_json, write_public_runtime_result_view_json,
+};
 
 use super::alerts::AlertEvent;
 use super::changes::{
     DrawingAction, DrawingObject, FillAction, HLineAction, RuntimeChanges, SeriesChange,
     SeriesHeader, StrategyChanges,
 };
-use super::drawings::{
-    BoxOutput, LabelOutput, LineFillOutput, LineOutput, PolylineOutput, TableOutput,
-};
 use super::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_RENDER_METADATA_VERSION,
     PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries, PlotBarSeries, PlotCandleSeries,
     PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
 };
-use super::strategy::StrategyResult;
 use profile::profile_json;
 
+/// Serialize the public owned result without complete per-family buffers.
 pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
-    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_RUNTIME_SCHEMA_VERSION);
-    output.push_str(&format!(
-        "\"renderMetadataVersion\":{},",
-        PUBLIC_RENDER_METADATA_VERSION
-    ));
-    output.push_str("\"plots\":");
-    output.push_str(&plots_json(&result.plots));
-    output.push_str(",\"plotChars\":");
-    output.push_str(&plot_chars_json(&result.plot_chars));
-    output.push_str(",\"plotShapes\":");
-    output.push_str(&plot_shapes_json(&result.plot_shapes));
-    output.push_str(",\"plotArrows\":");
-    output.push_str(&plot_arrows_json(&result.plot_arrows));
-    output.push_str(",\"plotBars\":");
-    output.push_str(&plot_bars_json(&result.plot_bars));
-    output.push_str(",\"plotCandles\":");
-    output.push_str(&plot_candles_json(&result.plot_candles));
-    output.push_str(",\"bgColors\":");
-    output.push_str(&colors_json(&result.bg_colors));
-    output.push_str(",\"barColors\":");
-    output.push_str(&colors_json(&result.bar_colors));
-    output.push_str(",\"hlines\":");
-    output.push_str(&hlines_json(&result.hlines));
-    output.push_str(",\"fills\":");
-    output.push_str(&fills_json(&result.fills));
-    output.push_str(",\"labels\":");
-    output.push_str(&labels_json(&result.labels));
-    output.push_str(",\"lines\":");
-    output.push_str(&lines_json(&result.lines));
-    output.push_str(",\"lineFills\":");
-    output.push_str(&line_fills_json(&result.line_fills));
-    output.push_str(",\"polylines\":");
-    output.push_str(&polylines_json(&result.polylines));
-    output.push_str(",\"boxes\":");
-    output.push_str(&boxes_json(&result.boxes));
-    output.push_str(",\"tables\":");
-    output.push_str(&tables_json(&result.tables));
-    output.push_str(",\"alerts\":");
-    output.push_str(&alerts_json(&result.alerts));
-    if let Some(strategy) = &result.strategy {
-        output.push_str(",\"strategy\":");
-        output.push_str(&strategy_json(strategy));
-    }
-    output.push_str(",\"diagnostics\":");
-    output.push_str(&runtime_diagnostics_json(&result.diagnostics));
-    output.push('}');
-    output
+    public_runtime_result_view_json(&result.view())
 }
 
 pub fn public_runtime_profiled_result_json(
@@ -389,7 +346,9 @@ fn drawing_object_json(object: &DrawingObject) -> String {
             first_object_json(&polylines_json(std::slice::from_ref(item)))
         }
         DrawingObject::Box(item) => first_object_json(&boxes_json(std::slice::from_ref(item))),
-        DrawingObject::Table(item) => first_object_json(&tables_json(std::slice::from_ref(item))),
+        DrawingObject::Table(item) => {
+            first_object_json(&tables_json(std::slice::from_ref(item.as_ref())))
+        }
     }
 }
 
@@ -486,206 +445,6 @@ fn first_object_json(array_json: &str) -> String {
         Some(rest) if rest.ends_with(']') => rest[..rest.len() - 1].to_owned(),
         _ => trimmed.to_owned(),
     }
-}
-
-fn plots_json(plots: &[PlotSeries]) -> String {
-    let mut output = String::from("[");
-    for (plot_index, plot) in plots.iter().enumerate() {
-        if plot_index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"values\":[", plot.id));
-        values_json_into(&mut output, &plot.values);
-        output.push(']');
-        if plot.colors.iter().any(|value| *value != PineValue::Na) {
-            push_values_field(&mut output, "colors", &plot.colors);
-        }
-        push_non_default_value_field(
-            &mut output,
-            "linewidth",
-            &plot.linewidth,
-            &PineValue::Int(1),
-        );
-        push_non_default_value_field(
-            &mut output,
-            "style",
-            &plot.style,
-            &PineValue::String("plot.style_line".to_owned()),
-        );
-        push_non_default_value_field(
-            &mut output,
-            "trackPrice",
-            &plot.track_price,
-            &PineValue::Bool(false),
-        );
-        push_non_default_value_field(&mut output, "histBase", &plot.hist_base, &PineValue::Int(0));
-        push_non_default_value_field(&mut output, "join", &plot.join, &PineValue::Bool(false));
-        push_non_default_value_field(
-            &mut output,
-            "format",
-            &plot.format,
-            &PineValue::String("format.inherit".to_owned()),
-        );
-        push_non_default_value_field(&mut output, "precision", &plot.precision, &PineValue::Na);
-        push_non_default_value_field(
-            &mut output,
-            "linestyle",
-            &plot.linestyle,
-            &PineValue::String("plot.linestyle_solid".to_owned()),
-        );
-        output_metadata_json_into(&mut output, &plot.metadata);
-        output.push('}');
-    }
-    output.push(']');
-    output
-}
-
-fn colors_json(colors: &[ColorSeries]) -> String {
-    let mut output = String::from("[");
-    for (color_index, colors) in colors.iter().enumerate() {
-        if color_index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"values\":[", colors.id));
-        values_json_into(&mut output, &colors.values);
-        output.push(']');
-        output_metadata_json_into(&mut output, &colors.metadata);
-        output.push('}');
-    }
-    output.push(']');
-    output
-}
-
-fn plot_chars_json(plot_chars: &[PlotCharSeries]) -> String {
-    let mut output = String::from("[");
-    for (plot_char_index, plot_char) in plot_chars.iter().enumerate() {
-        if plot_char_index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_char.id));
-        values_json_into(&mut output, &plot_char.values);
-        output.push_str("],\"chars\":[");
-        values_json_into(&mut output, &plot_char.chars);
-        output.push_str("],\"colors\":[");
-        values_json_into(&mut output, &plot_char.colors);
-        output.push_str("],\"locations\":[");
-        values_json_into(&mut output, &plot_char.locations);
-        output.push_str("],\"texts\":[");
-        values_json_into(&mut output, &plot_char.texts);
-        output.push_str("],\"textColors\":[");
-        values_json_into(&mut output, &plot_char.text_colors);
-        output.push_str("],\"sizes\":[");
-        values_json_into(&mut output, &plot_char.sizes);
-        output.push(']');
-        output_metadata_json_into(&mut output, &plot_char.metadata);
-        output.push('}');
-    }
-    output.push(']');
-    output
-}
-
-fn plot_shapes_json(plot_shapes: &[PlotShapeSeries]) -> String {
-    let mut output = String::from("[");
-    for (plot_shape_index, plot_shape) in plot_shapes.iter().enumerate() {
-        if plot_shape_index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_shape.id));
-        values_json_into(&mut output, &plot_shape.values);
-        output.push_str("],\"styles\":[");
-        values_json_into(&mut output, &plot_shape.styles);
-        output.push_str("],\"locations\":[");
-        values_json_into(&mut output, &plot_shape.locations);
-        output.push_str("],\"colors\":[");
-        values_json_into(&mut output, &plot_shape.colors);
-        output.push_str("],\"texts\":[");
-        values_json_into(&mut output, &plot_shape.texts);
-        output.push_str("],\"textColors\":[");
-        values_json_into(&mut output, &plot_shape.text_colors);
-        output.push_str("],\"sizes\":[");
-        values_json_into(&mut output, &plot_shape.sizes);
-        output.push(']');
-        output_metadata_json_into(&mut output, &plot_shape.metadata);
-        output.push('}');
-    }
-    output.push(']');
-    output
-}
-
-fn plot_arrows_json(plot_arrows: &[PlotArrowSeries]) -> String {
-    let mut output = String::from("[");
-    for (plot_arrow_index, plot_arrow) in plot_arrows.iter().enumerate() {
-        if plot_arrow_index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_arrow.id));
-        values_json_into(&mut output, &plot_arrow.values);
-        output.push_str("],\"colorUps\":[");
-        values_json_into(&mut output, &plot_arrow.color_ups);
-        output.push_str("],\"colorDowns\":[");
-        values_json_into(&mut output, &plot_arrow.color_downs);
-        output.push_str("],\"minHeights\":[");
-        values_json_into(&mut output, &plot_arrow.min_heights);
-        output.push_str("],\"maxHeights\":[");
-        values_json_into(&mut output, &plot_arrow.max_heights);
-        output.push(']');
-        output_metadata_json_into(&mut output, &plot_arrow.metadata);
-        output.push('}');
-    }
-    output.push(']');
-    output
-}
-
-fn plot_bars_json(plot_bars: &[PlotBarSeries]) -> String {
-    let mut output = String::from("[");
-    for (plot_bar_index, plot_bar) in plot_bars.iter().enumerate() {
-        if plot_bar_index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"opens\":[", plot_bar.id));
-        values_json_into(&mut output, &plot_bar.opens);
-        output.push_str("],\"highs\":[");
-        values_json_into(&mut output, &plot_bar.highs);
-        output.push_str("],\"lows\":[");
-        values_json_into(&mut output, &plot_bar.lows);
-        output.push_str("],\"closes\":[");
-        values_json_into(&mut output, &plot_bar.closes);
-        output.push_str("],\"colors\":[");
-        values_json_into(&mut output, &plot_bar.colors);
-        output.push(']');
-        output_metadata_json_into(&mut output, &plot_bar.metadata);
-        output.push('}');
-    }
-    output.push(']');
-    output
-}
-
-fn plot_candles_json(plot_candles: &[PlotCandleSeries]) -> String {
-    let mut output = String::from("[");
-    for (plot_candle_index, plot_candle) in plot_candles.iter().enumerate() {
-        if plot_candle_index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"opens\":[", plot_candle.id));
-        values_json_into(&mut output, &plot_candle.opens);
-        output.push_str("],\"highs\":[");
-        values_json_into(&mut output, &plot_candle.highs);
-        output.push_str("],\"lows\":[");
-        values_json_into(&mut output, &plot_candle.lows);
-        output.push_str("],\"closes\":[");
-        values_json_into(&mut output, &plot_candle.closes);
-        output.push_str("],\"colors\":[");
-        values_json_into(&mut output, &plot_candle.colors);
-        output.push_str("],\"wickColors\":[");
-        values_json_into(&mut output, &plot_candle.wick_colors);
-        output.push_str("],\"borderColors\":[");
-        values_json_into(&mut output, &plot_candle.border_colors);
-        output.push(']');
-        output_metadata_json_into(&mut output, &plot_candle.metadata);
-        output.push('}');
-    }
-    output.push(']');
-    output
 }
 
 fn values_json_into(output: &mut String, values: &[PineValue]) {
@@ -847,9 +606,9 @@ fn fills_json(fills: &[FillOutput]) -> String {
     output
 }
 
-fn labels_json(labels: &[LabelOutput]) -> String {
+fn labels_json<'a>(labels: impl IntoIterator<Item = impl Into<LabelOutputView<'a>>>) -> String {
     let mut output = String::from("[");
-    for (index, label) in labels.iter().enumerate() {
+    for (index, label) in labels.into_iter().map(Into::into).enumerate() {
         if index > 0 {
             output.push(',');
         }
@@ -898,9 +657,9 @@ fn labels_json(labels: &[LabelOutput]) -> String {
     output
 }
 
-fn lines_json(lines: &[LineOutput]) -> String {
+fn lines_json<'a>(lines: impl IntoIterator<Item = impl Into<LineOutputView<'a>>>) -> String {
     let mut output = String::from("[");
-    for (index, line) in lines.iter().enumerate() {
+    for (index, line) in lines.into_iter().map(Into::into).enumerate() {
         if index > 0 {
             output.push(',');
         }
@@ -941,9 +700,11 @@ fn lines_json(lines: &[LineOutput]) -> String {
     output
 }
 
-fn line_fills_json(line_fills: &[LineFillOutput]) -> String {
+fn line_fills_json<'a>(
+    line_fills: impl IntoIterator<Item = impl Into<LineFillOutputView<'a>>>,
+) -> String {
     let mut output = String::from("[");
-    for (index, line_fill) in line_fills.iter().enumerate() {
+    for (index, line_fill) in line_fills.into_iter().map(Into::into).enumerate() {
         if index > 0 {
             output.push(',');
         }
@@ -972,9 +733,11 @@ fn line_fills_json(line_fills: &[LineFillOutput]) -> String {
     output
 }
 
-fn polylines_json(polylines: &[PolylineOutput]) -> String {
+fn polylines_json<'a>(
+    polylines: impl IntoIterator<Item = impl Into<PolylineOutputView<'a>>>,
+) -> String {
     let mut output = String::from("[");
-    for (index, polyline) in polylines.iter().enumerate() {
+    for (index, polyline) in polylines.into_iter().map(Into::into).enumerate() {
         if index > 0 {
             output.push(',');
         }
@@ -1015,9 +778,9 @@ fn polylines_json(polylines: &[PolylineOutput]) -> String {
     output
 }
 
-fn boxes_json(boxes: &[BoxOutput]) -> String {
+fn boxes_json<'a>(boxes: impl IntoIterator<Item = impl Into<BoxOutputView<'a>>>) -> String {
     let mut output = String::from("[");
-    for (index, box_output) in boxes.iter().enumerate() {
+    for (index, box_output) in boxes.into_iter().map(Into::into).enumerate() {
         if index > 0 {
             output.push(',');
         }
@@ -1076,24 +839,24 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
     output
 }
 
-fn tables_json(tables: &[TableOutput]) -> String {
+fn tables_json<'a>(tables: impl IntoIterator<Item = impl Into<TableOutputView<'a>>>) -> String {
     let mut output = String::from("[");
-    for (index, table) in tables.iter().enumerate() {
+    for (index, table) in tables.into_iter().map(Into::into).enumerate() {
         if index > 0 {
             output.push(',');
         }
         output.push_str(&format!("{{\"id\":{},\"position\":", table.id));
-        output.push_str(&value_json(&table.position));
+        output.push_str(&value_json(table.position));
         output.push_str(",\"bgColor\":");
-        output.push_str(&value_json(&table.bg_color));
+        output.push_str(&value_json(table.bg_color));
         output.push_str(",\"frameColor\":");
-        output.push_str(&value_json(&table.frame_color));
+        output.push_str(&value_json(table.frame_color));
         output.push_str(",\"frameWidth\":");
-        output.push_str(&value_json(&table.frame_width));
+        output.push_str(&value_json(table.frame_width));
         output.push_str(",\"borderColor\":");
-        output.push_str(&value_json(&table.border_color));
+        output.push_str(&value_json(table.border_color));
         output.push_str(",\"borderWidth\":");
-        output.push_str(&value_json(&table.border_width));
+        output.push_str(&value_json(table.border_width));
         output.push_str(&format!(
             ",\"columns\":{},\"rows\":{},\"snapshots\":[",
             table.columns, table.rows
@@ -1182,18 +945,6 @@ fn alerts_json(alerts: &[AlertEvent]) -> String {
     }
     output.push(']');
     output
-}
-
-fn strategy_json(strategy: &StrategyResult) -> String {
-    format!(
-        "{{\"orders\":{},\"trades\":{},\"position\":{},\"equity\":{},\"alerts\":{},\"diagnostics\":{}}}",
-        strategy_orders_json(&strategy.orders),
-        strategy_trades_json(&strategy.trades),
-        strategy_position_json(&strategy.position),
-        strategy_equity_json(&strategy.equity),
-        strategy_order_fill_alerts_json(&strategy.alerts),
-        runtime_diagnostics_json(&strategy.diagnostics)
-    )
 }
 
 fn strategy_orders_json(orders: &[crate::StrategyOrderEvent]) -> String {
@@ -1346,64 +1097,15 @@ fn values_json(values: &[PineValue]) -> String {
 }
 
 fn value_json(value: &PineValue) -> String {
-    match value {
-        PineValue::Int(value) => value.to_string(),
-        PineValue::Float(value) => f64_json(*value),
-        PineValue::Bool(value) => value.to_string(),
-        PineValue::String(value) => format!("\"{}\"", json_escape(value)),
-        PineValue::Color(value) => value.to_string(),
-        PineValue::Plot(value)
-        | PineValue::HLine(value)
-        | PineValue::Label(value)
-        | PineValue::Line(value)
-        | PineValue::LineFill(value)
-        | PineValue::Polyline(value)
-        | PineValue::Box(value)
-        | PineValue::Table(value) => value.to_string(),
-        PineValue::ChartPoint(point) => format!(
-            "{{\"time\":{},\"index\":{},\"price\":{}}}",
-            value_json(&point.time),
-            value_json(&point.index),
-            value_json(&point.price)
-        ),
-        PineValue::UserType(values) | PineValue::Tuple(values) => {
-            let mut output = String::from("[");
-            for (index, value) in values.iter().enumerate() {
-                if index > 0 {
-                    output.push(',');
-                }
-                output.push_str(&value_json(value));
-            }
-            output.push(']');
-            output
-        }
-        PineValue::Array(_)
-        | PineValue::UserTypeRef(_)
-        | PineValue::Matrix(_)
-        | PineValue::Map(_)
-        | PineValue::Na
-        | PineValue::Void => "null".to_owned(),
-    }
+    let mut bytes = Vec::new();
+    value_writer::value(value, &mut bytes).expect("writing to a Vec cannot fail");
+    String::from_utf8(bytes).expect("JSON encoders produce UTF-8")
 }
 
 fn json_escape(value: &str) -> String {
-    let mut escaped = String::with_capacity(value.len());
-    for ch in value.chars() {
-        match ch {
-            '"' => escaped.push_str("\\\""),
-            '\\' => escaped.push_str("\\\\"),
-            '\n' => escaped.push_str("\\n"),
-            '\r' => escaped.push_str("\\r"),
-            '\t' => escaped.push_str("\\t"),
-            '\u{08}' => escaped.push_str("\\b"),
-            '\u{0C}' => escaped.push_str("\\f"),
-            ch if (ch as u32) < 0x20 => {
-                escaped.push_str(&format!("\\u{:04x}", ch as u32));
-            }
-            ch => escaped.push(ch),
-        }
-    }
-    escaped
+    let mut bytes = Vec::with_capacity(value.len());
+    value_writer::escaped(value, &mut bytes).expect("writing to a Vec cannot fail");
+    String::from_utf8(bytes).expect("JSON encoders produce UTF-8")
 }
 
 #[cfg(test)]

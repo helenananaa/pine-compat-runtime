@@ -58,6 +58,32 @@ pub(super) fn pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec
         return Vec::new();
     }
 
+    // Forming the Gram matrix squares the input scale. Normalize first so
+    // ordinary small values retain their rank and large values do not overflow.
+    // The caller supplies finite numbers; zero matrices have a zero inverse.
+    let scale = values.iter().map(|value| value.abs()).fold(0.0, f64::max);
+    if scale == 0.0 {
+        return vec![0.0; rows * columns];
+    }
+    // Power-of-two scaling avoids an extra rounding step for ordinary inputs.
+    // Construct the highest represented power directly, including subnormals
+    // whose biased exponent is zero and whose scale would underflow via powi.
+    let bits = scale.to_bits();
+    let exponent = bits & 0x7ff0_0000_0000_0000;
+    let scale = f64::from_bits(if exponent != 0 {
+        exponent
+    } else {
+        1_u64 << bits.ilog2()
+    });
+    let normalized: Vec<_> = values.iter().map(|value| value / scale).collect();
+    let mut result = normalized_pseudo_inverse(&normalized, rows, columns);
+    for value in &mut result {
+        *value /= scale;
+    }
+    result
+}
+
+fn normalized_pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec<f64> {
     if columns <= rows {
         let gram = right_gram(values, rows, columns);
         let (eigenvalues, eigenvectors) = jacobi_eigen_decomposition(gram, columns);
@@ -150,8 +176,12 @@ fn left_gram(values: &[f64], rows: usize, columns: usize) -> Vec<f64> {
 
 fn eigen_cutoff(eigenvalues: &[f64]) -> f64 {
     let max = eigenvalues.iter().copied().fold(0.0, f64::max);
-    (max * PSEUDO_INVERSE_TOLERANCE).max(PSEUDO_INVERSE_TOLERANCE)
+    max * PSEUDO_INVERSE_TOLERANCE
 }
+
+#[cfg(test)]
+#[path = "linalg_pinv_tests.rs"]
+mod pinv_tests;
 
 fn is_symmetric(values: &[f64], size: usize) -> bool {
     for row in 0..size {

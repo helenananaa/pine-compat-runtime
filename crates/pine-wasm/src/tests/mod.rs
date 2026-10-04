@@ -9,6 +9,31 @@ fn package_version_is_the_coordinated_prerelease_identity() {
 }
 
 #[test]
+fn analysis_library_diagnostics_preserve_unicode_source_identity() {
+    let root =
+        "//@version=6\nindicator(\"根\")\nimport audit/Library/1 as lib\nplot(lib.f(close))\n";
+    let text = "//@version=6\nlibrary(\"库\")\n// 中文\nexport f(float x) => str.length(\"中文\") + missingName + x\n";
+    let library = pine_syntax::SourceFile::new("<wasm:audit/Library/1>", text);
+    let offset = text.find("missingName").unwrap();
+    let location = library.line_col(offset);
+    let libraries = serde_json::json!({"audit/Library/1": text}).to_string();
+    let report: serde_json::Value =
+        serde_json::from_str(&analyze_script_with_libraries(root, &libraries)).unwrap();
+    let diagnostic = report["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["code"] == "E_UNKNOWN_SYMBOL")
+        .unwrap();
+    assert_eq!(diagnostic["span"]["sourceId"], 1);
+    assert_eq!(diagnostic["span"]["libraryKey"], "audit/Library/1");
+    assert_eq!(diagnostic["span"]["sourceName"], "<wasm:audit/Library/1>");
+    assert_eq!(diagnostic["span"]["start"], offset);
+    assert_eq!(diagnostic["span"]["line"], location.line);
+    assert_eq!(diagnostic["span"]["column"], location.column);
+}
+
+#[test]
 fn analyzes_script_to_json() {
     let output = analyze_script("//@version=6\nindicator(\"demo\")\nplot(close)\n");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");

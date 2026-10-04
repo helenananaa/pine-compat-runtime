@@ -13356,3 +13356,70 @@ def test_map_matrix_representative_host_golden_parity():
     }
 
     assert actual == expected
+
+
+def test_library_diagnostics_report_unicode_source_and_byte_offsets():
+    root = '//@version=6\nindicator("根")\nimport audit/Library/1 as lib\nplot(lib.f(close))\n'
+    library = '//@version=6\nlibrary("库")\n// 中文\nexport f(float x) => str.length("中文") + missingName + x\n'
+    report = pine_compat.analyze_script(root, library_sources={"audit/Library/1": library})
+    diagnostic = next(d for d in report["diagnostics"] if d["code"] == "E_UNKNOWN_SYMBOL")
+    offset = library.index("missingName")
+    span = diagnostic["span"]
+    assert span == {
+        "start": len(library[:offset].encode("utf-8")),
+        "end": len(library[:offset + len("missingName")].encode("utf-8")),
+        "line": 4,
+        "column": len(library.splitlines()[3].split("missingName")[0]) + 1,
+        "sourceId": 1,
+        "libraryKey": "audit/Library/1",
+        "sourceName": "<python:audit/Library/1>",
+    }
+    assert report["schemaVersion"] == 6
+    try:
+        pine_compat.compile_script(root, library_sources={"audit/Library/1": library})
+    except ValueError as error:
+        assert "audit/Library/1 (<python:audit/Library/1>):4:" in str(error)
+    else:
+        raise AssertionError("compile must reject invalid library with the same source location")
+    root_error = pine_compat.analyze_script('//@version=6\nindicator("root")\nplot(missingName)\n')
+    assert all("sourceId" not in d["span"] for d in root_error["diagnostics"])
+
+
+def test_input_metadata_resolves_constant_aliases_constraints_and_pure_calls():
+    aliases = """//@version=6
+indicator("const metadata")
+const int base = 3
+const string caption = "Length"
+length = input.int(base + 2, caption, minval=base, maxval=base * 3, step=base - 2, options=[1, base + 2, 7])
+pi = input.float(math.pi, "Pi")
+root = input.float(math.sqrt(9), "Root")
+plot(length + pi + root)
+"""
+    literals = '//@version=6\nindicator("const metadata")\nlength = input.int(5, "Length", minval=3, maxval=9, step=1, options=[1, 5, 7])\npi = input.float(3.141592653589793, "Pi")\nroot = input.float(3.0, "Root")\nplot(length + pi + root)\n'
+    report = pine_compat.analyze_script(aliases)
+    assert report["diagnostics"] == []
+    expected = pine_compat.analyze_script(literals)
+    clean = lambda inputs: [{k: v for k, v in item.items() if k != "callSiteId"} for item in inputs]
+    assert clean(report["inputs"]) == clean(expected["inputs"])
+    assert report["inputs"][0]["options"] == [1, 5, 7]
+    result = pine_compat.run_script(aliases, BARS)
+    assert result["plots"][0]["values"] == [8.0 + math.pi] * len(BARS)
+
+
+def test_deep_frontend_statement_nesting_returns_diagnostic_in_subprocess():
+    # Stack overflows abort the process. A subprocess tests the embedding
+    # boundary while keeping such a regression from aborting all pytest tests.
+    import subprocess
+    import sys
+    code = """import json, pine_compat
+source = '//@version=6\\nindicator("depth")\\nif true\\n    x = 1\\n' + 'else if false\\n    x = 2\\n' * 256
+print(json.dumps(pine_compat.analyze_script(source)))
+"""
+    result = subprocess.run([sys.executable, "-c", code], text=True, capture_output=True, timeout=15)
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["executable"] is False
+    assert any(
+        d["code"] in {"E_PARSE_STMT_DEPTH", "E_PARSE_EXPR_DEPTH"}
+        for d in report["diagnostics"]
+    )

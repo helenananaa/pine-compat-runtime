@@ -8,6 +8,39 @@ struct Counted {
     value: usize,
     clones: Rc<Cell<usize>>,
 }
+
+#[test]
+fn batched_middle_insertion_clones_each_old_cell_once_and_preserves_shared_checkpoints() {
+    let clones = Rc::new(Cell::new(0));
+    let original: ArrayValues<_> = (0..4096)
+        .map(|value| Counted {
+            value,
+            clones: clones.clone(),
+        })
+        .collect::<Vec<_>>()
+        .into();
+    let checkpoint = original.clone();
+    let incoming = (0..256)
+        .map(|index| Counted {
+            value: 10000 + index,
+            clones: clones.clone(),
+        })
+        .collect();
+    let inserted = original.with_inserted(1, incoming);
+    assert_eq!(clones.get(), 4096);
+    assert_eq!(inserted.len(), 4352);
+    assert_eq!(inserted[0].value, 0);
+    assert_eq!(inserted[1].value, 10000);
+    assert_eq!(inserted[256].value, 10255);
+    assert_eq!(inserted[257].value, 1);
+    assert_eq!(checkpoint.len(), 4096);
+    assert!(
+        checkpoint
+            .iter()
+            .enumerate()
+            .all(|(index, value)| value.value == index)
+    );
+}
 impl Clone for Counted {
     fn clone(&self) -> Self {
         self.clones.set(self.clones.get() + 1);

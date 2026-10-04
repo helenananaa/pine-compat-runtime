@@ -2,9 +2,30 @@ use super::*;
 use crate::analyzer::calls::expr_name;
 use crate::source_graph::SourceId;
 use pine_syntax::SourceFile;
+use std::sync::Arc;
 
-fn parsed_program(text: &str) -> Program {
-    parse_source(&SourceFile::new("library.pine", text)).program
+fn parsed_module(id: SourceId, key: Option<&str>, text: &str) -> ModuleInfo {
+    let source = Arc::new(SourceFile::new(
+        if id == SourceId::root() {
+            "root.pine"
+        } else {
+            "library.pine"
+        },
+        text,
+    ));
+    let program = parse_source(&source).program;
+    ModuleInfo {
+        id,
+        source,
+        key: key.map(str::to_owned),
+        program,
+        exports: HashMap::new(),
+        private_symbols: HashSet::new(),
+        user_types: HashMap::new(),
+        methods: HashMap::new(),
+        functions: HashMap::new(),
+        constants: HashMap::new(),
+    }
 }
 
 fn qualified_name(parts: &[&str]) -> Expr {
@@ -16,23 +37,15 @@ fn qualified_name(parts: &[&str]) -> Expr {
 
 #[test]
 fn exported_user_type_records_identity_and_fields() {
-    let mut module = ModuleInfo {
-        id: SourceId::library(7),
-        key: Some("user/identity/1".to_owned()),
-        program: parsed_program(
-            r#"
+    let mut module = parsed_module(
+        SourceId::library(7),
+        Some("user/identity/1"),
+        r#"
 library("identity")
 export type Point
     float x
 "#,
-        ),
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
+    );
     let mut diagnostics = Vec::new();
 
     collect_library_declarations(&mut module, &mut diagnostics);
@@ -65,39 +78,21 @@ export type Point
 
 #[test]
 fn import_plan_records_alias_qualified_user_type_metadata() {
-    let root = ModuleInfo {
-        id: SourceId::root(),
-        key: None,
-        program: parse_source(&SourceFile::new(
-            "root.pine",
-            r#"import user/identity/1 as lib
+    let root = parsed_module(
+        SourceId::root(),
+        None,
+        r#"import user/identity/1 as lib
 "#,
-        ))
-        .program,
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
-    let mut library = ModuleInfo {
-        id: SourceId::library(0),
-        key: Some("user/identity/1".to_owned()),
-        program: parsed_program(
-            r#"
+    );
+    let mut library = parsed_module(
+        SourceId::library(0),
+        Some("user/identity/1"),
+        r#"
 library("identity")
 export type Point
     float x
 "#,
-        ),
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
+    );
     let mut diagnostics = Vec::new();
     collect_library_declarations(&mut library, &mut diagnostics);
     let modules = vec![root, library];
@@ -131,41 +126,23 @@ export type Point
 
 #[test]
 fn import_plan_records_private_user_type_dependencies_for_exported_metadata() {
-    let root = ModuleInfo {
-        id: SourceId::root(),
-        key: None,
-        program: parse_source(&SourceFile::new(
-            "root.pine",
-            r#"import user/identity/1 as lib
+    let root = parsed_module(
+        SourceId::root(),
+        None,
+        r#"import user/identity/1 as lib
 "#,
-        ))
-        .program,
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
-    let mut library = ModuleInfo {
-        id: SourceId::library(0),
-        key: Some("user/identity/1".to_owned()),
-        program: parsed_program(
-            r#"
+    );
+    let mut library = parsed_module(
+        SourceId::library(0),
+        Some("user/identity/1"),
+        r#"
 library("identity")
 type Point
     float x
 export type Wrapper
     Point nested
 "#,
-        ),
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
+    );
     let mut diagnostics = Vec::new();
     collect_library_declarations(&mut library, &mut diagnostics);
     let modules = vec![root, library];
@@ -198,25 +175,17 @@ export type Wrapper
 
 #[test]
 fn library_method_records_receiver_identity_metadata() {
-    let mut module = ModuleInfo {
-        id: SourceId::library(3),
-        key: Some("user/methods/1".to_owned()),
-        program: parsed_program(
-            r#"
+    let mut module = parsed_module(
+        SourceId::library(3),
+        Some("user/methods/1"),
+        r#"
 library("methods")
 export type Point
     float x
 
 method shift(Point p, float delta) => p.x + delta
 "#,
-        ),
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
+    );
     let mut diagnostics = Vec::new();
 
     collect_library_declarations(&mut module, &mut diagnostics);
@@ -238,11 +207,10 @@ method shift(Point p, float delta) => p.x + delta
 
 #[test]
 fn library_method_metadata_allows_same_name_on_different_receivers() {
-    let mut module = ModuleInfo {
-        id: SourceId::library(3),
-        key: Some("user/methods/1".to_owned()),
-        program: parsed_program(
-            r#"
+    let mut module = parsed_module(
+        SourceId::library(3),
+        Some("user/methods/1"),
+        r#"
 library("methods")
 export type Point
     float x
@@ -252,14 +220,7 @@ export type Offset
 method same(Point p) => p
 method same(Offset offset) => offset
 "#,
-        ),
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
+    );
     let mut diagnostics = Vec::new();
 
     collect_library_declarations(&mut module, &mut diagnostics);
@@ -279,23 +240,15 @@ method same(Offset offset) => offset
 
 #[test]
 fn rewrite_context_alias_qualifies_exported_user_type_constructors() {
-    let mut module = ModuleInfo {
-        id: SourceId::library(4),
-        key: Some("user/methods/1".to_owned()),
-        program: parsed_program(
-            r#"
+    let mut module = parsed_module(
+        SourceId::library(4),
+        Some("user/methods/1"),
+        r#"
 library("methods")
 export type Point
     float x
 "#,
-        ),
-        exports: HashMap::new(),
-        private_symbols: HashSet::new(),
-        user_types: HashMap::new(),
-        methods: HashMap::new(),
-        functions: HashMap::new(),
-        constants: HashMap::new(),
-    };
+    );
     let mut diagnostics = Vec::new();
     collect_library_declarations(&mut module, &mut diagnostics);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");

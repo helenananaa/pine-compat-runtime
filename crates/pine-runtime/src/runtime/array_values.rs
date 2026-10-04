@@ -241,6 +241,18 @@ impl<T: Clone> ArrayValues<T> {
         *self = next.into();
     }
 
+    /// Builds one replacement payload for a middle insertion. The caller can
+    /// replace a shared store entry directly instead of cloning it before
+    /// discarding its old contents.
+    pub(crate) fn with_inserted(&self, index: usize, values: Vec<T>) -> Self {
+        assert!(index <= self.len());
+        let mut next = Vec::with_capacity(self.len() + values.len());
+        next.extend(self.view(0, index).iter().cloned());
+        next.extend(values);
+        next.extend(self.view(index, self.len() - index).iter().cloned());
+        next.into()
+    }
+
     pub(crate) fn insert(&mut self, index: usize, value: T) {
         let len = self.len();
         assert!(index <= len);

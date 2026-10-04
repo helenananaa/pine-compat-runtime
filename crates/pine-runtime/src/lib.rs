@@ -49,7 +49,8 @@ pub use output::drawings::{
 pub use output::json::{
     into_public_runtime_result_json, public_runtime_changes_json,
     public_runtime_profiled_result_json, public_runtime_result_json,
-    write_public_runtime_result_json,
+    public_runtime_result_view_json, write_public_runtime_result_json,
+    write_public_runtime_result_view_json,
 };
 pub use output::model::{
     ColorSeries, FillGradientSample, FillOutput, HLineOutput, OutputMetadata,
@@ -66,6 +67,7 @@ pub use output::strategy_alert_templates::{
     STRATEGY_ORDER_ALERT_MESSAGE_PLACEHOLDER, StrategyOrderFillAlertTemplateError,
     render_strategy_order_fill_alert_template,
 };
+pub use output::view::*;
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
 pub(crate) use request::RequestCacheKey;
 pub use request::{
@@ -76,6 +78,7 @@ pub use request::{
 pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::HistoricalDataset;
 pub use runtime::PreparedProgram;
+pub use runtime::execution::ExecutionLimits;
 pub use runtime::historical::{
     HistoricalRuntime, InputOverrides, run_historical, run_historical_profiled,
     run_historical_profiled_with_execution_times, run_historical_profiled_with_request_environment,

@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     RuntimeChanges, RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent,
-    StrategyOrderFillAlertOutput, StrategyPositionSnapshot, StrategyTrade,
+    StrategyOrderFillAlertOutput, StrategyPositionSnapshot, StrategyResult, StrategyTrade,
 };
 
 pub(super) fn empty_result() -> RuntimeResult {

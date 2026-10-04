@@ -92,6 +92,9 @@ impl<'a> HistoricalRuntime<'a> {
             Some(saved) => (*saved.before_last).clone(),
             None => self.fork_with_request_environment(environment),
         };
+        // Checkpoints retain Pine state, not an allowance from an older chart
+        // execution. All newly evaluated requested bars spend today's budget.
+        runtime.inherit_execution_budget(self);
         let bars = self.resolved_request_bars_from(key, prefix.len())?;
         runtime.historical_end = Some(count);
         let mut before_last = None;
@@ -101,13 +104,17 @@ impl<'a> HistoricalRuntime<'a> {
             if terminal {
                 before_last = Some(Arc::new(runtime.clone()));
             }
-            let value = runtime.eval_requested_bar_expression(
+            let result = runtime.eval_requested_bar_expression(
                 *bar,
                 expression,
                 &captures,
                 &initializers,
                 &tuple_dependencies,
-            )?;
+            );
+            self.execution_steps_remaining = runtime.execution_steps_remaining;
+            self.loop_iterations_remaining = runtime.loop_iterations_remaining;
+            self.pending_loop_control = runtime.pending_loop_control;
+            let value = result?;
             if terminal {
                 last = Some((bar.time, value));
             } else {

@@ -900,6 +900,22 @@ snapshot, or host callback. It therefore adds no public runtime-result schema
 field and does not enter the output rollback or collection-mutation side-effect
 models.
 
+`HistoricalRuntime` commits successful bars incrementally and does not copy the
+entire evaluator before each bar. Once an error is reached during execution
+(including `runtime.error`, an invalid reached expression, or a resource limit),
+that instance rejects further execution with `E_RUNTIME_POISONED`. Rebuild the
+runtime from the desired successful history before retrying. The failed bar may
+have changed evaluator state or emitted partial output; `result()` on that failed
+instance is not a committed checkpoint. Previously returned owned results remain
+valid. Dropping a failed historical dataset iterator releases its dataset context
+but does not clear this failure state. Cloning a failed instance also preserves it.
+
+Host-input validation performed before bar execution, such as a mismatched clock
+count or missing session-window coverage, leaves the runtime usable and may be
+fixed and retried. `RealtimeRuntime` executes updates and history replacement on
+separate candidates, so a failed update, seed, correction or replay leaves its
+previous session usable.
+
 ## Alert Events
 
 `alertcondition(condition, title, message)` is a supported runtime side effect

@@ -54,6 +54,11 @@ impl RequestTimeframe {
     pub fn seconds(&self) -> i64 {
         self.seconds
     }
+
+    pub(crate) fn nominal_close(&self, open_time: i64) -> i64 {
+        crate::builtins::time::calendar_timeframe_close(open_time, self.value(), self.seconds())
+            .unwrap_or_else(|| open_time.saturating_add(self.seconds().saturating_mul(1000)))
+    }
 }
 
 impl Default for RequestTimeframe {

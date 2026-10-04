@@ -7,6 +7,15 @@ use crate::{HistoricalRuntime, PineValue, RuntimeError};
 mod storage;
 use storage::MapEntries;
 
+// Pine counts a map key and its value as two collection elements.
+const MAX_MAP_ENTRIES: usize = crate::MAX_ARRAY_ELEMENTS / 2;
+
+fn map_capacity_error(function: &str) -> RuntimeError {
+    RuntimeError {
+        message: format!("{function} cannot exceed {MAX_MAP_ENTRIES} key-value pairs"),
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct MapStorage {
     pub(crate) key_kind: ArrayElementKind,
@@ -95,6 +104,11 @@ impl<'a> HistoricalRuntime<'a> {
         let value_kind = storage.value_kind;
         let key = self.eval_map_key(&args[1], key_kind)?;
         let value = self.eval_map_value(&args[2], value_kind)?;
+        if self.map_store.get(&id).is_some_and(|storage| {
+            storage.entries.len() >= MAX_MAP_ENTRIES && storage.entries.get(&key).is_none()
+        }) {
+            return Err(map_capacity_error("map.put"));
+        }
         self.record_map_put_pressure(id, &key);
         self.record_collection_values([&key, &value]);
         let Some(storage) = self.map_store.get_mut(&id) else {
@@ -236,6 +250,9 @@ impl<'a> HistoricalRuntime<'a> {
         let (PineValue::Map(target_id), PineValue::Map(source_id)) = (target, source) else {
             return Ok(PineValue::Void);
         };
+        if target_id == source_id || !self.validate_map_merge(target_id, source_id)? {
+            return Ok(PineValue::Void);
+        }
         let Some((source_entries, copied)) = self.map_store.get(&source_id).map(|storage| {
             (
                 storage.entries.clone(),
@@ -244,9 +261,6 @@ impl<'a> HistoricalRuntime<'a> {
         }) else {
             return Ok(PineValue::Void);
         };
-        if !self.map_store.contains_key(&target_id) {
-            return Ok(PineValue::Void);
-        }
         self.record_collection_bytes(copied);
         for (key, value) in source_entries {
             self.record_map_put_pressure(target_id, &key);
@@ -258,6 +272,32 @@ impl<'a> HistoricalRuntime<'a> {
                 .put(key, value);
         }
         Ok(PineValue::Void)
+    }
+
+    fn validate_map_merge(&self, target_id: u32, source_id: u32) -> Result<bool, RuntimeError> {
+        let (Some(target), Some(source)) = (
+            self.map_store.get(&target_id),
+            self.map_store.get(&source_id),
+        ) else {
+            return Ok(false);
+        };
+        let available = MAX_MAP_ENTRIES.saturating_sub(target.entries.len());
+        if source.entries.len() <= available {
+            return Ok(true);
+        }
+        let mut additional = 0;
+        // Preflight the distinct source keys before any overwrite or append.
+        // Argument evaluation has already completed; an oversized merge leaves
+        // the target entries and their insertion order unchanged.
+        for (key, _) in source.entries.iter() {
+            if target.entries.get(key).is_none() {
+                additional += 1;
+                if additional > available {
+                    return Err(map_capacity_error("map.put_all"));
+                }
+            }
+        }
+        Ok(true)
     }
 
     fn eval_map_size(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -412,6 +452,10 @@ fn map_keys_equal(left: &PineValue, right: &PineValue) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+#[path = "maps/capacity_tests.rs"]
+mod capacity_tests;
 
 #[cfg(test)]
 mod tests {

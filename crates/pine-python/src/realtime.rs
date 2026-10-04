@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyModule};
 
 use crate::changes::runtime_changes_to_py;
-use crate::outputs::runtime_result_into_py;
+use crate::outputs::runtime_result_view_to_py;
 use crate::{compile_script, parse_bar, parse_bars, parse_execution_times};
 
 fn execution_timestamp(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<i64>> {
@@ -163,18 +163,17 @@ impl PyRealtimeSession {
         }
         let bars = parse_bars(bars)?;
         let times = parse_execution_times(execution_times)?;
-        let result = py
-            .detach(|| match times {
-                Some(times) => self
-                    .runtime
-                    .seed_historical_with_execution_times(&bars, &times),
-                None => self.runtime.seed_historical(&bars),
-            })
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        py.detach(|| match times {
+            Some(times) => self
+                .runtime
+                .seed_historical_with_execution_times_without_output(&bars, &times),
+            None => self.runtime.seed_historical_without_output(&bars),
+        })
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.seeded = true;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        runtime_result_into_py(py, result)
+        runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
     /// Seed a session without constructing an owned Python snapshot.
@@ -215,18 +214,17 @@ impl PyRealtimeSession {
         self.require_seeded()?;
         let bars = parse_bars(bars)?;
         let times = parse_execution_times(execution_times)?;
-        let result = py
-            .detach(|| match times {
-                Some(times) => self
-                    .runtime
-                    .replay_historical_with_execution_times(&bars, &times),
-                None => self.runtime.replay_historical(&bars),
-            })
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        py.detach(|| match times {
+            Some(times) => self
+                .runtime
+                .replay_historical_with_execution_times_without_output(&bars, &times),
+            None => self.runtime.replay_historical_without_output(&bars),
+        })
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        runtime_result_into_py(py, result)
+        runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
     #[pyo3(signature = (from_time, bars, *, execution_times=None))]
@@ -248,18 +246,19 @@ impl PyRealtimeSession {
         })?;
         let bars = parse_bars(bars)?;
         let times = parse_execution_times(execution_times)?;
-        let result = py
-            .detach(|| match times {
-                Some(times) => self
-                    .runtime
-                    .correct_historical_with_execution_times(from_time, &bars, &times),
-                None => self.runtime.correct_historical(from_time, &bars),
-            })
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        py.detach(|| match times {
+            Some(times) => self
+                .runtime
+                .correct_historical_with_execution_times_without_output(from_time, &bars, &times),
+            None => self
+                .runtime
+                .correct_historical_without_output(from_time, &bars),
+        })
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        runtime_result_into_py(py, result)
+        runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -277,14 +276,13 @@ impl PyRealtimeSession {
             execution_time: execution_timestamp(execution_time)?,
             opening_update: opening_update_flag(opening_update)?,
         };
-        let result = py
-            .detach(|| {
-                self.runtime
-                    .update_with_context(BarUpdate::forming(bar), context)
-            })
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        py.detach(|| {
+            self.runtime
+                .update_with_context_without_output(BarUpdate::forming(bar), context)
+        })
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.forming_time = Some(bar.time);
-        runtime_result_into_py(py, result)
+        runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -302,16 +300,15 @@ impl PyRealtimeSession {
             execution_time: execution_timestamp(execution_time)?,
             opening_update: opening_update_flag(opening_update)?,
         };
-        let result = py
-            .detach(|| {
-                self.runtime
-                    .update_with_context(BarUpdate::confirmed(bar), context)
-            })
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        py.detach(|| {
+            self.runtime
+                .update_with_context_without_output(BarUpdate::confirmed(bar), context)
+        })
+        .map_err(|err| PyValueError::new_err(err.message))?;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        runtime_result_into_py(py, result)
+        runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -398,7 +395,7 @@ impl PyRealtimeSession {
         envelope.set_item("retainedFrom", self.runtime.display_origin())?;
         envelope.set_item(
             "result",
-            runtime_result_into_py(py, py.detach(|| self.runtime.result()))?,
+            runtime_result_view_to_py(py, &self.runtime.result_view())?,
         )?;
         Ok(envelope.into_any().unbind())
     }
@@ -417,11 +414,11 @@ impl PyRealtimeSession {
     }
 
     fn result(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        runtime_result_into_py(py, py.detach(|| self.runtime.result()))
+        runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
     fn confirmed_result(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        runtime_result_into_py(py, py.detach(|| self.runtime.confirmed_result()))
+        runtime_result_view_to_py(py, &self.runtime.confirmed_result_view())
     }
 
     #[getter]

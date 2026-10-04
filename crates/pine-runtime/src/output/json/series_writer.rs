@@ -2,13 +2,17 @@
 use super::*;
 use std::io::{self, Write};
 
-fn values<W: Write + ?Sized>(output: &mut W, name: &str, values: &[PineValue]) -> io::Result<()> {
+fn values<W: Write + ?Sized>(
+    output: &mut W,
+    name: &str,
+    values: &HistoryView<'_, PineValue>,
+) -> io::Result<()> {
     write!(output, ",\"{name}\":[")?;
     for (index, value) in values.iter().enumerate() {
         if index > 0 {
             output.write_all(b",")?;
         }
-        output.write_all(value_json(value).as_bytes())?;
+        value_writer::value(value, output)?;
     }
     output.write_all(b"]")
 }
@@ -23,72 +27,73 @@ fn metadata<W: Write + ?Sized>(
     output.write_all(b"}")
 }
 
-pub(super) fn plots<W: Write + ?Sized>(plot: &PlotSeries, output: &mut W) -> io::Result<()> {
+pub(super) fn plots<W: Write + ?Sized>(
+    plot: &PlotSeriesView<'_>,
+    output: &mut W,
+) -> io::Result<()> {
     write!(output, "{{\"id\":{}", plot.id)?;
     values(output, "values", &plot.values)?;
     if plot.colors.iter().any(|value| *value != PineValue::Na) {
         values(output, "colors", &plot.colors)?;
     }
     let mut suffix = String::new();
-    push_non_default_value_field(
-        &mut suffix,
-        "linewidth",
-        &plot.linewidth,
-        &PineValue::Int(1),
-    );
+    push_non_default_value_field(&mut suffix, "linewidth", plot.linewidth, &PineValue::Int(1));
     push_non_default_value_field(
         &mut suffix,
         "style",
-        &plot.style,
+        plot.style,
         &PineValue::String("plot.style_line".to_owned()),
     );
     push_non_default_value_field(
         &mut suffix,
         "trackPrice",
-        &plot.track_price,
+        plot.track_price,
         &PineValue::Bool(false),
     );
-    push_non_default_value_field(&mut suffix, "histBase", &plot.hist_base, &PineValue::Int(0));
-    push_non_default_value_field(&mut suffix, "join", &plot.join, &PineValue::Bool(false));
+    push_non_default_value_field(&mut suffix, "histBase", plot.hist_base, &PineValue::Int(0));
+    push_non_default_value_field(&mut suffix, "join", plot.join, &PineValue::Bool(false));
     push_non_default_value_field(
         &mut suffix,
         "format",
-        &plot.format,
+        plot.format,
         &PineValue::String("format.inherit".to_owned()),
     );
-    push_non_default_value_field(&mut suffix, "precision", &plot.precision, &PineValue::Na);
+    push_non_default_value_field(&mut suffix, "precision", plot.precision, &PineValue::Na);
     push_non_default_value_field(
         &mut suffix,
         "linestyle",
-        &plot.linestyle,
+        plot.linestyle,
         &PineValue::String("plot.linestyle_solid".to_owned()),
     );
 
     output.write_all(suffix.as_bytes())?;
-    metadata(output, &plot.metadata)
+    metadata(output, plot.metadata)
 }
 
 macro_rules! series {
-    ($name:ident, $kind:ty, $( $field:literal => $member:ident ),+ ) => {
-        pub(super) fn $name<W: Write + ?Sized>(item: &$kind, output: &mut W) -> io::Result<()> {
+    ($name:ident, $kind:ident, $( $field:literal => $member:ident ),+ ) => {
+        pub(super) fn $name<W: Write + ?Sized>(item: &$kind<'_>, output: &mut W) -> io::Result<()> {
             write!(output, "{{\"id\":{}", item.id)?;
             $(values(output, $field, &item.$member)?;)+
-            metadata(output, &item.metadata)
+            metadata(output, item.metadata)
         }
     };
 }
-series!(colors, ColorSeries, "values" => values);
-series!(chars, PlotCharSeries, "values" => values, "chars" => chars, "colors" => colors,
+series!(colors, ColorSeriesView, "values" => values);
+series!(chars, PlotCharSeriesView, "values" => values, "chars" => chars, "colors" => colors,
     "locations" => locations, "texts" => texts, "textColors" => text_colors, "sizes" => sizes);
-series!(shapes, PlotShapeSeries, "values" => values, "styles" => styles, "locations" => locations,
+series!(shapes, PlotShapeSeriesView, "values" => values, "styles" => styles, "locations" => locations,
     "colors" => colors, "texts" => texts, "textColors" => text_colors, "sizes" => sizes);
-series!(arrows, PlotArrowSeries, "values" => values, "colorUps" => color_ups, "colorDowns" => color_downs,
+series!(arrows, PlotArrowSeriesView, "values" => values, "colorUps" => color_ups, "colorDowns" => color_downs,
     "minHeights" => min_heights, "maxHeights" => max_heights);
-series!(bars, PlotBarSeries, "opens" => opens, "highs" => highs, "lows" => lows, "closes" => closes, "colors" => colors);
-series!(candles, PlotCandleSeries, "opens" => opens, "highs" => highs, "lows" => lows, "closes" => closes,
+series!(bars, PlotBarSeriesView, "opens" => opens, "highs" => highs, "lows" => lows, "closes" => closes, "colors" => colors);
+series!(candles, PlotCandleSeriesView, "opens" => opens, "highs" => highs, "lows" => lows, "closes" => closes,
     "colors" => colors, "wickColors" => wick_colors, "borderColors" => border_colors);
 
-pub(super) fn fills<W: Write + ?Sized>(fill: &FillOutput, output: &mut W) -> io::Result<()> {
+pub(super) fn fills<W: Write + ?Sized>(
+    fill: &FillOutputView<'_>,
+    output: &mut W,
+) -> io::Result<()> {
     write!(
         output,
         "{{\"id\":{},\"firstId\":{},\"secondId\":{},\"firstIsHLine\":{},\"secondIsHLine\":{}",
@@ -110,26 +115,26 @@ pub(super) fn fills<W: Write + ?Sized>(fill: &FillOutput, output: &mut W) -> io:
     push_non_default_value_field(
         &mut suffix,
         "title",
-        &fill.title,
+        fill.title,
         &PineValue::String(String::new()),
     );
     push_non_default_value_field(
         &mut suffix,
         "editable",
-        &fill.editable,
+        fill.editable,
         &PineValue::Bool(true),
     );
-    push_non_default_value_field(&mut suffix, "showLast", &fill.show_last, &PineValue::Na);
+    push_non_default_value_field(&mut suffix, "showLast", fill.show_last, &PineValue::Na);
     push_non_default_value_field(
         &mut suffix,
         "fillGaps",
-        &fill.fill_gaps,
+        fill.fill_gaps,
         &PineValue::Bool(true),
     );
     push_non_default_value_field(
         &mut suffix,
         "display",
-        &fill.display,
+        fill.display,
         &PineValue::String("display.all".to_owned()),
     );
 

@@ -23,6 +23,7 @@ mod realtime;
 mod realtime_market_extremes;
 mod realtime_opening_context;
 mod request;
+mod rolling_extrema;
 mod runtime_const_history;
 mod runtime_control_flow;
 mod runtime_core;

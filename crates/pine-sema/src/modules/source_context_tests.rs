@@ -127,3 +127,116 @@ method shift(Point self, float delta) => helper(self.x + delta)
     assert_eq!(left_private.source_id, right_private.source_id);
     assert_eq!(left_method.source_id, right_method.source_id);
 }
+
+#[test]
+fn library_diagnostics_retain_physical_sources_with_unicode_and_nested_imports() {
+    let root = pine_syntax::SourceFile::new(
+        "根.pine",
+        "//@version=6\nindicator(\"根\")\nimport audit/Outer/1 as outer\nplot(outer.f(close))\n",
+    );
+    let inner = pine_syntax::SourceFile::new(
+        "内部.pine",
+        "//@version=6\nlibrary(\"内部\")\n// 中文填充\nexport f(float x) => str.length(\"中文\") + missingName + x\n",
+    );
+    let offset = inner.text().find("missingName").unwrap();
+    let expected = inner.line_col(offset);
+    let input = AnalysisInput::with_library_sources(root.clone(), vec![
+        ("audit/Inner/1".to_owned(), inner.clone()),
+        ("audit/Outer/1".to_owned(), pine_syntax::SourceFile::new("外部.pine", "//@version=6\nlibrary(\"外部\")\nimport audit/Inner/1 as inner\nexport f(float x) => inner.f(x)\n")),
+    ]).unwrap();
+    let analysis = crate::analyze_input(&input);
+    let diagnostic = analysis
+        .diagnostics
+        .iter()
+        .find(|d| d.code == "E_UNKNOWN_SYMBOL" && d.message.contains("missingName"))
+        .expect("inner library diagnostic");
+    let origin = diagnostic
+        .source
+        .as_ref()
+        .expect("physical library identity");
+    assert_eq!(origin.source_id, SourceId::library(0).get());
+    assert_eq!(origin.library_key.as_deref(), Some("audit/Inner/1"));
+    assert_eq!(origin.source_name, "内部.pine");
+    assert_eq!(diagnostic.span.start, offset);
+    assert_eq!(diagnostic.line_col(&root), expected);
+    assert!(
+        diagnostic
+            .format(&root)
+            .contains("audit/Inner/1 (内部.pine):4:")
+    );
+}
+
+#[test]
+fn library_parser_and_module_validation_diagnostics_retain_origin() {
+    for (text, code) in [
+        (
+            "//@version=6\nlibrary(\"库\")\n// 中文\nexport f(float x) => (\n",
+            "E_PARSE_EXPR",
+        ),
+        (
+            "//@version=6\nlibrary(\"库\")\n// 中文\nimport audit/Missing/1 as missing\n",
+            "E_IMPORT_MISSING_LIBRARY",
+        ),
+    ] {
+        let root = pine_syntax::SourceFile::new(
+            "root.pine",
+            "//@version=6\nindicator(\"root\")\nplot(close)\n",
+        );
+        let library = pine_syntax::SourceFile::new("库.pine", text);
+        let input = AnalysisInput::with_library_sources(
+            root.clone(),
+            vec![("audit/Library/1".to_owned(), library.clone())],
+        )
+        .unwrap();
+        let analysis = crate::analyze_input(&input);
+        let diagnostic = analysis
+            .diagnostics
+            .iter()
+            .find(|d| d.code == code)
+            .unwrap_or_else(|| panic!("missing {code}: {:?}", analysis.diagnostics));
+        let origin = diagnostic
+            .source
+            .as_ref()
+            .expect("library identity even before HIR");
+        assert_eq!(origin.library_key.as_deref(), Some("audit/Library/1"));
+        assert_eq!(
+            diagnostic.line_col(&root),
+            library.line_col(diagnostic.span.start)
+        );
+    }
+    let root = pine_syntax::SourceFile::new(
+        "root.pine",
+        "//@version=6\nindicator(\"root\")\nplot(missingName)\n",
+    );
+    let analysis = crate::analyze_source(&root);
+    assert!(analysis.diagnostics.iter().all(|d| d.source.is_none()));
+}
+
+#[test]
+fn imported_parameter_type_errors_refer_to_the_library_declaration() {
+    let root = pine_syntax::SourceFile::new(
+        "root.pine",
+        "//@version=6\nindicator(\"root\")\nimport audit/Library/1 as lib\nplot(lib.f(\"bad\"))\n",
+    );
+    let library = pine_syntax::SourceFile::new(
+        "库.pine",
+        "//@version=6\nlibrary(\"库\")\n// 中文\nexport f(float value) => value\n",
+    );
+    let expected = library.line_col(library.text().find("float value").unwrap());
+    let input = AnalysisInput::with_library_sources(
+        root.clone(),
+        vec![("audit/Library/1".to_owned(), library)],
+    )
+    .unwrap();
+    let analysis = crate::analyze_input(&input);
+    let diagnostic = analysis
+        .diagnostics
+        .iter()
+        .find(|d| d.code == "E_FUNCTION_ARG_TYPE")
+        .expect("parameter type error");
+    assert_eq!(
+        diagnostic.source.as_ref().unwrap().library_key.as_deref(),
+        Some("audit/Library/1")
+    );
+    assert_eq!(diagnostic.line_col(&root), expected);
+}

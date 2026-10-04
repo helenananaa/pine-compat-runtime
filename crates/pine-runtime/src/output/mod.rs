@@ -9,3 +9,4 @@ pub mod parse;
 pub mod replica;
 pub mod strategy;
 pub mod strategy_alert_templates;
+pub mod view;

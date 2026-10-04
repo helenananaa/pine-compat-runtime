@@ -575,6 +575,53 @@ udtVaripReplica.free(); udtVaripSession.free(); udtVaripProgram.free();
   assert.deepEqual(output.plots.map(p=>p.values),[[2628003],[2628003],[31536036],[1],[1]]);
 }
 
+
+// Frontend resource rejection and library origins cross the real Wasm ABI.
+const deepStatementSource = '//@version=6\nindicator("depth")\nif true\n    x = 1\n'
+  + 'else if false\n    x = 2\n'.repeat(256);
+const deepStatementReport = JSON.parse(pine.analyzeScript(deepStatementSource));
+assert.equal(deepStatementReport.executable, false);
+assert.ok(deepStatementReport.diagnostics.some(({ code }) =>
+  code === 'E_PARSE_STMT_DEPTH' || code === 'E_PARSE_EXPR_DEPTH'));
+const diagnosticRoot = '//@version=6\nindicator("根")\nimport audit/Library/1 as lib\nplot(lib.f(close))\n';
+const diagnosticLibrary = '//@version=6\nlibrary("库")\n// 中文\nexport f(float x) => str.length("中文") + missingName + x\n';
+const diagnosticLibraries = JSON.stringify({ 'audit/Library/1': diagnosticLibrary });
+const libraryReport = JSON.parse(pine.analyzeScriptWithLibraries(diagnosticRoot, diagnosticLibraries));
+const libraryDiagnostic = libraryReport.diagnostics.find(({ code }) => code === 'E_UNKNOWN_SYMBOL');
+assert.ok(libraryDiagnostic);
+const libraryOffset = diagnosticLibrary.indexOf('missingName');
+assert.deepEqual(libraryDiagnostic.span, {
+  start: Buffer.byteLength(diagnosticLibrary.slice(0, libraryOffset), 'utf8'),
+  end: Buffer.byteLength(diagnosticLibrary.slice(0, libraryOffset + 'missingName'.length), 'utf8'),
+  line: 4,
+  column: [...diagnosticLibrary.split('\n')[3].split('missingName')[0]].length + 1,
+  sourceId: 1,
+  sourceName: '<wasm:audit/Library/1>',
+  libraryKey: 'audit/Library/1',
+});
+assert.throws(() => pine.compileScriptWithLibraries(diagnosticRoot, diagnosticLibraries), /audit\/Library\/1.*:4:/);
+const metadataSource = `//@version=6
+indicator("const metadata")
+const int base = 3
+const string caption = "Length"
+length = input.int(base + 2, caption, minval=base, maxval=base * 3, step=base - 2, options=[1, base + 2, 7])
+pi = input.float(math.pi, "Pi")
+root = input.float(math.sqrt(9), "Root")
+plot(length + pi + root)
+`;
+const metadataReport = JSON.parse(pine.analyzeScript(metadataSource));
+assert.deepEqual(metadataReport.diagnostics, []);
+assert.equal(metadataReport.inputs[0].title, 'Length');
+assert.equal(metadataReport.inputs[0].default, 5);
+assert.equal(metadataReport.inputs[0].min, 3);
+assert.equal(metadataReport.inputs[0].max, 9);
+assert.equal(metadataReport.inputs[0].step, 1);
+assert.deepEqual(metadataReport.inputs[0].options, [1, 5, 7]);
+assert.equal(metadataReport.inputs[1].default, Math.PI);
+assert.equal(metadataReport.inputs[2].default, 3);
+const metadataResult = JSON.parse(pine.runScriptCsv(metadataSource, bars));
+assert.deepEqual(metadataResult.plots[0].values, [8 + Math.PI, 8 + Math.PI, 8 + Math.PI]);
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

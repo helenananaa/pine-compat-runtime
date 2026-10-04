@@ -204,10 +204,30 @@ fn diagnostics_json(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
             json_escape(&diagnostic.code),
             severity_name(diagnostic.severity),
             json_escape(&diagnostic.message),
-            span_json(source, diagnostic.span)
+            diagnostic_span_json(source, diagnostic)
         ));
     }
     output.push(']');
+    output
+}
+
+fn diagnostic_span_json(root: &SourceFile, diagnostic: &Diagnostic) -> String {
+    let location = diagnostic.line_col(root);
+    let mut output = format!(
+        "{{\"start\":{},\"end\":{},\"line\":{},\"column\":{}",
+        diagnostic.span.start, diagnostic.span.end, location.line, location.column
+    );
+    if let Some(source) = &diagnostic.source {
+        output.push_str(&format!(
+            ",\"sourceId\":{},\"sourceName\":\"{}\"",
+            source.source_id,
+            json_escape(&source.source_name)
+        ));
+        if let Some(key) = &source.library_key {
+            output.push_str(&format!(",\"libraryKey\":\"{}\"", json_escape(key)));
+        }
+    }
+    output.push('}');
     output
 }
 
@@ -230,17 +250,7 @@ fn severity_name(severity: Severity) -> &'static str {
 pub(crate) fn format_diagnostics(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
     diagnostics
         .iter()
-        .map(|diagnostic| {
-            let line_col = source.line_col(diagnostic.span.start);
-            format!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            )
-        })
+        .map(|diagnostic| diagnostic.format(source))
         .collect::<Vec<_>>()
         .join("\n")
 }

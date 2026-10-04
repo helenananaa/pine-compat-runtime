@@ -146,9 +146,17 @@ The session keeps confirmed bars with `time < from_time` and re-executes that
 prefix plus the supplied suffix from a blank runtime that preserves the same
 program, inputs, request environment, request feed, magnifier and session
 windows, then discards forming state. Confirmed request-feed extras that close
-after the new last confirmed chart bar are dropped so replay cannot see
-`barstate.islast` or HTF close times from a discarded tail. Later forming
-request extras are kept for the next chart forming bar. An empty suffix
+after the close of the new last confirmed chart bar are dropped so replay cannot
+see `barstate.islast` or HTF close times from a discarded tail. The last retained
+request extra must have a nominal close within that chart boundary; earlier
+extras may close sooner at the next retained request open. If a discarded early
+successor supplied the only earlier close, trimming also removes its now-unclosed
+predecessor, continuing until the remaining prefix has a stable terminal close.
+This conservatively drops that irregular suffix and makes repeated replay stable.
+Later forming request extras that have not nominally closed by that boundary
+are kept for the next chart forming bar, even if their higher-timeframe open
+precedes the chart boundary. Closed lower-timeframe extras within the final
+retained chart bar are kept. Monthly boundaries use calendar months. An empty suffix
 truncates from `from_time`.
 `replay_historical` / `session.replay` still replaces the entire confirmed
 history when the host already has the combined list. Failed correct/replay

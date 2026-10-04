@@ -596,6 +596,13 @@ diagnostic, dialect, translation/emulation, and compatibility evidence; matrix
 remains `2`. These contracts can evolve independently when a runtime-only
 output field does not affect analysis or matrix contracts.
 
+Analysis schema 6 also carries optional `sourceId`, `libraryKey`, and
+`sourceName` in library diagnostic spans. Offsets and Unicode columns refer to
+that source. Root diagnostic spans retain their existing shape. The
+[frontend contract](FRONTEND_DIAGNOSTICS_AND_INPUT_METADATA.md) describes source
+identity, the Rust `Diagnostic.source` migration, bounded statement parsing,
+and constant input metadata evaluation.
+
 Drawing-object outputs use sparse snapshot families. The Phase E drawing
 contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have
 an object `id` and a `snapshots` array. Label snapshots use `barIndex`,

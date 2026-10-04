@@ -24,6 +24,131 @@ fn bar(close: f64) -> Bar {
 }
 
 #[test]
+fn concat_snapshots_overlapping_sources_and_preserves_other_slice_ranges() {
+    let program = program(
+        r#"//@version=6
+indicator("slice concat")
+parent = array.from(0, 1, 2, 3, 4)
+target = array.slice(parent, 1, 3)
+source = array.slice(parent, 2, 5)
+array.concat(target, source)
+plot(array.join(parent, "|") == "0|1|2|2|3|4|3|4" ? 1 : 0)
+plot(array.join(target, "|") == "1|2|2|3|4" ? 1 : 0)
+plot(array.join(source, "|") == "2|2|3" ? 1 : 0)
+array.concat(target, target)
+plot(array.size(target))
+plot(array.join(target, "|") == "1|2|2|3|4|1|2|2|3|4" ? 1 : 0)
+tail = array.from(7, 8)
+array.concat(tail, tail)
+plot(array.join(tail, "|") == "7|8|7|8" ? 1 : 0)
+"#,
+    );
+    let result = run_historical(&program, &[bar(1.0)]).unwrap();
+    for (plot, expected) in result.plots.iter().zip([1, 1, 1, 10, 1, 1]) {
+        assert_eq!(plot.values, [PineValue::Int(expected)]);
+    }
+}
+
+#[test]
+fn batched_slice_insert_keeps_checkpoint_and_counts_one_parent_payload_copy() {
+    let program = program("//@version=6\nindicator(\"batch insert\")\nplot(close)\n");
+    let mut runtime = HistoricalRuntime::new(&program);
+    let PineValue::Array(parent) = runtime.new_array_from_values(
+        ArrayElementKind::String,
+        vec![PineValue::String("old".repeat(100)); 257],
+    ) else {
+        panic!("parent");
+    };
+    let PineValue::Array(slice) = runtime.new_array_slice(parent, 127, 129) else {
+        panic!("slice");
+    };
+    let checkpoint = runtime.clone();
+    runtime.collection_gc_allocated_bytes = 0;
+    runtime
+        .array_insert_values(slice, 2, vec![PineValue::String("new".into()); 256])
+        .unwrap();
+    let cell_bytes = std::mem::size_of::<PineValue>();
+    assert_eq!(
+        runtime.collection_gc_allocated_bytes,
+        257 * (cell_bytes + 300) + 256 * (cell_bytes + 3)
+    );
+    assert_eq!(runtime.array_len(parent).unwrap(), Some(513));
+    assert_eq!(runtime.array_len(slice).unwrap(), Some(258));
+    assert_eq!(
+        runtime.array_get_cloned(parent, 129).unwrap(),
+        Some(PineValue::String("new".into()))
+    );
+    assert_eq!(
+        runtime.array_get_cloned(parent, 385).unwrap(),
+        Some(PineValue::String("old".repeat(100)))
+    );
+    assert_eq!(checkpoint.array_len(parent).unwrap(), Some(257));
+    assert_eq!(checkpoint.array_len(slice).unwrap(), Some(2));
+    assert_eq!(
+        checkpoint.array_get_cloned(parent, 129).unwrap(),
+        Some(PineValue::String("old".repeat(100)))
+    );
+}
+
+#[test]
+fn slice_concat_forming_replacements_rebuild_from_the_confirmed_checkpoint() {
+    let program = program(
+        r#"//@version=6
+indicator("forming concat")
+var parent = array.new_float(257, 0)
+var window = array.slice(parent, 0, 1)
+source = array.from(close)
+array.concat(window, source)
+plot(array.size(parent))
+plot(array.size(window))
+plot(array.last(window))
+plot(array.get(parent, array.size(window)))
+"#,
+    );
+    let mut runtime = RealtimeRuntime::new(&program);
+    for (update, parent_len, window_len, last) in [
+        (BarUpdate::historical(bar(1.0)), 258, 2, 1.0),
+        (
+            BarUpdate::forming(Bar {
+                time: 60000,
+                ..bar(2.0)
+            }),
+            259,
+            3,
+            2.0,
+        ),
+        (
+            BarUpdate::forming(Bar {
+                time: 60000,
+                ..bar(3.0)
+            }),
+            259,
+            3,
+            3.0,
+        ),
+        (
+            BarUpdate::confirmed(Bar {
+                time: 60000,
+                ..bar(4.0)
+            }),
+            259,
+            3,
+            4.0,
+        ),
+    ] {
+        let result = runtime.update(update).unwrap();
+        for (plot, expected) in result.plots.iter().zip([
+            PineValue::Int(parent_len),
+            PineValue::Int(window_len),
+            PineValue::Float(last),
+            PineValue::Float(0.0),
+        ]) {
+            assert_eq!(plot.values.last(), Some(&expected));
+        }
+    }
+}
+
+#[test]
 fn paged_arrays_preserve_slice_aliases_copy_history_and_checkpoint_isolation() {
     let program = program("//@version=6\nindicator(\"arrays\")\nplot(close)\n");
     let mut runtime = HistoricalRuntime::new(&program);

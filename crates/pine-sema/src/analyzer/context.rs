@@ -1,5 +1,6 @@
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 mod const_eval;
 mod history_offsets;
@@ -9,7 +10,7 @@ use pine_ir::{
     CallSiteId, DrawingSettings, PersistenceKind, PineType, Qualifier, ScriptMode, SeriesId,
     StrategySettings, SymbolId, VarSlotId,
 };
-use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Severity, Span};
+use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Severity, SourceFile, Span};
 
 use crate::analysis::Analysis;
 use crate::compatibility::CompatibilityReport;
@@ -46,7 +47,7 @@ impl Default for LoweringLimits {
 }
 
 pub(crate) struct Analyzer {
-    pub(crate) source_texts: HashMap<SourceId, String>,
+    pub(crate) source_texts: HashMap<SourceId, Arc<SourceFile>>,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) compatibility: CompatibilityReport,
     pub(crate) legacy: LegacyFrontEnd,
@@ -243,34 +244,6 @@ impl Analyzer {
 
     pub(crate) fn binding_key(&self, name: &str, span: Span) -> BindingKey {
         crate::resolver::binding_key(self.current_source_context_id(), name, span)
-    }
-
-    pub(crate) fn with_source_context<R>(
-        &mut self,
-        source_context_id: SourceContextId,
-        operation: impl FnOnce(&mut Self) -> R,
-    ) -> R {
-        let previous_context = self.source_context_id.replace(source_context_id);
-        let previous_depth = self.source_context_depth.get();
-        self.source_context_depth.set(previous_depth + 1);
-        let result = operation(self);
-        self.source_context_id.set(previous_context);
-        self.source_context_depth.set(previous_depth);
-        result
-    }
-
-    pub(crate) fn with_source_context_ref<R>(
-        &self,
-        source_context_id: SourceContextId,
-        operation: impl FnOnce(&Self) -> R,
-    ) -> R {
-        let previous_context = self.source_context_id.replace(source_context_id);
-        let previous_depth = self.source_context_depth.get();
-        self.source_context_depth.set(previous_depth + 1);
-        let result = operation(self);
-        self.source_context_id.set(previous_context);
-        self.source_context_depth.set(previous_depth);
-        result
     }
 
     pub(crate) fn with_symbol_initializer<R>(

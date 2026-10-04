@@ -5,7 +5,10 @@ use pyo3::{
     types::{PyAny, PyBool, PyDict, PyList},
 };
 
-pub(crate) fn samples_to_py(py: Python<'_>, samples: &[FillGradientSample]) -> PyResult<Py<PyAny>> {
+pub(crate) fn samples_to_py<'a>(
+    py: Python<'_>,
+    samples: impl IntoIterator<Item = &'a FillGradientSample>,
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for sample in samples {
         let item = PyDict::new(py);

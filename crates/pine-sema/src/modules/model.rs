@@ -1,7 +1,8 @@
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 use pine_ir::{PineType, Qualifier, ValueKind};
-use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Span};
+use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, SourceFile, Span};
 
 use crate::analyzer::context::{FunctionInfo, MethodInfo};
 use crate::legacy::SourcePolicy;
@@ -9,7 +10,7 @@ use crate::source_graph::{SourceContextId, SourceId};
 
 #[derive(Debug)]
 pub(crate) struct ModuleValidation {
-    pub(crate) source_texts: HashMap<SourceId, String>,
+    pub(crate) source_texts: HashMap<SourceId, Arc<SourceFile>>,
     pub(crate) source_context_origins: HashMap<SourceContextId, (SourceId, Option<String>)>,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) root_program: Program,
@@ -46,6 +47,7 @@ pub(crate) struct ImportedUserTypeFieldInfo {
 #[derive(Debug)]
 pub(super) struct ModuleInfo {
     pub(super) id: SourceId,
+    pub(super) source: Arc<SourceFile>,
     pub(super) key: Option<String>,
     pub(super) program: Program,
     pub(super) exports: HashMap<String, ExportInfo>,
@@ -54,6 +56,14 @@ pub(super) struct ModuleInfo {
     pub(super) methods: HashMap<(String, String), ModuleMethodInfo>,
     pub(super) functions: HashMap<String, FunctionInfo>,
     pub(super) constants: HashMap<String, Expr>,
+}
+
+impl ModuleInfo {
+    pub(super) fn attach_diagnostics(&self, diagnostics: &mut [Diagnostic]) {
+        for diagnostic in diagnostics {
+            diagnostic.attach_source(self.id.get(), self.key.as_deref(), &self.source);
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

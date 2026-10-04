@@ -83,6 +83,7 @@ pub(crate) struct CrossCallState {
 #[derive(Clone)]
 struct StrategyEvalCheckpoint {
     rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
+    extreme_windows: HashMap<CallSiteId, crate::algorithms::rolling_extreme::RollingExtremeState>,
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
     call_state: HashMap<CallSiteId, PineValue>,
@@ -98,6 +99,9 @@ struct StrategyEvalCheckpoint {
 }
 
 #[derive(Clone)]
+/// Historical execution commits successful bars incrementally. An error reached
+/// during bar execution disables further execution on this instance; rebuild it
+/// to retry. Host-input validation errors before execution remain retryable.
 pub struct HistoricalRuntime<'a> {
     pub(crate) program: RuntimeProgram<'a>,
     pub(crate) metadata: Arc<super::metadata::RuntimeMetadata>,
@@ -106,6 +110,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) magnifier_chart_bar_count: Option<usize>,
     pub(crate) session_windows: crate::SessionWindowInput,
     pub(crate) bars: usize,
+    pub(crate) execution_failed: bool,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
@@ -135,6 +140,10 @@ pub struct HistoricalRuntime<'a> {
         HashMap<RequestCacheKey, HashMap<SymbolId, PineValue>>,
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
+    pub(crate) execution_limits: ExecutionLimits,
+    pub(crate) execution_steps_remaining: u64,
+    pub(crate) loop_iterations_remaining: u64,
+    pub(crate) pending_loop_control: Option<crate::error::RuntimeLoopControl>,
     pub(crate) series_store: SeriesStore,
     pub(crate) series_retention: Arc<SeriesRetention>,
     pub(crate) history_dynamic_retention_misses: usize,
@@ -166,6 +175,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) cross_state: HashMap<CallSiteId, CrossCallState>,
     pub(crate) valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
     pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
+    pub(crate) extreme_windows:
+        HashMap<CallSiteId, crate::algorithms::rolling_extreme::RollingExtremeState>,
     pub(crate) selection_scratch: crate::algorithms::order_statistics::SelectionScratch,
     pub(crate) regex_cache: HashMap<CallSiteId, Arc<crate::builtins::strings::CachedPineRegex>>,
     pub(crate) rsi_state: HashMap<CallSiteId, RsiState>,
@@ -421,6 +432,7 @@ impl<'a> HistoricalRuntime<'a> {
             magnifier_chart_bar_count: None,
             session_windows: crate::SessionWindowInput::new(),
             bars: 0,
+            execution_failed: false,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
@@ -440,6 +452,10 @@ impl<'a> HistoricalRuntime<'a> {
             bounded_same_context_captures: HashMap::new(),
             legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
+            execution_limits: ExecutionLimits::default(),
+            execution_steps_remaining: ExecutionLimits::default().max_steps_per_bar,
+            loop_iterations_remaining: ExecutionLimits::default().max_loop_iterations_per_bar,
+            pending_loop_control: None,
             series_store: SeriesStore::new(),
             series_retention,
             history_dynamic_retention_misses: 0,
@@ -469,6 +485,7 @@ impl<'a> HistoricalRuntime<'a> {
             cross_state: HashMap::new(),
             valuewhen_state: HashMap::new(),
             rolling_windows: HashMap::new(),
+            extreme_windows: HashMap::new(),
             selection_scratch: crate::algorithms::order_statistics::SelectionScratch::default(),
             regex_cache: HashMap::new(),
             rsi_state: HashMap::new(),
@@ -673,7 +690,9 @@ impl<'a> HistoricalRuntime<'a> {
         &self,
         request_environment: RequestEnvironment,
     ) -> Self {
-        Self::with_runtime_program(self.program.clone(), request_environment)
+        let mut runtime = Self::with_runtime_program(self.program.clone(), request_environment);
+        runtime.inherit_execution_budget(self);
+        runtime
     }
 
     /// Empty runtime with the same program, host inputs and request feed.
@@ -685,6 +704,8 @@ impl<'a> HistoricalRuntime<'a> {
         runtime.magnifier_input = self.magnifier_input.clone();
         runtime.session_windows = self.session_windows.clone();
         runtime.request_feed = self.request_feed.clone();
+        runtime.execution_limits = self.execution_limits;
+        runtime.reset_execution_budget();
         runtime
     }
 
@@ -742,6 +763,7 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<(), RuntimeError> {
+        self.ensure_execution_ready()?;
         if bars.len() != execution_times.len() {
             return Err(RuntimeError {
                 message: format!(
@@ -784,6 +806,7 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &'bars [Bar],
         execution_times: Option<&'bars [i64]>,
     ) -> Result<HistoricalDataset<'runtime, 'bars, 'a>, RuntimeError> {
+        self.ensure_execution_ready()?;
         // A batch supplies the complete initial dataset. Restrict its first
         // execution window before any series, bar indices or strategy state
         // are created. Later incremental appends extend that window normally.
@@ -828,6 +851,8 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    /// Execute one newly discovered historical bar. If execution fails, this
+    /// instance cannot execute again; already returned owned results stay valid.
     pub fn append_bar(&mut self, bar: Bar) -> Result<(), RuntimeError> {
         self.append_bar_with_kind(bar, BarUpdateKind::Historical)
     }
@@ -855,6 +880,7 @@ impl<'a> HistoricalRuntime<'a> {
         is_new_bar: bool,
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
+        self.ensure_execution_ready()?;
         if let Some(account) = self.program.strategy_settings.account_currency {
             let chart = self.request_environment.chart().currency();
             if account != chart {
@@ -886,6 +912,32 @@ impl<'a> HistoricalRuntime<'a> {
             }
             .runtime_error());
         }
+        let result = self.execute_bar_with_context(bar, update_kind, is_new_bar, execution_time);
+        if result.is_err() {
+            self.execution_failed = true;
+        }
+        result
+    }
+
+    fn ensure_execution_ready(&self) -> Result<(), RuntimeError> {
+        if self.execution_failed {
+            Err(RuntimeError {
+                message: "E_RUNTIME_POISONED: historical runtime cannot execute after a previous execution error; create a new runtime".to_owned(),
+            })
+        } else {
+            Ok(())
+        }
+    }
+
+    fn execute_bar_with_context(
+        &mut self,
+        bar: Bar,
+        update_kind: BarUpdateKind,
+        is_new_bar: bool,
+        execution_time: Option<i64>,
+    ) -> Result<(), RuntimeError> {
+        self.reset_execution_budget();
+        let bar_index = self.bars;
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);
@@ -960,7 +1012,7 @@ impl<'a> HistoricalRuntime<'a> {
                     Ok(StmtControl::Break | StmtControl::Continue) => {
                         return Err(RuntimeError::escaped_loop_control());
                     }
-                    Err(error) if error.loop_control().is_some() => {
+                    Err(_) if self.pending_loop_control.take().is_some() => {
                         return Err(RuntimeError::escaped_loop_control());
                     }
                     Err(error) => return Err(error),
@@ -1099,6 +1151,7 @@ impl<'a> HistoricalRuntime<'a> {
     fn snapshot_strategy_eval_checkpoint(&mut self) {
         self.strategy_eval_checkpoint = Some(StrategyEvalCheckpoint {
             rolling_windows: self.rolling_windows.clone(),
+            extreme_windows: self.extreme_windows.clone(),
             rsi_state: self.rsi_state.clone(),
             macd_state: self.macd_state.clone(),
             call_state: self.call_state.clone(),
@@ -1119,6 +1172,7 @@ impl<'a> HistoricalRuntime<'a> {
             return;
         };
         self.rolling_windows.clone_from(&checkpoint.rolling_windows);
+        self.extreme_windows.clone_from(&checkpoint.extreme_windows);
         self.rsi_state.clone_from(&checkpoint.rsi_state);
         self.macd_state.clone_from(&checkpoint.macd_state);
         self.call_state.clone_from(&checkpoint.call_state);
@@ -1186,7 +1240,7 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(StmtControl::Break | StmtControl::Continue) => {
                     return Err(RuntimeError::escaped_loop_control());
                 }
-                Err(error) if error.loop_control().is_some() => {
+                Err(_) if self.pending_loop_control.take().is_some() => {
                     return Err(RuntimeError::escaped_loop_control());
                 }
                 Err(error) => return Err(error),

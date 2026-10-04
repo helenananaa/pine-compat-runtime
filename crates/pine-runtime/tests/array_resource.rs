@@ -12,10 +12,12 @@ struct TrackingAllocator;
 thread_local! {
     static TRACK: Cell<bool> = const { Cell::new(false) };
     static MAX_ALLOCATION: Cell<usize> = const { Cell::new(0) };
+    static TOTAL_ALLOCATION: Cell<usize> = const { Cell::new(0) };
 }
 fn record(size: usize) {
     if TRACK.try_with(Cell::get).unwrap_or(false) {
         let _ = MAX_ALLOCATION.try_with(|largest| largest.set(largest.get().max(size)));
+        let _ = TOTAL_ALLOCATION.try_with(|total| total.set(total.get().saturating_add(size)));
     }
 }
 unsafe impl GlobalAlloc for TrackingAllocator {
@@ -37,6 +39,95 @@ unsafe impl GlobalAlloc for TrackingAllocator {
 }
 #[global_allocator]
 static ALLOCATOR: TrackingAllocator = TrackingAllocator;
+
+fn join_error_allocation(source: &str) -> (usize, usize) {
+    let analysis = analyze_source(&SourceFile::new("bounded_join.pine", source));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.unwrap();
+    let mut runtime = HistoricalRuntime::new(&program);
+    let bar = Bar {
+        time: 0,
+        open: 1.0,
+        high: 1.0,
+        low: 1.0,
+        close: 1.0,
+        volume: 1.0,
+    };
+    runtime.append_bar(bar).unwrap();
+    MAX_ALLOCATION.set(0);
+    TOTAL_ALLOCATION.set(0);
+    TRACK.set(true);
+    let result = runtime.append_bar(Bar { time: 60000, ..bar });
+    TRACK.set(false);
+    assert_eq!(
+        result.unwrap_err().message,
+        "array.join result cannot exceed 40960 characters"
+    );
+    (MAX_ALLOCATION.get(), TOTAL_ALLOCATION.get())
+}
+
+#[test]
+fn oversized_join_stops_before_allocating_the_expanded_separator_result() {
+    let (largest, total) = join_error_allocation(
+        r#"//@version=6
+indicator("bounded join", max_bars_back=0)
+var values = array.new_string(1000, "x")
+var separator = str.repeat("x", 40960)
+plot(bar_index > 0 ? str.length(array.join(values, separator)) : 0)
+"#,
+    );
+    // The old result contains 40,920,040 ASCII bytes. These bounds include
+    // unrelated per-bar bookkeeping and the evaluated separator string.
+    assert!(largest < 256 * 1024, "largest allocation: {largest}");
+    assert!(total < 2 * 1024 * 1024, "cumulative allocation: {total}");
+}
+
+#[test]
+fn oversized_udt_join_does_not_materialize_large_fields_or_an_element_string() {
+    let mut source =
+        String::from("//@version=6\nindicator(\"bounded UDT join\", max_bars_back=0)\ntype Huge\n");
+    for index in 0..64 {
+        source.push_str(&format!("    string field{index}\n"));
+    }
+    source.push_str("var values = array.new<Huge>()\nif barstate.isfirst\n    payload = str.repeat(\"x\", 40960)\n    array.push(values, Huge.new(");
+    source.push_str(&vec!["payload"; 64].join(", "));
+    source.push_str("))\nplot(bar_index > 0 ? str.length(array.join(values)) : 0)\n");
+    let (largest, total) = join_error_allocation(&source);
+    // A single old element expands to more than 2.6 MB before the join limit
+    // is checked. Borrowing each field keeps both counters bounded instead.
+    assert!(largest < 256 * 1024, "largest allocation: {largest}");
+    assert!(total < 2 * 1024 * 1024, "cumulative allocation: {total}");
+}
+
+#[test]
+fn join_accepts_exact_character_limit_with_multibyte_elements_and_separator() {
+    let analysis = analyze_source(&SourceFile::new(
+        "unicode_join.pine",
+        "//@version=6\nindicator(\"unicode join\")\nvalues = array.from(str.repeat(\"界\", 40958), \"💥\")\nplot(str.length(array.join(values, \"é\")))\n",
+    ));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.unwrap();
+    let mut runtime = HistoricalRuntime::new(&program);
+    runtime
+        .append_bar(Bar {
+            time: 0,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        })
+        .unwrap();
+    assert_eq!(runtime.result().plots[0].values, [PineValue::Int(40960)]);
+}
 
 #[test]
 fn binary_search_borrows_large_arrays_and_cross_page_slices_without_materializing_them() {

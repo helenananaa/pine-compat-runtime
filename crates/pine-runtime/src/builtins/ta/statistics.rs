@@ -17,41 +17,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let mut ranked: Vec<_> = window
-            .values
-            .iter()
-            .flatten()
-            .copied()
-            .enumerate()
-            .collect();
-        ranked.sort_by(|left, right| left.1.total_cmp(&right.1));
-
-        let mut price_ranks = vec![0.0; length];
-        let mut start = 0;
-        while start < length {
-            let mut end = start + 1;
-            while end < length && ranked[end].1 == ranked[start].1 {
-                end += 1;
-            }
-
-            let average_rank = (start + 1 + end) as f64 / 2.0;
-            for &(original_index, _) in &ranked[start..end] {
-                price_ranks[original_index] = average_rank;
-            }
-            start = end;
-        }
-
-        let squared_rank_difference = price_ranks
-            .iter()
-            .enumerate()
-            .map(|(index, price_rank)| {
-                let difference = *price_rank - (index + 1) as f64;
-                difference * difference
-            })
-            .sum::<f64>();
-        let length = length as f64;
-        let rci =
-            (1.0 - 6.0 * squared_rank_difference / (length * (length * length - 1.0))) * 100.0;
+        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
+        let rci = self
+            .selection_scratch
+            .rci(window.values.iter().flatten().copied());
         Ok(finite_float_or_na(rci))
     }
 
@@ -307,29 +276,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let mut values: Vec<_> = window.values.iter().flatten().copied().collect();
-        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
-
-        let mut best_value = values[0];
-        let mut best_count = 0_usize;
-        let mut current_value = values[0];
-        let mut current_count = 0_usize;
-        for value in values {
-            if (value - current_value).abs() < f64::EPSILON {
-                current_count += 1;
-            } else {
-                if current_count > best_count {
-                    best_value = current_value;
-                    best_count = current_count;
-                }
-                current_value = value;
-                current_count = 1;
-            }
-        }
-        if current_count > best_count {
-            best_value = current_value;
-        }
-
+        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
+        let best_value = self
+            .selection_scratch
+            .mode(window.values.iter().flatten().copied());
         Ok(finite_float_or_na(best_value))
     }
 

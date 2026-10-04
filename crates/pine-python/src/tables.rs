@@ -2,31 +2,31 @@ use crate::outputs::value_to_py;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList};
 
-pub(crate) fn tables_to_py(
+pub(crate) fn tables_to_py<'a>(
     py: Python<'_>,
-    tables: &[pine_runtime::TableOutput],
+    tables: impl IntoIterator<Item = impl Into<pine_runtime::TableOutputView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for table in tables {
+    for table in tables.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", table.id)?;
-        item.set_item("position", value_to_py(py, &table.position)?)?;
-        item.set_item("bgColor", value_to_py(py, &table.bg_color)?)?;
-        item.set_item("frameColor", value_to_py(py, &table.frame_color)?)?;
-        item.set_item("frameWidth", value_to_py(py, &table.frame_width)?)?;
-        item.set_item("borderColor", value_to_py(py, &table.border_color)?)?;
-        item.set_item("borderWidth", value_to_py(py, &table.border_width)?)?;
+        item.set_item("position", value_to_py(py, table.position)?)?;
+        item.set_item("bgColor", value_to_py(py, table.bg_color)?)?;
+        item.set_item("frameColor", value_to_py(py, table.frame_color)?)?;
+        item.set_item("frameWidth", value_to_py(py, table.frame_width)?)?;
+        item.set_item("borderColor", value_to_py(py, table.border_color)?)?;
+        item.set_item("borderWidth", value_to_py(py, table.border_width)?)?;
         item.set_item("columns", table.columns)?;
         item.set_item("rows", table.rows)?;
-        item.set_item("snapshots", table_snapshots_to_py(py, &table.snapshots)?)?;
+        item.set_item("snapshots", table_snapshots_to_py(py, table.snapshots)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn table_snapshots_to_py(
+fn table_snapshots_to_py<'a>(
     py: Python<'_>,
-    snapshots: &[pine_runtime::TableSnapshot],
+    snapshots: impl IntoIterator<Item = &'a pine_runtime::TableSnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in snapshots {

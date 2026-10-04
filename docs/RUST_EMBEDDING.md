@@ -70,6 +70,48 @@ without mutating that state. `Forming` supplies an observed realtime update,
 while `Confirmed` commits the bar; it is not interchangeable with historical
 OHLC-path simulation. See REALTIME_MODEL.md for strategy behavior.
 
+Historical execution errors disable further execution of that `HistoricalRuntime`
+instance (`E_RUNTIME_POISONED`); rebuild it to retry. Validation failures before
+execution, including clock counts and session-window coverage, remain retryable.
+The failed historical instance can contain partial evaluator state or output;
+retain previously returned owned results when a committed snapshot is needed.
+`RealtimeRuntime` stages its updates and history replacements separately and
+preserves the previous session after a failed operation.
+
+For output that is immediately serialized or consumed, `result_view()` borrows
+the runtime's visible histories and metadata; `confirmed_result_view()` on a
+realtime runtime borrows confirmed output only. `RuntimeResult::view()` also
+adapts an existing owned result. `HistoryView<T>` exposes borrowed iteration and
+length without copying the historical values or exposing runtime storage.
+Small per-family view headers and synthesized diagnostics are allocated.
+The borrow prevents a mutable runtime update until the view is released.
+Use the owned `result()` when the snapshot must outlive the runtime or be
+retained independently of later updates.
+
+`write_public_runtime_result_view_json(&view, &mut sink)` streams the same public
+schema and field order to any `std::io::Write` sink and propagates I/O failures.
+Buffer file or network sinks in the host. This function needs no complete JSON
+buffer and leaves the runtime and revision unchanged on an I/O failure;
+already-written bytes remain in the caller's sink. The convenience function
+`public_runtime_result_view_json(&view)` counts and encodes the output in two
+passes to reserve one complete String buffer. The owned serializer
+`public_runtime_result_json(&result)` uses the same encoding path. Python and
+WASM `result`, confirmed-result, and stream-snapshot output paths consume views
+while still returning independently owned dictionaries or strings.
+
+For a host that will consume a view after a successful update, use
+`update_without_output` or `update_with_context_without_output` instead of
+constructing an intermediate owned result. They advance the revision, apply
+output retention, synchronize the cursor and clear `last_changes` exactly as
+the corresponding snapshot-producing update does. They do not produce a delta.
+The `seed_historical_without_output`, `replay_historical_without_output` and
+`correct_historical_without_output` families also provide explicit clock
+variants. Replay and correction discard forming state on success and require
+replicas to reset from the current result and revision. These operations share
+the existing execution and failure-atomicity paths; they only omit result
+materialization. Python and WASM snapshot-returning seed, replay, correction and
+update methods use these operations, followed by borrowed conversion.
+
 Cargo release settings in this workspace apply when building the example here.
 Downstream applications control their own profiles; use ThinLTO and one
 code-generation unit when reproducing the current release profile. This is not

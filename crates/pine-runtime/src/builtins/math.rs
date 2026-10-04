@@ -11,12 +11,13 @@ pub(crate) fn eval_math_call(
     callee: &str,
     call_site_id: CallSiteId,
     raw_args: &[HirCallArg],
+    positional_args: bool,
 ) -> Option<Result<PineValue, RuntimeError>> {
     if !callee.starts_with("math.") {
         return None;
     }
 
-    let args = RuntimeArgs::new(raw_args);
+    let args = RuntimeArgs::new(raw_args, positional_args);
     Some(match callee {
         "math.abs" => eval_math_abs(context, args),
         "math.max" => eval_math_extreme(context, args, NumericExtreme::Max),

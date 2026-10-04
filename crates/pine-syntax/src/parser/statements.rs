@@ -7,6 +7,27 @@ use super::{ForInParts, ForParts, Parser};
 
 impl Parser {
     pub(super) fn parse_stmt(&mut self) -> Option<Stmt> {
+        self.with_stmt_depth(Self::parse_stmt_inner)
+    }
+
+    pub(super) fn with_stmt_depth<T>(
+        &mut self,
+        parse: impl FnOnce(&mut Self) -> Option<T>,
+    ) -> Option<T> {
+        if !self.within_depth_budget(1, 0) {
+            self.error_here("E_PARSE_STMT_DEPTH", "statement nesting is too deep");
+            // Recovery must not recurse through the remaining adversarial
+            // blocks, or construct an AST too deep for subsequent passes.
+            self.pos = self.tokens.len().saturating_sub(1);
+            return None;
+        }
+        self.stmt_depth += 1;
+        let result = parse(self);
+        self.stmt_depth -= 1;
+        result
+    }
+
+    fn parse_stmt_inner(&mut self) -> Option<Stmt> {
         if self.at(TokenKind::Import) {
             return self.parse_import_decl();
         }
@@ -324,7 +345,7 @@ impl Parser {
         let else_branch = if self.at(TokenKind::Else) {
             self.bump();
             if self.at(TokenKind::If) {
-                let nested_if = self.parse_if_stmt()?;
+                let nested_if = self.parse_stmt()?;
                 span = nested_if.span;
                 vec![nested_if]
             } else {

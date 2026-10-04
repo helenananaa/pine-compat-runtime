@@ -107,7 +107,9 @@ fn accepts_type_casts() {
 
 #[test]
 fn rejects_deep_semantic_expression_nesting() {
-    let expression = format!("{}close", "+".repeat(130));
+    // A left-associative chain parses with shallow recursion but produces a
+    // deep AST, so this reaches the semantic guard independently of parsing.
+    let expression = format!("close{}", " + close".repeat(130));
     let analysis = analyze(&format!("plot({expression})\n"));
 
     assert!(

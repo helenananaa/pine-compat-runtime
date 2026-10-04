@@ -75,19 +75,7 @@ pub(crate) struct StrategyExitMetadata {
     pub(crate) disable_alert: bool,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct StrategyOrderFillAlertEvent {
-    pub(crate) id: String,
-    pub(crate) bar_index: usize,
-    pub(crate) time: i64,
-    pub(crate) direction: String,
-    pub(crate) qty: f64,
-    pub(crate) price: f64,
-    pub(crate) entry_id: Option<String>,
-    pub(crate) exit_id: Option<String>,
-    pub(crate) message: String,
-}
+pub(crate) type StrategyOrderFillAlertEvent = crate::StrategyOrderFillAlertOutput;
 
 pub(super) struct EntryFill {
     pub(super) id: String,

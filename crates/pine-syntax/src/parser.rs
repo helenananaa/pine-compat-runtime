@@ -9,9 +9,11 @@ mod declarations;
 mod phase_j;
 mod statements;
 
-// Keep the recursive parser comfortably below Rust's default test-thread stack.
+// Keep the recursive parser below the 1 MiB stack used by embedding threads.
 // The limit is a fail-closed resource bound, not part of Pine's syntax.
-const MAX_EXPR_DEPTH: u32 = 192;
+const MAX_EXPR_DEPTH: u32 = 64;
+const MAX_STMT_DEPTH: u32 = 32;
+const MAX_RECURSION_COST: u32 = 64;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Parse {
@@ -29,6 +31,7 @@ struct Parser {
     pos: usize,
     diagnostics: Vec<Diagnostic>,
     expr_depth: u32,
+    stmt_depth: u32,
     source_version: u16,
 }
 
@@ -52,12 +55,21 @@ struct ForInParts {
 }
 
 impl Parser {
+    fn within_depth_budget(&self, stmt_increment: u32, expr_increment: u32) -> bool {
+        let stmt_depth = self.stmt_depth + stmt_increment;
+        let expr_depth = self.expr_depth + expr_increment;
+        stmt_depth <= MAX_STMT_DEPTH
+            && expr_depth <= MAX_EXPR_DEPTH
+            && 2 * stmt_depth + expr_depth <= MAX_RECURSION_COST
+    }
+
     fn new(lexed: Lexed) -> Self {
         Self {
             tokens: lexed.tokens,
             pos: 0,
             diagnostics: lexed.diagnostics,
             expr_depth: 0,
+            stmt_depth: 0,
             source_version: 1,
         }
     }
@@ -113,7 +125,7 @@ impl Parser {
     }
 
     fn parse_expr(&mut self, min_bp: u8) -> Option<Expr> {
-        if self.expr_depth >= MAX_EXPR_DEPTH {
+        if !self.within_depth_budget(0, 1) {
             self.error_here("E_PARSE_EXPR_DEPTH", "expression nesting is too deep");
             return None;
         }
@@ -471,7 +483,9 @@ impl Parser {
                 // enforce the newline separating this inline arm from the next.
                 (SwitchArmResult::Block(vec![statement]), false)
             } else {
-                let result = self.parse_expr(0)?;
+                // Inline block expressions can recurse without entering a
+                // statement, so switch arms share the structural depth bound.
+                let result = self.with_stmt_depth(|parser| parser.parse_expr(0))?;
                 end = result.span;
                 (SwitchArmResult::Expr(result), false)
             };

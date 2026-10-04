@@ -23,6 +23,39 @@ fn package_version_is_the_coordinated_prerelease_identity() {
     assert!(crate::usage().contains("pine-compat --version"));
 }
 
+#[test]
+fn analysis_library_diagnostics_use_unicode_source_locations() {
+    let root = SourceFile::new(
+        "根.pine",
+        "//@version=6\nindicator(\"根\")\nimport audit/Library/1 as lib\nplot(lib.f(close))\n",
+    );
+    let text = "//@version=6\nlibrary(\"库\")\n// 中文\nexport f(float x) => str.length(\"中文\") + missingName + x\n";
+    let library = SourceFile::new("库.pine", text);
+    let offset = text.find("missingName").unwrap();
+    let location = library.line_col(offset);
+    let input = AnalysisInput::with_library_sources(
+        root.clone(),
+        vec![("audit/Library/1".to_owned(), library)],
+    )
+    .unwrap();
+    let analysis = analyze_input(&input);
+    let report: serde_json::Value =
+        serde_json::from_str(&crate::commands::analyze::analysis_json(&root, &analysis)).unwrap();
+    let diagnostic = report["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["code"] == "E_UNKNOWN_SYMBOL")
+        .unwrap();
+    assert_eq!(diagnostic["span"]["sourceId"], 1);
+    assert_eq!(diagnostic["span"]["libraryKey"], "audit/Library/1");
+    assert_eq!(diagnostic["span"]["sourceName"], "库.pine");
+    assert_eq!(diagnostic["span"]["start"], offset);
+    assert_eq!(diagnostic["span"]["line"], location.line);
+    assert_eq!(diagnostic["span"]["column"], location.column);
+    assert_eq!(report["schemaVersion"], 6);
+}
+
 fn strategy_orders_segment(output: &str) -> &str {
     let start = output.find(r#""orders":["#).expect("strategy orders start");
     let tail = &output[start..];

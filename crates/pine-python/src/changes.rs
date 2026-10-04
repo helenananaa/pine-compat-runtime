@@ -227,7 +227,9 @@ fn drawing_object_to_py(py: Python<'_>, object: &DrawingObject) -> PyResult<Py<P
             first_item(py, polylines_to_py(py, std::slice::from_ref(item))?)
         }
         DrawingObject::Box(item) => first_item(py, boxes_to_py(py, std::slice::from_ref(item))?),
-        DrawingObject::Table(item) => first_item(py, tables_to_py(py, std::slice::from_ref(item))?),
+        DrawingObject::Table(item) => {
+            first_item(py, tables_to_py(py, std::slice::from_ref(item.as_ref()))?)
+        }
     }
 }
 

@@ -6,10 +6,18 @@ use super::*;
 /// Write the public result schema to a caller-owned sink, propagating I/O errors.
 ///
 /// This avoids allocating the complete serialized result. History fields are
-/// emitted one value at a time; drawings use one object buffer. Callers can buffer their
+/// emitted one value at a time; drawings use one snapshot buffer. Callers can buffer their
 /// sink and choose its storage and lifecycle independently of the runtime.
 pub fn write_public_runtime_result_json<W: Write + ?Sized>(
     result: &RuntimeResult,
+    output: &mut W,
+) -> io::Result<()> {
+    write_public_runtime_result_view_json(&result.view(), output)
+}
+
+/// Stream borrowed runtime output directly from persistent histories.
+pub fn write_public_runtime_result_view_json<W: Write + ?Sized>(
+    result: &crate::RuntimeResultView<'_>,
     output: &mut W,
 ) -> io::Result<()> {
     write!(
@@ -20,13 +28,19 @@ pub fn write_public_runtime_result_json<W: Write + ?Sized>(
     macro_rules! family {
         ($name:literal, $values:expr, $serializer:ident) => {
             output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
-            write_array(output, $values, $serializer)?;
+            write_array(output, $values, |items| $serializer(items))?;
         };
     }
     macro_rules! history {
         ($name:literal, $values:expr, $serializer:ident) => {
             output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
             write_series_array(output, $values, series_writer::$serializer)?;
+        };
+    }
+    macro_rules! drawing {
+        ($name:literal, $values:expr, $serializer:ident) => {
+            output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
+            write_series_array(output, $values, drawings_writer::$serializer)?;
         };
     }
     history!("plots", result.plots.iter(), plots);
@@ -37,31 +51,55 @@ pub fn write_public_runtime_result_json<W: Write + ?Sized>(
     history!("plotCandles", result.plot_candles.iter(), candles);
     history!("bgColors", result.bg_colors.iter(), colors);
     history!("barColors", result.bar_colors.iter(), colors);
-    family!("hlines", &result.hlines, hlines_json);
+    family!("hlines", result.hlines, hlines_json);
     history!("fills", result.fills.iter(), fills);
-    family!("labels", &result.labels, labels_json);
-    family!("lines", &result.lines, lines_json);
-    family!("lineFills", &result.line_fills, line_fills_json);
-    family!("polylines", &result.polylines, polylines_json);
-    family!("boxes", &result.boxes, boxes_json);
-    family!("tables", &result.tables, tables_json);
-    family!("alerts", &result.alerts, alerts_json);
+    drawing!("labels", result.labels.iter(), labels);
+    drawing!("lines", result.lines.iter(), lines);
+    drawing!("lineFills", result.line_fills.iter(), line_fills);
+    drawing!("polylines", result.polylines.iter(), polylines);
+    drawing!("boxes", result.boxes.iter(), boxes);
+    drawing!("tables", result.tables.iter(), tables);
+    family!("alerts", result.alerts, alerts_json);
     if let Some(strategy) = &result.strategy {
         output.write_all(b",\"strategy\":{\"orders\":")?;
-        write_array(output, &strategy.orders, strategy_orders_json)?;
-        family!("trades", &strategy.trades, strategy_trades_json);
-        family!("position", &strategy.position, strategy_position_json);
-        family!("equity", &strategy.equity, strategy_equity_json);
-        family!("alerts", &strategy.alerts, strategy_order_fill_alerts_json);
+        write_array(output, strategy.orders, strategy_orders_json)?;
+        family!("trades", strategy.trades, strategy_trades_json);
+        family!("position", strategy.position, strategy_position_json);
+        family!("equity", strategy.equity, strategy_equity_json);
+        family!("alerts", strategy.alerts, strategy_order_fill_alerts_json);
         family!(
             "diagnostics",
-            &strategy.diagnostics,
+            strategy.diagnostics,
             runtime_diagnostics_json
         );
         output.write_all(b"}")?;
     }
-    family!("diagnostics", &result.diagnostics, runtime_diagnostics_json);
+    family!(
+        "diagnostics",
+        result.diagnostics.as_ref(),
+        runtime_diagnostics_json
+    );
     output.write_all(b"}")
+}
+
+/// Serialize borrowed output into one exactly sized output allocation.
+pub fn public_runtime_result_view_json(result: &crate::RuntimeResultView<'_>) -> String {
+    struct Counter(usize);
+    impl Write for Counter {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.0 += bytes.len();
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut counter = Counter(0);
+    write_public_runtime_result_view_json(result, &mut counter).expect("counting cannot fail");
+    let mut bytes = Vec::with_capacity(counter.0);
+    write_public_runtime_result_view_json(result, &mut bytes)
+        .expect("writing to a Vec cannot fail");
+    String::from_utf8(bytes).expect("JSON serializers produce UTF-8")
 }
 
 fn write_series_array<W: Write + ?Sized, T, I: IntoIterator>(
@@ -82,13 +120,13 @@ where
     output.write_all(b"]")
 }
 
-fn write_array<W: Write + ?Sized, T>(
+fn write_array<'a, W: Write + ?Sized, T: 'a>(
     output: &mut W,
-    items: &[T],
+    items: impl IntoIterator<Item = &'a T>,
     serialize: impl Fn(&[T]) -> String,
 ) -> io::Result<()> {
     output.write_all(b"[")?;
-    for (index, item) in items.iter().enumerate() {
+    for (index, item) in items.into_iter().enumerate() {
         if index > 0 {
             output.write_all(b",")?;
         }
@@ -157,31 +195,56 @@ fn write_owned_result<W: Write + ?Sized>(result: RuntimeResult, output: &mut W) 
     macro_rules! family {
         ($name:literal, $values:expr, $serializer:ident) => {
             output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
-            write_owned_array(output, $values, $serializer)?;
+            write_owned_array(output, $values, |items| $serializer(items))?;
         };
     }
     macro_rules! history {
-        ($name:literal, $values:expr, $serializer:ident) => {
+        ($name:literal, $values:expr, $serializer:ident, $kind:ty) => {
             output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
-            write_series_array(output, $values, series_writer::$serializer)?;
+            write_series_array(output, $values, |item: &$kind, sink| {
+                series_writer::$serializer(&item.into(), sink)
+            })?;
         };
     }
-    history!("plots", result.plots, plots);
-    history!("plotChars", result.plot_chars, chars);
-    history!("plotShapes", result.plot_shapes, shapes);
-    history!("plotArrows", result.plot_arrows, arrows);
-    history!("plotBars", result.plot_bars, bars);
-    history!("plotCandles", result.plot_candles, candles);
-    history!("bgColors", result.bg_colors, colors);
-    history!("barColors", result.bar_colors, colors);
+    macro_rules! drawing {
+        ($name:literal, $values:expr, $serializer:ident, $kind:ty) => {
+            output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
+            write_series_array(output, $values, |item: &$kind, sink| {
+                drawings_writer::$serializer(&item.into(), sink)
+            })?;
+        };
+    }
+    history!("plots", result.plots, plots, PlotSeries);
+    history!("plotChars", result.plot_chars, chars, PlotCharSeries);
+    history!("plotShapes", result.plot_shapes, shapes, PlotShapeSeries);
+    history!("plotArrows", result.plot_arrows, arrows, PlotArrowSeries);
+    history!("plotBars", result.plot_bars, bars, PlotBarSeries);
+    history!(
+        "plotCandles",
+        result.plot_candles,
+        candles,
+        PlotCandleSeries
+    );
+    history!("bgColors", result.bg_colors, colors, ColorSeries);
+    history!("barColors", result.bar_colors, colors, ColorSeries);
     family!("hlines", result.hlines, hlines_json);
-    history!("fills", result.fills, fills);
-    family!("labels", result.labels, labels_json);
-    family!("lines", result.lines, lines_json);
-    family!("lineFills", result.line_fills, line_fills_json);
-    family!("polylines", result.polylines, polylines_json);
-    family!("boxes", result.boxes, boxes_json);
-    family!("tables", result.tables, tables_json);
+    history!("fills", result.fills, fills, FillOutput);
+    drawing!("labels", result.labels, labels, crate::LabelOutput);
+    drawing!("lines", result.lines, lines, crate::LineOutput);
+    drawing!(
+        "lineFills",
+        result.line_fills,
+        line_fills,
+        crate::LineFillOutput
+    );
+    drawing!(
+        "polylines",
+        result.polylines,
+        polylines,
+        crate::PolylineOutput
+    );
+    drawing!("boxes", result.boxes, boxes, crate::BoxOutput);
+    drawing!("tables", result.tables, tables, crate::TableOutput);
     family!("alerts", result.alerts, alerts_json);
     if let Some(strategy) = result.strategy {
         output.write_all(b",\"strategy\":{\"orders\":")?;

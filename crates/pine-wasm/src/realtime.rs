@@ -11,7 +11,6 @@ use crate::request_bars::{
     bar_from_json, execution_times_from_json, request_environment_and_execution_times_from_json,
 };
 use crate::run::{WasmProgram, parse_bars_csv};
-use crate::snapshot::owned_snapshot_json;
 
 pub(crate) const REALTIME_SESSION_SCHEMA_VERSION: u32 = 1;
 
@@ -121,7 +120,9 @@ impl WasmRealtimeSession {
         execution_times: Option<&[i64]>,
     ) -> Result<String, String> {
         self.seed_state_internal(bars_csv, execution_times)?;
-        Ok(owned_snapshot_json(self.runtime.result()))
+        Ok(crate::snapshot::result_view_snapshot_json(
+            &self.runtime.result_view(),
+        ))
     }
 
     pub(crate) fn seed_state_internal(
@@ -153,17 +154,19 @@ impl WasmRealtimeSession {
     ) -> Result<String, String> {
         self.require_seeded()?;
         let bars = parse_bars_csv(bars_csv)?;
-        let result = match execution_times {
+        match execution_times {
             Some(times) => self
                 .runtime
-                .replay_historical_with_execution_times(&bars, times),
-            None => self.runtime.replay_historical(&bars),
+                .replay_historical_with_execution_times_without_output(&bars, times),
+            None => self.runtime.replay_historical_without_output(&bars),
         }
         .map_err(|err| err.message)?;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        Ok(owned_snapshot_json(result))
+        Ok(crate::snapshot::result_view_snapshot_json(
+            &self.runtime.result_view(),
+        ))
     }
 
     pub(crate) fn correct_internal(
@@ -174,17 +177,21 @@ impl WasmRealtimeSession {
     ) -> Result<String, String> {
         self.require_seeded()?;
         let bars = parse_bars_csv(bars_csv)?;
-        let result = match execution_times {
+        match execution_times {
             Some(times) => self
                 .runtime
-                .correct_historical_with_execution_times(from_time, &bars, times),
-            None => self.runtime.correct_historical(from_time, &bars),
+                .correct_historical_with_execution_times_without_output(from_time, &bars, times),
+            None => self
+                .runtime
+                .correct_historical_without_output(from_time, &bars),
         }
         .map_err(|err| err.message)?;
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        Ok(owned_snapshot_json(result))
+        Ok(crate::snapshot::result_view_snapshot_json(
+            &self.runtime.result_view(),
+        ))
     }
 
     fn parse_from_time(from_time: f64) -> Result<i64, String> {
@@ -217,11 +224,10 @@ impl WasmRealtimeSession {
                 .map_err(|err| err.message)?;
             public_runtime_changes_json(&changes)
         } else {
-            let result = self
-                .runtime
-                .update_with_context(update, context)
+            self.runtime
+                .update_with_context_without_output(update, context)
                 .map_err(|err| err.message)?;
-            owned_snapshot_json(result)
+            crate::snapshot::result_view_snapshot_json(&self.runtime.result_view())
         };
         if forming {
             self.forming_time = Some(bar.time);
@@ -428,7 +434,7 @@ impl WasmRealtimeSession {
     #[wasm_bindgen(js_name = streamSnapshot)]
     pub fn stream_snapshot(&self) -> String {
         crate::snapshot::stream_snapshot_json(
-            self.runtime.result(),
+            &self.runtime.result_view(),
             self.runtime.revision(),
             self.runtime.display_origin(),
         )
@@ -459,12 +465,12 @@ impl WasmRealtimeSession {
 
     #[wasm_bindgen(js_name = result)]
     pub fn result(&self) -> String {
-        owned_snapshot_json(self.runtime.result())
+        crate::snapshot::result_view_snapshot_json(&self.runtime.result_view())
     }
 
     #[wasm_bindgen(js_name = confirmedResult)]
     pub fn confirmed_result(&self) -> String {
-        owned_snapshot_json(self.runtime.confirmed_result())
+        crate::snapshot::result_view_snapshot_json(&self.runtime.confirmed_result_view())
     }
 
     #[wasm_bindgen(js_name = lastChanges)]

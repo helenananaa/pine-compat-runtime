@@ -249,6 +249,57 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(())
     }
 
+    pub(super) fn array_insert_values(
+        &mut self,
+        id: u32,
+        index: i64,
+        incoming: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        if incoming.is_empty() {
+            return Ok(());
+        }
+        let Some((target_id, index)) = self.array_insert_index(id, index)? else {
+            return Ok(());
+        };
+        let parent = self.array_store.get(&target_id).expect("validated parent");
+        let parent_len = parent.len();
+        let added = incoming.len();
+        if parent_len.saturating_add(added) > MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.concat cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
+        }
+        let copied = if index < parent_len {
+            array_payload_allocation_bytes(
+                self.array_kinds.get(&target_id),
+                parent.view(0, parent_len),
+            )
+        } else {
+            collection_values_allocation_bytes(
+                parent.append_allocation_values(self.array_store.get_mut_clones_value(&target_id)),
+            )
+        };
+        self.record_collection_bytes(copied);
+        self.record_collection_values(&incoming);
+        if index < parent_len {
+            let replacement = self
+                .array_store
+                .get(&target_id)
+                .expect("validated parent")
+                .with_inserted(index, incoming);
+            self.array_store.insert(target_id, replacement);
+        } else {
+            self.array_store
+                .get_mut(&target_id)
+                .expect("validated parent")
+                .extend(incoming);
+        }
+        if let Some(slice) = self.array_slices.get_mut(&id) {
+            slice.len += added;
+        }
+        Ok(())
+    }
+
     pub(super) fn array_remove_value(
         &mut self,
         id: u32,

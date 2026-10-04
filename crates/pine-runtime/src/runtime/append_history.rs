@@ -174,6 +174,28 @@ impl<T: Clone> AppendHistory<T> {
         self.tail(0)
     }
 
+    /// Retain a prefix without copying its closed leaves. Checkpoints retain
+    /// their old tail; only the boundary leaf and branch path become private.
+    pub(crate) fn truncate(&mut self, len: usize) {
+        if len >= self.len {
+            return;
+        }
+        if len == 0 {
+            *self = Self::default();
+            return;
+        }
+        let end = self.start + len;
+        while self.capacity > APPEND_LEAF_SIZE && end <= self.capacity / 2 {
+            let Node::Branch { left, .. } = self.root.as_ref() else {
+                unreachable!()
+            };
+            self.root = left.clone();
+            self.capacity /= 2;
+        }
+        prune_suffix(&mut self.root, self.capacity, end);
+        self.len = len;
+    }
+
     pub(crate) fn drop_prefix(&mut self, count: usize) {
         if count == 0 {
             return;
@@ -517,6 +539,26 @@ impl<T> ExactSizeIterator for RevIter<'_, T> {}
 #[path = "append_history_walk_tests.rs"]
 mod walk_tests;
 
+fn prune_suffix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, keep: usize) {
+    if keep >= span || matches!(node.as_ref(), Node::Empty) {
+        return;
+    }
+    match Arc::make_mut(node) {
+        Node::Empty => {}
+        Node::Leaf(values) => values.truncate(keep),
+        Node::Repeat { len, .. } => *len = (*len).min(keep),
+        Node::Branch { left, right } => {
+            let half = span / 2;
+            if keep <= half {
+                prune_suffix(left, half, keep);
+                *right = None;
+            } else if let Some(right) = right {
+                prune_suffix(right, half, keep - half);
+            }
+        }
+    }
+}
+
 fn prune_prefix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, count: usize) {
     if count == 0 || matches!(node.as_ref(), Node::Empty) {
         return;
@@ -837,5 +879,74 @@ mod tests {
         assert_eq!(iter.len(), 149);
         assert_eq!(iter.nth(usize::MAX), None);
         assert_eq!(iter.len(), 0);
+    }
+
+    #[test]
+    fn suffix_truncation_keeps_checkpoints_and_append_indexes_after_prefix_pruning() {
+        let original = AppendHistory::from_values(0..4096);
+        for dropped in [0, 127, 600, 2051] {
+            for retained in [1, 127, 128, 129, 513] {
+                let mut history = original.clone();
+                history.drop_prefix(dropped);
+                history.truncate(retained);
+                assert_eq!(
+                    history.to_vec(),
+                    (dropped..dropped + retained).collect::<Vec<_>>()
+                );
+                let truncated = history.clone();
+                history.push(9000);
+                *history.last_mut().unwrap() = 9001;
+                assert_eq!(history[retained], 9001);
+                assert_eq!(truncated.len(), retained);
+                assert_eq!(*truncated.last().unwrap(), dropped + retained - 1);
+            }
+        }
+        assert_eq!(original.to_vec(), (0..4096).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn suffix_truncation_copies_only_a_boundary_leaf() {
+        #[derive(Debug)]
+        struct Counted(Arc<AtomicUsize>);
+        impl Clone for Counted {
+            fn clone(&self) -> Self {
+                self.0.fetch_add(1, Ordering::Relaxed);
+                Self(self.0.clone())
+            }
+        }
+        let count = Arc::new(AtomicUsize::new(0));
+        let original = AppendHistory::from_values((0..4096).map(|_| Counted(count.clone())));
+        let mut history = original.clone();
+        count.store(0, Ordering::Relaxed);
+        history.truncate(4096);
+        assert_eq!(count.load(Ordering::Relaxed), 0);
+        history.truncate(3075);
+        assert!(count.load(Ordering::Relaxed) <= APPEND_LEAF_SIZE);
+        assert_eq!(history.len(), 3075);
+        assert_eq!(original.len(), 4096);
+        history.truncate(0);
+        history.push(Counted(count));
+        assert_eq!(history.len(), 1);
+    }
+
+    #[test]
+    fn compact_suffix_truncation_preserves_repeat_leaves_and_future_appends() {
+        use crate::PineValue;
+        let mut history =
+            AppendHistory::from_compact_values(std::iter::repeat_n(PineValue::Na, 1024));
+        let checkpoint = history.clone();
+        history.drop_prefix(100);
+        history.truncate(129);
+        history.push_compact(PineValue::Int(7));
+        assert_eq!(history.len(), 130);
+        assert!(
+            history
+                .iter()
+                .take(129)
+                .all(|value| value == &PineValue::Na)
+        );
+        assert_eq!(history.last(), Some(&PineValue::Int(7)));
+        assert_eq!(checkpoint.len(), 1024);
+        assert!(checkpoint.iter().all(|value| value == &PineValue::Na));
     }
 }

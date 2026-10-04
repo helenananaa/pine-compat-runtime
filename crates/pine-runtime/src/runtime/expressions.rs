@@ -5,6 +5,7 @@ use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_expr(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
+        self.charge_execution_steps(1)?;
         if self.eval_expr_depth >= MAX_RUNTIME_EVAL_DEPTH {
             return Err(RuntimeError {
                 message: "runtime expression evaluation exceeded maximum depth".to_owned(),
@@ -149,8 +150,16 @@ impl<'a> HistoricalRuntime<'a> {
                 for statement in statements {
                     match self.eval_stmt(statement)? {
                         StmtControl::None => {}
-                        StmtControl::Break => return Err(RuntimeError::loop_break()),
-                        StmtControl::Continue => return Err(RuntimeError::loop_continue()),
+                        StmtControl::Break => {
+                            return Err(
+                                self.raise_loop_control(crate::error::RuntimeLoopControl::Break)
+                            );
+                        }
+                        StmtControl::Continue => {
+                            return Err(
+                                self.raise_loop_control(crate::error::RuntimeLoopControl::Continue)
+                            );
+                        }
                     }
                 }
                 self.eval_expr(result)?

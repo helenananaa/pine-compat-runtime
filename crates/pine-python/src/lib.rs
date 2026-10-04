@@ -26,7 +26,7 @@ mod tables;
 mod tests;
 use alerts::{render_strategy_order_fill_alert_template, render_strategy_order_fill_running_alert};
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
-use outputs::{runtime_result_into_py, value_to_py};
+use outputs::{runtime_result_view_to_py, value_to_py};
 use realtime::PyRealtimeSession;
 
 #[pyclass(name = "Program", skip_from_py_object)]
@@ -95,7 +95,7 @@ impl PyProgram {
             None => runtime.append_bars(&bars),
         })
         .map_err(|err| PyValueError::new_err(err.message))?;
-        runtime_result_into_py(py, py.detach(|| runtime.result()))
+        runtime_result_view_to_py(py, &runtime.result_view())
     }
 
     #[pyo3(signature = (
@@ -787,7 +787,20 @@ fn diagnostics_to_py(
         item.set_item("code", &diagnostic.code)?;
         item.set_item("severity", severity_name(diagnostic.severity))?;
         item.set_item("message", &diagnostic.message)?;
-        item.set_item("span", span_to_py(py, source, diagnostic.span)?)?;
+        let location = diagnostic.line_col(source);
+        let span = PyDict::new(py);
+        span.set_item("start", diagnostic.span.start)?;
+        span.set_item("end", diagnostic.span.end)?;
+        span.set_item("line", location.line)?;
+        span.set_item("column", location.column)?;
+        if let Some(origin) = &diagnostic.source {
+            span.set_item("sourceId", origin.source_id)?;
+            span.set_item("sourceName", &origin.source_name)?;
+            if let Some(key) = &origin.library_key {
+                span.set_item("libraryKey", key)?;
+            }
+        }
+        item.set_item("span", span)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

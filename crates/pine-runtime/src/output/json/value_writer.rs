@@ -5,7 +5,7 @@ use std::io::{self, Write};
 pub(super) fn value<W: Write + ?Sized>(value: &PineValue, output: &mut W) -> io::Result<()> {
     match value {
         PineValue::Int(value) => write!(output, "{value}"),
-        PineValue::Float(value) if value.is_finite() => write!(output, "{value}"),
+        PineValue::Float(value) => super::float_writer::float(*value, output),
         PineValue::Bool(value) => output.write_all(if *value { b"true" } else { b"false" }),
         PineValue::String(value) => {
             output.write_all(b"\"")?;
@@ -40,8 +40,7 @@ pub(super) fn value<W: Write + ?Sized>(value: &PineValue, output: &mut W) -> io:
             }
             output.write_all(b"]")
         }
-        PineValue::Float(_)
-        | PineValue::Array(_)
+        PineValue::Array(_)
         | PineValue::UserTypeRef(_)
         | PineValue::Matrix(_)
         | PineValue::Map(_)

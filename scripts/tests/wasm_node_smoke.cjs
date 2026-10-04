@@ -622,6 +622,63 @@ assert.equal(metadataReport.inputs[2].default, 3);
 const metadataResult = JSON.parse(pine.runScriptCsv(metadataSource, bars));
 assert.deepEqual(metadataResult.plots[0].values, [8 + Math.PI, 8 + Math.PI, 8 + Math.PI]);
 
+// Compact extreme floats preserve their IEEE-754 values through the real Wasm
+// ABI, including borrowed realtime snapshots and parsed change replicas.
+{
+  const extremeSource = '//@version=6\nindicator("compact floats")\nplot(close)\nlabel.new(bar_index,close)\n';
+  const values = [Number.MAX_VALUE, -Number.MAX_VALUE, Number.MIN_VALUE, -Number.MIN_VALUE, 1e-308, -0];
+  const bits = value => {
+    const view = new DataView(new ArrayBuffer(8));
+    view.setFloat64(0, value);
+    return view.getBigUint64(0);
+  };
+  const checkValues = (wire, expected) => {
+    const result = JSON.parse(wire);
+    assert.equal(result.schemaVersion, 9);
+    assert.equal(result.renderMetadataVersion, 1);
+    assert.deepEqual(result.diagnostics, []);
+    assert.deepEqual(result.plots[0].values.map(bits), expected.map(bits));
+    const tokens = wire.match(/"values":\[([^\]]*)\]/)[1].split(',');
+    assert.ok(tokens.every(token => token.length <= 24));
+    return result;
+  };
+  const csv = ['time,open,high,low,close,volume', ...values.map((value, time) => {
+    const text = Object.is(value, -0) ? '-0' : String(value);
+    return `${time},${text},${text},${text},${text},1`;
+  }), ''].join('\n');
+  const directWire = pine.runScriptCsv(extremeSource, csv);
+  checkValues(directWire, values);
+  assert.ok(directWire.includes('1.7976931348623157e+308'));
+  assert.ok(directWire.includes('-5e-324'));
+  const extremeProgram = pine.compileScript(extremeSource);
+  assert.equal(extremeProgram.runCsv(csv), directWire);
+  const session = extremeProgram.realtimeSession();
+  assert.equal(session.seed(csv), directWire);
+  const consumer = session.replica();
+  const confirmedBefore = session.confirmedResult();
+  for (const close of [1e308, -1e308, Number.MIN_VALUE]) {
+    const bar = JSON.stringify({ time: values.length, open: close, high: close, low: close, close, volume: 1 });
+    const changes = session.applyForming(bar);
+    assert.equal(consumer.apply(changes), true);
+    assert.equal(consumer.apply(changes), false);
+    const visible = session.result();
+    const result = checkValues(visible, [...values, close]);
+    assert.equal(bits(result.labels.at(-1).snapshots.at(-1).y), bits(close));
+    assert.equal(consumer.result(), visible);
+    assert.equal(session.confirmedResult(), confirmedBefore);
+  }
+  const close = Number.MIN_VALUE;
+  const changes = session.applyConfirmed(JSON.stringify({ time: values.length, open: close, high: close, low: close, close, volume: 1 }));
+  assert.equal(consumer.apply(changes), true);
+  const complete = session.result();
+  checkValues(complete, [...values, close]);
+  assert.equal(consumer.result(), complete);
+  assert.equal(session.confirmedResult(), complete);
+  consumer.free();
+  session.free();
+  extremeProgram.free();
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

@@ -3,6 +3,7 @@ use crate::{PineValue, RuntimeProfile};
 
 mod delta_writer;
 mod drawings_writer;
+mod float_writer;
 mod metadata_writer;
 mod profile;
 mod records_writer;

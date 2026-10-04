@@ -1,4 +1,5 @@
 //! Allocation-free record encoding shared by full and incremental output.
+use super::float_writer::float;
 use super::*;
 use std::io::{self, Write};
 
@@ -6,13 +7,6 @@ fn string<W: Write + ?Sized>(value: &str, output: &mut W) -> io::Result<()> {
     output.write_all(b"\"")?;
     value_writer::escaped(value, output)?;
     output.write_all(b"\"")
-}
-fn float<W: Write + ?Sized>(value: f64, output: &mut W) -> io::Result<()> {
-    if value.is_finite() {
-        write!(output, "{value}")
-    } else {
-        output.write_all(b"null")
-    }
 }
 fn optional_string<W: Write + ?Sized>(value: Option<&str>, output: &mut W) -> io::Result<()> {
     match value {

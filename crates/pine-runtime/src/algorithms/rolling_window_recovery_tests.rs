@@ -1,5 +1,7 @@
 //! Mathematical recovery cases are separate from the legacy finite-path bit
 //! comparisons: the legacy overflowing or lost-tail sums are known errors.
+use std::collections::VecDeque;
+
 use super::*;
 
 fn assert_constant_result(window: &RollingWindowState, value: f64, length: usize) {
@@ -290,7 +292,7 @@ fn ready_zero_variance_matches_independent_old_scan_bits_with_wrap_na_and_undo()
         (squared / denominator as f64).max(0.0)
     }
     let mut window = RollingWindowState {
-        values: VecDeque::with_capacity(7),
+        values: VecDeque::with_capacity(7).into(),
         ..Default::default()
     };
     let mut wrapped = false;
@@ -302,7 +304,7 @@ fn ready_zero_variance_matches_independent_old_scan_bits_with_wrap_na_and_undo()
             Some(if bar.is_multiple_of(2) { -0.0 } else { 0.0 })
         };
         window.push_for_bar(value, length, bar);
-        wrapped |= !window.values.as_slices().1.is_empty();
+        wrapped |= window.values.has_split_storage();
         for biased in [false, true] {
             assert_eq!(
                 window.variance(length, biased).to_bits(),
@@ -339,7 +341,7 @@ fn constant_proof_matches_independent_adjacent_scan_after_eviction_and_undo() {
         assert_eq!(window.is_constant_ready(length), expected);
     }
     let mut window = RollingWindowState {
-        values: VecDeque::with_capacity(7),
+        values: VecDeque::with_capacity(7).into(),
         ..Default::default()
     };
     let inputs = [
@@ -357,7 +359,7 @@ fn constant_proof_matches_independent_adjacent_scan_after_eviction_and_undo() {
             let value = inputs[(bar + pass) % inputs.len()];
             window.push_for_bar(value, length, bar);
             assert_proof(&window, length);
-            wrapped |= !window.values.as_slices().1.is_empty();
+            wrapped |= window.values.has_split_storage();
             if pass == 2 {
                 let checkpoint = window.clone();
                 window.push_for_bar(Some(9.0), 2, bar);

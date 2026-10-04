@@ -1,7 +1,47 @@
 //! Compare observable window results with the pre-removal algorithm. The
 //! reference uses a plain Vec and full undo snapshots, independent of the
 //! production deque and its eviction log.
+use std::collections::VecDeque;
+
 use super::*;
+
+#[test]
+fn paged_scans_and_large_same_bar_eviction_log_preserve_legacy_bits() {
+    let mut current = RollingWindowState::default();
+    let mut legacy = LegacyWindow::default();
+    for index in 0..5100 {
+        current.push(ordinary_sample(index), 5000);
+        legacy.samples.push(ordinary_sample(index), 5000);
+    }
+    assert!(current.values.has_split_storage());
+    assert_same(&current, &legacy.samples, 5000);
+    let committed = current.clone();
+    let committed_legacy = legacy.clone();
+    for (pass, length) in [1, 127, 129, 257, 5000, 3, 5000].into_iter().enumerate() {
+        current.push_for_bar(ordinary_sample(5100 + pass), length, 5100);
+        legacy.push_for_bar(ordinary_sample(5100 + pass), length, 5100);
+        assert_same(&current, &legacy.samples, length);
+        assert_hma_scan_pair(&current, &legacy.samples, length);
+        if length == 1 {
+            assert_eq!(current.evicted.len(), 5000);
+            assert!(current.evicted.has_split_storage());
+        }
+        let checkpoint = current.clone();
+        let previous = legacy.clone();
+        current.push_for_bar(Some(-0.0), 2, 5100);
+        legacy.push_for_bar(Some(-0.0), 2, 5100);
+        assert_same(&current, &legacy.samples, 2);
+        current = checkpoint;
+        legacy = previous;
+        assert_same(&current, &legacy.samples, length);
+    }
+    current.discard_for_bar(5100);
+    legacy.discard_for_bar(5100);
+    assert_same(&current, &legacy.samples, 5000);
+    assert_eq!(current.values, committed.values);
+    assert_eq!(current.sum.to_bits(), committed.sum.to_bits());
+    assert_same(&current, &committed_legacy.samples, 5000);
+}
 
 #[derive(Clone, Default)]
 struct LegacySamples {
@@ -260,7 +300,7 @@ fn assert_hma_scan_pair(current: &RollingWindowState, legacy: &LegacySamples, le
 #[test]
 fn hma_fused_scan_matches_old_double_scan_for_wrapped_na_zero_and_extreme_samples() {
     let mut current = RollingWindowState {
-        values: VecDeque::with_capacity(7),
+        values: VecDeque::with_capacity(7).into(),
         ..Default::default()
     };
     let mut legacy = LegacySamples::default();
@@ -277,7 +317,7 @@ fn hma_fused_scan_matches_old_double_scan_for_wrapped_na_zero_and_extreme_sample
         };
         current.push(value, length);
         legacy.push(value, length);
-        wrapped |= !current.values.as_slices().1.is_empty();
+        wrapped |= current.values.has_split_storage();
         overflow_seen |= legacy.weighted_mean(length).is_infinite();
         nan_seen |= legacy.weighted_mean(length).is_nan();
         assert_hma_scan_pair(&current, &legacy, length);
@@ -342,7 +382,7 @@ fn hma_fused_scan_keeps_old_bits_after_same_bar_undo_discard_and_checkpoint_rest
 #[test]
 fn ordinary_push_outputs_match_legacy_bits_through_wrapped_deque_na_and_length_changes() {
     let mut current = RollingWindowState {
-        values: VecDeque::with_capacity(7),
+        values: VecDeque::with_capacity(7).into(),
         ..Default::default()
     };
     let mut legacy = LegacySamples::default();
@@ -356,7 +396,7 @@ fn ordinary_push_outputs_match_legacy_bits_through_wrapped_deque_na_and_length_c
         };
         current.push(ordinary_sample(index), length);
         legacy.push(ordinary_sample(index), length);
-        wrapped |= !current.values.as_slices().1.is_empty();
+        wrapped |= current.values.has_split_storage();
         assert_same(&current, &legacy, length);
         if index.is_multiple_of(19) {
             current.pop_front();

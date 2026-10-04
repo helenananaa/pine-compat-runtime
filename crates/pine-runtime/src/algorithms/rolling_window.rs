@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
-
 use pine_ir::CallSiteId;
+
+use super::shared_deque::SharedDeque;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct RollingWindowState {
-    pub(crate) values: VecDeque<Option<f64>>,
+    pub(crate) values: SharedDeque<Option<f64>>,
     pub(crate) sum: f64,
     pub(crate) na_count: usize,
     nonzero_count: usize,
@@ -18,9 +18,9 @@ pub(crate) struct RollingWindowState {
     prev_na_count: usize,
     prev_nonzero_count: usize,
     prev_change_count: usize,
-    /// Items evicted by the open append only. Kept at this level (not inside
-    /// `Option`) so the allocation is reused across bars.
-    evicted: Vec<Option<f64>>,
+    /// Items evicted by the open append only. Short logs reuse their allocation;
+    /// large logs share bounded pages across checkpoints until committed.
+    evicted: SharedDeque<Option<f64>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -102,7 +102,7 @@ impl RollingWindowState {
                 break;
             };
             recover_tail |= self.remove_front();
-            self.evicted.push(evicted);
+            self.evicted.push_back(evicted);
         }
         let tail_recovered = recover_tail && self.recover_qualified_tail();
         self.append(value);
@@ -261,15 +261,19 @@ impl RollingWindowState {
         let mut weighted_sum = -0.0;
         let mut tail_weighted_sum = -0.0;
         let mut full_weight = 0_usize;
-        for value in self.values.range(..tail_start).flatten() {
+        self.values.range(..tail_start).flatten().for_each(|value| {
             full_weight += 1;
             weighted_sum += *value * full_weight as f64;
-        }
-        for (index, value) in self.values.range(tail_start..).flatten().enumerate() {
-            full_weight += 1;
-            weighted_sum += *value * full_weight as f64;
-            tail_weighted_sum += *value * (index + 1) as f64;
-        }
+        });
+        self.values
+            .range(tail_start..)
+            .flatten()
+            .enumerate()
+            .for_each(|(index, value)| {
+                full_weight += 1;
+                weighted_sum += *value * full_weight as f64;
+                tail_weighted_sum += *value * (index + 1) as f64;
+            });
         let denominator = length * (length + 1) / 2;
         let tail_denominator = tail_length * (tail_length + 1) / 2;
         let full_mean = weighted_sum / denominator as f64;
@@ -499,7 +503,7 @@ impl RollingWindowState {
         self.na_count = self.prev_na_count;
         self.nonzero_count = self.prev_nonzero_count;
         self.change_count = self.prev_change_count;
-        while let Some(value) = self.evicted.pop() {
+        while let Some(value) = self.evicted.pop_back() {
             self.values.push_front(value);
         }
     }
@@ -514,6 +518,8 @@ fn two_sum(left: f64, right: f64) -> (f64, f64) {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::VecDeque;
+
     use super::*;
 
     fn bits(value: f64) -> u64 {

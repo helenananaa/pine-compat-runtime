@@ -17,8 +17,9 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_expr_depth -= 1;
 
         let value = result?;
-        if let Some(series_id) = expr.series_id {
-            self.activate_bar_aligned_series(series_id);
+        if let Some(series_id) = expr.series_id
+            && self.activate_bar_aligned_series(series_id)
+        {
             self.current_series.insert(series_id, value.clone());
         }
 

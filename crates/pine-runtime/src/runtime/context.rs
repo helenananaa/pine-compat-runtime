@@ -116,11 +116,14 @@ impl<'a> HistoricalRuntime<'a> {
                 .ok_or_else(|| RuntimeError {
                     message: format!("missing builtin symbol `{name}`"),
                 })?;
-            let symbol = &self.program.symbols[index];
-            self.current_symbols.insert(symbol.id, value.clone());
-            if let Some(series_id) = symbol.series_id {
-                self.activate_bar_aligned_series(series_id);
+            let symbol_id = self.program.symbols[index].id;
+            if let Some(series_id) = self.program.symbols[index].series_id
+                && self.activate_bar_aligned_series(series_id)
+            {
+                self.current_symbols.insert(symbol_id, value.clone());
                 self.current_series.insert(series_id, value);
+            } else {
+                self.current_symbols.insert(symbol_id, value);
             }
         }
 
@@ -332,16 +335,22 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn set_symbol_value(&mut self, symbol: SymbolId, value: PineValue) {
-        self.current_symbols.insert(symbol, value.clone());
-        if let Some(series_id) = self.series_id_for_symbol(symbol) {
-            self.activate_bar_aligned_series(series_id);
+        if let Some(series_id) = self.series_id_for_symbol(symbol)
+            && self.activate_bar_aligned_series(series_id)
+        {
+            self.current_symbols.insert(symbol, value.clone());
             self.current_series.insert(series_id, value);
+        } else {
+            self.current_symbols.insert(symbol, value);
         }
     }
 
-    pub(crate) fn activate_bar_aligned_series(&mut self, series_id: SeriesId) {
+    pub(crate) fn activate_bar_aligned_series(&mut self, series_id: SeriesId) -> bool {
         if self.metadata.requires_history(series_id) {
             self.active_series.insert(series_id);
+            true
+        } else {
+            false
         }
     }
 
@@ -443,3 +452,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.previous_builtin_f64("close")
     }
 }
+
+#[cfg(test)]
+#[path = "zero_depth_series_tests.rs"]
+mod zero_depth_series_tests;

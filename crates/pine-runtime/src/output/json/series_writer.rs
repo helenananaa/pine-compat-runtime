@@ -21,9 +21,7 @@ fn metadata<W: Write + ?Sized>(
     output: &mut W,
     metadata: &super::super::model::OutputMetadata,
 ) -> io::Result<()> {
-    let mut suffix = String::new();
-    output_metadata_json_into(&mut suffix, metadata);
-    output.write_all(suffix.as_bytes())?;
+    metadata_writer::output_metadata(output, metadata)?;
     output.write_all(b"}")
 }
 
@@ -36,37 +34,7 @@ pub(super) fn plots<W: Write + ?Sized>(
     if plot.colors.iter().any(|value| *value != PineValue::Na) {
         values(output, "colors", &plot.colors)?;
     }
-    let mut suffix = String::new();
-    push_non_default_value_field(&mut suffix, "linewidth", plot.linewidth, &PineValue::Int(1));
-    push_non_default_value_field(
-        &mut suffix,
-        "style",
-        plot.style,
-        &PineValue::String("plot.style_line".to_owned()),
-    );
-    push_non_default_value_field(
-        &mut suffix,
-        "trackPrice",
-        plot.track_price,
-        &PineValue::Bool(false),
-    );
-    push_non_default_value_field(&mut suffix, "histBase", plot.hist_base, &PineValue::Int(0));
-    push_non_default_value_field(&mut suffix, "join", plot.join, &PineValue::Bool(false));
-    push_non_default_value_field(
-        &mut suffix,
-        "format",
-        plot.format,
-        &PineValue::String("format.inherit".to_owned()),
-    );
-    push_non_default_value_field(&mut suffix, "precision", plot.precision, &PineValue::Na);
-    push_non_default_value_field(
-        &mut suffix,
-        "linestyle",
-        plot.linestyle,
-        &PineValue::String("plot.linestyle_solid".to_owned()),
-    );
-
-    output.write_all(suffix.as_bytes())?;
+    metadata_writer::plot_fields(plot, output)?;
     metadata(output, plot.metadata)
 }
 
@@ -106,38 +74,37 @@ pub(super) fn fills<W: Write + ?Sized>(
             if index > 0 {
                 output.write_all(b",")?;
             }
-            let text = serde_json::to_string(sample).expect("finite gradient samples");
-            output.write_all(text.as_bytes())?;
+            gradient_sample(sample, output)?;
         }
         output.write_all(b"]")?;
     }
-    let mut suffix = String::new();
-    push_non_default_value_field(
-        &mut suffix,
-        "title",
-        fill.title,
-        &PineValue::String(String::new()),
-    );
-    push_non_default_value_field(
-        &mut suffix,
-        "editable",
-        fill.editable,
-        &PineValue::Bool(true),
-    );
-    push_non_default_value_field(&mut suffix, "showLast", fill.show_last, &PineValue::Na);
-    push_non_default_value_field(
-        &mut suffix,
-        "fillGaps",
-        fill.fill_gaps,
-        &PineValue::Bool(true),
-    );
-    push_non_default_value_field(
-        &mut suffix,
-        "display",
-        fill.display,
-        &PineValue::String("display.all".to_owned()),
-    );
+    use metadata_writer::DefaultValue::{Bool, Na, Str};
+    metadata_writer::non_default(output, "title", fill.title, Str(""))?;
+    metadata_writer::non_default(output, "editable", fill.editable, Bool(true))?;
+    metadata_writer::non_default(output, "showLast", fill.show_last, Na)?;
+    metadata_writer::non_default(output, "fillGaps", fill.fill_gaps, Bool(true))?;
+    metadata_writer::non_default(output, "display", fill.display, Str("display.all"))?;
+    output.write_all(b"}")
+}
 
-    output.write_all(suffix.as_bytes())?;
+pub(super) fn gradient_sample<W: Write + ?Sized>(
+    sample: &crate::FillGradientSample,
+    output: &mut W,
+) -> io::Result<()> {
+    // Gradient floats retain serde_json's wire spelling (including `.0`),
+    // rather than the PineValue Display spelling used by other histories.
+    serde_json::to_writer(output, sample).map_err(io::Error::from)
+}
+
+pub(super) fn hlines<W: Write + ?Sized>(item: &HLineOutput, output: &mut W) -> io::Result<()> {
+    use metadata_writer::DefaultValue::{Bool, Color, Int, Str};
+    write!(output, "{{\"id\":{},\"price\":", item.id)?;
+    value_writer::value(&item.price, output)?;
+    metadata_writer::non_default(output, "title", &item.title, Str(""))?;
+    metadata_writer::non_default(output, "color", &item.color, Color(0x787B86))?;
+    metadata_writer::non_default(output, "style", &item.style, Str("hline.style_solid"))?;
+    metadata_writer::non_default(output, "linewidth", &item.linewidth, Int(1))?;
+    metadata_writer::non_default(output, "editable", &item.editable, Bool(true))?;
+    metadata_writer::non_default(output, "display", &item.display, Str("display.all"))?;
     output.write_all(b"}")
 }

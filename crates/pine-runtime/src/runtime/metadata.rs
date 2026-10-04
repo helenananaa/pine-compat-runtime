@@ -3,18 +3,22 @@ use std::collections::{HashMap, HashSet};
 
 use pine_ir::{HirProgram, PersistenceKind, SeriesId, SymbolId, VarSlotId};
 
+use crate::retention::SeriesRetention;
+
 #[derive(Debug)]
 pub(crate) struct RuntimeMetadata {
     pub(crate) calls: super::call_plan::CallPlan,
     symbols: HashMap<SymbolId, usize>,
     names: HashMap<String, usize>,
+    // Exact nonzero retention eligibility, including unbounded dynamic history.
+    // Zero-depth series need no current sample, commit or activation bookkeeping.
     history: HashSet<SeriesId>,
     execution_scoped: HashSet<SeriesId>,
     persistent_slots: [Vec<VarSlotId>; 3],
 }
 
 impl RuntimeMetadata {
-    pub(crate) fn from_program(program: &HirProgram) -> Self {
+    pub(crate) fn from_program(program: &HirProgram, retention: &SeriesRetention) -> Self {
         let mut metadata = Self {
             calls: super::call_plan::CallPlan::from_program(program),
             symbols: HashMap::with_capacity(program.symbols.len()),
@@ -22,9 +26,7 @@ impl RuntimeMetadata {
             history: program
                 .series_history
                 .iter()
-                .filter(|requirement| {
-                    requirement.max_constant_offset > 0 || requirement.has_dynamic_offsets
-                })
+                .filter(|requirement| retention.max_depth_for(requirement.series_id) != Some(0))
                 .map(|requirement| requirement.series_id)
                 .collect(),
             execution_scoped: program.execution_scoped_series.iter().copied().collect(),
@@ -93,7 +95,8 @@ mod tests {
         program.symbols.push(duplicate.clone());
         duplicate.name = "sparse".to_owned();
         program.symbols.push(duplicate);
-        let metadata = RuntimeMetadata::from_program(&program);
+        let retention = SeriesRetention::from_program(&program);
+        let metadata = RuntimeMetadata::from_program(&program, &retention);
         for symbol in &program.symbols {
             assert_eq!(
                 metadata.symbol_index(symbol.id),
@@ -116,12 +119,7 @@ mod tests {
             let series = SeriesId(id);
             assert_eq!(
                 metadata.requires_history(series),
-                program
-                    .series_history
-                    .iter()
-                    .any(|requirement| requirement.series_id == series
-                        && (requirement.max_constant_offset > 0
-                            || requirement.has_dynamic_offsets))
+                retention.max_depth_for(series) != Some(0)
             );
         }
         for kind in [

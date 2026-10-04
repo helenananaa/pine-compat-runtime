@@ -49,8 +49,8 @@ pub use output::drawings::{
 pub use output::json::{
     into_public_runtime_result_json, public_runtime_changes_json,
     public_runtime_profiled_result_json, public_runtime_result_json,
-    public_runtime_result_view_json, write_public_runtime_result_json,
-    write_public_runtime_result_view_json,
+    public_runtime_result_view_json, write_public_runtime_changes_json,
+    write_public_runtime_result_json, write_public_runtime_result_view_json,
 };
 pub use output::model::{
     ColorSeries, FillGradientSample, FillOutput, HLineOutput, OutputMetadata,

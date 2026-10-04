@@ -540,3 +540,61 @@ fn large_drawing_and_record_payloads_stream_without_temporary_allocations() {
     assert_eq!(sink.bytes, encoded.as_bytes()[..sink.limit]);
     assert_eq!(json(&view), encoded);
 }
+
+#[test]
+fn large_delta_fields_headers_and_gradients_stream_without_temporary_allocations() {
+    use pine_runtime::{
+        FillAction, FillChange, FillGradientSample, PineValue as V, RuntimeChanges, SeriesChange,
+        SeriesChangeOp, SeriesFamily, SeriesFields, SeriesHeader, StreamingVisibility,
+        public_runtime_changes_json, write_public_runtime_changes_json,
+    };
+    let text = "汉🙂\n\0\"\\".repeat(1024);
+    let mut changes = RuntimeChanges::new(10, StreamingVisibility::Preview);
+    for id in 0..64 {
+        let mut header = SeriesHeader::default();
+        header.metadata.title = V::String(text.clone());
+        header.hist_base = V::Float(-0.0);
+        changes.series.push(SeriesChange {
+            family: SeriesFamily::Plot,
+            id,
+            op: SeriesChangeOp::ReplaceLast,
+            start: 4,
+            fields: SeriesFields {
+                values: vec![V::Float(-0.0), V::Na, V::Float(f64::INFINITY)],
+                texts: vec![V::String(text.clone())],
+                ..Default::default()
+            },
+            header: Some(header),
+        });
+    }
+    changes.fills.push(FillChange {
+        id: 1,
+        action: FillAction::SetGradient {
+            start: 4,
+            values: vec![
+                FillGradientSample {
+                    top_value: Some(1.0),
+                    bottom_value: Some(-0.0),
+                    top_color: Some(0xffaaff),
+                    bottom_color: None,
+                };
+                4096
+            ],
+        },
+    });
+    let (_, largest, total) =
+        track(|| write_public_runtime_changes_json(&changes, &mut io::sink()).unwrap());
+    assert_eq!(
+        (largest, total),
+        (0, 0),
+        "delta encoder allocated a field/section buffer"
+    );
+    let mut bytes = Vec::new();
+    write_public_runtime_changes_json(&changes, &mut bytes).unwrap();
+    assert_eq!(bytes, public_runtime_changes_json(&changes).as_bytes());
+    let parsed: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(parsed["series"][0]["header"]["title"], text);
+    assert!(parsed["series"][0].get("fields").is_none());
+    assert_eq!(parsed["series"][0]["values"][2], serde_json::Value::Null);
+    assert_eq!(parsed["fills"][0]["values"].as_array().unwrap().len(), 4096);
+}

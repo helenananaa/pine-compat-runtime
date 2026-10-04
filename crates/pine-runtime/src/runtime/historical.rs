@@ -387,10 +387,13 @@ impl<'a> HistoricalRuntime<'a> {
         request_environment: RequestEnvironment,
     ) -> Self {
         let (series_retention, metadata) = match &program {
-            RuntimeProgram::Borrowed(program) => (
-                Arc::new(SeriesRetention::from_program(program)),
-                Arc::new(super::metadata::RuntimeMetadata::from_program(program)),
-            ),
+            RuntimeProgram::Borrowed(program) => {
+                let retention = Arc::new(SeriesRetention::from_program(program));
+                let metadata = Arc::new(super::metadata::RuntimeMetadata::from_program(
+                    program, &retention,
+                ));
+                (retention, metadata)
+            }
             RuntimeProgram::Owned(program) => (
                 Arc::clone(&program.retention),
                 Arc::clone(&program.metadata),

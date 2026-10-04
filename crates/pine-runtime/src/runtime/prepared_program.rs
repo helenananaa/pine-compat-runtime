@@ -26,9 +26,10 @@ impl PreparedProgram {
 
     #[must_use]
     pub fn from_shared_hir(hir: Arc<HirProgram>) -> Self {
+        let retention = Arc::new(SeriesRetention::from_program(&hir));
         Self {
-            metadata: Arc::new(RuntimeMetadata::from_program(&hir)),
-            retention: Arc::new(SeriesRetention::from_program(&hir)),
+            metadata: Arc::new(RuntimeMetadata::from_program(&hir, &retention)),
+            retention,
             position_history_depth: super::strategy_history::position_history_depth(&hir),
             hir,
         }

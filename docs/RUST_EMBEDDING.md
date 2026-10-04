@@ -95,8 +95,10 @@ buffer and leaves the runtime and revision unchanged on an I/O failure;
 already-written bytes remain in the caller's sink. Drawing snapshots (including
 table cells and polyline points), strategy records, alerts, and diagnostics write
 their scalar fields directly to the sink. They do not allocate a temporary buffer
-proportional to a record or history. Persistent history iteration uses a small
-tree cursor; metadata and other static output headers may also allocate.
+proportional to a record or history. Series, fill, hline and delta headers use
+borrowed, type-sensitive defaults; gradient samples stream through their original
+serde_json encoding rules. Persistent history iteration still uses a small tree
+cursor. Convenience functions returning String still allocate the complete JSON.
 The sink may short-write or fail inside a record, so discard partial output when
 atomic delivery is required. The convenience function
 `public_runtime_result_view_json(&view)` counts and encodes the output in two
@@ -104,6 +106,15 @@ passes to reserve one complete String buffer. The owned serializer
 `public_runtime_result_json(&result)` uses the same encoding path. Python and
 WASM `result`, confirmed-result, and stream-snapshot output paths consume views
 while still returning independently owned dictionaries or strings.
+
+`write_public_runtime_changes_json(&changes, &mut sink)` provides the equivalent
+streaming contract for realtime deltas. It shares scalar, metadata, drawing and
+strategy record rules with complete output, preserving field order, optional
+sections and action names. Empty vectors are omitted where the existing delta
+schema omits them; absent and present-empty strategy splices remain distinct.
+`public_runtime_changes_json(&changes)` retains the existing owned String API.
+A sink failure does not alter the changes or runtime state; discard already-written
+partial output when the host requires atomic delivery.
 
 For a host that will consume a view after a successful update, use
 `update_without_output` or `update_with_context_without_output` instead of

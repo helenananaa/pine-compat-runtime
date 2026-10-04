@@ -2,6 +2,10 @@ use std::borrow::Borrow;
 use std::io::{self, Write};
 
 use super::*;
+use crate::output::model::{
+    ColorSeries, FillOutput, PlotArrowSeries, PlotBarSeries, PlotCandleSeries, PlotCharSeries,
+    PlotSeries, PlotShapeSeries,
+};
 
 /// Write the public result schema to a caller-owned sink, propagating I/O errors.
 ///
@@ -25,12 +29,6 @@ pub fn write_public_runtime_result_view_json<W: Write + ?Sized>(
         "{{\"schemaVersion\":{},\"renderMetadataVersion\":{}",
         PUBLIC_RUNTIME_SCHEMA_VERSION, PUBLIC_RENDER_METADATA_VERSION
     )?;
-    macro_rules! family {
-        ($name:literal, $values:expr, $serializer:ident) => {
-            output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
-            write_array(output, $values, |items| $serializer(items))?;
-        };
-    }
     macro_rules! history {
         ($name:literal, $values:expr, $serializer:ident) => {
             output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
@@ -57,7 +55,8 @@ pub fn write_public_runtime_result_view_json<W: Write + ?Sized>(
     history!("plotCandles", result.plot_candles.iter(), candles);
     history!("bgColors", result.bg_colors.iter(), colors);
     history!("barColors", result.bar_colors.iter(), colors);
-    family!("hlines", result.hlines, hlines_json);
+    output.write_all(b",\"hlines\":")?;
+    write_series_array(output, result.hlines, series_writer::hlines)?;
     history!("fills", result.fills.iter(), fills);
     drawing!("labels", result.labels.iter(), labels);
     drawing!("lines", result.lines.iter(), lines);
@@ -118,24 +117,6 @@ where
     output.write_all(b"]")
 }
 
-fn write_array<'a, W: Write + ?Sized, T: 'a>(
-    output: &mut W,
-    items: impl IntoIterator<Item = &'a T>,
-    serialize: impl Fn(&[T]) -> String,
-) -> io::Result<()> {
-    output.write_all(b"[")?;
-    for (index, item) in items.into_iter().enumerate() {
-        if index > 0 {
-            output.write_all(b",")?;
-        }
-        // Reuse the established field/number/escaping rules for exactly one
-        // item. Remove only its enclosing array brackets, never parse values.
-        let text = serialize(std::slice::from_ref(item));
-        output.write_all(&text.as_bytes()[1..text.len() - 1])?;
-    }
-    output.write_all(b"]")
-}
-
 /// Serialize an owned snapshot, releasing each source series after encoding it.
 ///
 /// Encode into small chunks as source series are released, then allocate the
@@ -190,12 +171,6 @@ fn write_owned_result<W: Write + ?Sized>(result: RuntimeResult, output: &mut W) 
         "{{\"schemaVersion\":{},\"renderMetadataVersion\":{}",
         PUBLIC_RUNTIME_SCHEMA_VERSION, PUBLIC_RENDER_METADATA_VERSION
     )?;
-    macro_rules! family {
-        ($name:literal, $values:expr, $serializer:ident) => {
-            output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
-            write_owned_array(output, $values, |items| $serializer(items))?;
-        };
-    }
     macro_rules! history {
         ($name:literal, $values:expr, $serializer:ident, $kind:ty) => {
             output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
@@ -231,7 +206,8 @@ fn write_owned_result<W: Write + ?Sized>(result: RuntimeResult, output: &mut W) 
     );
     history!("bgColors", result.bg_colors, colors, ColorSeries);
     history!("barColors", result.bar_colors, colors, ColorSeries);
-    family!("hlines", result.hlines, hlines_json);
+    output.write_all(b",\"hlines\":")?;
+    write_series_array(output, result.hlines, series_writer::hlines)?;
     history!("fills", result.fills, fills, FillOutput);
     drawing!("labels", result.labels, labels, crate::LabelOutput);
     drawing!("lines", result.lines, lines, crate::LineOutput);
@@ -262,22 +238,6 @@ fn write_owned_result<W: Write + ?Sized>(result: RuntimeResult, output: &mut W) 
     }
     record!("diagnostics", result.diagnostics, diagnostics);
     output.write_all(b"}")
-}
-
-fn write_owned_array<W: Write + ?Sized, T>(
-    output: &mut W,
-    items: Vec<T>,
-    serialize: impl Fn(&[T]) -> String,
-) -> io::Result<()> {
-    output.write_all(b"[")?;
-    for (index, item) in items.into_iter().enumerate() {
-        if index > 0 {
-            output.write_all(b",")?;
-        }
-        let text = serialize(std::slice::from_ref(&item));
-        output.write_all(&text.as_bytes()[1..text.len() - 1])?;
-    }
-    output.write_all(b"]")
 }
 
 #[cfg(test)]

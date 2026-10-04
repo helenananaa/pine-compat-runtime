@@ -72,7 +72,17 @@ impl<T> SharedDeque<T> {
     pub(crate) fn capacity(&self) -> usize {
         match &self.storage {
             Storage::Small(values) => values.capacity(),
-            Storage::Paged { pages, .. } => pages.iter().map(|page| page.capacity()).sum(),
+            Storage::Paged { pages, .. } => {
+                // Every nonempty page reserves PAGE_SIZE cells, and endpoint
+                // writes never grow its physical length beyond that reserve.
+                // Count the buffers without visiting shared checkpoint pages.
+                // ZST Vecs report usize::MAX; summing several would overflow.
+                if std::mem::size_of::<T>() == 0 {
+                    usize::MAX
+                } else {
+                    pages.len().saturating_mul(PAGE_SIZE)
+                }
+            }
         }
     }
 

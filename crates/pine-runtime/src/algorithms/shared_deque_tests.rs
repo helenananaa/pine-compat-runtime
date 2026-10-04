@@ -99,7 +99,19 @@ fn short_checkpoint_copies_at_most_one_page_and_preserves_wrapped_storage() {
     assert_eq!(checkpoint.front().unwrap().value, 1017);
 }
 
+fn assert_capacity_reports_backing_storage<T>(values: &SharedDeque<T>) {
+    let actual_buffer_capacity = match &values.storage {
+        Storage::Small(buffer) => buffer.capacity(),
+        Storage::Paged { pages, .. } => pages.iter().fold(0_usize, |capacity, page| {
+            assert!(page.len() <= PAGE_SIZE, "a page must not grow its buffer");
+            capacity.saturating_add(page.capacity())
+        }),
+    };
+    assert_eq!(values.capacity(), actual_buffer_capacity);
+}
+
 fn assert_model(values: &SharedDeque<usize>, expected: &VecDeque<usize>) {
+    assert_capacity_reports_backing_storage(values);
     assert_eq!(values.len(), expected.len());
     assert_eq!(values.front(), expected.front());
     assert_eq!(values.back(), expected.back());
@@ -124,6 +136,97 @@ fn assert_model(values: &SharedDeque<usize>, expected: &VecDeque<usize>) {
         assert_eq!(range.len(), end - start);
         assert!(range.eq(expected.range(start..end)));
     }
+}
+
+#[test]
+fn capacity_matches_allocated_buffers_across_promotion_ghosts_and_checkpoints() {
+    let initial = VecDeque::with_capacity(4096);
+    let flat_capacity = initial.capacity();
+    let mut values = SharedDeque::from(initial);
+    let mut expected = VecDeque::new();
+    for value in 0..128 {
+        values.push_back(value);
+        expected.push_back(value);
+        assert_eq!(values.capacity(), flat_capacity);
+        assert_model(&values, &expected);
+    }
+    let flat_checkpoint = values.clone();
+    assert_capacity_reports_backing_storage(&flat_checkpoint);
+    for value in 128..1025 {
+        values.push_back(value);
+        expected.push_back(value);
+        assert_model(&values, &expected);
+    }
+    let paged_checkpoint = values.clone();
+    let previous = expected.clone();
+    // Shrink both endpoints without changing their physical buffers, including
+    // leaving a single page whose physical tail still contains removed cells.
+    for _ in 0..37 {
+        assert_eq!(values.pop_front(), expected.pop_front());
+        assert_model(&values, &expected);
+    }
+    while values.len() > 1 {
+        assert_eq!(values.pop_back(), expected.pop_back());
+        assert_model(&values, &expected);
+    }
+    let ghost_checkpoint = values.clone();
+    for value in 2000..2257 {
+        values.push_front(value);
+        expected.push_front(value);
+        values.push_back(value + 1000);
+        expected.push_back(value + 1000);
+        assert_model(&values, &expected);
+    }
+    assert_model(&paged_checkpoint, &previous);
+    assert!(flat_checkpoint.iter().copied().eq(0..128));
+    assert!(ghost_checkpoint.iter().copied().eq([37]));
+    assert_capacity_reports_backing_storage(&ghost_checkpoint);
+    values.clear();
+    expected.clear();
+    assert_model(&values, &expected);
+    values.push_front(5000);
+    expected.push_front(5000);
+    assert_model(&values, &expected);
+    assert_model(&paged_checkpoint, &previous);
+}
+
+#[test]
+fn zero_sized_capacity_matches_std_deque_across_shared_pages_and_drain() {
+    let mut values = SharedDeque::default();
+    let mut expected = VecDeque::new();
+    let assert_model = |values: &SharedDeque<()>, expected: &VecDeque<()>| {
+        assert_eq!(values.len(), expected.len());
+        assert!(values.iter().eq(expected.iter()));
+        assert_eq!(values.capacity(), expected.capacity());
+        assert_capacity_reports_backing_storage(values);
+    };
+    assert_model(&values, &expected);
+    for _ in 0..1025 {
+        values.push_back(());
+        expected.push_back(());
+        assert_model(&values, &expected);
+    }
+    let checkpoint = values.clone();
+    for _ in 0..129 {
+        assert_eq!(values.pop_front(), expected.pop_front());
+        assert_eq!(values.pop_back(), expected.pop_back());
+        assert_model(&values, &expected);
+    }
+    values.push_front(());
+    expected.push_front(());
+    values.push_back(());
+    expected.push_back(());
+    assert_model(&values, &expected);
+    while !expected.is_empty() {
+        assert_eq!(values.pop_front(), expected.pop_front());
+        assert_model(&values, &expected);
+    }
+    values.clear();
+    expected.clear();
+    assert_model(&values, &expected);
+    assert_eq!(checkpoint.len(), 1025);
+    assert_eq!(checkpoint.capacity(), expected.capacity());
+    assert_capacity_reports_backing_storage(&checkpoint);
 }
 
 #[test]

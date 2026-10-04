@@ -344,7 +344,7 @@ fn gradient_samples_from_values(
                     return Err(format!("gradient sample requires {name}"));
                 }
             }
-            let sample: crate::FillGradientSample = serde_json::from_value(value.clone())
+            let sample: crate::FillGradientSample = serde::Deserialize::deserialize(value)
                 .map_err(|e| format!("invalid gradient sample: {e}"))?;
             if [sample.top_color, sample.bottom_color]
                 .into_iter()
@@ -1106,10 +1106,10 @@ fn pine_value_from_json(value: &Value) -> Result<PineValue, String> {
 fn parse_object(json: &str, what: &str) -> Result<Map<String, Value>, String> {
     let value: Value =
         serde_json::from_str(json).map_err(|err| format!("{what} must be JSON: {err}"))?;
-    value
-        .as_object()
-        .cloned()
-        .ok_or_else(|| format!("{what} must be a JSON object"))
+    match value {
+        Value::Object(object) => Ok(object),
+        _ => Err(format!("{what} must be a JSON object")),
+    }
 }
 
 fn as_object<'a>(value: &'a Value, what: &str) -> Result<&'a Map<String, Value>, String> {

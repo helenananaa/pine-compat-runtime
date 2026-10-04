@@ -68,6 +68,9 @@ fn unscaled_eigenvalues(
     if size == 1 {
         return Ok(vec![values[0]]);
     }
+    if size == 2 && has_equal_diagonal_complex_roots(values) {
+        return Err(EigenFailure::Complex);
+    }
     if symmetric.unwrap_or_else(|| is_symmetric(values, size)) {
         return Ok(symmetric_eigenvalues(values, size));
     }
@@ -114,6 +117,9 @@ fn unscaled_eigenvectors(
     }
     if size == 1 {
         return Ok(vec![1.0]);
+    }
+    if size == 2 && has_equal_diagonal_complex_roots(values) {
+        return Err(EigenFailure::Complex);
     }
     if symmetric.unwrap_or_else(|| is_symmetric(values, size)) {
         let (_, vectors) = jacobi_eigen_decomposition(values.to_vec(), size);
@@ -329,9 +335,23 @@ fn symmetric_eigenvalues(values: &[f64], size: usize) -> Vec<f64> {
     eigenvalues
 }
 
+/// For equal real diagonal entries, the discriminant is exactly 4*b*c.
+/// Compare signs directly so cancellation or underflow cannot invent real
+/// roots. Run this before approximate symmetry can hide tiny off-diagonals.
+fn has_equal_diagonal_complex_roots(values: &[f64]) -> bool {
+    values[0] == values[3]
+        && values[1] != 0.0
+        && values[2] != 0.0
+        && values[1].is_sign_negative() != values[2].is_sign_negative()
+        && values.iter().all(|value| value.is_finite())
+}
+
 fn two_by_two_eigenvalues(values: &[f64], recovery: bool) -> Result<Vec<f64>, EigenFailure> {
     if recovery {
         return recovered_two_by_two_eigenvalues(values);
+    }
+    if has_equal_diagonal_complex_roots(values) {
+        return Err(EigenFailure::Complex);
     }
     let trace = values[0] + values[3];
     let determinant = values[0] * values[3] - values[1] * values[2];
@@ -352,11 +372,7 @@ fn recovered_two_by_two_eigenvalues(values: &[f64]) -> Result<Vec<f64>, EigenFai
     let product = values[1] * values[2];
     // Equal diagonal entries with oppositely signed nonzero off-diagonals have
     // complex roots even if their product underflows after normalization.
-    if difference == 0.0
-        && values[1] != 0.0
-        && values[2] != 0.0
-        && values[1].is_sign_negative() != values[2].is_sign_negative()
-    {
+    if has_equal_diagonal_complex_roots(values) {
         return Err(EigenFailure::Complex);
     }
     let discriminant = difference * difference + 4.0 * product;
@@ -374,8 +390,17 @@ fn qr_eigenvalues(values: &[f64], size: usize, recovery: bool) -> Result<Vec<f64
     let mut matrix = values.to_vec();
     for _ in 0..(size * size * 128).max(1) {
         let (q, r) = qr_decompose(&matrix, size).ok_or(EigenFailure::Numerical)?;
-        matrix = multiply_square(&r, &q, size);
-        if lower_off_diagonal_norm(&matrix, size) <= EIGEN_TOLERANCE {
+        let next = multiply_square(&r, &q, size);
+        // Keep the original convergence check first. A finite bit-identical
+        // state will repeat every remaining deterministic QR step; it still
+        // goes through the original real/complex block classification below.
+        if lower_off_diagonal_norm(&next, size) <= EIGEN_TOLERANCE {
+            matrix = next;
+            break;
+        }
+        let fixed_point = finite_matrix_bits_unchanged(&matrix, &next);
+        matrix = next;
+        if fixed_point {
             break;
         }
     }
@@ -398,6 +423,13 @@ fn qr_eigenvalues(values: &[f64], size: usize, recovery: bool) -> Result<Vec<f64
         }
     }
     Ok(result)
+}
+
+fn finite_matrix_bits_unchanged(previous: &[f64], next: &[f64]) -> bool {
+    previous.len() == next.len()
+        && previous.iter().zip(next).all(|(previous, next)| {
+            previous.is_finite() && next.is_finite() && previous.to_bits() == next.to_bits()
+        })
 }
 
 fn eigenvector_for(

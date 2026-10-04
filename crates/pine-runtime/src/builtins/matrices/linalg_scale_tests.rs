@@ -162,6 +162,59 @@ fn ordinary_finite_complex_failure_is_not_reinterpreted_by_rescaling() {
 }
 
 #[test]
+fn equal_diagonal_complex_roots_are_rejected_before_cancellation_or_approximate_symmetry() {
+    for diagonal in [0.0, -0.0, 1.0, -1.0, 1000.0, 1e154, 1e200] {
+        for (upper, lower) in [
+            (1e-8, -1e-8),
+            (-1e-8, 1e-8),
+            (1e-200, -1e-200),
+            (f64::from_bits(1), -f64::from_bits(1)),
+            (1e8, -1e-300),
+        ] {
+            let values = [diagonal, upper, lower, diagonal];
+            // In exact arithmetic D = 4*upper*lower < 0. Computing their
+            // product, or trace^2 - 4*det, may round this fact away.
+            assert_eq!(
+                super::two_by_two_eigenvalues(&values, false),
+                Err(super::EigenFailure::Complex)
+            );
+            assert!(eigenvalues(&values, 2).is_none(), "{values:?}");
+            assert!(eigenvectors(&values, 2).is_none(), "{values:?}");
+        }
+    }
+    let tiny = [1.0, 1e-200, -1e-200, 1.0];
+    assert!(super::is_symmetric(&tiny, 2));
+    let ordinary = [1.0, 1e-8, -1e-8, 1.0];
+    let trace = ordinary[0] + ordinary[3];
+    let determinant = ordinary[0] * ordinary[3] - ordinary[1] * ordinary[2];
+    assert_eq!(trace * trace - 4.0 * determinant, 0.0);
+}
+
+#[test]
+fn exact_complex_predicate_keeps_zero_off_diagonals_and_rejects_nonfinite_proofs() {
+    for zero in [0.0, -0.0] {
+        for values in [[1.0, zero, -1e-8, 1.0], [1.0, 1e-8, zero, 1.0]] {
+            assert!(!super::has_equal_diagonal_complex_roots(&values));
+            assert_eq!(
+                super::two_by_two_eigenvalues(&values, false).unwrap(),
+                [1.0, 1.0]
+            );
+        }
+    }
+    for invalid in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        for values in [[invalid, 1.0, -1.0, invalid], [1.0, invalid, -1.0, 1.0]] {
+            assert!(!super::has_equal_diagonal_complex_roots(&values));
+        }
+    }
+    assert!(!super::has_equal_diagonal_complex_roots(&[
+        1.0,
+        1e-8,
+        -1e-8,
+        1.0 + f64::EPSILON,
+    ]));
+}
+
+#[test]
 fn failed_triangular_kernel_preserves_mixed_diagonal_without_scaling() {
     for values in [[1e308, 1e308, 0.0, 1e-308], [1e-308, 0.0, 1e308, 1e308]] {
         assert!(scale::reversible_eigen_normalization(&values).is_none());

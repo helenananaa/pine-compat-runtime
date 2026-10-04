@@ -128,3 +128,118 @@ fn overflowing_qr_column_norm_recovers_repeated_triangular_eigenvalues() {
         assert_eq!(root.to_bits(), magnitude.to_bits());
     }
 }
+
+#[test]
+fn qr_exact_fixed_point_preserves_the_full_iteration_complex_classification() {
+    let values = [0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 2.0];
+    let (q, r) = qr_decompose(&values, 3).unwrap();
+    let next = super::multiply_square(&r, &q, 3);
+    assert!(super::lower_off_diagonal_norm(&next, 3) > EIGEN_TOLERANCE);
+    assert!(super::finite_matrix_bits_unchanged(&values, &next));
+
+    // Independent original iteration budget: every subsequent step is the
+    // same matrix, so stopping here must still reject its +/-i pair.
+    let mut reference = values.to_vec();
+    for _ in 0..3 * 3 * 128 {
+        let (q, r) = qr_decompose(&reference, 3).unwrap();
+        reference = super::multiply_square(&r, &q, 3);
+    }
+    assert_eq!(
+        reference
+            .iter()
+            .map(|value| value.to_bits())
+            .collect::<Vec<_>>(),
+        next.iter().map(|value| value.to_bits()).collect::<Vec<_>>()
+    );
+    assert_eq!(
+        super::qr_eigenvalues(&values, 3, false),
+        Err(super::EigenFailure::Complex)
+    );
+    assert!(eigenvalues(&values, 3).is_none());
+    assert!(eigenvectors(&values, 3).is_none());
+}
+
+#[test]
+fn qr_fixed_point_policy_distinguishes_signed_zero_rounding_and_nonfinite_states() {
+    let values = [1.0, -0.0, 2.0, 0.0];
+    assert!(super::finite_matrix_bits_unchanged(&values, &values));
+    assert!(!super::finite_matrix_bits_unchanged(
+        &values,
+        &[1.0, 0.0, 2.0, 0.0]
+    ));
+    assert!(!super::finite_matrix_bits_unchanged(
+        &values,
+        &[1.0 + f64::EPSILON, -0.0, 2.0, 0.0]
+    ));
+    assert!(!super::finite_matrix_bits_unchanged(&values, &values[..3]));
+    for invalid in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let values = [1.0, invalid];
+        assert!(!super::finite_matrix_bits_unchanged(&values, &values));
+    }
+    let triangular = [1.0, 2.0, 3.0, -0.0, -0.0, 4.0, 0.0, -0.0, 5.0];
+    let roots = eigenvalues(&triangular, 3).unwrap();
+    assert_eq!(roots[0].to_bits(), 1.0_f64.to_bits());
+    assert_eq!(roots[1].to_bits(), 0.0_f64.to_bits());
+    assert_eq!(roots[2].to_bits(), 5.0_f64.to_bits());
+}
+
+#[test]
+fn fixed_point_complex_and_signed_zero_control_run_through_the_public_interpreter() {
+    let source = pine_syntax::SourceFile::new(
+        "qr_fixedpoint.pine",
+        r#"//@version=6
+indicator("QR fixed point")
+var a = matrix.new<float>(3, 3, 0)
+var control = matrix.new<float>(3, 3, 0)
+if barstate.isfirst
+    matrix.set(a, 0, 1, -1)
+    matrix.set(a, 1, 0, 1)
+    matrix.set(a, 2, 2, 2)
+    matrix.set(control, 0, 0, 1)
+    matrix.set(control, 0, 1, 2)
+    matrix.set(control, 0, 2, 3)
+    matrix.set(control, 1, 0, -0.0)
+    matrix.set(control, 1, 1, -0.0)
+    matrix.set(control, 1, 2, 4)
+    matrix.set(control, 2, 1, -0.0)
+    matrix.set(control, 2, 2, 5)
+plot(na(matrix.eigenvalues(a)) ? 1 : 0)
+plot(na(matrix.eigenvectors(a)) ? 1 : 0)
+roots = matrix.eigenvalues(control)
+plot(array.get(roots, 0))
+plot(array.get(roots, 1))
+plot(array.get(roots, 2))
+"#,
+    );
+    let analysis = pine_sema::analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.unwrap();
+    let mut runtime = crate::HistoricalRuntime::new(&program);
+    for index in 0..3 {
+        runtime
+            .append_bar(crate::Bar {
+                time: index * 60_000,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            })
+            .unwrap();
+    }
+    let result = runtime.result();
+    for (plot, expected) in result.plots.iter().zip([
+        crate::PineValue::Int(1),
+        crate::PineValue::Int(1),
+        crate::PineValue::Float(1.0),
+        crate::PineValue::Float(0.0),
+        crate::PineValue::Float(5.0),
+    ]) {
+        assert_eq!(plot.values, vec![expected; 3]);
+    }
+    assert_eq!(result.plots.len(), 5);
+}

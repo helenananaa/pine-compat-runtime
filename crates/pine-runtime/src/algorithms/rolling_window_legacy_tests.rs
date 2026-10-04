@@ -144,7 +144,28 @@ fn sample(index: usize) -> Option<f64> {
     }
 }
 
-fn assert_same(current: &RollingWindowState, legacy: &LegacySamples, length: usize) {
+// Keep ordinary arithmetic controls away from the proven lost-tail correction
+// cases. The original extreme sample sequence remains in the independent HMA
+// scan/output tests, and recovery has separate mathematical regression tests.
+fn ordinary_sample(index: usize) -> Option<f64> {
+    match index % 13 {
+        0 => None,
+        1 => Some(-0.0),
+        2 => Some(0.0),
+        3 => Some(1.25),
+        4 => Some(-1.25),
+        5 => Some(1053.7),
+        6 => Some(1029.4),
+        7 => Some(1041.3),
+        8 => Some(1.0),
+        9 => Some(-1041.3),
+        10 => Some(1e4),
+        11 => Some(-1e4),
+        _ => Some(-1088.2),
+    }
+}
+
+fn assert_same_samples(current: &RollingWindowState, legacy: &LegacySamples, length: usize) {
     assert_eq!(
         current
             .values
@@ -157,13 +178,17 @@ fn assert_same(current: &RollingWindowState, legacy: &LegacySamples, length: usi
             .map(|value| value.map(f64::to_bits))
             .collect::<Vec<_>>()
     );
-    assert_eq!(current.sum.to_bits(), legacy.sum.to_bits());
     assert_eq!(current.na_count, legacy.na_count);
     assert_eq!(current.nonzero_count, legacy.nonzero_count);
     assert_eq!(
         current.is_ready(length),
         legacy.values.len() == length && legacy.na_count == 0
     );
+}
+
+fn assert_same(current: &RollingWindowState, legacy: &LegacySamples, length: usize) {
+    assert_same_samples(current, legacy, length);
+    assert_eq!(current.sum.to_bits(), legacy.sum.to_bits());
     assert_eq!(
         current.mean(length).to_bits(),
         legacy.mean(length).to_bits()
@@ -315,8 +340,8 @@ fn ordinary_push_outputs_match_legacy_bits_through_wrapped_deque_na_and_length_c
             2 => 11,
             _ => 1,
         };
-        current.push(sample(index), length);
-        legacy.push(sample(index), length);
+        current.push(ordinary_sample(index), length);
+        legacy.push(ordinary_sample(index), length);
         wrapped |= !current.values.as_slices().1.is_empty();
         assert_same(&current, &legacy, length);
         if index.is_multiple_of(19) {
@@ -336,7 +361,7 @@ fn bar_replacement_discard_and_checkpoints_match_legacy_bits_after_length_change
         let original = current.clone();
         let legacy_original = legacy.clone();
         for (pass, length) in [17, 3, 29, 1, 11].into_iter().enumerate() {
-            let value = sample(bar * 5 + pass);
+            let value = ordinary_sample(bar * 5 + pass);
             current.push_for_bar(value, length, bar);
             legacy.push_for_bar(value, length, bar);
             assert_same(&current, &legacy.samples, length);
@@ -444,8 +469,9 @@ fn hma_tail_reuse_matches_legacy_three_windows_for_every_output_bit() {
         // The runtime's common update helper converts non-finite results to NA.
         old_smooth.push(old_diff.filter(|value| value.is_finite()), smooth_length);
         smooth.push(diff.filter(|value| value.is_finite()), smooth_length);
-        assert_same(&full, &old_full, length);
-        assert_same(&smooth, &old_smooth, smooth_length);
+        assert_same_samples(&full, &old_full, length);
+        assert_hma_scan_pair(&full, &old_full, length);
+        assert_same_samples(&smooth, &old_smooth, smooth_length);
         assert_eq!(
             smooth.is_ready(smooth_length),
             old_smooth.values.len() == smooth_length && old_smooth.na_count == 0

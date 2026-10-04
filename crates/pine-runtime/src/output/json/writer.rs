@@ -6,8 +6,8 @@ use super::*;
 /// Write the public result schema to a caller-owned sink, propagating I/O errors.
 ///
 /// This avoids allocating the complete serialized result. History fields are
-/// emitted one value at a time; drawings use one snapshot buffer. Callers can buffer their
-/// sink and choose its storage and lifecycle independently of the runtime.
+/// emitted one value at a time, including drawing snapshots and strategy records.
+/// Callers can buffer their sink and choose its storage and lifecycle independently.
 pub fn write_public_runtime_result_json<W: Write + ?Sized>(
     result: &RuntimeResult,
     output: &mut W,
@@ -43,6 +43,12 @@ pub fn write_public_runtime_result_view_json<W: Write + ?Sized>(
             write_series_array(output, $values, drawings_writer::$serializer)?;
         };
     }
+    macro_rules! record {
+        ($name:literal, $values:expr, $encoder:ident) => {
+            output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
+            write_series_array(output, $values, records_writer::$encoder)?;
+        };
+    }
     history!("plots", result.plots.iter(), plots);
     history!("plotChars", result.plot_chars.iter(), chars);
     history!("plotShapes", result.plot_shapes.iter(), shapes);
@@ -59,26 +65,18 @@ pub fn write_public_runtime_result_view_json<W: Write + ?Sized>(
     drawing!("polylines", result.polylines.iter(), polylines);
     drawing!("boxes", result.boxes.iter(), boxes);
     drawing!("tables", result.tables.iter(), tables);
-    family!("alerts", result.alerts, alerts_json);
+    record!("alerts", result.alerts, alerts);
     if let Some(strategy) = &result.strategy {
         output.write_all(b",\"strategy\":{\"orders\":")?;
-        write_array(output, strategy.orders, strategy_orders_json)?;
-        family!("trades", strategy.trades, strategy_trades_json);
-        family!("position", strategy.position, strategy_position_json);
-        family!("equity", strategy.equity, strategy_equity_json);
-        family!("alerts", strategy.alerts, strategy_order_fill_alerts_json);
-        family!(
-            "diagnostics",
-            strategy.diagnostics,
-            runtime_diagnostics_json
-        );
+        write_series_array(output, strategy.orders, records_writer::orders)?;
+        record!("trades", strategy.trades, trades);
+        record!("position", strategy.position, position);
+        record!("equity", strategy.equity, equity);
+        record!("alerts", strategy.alerts, order_fill_alerts);
+        record!("diagnostics", strategy.diagnostics, diagnostics);
         output.write_all(b"}")?;
     }
-    family!(
-        "diagnostics",
-        result.diagnostics.as_ref(),
-        runtime_diagnostics_json
-    );
+    record!("diagnostics", result.diagnostics.as_ref(), diagnostics);
     output.write_all(b"}")
 }
 
@@ -102,7 +100,7 @@ pub fn public_runtime_result_view_json(result: &crate::RuntimeResultView<'_>) ->
     String::from_utf8(bytes).expect("JSON serializers produce UTF-8")
 }
 
-fn write_series_array<W: Write + ?Sized, T, I: IntoIterator>(
+pub(super) fn write_series_array<W: Write + ?Sized, T, I: IntoIterator>(
     output: &mut W,
     items: I,
     serialize: impl Fn(&T, &mut W) -> io::Result<()>,
@@ -214,6 +212,12 @@ fn write_owned_result<W: Write + ?Sized>(result: RuntimeResult, output: &mut W) 
             })?;
         };
     }
+    macro_rules! record {
+        ($name:literal, $values:expr, $encoder:ident) => {
+            output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
+            write_series_array(output, $values, records_writer::$encoder)?;
+        };
+    }
     history!("plots", result.plots, plots, PlotSeries);
     history!("plotChars", result.plot_chars, chars, PlotCharSeries);
     history!("plotShapes", result.plot_shapes, shapes, PlotShapeSeries);
@@ -245,22 +249,18 @@ fn write_owned_result<W: Write + ?Sized>(result: RuntimeResult, output: &mut W) 
     );
     drawing!("boxes", result.boxes, boxes, crate::BoxOutput);
     drawing!("tables", result.tables, tables, crate::TableOutput);
-    family!("alerts", result.alerts, alerts_json);
+    record!("alerts", result.alerts, alerts);
     if let Some(strategy) = result.strategy {
         output.write_all(b",\"strategy\":{\"orders\":")?;
-        write_owned_array(output, strategy.orders, strategy_orders_json)?;
-        family!("trades", strategy.trades, strategy_trades_json);
-        family!("position", strategy.position, strategy_position_json);
-        family!("equity", strategy.equity, strategy_equity_json);
-        family!("alerts", strategy.alerts, strategy_order_fill_alerts_json);
-        family!(
-            "diagnostics",
-            strategy.diagnostics,
-            runtime_diagnostics_json
-        );
+        write_series_array(output, strategy.orders, records_writer::orders)?;
+        record!("trades", strategy.trades, trades);
+        record!("position", strategy.position, position);
+        record!("equity", strategy.equity, equity);
+        record!("alerts", strategy.alerts, order_fill_alerts);
+        record!("diagnostics", strategy.diagnostics, diagnostics);
         output.write_all(b"}")?;
     }
-    family!("diagnostics", result.diagnostics, runtime_diagnostics_json);
+    record!("diagnostics", result.diagnostics, diagnostics);
     output.write_all(b"}")
 }
 
@@ -289,7 +289,7 @@ mod tests {
         let mut result = super::super::tests::empty_result();
         result.diagnostics.push(crate::RuntimeDiagnostic {
             code: "large".to_owned(),
-            message: "你好🙂\"\n\\".repeat(20000),
+            message: "浣犲ソ馃檪\"\n\\".repeat(20000),
         });
         let expected = public_runtime_result_json(&result);
         assert!(expected.len() > 4 * 65536);
@@ -346,7 +346,7 @@ mod tests {
                 PineValue::Float(-0.0),
                 PineValue::Float(f64::NAN),
                 PineValue::Float(f64::INFINITY),
-                PineValue::String("你好\n\"\\".into()),
+                PineValue::String("浣犲ソ\n\"\\".into()),
                 PineValue::Tuple(vec![PineValue::Na]),
             ],
         ));
@@ -361,7 +361,7 @@ mod tests {
     fn matches_owned_serializer_with_strategy_drawings_and_escaping() {
         let source = pine_syntax::SourceFile::new(
             "writer.pine",
-            "//@version=6\nstrategy(\"writer\")\nplot(close)\nplot(open)\nplotshape(close > open)\nplotshape(close < open)\nbgcolor(color.red)\nlabel.new(bar_index, close, \"你好\\n\\\"\")\nstrategy.entry(\"buy\", strategy.long)\n",
+            "//@version=6\nstrategy(\"writer\")\nplot(close)\nplot(open)\nplotshape(close > open)\nplotshape(close < open)\nbgcolor(color.red)\nlabel.new(bar_index, close, \"浣犲ソ\\n\\\"\")\nstrategy.entry(\"buy\", strategy.long)\n",
         );
         let hir = pine_sema::analyze_source(&source).hir.unwrap();
         let mut runtime = crate::HistoricalRuntime::new(&hir);

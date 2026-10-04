@@ -389,10 +389,154 @@ fn drawing_sink_encoding_does_not_buffer_a_complete_sparse_history() {
     );
     // Creation and the first text mutation each retain their own snapshot.
     assert_eq!(view.labels[0].snapshots.len(), 10_001);
-    let (_, largest, _) =
+    let (_, largest, total) =
         track(|| write_public_runtime_result_view_json(&view, &mut io::sink()).unwrap());
+    // Persistent history iteration allocates a small tree cursor; 10k drawing
+    // snapshots must not add per-snapshot allocations or record-sized buffers.
     assert!(
-        largest < 4096,
-        "a complete drawing history was buffered: largest={largest}"
+        largest < 4096 && total < 1024,
+        "drawing encoding: largest={largest}, total={total}"
     );
+}
+
+#[test]
+fn large_drawing_and_record_payloads_stream_without_temporary_allocations() {
+    use pine_runtime::{
+        AlertEvent, ChartPointValue, PineValue as V, PolylineOutput, PolylineSnapshot,
+        RuntimeDiagnostic, TableCellSnapshot, TableOutput, TableSnapshot,
+    };
+    let hir = analyze_source(&SourceFile::new(
+        "empty.pine",
+        "//@version=6\nindicator(\"empty\")\n",
+    ))
+    .hir
+    .unwrap();
+    let mut result = HistoricalRuntime::new(&hir).result();
+    let text = "汉🙂\n\0\"\\".repeat(128);
+    let cell = TableCellSnapshot {
+        column: 0,
+        row: 0,
+        text: V::String(text.clone()),
+        bg_color: V::Color(0),
+        text_color: V::Color(u64::MAX),
+        width: V::Float(-0.0),
+        height: V::Na,
+        text_size: V::Na,
+        text_halign: V::Na,
+        text_valign: V::Na,
+        text_wrap: V::Na,
+        tooltip: V::String(text.clone()),
+        text_font_family: V::Na,
+        text_formatting: V::Na,
+    };
+    result.tables.push(TableOutput {
+        id: 1,
+        columns: 1024,
+        rows: 1,
+        position: V::String(text.clone()),
+        bg_color: V::Na,
+        frame_color: V::Na,
+        frame_width: V::Na,
+        border_color: V::Na,
+        border_width: V::Na,
+        snapshots: vec![TableSnapshot {
+            bar_index: 0,
+            exists: true,
+            cells: vec![cell; 1024],
+            merged_cells: vec![],
+        }],
+    });
+    result.polylines.push(PolylineOutput {
+        id: 2,
+        snapshots: vec![PolylineSnapshot {
+            bar_index: 0,
+            exists: true,
+            points: vec![
+                V::ChartPoint(ChartPointValue::new(
+                    V::Int(i64::MAX),
+                    V::Na,
+                    V::Float(-0.0)
+                ));
+                10_000
+            ],
+            curved: V::Bool(false),
+            closed: V::Bool(true),
+            xloc: V::Na,
+            line_color: V::Na,
+            fill_color: V::Na,
+            line_style: V::Na,
+            line_width: V::Float(1.0),
+            force_overlay: V::Bool(false),
+        }],
+    });
+    result.alerts.push(AlertEvent {
+        id: 1,
+        bar_index: 0,
+        time: i64::MIN,
+        message: text.repeat(128),
+        source: text.clone(),
+    });
+    result.diagnostics.push(RuntimeDiagnostic {
+        code: text.clone(),
+        message: text.repeat(128),
+    });
+    let view = result.view();
+    let (_, largest, total) =
+        track(|| write_public_runtime_result_view_json(&view, &mut io::sink()).unwrap());
+    assert_eq!(
+        (largest, total),
+        (0, 0),
+        "large borrowed payload encoding allocated"
+    );
+    let encoded = json(&view);
+    let parsed: serde_json::Value = serde_json::from_str(&encoded).unwrap();
+    assert_eq!(
+        parsed["tables"][0]["snapshots"][0]["cells"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1024
+    );
+    assert_eq!(
+        parsed["polylines"][0]["snapshots"][0]["points"]
+            .as_array()
+            .unwrap()
+            .len(),
+        10_000
+    );
+    assert_eq!(
+        parsed["tables"][0]["snapshots"][0]["cells"][0]["text"],
+        text
+    );
+    // A short-writing sink exercises write_all inside a large string; errors
+    // propagate without attempting further writes or changing borrowed output.
+    struct Limited {
+        bytes: Vec<u8>,
+        limit: usize,
+        failed: bool,
+    }
+    impl Write for Limited {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            assert!(!self.failed, "encoder continued after a sink error");
+            if self.bytes.len() == self.limit {
+                self.failed = true;
+                return Err(io::Error::new(io::ErrorKind::StorageFull, "full"));
+            }
+            let count = bytes.len().min(7).min(self.limit - self.bytes.len());
+            self.bytes.extend_from_slice(&bytes[..count]);
+            Ok(count)
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut sink = Limited {
+        bytes: vec![],
+        limit: 70_013,
+        failed: false,
+    };
+    let error = write_public_runtime_result_view_json(&view, &mut sink).unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::StorageFull);
+    assert_eq!(sink.bytes, encoded.as_bytes()[..sink.limit]);
+    assert_eq!(json(&view), encoded);
 }

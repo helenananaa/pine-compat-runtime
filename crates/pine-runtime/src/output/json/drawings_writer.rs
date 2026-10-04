@@ -1,75 +1,162 @@
-//! Sink encoding of drawing histories with at most one snapshot buffer.
+//! Drawing records written directly to the sink, including large cell and point
+//! collections. Field order is shared by full output and delta output.
 use super::*;
+use crate::output::drawings::{
+    BoxSnapshot, LabelSnapshot, LineFillSnapshot, LineSnapshot, PolylineSnapshot,
+};
 use std::io::{self, Write};
 
-fn write_history<'a, W: Write + ?Sized, T: 'a>(
+macro_rules! fields {
+    ($output:expr, $item:expr; $($name:literal => $field:ident),+ $(,)?) => {
+        $(
+            $output.write_all(concat!(",\"", $name, "\":").as_bytes())?;
+            value_writer::value(&$item.$field, $output)?;
+        )+
+    };
+}
+
+fn snapshots<'a, W: Write + ?Sized, T: 'a>(
+    history: HistoryView<'a, T>,
     output: &mut W,
-    prefix: &str,
-    snapshots: HistoryView<'a, T>,
-    mut serialize_snapshot: impl FnMut(&'a T) -> String,
+    write_snapshot: impl Fn(&T, &mut W) -> io::Result<()>,
 ) -> io::Result<()> {
-    // The prefix and each snapshot come from our typed legacy serializers. The
-    // caller supplies exactly one borrowed snapshot, so this is trusted wrapper
-    // removal, never parsing or searching arbitrary JSON payloads.
-    assert!(prefix.starts_with("[{\"id\":"));
-    assert!(prefix.ends_with("\"snapshots\":["));
-    output.write_all(&prefix.as_bytes()[1..])?;
-    for (index, snapshot) in snapshots.iter().enumerate() {
+    for (index, snapshot) in history.iter().enumerate() {
         if index > 0 {
             output.write_all(b",")?;
         }
-        let text = serialize_snapshot(snapshot);
-        let snapshot = text
-            .strip_prefix(prefix)
-            .and_then(|text| text.strip_suffix("]}]"))
-            .expect("single-snapshot serializer must preserve its exact wrapper");
-        assert!(snapshot.starts_with("{\"barIndex\":"));
-        assert!(snapshot.ends_with('}'));
-        output.write_all(snapshot.as_bytes())?;
+        write_snapshot(snapshot, output)?;
     }
     output.write_all(b"]}")
 }
 
 macro_rules! drawing {
-    ($function:ident, $view:ident, $serializer:ident) => {
+    ($function:ident, $view:ident, $snapshot:ident, |$item:ident, $output:ident| $body:block) => {
         pub(super) fn $function<W: Write + ?Sized>(
             drawing: &$view<'_>,
             output: &mut W,
         ) -> io::Result<()> {
-            let prefix = format!("[{{\"id\":{},\"snapshots\":[", drawing.id);
-            write_history(output, &prefix, drawing.snapshots, |snapshot| {
-                $serializer([$view {
-                    id: drawing.id,
-                    snapshots: HistoryView::from_slice(std::slice::from_ref(snapshot)),
-                }])
+            write!(output, "{{\"id\":{},\"snapshots\":[", drawing.id)?;
+            snapshots(drawing.snapshots, output, |$item: &$snapshot, $output| {
+                write!($output, "{{\"barIndex\":{},\"exists\":{}", $item.bar_index, $item.exists)?;
+                if $item.exists $body
+                $output.write_all(b"}")
             })
         }
     };
 }
 
-drawing!(labels, LabelOutputView, labels_json);
-drawing!(lines, LineOutputView, lines_json);
-drawing!(line_fills, LineFillOutputView, line_fills_json);
-drawing!(polylines, PolylineOutputView, polylines_json);
-drawing!(boxes, BoxOutputView, boxes_json);
+drawing!(labels, LabelOutputView, LabelSnapshot, |item, output| {
+    fields!(output, item;
+        "x" => x, "y" => y, "text" => text, "xloc" => xloc, "yloc" => yloc,
+        "color" => color, "style" => style, "textColor" => text_color,
+        "size" => size, "tooltip" => tooltip, "textAlign" => text_align,
+        "textFontFamily" => text_font_family, "textFormatting" => text_formatting
+    );
+});
+drawing!(lines, LineOutputView, LineSnapshot, |item, output| {
+    fields!(output, item;
+        "x1" => x1, "y1" => y1, "x2" => x2, "y2" => y2, "xloc" => xloc,
+        "color" => color, "width" => width, "style" => style, "extend" => extend
+    );
+});
+drawing!(
+    line_fills,
+    LineFillOutputView,
+    LineFillSnapshot,
+    |item, output| {
+        write!(output, ",\"line1\":{},\"line2\":{}", item.line1, item.line2)?;
+        fields!(output, item; "color" => color);
+    }
+);
+drawing!(
+    polylines,
+    PolylineOutputView,
+    PolylineSnapshot,
+    |item, output| {
+        output.write_all(b",\"points\":[")?;
+        for (index, point) in item.points.iter().enumerate() {
+            if index > 0 {
+                output.write_all(b",")?;
+            }
+            value_writer::value(point, output)?;
+        }
+        output.write_all(b"]")?;
+        fields!(output, item;
+            "curved" => curved, "closed" => closed, "xloc" => xloc,
+            "lineColor" => line_color, "fillColor" => fill_color,
+            "lineStyle" => line_style, "lineWidth" => line_width,
+            "forceOverlay" => force_overlay
+        );
+    }
+);
+drawing!(boxes, BoxOutputView, BoxSnapshot, |item, output| {
+    fields!(output, item;
+        "left" => left, "top" => top, "right" => right, "bottom" => bottom,
+        "xloc" => xloc, "bgColor" => bg_color, "borderColor" => border_color,
+        "borderWidth" => border_width, "borderStyle" => border_style,
+        "extend" => extend, "text" => text, "textColor" => text_color,
+        "textSize" => text_size, "textHalign" => text_halign,
+        "textValign" => text_valign, "textWrap" => text_wrap,
+        "textFontFamily" => text_font_family, "textFormatting" => text_formatting
+    );
+});
 
 pub(super) fn tables<W: Write + ?Sized>(
     table: &TableOutputView<'_>,
     output: &mut W,
 ) -> io::Result<()> {
-    // Tables have extra metadata before snapshots. Ask the established serializer
-    // for their exact header once rather than duplicating its field/escaping rules.
-    let header = tables_json([TableOutputView {
-        snapshots: HistoryView::from_slice(&[]),
-        ..*table
-    }]);
-    let prefix = header
-        .strip_suffix("]}]")
-        .expect("empty table serializer must preserve its exact wrapper");
-    write_history(output, prefix, table.snapshots, |snapshot| {
-        tables_json([TableOutputView {
-            snapshots: HistoryView::from_slice(std::slice::from_ref(snapshot)),
-            ..*table
-        }])
+    write!(output, "{{\"id\":{},\"position\":", table.id)?;
+    value_writer::value(table.position, output)?;
+    fields!(output, table;
+        "bgColor" => bg_color, "frameColor" => frame_color,
+        "frameWidth" => frame_width, "borderColor" => border_color,
+        "borderWidth" => border_width
+    );
+    write!(
+        output,
+        ",\"columns\":{},\"rows\":{},\"snapshots\":[",
+        table.columns, table.rows
+    )?;
+    snapshots(table.snapshots, output, |snapshot, output| {
+        write!(
+            output,
+            "{{\"barIndex\":{},\"exists\":{}",
+            snapshot.bar_index, snapshot.exists
+        )?;
+        if snapshot.exists {
+            output.write_all(b",\"cells\":[")?;
+            for (index, cell) in snapshot.cells.iter().enumerate() {
+                if index > 0 {
+                    output.write_all(b",")?;
+                }
+                write!(
+                    output,
+                    "{{\"column\":{},\"row\":{},\"text\":",
+                    cell.column, cell.row
+                )?;
+                value_writer::value(&cell.text, output)?;
+                fields!(output, cell;
+                    "bgColor" => bg_color, "textColor" => text_color,
+                    "width" => width, "height" => height, "textSize" => text_size,
+                    "textHalign" => text_halign, "textValign" => text_valign,
+                    "textWrap" => text_wrap, "tooltip" => tooltip,
+                    "textFontFamily" => text_font_family, "textFormatting" => text_formatting
+                );
+                output.write_all(b"}")?;
+            }
+            output.write_all(b"],\"mergedCells\":[")?;
+            for (index, cell) in snapshot.merged_cells.iter().enumerate() {
+                if index > 0 {
+                    output.write_all(b",")?;
+                }
+                write!(
+                    output,
+                    "{{\"startColumn\":{},\"startRow\":{},\"endColumn\":{},\"endRow\":{}}}",
+                    cell.start_column, cell.start_row, cell.end_column, cell.end_row
+                )?;
+            }
+            output.write_all(b"]")?;
+        }
+        output.write_all(b"}")
     })
 }

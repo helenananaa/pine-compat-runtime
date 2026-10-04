@@ -92,7 +92,13 @@ retained independently of later updates.
 schema and field order to any `std::io::Write` sink and propagates I/O failures.
 Buffer file or network sinks in the host. This function needs no complete JSON
 buffer and leaves the runtime and revision unchanged on an I/O failure;
-already-written bytes remain in the caller's sink. The convenience function
+already-written bytes remain in the caller's sink. Drawing snapshots (including
+table cells and polyline points), strategy records, alerts, and diagnostics write
+their scalar fields directly to the sink. They do not allocate a temporary buffer
+proportional to a record or history. Persistent history iteration uses a small
+tree cursor; metadata and other static output headers may also allocate.
+The sink may short-write or fail inside a record, so discard partial output when
+atomic delivery is required. The convenience function
 `public_runtime_result_view_json(&view)` counts and encodes the output in two
 passes to reserve one complete String buffer. The owned serializer
 `public_runtime_result_json(&result)` uses the same encoding path. Python and

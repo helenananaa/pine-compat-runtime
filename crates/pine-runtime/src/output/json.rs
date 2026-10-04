@@ -3,6 +3,7 @@ use crate::{PineValue, RuntimeProfile};
 
 mod drawings_writer;
 mod profile;
+mod records_writer;
 mod series_writer;
 mod value_writer;
 mod writer;
@@ -336,20 +337,17 @@ fn drawing_changes_json(changes: &[super::changes::DrawingChange]) -> String {
 }
 
 fn drawing_object_json(object: &DrawingObject) -> String {
+    let mut bytes = Vec::new();
     match object {
-        DrawingObject::Label(item) => first_object_json(&labels_json(std::slice::from_ref(item))),
-        DrawingObject::Line(item) => first_object_json(&lines_json(std::slice::from_ref(item))),
-        DrawingObject::LineFill(item) => {
-            first_object_json(&line_fills_json(std::slice::from_ref(item)))
-        }
-        DrawingObject::Polyline(item) => {
-            first_object_json(&polylines_json(std::slice::from_ref(item)))
-        }
-        DrawingObject::Box(item) => first_object_json(&boxes_json(std::slice::from_ref(item))),
-        DrawingObject::Table(item) => {
-            first_object_json(&tables_json(std::slice::from_ref(item.as_ref())))
-        }
+        DrawingObject::Label(item) => drawings_writer::labels(&item.into(), &mut bytes),
+        DrawingObject::Line(item) => drawings_writer::lines(&item.into(), &mut bytes),
+        DrawingObject::LineFill(item) => drawings_writer::line_fills(&item.into(), &mut bytes),
+        DrawingObject::Polyline(item) => drawings_writer::polylines(&item.into(), &mut bytes),
+        DrawingObject::Box(item) => drawings_writer::boxes(&item.into(), &mut bytes),
+        DrawingObject::Table(item) => drawings_writer::tables(&item.as_ref().into(), &mut bytes),
     }
+    .expect("writing to a Vec cannot fail");
+    String::from_utf8(bytes).expect("JSON encoders produce UTF-8")
 }
 
 fn event_changes_json(changes: &[super::changes::EventChange<AlertEvent>]) -> String {
@@ -606,505 +604,40 @@ fn fills_json(fills: &[FillOutput]) -> String {
     output
 }
 
-fn labels_json<'a>(labels: impl IntoIterator<Item = impl Into<LabelOutputView<'a>>>) -> String {
-    let mut output = String::from("[");
-    for (index, label) in labels.into_iter().map(Into::into).enumerate() {
-        if index > 0 {
-            output.push(',');
+// String-returning delta helpers use the same record encoders as full output.
+macro_rules! records_json {
+    ($function:ident, $kind:ty, $encoder:ident) => {
+        fn $function(items: &[$kind]) -> String {
+            let mut bytes = Vec::new();
+            writer::write_series_array(&mut bytes, items, records_writer::$encoder)
+                .expect("writing to a Vec cannot fail");
+            String::from_utf8(bytes).expect("JSON encoders produce UTF-8")
         }
-        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", label.id));
-        for (snapshot_index, snapshot) in label.snapshots.iter().enumerate() {
-            if snapshot_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&format!(
-                "{{\"barIndex\":{},\"exists\":{}",
-                snapshot.bar_index, snapshot.exists
-            ));
-            if snapshot.exists {
-                output.push_str(",\"x\":");
-                output.push_str(&value_json(&snapshot.x));
-                output.push_str(",\"y\":");
-                output.push_str(&value_json(&snapshot.y));
-                output.push_str(",\"text\":");
-                output.push_str(&value_json(&snapshot.text));
-                output.push_str(",\"xloc\":");
-                output.push_str(&value_json(&snapshot.xloc));
-                output.push_str(",\"yloc\":");
-                output.push_str(&value_json(&snapshot.yloc));
-                output.push_str(",\"color\":");
-                output.push_str(&value_json(&snapshot.color));
-                output.push_str(",\"style\":");
-                output.push_str(&value_json(&snapshot.style));
-                output.push_str(",\"textColor\":");
-                output.push_str(&value_json(&snapshot.text_color));
-                output.push_str(",\"size\":");
-                output.push_str(&value_json(&snapshot.size));
-                output.push_str(",\"tooltip\":");
-                output.push_str(&value_json(&snapshot.tooltip));
-                output.push_str(",\"textAlign\":");
-                output.push_str(&value_json(&snapshot.text_align));
-                output.push_str(",\"textFontFamily\":");
-                output.push_str(&value_json(&snapshot.text_font_family));
-                output.push_str(",\"textFormatting\":");
-                output.push_str(&value_json(&snapshot.text_formatting));
-            }
-            output.push('}');
-        }
-        output.push_str("]}");
-    }
-    output.push(']');
-    output
+    };
 }
-
-fn lines_json<'a>(lines: impl IntoIterator<Item = impl Into<LineOutputView<'a>>>) -> String {
-    let mut output = String::from("[");
-    for (index, line) in lines.into_iter().map(Into::into).enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", line.id));
-        for (snapshot_index, snapshot) in line.snapshots.iter().enumerate() {
-            if snapshot_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&format!(
-                "{{\"barIndex\":{},\"exists\":{}",
-                snapshot.bar_index, snapshot.exists
-            ));
-            if snapshot.exists {
-                output.push_str(",\"x1\":");
-                output.push_str(&value_json(&snapshot.x1));
-                output.push_str(",\"y1\":");
-                output.push_str(&value_json(&snapshot.y1));
-                output.push_str(",\"x2\":");
-                output.push_str(&value_json(&snapshot.x2));
-                output.push_str(",\"y2\":");
-                output.push_str(&value_json(&snapshot.y2));
-                output.push_str(",\"xloc\":");
-                output.push_str(&value_json(&snapshot.xloc));
-                output.push_str(",\"color\":");
-                output.push_str(&value_json(&snapshot.color));
-                output.push_str(",\"width\":");
-                output.push_str(&value_json(&snapshot.width));
-                output.push_str(",\"style\":");
-                output.push_str(&value_json(&snapshot.style));
-                output.push_str(",\"extend\":");
-                output.push_str(&value_json(&snapshot.extend));
-            }
-            output.push('}');
-        }
-        output.push_str("]}");
-    }
-    output.push(']');
-    output
-}
-
-fn line_fills_json<'a>(
-    line_fills: impl IntoIterator<Item = impl Into<LineFillOutputView<'a>>>,
-) -> String {
-    let mut output = String::from("[");
-    for (index, line_fill) in line_fills.into_iter().map(Into::into).enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", line_fill.id));
-        for (snapshot_index, snapshot) in line_fill.snapshots.iter().enumerate() {
-            if snapshot_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&format!(
-                "{{\"barIndex\":{},\"exists\":{}",
-                snapshot.bar_index, snapshot.exists
-            ));
-            if snapshot.exists {
-                output.push_str(",\"line1\":");
-                output.push_str(&snapshot.line1.to_string());
-                output.push_str(",\"line2\":");
-                output.push_str(&snapshot.line2.to_string());
-                output.push_str(",\"color\":");
-                output.push_str(&value_json(&snapshot.color));
-            }
-            output.push('}');
-        }
-        output.push_str("]}");
-    }
-    output.push(']');
-    output
-}
-
-fn polylines_json<'a>(
-    polylines: impl IntoIterator<Item = impl Into<PolylineOutputView<'a>>>,
-) -> String {
-    let mut output = String::from("[");
-    for (index, polyline) in polylines.into_iter().map(Into::into).enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", polyline.id));
-        for (snapshot_index, snapshot) in polyline.snapshots.iter().enumerate() {
-            if snapshot_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&format!(
-                "{{\"barIndex\":{},\"exists\":{}",
-                snapshot.bar_index, snapshot.exists
-            ));
-            if snapshot.exists {
-                output.push_str(",\"points\":");
-                output.push_str(&values_json(&snapshot.points));
-                output.push_str(",\"curved\":");
-                output.push_str(&value_json(&snapshot.curved));
-                output.push_str(",\"closed\":");
-                output.push_str(&value_json(&snapshot.closed));
-                output.push_str(",\"xloc\":");
-                output.push_str(&value_json(&snapshot.xloc));
-                output.push_str(",\"lineColor\":");
-                output.push_str(&value_json(&snapshot.line_color));
-                output.push_str(",\"fillColor\":");
-                output.push_str(&value_json(&snapshot.fill_color));
-                output.push_str(",\"lineStyle\":");
-                output.push_str(&value_json(&snapshot.line_style));
-                output.push_str(",\"lineWidth\":");
-                output.push_str(&value_json(&snapshot.line_width));
-                output.push_str(",\"forceOverlay\":");
-                output.push_str(&value_json(&snapshot.force_overlay));
-            }
-            output.push('}');
-        }
-        output.push_str("]}");
-    }
-    output.push(']');
-    output
-}
-
-fn boxes_json<'a>(boxes: impl IntoIterator<Item = impl Into<BoxOutputView<'a>>>) -> String {
-    let mut output = String::from("[");
-    for (index, box_output) in boxes.into_iter().map(Into::into).enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", box_output.id));
-        for (snapshot_index, snapshot) in box_output.snapshots.iter().enumerate() {
-            if snapshot_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&format!(
-                "{{\"barIndex\":{},\"exists\":{}",
-                snapshot.bar_index, snapshot.exists
-            ));
-            if snapshot.exists {
-                output.push_str(",\"left\":");
-                output.push_str(&value_json(&snapshot.left));
-                output.push_str(",\"top\":");
-                output.push_str(&value_json(&snapshot.top));
-                output.push_str(",\"right\":");
-                output.push_str(&value_json(&snapshot.right));
-                output.push_str(",\"bottom\":");
-                output.push_str(&value_json(&snapshot.bottom));
-                output.push_str(",\"xloc\":");
-                output.push_str(&value_json(&snapshot.xloc));
-                output.push_str(",\"bgColor\":");
-                output.push_str(&value_json(&snapshot.bg_color));
-                output.push_str(",\"borderColor\":");
-                output.push_str(&value_json(&snapshot.border_color));
-                output.push_str(",\"borderWidth\":");
-                output.push_str(&value_json(&snapshot.border_width));
-                output.push_str(",\"borderStyle\":");
-                output.push_str(&value_json(&snapshot.border_style));
-                output.push_str(",\"extend\":");
-                output.push_str(&value_json(&snapshot.extend));
-                output.push_str(",\"text\":");
-                output.push_str(&value_json(&snapshot.text));
-                output.push_str(",\"textColor\":");
-                output.push_str(&value_json(&snapshot.text_color));
-                output.push_str(",\"textSize\":");
-                output.push_str(&value_json(&snapshot.text_size));
-                output.push_str(",\"textHalign\":");
-                output.push_str(&value_json(&snapshot.text_halign));
-                output.push_str(",\"textValign\":");
-                output.push_str(&value_json(&snapshot.text_valign));
-                output.push_str(",\"textWrap\":");
-                output.push_str(&value_json(&snapshot.text_wrap));
-                output.push_str(",\"textFontFamily\":");
-                output.push_str(&value_json(&snapshot.text_font_family));
-                output.push_str(",\"textFormatting\":");
-                output.push_str(&value_json(&snapshot.text_formatting));
-            }
-            output.push('}');
-        }
-        output.push_str("]}");
-    }
-    output.push(']');
-    output
-}
-
-fn tables_json<'a>(tables: impl IntoIterator<Item = impl Into<TableOutputView<'a>>>) -> String {
-    let mut output = String::from("[");
-    for (index, table) in tables.into_iter().map(Into::into).enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"id\":{},\"position\":", table.id));
-        output.push_str(&value_json(table.position));
-        output.push_str(",\"bgColor\":");
-        output.push_str(&value_json(table.bg_color));
-        output.push_str(",\"frameColor\":");
-        output.push_str(&value_json(table.frame_color));
-        output.push_str(",\"frameWidth\":");
-        output.push_str(&value_json(table.frame_width));
-        output.push_str(",\"borderColor\":");
-        output.push_str(&value_json(table.border_color));
-        output.push_str(",\"borderWidth\":");
-        output.push_str(&value_json(table.border_width));
-        output.push_str(&format!(
-            ",\"columns\":{},\"rows\":{},\"snapshots\":[",
-            table.columns, table.rows
-        ));
-        for (snapshot_index, snapshot) in table.snapshots.iter().enumerate() {
-            if snapshot_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&format!(
-                "{{\"barIndex\":{},\"exists\":{}",
-                snapshot.bar_index, snapshot.exists
-            ));
-            if snapshot.exists {
-                output.push_str(",\"cells\":[");
-                for (cell_index, cell) in snapshot.cells.iter().enumerate() {
-                    if cell_index > 0 {
-                        output.push(',');
-                    }
-                    output.push_str(&format!(
-                        "{{\"column\":{},\"row\":{},\"text\":",
-                        cell.column, cell.row
-                    ));
-                    output.push_str(&value_json(&cell.text));
-                    output.push_str(",\"bgColor\":");
-                    output.push_str(&value_json(&cell.bg_color));
-                    output.push_str(",\"textColor\":");
-                    output.push_str(&value_json(&cell.text_color));
-                    output.push_str(",\"width\":");
-                    output.push_str(&value_json(&cell.width));
-                    output.push_str(",\"height\":");
-                    output.push_str(&value_json(&cell.height));
-                    output.push_str(",\"textSize\":");
-                    output.push_str(&value_json(&cell.text_size));
-                    output.push_str(",\"textHalign\":");
-                    output.push_str(&value_json(&cell.text_halign));
-                    output.push_str(",\"textValign\":");
-                    output.push_str(&value_json(&cell.text_valign));
-                    output.push_str(",\"textWrap\":");
-                    output.push_str(&value_json(&cell.text_wrap));
-                    output.push_str(",\"tooltip\":");
-                    output.push_str(&value_json(&cell.tooltip));
-                    output.push_str(",\"textFontFamily\":");
-                    output.push_str(&value_json(&cell.text_font_family));
-                    output.push_str(",\"textFormatting\":");
-                    output.push_str(&value_json(&cell.text_formatting));
-                    output.push('}');
-                }
-                output.push(']');
-                output.push_str(",\"mergedCells\":[");
-                for (merge_index, merged_cell) in snapshot.merged_cells.iter().enumerate() {
-                    if merge_index > 0 {
-                        output.push(',');
-                    }
-                    output.push_str(&format!(
-                        "{{\"startColumn\":{},\"startRow\":{},\"endColumn\":{},\"endRow\":{}}}",
-                        merged_cell.start_column,
-                        merged_cell.start_row,
-                        merged_cell.end_column,
-                        merged_cell.end_row
-                    ));
-                }
-                output.push(']');
-            }
-            output.push('}');
-        }
-        output.push_str("]}");
-    }
-    output.push(']');
-    output
-}
-
-fn alerts_json(alerts: &[AlertEvent]) -> String {
-    let mut output = String::from("[");
-    for (index, alert) in alerts.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"id\":{},\"barIndex\":{},\"time\":{},\"message\":\"{}\",\"source\":\"{}\"}}",
-            alert.id,
-            alert.bar_index,
-            alert.time,
-            json_escape(&alert.message),
-            json_escape(&alert.source)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn strategy_orders_json(orders: &[crate::StrategyOrderEvent]) -> String {
-    let mut output = String::from("[");
-    for (index, order) in orders.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"id\":\"{}\",\"barIndex\":{},\"time\":{},\"direction\":\"{}\",\"qty\":{},\"price\":{}}}",
-            json_escape(&order.id),
-            order.bar_index,
-            order.time,
-            json_escape(&order.direction),
-            f64_json(order.qty),
-            f64_json(order.price)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn strategy_order_fill_alerts_json(alerts: &[crate::StrategyOrderFillAlertOutput]) -> String {
-    let mut output = String::from("[");
-    for (index, alert) in alerts.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"id\":\"{}\",\"barIndex\":{},\"time\":{},\"direction\":\"{}\",\"qty\":{},\"price\":{},\"entryId\":{},\"exitId\":{},\"message\":\"{}\"}}",
-            json_escape(&alert.id),
-            alert.bar_index,
-            alert.time,
-            json_escape(&alert.direction),
-            f64_json(alert.qty),
-            f64_json(alert.price),
-            option_string_json(alert.entry_id.as_deref()),
-            option_string_json(alert.exit_id.as_deref()),
-            json_escape(&alert.message)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn strategy_trades_json(trades: &[crate::StrategyTrade]) -> String {
-    let mut output = String::from("[");
-    for (index, trade) in trades.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"id\":\"{}\",\"entryBarIndex\":{},\"exitBarIndex\":{},\"entryTime\":{},\"exitTime\":{},\"entryPrice\":{},\"exitPrice\":{},\"qty\":{},\"profit\":{}}}",
-            json_escape(&trade.id),
-            trade.entry_bar_index,
-            trade.exit_bar_index,
-            trade.entry_time,
-            trade.exit_time,
-            f64_json(trade.entry_price),
-            f64_json(trade.exit_price),
-            f64_json(trade.qty),
-            f64_json(trade.profit)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn strategy_position_json(position: &[crate::StrategyPositionSnapshot]) -> String {
-    let mut output = String::from("[");
-    for (index, snapshot) in position.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"barIndex\":{},\"size\":{},\"avgPrice\":{}}}",
-            snapshot.bar_index,
-            f64_json(snapshot.size),
-            option_f64_json(snapshot.avg_price)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn strategy_equity_json(equity: &[crate::StrategyEquitySnapshot]) -> String {
-    let mut output = String::from("[");
-    for (index, snapshot) in equity.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"barIndex\":{},\"cash\":{},\"marketValue\":{},\"equity\":{},\"netProfit\":{}}}",
-            snapshot.bar_index,
-            f64_json(snapshot.cash),
-            f64_json(snapshot.market_value),
-            f64_json(snapshot.equity),
-            f64_json(snapshot.net_profit)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn option_f64_json(value: Option<f64>) -> String {
-    value.map_or_else(|| "null".to_owned(), f64_json)
-}
-
-fn option_string_json(value: Option<&str>) -> String {
-    value.map_or_else(
-        || "null".to_owned(),
-        |value| format!("\"{}\"", json_escape(value)),
-    )
-}
-
-fn f64_json(value: f64) -> String {
-    if value.is_finite() {
-        value.to_string()
-    } else {
-        "null".to_owned()
-    }
-}
-
-fn runtime_diagnostics_json(diagnostics: &[crate::RuntimeDiagnostic]) -> String {
-    let mut output = String::from("[");
-    for (index, diagnostic) in diagnostics.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"code\":\"{}\",\"message\":\"{}\"}}",
-            json_escape(&diagnostic.code),
-            json_escape(&diagnostic.message)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn values_json(values: &[PineValue]) -> String {
-    let mut output = String::from("[");
-    for (index, value) in values.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&value_json(value));
-    }
-    output.push(']');
-    output
-}
+records_json!(alerts_json, AlertEvent, alerts);
+records_json!(strategy_orders_json, crate::StrategyOrderEvent, orders);
+records_json!(
+    strategy_order_fill_alerts_json,
+    crate::StrategyOrderFillAlertOutput,
+    order_fill_alerts
+);
+records_json!(strategy_trades_json, crate::StrategyTrade, trades);
+records_json!(
+    strategy_position_json,
+    crate::StrategyPositionSnapshot,
+    position
+);
+records_json!(strategy_equity_json, crate::StrategyEquitySnapshot, equity);
+records_json!(
+    runtime_diagnostics_json,
+    crate::RuntimeDiagnostic,
+    diagnostics
+);
 
 fn value_json(value: &PineValue) -> String {
     let mut bytes = Vec::new();
     value_writer::value(value, &mut bytes).expect("writing to a Vec cannot fail");
-    String::from_utf8(bytes).expect("JSON encoders produce UTF-8")
-}
-
-fn json_escape(value: &str) -> String {
-    let mut bytes = Vec::with_capacity(value.len());
-    value_writer::escaped(value, &mut bytes).expect("writing to a Vec cannot fail");
     String::from_utf8(bytes).expect("JSON encoders produce UTF-8")
 }
 

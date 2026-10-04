@@ -6,7 +6,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_cum(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source = self.eval_flow_source(args)?;
         let Some(source) = source.as_f64() else {
@@ -28,7 +28,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_all_time_extreme(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
         let source = self.eval_flow_source(args)?;
@@ -59,7 +59,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_cci(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_flow_source_length(args)?;
         if length <= 0 {
@@ -90,7 +90,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_cog(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_flow_source_length(args)?;
         if length <= 0 {
@@ -109,7 +109,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_vwma(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_flow_source_length(args)?;
         if length <= 0 {
@@ -171,7 +171,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(weighted.sum / volumes.sum))
     }
 
-    fn eval_flow_source(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    fn eval_flow_source(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))
             .transpose()
@@ -180,7 +180,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_flow_source_length(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<(PineValue, i64), RuntimeError> {
         let source = ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))
@@ -197,7 +197,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_mfi(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source_arg = ta_arg(args, 0, "source");
         let source = source_arg
@@ -267,7 +267,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_vwap_source(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let has_bands = vwap_arg(args, 2, "stdev_mult").is_some();
         let source_arg = vwap_arg(args, 0, "source").ok_or_else(|| RuntimeError {
@@ -355,7 +355,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_stoch(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source = ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))
@@ -416,7 +416,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_wpr(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let length = ta_arg(args, 0, "length")
             .map(|arg| self.eval_expr(arg))
@@ -519,7 +519,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_rising_falling(
         &mut self,
         _call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: RisingFallingMode,
     ) -> Result<PineValue, RuntimeError> {
         let Some(source_arg) = ta_arg(args, 0, "source") else {
@@ -561,7 +561,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_cross(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: CrossMode,
     ) -> Result<PineValue, RuntimeError> {
         let Some(left_arg) = ta_arg(args, 0, "source1") else {
@@ -625,7 +625,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_barssince(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let condition = ta_arg(args, 0, "condition")
             .map(|arg| self.eval_expr(arg))
@@ -652,7 +652,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_valuewhen(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let condition = ta_arg(args, 0, "condition")
             .map(|arg| self.eval_expr(arg))

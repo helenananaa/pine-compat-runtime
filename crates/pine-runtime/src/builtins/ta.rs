@@ -1,6 +1,6 @@
 use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
-use crate::builtins::args::call_arg_expr;
+use crate::builtins::args::RuntimeArgs;
 use crate::*;
 mod averages;
 mod extremes;
@@ -9,6 +9,10 @@ mod momentum;
 mod pivots;
 mod statistics;
 mod trend;
+
+#[cfg(test)]
+#[path = "ta_args_tests.rs"]
+mod args_tests;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct RsiState {
@@ -112,15 +116,15 @@ pub(crate) fn vwap_result_na(has_bands: bool) -> PineValue {
 }
 
 pub(crate) fn ta_arg<'a>(
-    args: &'a [HirCallArg],
+    args: RuntimeArgs<'a>,
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
-    call_arg_expr(args, positional, name)
+    args.expr(positional, name)
 }
 
 pub(crate) fn vwap_arg<'a>(
-    args: &'a [HirCallArg],
+    args: RuntimeArgs<'a>,
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
@@ -128,7 +132,7 @@ pub(crate) fn vwap_arg<'a>(
 }
 
 pub(crate) fn pivot_point_arg<'a>(
-    args: &'a [HirCallArg],
+    args: RuntimeArgs<'a>,
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
@@ -402,12 +406,14 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         callee: &str,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        raw_args: &[HirCallArg],
+        positional_args: bool,
     ) -> Option<Result<PineValue, RuntimeError>> {
         if !callee.starts_with("ta.") {
             return None;
         }
 
+        let args = RuntimeArgs::new(raw_args, positional_args);
         Some(match callee {
             "ta.sma" => self.eval_sma(call_site_id, args),
             "ta.ema" => self.eval_ema(call_site_id, args),

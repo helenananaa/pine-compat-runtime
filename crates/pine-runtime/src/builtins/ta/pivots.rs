@@ -4,7 +4,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_pivot(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
         let (source, leftbars, rightbars) = self.eval_pivot_args(args, mode)?;
@@ -59,11 +59,11 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn eval_pivot_args(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: WindowExtreme,
     ) -> Result<(PineValue, i64, i64), RuntimeError> {
         let positional_default_source =
-            args.len() == 2 && args.iter().all(|arg| arg.name.is_none());
+            args.raw().len() == 2 && args.raw().iter().all(|arg| arg.name.is_none());
         let has_explicit_source = !positional_default_source && ta_arg(args, 0, "source").is_some();
         if !has_explicit_source {
             let (left_index, right_index) = if positional_default_source {
@@ -111,7 +111,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_pivot_point_levels(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let type_arg = pivot_point_arg(args, 0, "type").ok_or_else(|| RuntimeError {
             message: "ta.pivot_point_levels missing type argument".to_owned(),

@@ -4,7 +4,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_sma(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source = ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))
@@ -31,7 +31,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_bb(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length, mult) = self.eval_average_source_length_mult(args)?;
         if length <= 0 {
@@ -73,7 +73,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_bbw(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length, mult) = self.eval_average_source_length_mult(args)?;
         if length <= 0 {
@@ -101,7 +101,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_kc(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some((basis, range_ema, mult)) = self.eval_kc_components(call_site_id, args)? else {
             return Ok(three_na_tuple());
@@ -117,7 +117,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_kcw(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some((basis, range_ema, mult)) = self.eval_kc_components(call_site_id, args)? else {
             return Ok(PineValue::Na);
@@ -132,7 +132,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_kc_components(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<Option<(f64, f64, f64)>, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
@@ -187,7 +187,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_wma(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         if length <= 0 {
@@ -206,7 +206,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_hma(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         if length <= 0 {
@@ -218,22 +218,16 @@ impl<'a> HistoricalRuntime<'a> {
         let smooth_length = (length as f64).sqrt().round().max(1.0) as usize;
         let source = source.as_f64();
 
-        self.update_rolling_window_key(
-            RollingWindowKey::HmaHalf(call_site_id),
-            source,
-            half_length,
-        );
         self.update_rolling_window_key(RollingWindowKey::HmaFull(call_site_id), source, length);
 
-        let half = self
-            .rolling_windows
-            .get(&RollingWindowKey::HmaHalf(call_site_id));
         let full = self
             .rolling_windows
             .get(&RollingWindowKey::HmaFull(call_site_id));
-        let diff = match (half, full) {
-            (Some(half), Some(full)) if half.is_ready(half_length) && full.is_ready(length) => {
-                Some(2.0 * half.weighted_mean(half_length) - full.weighted_mean(length))
+        let diff = match full {
+            Some(full) if full.is_ready(length) => {
+                // The half window is always this suffix. Once the full window
+                // is ready, its half suffix is ready too, even after length changes.
+                Some(2.0 * full.weighted_mean_tail(half_length) - full.weighted_mean(length))
             }
             _ => None,
         };
@@ -252,7 +246,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_average_source_length(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<(PineValue, i64), RuntimeError> {
         let source = ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))
@@ -268,7 +262,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_average_source_length_mult(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<(PineValue, i64, Option<f64>), RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         let mult = ta_arg(args, 2, "mult")
@@ -281,7 +275,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_swma(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source = ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))
@@ -301,7 +295,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_alma(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source = ta_arg(args, 0, "series")
             .map(|arg| self.eval_expr(arg))
@@ -367,7 +361,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_linreg(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         let offset = ta_arg(args, 2, "offset")
@@ -416,7 +410,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_ema(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         if length <= 0 {
@@ -478,7 +472,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_dema(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some((source, length)) = self.eval_ema_source_and_length(args)? else {
             return Ok(PineValue::Na);
@@ -496,7 +490,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_tema(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some((source, length)) = self.eval_ema_source_and_length(args)? else {
             return Ok(PineValue::Na);
@@ -519,7 +513,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn eval_ema_source_and_length(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<Option<(f64, i64)>, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
@@ -534,7 +528,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_rma(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
@@ -563,7 +557,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_rsi(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
@@ -607,7 +601,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_macd(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source = ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))

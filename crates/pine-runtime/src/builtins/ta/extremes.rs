@@ -10,7 +10,7 @@ impl HistoricalRuntime<'_> {
     pub(crate) fn eval_window_extreme(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
         let (source, series_id, length) = self.eval_extreme_source_length(args, mode)?;
@@ -49,7 +49,7 @@ impl HistoricalRuntime<'_> {
     pub(crate) fn eval_window_extreme_offset(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
         let (source, series_id, length) = self.eval_extreme_source_length(args, mode)?;
@@ -123,11 +123,11 @@ impl HistoricalRuntime<'_> {
 
     pub(crate) fn eval_extreme_source_length(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: WindowExtreme,
     ) -> Result<(PineValue, Option<SeriesId>, i64), RuntimeError> {
         let positional_default_source =
-            args.len() == 1 && args.first().is_some_and(|arg| arg.name.is_none());
+            args.raw().len() == 1 && args.raw().first().is_some_and(|arg| arg.name.is_none());
         let has_explicit_source = !positional_default_source && ta_arg(args, 0, "source").is_some();
 
         if has_explicit_source {

@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
-    pub(crate) fn eval_tr(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_tr(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let handle_na = if let Some(arg) = ta_arg(args, 0, "handle_na") {
             matches!(self.eval_expr(arg)?, PineValue::Bool(true))
         } else {
@@ -14,7 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_atr(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let length = ta_arg(args, 0, "length")
             .map(|arg| self.eval_expr(arg))
@@ -45,7 +45,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_supertrend(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some(factor) = ta_arg(args, 0, "factor")
             .map(|arg| self.eval_expr(arg))
@@ -142,7 +142,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_dmi(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let di_length = ta_arg(args, 0, "diLength")
             .map(|arg| self.eval_expr(arg))
@@ -264,7 +264,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_sar(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some(start) = ta_arg(args, 0, "start")
             .map(|arg| self.eval_expr(arg))

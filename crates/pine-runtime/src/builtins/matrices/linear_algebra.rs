@@ -310,48 +310,13 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let mut rank = 0_usize;
-        let mut pivot_row = 0_usize;
-        for column in 0..matrix.columns {
-            let mut best_row = pivot_row;
-            let mut best_abs = 0.0;
-            for row in pivot_row..matrix.rows {
-                let candidate_abs = values[row * matrix.columns + column].abs();
-                if candidate_abs > best_abs {
-                    best_abs = candidate_abs;
-                    best_row = row;
-                }
-            }
-            if best_abs == 0.0 {
-                continue;
-            }
-
-            if best_row != pivot_row {
-                for swap_column in 0..matrix.columns {
-                    values.swap(
-                        pivot_row * matrix.columns + swap_column,
-                        best_row * matrix.columns + swap_column,
-                    );
-                }
-            }
-
-            let pivot_value = values[pivot_row * matrix.columns + column];
-            for row in (pivot_row + 1)..matrix.rows {
-                let factor = values[row * matrix.columns + column] / pivot_value;
-                values[row * matrix.columns + column] = 0.0;
-                for elimination_column in (column + 1)..matrix.columns {
-                    values[row * matrix.columns + elimination_column] -=
-                        factor * values[pivot_row * matrix.columns + elimination_column];
-                }
-            }
-
-            rank += 1;
-            pivot_row += 1;
-            if pivot_row == matrix.rows {
-                break;
-            }
-        }
-
+        let rank = super::linalg::rank(&mut values, matrix.rows, matrix.columns, || {
+            matrix
+                .values
+                .iter()
+                .map(|value| value.as_f64().expect("numeric matrix validated"))
+                .collect()
+        });
         Some(PineValue::Int(rank as i64))
     }
 }

@@ -111,3 +111,15 @@ fn pseudoinverse_binary_scale_handles_subnormal_inputs_without_zero_scale() {
         assert_eq!(pseudo_inverse(&[scale], 1, 1), [1.0 / scale]);
     }
 }
+
+#[test]
+fn pseudoinverse_projection_workspace_overwrites_after_discarded_components() {
+    // Both Gram branches retain the first/last components and skip the middle.
+    let tall = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0];
+    let tall_inverse = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0];
+    assert_eq!(pseudo_inverse(&tall, 4, 3), tall_inverse);
+    let wide = tall_inverse;
+    assert_eq!(pseudo_inverse(&wide, 3, 4), tall);
+    assert_eq!(pseudo_inverse(&[0.0; 12], 4, 3), [0.0; 12]);
+    assert_eq!(pseudo_inverse(&[0.0; 12], 3, 4), [0.0; 12]);
+}

@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
-    pub(crate) fn eval_change(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_change(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let Some(source_arg) = ta_arg(args, 0, "source") else {
             return Ok(PineValue::Na);
         };
@@ -39,7 +39,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    pub(crate) fn eval_mom(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_mom(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let Some((current, previous)) = self.current_and_previous(args)? else {
             return Ok(PineValue::Na);
         };
@@ -47,7 +47,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Float(current - previous))
     }
 
-    pub(crate) fn eval_roc(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_roc(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let Some((current, previous)) = self.current_and_previous(args)? else {
             return Ok(PineValue::Na);
         };
@@ -60,7 +60,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn current_and_previous(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<Option<(f64, f64)>, RuntimeError> {
         let Some(source_arg) = ta_arg(args, 0, "source") else {
             return Ok(None);
@@ -93,7 +93,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_tsi(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source_arg = ta_arg(args, 0, "source");
         let source = source_arg
@@ -155,7 +155,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_cmo(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source_arg = ta_arg(args, 0, "source");
         let source = source_arg

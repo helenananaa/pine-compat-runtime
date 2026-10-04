@@ -14,6 +14,10 @@ impl<'args> RuntimeArgs<'args> {
         Self { raw, positional }
     }
 
+    pub(crate) fn raw(self) -> &'args [HirCallArg] {
+        self.raw
+    }
+
     pub(crate) fn exprs(self) -> impl Iterator<Item = &'args HirExpr> {
         self.raw.iter().map(|arg| &arg.value)
     }
@@ -41,7 +45,7 @@ impl<'args> RuntimeArgs<'args> {
             .transpose()
     }
 
-    fn expr(self, index: usize, name: &str) -> Option<&'args HirExpr> {
+    pub(crate) fn expr(self, index: usize, name: &str) -> Option<&'args HirExpr> {
         if self.positional {
             positional_arg(self.raw, index).map(|arg| &arg.value)
         } else {

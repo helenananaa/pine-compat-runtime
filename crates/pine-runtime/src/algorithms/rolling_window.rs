@@ -6,7 +6,6 @@ use pine_ir::CallSiteId;
 pub(crate) struct RollingWindowState {
     pub(crate) values: VecDeque<Option<f64>>,
     pub(crate) sum: f64,
-    pub(crate) sum_squares: f64,
     pub(crate) na_count: usize,
     nonzero_count: usize,
     /// Bar that owns the uncommitted tail sample, if any.
@@ -14,7 +13,6 @@ pub(crate) struct RollingWindowState {
     /// Exact aggregates from before the open append. Restored by assignment on
     /// same-bar undo so subtract/add cannot accumulate roundoff.
     prev_sum: f64,
-    prev_sum_squares: f64,
     prev_na_count: usize,
     prev_nonzero_count: usize,
     /// Items evicted by the open append only. Kept at this level (not inside
@@ -44,7 +42,6 @@ pub(crate) enum RollingWindowKey {
     StochLow(CallSiteId),
     WprHigh(CallSiteId),
     WprLow(CallSiteId),
-    HmaHalf(CallSiteId),
     HmaFull(CallSiteId),
     HmaSmooth(CallSiteId),
     Rma { call_site: CallSiteId, channel: u8 },
@@ -127,7 +124,6 @@ impl RollingWindowState {
         if let Some(value) = self.values.pop_front() {
             if let Some(value) = value {
                 self.sum -= value;
-                self.sum_squares -= value * value;
                 self.nonzero_count -= usize::from(value != 0.0);
             } else {
                 self.na_count = self.na_count.saturating_sub(1);
@@ -212,10 +208,23 @@ impl RollingWindowState {
         weighted_sum / denominator as f64
     }
 
+    /// Weighted mean of a ready tail, retaining the same oldest-to-newest
+    /// multiplication and summation order as a separate shorter window.
+    pub(crate) fn weighted_mean_tail(&self, length: usize) -> f64 {
+        let weighted_sum = self
+            .values
+            .range(self.values.len() - length..)
+            .flatten()
+            .enumerate()
+            .map(|(index, value)| *value * (index + 1) as f64)
+            .sum::<f64>();
+        let denominator = length * (length + 1) / 2;
+        weighted_sum / denominator as f64
+    }
+
     fn append(&mut self, value: Option<f64>) {
         if let Some(value) = value {
             self.sum += value;
-            self.sum_squares += value * value;
             self.nonzero_count += usize::from(value != 0.0);
             self.values.push_back(Some(value));
         } else {
@@ -229,14 +238,12 @@ impl RollingWindowState {
         // A window containing only exact zeros has exact zero aggregates.
         if self.nonzero_count == 0 && self.na_count == 0 {
             self.sum = 0.0;
-            self.sum_squares = 0.0;
         }
     }
 
     fn begin_open_append(&mut self, bar: usize) {
         self.open_bar = Some(bar);
         self.prev_sum = self.sum;
-        self.prev_sum_squares = self.sum_squares;
         self.prev_na_count = self.na_count;
         self.prev_nonzero_count = self.nonzero_count;
         self.evicted.clear();
@@ -245,7 +252,6 @@ impl RollingWindowState {
     fn undo_open_append(&mut self) {
         self.values.pop_back();
         self.sum = self.prev_sum;
-        self.sum_squares = self.prev_sum_squares;
         self.na_count = self.prev_na_count;
         self.nonzero_count = self.prev_nonzero_count;
         while let Some(value) = self.evicted.pop() {
@@ -289,11 +295,9 @@ mod tests {
         window.push_for_bar(Some(0.0), 3, 5);
         assert_eq!(window.values, VecDeque::from(vec![Some(0.0); 3]));
         assert_eq!(window.sum, 0.0);
-        assert_eq!(window.sum_squares, 0.0);
         window.discard_for_bar(5);
         assert_eq!(window.values, before.values);
         assert_eq!(window.sum.to_bits(), before.sum.to_bits());
-        assert_eq!(window.sum_squares.to_bits(), before.sum_squares.to_bits());
         assert_eq!(window.nonzero_count, before.nonzero_count);
 
         window.push_for_bar(Some(0.0), 3, 5);
@@ -303,7 +307,6 @@ mod tests {
             VecDeque::from(vec![Some(0.0), Some(0.0), Some(1.0)])
         );
         assert_eq!(window.sum, 1.0);
-        assert_eq!(window.sum_squares, 1.0);
     }
 
     #[test]
@@ -334,7 +337,6 @@ mod tests {
             window.discard_for_bar(4);
             assert_eq!(window.values, base.values);
             assert_eq!(window.sum.to_bits(), base.sum.to_bits());
-            assert_eq!(window.sum_squares.to_bits(), base.sum_squares.to_bits());
         }
     }
 
@@ -369,7 +371,6 @@ mod tests {
         let mut window = RollingWindowState::default();
         window.push(Some(1.0), 2);
         let pre_sum = bits(window.sum);
-        let pre_squares = bits(window.sum_squares);
 
         window.push_for_bar(Some(1e16), 2, 7);
         assert_eq!(window.sum, 1e16);
@@ -378,7 +379,6 @@ mod tests {
         window.push_for_bar(Some(2.0), 2, 7);
         assert_eq!(window.values, VecDeque::from(vec![Some(1.0), Some(2.0)]));
         assert_eq!(bits(window.sum), bits(3.0));
-        assert_eq!(bits(window.sum_squares), bits(5.0));
 
         let mut discarded = RollingWindowState::default();
         discarded.push(Some(1.0), 2);
@@ -386,7 +386,6 @@ mod tests {
         discarded.discard_for_bar(7);
         assert_eq!(discarded.values, VecDeque::from(vec![Some(1.0)]));
         assert_eq!(bits(discarded.sum), pre_sum);
-        assert_eq!(bits(discarded.sum_squares), pre_squares);
         assert_ne!(bits(discarded.sum), bits(0.0));
     }
 
@@ -419,7 +418,6 @@ mod tests {
             ])
         );
         assert_eq!(bits(window.sum), bits(expected.sum));
-        assert_eq!(bits(window.sum_squares), bits(expected.sum_squares));
         assert_eq!(window, expected);
 
         let mut shrunk = pre_bar.clone();
@@ -427,7 +425,6 @@ mod tests {
         shrunk.discard_for_bar(4);
         assert_eq!(shrunk.values, pre_bar.values);
         assert_eq!(bits(shrunk.sum), bits(pre_bar.sum));
-        assert_eq!(bits(shrunk.sum_squares), bits(pre_bar.sum_squares));
         assert_eq!(shrunk.na_count, pre_bar.na_count);
     }
 
@@ -513,3 +510,7 @@ mod tests {
         assert_eq!(committed.values, VecDeque::from(vec![Some(3.0), Some(4.0)]));
     }
 }
+
+#[cfg(test)]
+#[path = "rolling_window_legacy_tests.rs"]
+mod legacy_equivalence_tests;

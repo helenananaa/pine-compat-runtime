@@ -4,7 +4,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_rci(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         if length < 2 {
@@ -27,7 +27,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_stdev(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         match self.eval_window_variance(call_site_id, args)? {
             PineValue::Float(value) => Ok(finite_float_or_na(value.sqrt())),
@@ -38,7 +38,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_variance(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         self.eval_window_variance(call_site_id, args)
     }
@@ -46,7 +46,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_range(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
@@ -65,7 +65,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_dev(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
@@ -83,7 +83,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_source_length(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<(PineValue, i64), RuntimeError> {
         let source = ta_arg(args, 0, "source")
             .map(|arg| self.eval_expr(arg))
@@ -100,7 +100,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_correlation(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (left, right, length) = self.eval_pair_sources_length(args)?;
         if length <= 0 {
@@ -157,7 +157,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_covariance(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (left, right, length) = self.eval_pair_sources_length(args)?;
         if length <= 0 {
@@ -206,7 +206,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_pair_sources_length(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<(PineValue, PineValue, i64), RuntimeError> {
         let left = ta_arg(args, 0, "source1")
             .map(|arg| self.eval_expr(arg))
@@ -227,7 +227,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_median(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
@@ -263,7 +263,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_mode(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
@@ -286,7 +286,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_percentile(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
         mode: ArrayPercentileMode,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length, percentage) = self.eval_percentile_source_length_percentage(args)?;
@@ -352,7 +352,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_percentrank(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
@@ -381,7 +381,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_window_variance(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         let biased = if let Some(arg) = ta_arg(args, 2, "biased") {
@@ -404,7 +404,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_percentile_source_length_percentage(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<(PineValue, i64, Option<f64>), RuntimeError> {
         let (source, length) = self.eval_source_length(args)?;
         let percentage = ta_arg(args, 2, "percentage")

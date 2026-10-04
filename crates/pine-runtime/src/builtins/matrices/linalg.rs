@@ -2,7 +2,26 @@ const EIGEN_TOLERANCE: f64 = 1e-12;
 const EIGEN_VECTOR_TOLERANCE: f64 = 1e-8;
 const PSEUDO_INVERSE_TOLERANCE: f64 = 1e-12;
 
+#[path = "linalg_rank.rs"]
+mod rank;
+#[path = "linalg_scale.rs"]
+mod scale;
+pub(super) use rank::rank;
+
 pub(super) fn eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
+    if size > 1
+        && let Some((normalized, scale)) = scale::extreme_eigen_normalization(values)
+    {
+        let mut result = unscaled_eigenvalues(&normalized, size)?;
+        for value in &mut result {
+            *value *= scale;
+        }
+        return Some(result);
+    }
+    unscaled_eigenvalues(values, size)
+}
+
+fn unscaled_eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
     if size == 0 {
         return Some(Vec::new());
     }
@@ -19,6 +38,15 @@ pub(super) fn eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
 }
 
 pub(super) fn eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
+    if size > 1
+        && let Some((normalized, _)) = scale::extreme_eigen_normalization(values)
+    {
+        return unscaled_eigenvectors(&normalized, size);
+    }
+    unscaled_eigenvectors(values, size)
+}
+
+fn unscaled_eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
     if size == 0 {
         return Some(Vec::new());
     }
@@ -30,7 +58,7 @@ pub(super) fn eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
         return Some(normalize_vector_columns(vectors, size));
     }
 
-    let eigenvalues = eigenvalues(values, size)?;
+    let eigenvalues = unscaled_eigenvalues(values, size)?;
     let mut result = vec![0.0; size * size];
     let mut previous = Vec::new();
     for (column, eigenvalue) in eigenvalues.iter().copied().enumerate() {
@@ -68,13 +96,7 @@ pub(super) fn pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec
     // Power-of-two scaling avoids an extra rounding step for ordinary inputs.
     // Construct the highest represented power directly, including subnormals
     // whose biased exponent is zero and whose scale would underflow via powi.
-    let bits = scale.to_bits();
-    let exponent = bits & 0x7ff0_0000_0000_0000;
-    let scale = f64::from_bits(if exponent != 0 {
-        exponent
-    } else {
-        1_u64 << bits.ilog2()
-    });
+    let scale = scale::binary_scale(scale);
     let normalized: Vec<_> = values.iter().map(|value| value / scale).collect();
     let mut result = normalized_pseudo_inverse(&normalized, rows, columns);
     for value in &mut result {
@@ -89,13 +111,13 @@ fn normalized_pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec
         let (eigenvalues, eigenvectors) = jacobi_eigen_decomposition(gram, columns);
         let cutoff = eigen_cutoff(&eigenvalues);
         let mut result = vec![0.0; columns * rows];
+        let mut projected_rows = vec![0.0; rows];
 
         for eigen_index in 0..columns {
             let lambda = eigenvalues[eigen_index];
             if lambda <= cutoff {
                 continue;
             }
-            let mut projected_rows = vec![0.0; rows];
             for row in 0..rows {
                 let mut total = 0.0;
                 for column in 0..columns {
@@ -117,13 +139,13 @@ fn normalized_pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec
         let (eigenvalues, eigenvectors) = jacobi_eigen_decomposition(gram, rows);
         let cutoff = eigen_cutoff(&eigenvalues);
         let mut result = vec![0.0; columns * rows];
+        let mut projected_columns = vec![0.0; columns];
 
         for eigen_index in 0..rows {
             let lambda = eigenvalues[eigen_index];
             if lambda <= cutoff {
                 continue;
             }
-            let mut projected_columns = vec![0.0; columns];
             for column in 0..columns {
                 let mut total = 0.0;
                 for row in 0..rows {
@@ -182,6 +204,14 @@ fn eigen_cutoff(eigenvalues: &[f64]) -> f64 {
 #[cfg(test)]
 #[path = "linalg_pinv_tests.rs"]
 mod pinv_tests;
+
+#[cfg(test)]
+#[path = "linalg_qr_tests.rs"]
+mod qr_tests;
+
+#[cfg(test)]
+#[path = "linalg_scale_tests.rs"]
+mod scale_tests;
 
 fn is_symmetric(values: &[f64], size: usize) -> bool {
     for row in 0..size {
@@ -341,10 +371,11 @@ fn eigen_residual_norm(values: &[f64], size: usize, eigenvalue: f64, vector: &[f
 }
 
 fn normalize_vector_columns(mut vectors: Vec<f64>, size: usize) -> Vec<f64> {
+    let mut vector = vec![0.0; size];
     for column in 0..size {
-        let mut vector = (0..size)
-            .map(|row| vectors[row * size + column])
-            .collect::<Vec<_>>();
+        for row in 0..size {
+            vector[row] = vectors[row * size + column];
+        }
         if normalize_vector(&mut vector).is_some() {
             for row in 0..size {
                 vectors[row * size + column] = vector[row];
@@ -405,7 +436,12 @@ fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
         }
 
         let mut norm = vector_norm(&vector);
+        let mut diagonal = norm;
         if norm <= EIGEN_TOLERANCE {
+            // Completing Q does not create a component in the original column.
+            // Its numerically dependent residual is discarded at the existing
+            // tolerance; only the fallback basis vector needs normalization.
+            diagonal = 0.0;
             vector = orthogonal_fallback(&q, size, column)?;
             norm = vector_norm(&vector);
         }
@@ -413,7 +449,7 @@ fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
             return None;
         }
 
-        r[column * size + column] = norm;
+        r[column * size + column] = diagonal;
         for row in 0..size {
             q[row * size + column] = vector[row] / norm;
         }

@@ -35,9 +35,12 @@ impl<'a> HistoricalRuntime<'a> {
                 args,
                 dispatch.positional_args,
             ),
-            CallFamily::Ta => {
-                self.eval_ta_call(callee, call_site_id, args, dispatch.positional_args)
-            }
+            CallFamily::Ta => self.eval_ta_call(
+                dispatch.ta_opcode,
+                call_site_id,
+                args,
+                dispatch.positional_args,
+            ),
             CallFamily::Array => self.eval_array_call(callee, args),
             CallFamily::Map => self.eval_map_call(callee, args),
             CallFamily::Matrix => self.eval_matrix_call(callee, args),

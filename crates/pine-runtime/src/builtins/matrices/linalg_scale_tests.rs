@@ -90,3 +90,94 @@ fn eigen_normalization_keeps_mixed_diagonals_singletons_and_signed_zeros() {
     assert_eq!(eigenvectors(&zero, 2).unwrap(), [1.0, 0.0, 0.0, 1.0]);
     assert!(eigenvalues(&[], 0).unwrap().is_empty());
 }
+
+#[test]
+fn failed_two_by_two_formula_recovers_real_finite_roots_and_vectors() {
+    let magnitude = 1e154;
+    let values = [magnitude, magnitude, 0.5 * magnitude, magnitude];
+    assert!(scale::extreme_eigen_normalization(&values).is_none());
+    // The original trace and determinant are finite, but both terms of the
+    // discriminant overflow. NaN.max(0) used to fabricate two equal roots.
+    assert_eq!(
+        super::two_by_two_eigenvalues(&values, false),
+        Err(super::EigenFailure::Numerical)
+    );
+    let roots = eigenvalues(&values, 2).unwrap();
+    let expected = [1.0 + 0.5_f64.sqrt(), 1.0 - 0.5_f64.sqrt()];
+    for (actual, expected) in roots.iter().zip(expected) {
+        assert!((actual / magnitude - expected).abs() <= 1e-14);
+    }
+    let vectors = eigenvectors(&values, 2).unwrap();
+    let unit = [1.0, 1.0, 0.5, 1.0];
+    for column in 0..2 {
+        for row in 0..2 {
+            let projected: f64 = (0..2)
+                .map(|inner| unit[row * 2 + inner] * vectors[inner * 2 + column])
+                .sum();
+            assert!((projected - expected[column] * vectors[row * 2 + column]).abs() <= 1e-14);
+        }
+    }
+}
+
+#[test]
+fn recovery_keeps_tiny_nonsymmetric_classification_and_rejects_complex_roots() {
+    let magnitude = 1e-200;
+    let values = [0.0, magnitude, (1.0 - 2e-13) * magnitude, 0.0];
+    let (normalized, _) = scale::extreme_eigen_normalization(&values).unwrap();
+    assert!(super::is_symmetric(&normalized, 2));
+    let roots = eigenvalues(&values, 2).unwrap();
+    let positive = ((values[1] / magnitude) * (values[2] / magnitude)).sqrt();
+    assert!((roots[0] / magnitude - positive).abs() <= 2e-15);
+    assert!((roots[1] / magnitude + positive).abs() <= 2e-15);
+    let vectors = eigenvectors(&values, 2).unwrap();
+    for column in 0..2 {
+        for row in 0..2 {
+            let projected: f64 = (0..2)
+                .map(|inner| (values[row * 2 + inner] / magnitude) * vectors[inner * 2 + column])
+                .sum();
+            assert!(
+                (projected - (roots[column] / magnitude) * vectors[row * 2 + column]).abs()
+                    <= 1e-14
+            );
+        }
+    }
+    let complex = [0.0, magnitude, -magnitude, 0.0];
+    assert!(eigenvalues(&complex, 2).is_none());
+    assert!(eigenvectors(&complex, 2).is_none());
+    let tiny_off_diagonal = [1e200, 1e185, -1e185, 1e200];
+    assert!(eigenvalues(&tiny_off_diagonal, 2).is_none());
+    assert!(eigenvectors(&tiny_off_diagonal, 2).is_none());
+}
+
+#[test]
+fn ordinary_finite_complex_failure_is_not_reinterpreted_by_rescaling() {
+    let values = [1000.0, 1e-5, -1e-5, 1000.0];
+    assert!(scale::extreme_eigen_normalization(&values).is_none());
+    assert_eq!(
+        super::two_by_two_eigenvalues(&values, false),
+        Err(super::EigenFailure::Complex)
+    );
+    assert!(eigenvalues(&values, 2).is_none());
+    assert!(eigenvectors(&values, 2).is_none());
+}
+
+#[test]
+fn failed_triangular_kernel_preserves_mixed_diagonal_without_scaling() {
+    for values in [[1e308, 1e308, 0.0, 1e-308], [1e-308, 0.0, 1e308, 1e308]] {
+        assert!(scale::reversible_eigen_normalization(&values).is_none());
+        let roots = eigenvalues(&values, 2).unwrap();
+        assert_eq!(roots[0].to_bits(), 1e308_f64.to_bits());
+        assert_eq!(roots[1].to_bits(), 1e-308_f64.to_bits());
+        // The vector solver has no lossless normalized retry for these inputs.
+        assert!(eigenvectors(&values, 2).is_none());
+    }
+}
+
+#[test]
+fn failed_nontriangular_kernel_rejects_irreversible_normalization() {
+    let values = [1e154, 1e-200, 1e154, 1e154, 1e154, 0.0, 0.0, 1e154, 1e154];
+    assert!(scale::extreme_eigen_normalization(&values).is_none());
+    assert!(scale::reversible_eigen_normalization(&values).is_none());
+    assert!(eigenvalues(&values, 3).is_none());
+    assert!(eigenvectors(&values, 3).is_none());
+}

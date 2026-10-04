@@ -3,6 +3,8 @@ use std::collections::HashMap;
 
 use pine_ir::{CallSiteId, HirCallArg, HirExprKind, HirProgram};
 
+use crate::builtins::ta::TaOpcode;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CallFamily {
     Legacy,
@@ -73,6 +75,22 @@ impl CallFamily {
 pub(crate) struct CallDispatch {
     pub(crate) family: CallFamily,
     pub(crate) positional_args: bool,
+    pub(crate) ta_opcode: Option<TaOpcode>,
+}
+
+impl CallDispatch {
+    fn for_call(callee: &str, args: &[HirCallArg]) -> Self {
+        let family = CallFamily::for_name(callee);
+        Self {
+            family,
+            positional_args: positional_layout(args),
+            ta_opcode: if family == CallFamily::Ta {
+                TaOpcode::for_name(callee)
+            } else {
+                None
+            },
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -97,10 +115,7 @@ impl CallPlan {
                 args,
             } = &expr.kind
             {
-                let dispatch = CallDispatch {
-                    family: CallFamily::for_name(callee),
-                    positional_args: positional_layout(args),
-                };
+                let dispatch = CallDispatch::for_call(callee, args);
                 bindings
                     .entry(*call_site_id)
                     .and_modify(|binding| {
@@ -165,10 +180,7 @@ impl CallPlan {
         self.binding(site)
             .filter(|binding| binding.callee == callee)
             .map_or_else(
-                || CallDispatch {
-                    family: CallFamily::for_name(callee),
-                    positional_args: positional_layout(args),
-                },
+                || CallDispatch::for_call(callee, args),
                 |binding| binding.dispatch,
             )
     }
@@ -181,6 +193,10 @@ fn positional_layout(args: &[HirCallArg]) -> bool {
             .is_none_or(|name| name == pine_ir::OMITTED_BUILTIN_ARG)
     })
 }
+
+#[cfg(test)]
+#[path = "ta_dispatch_tests.rs"]
+mod ta_dispatch_tests;
 
 #[cfg(test)]
 mod tests {

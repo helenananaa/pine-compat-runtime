@@ -129,12 +129,12 @@ impl<'a> HistoricalRuntime<'a> {
         right_id: u32,
     ) -> Result<PineValue, RuntimeError> {
         let (Some(left), Some(right)) = (
-            self.matrix_store.get(&left_id).cloned(),
-            self.matrix_store.get(&right_id).cloned(),
+            self.matrix_store.get(&left_id),
+            self.matrix_store.get(&right_id),
         ) else {
             return Ok(PineValue::Na);
         };
-        let result = matrix_multiply_storage(&left, &right)?;
+        let result = matrix_multiply_storage(left, right)?;
         self.record_collection_allocation(result.values.len());
         Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,

@@ -1,27 +1,35 @@
 //! Rank recovery after non-finite elimination, keeping the ordinary path intact.
-use super::scale::normalize_rows_reversibly;
+use super::scale::{normalize_columns_reversibly, normalize_rows_reversibly};
 
 pub(in super::super) fn rank(
     values: &mut [f64],
     rows: usize,
     columns: usize,
     original: impl FnOnce() -> Vec<f64>,
-) -> usize {
+) -> Option<usize> {
     let legacy_rank = eliminate(values, rows, columns);
     if values.iter().all(|value| value.is_finite()) {
-        return legacy_rank;
+        return Some(legacy_rank);
     }
     // Read original entries only on failure; ordinary calls allocate no backup.
-    let mut normalized = original();
-    if !normalize_rows_reversibly(&mut normalized, rows, columns) {
-        return legacy_rank;
+    let original = original();
+    values.copy_from_slice(&original);
+    if normalize_rows_reversibly(values, rows, columns) {
+        let recovered_rank = eliminate(values, rows, columns);
+        if values.iter().all(|value| value.is_finite()) {
+            return Some(recovered_rank);
+        }
     }
-    let recovered_rank = eliminate(&mut normalized, rows, columns);
-    if normalized.iter().all(|value| value.is_finite()) {
-        recovered_rank
-    } else {
-        legacy_rank
+    // A wide-scale row may still have independently reversible columns.
+    values.copy_from_slice(&original);
+    if normalize_columns_reversibly(values, rows, columns) {
+        let recovered_rank = eliminate(values, rows, columns);
+        if values.iter().all(|value| value.is_finite()) {
+            return Some(recovered_rank);
+        }
     }
+    // The contaminated elimination cannot establish a finite integer rank.
+    None
 }
 
 fn eliminate(values: &mut [f64], rows: usize, columns: usize) -> usize {

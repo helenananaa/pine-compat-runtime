@@ -23,6 +23,19 @@ pub(super) fn extreme_eigen_normalization(values: &[f64]) -> Option<(Vec<f64>, f
     if magnitude == 0.0 || (magnitude > super::EIGEN_TOLERANCE && magnitude <= f64::MAX.sqrt()) {
         return None;
     }
+    eigen_normalization_at_magnitude(values, magnitude)
+}
+
+/// Retry a failed eigensolver only if binary normalization preserves every bit.
+pub(super) fn reversible_eigen_normalization(values: &[f64]) -> Option<(Vec<f64>, f64)> {
+    let magnitude = values.iter().map(|value| value.abs()).fold(0.0, f64::max);
+    if magnitude == 0.0 || !magnitude.is_finite() {
+        return None;
+    }
+    eigen_normalization_at_magnitude(values, magnitude)
+}
+
+fn eigen_normalization_at_magnitude(values: &[f64], magnitude: f64) -> Option<(Vec<f64>, f64)> {
     let scale = binary_scale(magnitude);
     let normalized = values
         .iter()
@@ -41,6 +54,37 @@ pub(super) fn normalize_rows_reversibly(values: &mut [f64], rows: usize, columns
         }
         let scale = binary_scale(magnitude);
         for value in values {
+            let Some(normalized) = reversible_scaled(*value, scale) else {
+                return false;
+            };
+            *value = normalized;
+        }
+    }
+    true
+}
+
+/// Column scaling is a second cold-path rank recovery option when row scaling
+/// cannot retain a small element. A failed attempt may partly modify the input.
+pub(super) fn normalize_columns_reversibly(
+    values: &mut [f64],
+    rows: usize,
+    columns: usize,
+) -> bool {
+    for column in 0..columns {
+        let mut magnitude = 0.0_f64;
+        for row in 0..rows {
+            let value = values[row * columns + column];
+            if !value.is_finite() {
+                return false;
+            }
+            magnitude = magnitude.max(value.abs());
+        }
+        if magnitude == 0.0 {
+            continue;
+        }
+        let scale = binary_scale(magnitude);
+        for row in 0..rows {
+            let value = &mut values[row * columns + column];
             let Some(normalized) = reversible_scaled(*value, scale) else {
                 return false;
             };

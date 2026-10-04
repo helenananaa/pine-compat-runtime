@@ -114,3 +114,17 @@ fn column_normalization_workspace_keeps_signs_and_preserves_ineligible_columns()
     );
     assert!(normalize_vector_columns(Vec::new(), 0).is_empty());
 }
+
+#[test]
+fn overflowing_qr_column_norm_recovers_repeated_triangular_eigenvalues() {
+    let magnitude = 1e154;
+    let values = [
+        magnitude, 0.0, 0.0, magnitude, magnitude, 0.0, magnitude, 0.0, magnitude,
+    ];
+    assert!(super::scale::extreme_eigen_normalization(&values).is_none());
+    assert!(qr_decompose(&values, 3).is_none());
+    let roots = eigenvalues(&values, 3).unwrap();
+    for root in roots {
+        assert_eq!(root.to_bits(), magnitude.to_bits());
+    }
+}

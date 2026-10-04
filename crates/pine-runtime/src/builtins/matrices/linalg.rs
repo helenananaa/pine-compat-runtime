@@ -8,57 +8,119 @@ mod rank;
 mod scale;
 pub(super) use rank::rank;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EigenFailure {
+    Numerical,
+    Complex,
+}
+
 pub(super) fn eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
     if size > 1
         && let Some((normalized, scale)) = scale::extreme_eigen_normalization(values)
     {
-        let mut result = unscaled_eigenvalues(&normalized, size)?;
-        for value in &mut result {
-            *value *= scale;
+        if let Some(result) = exact_triangular_eigenvalues(values, size) {
+            return Some(result);
         }
+        return recovered_eigenvalues(&normalized, size, scale, is_exactly_symmetric(values, size));
+    }
+    let result = unscaled_eigenvalues(values, size, None);
+    if size <= 1
+        || result
+            .as_ref()
+            .is_ok_and(|values| values.iter().all(|value| value.is_finite()))
+    {
+        return result.ok();
+    }
+    if matches!(result, Err(EigenFailure::Complex)) {
+        return None;
+    }
+    if let Some(result) = exact_triangular_eigenvalues(values, size) {
         return Some(result);
     }
-    unscaled_eigenvalues(values, size)
+    let (normalized, scale) = scale::reversible_eigen_normalization(values)?;
+    recovered_eigenvalues(&normalized, size, scale, is_exactly_symmetric(values, size))
 }
 
-fn unscaled_eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
+fn recovered_eigenvalues(
+    values: &[f64],
+    size: usize,
+    scale: f64,
+    symmetric: bool,
+) -> Option<Vec<f64>> {
+    let mut result = unscaled_eigenvalues(values, size, Some(symmetric)).ok()?;
+    if !result.iter().all(|value| value.is_finite()) {
+        return None;
+    }
+    for value in &mut result {
+        *value *= scale;
+    }
+    Some(result)
+}
+
+fn unscaled_eigenvalues(
+    values: &[f64],
+    size: usize,
+    symmetric: Option<bool>,
+) -> Result<Vec<f64>, EigenFailure> {
     if size == 0 {
-        return Some(Vec::new());
+        return Ok(Vec::new());
     }
     if size == 1 {
-        return Some(vec![values[0]]);
+        return Ok(vec![values[0]]);
     }
-    if is_symmetric(values, size) {
-        return Some(symmetric_eigenvalues(values, size));
+    if symmetric.unwrap_or_else(|| is_symmetric(values, size)) {
+        return Ok(symmetric_eigenvalues(values, size));
     }
     if size == 2 {
-        return two_by_two_eigenvalues(values);
+        return two_by_two_eigenvalues(values, symmetric.is_some());
     }
-    qr_eigenvalues(values, size)
+    qr_eigenvalues(values, size, symmetric.is_some())
 }
 
 pub(super) fn eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
     if size > 1
         && let Some((normalized, _)) = scale::extreme_eigen_normalization(values)
     {
-        return unscaled_eigenvectors(&normalized, size);
+        return recovered_eigenvectors(&normalized, size, is_exactly_symmetric(values, size));
     }
-    unscaled_eigenvectors(values, size)
+    let result = unscaled_eigenvectors(values, size, None);
+    if size <= 1
+        || result
+            .as_ref()
+            .is_ok_and(|values| values.iter().all(|value| value.is_finite()))
+    {
+        return result.ok();
+    }
+    if matches!(result, Err(EigenFailure::Complex)) {
+        return None;
+    }
+    let (normalized, _) = scale::reversible_eigen_normalization(values)?;
+    recovered_eigenvectors(&normalized, size, is_exactly_symmetric(values, size))
 }
 
-fn unscaled_eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
+fn recovered_eigenvectors(values: &[f64], size: usize, symmetric: bool) -> Option<Vec<f64>> {
+    unscaled_eigenvectors(values, size, Some(symmetric))
+        .ok()
+        .filter(|vectors| vectors.iter().all(|value| value.is_finite()))
+}
+
+fn unscaled_eigenvectors(
+    values: &[f64],
+    size: usize,
+    symmetric: Option<bool>,
+) -> Result<Vec<f64>, EigenFailure> {
     if size == 0 {
-        return Some(Vec::new());
+        return Ok(Vec::new());
     }
     if size == 1 {
-        return Some(vec![1.0]);
+        return Ok(vec![1.0]);
     }
-    if is_symmetric(values, size) {
+    if symmetric.unwrap_or_else(|| is_symmetric(values, size)) {
         let (_, vectors) = jacobi_eigen_decomposition(values.to_vec(), size);
-        return Some(normalize_vector_columns(vectors, size));
+        return Ok(normalize_vector_columns(vectors, size));
     }
 
-    let eigenvalues = unscaled_eigenvalues(values, size)?;
+    let eigenvalues = unscaled_eigenvalues(values, size, symmetric)?;
     let mut result = vec![0.0; size * size];
     let mut previous = Vec::new();
     for (column, eigenvalue) in eigenvalues.iter().copied().enumerate() {
@@ -72,13 +134,14 @@ fn unscaled_eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
                 }
             })
             .collect::<Vec<_>>();
-        let vector = eigenvector_for(values, size, eigenvalue, &matching_previous)?;
+        let vector = eigenvector_for(values, size, eigenvalue, &matching_previous)
+            .ok_or(EigenFailure::Numerical)?;
         for row in 0..size {
             result[row * size + column] = vector[row];
         }
         previous.push((eigenvalue, vector));
     }
-    Some(result)
+    Ok(result)
 }
 
 pub(super) fn pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec<f64> {
@@ -224,26 +287,93 @@ fn is_symmetric(values: &[f64], size: usize) -> bool {
     true
 }
 
+fn is_exactly_symmetric(values: &[f64], size: usize) -> bool {
+    for row in 0..size {
+        for column in (row + 1)..size {
+            if values[row * size + column] != values[column * size + row] {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+/// Use the triangular characteristic polynomial only on a recovery path. This
+/// also retains exact diagonal values when no single scaling preserves all
+/// entries, and avoids QR splitting a repeated eigenvalue of a Jordan block.
+fn exact_triangular_eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
+    let mut upper = true;
+    let mut lower = true;
+    for row in 0..size {
+        for column in (row + 1)..size {
+            upper &= values[column * size + row] == 0.0;
+            lower &= values[row * size + column] == 0.0;
+        }
+    }
+    if !upper && !lower {
+        return None;
+    }
+    let mut result: Vec<_> = (0..size)
+        .map(|index| values[index * size + index])
+        .collect();
+    // The nonsymmetric 2x2 formula returns the larger root first. Symmetric
+    // diagonal matrices and larger QR matrices keep their diagonal order.
+    if size == 2 && !is_exactly_symmetric(values, size) && result[0] < result[1] {
+        result.swap(0, 1);
+    }
+    Some(result)
+}
+
 fn symmetric_eigenvalues(values: &[f64], size: usize) -> Vec<f64> {
     let (eigenvalues, _) = jacobi_eigen_decomposition(values.to_vec(), size);
     eigenvalues
 }
 
-fn two_by_two_eigenvalues(values: &[f64]) -> Option<Vec<f64>> {
+fn two_by_two_eigenvalues(values: &[f64], recovery: bool) -> Result<Vec<f64>, EigenFailure> {
+    if recovery {
+        return recovered_two_by_two_eigenvalues(values);
+    }
     let trace = values[0] + values[3];
     let determinant = values[0] * values[3] - values[1] * values[2];
     let discriminant = trace * trace - 4.0 * determinant;
+    if !trace.is_finite() || !determinant.is_finite() || !discriminant.is_finite() {
+        return Err(EigenFailure::Numerical);
+    }
     if discriminant < -EIGEN_TOLERANCE {
-        return None;
+        return Err(EigenFailure::Complex);
     }
     let root = discriminant.max(0.0).sqrt();
-    Some(vec![(trace + root) / 2.0, (trace - root) / 2.0])
+    Ok(vec![(trace + root) / 2.0, (trace - root) / 2.0])
 }
 
-fn qr_eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
+fn recovered_two_by_two_eigenvalues(values: &[f64]) -> Result<Vec<f64>, EigenFailure> {
+    let trace = values[0] + values[3];
+    let difference = values[0] - values[3];
+    let product = values[1] * values[2];
+    // Equal diagonal entries with oppositely signed nonzero off-diagonals have
+    // complex roots even if their product underflows after normalization.
+    if difference == 0.0
+        && values[1] != 0.0
+        && values[2] != 0.0
+        && values[1].is_sign_negative() != values[2].is_sign_negative()
+    {
+        return Err(EigenFailure::Complex);
+    }
+    let discriminant = difference * difference + 4.0 * product;
+    if !trace.is_finite() || !discriminant.is_finite() {
+        return Err(EigenFailure::Numerical);
+    }
+    if discriminant < 0.0 {
+        return Err(EigenFailure::Complex);
+    }
+    let root = discriminant.sqrt();
+    Ok(vec![(trace + root) / 2.0, (trace - root) / 2.0])
+}
+
+fn qr_eigenvalues(values: &[f64], size: usize, recovery: bool) -> Result<Vec<f64>, EigenFailure> {
     let mut matrix = values.to_vec();
     for _ in 0..(size * size * 128).max(1) {
-        let (q, r) = qr_decompose(&matrix, size)?;
+        let (q, r) = qr_decompose(&matrix, size).ok_or(EigenFailure::Numerical)?;
         matrix = multiply_square(&r, &q, size);
         if lower_off_diagonal_norm(&matrix, size) <= EIGEN_TOLERANCE {
             break;
@@ -260,14 +390,14 @@ fn qr_eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
                 matrix[(index + 1) * size + index],
                 matrix[(index + 1) * size + index + 1],
             ];
-            result.extend(two_by_two_eigenvalues(&block)?);
+            result.extend(two_by_two_eigenvalues(&block, recovery)?);
             index += 2;
         } else {
             result.push(matrix[index * size + index]);
             index += 1;
         }
     }
-    Some(result)
+    Ok(result)
 }
 
 fn eigenvector_for(
@@ -387,7 +517,7 @@ fn normalize_vector_columns(mut vectors: Vec<f64>, size: usize) -> Vec<f64> {
 
 fn normalize_vector(vector: &mut [f64]) -> Option<()> {
     let norm = vector_norm(vector);
-    if norm <= EIGEN_VECTOR_TOLERANCE {
+    if !norm.is_finite() || norm <= EIGEN_VECTOR_TOLERANCE {
         return None;
     }
     for value in vector.iter_mut() {
@@ -436,6 +566,9 @@ fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
         }
 
         let mut norm = vector_norm(&vector);
+        if !norm.is_finite() {
+            return None;
+        }
         let mut diagonal = norm;
         if norm <= EIGEN_TOLERANCE {
             // Completing Q does not create a component in the original column.
@@ -445,7 +578,7 @@ fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
             vector = orthogonal_fallback(&q, size, column)?;
             norm = vector_norm(&vector);
         }
-        if norm <= EIGEN_TOLERANCE {
+        if !norm.is_finite() || norm <= EIGEN_TOLERANCE {
             return None;
         }
 

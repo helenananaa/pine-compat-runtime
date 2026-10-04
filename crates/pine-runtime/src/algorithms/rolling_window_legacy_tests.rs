@@ -204,6 +204,102 @@ fn assert_same(current: &RollingWindowState, legacy: &LegacySamples, length: usi
     );
 }
 
+fn assert_hma_scan_pair(current: &RollingWindowState, legacy: &LegacySamples, length: usize) {
+    let half_length = (length / 2).max(1).min(legacy.values.len());
+    let old_half = LegacySamples {
+        values: legacy.values[legacy.values.len() - half_length..].to_vec(),
+        ..Default::default()
+    };
+    let (full_mean, half_mean) = current.weighted_mean_with_tail(length, half_length);
+    assert_eq!(full_mean.to_bits(), legacy.weighted_mean(length).to_bits());
+    assert_eq!(
+        half_mean.to_bits(),
+        old_half.weighted_mean(half_length).to_bits()
+    );
+}
+
+#[test]
+fn hma_fused_scan_matches_old_double_scan_for_wrapped_na_zero_and_extreme_samples() {
+    let mut current = RollingWindowState {
+        values: VecDeque::with_capacity(7),
+        ..Default::default()
+    };
+    let mut legacy = LegacySamples::default();
+    let mut wrapped = false;
+    let mut overflow_seen = false;
+    let mut nan_seen = false;
+    for index in 0..2048 {
+        let length = [1, 2, 3, 7, 8, 31, 32, 127][(index / 128) % 8];
+        let value = match index % 29 {
+            0 => Some(f64::MAX),
+            1 => Some(-f64::MAX),
+            2 => Some(f64::MIN_POSITIVE),
+            _ => sample(index),
+        };
+        current.push(value, length);
+        legacy.push(value, length);
+        wrapped |= !current.values.as_slices().1.is_empty();
+        overflow_seen |= legacy.weighted_mean(length).is_infinite();
+        nan_seen |= legacy.weighted_mean(length).is_nan();
+        assert_hma_scan_pair(&current, &legacy, length);
+    }
+    assert!(wrapped, "exercise both backing slices of the deque");
+    assert!(overflow_seen, "exercise overflowing weighted terms");
+    assert!(nan_seen, "exercise opposite infinite partial sums");
+
+    for value in [
+        None,
+        Some(0.0),
+        Some(-0.0),
+        Some(f64::from_bits(1)),
+        Some(-f64::from_bits(1)),
+    ] {
+        let mut current = RollingWindowState::default();
+        let mut legacy = LegacySamples::default();
+        for _ in 0..8 {
+            current.push(value, 8);
+            legacy.push(value, 8);
+            assert_hma_scan_pair(&current, &legacy, 8);
+        }
+    }
+}
+
+#[test]
+fn hma_fused_scan_keeps_old_bits_after_same_bar_undo_discard_and_checkpoint_restore() {
+    let mut current = RollingWindowState::default();
+    let mut legacy = LegacyWindow::default();
+    for bar in 0..128 {
+        for (pass, length) in [17, 3, 29, 1, 11].into_iter().enumerate() {
+            let value = match (bar * 5 + pass) % 31 {
+                0 => Some(f64::MAX),
+                1 => Some(-f64::MAX),
+                _ => sample(bar * 5 + pass),
+            };
+            current.push_for_bar(value, length, bar);
+            legacy.push_for_bar(value, length, bar);
+            assert_hma_scan_pair(&current, &legacy.samples, length);
+            if pass == 2 {
+                let checkpoint = current.clone();
+                let legacy_checkpoint = legacy.clone();
+                current.push_for_bar(Some(999.0), 2, bar);
+                legacy.push_for_bar(Some(999.0), 2, bar);
+                assert_hma_scan_pair(&current, &legacy.samples, 2);
+                current = checkpoint;
+                legacy = legacy_checkpoint;
+                assert_hma_scan_pair(&current, &legacy.samples, length);
+            }
+        }
+        current.discard_for_bar(bar + 1);
+        legacy.discard_for_bar(bar + 1);
+        assert_hma_scan_pair(&current, &legacy.samples, 11);
+        if bar.is_multiple_of(3) {
+            current.discard_for_bar(bar);
+            legacy.discard_for_bar(bar);
+            assert_hma_scan_pair(&current, &legacy.samples, 11);
+        }
+    }
+}
+
 #[test]
 fn ordinary_push_outputs_match_legacy_bits_through_wrapped_deque_na_and_length_changes() {
     let mut current = RollingWindowState {
@@ -340,9 +436,10 @@ fn hma_tail_reuse_matches_legacy_three_windows_for_every_output_bit() {
             && old_full.values.len() == length
             && old_full.na_count == 0)
             .then(|| 2.0 * old_half.weighted_mean(half_length) - old_full.weighted_mean(length));
-        let diff = full
-            .is_ready(length)
-            .then(|| 2.0 * full.weighted_mean_tail(half_length) - full.weighted_mean(length));
+        let diff = full.is_ready(length).then(|| {
+            let (full_mean, half_mean) = full.weighted_mean_with_tail(length, half_length);
+            2.0 * half_mean - full_mean
+        });
         assert_eq!(old_diff.map(f64::to_bits), diff.map(f64::to_bits));
         // The runtime's common update helper converts non-finite results to NA.
         old_smooth.push(old_diff.filter(|value| value.is_finite()), smooth_length);

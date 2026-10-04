@@ -208,18 +208,29 @@ impl RollingWindowState {
         weighted_sum / denominator as f64
     }
 
-    /// Weighted mean of a ready tail, retaining the same oldest-to-newest
-    /// multiplication and summation order as a separate shorter window.
-    pub(crate) fn weighted_mean_tail(&self, length: usize) -> f64 {
-        let weighted_sum = self
-            .values
-            .range(self.values.len() - length..)
-            .flatten()
-            .enumerate()
-            .map(|(index, value)| *value * (index + 1) as f64)
-            .sum::<f64>();
+    /// Full and tail weighted means in one traversal. Each accumulator keeps
+    /// the original oldest-to-newest multiplication and addition order.
+    pub(crate) fn weighted_mean_with_tail(&self, length: usize, tail_length: usize) -> (f64, f64) {
+        let tail_start = self.values.len() - tail_length;
+        // Iterator::sum::<f64>() starts at -0.0; keep its signed-zero identity.
+        let mut weighted_sum = -0.0;
+        let mut tail_weighted_sum = -0.0;
+        let mut full_weight = 0_usize;
+        for value in self.values.range(..tail_start).flatten() {
+            full_weight += 1;
+            weighted_sum += *value * full_weight as f64;
+        }
+        for (index, value) in self.values.range(tail_start..).flatten().enumerate() {
+            full_weight += 1;
+            weighted_sum += *value * full_weight as f64;
+            tail_weighted_sum += *value * (index + 1) as f64;
+        }
         let denominator = length * (length + 1) / 2;
-        weighted_sum / denominator as f64
+        let tail_denominator = tail_length * (tail_length + 1) / 2;
+        (
+            weighted_sum / denominator as f64,
+            tail_weighted_sum / tail_denominator as f64,
+        )
     }
 
     fn append(&mut self, value: Option<f64>) {

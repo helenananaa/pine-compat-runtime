@@ -126,7 +126,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn matrix_inv(&mut self, id: u32) -> Result<PineValue, RuntimeError> {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         if matrix.rows != matrix.columns {
@@ -206,7 +206,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn matrix_eigenvalues(&mut self, id: u32) -> Result<PineValue, RuntimeError> {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         if matrix.rows != matrix.columns {
@@ -215,6 +215,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
+        let size = matrix.rows;
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -226,7 +227,7 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let Some(values) = eigenvalues(&values, matrix.rows) else {
+        let Some(values) = eigenvalues(&values, size) else {
             return Ok(PineValue::Na);
         };
         Ok(self.new_array_from_values(
@@ -236,7 +237,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn matrix_eigenvectors(&mut self, id: u32) -> Result<PineValue, RuntimeError> {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         if matrix.rows != matrix.columns {
@@ -269,10 +270,12 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn matrix_pinv(&mut self, id: u32) -> PineValue {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return PineValue::Na;
         };
 
+        let rows = matrix.rows;
+        let columns = matrix.columns;
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -284,11 +287,11 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let inverse_values = pseudo_inverse(&values, matrix.rows, matrix.columns);
+        let inverse_values = pseudo_inverse(&values, rows, columns);
         self.insert_matrix_storage(
             MatrixElementKind::Float,
-            matrix.columns,
-            matrix.rows,
+            columns,
+            rows,
             inverse_values.into_iter().map(finite_float_or_na).collect(),
         )
     }
@@ -317,6 +320,10 @@ impl<'a> HistoricalRuntime<'a> {
                 .map(|value| value.as_f64().expect("numeric matrix validated"))
                 .collect()
         });
-        Some(PineValue::Int(rank as i64))
+        Some(rank.map_or(PineValue::Na, |rank| PineValue::Int(rank as i64)))
     }
 }
+
+#[cfg(test)]
+#[path = "linear_algebra_tests.rs"]
+mod tests;

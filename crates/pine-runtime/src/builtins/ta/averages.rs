@@ -227,7 +227,8 @@ impl<'a> HistoricalRuntime<'a> {
             Some(full) if full.is_ready(length) => {
                 // The half window is always this suffix. Once the full window
                 // is ready, its half suffix is ready too, even after length changes.
-                Some(2.0 * full.weighted_mean_tail(half_length) - full.weighted_mean(length))
+                let (full_mean, half_mean) = full.weighted_mean_with_tail(length, half_length);
+                Some(2.0 * half_mean - full_mean)
             }
             _ => None,
         };

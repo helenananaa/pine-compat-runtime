@@ -550,13 +550,24 @@ impl<'a, T> Iterator for Iter<'a, T> {
                 let take = remaining.min(iter.current.len());
                 let mut accumulator = iter.current.as_slice()[..take].iter().fold(init, &mut fold);
                 remaining -= take;
-                let mut next_page = iter.next_page;
-                while remaining != 0 {
-                    let page = iter.root.page(next_page);
+                if remaining != 0
+                    && let Some(pages) = &iter.root.middle
+                {
+                    let start = iter.next_page.saturating_sub(1).min(pages.len());
+                    for page in pages.range(start..) {
+                        if remaining == 0 {
+                            break;
+                        }
+                        let take = remaining.min(page.len());
+                        accumulator = page[..take].iter().fold(accumulator, &mut fold);
+                        remaining -= take;
+                    }
+                }
+                if remaining != 0 {
+                    let page = iter.root.back.as_ref().expect("remaining back page");
                     let take = remaining.min(page.len());
                     accumulator = page[..take].iter().fold(accumulator, &mut fold);
                     remaining -= take;
-                    next_page += 1;
                 }
                 debug_assert_eq!(remaining, 0);
                 accumulator
@@ -611,3 +622,7 @@ mod restore_tests;
 #[cfg(test)]
 #[path = "shared_deque_endpoint_tests.rs"]
 mod shared_deque_endpoint_tests;
+
+#[cfg(test)]
+#[path = "shared_deque_scan_tests.rs"]
+mod shared_deque_scan_tests;

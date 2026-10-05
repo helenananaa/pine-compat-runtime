@@ -90,6 +90,7 @@ struct StrategyEvalCheckpoint {
     call_state: HashMap<CallSiteId, PineValue>,
     cross_state: HashMap<CallSiteId, CrossCallState>,
     valuewhen_state: HashMap<CallSiteId, ValueWhenHistory>,
+    valuewhen_local_values: usize,
     vwap_call_state: HashMap<CallSiteId, VwapState>,
     pivot_point_state: HashMap<CallSiteId, PivotPointState>,
     random_state: HashMap<CallSiteId, u64>,
@@ -142,6 +143,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) execution_limits: ExecutionLimits,
+    pub(crate) valuewhen_budget: super::valuewhen_limits::ValueWhenBudget,
     pub(crate) execution_steps_remaining: u64,
     pub(crate) loop_iterations_remaining: u64,
     pub(crate) pending_loop_control: Option<crate::error::RuntimeLoopControl>,
@@ -457,6 +459,7 @@ impl<'a> HistoricalRuntime<'a> {
             legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
             execution_limits: ExecutionLimits::default(),
+            valuewhen_budget: super::valuewhen_limits::ValueWhenBudget::default(),
             execution_steps_remaining: ExecutionLimits::default().max_steps_per_bar,
             loop_iterations_remaining: ExecutionLimits::default().max_loop_iterations_per_bar,
             pending_loop_control: None,
@@ -709,6 +712,7 @@ impl<'a> HistoricalRuntime<'a> {
         runtime.session_windows = self.session_windows.clone();
         runtime.request_feed = self.request_feed.clone();
         runtime.execution_limits = self.execution_limits;
+        runtime.valuewhen_budget.limits = self.valuewhen_limits();
         runtime.reset_execution_budget();
         runtime
     }
@@ -1161,6 +1165,7 @@ impl<'a> HistoricalRuntime<'a> {
             call_state: self.call_state.clone(),
             cross_state: self.cross_state.clone(),
             valuewhen_state: self.valuewhen_state.clone(),
+            valuewhen_local_values: self.valuewhen_budget.local_values,
             vwap_call_state: self.vwap_call_state.clone(),
             pivot_point_state: self.pivot_point_state.clone(),
             random_state: self.random_state.clone(),
@@ -1182,6 +1187,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.call_state.clone_from(&checkpoint.call_state);
         self.cross_state.clone_from(&checkpoint.cross_state);
         self.valuewhen_state.clone_from(&checkpoint.valuewhen_state);
+        self.valuewhen_budget.local_values = checkpoint.valuewhen_local_values;
         self.vwap_call_state.clone_from(&checkpoint.vwap_call_state);
         self.pivot_point_state
             .clone_from(&checkpoint.pivot_point_state);

@@ -85,6 +85,42 @@ impl<'a> RealtimeRuntime<'a> {
         self.confirmed.execution_limits()
     }
 
+    /// Apply one logical event limit to confirmed and forming states. Each
+    /// execution-state tree has its own allowance; rollback copies are excluded.
+    /// Rejecting a limit leaves both configuration and Pine state unchanged.
+    pub fn set_valuewhen_limits(&mut self, limits: ValueWhenLimits) -> Result<(), RuntimeError> {
+        self.confirmed.validate_valuewhen_limits(limits)?;
+        if let Some(forming) = &self.forming {
+            forming.validate_valuewhen_limits(limits)?;
+        }
+        self.confirmed.set_valuewhen_limits(limits)?;
+        if let Some(forming) = &mut self.forming {
+            forming.set_valuewhen_limits(limits)?;
+        }
+        Ok(())
+    }
+
+    pub fn with_valuewhen_limits(mut self, limits: ValueWhenLimits) -> Result<Self, RuntimeError> {
+        self.set_valuewhen_limits(limits)?;
+        Ok(self)
+    }
+
+    #[must_use]
+    pub fn valuewhen_limits(&self) -> ValueWhenLimits {
+        self.confirmed.valuewhen_limits()
+    }
+
+    /// Retained logical events in the currently visible execution state.
+    #[must_use]
+    pub fn valuewhen_retained_values(&self) -> usize {
+        self.live().valuewhen_retained_values()
+    }
+
+    #[must_use]
+    pub fn confirmed_valuewhen_retained_values(&self) -> usize {
+        self.confirmed.valuewhen_retained_values()
+    }
+
     #[must_use]
     pub fn with_magnifier_input(mut self, input: crate::MagnifierInput) -> Self {
         self.confirmed = self.confirmed.with_magnifier_input(input);
@@ -207,40 +243,66 @@ impl<'a> RealtimeRuntime<'a> {
         key: RequestKey,
         update: BarUpdate,
     ) -> Result<Option<RuntimeChanges>, RuntimeError> {
+        self.apply_request_update_ref(key, update)
+            .map(|changes| changes.cloned())
+    }
+
+    /// Apply a provider update and borrow the resulting cached delta, if the
+    /// live chart was recalculated. A feed-only update preserves `last_changes`.
+    pub fn apply_request_update_ref(
+        &mut self,
+        key: RequestKey,
+        update: BarUpdate,
+    ) -> Result<Option<&RuntimeChanges>, RuntimeError> {
         let confirmed_feed = self.confirmed.request_feed.clone();
         let confirmed_cache = self.confirmed.request_cache.clone();
         let forming = self.forming.clone();
         let cursor = self.cursor.clone();
-        let last_changes = self.last_changes.clone();
         let revision = self.revision;
         let live_chart = self.live_chart;
         let result = self.apply_request_update_inner(key, update);
         if result.is_err() {
+            // Cloning a rollback checkpoint deliberately omits selection
+            // scratch. Keep the live workspace when restoring Pine state.
+            let scratch = self
+                .forming
+                .as_mut()
+                .map(|runtime| std::mem::take(&mut runtime.selection_scratch));
             self.confirmed.request_feed = confirmed_feed;
             self.confirmed.request_cache = confirmed_cache;
             self.forming = forming;
+            if let (Some(forming), Some(scratch)) = (&mut self.forming, scratch) {
+                forming.selection_scratch = scratch;
+            }
             self.cursor = cursor;
-            self.last_changes = last_changes;
             self.revision = revision;
             self.live_chart = live_chart;
         }
-        result
+        // The inner transaction commits last_changes only after all fallible
+        // work. Errors leave its owned payload untouched, without a rollback copy.
+        result.map(|recalculated| {
+            if recalculated {
+                self.last_changes.as_ref()
+            } else {
+                None
+            }
+        })
     }
 
     fn apply_request_update_inner(
         &mut self,
         key: RequestKey,
         update: BarUpdate,
-    ) -> Result<Option<RuntimeChanges>, RuntimeError> {
+    ) -> Result<bool, RuntimeError> {
         self.confirmed.apply_request_update(key.clone(), update)?;
         if let Some(forming) = &mut self.forming {
             forming.apply_request_update(key, update)?;
         }
         if self.forming.is_none() {
-            return Ok(None);
+            return Ok(false);
         }
         let Some((bar, mut context)) = self.live_chart else {
-            return Ok(None);
+            return Ok(false);
         };
         // Provider updates re-execute the existing forming bar; they are not a
         // second opening observation. Keep its latest execution timestamp.
@@ -253,8 +315,8 @@ impl<'a> RealtimeRuntime<'a> {
                 .diff(self.live(), self.revision, StreamingVisibility::Preview);
         changes.retained_from = self.display_origin();
         self.sync_cursor();
-        self.last_changes = Some(changes.clone());
-        Ok(Some(changes))
+        self.last_changes = Some(changes);
+        Ok(true)
     }
 
     pub fn apply_update(&mut self, update: BarUpdate) -> Result<RuntimeChanges, RuntimeError> {
@@ -280,6 +342,35 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         context: RealtimeUpdateContext,
     ) -> Result<RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context_ref(update, context).cloned()
+    }
+
+    /// Apply an update and borrow its delta from the runtime cache. The borrow
+    /// ends before the next mutable operation on this runtime; clone explicitly
+    /// when the caller needs to retain an independent owned delta.
+    pub fn apply_update_ref(&mut self, update: BarUpdate) -> Result<&RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context_ref(update, RealtimeUpdateContext::default())
+    }
+
+    pub fn apply_update_with_execution_time_ref(
+        &mut self,
+        update: BarUpdate,
+        execution_time: i64,
+    ) -> Result<&RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context_ref(
+            update,
+            RealtimeUpdateContext {
+                execution_time: Some(execution_time),
+                opening_update: None,
+            },
+        )
+    }
+
+    pub fn apply_update_with_context_ref(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<&RuntimeChanges, RuntimeError> {
         let kind = update.kind;
         self.update_inner(update, context)?;
         self.revision += 1;
@@ -292,8 +383,8 @@ impl<'a> RealtimeRuntime<'a> {
         let mut changes = self.cursor.diff(self.live(), self.revision, visibility);
         changes.retained_from = self.display_origin();
         self.sync_cursor();
-        self.last_changes = Some(changes.clone());
-        Ok(changes)
+        self.last_changes = Some(changes);
+        Ok(self.last_changes.as_ref().expect("delta committed"))
     }
 
     fn update_and_snapshot(
@@ -415,12 +506,17 @@ impl<'a> RealtimeRuntime<'a> {
             runtime.selection_scratch = std::mem::take(&mut previous_forming.selection_scratch);
         }
         let script_passes = runtime.strategy_scheduler.script_passes();
-        runtime.append_bar_with_context(
+        if let Err(error) = runtime.append_bar_with_context(
             update.bar,
             update.kind,
             is_new_bar,
             context.execution_time,
-        )?;
+        ) {
+            if let Some(previous_forming) = &mut self.forming {
+                previous_forming.selection_scratch = std::mem::take(&mut runtime.selection_scratch);
+            }
+            return Err(error);
+        }
         if update.kind == BarUpdateKind::Forming
             && runtime.program.script_mode == pine_ir::ScriptMode::Strategy
             && runtime.strategy_scheduler.script_passes() == script_passes

@@ -1,6 +1,6 @@
 use pine_runtime::{
     Bar, BarUpdate, InputOverrides, PreparedProgram, RealtimeRuntime, RealtimeUpdateContext,
-    RequestEnvironment, RequestKey, RequestTimeframe,
+    RequestEnvironment, RequestKey, RequestTimeframe, ValueWhenLimits,
 };
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -126,10 +126,10 @@ impl PyRealtimeSession {
             BarUpdate::confirmed(bar)
         };
         match py
-            .detach(|| self.runtime.apply_request_update(key, update))
+            .detach(|| self.runtime.apply_request_update_ref(key, update))
             .map_err(|err| PyValueError::new_err(err.message))?
         {
-            Some(changes) => runtime_changes_to_py(py, &changes),
+            Some(changes) => runtime_changes_to_py(py, changes),
             None => Ok(py.None()),
         }
     }
@@ -137,6 +137,45 @@ impl PyRealtimeSession {
 
 #[pymethods]
 impl PyRealtimeSession {
+    /// Bound logical valuewhen events; None keeps aggregate retention unlimited.
+    #[pyo3(signature = (limit=None))]
+    fn set_valuewhen_limit(&mut self, limit: Option<&Bound<'_, PyAny>>) -> PyResult<()> {
+        let max_retained_values = limit
+            .map(|value| {
+                if value.is_instance_of::<PyBool>() {
+                    return Err(PyValueError::new_err(
+                        "limit must be a nonnegative integer that fits this platform",
+                    ));
+                }
+                value.extract::<usize>().map_err(|_| {
+                    PyValueError::new_err(
+                        "limit must be a nonnegative integer that fits this platform",
+                    )
+                })
+            })
+            .transpose()?;
+        self.runtime
+            .set_valuewhen_limits(ValueWhenLimits {
+                max_retained_values,
+            })
+            .map_err(|error| PyValueError::new_err(error.message))
+    }
+
+    #[getter]
+    fn valuewhen_limit(&self) -> Option<usize> {
+        self.runtime.valuewhen_limits().max_retained_values
+    }
+
+    #[getter]
+    fn valuewhen_retained_values(&self) -> usize {
+        self.runtime.valuewhen_retained_values()
+    }
+
+    #[getter]
+    fn confirmed_valuewhen_retained_values(&self) -> usize {
+        self.runtime.confirmed_valuewhen_retained_values()
+    }
+
     fn extend_session_windows(
         &mut self,
         py: Python<'_>,
@@ -329,11 +368,12 @@ impl PyRealtimeSession {
         let changes = py
             .detach(|| {
                 self.runtime
-                    .apply_update_with_context(BarUpdate::forming(bar), context)
+                    .apply_update_with_context_ref(BarUpdate::forming(bar), context)
             })
             .map_err(|err| PyValueError::new_err(err.message))?;
+        let output = runtime_changes_to_py(py, changes);
         self.forming_time = Some(bar.time);
-        runtime_changes_to_py(py, &changes)
+        output
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -354,13 +394,14 @@ impl PyRealtimeSession {
         let changes = py
             .detach(|| {
                 self.runtime
-                    .apply_update_with_context(BarUpdate::confirmed(bar), context)
+                    .apply_update_with_context_ref(BarUpdate::confirmed(bar), context)
             })
             .map_err(|err| PyValueError::new_err(err.message))?;
+        let output = runtime_changes_to_py(py, changes);
         self.confirmed_bars = self.runtime.confirmed_bar_count();
         self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         self.forming_time = None;
-        runtime_changes_to_py(py, &changes)
+        output
     }
 
     fn apply_request_forming(

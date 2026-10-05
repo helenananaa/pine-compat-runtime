@@ -737,6 +737,94 @@ plot(ta.valuewhen(true, close, bar_index % 257))
   valuewhenProgram.free();
 }
 
+// Logical event limits are optional and preserve failed forming/replay state.
+{
+  const program = pine.compileScript(`//@version=6
+indicator("logical event budget")
+plot(ta.valuewhen(true, close, bar_index % 3))
+plot(ta.valuewhen(true, close * 2, bar_index % 3))
+`);
+  const session = program.realtimeSession();
+  const csv = n => ['time,open,high,low,close,volume', ...Array.from({length:n}, (_, i) =>
+    `${i * 60000},${i + 1},${i + 1},${i + 1},${i + 1},1`), ''].join('\n');
+  const bar = (i, close) => JSON.stringify({time:i * 60000, open:close, high:close, low:close, close, volume:1});
+  assert.ok(session.valueWhenLimit() == null);
+  session.seed(csv(2));
+  session.setValueWhenLimit(6);
+  session.applyForming(bar(2,3));
+  session.applyForming(bar(2,4));
+  assert.equal(session.valueWhenRetainedValues(), 6);
+  assert.equal(session.confirmedValueWhenRetainedValues(), 4);
+  const before = session.result(), cache = session.lastChanges(), revision = session.revision;
+  for (const invalid of [true,false,-1,1.5,"6",NaN,Infinity,4294967296,9007199254740992]) {
+    assert.throws(() => session.setValueWhenLimit(invalid), /maxValues/);
+    assert.equal(session.valueWhenLimit(),6);
+    assert.equal(session.result(),before);
+  }
+  assert.throws(() => session.setValueWhenLimit(5), /E_VALUEWHEN_BUDGET/);
+  assert.equal(session.lastChanges(),cache);
+  assert.equal(session.revision,revision);
+  session.applyConfirmed(bar(2,4));
+  const confirmed = session.result(), confirmedCache = session.lastChanges(), confirmedRevision = session.revision;
+  assert.throws(() => session.applyForming(bar(3,5)), /E_VALUEWHEN_BUDGET/);
+  assert.equal(session.result(),confirmed);
+  assert.equal(session.lastChanges(),confirmedCache);
+  assert.equal(session.revision,confirmedRevision);
+  session.setValueWhenLimit(8);
+  session.applyForming(bar(3,5));
+  session.applyConfirmed(bar(3,5));
+  assert.equal(session.confirmedValueWhenRetainedValues(),8);
+  const replayBefore = session.result();
+  assert.throws(() => session.replay(csv(5)), /E_VALUEWHEN_BUDGET/);
+  assert.equal(session.result(),replayBefore);
+  assert.equal(session.valueWhenLimit(),8);
+  session.setValueWhenLimit(null);
+  session.replay(csv(5));
+  assert.equal(session.valueWhenRetainedValues(),10);
+  assert.ok(session.valueWhenLimit() == null);
+  session.free();
+  program.free();
+}
+
+// Ref-backed conversion still returns independent JSON and all duplicate alerts.
+{
+  const count = 257, prefix = '告警🧠'.repeat(600);
+  const program = pine.compileScript(`//@version=6
+indicator("borrowed alert conversion")
+if barstate.isrealtime
+    for iteration = 0 to ${count-1}
+        alert("${prefix}" + (close == 17 ? "A" : "B"), alert.freq_all)
+plot(close)
+`);
+  const session = program.realtimeSession();
+  session.seed('time,open,high,low,close,volume\n0,1,1,1,1,1\n');
+  const replica = session.replica();
+  const bar = close => JSON.stringify({time:60000,open:close,high:close,low:close,close,volume:1});
+  const firstWire = session.applyForming(bar(17)), first = JSON.parse(firstWire);
+  assert.equal(first.alerts.length,count);
+  assert.ok(first.alerts.every(change => change.action === 'add' && change.event.message === prefix+'A'));
+  assert.equal(replica.apply(firstWire),true);
+  assert.equal(replica.apply(firstWire),false);
+  first.alerts[0].event.message = 'independent decoded object';
+  assert.equal(JSON.parse(session.lastChanges()).alerts[0].event.message,prefix+'A');
+  const replacementWire = session.applyForming(bar(18)), replacement = JSON.parse(replacementWire);
+  assert.equal(replacement.alerts.length,count*2);
+  assert.deepEqual(replacement.alerts.map(change => change.action),[
+    ...Array(count).fill('remove'),...Array(count).fill('add')]);
+  assert.deepEqual(replacement.alerts.map(change => change.event.message),[
+    ...Array(count).fill(prefix+'A'),...Array(count).fill(prefix+'B')]);
+  assert.equal(replica.apply(replacementWire),true);
+  assert.equal(replica.apply(replacementWire),false);
+  assert.equal(replica.result(),session.result());
+  const confirmation = session.applyConfirmed(bar(18));
+  assert.equal(replica.apply(confirmation),true);
+  assert.equal(replica.result(),session.confirmedResult());
+  assert.equal(JSON.parse(session.confirmedResult()).alerts.length,count);
+  replica.free();
+  session.free();
+  program.free();
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

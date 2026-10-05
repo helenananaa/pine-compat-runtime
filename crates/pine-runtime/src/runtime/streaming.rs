@@ -1,3 +1,4 @@
+use super::append_history::AppendHistory;
 use super::drawing_history::{
     DrawingStore, RuntimeBox, RuntimeLabel, RuntimeLine, RuntimeLineFill, RuntimePolyline,
     RuntimeTable,
@@ -28,7 +29,7 @@ pub(crate) struct OutputCursor {
     polylines: DrawingStore<RuntimePolyline>,
     boxes: DrawingStore<RuntimeBox>,
     tables: DrawingStore<RuntimeTable>,
-    alerts: Vec<crate::AlertEvent>,
+    alerts: Option<AppendHistory<crate::AlertEvent>>,
     alert_bar: usize,
     drawing_bar: usize,
     orders: usize,
@@ -44,6 +45,13 @@ impl OutputCursor {
         let alert_start = runtime
             .alerts
             .partition_point(|event| event.bar_index < runtime.bars.saturating_sub(1));
+        // Retain only the current bar's logical events. Prefix pruning shares
+        // leaves and copies branch paths, without cloning alert string payloads.
+        let alerts = (alert_start < runtime.alerts.len()).then(|| {
+            let mut alerts = runtime.alerts.clone();
+            alerts.drop_prefix(alert_start);
+            alerts
+        });
         Self {
             plots: runtime
                 .plots
@@ -97,7 +105,7 @@ impl OutputCursor {
             polylines: runtime.polylines.clone(),
             boxes: runtime.boxes.clone(),
             tables: runtime.tables.clone(),
-            alerts: runtime.alerts.tail(alert_start),
+            alerts,
             alert_bar: runtime.bars.saturating_sub(1),
             drawing_bar: runtime.bars.saturating_sub(1),
             orders: runtime.strategy_broker.order_len(),
@@ -182,8 +190,10 @@ impl OutputCursor {
         );
         diff_alerts(
             &mut changes,
-            &self.alerts,
-            &runtime.alerts.tail(
+            self.alerts.as_ref().map_or(0, AppendHistory::len),
+            self.alerts.iter().flat_map(AppendHistory::iter),
+            self.alerts.iter().flat_map(AppendHistory::iter_rev),
+            runtime.alerts.iter().skip(
                 runtime
                     .alerts
                     .partition_point(|event| event.bar_index < self.alert_bar),
@@ -779,24 +789,32 @@ fn diff_drawings<V: Clone + super::drawing_history::DrawingIdentity>(
         }));
 }
 
-fn diff_alerts(
+fn diff_alerts<'a>(
     changes: &mut RuntimeChanges,
-    previous: &[crate::AlertEvent],
-    current: &[crate::AlertEvent],
+    previous_len: usize,
+    previous: impl Iterator<Item = &'a crate::AlertEvent>,
+    previous_rev: impl Iterator<Item = &'a crate::AlertEvent>,
+    current: impl Iterator<Item = &'a crate::AlertEvent>,
 ) {
-    let prefix = previous
-        .iter()
-        .zip(current)
-        .take_while(|(a, b)| a == b)
-        .count();
+    let mut previous = previous.peekable();
+    let mut current = current.peekable();
+    let mut prefix = 0;
+    while let (Some(a), Some(b)) = (previous.peek(), current.peek()) {
+        if a != b {
+            break;
+        }
+        previous.next();
+        current.next();
+        prefix += 1;
+    }
     // Preserve occurrence counts for alert.freq_all calls with identical payloads.
-    for event in previous[prefix..].iter().rev() {
+    for event in previous_rev.take(previous_len - prefix) {
         changes.alerts.push(EventChange {
             action: EventAction::Remove,
             event: event.clone(),
         });
     }
-    for event in &current[prefix..] {
+    for event in current {
         changes.alerts.push(EventChange {
             action: EventAction::Add,
             event: event.clone(),
@@ -869,6 +887,48 @@ fn fill_alert_splice(
         start,
         items: broker.fill_alerts_from(start),
     })
+}
+
+#[cfg(test)]
+mod alert_cursor_tests {
+    use super::{HistoricalRuntime, OutputCursor};
+
+    #[test]
+    fn empty_cursors_have_no_alert_root_and_nonempty_cursors_share_only_a_bounded_tail() {
+        assert!(OutputCursor::default().alerts.is_none());
+        let program = pine_sema::analyze_source(&pine_syntax::SourceFile::new(
+            "cursor.pine",
+            "//@version=6\nindicator(\"cursor\")\n",
+        ))
+        .hir
+        .unwrap();
+        let mut runtime = HistoricalRuntime::new(&program);
+        assert!(OutputCursor::capture(&runtime).alerts.is_none());
+        for index in 0..4099 {
+            runtime.alerts.push(crate::AlertEvent {
+                id: 1,
+                bar_index: index / 257,
+                time: (index / 257) as i64 * 60_000,
+                message: "共享汉🙂".repeat(32),
+                source: "alert".to_owned(),
+            });
+        }
+        runtime.bars = 16;
+        let cursor = OutputCursor::capture(&runtime);
+        let tail = cursor.alerts.as_ref().unwrap();
+        assert_eq!(tail.len(), 244);
+        assert!(tail.capacity() <= tail.len() + 254);
+        for (saved, original) in tail.iter().zip(runtime.alerts.iter().skip(3855)) {
+            assert_eq!(saved, original);
+            assert_eq!(saved.message.as_ptr(), original.message.as_ptr());
+            assert_eq!(saved.source.as_ptr(), original.source.as_ptr());
+        }
+        // All alerts are now closed; capture must not allocate an empty root
+        // or retain the expired historical prefix for the new quiet bar.
+        runtime.bars = 17;
+        assert!(OutputCursor::capture(&runtime).alerts.is_none());
+        assert_eq!(runtime.alerts.len(), 4099);
+    }
 }
 
 #[cfg(test)]

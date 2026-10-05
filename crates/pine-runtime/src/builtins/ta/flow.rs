@@ -679,8 +679,15 @@ impl<'a> HistoricalRuntime<'a> {
                 occurrence.map_or(0, |value| value + 1)
             };
 
-            let values = self.valuewhen_state.entry(call_site_id).or_default();
-            values.push_retained(source, retain);
+            let entry = self.valuewhen_state.entry(call_site_id);
+            let previous = match &entry {
+                std::collections::hash_map::Entry::Occupied(values) => values.get().len(),
+                std::collections::hash_map::Entry::Vacant(_) => 0,
+            };
+            let replacement = previous.saturating_add(1).min(retain);
+            self.valuewhen_budget
+                .replace_local_values(previous, replacement)?;
+            entry.or_default().push_retained(source, retain);
         }
 
         let Some(occurrence) = occurrence else {

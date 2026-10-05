@@ -29,6 +29,15 @@ impl RequestEvaluation<'_> {
     pub(crate) fn capture_values(&self) -> impl Iterator<Item = &PineValue> {
         self.captures.values()
     }
+
+    pub(crate) fn valuewhen_retained_values(&self) -> usize {
+        self.before_last.valuewhen_retained_values()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn valuewhen_checkpoint(&self) -> &HistoricalRuntime<'_> {
+        &self.before_last
+    }
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -85,6 +94,10 @@ impl<'a> HistoricalRuntime<'a> {
                     && saved.prefix.len() < count
             })
             .cloned();
+        let replaced_values = self
+            .request_evaluations
+            .get(cache_key)
+            .map_or(0, |saved| saved.valuewhen_retained_values());
         let mut prefix = previous
             .as_ref()
             .map_or_else(AppendHistory::default, |saved| saved.prefix.clone());
@@ -95,6 +108,7 @@ impl<'a> HistoricalRuntime<'a> {
         // Checkpoints retain Pine state, not an allowance from an older chart
         // execution. All newly evaluated requested bars spend today's budget.
         runtime.inherit_execution_budget(self);
+        runtime.inherit_valuewhen_budget(self, replaced_values)?;
         let bars = self.resolved_request_bars_from(key, prefix.len())?;
         runtime.historical_end = Some(count);
         let mut before_last = None;
@@ -123,11 +137,16 @@ impl<'a> HistoricalRuntime<'a> {
         }
         let mut values = prefix.clone();
         values.push(last.expect("resolved bars are nonempty"));
+        let before_last = before_last.expect("terminal checkpoint");
+        self.replace_requested_valuewhen_values(
+            replaced_values,
+            before_last.valuewhen_retained_values(),
+        )?;
         self.request_evaluations.insert(
             cache_key.clone(),
             Arc::new(RequestEvaluation {
                 prefix,
-                before_last: before_last.expect("terminal checkpoint"),
+                before_last,
                 captures,
                 provider_len,
                 #[cfg(test)]
@@ -373,7 +392,7 @@ mod tests {
                         .unwrap();
                     full.apply_request_update(key.clone(), BarUpdate::forming(requested))
                         .unwrap();
-                    full.request_evaluations.clear();
+                    full.clear_request_evaluations();
                     let chart = bar(index * 300_000 + 240_000, 1.0);
                     fast.append_bar_with_kind(chart, BarUpdateKind::Forming)
                         .unwrap();
@@ -400,7 +419,7 @@ mod tests {
                     .unwrap();
                 full.apply_request_update(key.clone(), BarUpdate::confirmed(requested))
                     .unwrap();
-                full.request_evaluations.clear();
+                full.clear_request_evaluations();
                 let chart = bar(index * 300_000 + 240_000, 1.0);
                 fast.append_bar_with_kind(chart, BarUpdateKind::Confirmed)
                     .unwrap();
@@ -468,7 +487,7 @@ mod tests {
                     .unwrap();
                 full.apply_request_update(key.clone(), BarUpdate::forming(requested))
                     .unwrap();
-                full.request_evaluations.clear();
+                full.clear_request_evaluations();
                 let chart = bar(index * 300_000 + 240_000, 1.0);
                 fast.append_bar_with_kind(chart, BarUpdateKind::Forming)
                     .unwrap();

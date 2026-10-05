@@ -468,8 +468,9 @@ impl<'a> HistoricalRuntime<'a> {
                 }
                 let key =
                     RequestCacheKey::new(call_site_id, &chart_symbol, chart_timeframe.value());
-                let initializers = request_dependency_initializers(&self.program);
-                let tuple_dependencies = request_tuple_dependency_statements(&self.program);
+                let program = self.program.clone();
+                let initializers = request_dependency_initializers(&program);
+                let tuple_dependencies = request_tuple_dependency_statements(&program);
                 let captures = request_capture_values(
                     &self.program,
                     expression,
@@ -480,15 +481,16 @@ impl<'a> HistoricalRuntime<'a> {
                 for value in captures.values() {
                     self.reject_request_object_graph(value)?;
                 }
-                let mut runtime = self
-                    .bounded_same_context_evaluations
-                    .remove(&key)
-                    .unwrap_or_else(|| {
-                        Box::new(
-                            self.fork_with_request_environment(self.request_environment.clone()),
-                        )
-                    });
+                let saved = self.bounded_same_context_evaluations.remove(&key);
+                let replaced_values = saved
+                    .as_ref()
+                    .map_or(0, |runtime| runtime.valuewhen_retained_values());
+                self.replace_requested_valuewhen_values(replaced_values, 0)?;
+                let mut runtime = saved.unwrap_or_else(|| {
+                    Box::new(self.fork_with_request_environment(self.request_environment.clone()))
+                });
                 runtime.inherit_execution_budget(self);
+                runtime.inherit_valuewhen_budget(self, 0)?;
                 if runtime.bars != self.bars - start {
                     return Err(RuntimeError {
                         message: "request.security bounded equal-timeframe expression must execute on every retained chart bar"
@@ -508,6 +510,7 @@ impl<'a> HistoricalRuntime<'a> {
                 );
                 self.accept_execution_budget(&runtime);
                 let value = result?;
+                self.replace_requested_valuewhen_values(0, runtime.valuewhen_retained_values())?;
                 self.bounded_same_context_evaluations.insert(key, runtime);
                 self.bounded_same_context_captures.insert(
                     RequestCacheKey::new(call_site_id, &chart_symbol, chart_timeframe.value()),
@@ -787,6 +790,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.reject_request_object_graph(value)?;
         }
         let mut runtime = self.fork_with_request_environment(requested_environment);
+        runtime.inherit_valuewhen_budget(self, 0)?;
         runtime.historical_end = Some(requested_bars.len());
         let mut values = Vec::with_capacity(requested_bars.len());
         for bar in requested_bars {

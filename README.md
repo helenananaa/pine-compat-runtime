@@ -216,11 +216,24 @@ preview vs confirmed visibility, base/current revisions, and `retainedFrom`.
 A replica ignores an identical retransmission and rejects stale or missing
 revisions. Complete results remain runtime schema 9.
 
+Native Rust callers can borrow the committed delta with `apply_update_ref`
+or `apply_request_update_ref` (and the context/execution-time variants) until
+their next mutable operation on the runtime. Existing owned APIs still return
+independent changes. Python and WASM encode the borrowed cache into independent
+public values without an intermediate owned Rust copy.
+
 Limit retained display output with `session.set_output_retention(256)`;
 `None` removes the limit for future updates. This does not prune input bars,
 compute history, script collections or script-readable broker records.
 Increasing the window cannot restore discarded output; replay and reset the
 replica to rebuild it. Full `result()` calls still materialize retained results.
+
+An optional `session.set_valuewhen_limit(100_000)` bounds logical `ta.valuewhen`
+events across call sites and requested evaluators. `None` restores the default
+unlimited aggregate allowance. This limit preserves script state and rejects
+updates that exceed the allowance; it does not prune events or bound heap bytes.
+See [execution limits](docs/EXECUTION_LIMITS.md) for the Rust/WASM APIs, counters,
+request accounting, and failure contract.
 
 For live requested contexts, supply bars through
 `session.apply_request_forming(symbol, timeframe, bar)` and

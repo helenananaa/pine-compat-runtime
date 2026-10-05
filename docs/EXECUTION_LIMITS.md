@@ -29,3 +29,40 @@ Loop control is typed execution state generated only by reached break/continue
 nodes. Public RuntimeError text is never interpreted as a control signal;
 runtime.error preserves every user-supplied string, including former internal
 sentinel names. Public `RuntimeError { message }` construction remains valid.
+
+## Logical valuewhen event limits
+
+`ValueWhenLimits { max_retained_values: Some(limit) }` sets an optional aggregate
+limit on `ta.valuewhen` events. The default is `None`, which keeps the existing
+per-call-site retention rules and permits more than one million events across
+multiple call sites. One retained Pine value counts as one event, including
+`na`; the value's payload size does not change that count.
+
+The limit covers local histories, retained requested-context checkpoints, and
+requested evaluators while they execute. A replacement checkpoint releases the
+old checkpoint's allowance before evaluating its replacement. Temporary request
+evaluators spend the allowance while running and disappear from the retained
+count when discarded. Confirmed and forming states, and independent runtime
+clones, each have their own allowance. This contract does not enable nested
+Pine request expressions that semantic analysis currently rejects.
+
+Rust exposes `set_valuewhen_limits`, `with_valuewhen_limits`,
+`valuewhen_limits`, and `valuewhen_retained_values` on historical and realtime
+runtimes. Realtime also exposes `confirmed_valuewhen_retained_values`.
+Python realtime sessions expose `set_valuewhen_limit(limit=None)` and the
+`valuewhen_limit`, `valuewhen_retained_values`, and
+`confirmed_valuewhen_retained_values` properties. WASM realtime sessions expose
+`setValueWhenLimit(limit)`, `valueWhenLimit()`, `valueWhenRetainedValues()`, and
+`confirmedValueWhenRetainedValues()`; null/undefined removes the limit.
+Bindings reject booleans, fractional values, negative values, and values that
+do not fit the platform. WASM additionally requires a safe JavaScript integer.
+
+Setting a limit below current usage returns `E_VALUEWHEN_BUDGET` and leaves the
+configuration and Pine state unchanged. An execution that exceeds the limit
+returns the same error family. Realtime rejects the candidate without advancing
+its result, delta cache, or revision; the historical failure lifecycle above
+still applies. Seed/replay retain the configuration and recompute the count.
+
+This is an event-count limit. It does not bound payload bytes, shared physical
+leaves, rollback copies, request output caches, other collections, retained
+output, or process RSS. Hosts still own external resource and process policy.

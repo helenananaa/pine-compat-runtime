@@ -1,7 +1,7 @@
 use pine_runtime::{
     Bar, BarUpdate, OutputRetention, RealtimeRuntime, RealtimeUpdateContext, RequestKey,
-    RequestTimeframe, RuntimeReplica, public_runtime_changes_json, runtime_changes_from_json,
-    runtime_result_from_json, session_window_input_from_json,
+    RequestTimeframe, RuntimeReplica, ValueWhenLimits, public_runtime_changes_json,
+    runtime_changes_from_json, runtime_result_from_json, session_window_input_from_json,
 };
 use serde_json::Value;
 use wasm_bindgen::prelude::*;
@@ -220,9 +220,9 @@ impl WasmRealtimeSession {
         let output = if changes {
             let changes = self
                 .runtime
-                .apply_update_with_context(update, context)
+                .apply_update_with_context_ref(update, context)
                 .map_err(|err| err.message)?;
-            public_runtime_changes_json(&changes)
+            public_runtime_changes_json(changes)
         } else {
             self.runtime
                 .update_with_context_without_output(update, context)
@@ -257,10 +257,10 @@ impl WasmRealtimeSession {
         };
         match self
             .runtime
-            .apply_request_update(key, update)
+            .apply_request_update_ref(key, update)
             .map_err(|err| err.message)?
         {
-            Some(changes) => Ok(public_runtime_changes_json(&changes)),
+            Some(changes) => Ok(public_runtime_changes_json(changes)),
             None => Ok("null".to_owned()),
         }
     }
@@ -268,6 +268,55 @@ impl WasmRealtimeSession {
 
 #[wasm_bindgen]
 impl WasmRealtimeSession {
+    /// Limit logical valuewhen events, including requested-context checkpoints.
+    /// Passing null/undefined restores unlimited aggregate retention.
+    #[wasm_bindgen(js_name = setValueWhenLimit)]
+    pub fn set_valuewhen_limit(&mut self, max_values: JsValue) -> Result<(), JsValue> {
+        let max_retained_values = if max_values.is_null() || max_values.is_undefined() {
+            None
+        } else {
+            let value = max_values.as_f64().ok_or_else(|| {
+                JsValue::from_str(
+                    "maxValues must be a nonnegative safe integer that fits this platform",
+                )
+            })?;
+            if !value.is_finite()
+                || value < 0.0
+                || value.fract() != 0.0
+                || value > 9_007_199_254_740_991.0
+            {
+                return Err(JsValue::from_str(
+                    "maxValues must be a nonnegative safe integer that fits this platform",
+                ));
+            }
+            Some(usize::try_from(value as u64).map_err(|_| {
+                JsValue::from_str(
+                    "maxValues must be a nonnegative safe integer that fits this platform",
+                )
+            })?)
+        };
+        self.runtime
+            .set_valuewhen_limits(ValueWhenLimits {
+                max_retained_values,
+            })
+            .map_err(|error| JsValue::from_str(&error.message))
+    }
+
+    #[wasm_bindgen(js_name = valueWhenLimit)]
+    pub fn valuewhen_limit(&self) -> Option<usize> {
+        self.runtime.valuewhen_limits().max_retained_values
+    }
+
+    #[wasm_bindgen(js_name = valueWhenRetainedValues)]
+    pub fn valuewhen_retained_values(&self) -> usize {
+        self.runtime.valuewhen_retained_values()
+    }
+
+    #[wasm_bindgen(js_name = confirmedValueWhenRetainedValues)]
+    pub fn confirmed_valuewhen_retained_values(&self) -> usize {
+        self.runtime.confirmed_valuewhen_retained_values()
+    }
+
     #[wasm_bindgen(js_name = seedState)]
     pub fn seed_state(&mut self, bars_csv: &str) -> Result<(), JsValue> {
         self.seed_state_internal(bars_csv, None)

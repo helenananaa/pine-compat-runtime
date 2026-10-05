@@ -90,6 +90,7 @@ pub use runtime::historical::{
     run_historical_with_request_environment_and_input_overrides_and_execution_times,
 };
 pub use runtime::realtime::RealtimeRuntime;
+pub use runtime::valuewhen_limits::ValueWhenLimits;
 pub use series::SeriesStore;
 pub use session_windows::{
     SESSION_WINDOW_SCHEMA_VERSION, SessionWindowIds, SessionWindowInput, SessionWindowInputError,

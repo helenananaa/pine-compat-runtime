@@ -356,8 +356,12 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(length) = usize::try_from(length).ok() else {
             return Ok(PineValue::Na);
         };
-        let window = self.update_rolling_window(call_site_id, source, length);
-        if !window.is_ready(length) {
+        let ready = self
+            .update_rolling_window(call_site_id, source, length)
+            .is_ready(length);
+        if !ready {
+            self.alma_weights
+                .prepare(call_site_id, length, offset, sigma, floor_center, false);
             return Ok(PineValue::Na);
         }
 
@@ -367,17 +371,35 @@ impl<'a> HistoricalRuntime<'a> {
         }
         let scale = length as f64 / sigma;
         if scale == 0.0 || !scale.is_finite() {
+            self.alma_weights
+                .prepare(call_site_id, length, offset, sigma, floor_center, false);
             return Ok(PineValue::Na);
         }
 
-        let mut weighted_sum = 0.0;
-        let mut weight_sum = 0.0;
-        for (index, value) in window.values.iter().flatten().copied().enumerate() {
-            let distance = index as f64 - center;
-            let weight = (-(distance * distance) / (2.0 * scale * scale)).exp();
-            weighted_sum += value * weight;
-            weight_sum += weight;
-        }
+        let weights =
+            self.alma_weights
+                .prepare(call_site_id, length, offset, sigma, floor_center, true);
+        let window = self
+            .rolling_windows
+            .get(&RollingWindowKey::Single(call_site_id))
+            .expect("updated ALMA window");
+        let (weighted_sum, weight_sum) = if let Some(weights) = weights {
+            let mut weighted_sum = 0.0;
+            for (value, weight) in window.values.iter().flatten().zip(weights.values()) {
+                weighted_sum += *value * *weight;
+            }
+            (weighted_sum, weights.weight_sum())
+        } else {
+            let mut weighted_sum = 0.0;
+            let mut weight_sum = 0.0;
+            for (index, value) in window.values.iter().flatten().copied().enumerate() {
+                let distance = index as f64 - center;
+                let weight = (-(distance * distance) / (2.0 * scale * scale)).exp();
+                weighted_sum += value * weight;
+                weight_sum += weight;
+            }
+            (weighted_sum, weight_sum)
+        };
         if weight_sum == 0.0 || !weight_sum.is_finite() {
             return Ok(PineValue::Na);
         }

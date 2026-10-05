@@ -168,7 +168,8 @@ impl HistoricalRuntime<'_> {
                 .values()
                 .map(crate::algorithms::rolling_extreme::RollingExtremeState::retained_capacity)
                 .sum::<usize>()
-            + self.selection_scratch.capacity();
+            + self.selection_scratch.capacity()
+            + self.alma_weights.capacity();
         let valuewhen_state_values = self
             .valuewhen_state
             .values()

@@ -1,4 +1,5 @@
 mod alerts;
+mod alma_cache_tests;
 mod arrays;
 mod builtin_registry;
 mod builtins_colors;

@@ -181,6 +181,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) extreme_windows:
         HashMap<CallSiteId, crate::algorithms::rolling_extreme::RollingExtremeState>,
     pub(crate) selection_scratch: crate::algorithms::order_statistics::SelectionScratch,
+    pub(crate) alma_weights: crate::algorithms::alma_weights::AlmaWeightCache,
     pub(crate) regex_cache: HashMap<CallSiteId, Arc<crate::builtins::strings::CachedPineRegex>>,
     pub(crate) rsi_state: HashMap<CallSiteId, RsiState>,
     pub(crate) macd_state: HashMap<CallSiteId, MacdState>,
@@ -494,6 +495,7 @@ impl<'a> HistoricalRuntime<'a> {
             rolling_windows: HashMap::new(),
             extreme_windows: HashMap::new(),
             selection_scratch: crate::algorithms::order_statistics::SelectionScratch::default(),
+            alma_weights: crate::algorithms::alma_weights::AlmaWeightCache::default(),
             regex_cache: HashMap::new(),
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),

@@ -493,6 +493,10 @@ impl<'a> RealtimeRuntime<'a> {
             runtime
                 .regex_cache
                 .clone_from(&previous_forming.regex_cache);
+            // Gaussian weights depend only on their checked parameter key.
+            runtime
+                .alma_weights
+                .clone_from(&previous_forming.alma_weights);
             runtime
                 .strategy_broker
                 .clone_from(&previous_forming.strategy_broker);

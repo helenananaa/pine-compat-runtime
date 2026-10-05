@@ -1,7 +1,24 @@
-use pine_ir::CallSiteId;
+//! Independent frozen pre-certificate oracle. Methods below are copied from
+//! commit 0052cf0583d941202bcc428c928e2a88d8077521, algorithms/rolling_window.rs (SHA256 ec5124a2eab0bb018ce91846c4436fee2d6f572ed33c4d959e7076a4147bc07c).
+//! The reference uses VecDeque and never invokes production arithmetic helpers.
+use std::collections::VecDeque;
 
-use super::rolling_window_certificates::{constant_sum_overflows, exact_constant_weighted_mean};
-use super::shared_deque::SharedDeque;
+use super::RollingWindowState;
+
+#[derive(Debug, Default, Clone)]
+struct OldWindow {
+    values: VecDeque<Option<f64>>,
+    sum: f64,
+    na_count: usize,
+    nonzero_count: usize,
+    change_count: usize,
+    open_bar: Option<usize>,
+    prev_sum: f64,
+    prev_na_count: usize,
+    prev_nonzero_count: usize,
+    prev_change_count: usize,
+    evicted: VecDeque<Option<f64>>,
+}
 
 fn weighted_denominator(length: usize) -> f64 {
     // Widen before both the addition and multiplication. The exact triangular
@@ -10,85 +27,18 @@ fn weighted_denominator(length: usize) -> f64 {
     (length * (length + 1) / 2) as f64
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
-pub(crate) struct RollingWindowState {
-    pub(crate) values: SharedDeque<Option<f64>>,
-    pub(crate) sum: f64,
-    pub(crate) na_count: usize,
-    nonzero_count: usize,
-    /// Number of unequal adjacent samples; signed zeros compare as equal.
-    change_count: usize,
-    /// Ordinary pushes interleaved with an open append can invalidate its saved
-    /// aggregate counters. Such windows keep using the existing scans; a bar
-    /// change or discard does not prove those counters trustworthy again.
-    constant_certificate_invalid: bool,
-    /// Bar that owns the uncommitted tail sample, if any.
-    open_bar: Option<usize>,
-    /// Exact aggregates from before the open append. Restored by assignment on
-    /// same-bar undo so subtract/add cannot accumulate roundoff.
-    prev_sum: f64,
-    prev_na_count: usize,
-    prev_nonzero_count: usize,
-    prev_change_count: usize,
-    /// Items evicted by the open append only. Short logs reuse their allocation;
-    /// large logs share bounded pages across checkpoints until committed.
-    evicted: SharedDeque<Option<f64>>,
+fn two_sum(left: f64, right: f64) -> (f64, f64) {
+    let sum = left + right;
+    let virtual_right = sum - left;
+    let error = (left - (sum - virtual_right)) + (right - virtual_right);
+    (sum, error)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum RollingWindowKey {
-    Single(CallSiteId),
-    MathSum(CallSiteId),
-    VwmaWeighted(CallSiteId),
-    VwmaVolume(CallSiteId),
-    MfiPositive(CallSiteId),
-    MfiNegative(CallSiteId),
-    CmoPositive(CallSiteId),
-    CmoNegative(CallSiteId),
-    AoFast(CallSiteId),
-    AoSlow(CallSiteId),
-    CorrelationLeft(CallSiteId),
-    CorrelationRight(CallSiteId),
-    CorrelationProduct(CallSiteId),
-    CovarianceLeft(CallSiteId),
-    CovarianceRight(CallSiteId),
-    CovarianceProduct(CallSiteId),
-    StochHigh(CallSiteId),
-    StochLow(CallSiteId),
-    WprHigh(CallSiteId),
-    WprLow(CallSiteId),
-    HmaFull(CallSiteId),
-    HmaSmooth(CallSiteId),
-    Rma { call_site: CallSiteId, channel: u8 },
-    Macd { call_site: CallSiteId, channel: u8 },
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum WindowExtreme {
-    Highest,
-    Lowest,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum RisingFallingMode {
-    Rising,
-    Falling,
-}
-
-impl RollingWindowState {
-    pub(crate) fn retained_values(&self) -> usize {
-        self.values.len() + self.evicted.len()
-    }
-
-    pub(crate) fn retained_capacity(&self) -> usize {
-        self.values.capacity() + self.evicted.capacity()
-    }
-
+impl OldWindow {
     pub(crate) fn push(&mut self, value: Option<f64>, length: usize) {
         if length == 0 {
             return;
         }
-        self.constant_certificate_invalid |= self.open_bar.is_some();
         let mut recover_tail = false;
         while self.values.len() >= length {
             recover_tail |= self.remove_front();
@@ -101,12 +51,6 @@ impl RollingWindowState {
         self.recover_nonfinite_sum();
     }
 
-    /// Append `value` as the sample for `bar`.
-    ///
-    /// A second call with the same `bar` undoes the open append (restoring the
-    /// exact pre-append aggregates and only the items that append evicted) and
-    /// then applies `value`. A different `bar` commits the previous append.
-    /// `None` is an ordinary NA sample, not a discard.
     pub(crate) fn push_for_bar(&mut self, value: Option<f64>, length: usize, bar: usize) {
         if length == 0 {
             return;
@@ -142,8 +86,6 @@ impl RollingWindowState {
         self.recover_nonfinite_sum();
     }
 
-    /// Undo the open append when it belongs to `bar`, leaving no sample for
-    /// that bar. A later `push_for_bar` on the same bar starts a new append.
     pub(crate) fn discard_for_bar(&mut self, bar: usize) {
         if self.open_bar == Some(bar) {
             self.undo_open_append();
@@ -151,17 +93,13 @@ impl RollingWindowState {
         }
     }
 
-    #[cfg(test)]
     pub(crate) fn pop_front(&mut self) {
-        self.constant_certificate_invalid |= self.open_bar.is_some() && !self.values.is_empty();
         if self.remove_front() {
             self.recover_qualified_tail();
         }
         self.recover_nonfinite_sum();
     }
 
-    /// Remove one sample in constant time and qualify a possible lost tail.
-    /// A push combines these flags and reconstructs once after all evictions.
     fn remove_front(&mut self) -> bool {
         let mut recover_tail = false;
         if let Some(value) = self.values.pop_front() {
@@ -197,13 +135,6 @@ impl RollingWindowState {
         self.sum / length as f64
     }
 
-    fn certified_constant_value(&self, length: usize) -> Option<f64> {
-        if self.constant_certificate_invalid || !self.is_constant_ready(length) {
-            return None;
-        }
-        self.values.front().copied().flatten()
-    }
-
     pub(crate) fn variance(&self, length: usize, biased: bool) -> f64 {
         if !biased && length < 2 {
             return f64::NAN;
@@ -212,14 +143,6 @@ impl RollingWindowState {
             return 0.0;
         }
         let mean = self.mean(length);
-        if let Some(value) = self.certified_constant_value(length) {
-            let diff = value - mean;
-            // Keep the original mean and subtraction. Only an exactly zero
-            // squared residual proves every term in the old scan is +0.0.
-            if diff * diff == 0.0 {
-                return 0.0;
-            }
-        }
         let squared_diff_sum = self
             .values
             .iter()
@@ -233,51 +156,7 @@ impl RollingWindowState {
         (squared_diff_sum / denominator as f64).max(0.0)
     }
 
-    pub(crate) fn extreme(&self, mode: WindowExtreme) -> Option<f64> {
-        self.values
-            .iter()
-            .flatten()
-            .copied()
-            .reduce(|current, value| match mode {
-                WindowExtreme::Highest => current.max(value),
-                WindowExtreme::Lowest => current.min(value),
-            })
-    }
-
-    pub(crate) fn range(&self) -> Option<f64> {
-        let highest = self.extreme(WindowExtreme::Highest)?;
-        let lowest = self.extreme(WindowExtreme::Lowest)?;
-        Some(highest - lowest)
-    }
-
-    pub(crate) fn mean_absolute_deviation(&self, length: usize) -> f64 {
-        let mean = self.mean(length);
-        self.values
-            .iter()
-            .flatten()
-            .map(|value| (*value - mean).abs())
-            .sum::<f64>()
-            / length as f64
-    }
-
-    pub(crate) fn center_of_gravity(&self, length: usize) -> f64 {
-        let numerator = self
-            .values
-            .iter()
-            .flatten()
-            .enumerate()
-            .map(|(index, value)| *value * (length - index) as f64)
-            .sum::<f64>();
-        -numerator / self.sum
-    }
-
     pub(crate) fn weighted_mean(&self, length: usize) -> f64 {
-        if let Some(mean) = self
-            .certified_constant_value(length)
-            .and_then(|value| exact_constant_weighted_mean(value, length))
-        {
-            return mean;
-        }
         let weighted_sum = self
             .values
             .iter()
@@ -293,19 +172,7 @@ impl RollingWindowState {
         }
     }
 
-    /// Full and tail weighted means in one traversal. Each accumulator keeps
-    /// the original oldest-to-newest multiplication and addition order.
     pub(crate) fn weighted_mean_with_tail(&self, length: usize, tail_length: usize) -> (f64, f64) {
-        if tail_length != 0
-            && tail_length <= length
-            && let Some(value) = self.certified_constant_value(length)
-            && let (Some(full), Some(tail)) = (
-                exact_constant_weighted_mean(value, length),
-                exact_constant_weighted_mean(value, tail_length),
-            )
-        {
-            return (full, tail);
-        }
         let tail_start = self.values.len() - tail_length;
         // Iterator::sum::<f64>() starts at -0.0; keep its signed-zero identity.
         let mut weighted_sum = -0.0;
@@ -341,9 +208,6 @@ impl RollingWindowState {
         )
     }
 
-    /// Recover an overflowing weighted scan only for a complete finite window.
-    /// A suffix uses its own weights, as in HMA's half window. This is a cold,
-    /// stateless calculation; the finite legacy scan above keeps its exact bits.
     fn recovered_weighted_mean(&self, length: usize, start: usize) -> Option<f64> {
         if length == 0 || start >= length || !self.is_ready(length) {
             return None;
@@ -490,13 +354,6 @@ impl RollingWindowState {
     }
 
     fn reconstructed_sum(&self, require_exact: bool) -> Option<f64> {
-        if let Some(value) = self.certified_constant_value(self.values.len())
-            && constant_sum_overflows(value, self.values.len())
-        {
-            // A lower bound already exceeds the representable range. Both
-            // forms of the existing reconstruction must reject this sum.
-            return None;
-        }
         let mut maximum = 0.0_f64;
         for &value in self.values.iter().flatten() {
             if !value.is_finite() {
@@ -564,33 +421,306 @@ impl RollingWindowState {
     }
 }
 
-#[cfg(test)]
-#[path = "rolling_window_certificates_tests.rs"]
-mod certificates_tests;
-
-fn two_sum(left: f64, right: f64) -> (f64, f64) {
-    let sum = left + right;
-    let virtual_right = sum - left;
-    let error = (left - (sum - virtual_right)) + (right - virtual_right);
-    (sum, error)
+fn sample_bits(samples: impl IntoIterator<Item = Option<f64>>) -> Vec<Option<u64>> {
+    samples
+        .into_iter()
+        .map(|sample| sample.map(f64::to_bits))
+        .collect()
 }
 
-#[cfg(test)]
-#[path = "rolling_window_tests.rs"]
-mod tests;
+fn assert_option_bits(current: Option<f64>, old: Option<f64>) {
+    assert_eq!(current.map(f64::to_bits), old.map(f64::to_bits));
+}
 
-#[cfg(test)]
-#[path = "rolling_window_legacy_tests.rs"]
-mod legacy_equivalence_tests;
+fn assert_same(current: &RollingWindowState, old: &OldWindow) {
+    assert_eq!(
+        sample_bits(current.values.iter().copied()),
+        sample_bits(old.values.iter().copied())
+    );
+    assert_eq!(
+        sample_bits(current.evicted.iter().copied()),
+        sample_bits(old.evicted.iter().copied())
+    );
+    assert_eq!(current.sum.to_bits(), old.sum.to_bits());
+    assert_eq!(current.na_count, old.na_count);
+    assert_eq!(current.nonzero_count, old.nonzero_count);
+    assert_eq!(current.change_count, old.change_count);
+    assert_eq!(current.open_bar, old.open_bar);
+    assert_eq!(current.prev_sum.to_bits(), old.prev_sum.to_bits());
+    assert_eq!(current.prev_na_count, old.prev_na_count);
+    assert_eq!(current.prev_nonzero_count, old.prev_nonzero_count);
+    assert_eq!(current.prev_change_count, old.prev_change_count);
+    for require_exact in [false, true] {
+        assert_option_bits(
+            current.reconstructed_sum(require_exact),
+            old.reconstructed_sum(require_exact),
+        );
+    }
+    let length = current.values.len();
+    if length != 0 {
+        for biased in [false, true] {
+            assert_eq!(
+                current.variance(length, biased).to_bits(),
+                old.variance(length, biased).to_bits()
+            );
+        }
+        assert_eq!(
+            current.weighted_mean(length).to_bits(),
+            old.weighted_mean(length).to_bits()
+        );
+        for tail in [1, (length / 2).max(1), length] {
+            let (full, suffix) = current.weighted_mean_with_tail(length, tail);
+            let (old_full, old_suffix) = old.weighted_mean_with_tail(length, tail);
+            assert_eq!(full.to_bits(), old_full.to_bits());
+            assert_eq!(suffix.to_bits(), old_suffix.to_bits());
+        }
+    }
+}
 
-#[cfg(test)]
-#[path = "rolling_window_recovery_tests.rs"]
-mod recovery_tests;
+fn push(current: &mut RollingWindowState, old: &mut OldWindow, value: Option<f64>, length: usize) {
+    current.push(value, length);
+    old.push(value, length);
+    assert_same(current, old);
+}
 
-#[cfg(test)]
-#[path = "rolling_window_weighted_recovery_tests.rs"]
-mod weighted_recovery_tests;
+fn push_for_bar(
+    current: &mut RollingWindowState,
+    old: &mut OldWindow,
+    value: Option<f64>,
+    length: usize,
+    bar: usize,
+) {
+    current.push_for_bar(value, length, bar);
+    old.push_for_bar(value, length, bar);
+    assert_same(current, old);
+}
 
-#[cfg(test)]
-#[path = "rolling_window_length_tests.rs"]
-mod length_tests;
+#[test]
+fn constant_threshold_neighbors_and_partial_windows_keep_old_recovery_bits() {
+    for length in [1_usize, 2, 3, 4, 7, 8, 15, 16, 31, 32, 127, 128, 129, 257] {
+        let power = 1_usize << length.ilog2();
+        let threshold = f64::MAX / power as f64;
+        let neighbors = [
+            f64::from_bits(threshold.to_bits() - 1),
+            threshold,
+            f64::from_bits(threshold.to_bits() + 1),
+        ];
+        for magnitude in neighbors.into_iter().filter(|value| value.is_finite()) {
+            for sign in [1.0, -1.0] {
+                let value = magnitude * sign;
+                let mut current = RollingWindowState::default();
+                let mut old = OldWindow::default();
+                // The requested length is intentionally larger than the actual
+                // retained count. Certificates must also cover partial warmup.
+                for _ in 0..length {
+                    push(&mut current, &mut old, Some(value), length + 17);
+                }
+                assert!(!current.is_ready(length + 17));
+                assert_option_bits(current.certified_constant_value(length), Some(value));
+                if length.is_power_of_two() && magnitude == threshold {
+                    for require_exact in [false, true] {
+                        assert_option_bits(
+                            current.reconstructed_sum(require_exact),
+                            Some(sign * f64::MAX),
+                        );
+                    }
+                }
+                if magnitude > threshold {
+                    assert_eq!(old.reconstructed_sum(false), None);
+                    assert_eq!(old.reconstructed_sum(true), None);
+                }
+                current.sum = f64::INFINITY.copysign(sign);
+                old.sum = current.sum;
+                current.recover_nonfinite_sum();
+                old.recover_nonfinite_sum();
+                assert_same(&current, &old);
+            }
+        }
+    }
+}
+
+#[test]
+fn na_signed_zeros_and_subnormal_constants_do_not_become_false_rejections() {
+    let tiny = f64::from_bits(1);
+    for values in [
+        vec![None, None],
+        vec![Some(-0.0), Some(0.0), Some(-0.0)],
+        vec![Some(tiny), Some(tiny), Some(tiny)],
+        vec![Some(-tiny), Some(-tiny), Some(-tiny)],
+        vec![Some(0.25), None, Some(0.25)],
+        vec![Some(1e308), None, Some(-1e308), Some(1.0)],
+        vec![Some(1e308), Some(1e-308), Some(-1e308)],
+        vec![Some(1.0), Some(2.0_f64.powi(-54)), Some(2.0_f64.powi(-108))],
+        vec![Some(f64::INFINITY), Some(1.0)],
+        vec![Some(f64::NAN), Some(1.0)],
+    ] {
+        let mut current = RollingWindowState::default();
+        let mut old = OldWindow::default();
+        for value in &values {
+            push(&mut current, &mut old, *value, values.len() + 3);
+        }
+        current.sum = f64::INFINITY;
+        old.sum = f64::INFINITY;
+        current.recover_nonfinite_sum();
+        old.recover_nonfinite_sum();
+        assert_same(&current, &old);
+        while !current.values.is_empty() {
+            current.pop_front();
+            old.pop_front();
+            assert_same(&current, &old);
+        }
+    }
+}
+
+#[test]
+fn pure_per_bar_eviction_replacement_discard_and_checkpoints_keep_certificates_valid() {
+    let mut current = RollingWindowState {
+        values: VecDeque::with_capacity(7).into(),
+        ..Default::default()
+    };
+    let mut old = OldWindow {
+        values: VecDeque::with_capacity(7),
+        ..Default::default()
+    };
+    for bar in 0..129 {
+        push_for_bar(&mut current, &mut old, Some(1e308), 129, bar);
+    }
+    for bar in 129..177 {
+        let checkpoint = (current.clone(), old.clone());
+        for (value, length) in [
+            (Some(1e308), 257),
+            (Some(-1e308), 3),
+            (None, 129),
+            (Some(-0.0), 1),
+            (Some(0.1), 65),
+        ] {
+            push_for_bar(&mut current, &mut old, value, length, bar);
+            assert!(!current.constant_certificate_invalid);
+        }
+        current.discard_for_bar(bar);
+        old.discard_for_bar(bar);
+        assert_same(&current, &old);
+        assert!(!current.constant_certificate_invalid);
+        (current, old) = checkpoint;
+        push_for_bar(&mut current, &mut old, Some(1e308), 129, bar);
+        assert!(!current.constant_certificate_invalid);
+    }
+}
+
+#[test]
+fn ordinary_dynamic_shrink_na_and_mixed_scale_follow_the_frozen_oracle() {
+    let mut current = RollingWindowState::default();
+    let mut old = OldWindow::default();
+    for value in [
+        Some(1e308),
+        Some(1e308),
+        None,
+        Some(1.0),
+        Some(2.0),
+        Some(3.0),
+    ] {
+        push(&mut current, &mut old, value, 6);
+    }
+    for (value, length) in [
+        (Some(4.0), 4),
+        (Some(-0.0), 2),
+        (None, 8),
+        (Some(0.0), 8),
+        (Some(1.0), 3),
+        (Some(1e16), 4),
+        (Some(1.0), 1),
+    ] {
+        push(&mut current, &mut old, value, length);
+    }
+    assert!(!current.constant_certificate_invalid);
+}
+
+#[test]
+fn variance_certificates_keep_decimal_residuals_and_zero_underflow_bits() {
+    for value in [100.25_f64, -100.25, 0.1, -0.1, 1e-180, -1e-180] {
+        for length in [1, 3, 17, 129] {
+            let mut current = RollingWindowState::default();
+            let mut old = OldWindow::default();
+            for _ in 0..length {
+                push(&mut current, &mut old, Some(value), length);
+            }
+            if value.abs() == 0.1 && length == 3 {
+                let residual = value - old.mean(length);
+                assert_ne!(residual * residual, 0.0);
+                assert_ne!(old.variance(length, true), 0.0);
+            }
+            if value.abs() == 100.25 {
+                assert_eq!(current.variance(length, true).to_bits(), 0.0_f64.to_bits());
+            }
+            if value.abs() == 1e-180 {
+                assert_eq!(current.variance(length, true).to_bits(), 0.0_f64.to_bits());
+            }
+        }
+    }
+}
+
+#[test]
+fn mixed_push_modes_with_stale_constant_metadata_fall_back_and_stay_invalid() {
+    let value = 1e308;
+    let mut current = RollingWindowState::default();
+    let mut old = OldWindow::default();
+    push(&mut current, &mut old, Some(value), 2);
+    push(&mut current, &mut old, Some(value), 2);
+    push_for_bar(&mut current, &mut old, Some(-value), 2, 7);
+    // Zero length is a true no-op and must not invalidate a sound certificate.
+    push(&mut current, &mut old, Some(-value), 0);
+    assert!(!current.constant_certificate_invalid);
+    push(&mut current, &mut old, Some(-value), 3);
+    assert!(current.constant_certificate_invalid);
+    push_for_bar(&mut current, &mut old, Some(-value), 4, 7);
+    assert!(current.is_constant_ready(4)); // Existing metadata is stale here.
+    assert_eq!(current.change_count, 0);
+    assert_eq!(
+        sample_bits(current.values.iter().copied()),
+        sample_bits([Some(value), Some(value), Some(-value), Some(-value)])
+    );
+    assert_eq!(current.certified_constant_value(4), None);
+    assert_eq!(current.sum.to_bits(), 0.0_f64.to_bits());
+    for require_exact in [false, true] {
+        assert_option_bits(current.reconstructed_sum(require_exact), Some(0.0));
+    }
+    current.discard_for_bar(7);
+    old.discard_for_bar(7);
+    assert_same(&current, &old);
+    assert!(current.constant_certificate_invalid);
+    assert_eq!(current.open_bar, None);
+    let checkpoint = (current.clone(), old.clone());
+    push(&mut current, &mut old, Some(-value), 10);
+    assert!(current.constant_certificate_invalid);
+    push_for_bar(&mut current, &mut old, Some(-value), 10, 8);
+    assert!(current.constant_certificate_invalid);
+    current.discard_for_bar(8);
+    old.discard_for_bar(8);
+    assert_same(&current, &old);
+    (current, old) = checkpoint;
+    assert_same(&current, &old);
+    assert!(current.constant_certificate_invalid);
+}
+
+#[test]
+fn direct_pop_during_an_open_append_permanently_disables_new_certificates() {
+    let mut current = RollingWindowState::default();
+    let mut old = OldWindow::default();
+    push_for_bar(&mut current, &mut old, Some(1e308), 2, 0);
+    push_for_bar(&mut current, &mut old, Some(1e308), 2, 1);
+    assert!(!current.constant_certificate_invalid);
+    current.pop_front();
+    old.pop_front();
+    assert_same(&current, &old);
+    assert!(current.constant_certificate_invalid);
+    push_for_bar(&mut current, &mut old, Some(1e308), 10, 1);
+    assert!(current.constant_certificate_invalid);
+    current.discard_for_bar(1);
+    old.discard_for_bar(1);
+    assert_same(&current, &old);
+    assert!(current.constant_certificate_invalid);
+    assert_eq!(current.open_bar, None);
+    push(&mut current, &mut old, Some(1e308), 10);
+    assert!(current.constant_certificate_invalid);
+    assert_eq!(current.certified_constant_value(current.values.len()), None);
+}

@@ -307,7 +307,12 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let values: Vec<_> = window.values.iter().flatten().copied().collect();
+        let values = [
+            window.values[0].expect("ready SWMA window"),
+            window.values[1].expect("ready SWMA window"),
+            window.values[2].expect("ready SWMA window"),
+            window.values[3].expect("ready SWMA window"),
+        ];
         let value = (values[0] + 2.0 * values[1] + 2.0 * values[2] + values[3]) / 6.0;
         Ok(finite_float_or_na(value))
     }
@@ -403,9 +408,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let values: Vec<_> = window.values.iter().flatten().copied().collect();
-        if values.len() == 1 {
-            return Ok(finite_float_or_na(values[0]));
+        if length == 1 {
+            return Ok(finite_float_or_na(
+                window.values[0].expect("ready LinReg window"),
+            ));
         }
 
         let n = length as f64;
@@ -413,13 +419,19 @@ impl<'a> HistoricalRuntime<'a> {
         let mut sum_y = 0.0;
         let mut sum_x_squared = 0.0;
         let mut sum_xy = 0.0;
-        for (index, value) in values.iter().enumerate() {
-            let x = index as f64;
-            sum_x += x;
-            sum_y += value;
-            sum_x_squared += x * x;
-            sum_xy += x * value;
-        }
+        window
+            .values
+            .iter()
+            .flatten()
+            .copied()
+            .enumerate()
+            .for_each(|(index, value)| {
+                let x = index as f64;
+                sum_x += x;
+                sum_y += value;
+                sum_x_squared += x * x;
+                sum_xy += x * value;
+            });
 
         let denominator = n * sum_x_squared - sum_x * sum_x;
         if denominator == 0.0 {

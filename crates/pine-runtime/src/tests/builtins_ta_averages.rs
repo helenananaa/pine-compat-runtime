@@ -632,3 +632,6 @@ fn assert_builtin_series_history(
 
 #[path = "weighted_averages_recovery_tests.rs"]
 mod weighted_recovery_tests;
+
+#[path = "ta_scan_tests.rs"]
+mod ta_scan_tests;

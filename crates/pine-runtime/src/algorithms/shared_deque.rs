@@ -353,6 +353,30 @@ impl<T: Clone> SharedDeque<T> {
     }
 }
 
+impl SharedDeque<Option<f64>> {
+    /// Restore an evicted sample at the front. A paged pop normally leaves the
+    /// removed cell in place, so exact restoration only changes this queue's
+    /// logical bounds; checkpoints can keep sharing both directory and page.
+    /// Compare bits so signed zero and every NaN payload keep their identity.
+    /// Other representations and changed cells use the ordinary write path.
+    pub(crate) fn restore_front(&mut self, value: Option<f64>) {
+        if let Storage::Paged {
+            pages,
+            front_offset,
+            len,
+            ..
+        } = &mut self.storage
+            && *front_offset != 0
+            && pages[0][*front_offset - 1].map(f64::to_bits) == value.map(f64::to_bits)
+        {
+            *front_offset -= 1;
+            *len += 1;
+            return;
+        }
+        self.push_front(value);
+    }
+}
+
 impl<T: Clone> From<VecDeque<T>> for SharedDeque<T> {
     fn from(values: VecDeque<T>) -> Self {
         let mut deque = Self {
@@ -534,3 +558,7 @@ impl<T> ExactSizeIterator for Iter<'_, T> {}
 #[cfg(test)]
 #[path = "shared_deque_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "shared_deque_restore_tests.rs"]
+mod restore_tests;

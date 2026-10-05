@@ -559,7 +559,7 @@ impl RollingWindowState {
         self.nonzero_count = self.prev_nonzero_count;
         self.change_count = self.prev_change_count;
         while let Some(value) = self.evicted.pop_back() {
-            self.values.push_front(value);
+            self.values.restore_front(value);
         }
     }
 }

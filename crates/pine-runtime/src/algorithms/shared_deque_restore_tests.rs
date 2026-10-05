@@ -7,10 +7,18 @@ fn bits(value: Option<f64>) -> Option<u64> {
     value.map(f64::to_bits)
 }
 
-fn directory(values: &FloatDeque) -> &Directory {
+fn paged(values: &FloatDeque) -> &PagedStorage<Option<f64>> {
     match &values.storage {
-        Storage::Paged { pages, .. } => pages,
+        Storage::Paged(pages) => pages,
         Storage::Small(_) => panic!("expected paged storage"),
+    }
+}
+
+fn same_directory(values: &FloatDeque, expected: &Option<Directory>) -> bool {
+    match (&paged(values).middle, expected) {
+        (None, None) => true,
+        (Some(actual), Some(expected)) => Arc::ptr_eq(actual, expected),
+        _ => false,
     }
 }
 
@@ -66,29 +74,23 @@ fn assert_model(values: &FloatDeque, expected: &VecDeque<Option<f64>>) {
                 .eq(expected.range(start..end).rev().copied().map(bits))
         );
     }
-    if let Storage::Paged {
-        pages,
-        front_offset,
-        back_len,
-        len,
-    } = &values.storage
-    {
-        assert!(!pages.is_empty());
-        assert!(*front_offset < pages[0].len());
-        assert!(*back_len != 0 && *back_len <= pages.back().unwrap().len());
-        let logical = if pages.len() == 1 {
-            assert!(*front_offset < *back_len);
-            *back_len - *front_offset
+    if let Storage::Paged(pages) = &values.storage {
+        assert!(pages.front_offset < pages.front.len());
+        assert!(pages.back_len != 0 && pages.back_len <= pages.page(pages.page_count() - 1).len());
+        let logical = if pages.back.is_none() {
+            assert!(pages.middle.is_none());
+            assert!(pages.front_offset < pages.back_len);
+            pages.back_len - pages.front_offset
         } else {
-            pages[0].len() - *front_offset + (pages.len() - 2) * PAGE_SIZE + *back_len
+            pages.front.len() - pages.front_offset + pages.middle_len() * PAGE_SIZE + pages.back_len
         };
-        assert_eq!(*len, logical);
+        assert_eq!(pages.len, logical);
         assert!(
-            pages
-                .iter()
+            (0..pages.page_count())
+                .map(|index| pages.page(index))
                 .all(|page| page.len() <= PAGE_SIZE && page.capacity() == PAGE_SIZE)
         );
-        assert_eq!(values.capacity(), pages.len() * PAGE_SIZE);
+        assert_eq!(values.capacity(), pages.page_count() * PAGE_SIZE);
     }
 }
 
@@ -110,13 +112,13 @@ fn unchanged_prefix_restoration_keeps_shared_directory_and_page_identity() {
             }
             let after_pop = values.clone();
             let after_pop_expected = expected.clone();
-            let root = directory(&values).clone();
-            let page = root.front().unwrap().clone();
+            let root = paged(&values).middle.clone();
+            let page = paged(&values).front.clone();
             for value in evicted.into_iter().rev() {
                 values.restore_front(value);
                 expected.push_front(value);
-                assert!(Arc::ptr_eq(directory(&values), &root));
-                assert!(Arc::ptr_eq(directory(&values).front().unwrap(), &page));
+                assert!(same_directory(&values, &root));
+                assert!(Arc::ptr_eq(&paged(&values).front, &page));
             }
             assert_model(&values, &original);
             assert_model(&values, &expected);
@@ -159,16 +161,15 @@ fn exact_float_bits_restore_but_changed_zeros_nan_payloads_and_na_use_cow() {
         );
         let checkpoint = values.clone();
         let checkpoint_expected = expected.clone();
-        let root = directory(&values).clone();
-        let page = root.front().unwrap().clone();
+        let root = paged(&values).middle.clone();
+        let page = paged(&values).front.clone();
         values.restore_front(incoming);
         expected.push_front(incoming);
         let unchanged = bits(outgoing) == bits(incoming);
-        assert_eq!(Arc::ptr_eq(directory(&values), &root), unchanged);
-        assert_eq!(
-            Arc::ptr_eq(directory(&values).front().unwrap(), &page),
-            unchanged
-        );
+        // A changed restore copies the front page while the interior directory
+        // stays shared; an exact restore keeps both identities.
+        assert!(same_directory(&values, &root));
+        assert_eq!(Arc::ptr_eq(&paged(&values).front, &page), unchanged);
         assert_model(&values, &expected);
         assert_model(&checkpoint, &checkpoint_expected);
     }
@@ -185,11 +186,11 @@ fn ordinary_front_write_invalidates_the_old_prefix_and_restore_uses_cow() {
     assert_eq!(bits(values.pop_front().unwrap()), bits(Some(20.5)));
     let checkpoint = values.clone();
     let checkpoint_expected = original.iter().skip(1).copied().collect::<VecDeque<_>>();
-    let root = directory(&values).clone();
-    let page = root.front().unwrap().clone();
+    let root = paged(&values).middle.clone();
+    let page = paged(&values).front.clone();
     values.restore_front(outgoing);
-    assert!(!Arc::ptr_eq(directory(&values), &root));
-    assert!(!Arc::ptr_eq(directory(&values).front().unwrap(), &page));
+    assert!(same_directory(&values, &root));
+    assert!(!Arc::ptr_eq(&paged(&values).front, &page));
     assert_model(&values, &original);
     assert_model(&checkpoint, &checkpoint_expected);
 }
@@ -238,22 +239,22 @@ fn single_paged_leaf_restoration_preserves_logical_back_and_stale_tail() {
     }
     let checkpoint = values.clone();
     let checkpoint_expected = expected.clone();
-    let root = directory(&values).clone();
-    let page = root.front().unwrap().clone();
-    assert_eq!(root.len(), 1);
+    let root = paged(&values).middle.clone();
+    let page = paged(&values).front.clone();
+    assert_eq!(paged(&values).page_count(), 1);
     let restored = last.unwrap();
     values.restore_front(restored);
     expected.push_front(restored);
-    assert!(Arc::ptr_eq(directory(&values), &root));
-    assert!(Arc::ptr_eq(directory(&values).front().unwrap(), &page));
+    assert!(same_directory(&values, &root));
+    assert!(Arc::ptr_eq(&paged(&values).front, &page));
     assert!(matches!(
         &values.storage,
-        Storage::Paged {
+        Storage::Paged(PagedStorage {
             front_offset: 6,
             back_len: 10,
             len: 4,
             ..
-        }
+        })
     ));
     assert_model(&values, &expected);
     assert_eq!(values.pop_back().map(bits), expected.pop_back().map(bits));
@@ -274,18 +275,18 @@ fn removed_pages_empty_storage_and_short_queues_restore_through_push_front() {
     }
     assert!(matches!(
         &values.storage,
-        Storage::Paged {
+        Storage::Paged(PagedStorage {
             front_offset: 0,
             ..
-        }
+        })
     ));
     let checkpoint = values.clone();
     let checkpoint_expected = expected.clone();
-    let root = directory(&values).clone();
+    let root = paged(&values).middle.clone();
     values.restore_front(Some(127.0));
     expected.push_front(Some(127.0));
-    assert!(!Arc::ptr_eq(directory(&values), &root));
-    assert_eq!(directory(&values).front().unwrap().len(), 1);
+    assert!(!same_directory(&values, &root));
+    assert_eq!(paged(&values).front.len(), 1);
     values.restore_front(Some(126.0));
     expected.push_front(Some(126.0));
     assert_model(&values, &expected);
@@ -324,16 +325,16 @@ fn clone_and_drop_keep_own_logical_bounds_and_release_shared_storage() {
         }
         let checkpoint = values.clone();
         let checkpoint_expected = expected.clone();
-        let root = directory(&values).clone();
+        let root = paged(&values).middle.as_ref().unwrap().clone();
         let weak_root = Arc::downgrade(&root);
-        let weak_page = Arc::downgrade(root.front().unwrap());
+        let weak_page = Arc::downgrade(&paged(&values).front);
         let value = evicted.pop().unwrap();
         values.restore_front(value);
         expected.push_front(value);
         let restored_clone = values.clone();
         let restored_expected = expected.clone();
         values.restore_front(evicted.pop().unwrap());
-        assert!(Arc::ptr_eq(directory(&values), &root));
+        assert!(Arc::ptr_eq(paged(&values).middle.as_ref().unwrap(), &root));
         drop(values);
         assert_model(&checkpoint, &checkpoint_expected);
         assert_model(&restored_clone, &restored_expected);

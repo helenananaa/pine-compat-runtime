@@ -35,8 +35,9 @@ impl<T> DerefMut for Page<T> {
 }
 
 /// Short queues keep their ordinary flat path. Larger checkpoints share the
-/// page directory; an endpoint write copies references and one bounded page,
-/// rather than postponing a copy of the complete payload until the first write.
+/// complete interior pages while keeping the endpoints outside that directory.
+/// Ordinary endpoint writes copy one bounded page; only page migrations copy
+/// the directory, rather than copying its references for every checkpoint write.
 #[derive(Debug, Clone)]
 pub(crate) struct SharedDeque<T> {
     storage: Storage<T>,
@@ -45,12 +46,96 @@ pub(crate) struct SharedDeque<T> {
 #[derive(Debug, Clone)]
 enum Storage<T> {
     Small(VecDeque<T>),
-    Paged {
-        pages: Arc<VecDeque<Arc<Page<T>>>>,
-        front_offset: usize,
-        back_len: usize,
-        len: usize,
-    },
+    Paged(PagedStorage<T>),
+}
+
+#[derive(Debug, Clone)]
+struct PagedStorage<T> {
+    front: Arc<Page<T>>,
+    // A single page uses front for both ends, including any removed tail cells.
+    back: Option<Arc<Page<T>>>,
+    // This directory contains complete interior pages only. None avoids an
+    // empty directory allocation for one or two pages and after shrinking.
+    middle: Option<Arc<VecDeque<Arc<Page<T>>>>>,
+    front_offset: usize,
+    back_len: usize,
+    len: usize,
+}
+
+impl<T> PagedStorage<T> {
+    fn middle_len(&self) -> usize {
+        self.middle.as_ref().map_or(0, |pages| pages.len())
+    }
+
+    fn page_count(&self) -> usize {
+        1 + self.middle_len() + usize::from(self.back.is_some())
+    }
+
+    fn page(&self, index: usize) -> &Arc<Page<T>> {
+        if index == 0 {
+            &self.front
+        } else if index <= self.middle_len() {
+            &self.middle.as_ref().expect("interior page directory")[index - 1]
+        } else {
+            debug_assert_eq!(index, self.page_count() - 1);
+            self.back.as_ref().expect("separate back page")
+        }
+    }
+
+    // Only the endpoints may be partial. Every interior page has PAGE_SIZE
+    // cells, so locating a value never walks the preceding pages.
+    fn locate(&self, index: usize) -> (usize, usize) {
+        let first = self.front.len() - self.front_offset;
+        if index < first {
+            (0, self.front_offset + index)
+        } else {
+            let rest = index - first;
+            (1 + rest / PAGE_SIZE, rest % PAGE_SIZE)
+        }
+    }
+
+    fn push_middle_front(&mut self, page: Arc<Page<T>>) {
+        debug_assert_eq!(page.len(), PAGE_SIZE);
+        let pages = self.middle.get_or_insert_with(|| Arc::new(VecDeque::new()));
+        Arc::make_mut(pages).push_front(page);
+    }
+
+    fn push_middle_back(&mut self, page: Arc<Page<T>>) {
+        debug_assert_eq!(page.len(), PAGE_SIZE);
+        let pages = self.middle.get_or_insert_with(|| Arc::new(VecDeque::new()));
+        Arc::make_mut(pages).push_back(page);
+    }
+
+    fn pop_middle_front(&mut self) -> Option<Arc<Page<T>>> {
+        // Removing the sole interior page discards this branch's directory.
+        // Copy its page handle directly instead of cloning a shared directory
+        // that would immediately become empty and be dropped.
+        if self.middle.as_ref()?.len() == 1 {
+            return self.middle.take()?.front().cloned();
+        }
+        let pages = Arc::make_mut(self.middle.as_mut()?);
+        let page = pages.pop_front();
+        if pages.is_empty() {
+            self.middle = None;
+        } else {
+            prune_directory(pages);
+        }
+        page
+    }
+
+    fn pop_middle_back(&mut self) -> Option<Arc<Page<T>>> {
+        if self.middle.as_ref()?.len() == 1 {
+            return self.middle.take()?.back().cloned();
+        }
+        let pages = Arc::make_mut(self.middle.as_mut()?);
+        let page = pages.pop_back();
+        if pages.is_empty() {
+            self.middle = None;
+        } else {
+            prune_directory(pages);
+        }
+        page
+    }
 }
 
 impl<T> Default for SharedDeque<T> {
@@ -65,14 +150,14 @@ impl<T> SharedDeque<T> {
     pub(crate) fn len(&self) -> usize {
         match &self.storage {
             Storage::Small(values) => values.len(),
-            Storage::Paged { len, .. } => *len,
+            Storage::Paged(pages) => pages.len,
         }
     }
 
     pub(crate) fn capacity(&self) -> usize {
         match &self.storage {
             Storage::Small(values) => values.capacity(),
-            Storage::Paged { pages, .. } => {
+            Storage::Paged(pages) => {
                 // Every nonempty page reserves PAGE_SIZE cells, and endpoint
                 // writes never grow its physical length beyond that reserve.
                 // Count the buffers without visiting shared checkpoint pages.
@@ -80,7 +165,7 @@ impl<T> SharedDeque<T> {
                 if std::mem::size_of::<T>() == 0 {
                     usize::MAX
                 } else {
-                    pages.len().saturating_mul(PAGE_SIZE)
+                    pages.page_count().saturating_mul(PAGE_SIZE)
                 }
             }
         }
@@ -97,17 +182,12 @@ impl<T> SharedDeque<T> {
     pub(crate) fn get(&self, index: usize) -> Option<&T> {
         match &self.storage {
             Storage::Small(values) => values.get(index),
-            Storage::Paged {
-                pages,
-                front_offset,
-                len,
-                ..
-            } => {
-                if index >= *len {
+            Storage::Paged(pages) => {
+                if index >= pages.len {
                     return None;
                 }
-                let (page, offset) = locate(pages, *front_offset, index);
-                Some(&pages[page][offset])
+                let (page, offset) = pages.locate(index);
+                Some(&pages.page(page)[offset])
             }
         }
     }
@@ -119,12 +199,7 @@ impl<T> SharedDeque<T> {
     pub(crate) fn range(&self, range: impl RangeBounds<usize>) -> Iter<'_, T> {
         match &self.storage {
             Storage::Small(values) => Iter::Small(values.range(range)),
-            Storage::Paged {
-                pages,
-                front_offset,
-                len,
-                ..
-            } => {
+            Storage::Paged(pages) => {
                 let start = match range.start_bound() {
                     Bound::Included(&index) => index,
                     Bound::Excluded(&index) => index.checked_add(1).expect("range start overflow"),
@@ -133,29 +208,30 @@ impl<T> SharedDeque<T> {
                 let end = match range.end_bound() {
                     Bound::Included(&index) => index.checked_add(1).expect("range end overflow"),
                     Bound::Excluded(&index) => index,
-                    Bound::Unbounded => *len,
+                    Bound::Unbounded => pages.len,
                 };
-                assert!(start <= end && end <= *len, "deque range out of bounds");
+                assert!(
+                    start <= end && end <= pages.len,
+                    "deque range out of bounds"
+                );
                 let remaining = end - start;
                 if remaining == 0 {
                     return Iter::Paged(PagedIter {
                         root: pages,
-                        front_offset: *front_offset,
                         front_index: start,
                         back_index: end,
-                        pages: pages.range(..0),
+                        next_page: 0,
                         current: [].iter(),
                         remaining: 0,
                     });
                 }
-                let (page, offset) = locate(pages, *front_offset, start);
+                let (page, offset) = pages.locate(start);
                 Iter::Paged(PagedIter {
                     root: pages,
-                    front_offset: *front_offset,
                     front_index: start,
                     back_index: end,
-                    pages: pages.range(page + 1..),
-                    current: pages[page][offset..].iter(),
+                    next_page: page + 1,
+                    current: pages.page(page)[offset..].iter(),
                     remaining,
                 })
             }
@@ -165,7 +241,7 @@ impl<T> SharedDeque<T> {
     pub(crate) fn clear(&mut self) {
         match &mut self.storage {
             Storage::Small(values) => values.clear(),
-            Storage::Paged { .. } => *self = Self::default(),
+            Storage::Paged(_) => *self = Self::default(),
         }
     }
 
@@ -178,7 +254,7 @@ impl<T> SharedDeque<T> {
     pub(crate) fn has_split_storage(&self) -> bool {
         match &self.storage {
             Storage::Small(values) => !values.as_slices().1.is_empty(),
-            Storage::Paged { pages, .. } => pages.len() > 1,
+            Storage::Paged(pages) => pages.page_count() > 1,
         }
     }
 
@@ -186,20 +262,8 @@ impl<T> SharedDeque<T> {
     fn page_directory_capacity(&self) -> usize {
         match &self.storage {
             Storage::Small(_) => 0,
-            Storage::Paged { pages, .. } => pages.capacity(),
+            Storage::Paged(pages) => pages.middle.as_ref().map_or(0, |pages| pages.capacity()),
         }
-    }
-}
-
-// Only the first and last pages may be partial. All interior pages have exactly
-// PAGE_SIZE cells, so a range starts at its first cell without walking its prefix.
-fn locate<T>(pages: &VecDeque<Arc<Page<T>>>, front_offset: usize, index: usize) -> (usize, usize) {
-    let first = pages[0].len() - front_offset;
-    if index < first {
-        (0, front_offset + index)
-    } else {
-        let rest = index - first;
-        (1 + rest / PAGE_SIZE, rest % PAGE_SIZE)
     }
 }
 
@@ -225,12 +289,17 @@ impl<T: Clone> SharedDeque<T> {
             pages.push_back(Arc::new(Page(page)));
         }
         let back_len = pages.back().expect("nonempty promoted deque").len();
-        self.storage = Storage::Paged {
-            pages: Arc::new(pages),
+        let front = pages.pop_front().expect("nonempty promoted deque");
+        let back = pages.pop_back();
+        let middle = (!pages.is_empty()).then(|| Arc::new(pages));
+        self.storage = Storage::Paged(PagedStorage {
+            front,
+            back,
+            middle,
             front_offset: 0,
             back_len,
             len,
-        };
+        });
     }
 
     pub(crate) fn push_back(&mut self, value: T) {
@@ -239,28 +308,25 @@ impl<T: Clone> SharedDeque<T> {
         }
         match &mut self.storage {
             Storage::Small(values) => values.push_back(value),
-            Storage::Paged {
-                pages,
-                back_len,
-                len,
-                ..
-            } => {
-                let pages = Arc::make_mut(pages);
-                if *back_len == PAGE_SIZE {
+            Storage::Paged(pages) => {
+                if pages.back_len == PAGE_SIZE {
                     let mut page = Vec::with_capacity(PAGE_SIZE);
                     page.push(value);
-                    pages.push_back(Arc::new(Page(page)));
-                    *back_len = 1;
+                    if let Some(back) = pages.back.take() {
+                        pages.push_middle_back(back);
+                    }
+                    pages.back = Some(Arc::new(Page(page)));
+                    pages.back_len = 1;
                 } else {
-                    let page = Arc::make_mut(pages.back_mut().expect("nonempty paged deque"));
-                    if *back_len < page.len() {
-                        page[*back_len] = value;
+                    let page = Arc::make_mut(pages.back.as_mut().unwrap_or(&mut pages.front));
+                    if pages.back_len < page.len() {
+                        page[pages.back_len] = value;
                     } else {
                         page.push(value);
                     }
-                    *back_len += 1;
+                    pages.back_len += 1;
                 }
-                *len += 1;
+                pages.len += 1;
             }
         }
     }
@@ -271,30 +337,29 @@ impl<T: Clone> SharedDeque<T> {
         }
         match &mut self.storage {
             Storage::Small(values) => values.push_front(value),
-            Storage::Paged {
-                pages,
-                front_offset,
-                back_len,
-                len,
-            } => {
-                let pages = Arc::make_mut(pages);
-                if *front_offset != 0 {
-                    *front_offset -= 1;
-                    Arc::make_mut(pages.front_mut().expect("nonempty paged deque"))
-                        [*front_offset] = value;
-                } else if pages[0].len() < PAGE_SIZE {
-                    let single = pages.len() == 1;
-                    Arc::make_mut(pages.front_mut().expect("nonempty paged deque"))
-                        .insert(0, value);
-                    if single {
-                        *back_len += 1;
+            Storage::Paged(pages) => {
+                if pages.front_offset != 0 {
+                    pages.front_offset -= 1;
+                    Arc::make_mut(&mut pages.front)[pages.front_offset] = value;
+                } else if pages.front.len() < PAGE_SIZE {
+                    Arc::make_mut(&mut pages.front).insert(0, value);
+                    if pages.back.is_none() {
+                        pages.back_len += 1;
                     }
                 } else {
                     let mut page = Vec::with_capacity(PAGE_SIZE);
                     page.push(value);
-                    pages.push_front(Arc::new(Page(page)));
+                    let previous = std::mem::replace(&mut pages.front, Arc::new(Page(page)));
+                    if pages.back.is_none() {
+                        // A single page can have a removed physical tail. It
+                        // becomes the back endpoint with its logical back_len,
+                        // rather than becoming a supposedly complete middle page.
+                        pages.back = Some(previous);
+                    } else {
+                        pages.push_middle_front(previous);
+                    }
                 }
-                *len += 1;
+                pages.len += 1;
             }
         }
     }
@@ -302,25 +367,17 @@ impl<T: Clone> SharedDeque<T> {
     pub(crate) fn pop_front(&mut self) -> Option<T> {
         match &mut self.storage {
             Storage::Small(values) => values.pop_front(),
-            Storage::Paged {
-                pages,
-                front_offset,
-                back_len,
-                len,
-            } => {
-                let value = pages[0][*front_offset].clone();
-                *front_offset += 1;
-                *len -= 1;
-                if *len == 0 {
+            Storage::Paged(pages) => {
+                let value = pages.front[pages.front_offset].clone();
+                pages.front_offset += 1;
+                pages.len -= 1;
+                if pages.len == 0 {
                     *self = Self::default();
-                } else if *front_offset == pages[0].len() {
-                    let pages = Arc::make_mut(pages);
-                    pages.pop_front();
-                    *front_offset = 0;
-                    if pages.len() == 1 {
-                        debug_assert!(*back_len <= pages[0].len());
-                    }
-                    prune_directory(pages);
+                } else if pages.front_offset == pages.front.len() {
+                    pages.front = pages
+                        .pop_middle_front()
+                        .unwrap_or_else(|| pages.back.take().expect("surviving back page"));
+                    pages.front_offset = 0;
                 }
                 Some(value)
             }
@@ -330,22 +387,15 @@ impl<T: Clone> SharedDeque<T> {
     pub(crate) fn pop_back(&mut self) -> Option<T> {
         match &mut self.storage {
             Storage::Small(values) => values.pop_back(),
-            Storage::Paged {
-                pages,
-                back_len,
-                len,
-                ..
-            } => {
-                let value = pages.back().expect("nonempty paged deque")[*back_len - 1].clone();
-                *back_len -= 1;
-                *len -= 1;
-                if *len == 0 {
+            Storage::Paged(pages) => {
+                let value = pages.back.as_ref().unwrap_or(&pages.front)[pages.back_len - 1].clone();
+                pages.back_len -= 1;
+                pages.len -= 1;
+                if pages.len == 0 {
                     *self = Self::default();
-                } else if *back_len == 0 {
-                    let pages = Arc::make_mut(pages);
-                    pages.pop_back();
-                    *back_len = pages.back().expect("surviving paged deque").len();
-                    prune_directory(pages);
+                } else if pages.back_len == 0 {
+                    pages.back = pages.pop_middle_back();
+                    pages.back_len = pages.back.as_ref().unwrap_or(&pages.front).len();
                 }
                 Some(value)
             }
@@ -360,17 +410,12 @@ impl SharedDeque<Option<f64>> {
     /// Compare bits so signed zero and every NaN payload keep their identity.
     /// Other representations and changed cells use the ordinary write path.
     pub(crate) fn restore_front(&mut self, value: Option<f64>) {
-        if let Storage::Paged {
-            pages,
-            front_offset,
-            len,
-            ..
-        } = &mut self.storage
-            && *front_offset != 0
-            && pages[0][*front_offset - 1].map(f64::to_bits) == value.map(f64::to_bits)
+        if let Storage::Paged(pages) = &mut self.storage
+            && pages.front_offset != 0
+            && pages.front[pages.front_offset - 1].map(f64::to_bits) == value.map(f64::to_bits)
         {
-            *front_offset -= 1;
-            *len += 1;
+            pages.front_offset -= 1;
+            pages.len += 1;
             return;
         }
         self.push_front(value);
@@ -434,11 +479,10 @@ pub(crate) enum Iter<'a, T> {
 }
 
 pub(crate) struct PagedIter<'a, T> {
-    root: &'a VecDeque<Arc<Page<T>>>,
-    front_offset: usize,
+    root: &'a PagedStorage<T>,
     front_index: usize,
     back_index: usize,
-    pages: std::collections::vec_deque::Iter<'a, Arc<Page<T>>>,
+    next_page: usize,
     current: std::slice::Iter<'a, T>,
     remaining: usize,
 }
@@ -459,7 +503,8 @@ impl<'a, T> Iterator for Iter<'a, T> {
                         iter.front_index += 1;
                         return Some(value);
                     }
-                    iter.current = iter.pages.next()?.iter();
+                    iter.current = iter.root.page(iter.next_page).iter();
+                    iter.next_page += 1;
                 }
             }
         }
@@ -476,9 +521,9 @@ impl<'a, T> Iterator for Iter<'a, T> {
                 }
                 iter.front_index += n;
                 iter.remaining -= n;
-                let (page, offset) = locate(iter.root, iter.front_offset, iter.front_index);
-                iter.current = iter.root[page][offset..].iter();
-                iter.pages = iter.root.range(page + 1..);
+                let (page, offset) = iter.root.locate(iter.front_index);
+                iter.current = iter.root.page(page)[offset..].iter();
+                iter.next_page = page + 1;
                 self.next()
             }
         }
@@ -505,13 +550,13 @@ impl<'a, T> Iterator for Iter<'a, T> {
                 let take = remaining.min(iter.current.len());
                 let mut accumulator = iter.current.as_slice()[..take].iter().fold(init, &mut fold);
                 remaining -= take;
-                for page in iter.pages {
-                    if remaining == 0 {
-                        break;
-                    }
+                let mut next_page = iter.next_page;
+                while remaining != 0 {
+                    let page = iter.root.page(next_page);
                     let take = remaining.min(page.len());
                     accumulator = page[..take].iter().fold(accumulator, &mut fold);
                     remaining -= take;
+                    next_page += 1;
                 }
                 debug_assert_eq!(remaining, 0);
                 accumulator
@@ -530,8 +575,8 @@ impl<T> DoubleEndedIterator for Iter<'_, T> {
                 }
                 iter.back_index -= 1;
                 iter.remaining -= 1;
-                let (page, offset) = locate(iter.root, iter.front_offset, iter.back_index);
-                Some(&iter.root[page][offset])
+                let (page, offset) = iter.root.locate(iter.back_index);
+                Some(&iter.root.page(page)[offset])
             }
         }
     }
@@ -562,3 +607,7 @@ mod tests;
 #[cfg(test)]
 #[path = "shared_deque_restore_tests.rs"]
 mod restore_tests;
+
+#[cfg(test)]
+#[path = "shared_deque_endpoint_tests.rs"]
+mod shared_deque_endpoint_tests;

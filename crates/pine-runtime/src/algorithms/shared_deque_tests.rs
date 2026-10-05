@@ -102,7 +102,8 @@ fn short_checkpoint_copies_at_most_one_page_and_preserves_wrapped_storage() {
 fn assert_capacity_reports_backing_storage<T>(values: &SharedDeque<T>) {
     let actual_buffer_capacity = match &values.storage {
         Storage::Small(buffer) => buffer.capacity(),
-        Storage::Paged { pages, .. } => pages.iter().fold(0_usize, |capacity, page| {
+        Storage::Paged(pages) => (0..pages.page_count()).fold(0_usize, |capacity, index| {
+            let page = pages.page(index);
             assert!(page.len() <= PAGE_SIZE, "a page must not grow its buffer");
             capacity.saturating_add(page.capacity())
         }),

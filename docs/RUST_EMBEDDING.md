@@ -70,6 +70,16 @@ without mutating that state. `Forming` supplies an observed realtime update,
 while `Confirmed` commits the bar; it is not interchangeable with historical
 OHLC-path simulation. See REALTIME_MODEL.md for strategy behavior.
 
+For manually constructed HIR, reusing a `CallSiteId` for the same TA callee
+identifies one logical stateful call site. Repeated execution retains that
+algorithm's existing invocation and same-bar replacement rules. If different
+callees share an ID, preparation assigns private, deterministic state IDs to
+the TA operations declared at that ID. This separates their windows and
+recursive state, including conflicts with `fixnan`. It does not rewrite HIR,
+input override IDs, output IDs, request IDs or source locations. Prefer unique
+IDs for distinct logical calls; this compatibility rule is not general HIR
+validation or isolation for arbitrary calls outside the prepared program.
+
 Historical execution errors disable further execution of that `HistoricalRuntime`
 instance (`E_RUNTIME_POISONED`); rebuild it to retry. Validation failures before
 execution, including clock counts and session-window coverage, remain retryable.

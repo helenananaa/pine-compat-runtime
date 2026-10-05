@@ -76,6 +76,7 @@ impl CallFamily {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct CallDispatch {
     pub(crate) family: CallFamily,
+    pub(crate) state_site: CallSiteId,
     pub(crate) positional_args: bool,
     pub(crate) ta_opcode: Option<TaOpcode>,
     pub(crate) math_opcode: Option<MathOpcode>,
@@ -83,10 +84,11 @@ pub(crate) struct CallDispatch {
 }
 
 impl CallDispatch {
-    fn for_call(callee: &str, args: &[HirCallArg]) -> Self {
+    fn for_call(site: CallSiteId, callee: &str, args: &[HirCallArg]) -> Self {
         let family = CallFamily::for_name(callee);
         Self {
             family,
+            state_site: site,
             positional_args: positional_layout(args),
             ta_opcode: if family == CallFamily::Ta {
                 TaOpcode::for_name(callee)
@@ -117,6 +119,7 @@ struct CallBinding {
 pub(crate) struct CallPlan {
     dense: Vec<Option<CallBinding>>,
     sparse: HashMap<CallSiteId, Option<CallBinding>>,
+    ta_state_sites: HashMap<(CallSiteId, TaOpcode), CallSiteId>,
 }
 
 impl CallPlan {
@@ -129,7 +132,7 @@ impl CallPlan {
                 args,
             } = &expr.kind
             {
-                let dispatch = CallDispatch::for_call(callee, args);
+                let dispatch = CallDispatch::for_call(*call_site_id, callee, args);
                 bindings
                     .entry(*call_site_id)
                     .and_modify(|binding| {
@@ -166,6 +169,7 @@ impl CallPlan {
         let mut plan = Self {
             dense: std::iter::repeat_with(|| None).take(dense_len).collect(),
             sparse: HashMap::new(),
+            ta_state_sites: Self::ta_state_sites(program, &bindings),
         };
         for (site, binding) in bindings {
             if let Some(slot) = plan.dense.get_mut(site.0 as usize) {
@@ -175,6 +179,45 @@ impl CallPlan {
             }
         }
         plan
+    }
+
+    fn ta_state_sites(
+        program: &HirProgram,
+        bindings: &HashMap<CallSiteId, Option<CallBinding>>,
+    ) -> HashMap<(CallSiteId, TaOpcode), CallSiteId> {
+        let mut aliases = HashMap::new();
+        if !bindings.values().any(Option::is_none) {
+            return aliases;
+        }
+        let mut conflicts = Vec::new();
+        super::hir_walk::statements(&program.statements, &mut |expr| {
+            if let HirExprKind::Call {
+                callee,
+                call_site_id,
+                ..
+            } = &expr.kind
+                && bindings.get(call_site_id).is_some_and(Option::is_none)
+                && let Some(opcode) = TaOpcode::for_name(callee)
+            {
+                conflicts.push((*call_site_id, opcode));
+            }
+        });
+        conflicts.sort_unstable_by_key(|(site, opcode)| (site.0, *opcode as usize));
+        conflicts.dedup();
+        // Use unused holes, excluding every HIR call ID, including non-TA
+        // calls. Aliasing every TA callee also isolates shared call_state
+        // storage from a conflicting non-TA call such as fixnan.
+        let mut next = 0_u64;
+        for conflict in conflicts {
+            while next <= u64::from(u32::MAX) && bindings.contains_key(&CallSiteId(next as u32)) {
+                next += 1;
+            }
+            let alias =
+                CallSiteId(u32::try_from(next).expect("call-site state ID space exhausted"));
+            aliases.insert(conflict, alias);
+            next += 1;
+        }
+        aliases
     }
 
     fn binding(&self, site: CallSiteId) -> Option<&CallBinding> {
@@ -194,7 +237,15 @@ impl CallPlan {
         self.binding(site)
             .filter(|binding| binding.callee == callee)
             .map_or_else(
-                || CallDispatch::for_call(callee, args),
+                || {
+                    let mut dispatch = CallDispatch::for_call(site, callee, args);
+                    if let Some(opcode) = dispatch.ta_opcode
+                        && let Some(alias) = self.ta_state_sites.get(&(site, opcode))
+                    {
+                        dispatch.state_site = *alias;
+                    }
+                    dispatch
+                },
                 |binding| binding.dispatch,
             )
     }
@@ -211,6 +262,10 @@ fn positional_layout(args: &[HirCallArg]) -> bool {
 #[cfg(test)]
 #[path = "ta_dispatch_tests.rs"]
 mod ta_dispatch_tests;
+
+#[cfg(test)]
+#[path = "ta_state_plan_tests.rs"]
+mod ta_state_plan_tests;
 
 #[cfg(test)]
 #[path = "math_dispatch_tests.rs"]

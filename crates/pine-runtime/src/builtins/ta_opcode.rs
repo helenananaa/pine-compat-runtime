@@ -1,6 +1,6 @@
 //! Immutable TA operation selection; argument and overload semantics stay in the kernels.
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub(crate) enum TaOpcode {
     Sma,

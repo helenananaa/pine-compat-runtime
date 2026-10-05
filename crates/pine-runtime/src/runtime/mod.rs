@@ -35,3 +35,6 @@ pub(crate) mod valuewhen_limits;
 
 #[cfg(test)]
 mod window_length_tests;
+
+#[cfg(test)]
+mod ta_state_identity_tests;

@@ -37,7 +37,7 @@ impl<'a> HistoricalRuntime<'a> {
             ),
             CallFamily::Ta => self.eval_ta_call(
                 dispatch.ta_opcode,
-                call_site_id,
+                dispatch.state_site,
                 args,
                 dispatch.positional_args,
             ),

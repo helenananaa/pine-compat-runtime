@@ -1,0 +1,814 @@
+{
+  "schema": "pine.ta-state-identity-repair.v1",
+  "status": "PASS_SCOPED_STATE_IDENTITY_REPAIR",
+  "baseCommit": "c57298550129b8455bd8a3a777d0f743c921141c",
+  "qualifiedSourceFiles": 6352,
+  "sourceManifestSha256": "32ffeaea77a7b6319e3449bbea01c05ee8887687012dd714f16d5b9f6701e240",
+  "qualifiedChangedSourceSha256": {
+    "crates/pine-runtime/src/builtins/ta_opcode.rs": "eaba57618ab35fdd2f1c6cf7e0c33bc465642d9596156c7001596bb04a7b71a3",
+    "crates/pine-runtime/src/runtime/call_plan.rs": "d0eaee0ab3bd9125407b9204b3a565a2fd9f81673cb6c3248c29fd93dfbf848c",
+    "crates/pine-runtime/src/runtime/calls.rs": "211a47619b1756cf740deedbd7b39316a506a91f9f975821eef73245185672b8",
+    "crates/pine-runtime/src/runtime/mod.rs": "8f04d9104110020e4db081e07b77bcb5490a7d49623944f9eb4a78ff5ac4f039",
+    "crates/pine-runtime/src/runtime/ta_state_plan_tests.rs": "0f48e4a7e57419f50764cfdd47b40306ddf6c2baff662ecb6ff48c63fa404621",
+    "crates/pine-runtime/src/runtime/ta_state_identity_tests.rs": "2df8641ac54a9bee28e9e647ed85c40d5041d1afeb7f7ea91582cf7b04d01535",
+    "docs/RUST_EMBEDDING.md": "b964a770623cd4962fda013dd002d0ae7ad6935c81167b2d22d654ac25848cf2"
+  },
+  "policy": {
+    "sameIdSameCallee": "one logical stateful site; retain the algorithm invocation/replacement rules",
+    "differentCalleeNamesAtSameId": "each recognized TA opcode receives a private state ID",
+    "allocation": "deterministic sorted site/opcode pairs, holes excluding all actual HIR call IDs",
+    "nonTaDispatch": "original IDs; includes fixnan, input, output, request and source locations",
+    "normalUniqueIds": "original cached ID; no alias lookup on bound dispatch",
+    "notClaimed": "general HIR validation or private unrecorded eval_call isolation"
+  },
+  "baselineReleaseReproduction": {
+    "status": "PASS_REPRODUCED_WRONG_50",
+    "baseCommit": "c57298550129b8455bd8a3a777d0f743c921141c",
+    "baseFiles": 6350,
+    "compiledSourceFilesMatchedBaseIncludingLineEndingEquivalence": 6348,
+    "lineEndingOnlyDifferences": [
+      ".gitignore",
+      "Cargo.lock",
+      "LICENSE",
+      "crates/pine-builtins/src/constants/strings.rs",
+      "crates/pine-builtins/src/namespaces/core.rs",
+      "crates/pine-builtins/src/namespaces/outputs.rs",
+      "crates/pine-cli/src/commands/run.rs",
+      "crates/pine-ir/src/lib.rs",
+      "crates/pine-ir/src/types.rs",
+      "crates/pine-python/src/lib.rs",
+      "crates/pine-python/src/tables.rs",
+      "crates/pine-runtime/src/algorithms/mod.rs",
+      "crates/pine-runtime/src/builtins/drawings/boxes.rs",
+      "crates/pine-runtime/src/builtins/drawings/labels.rs",
+      "crates/pine-runtime/src/builtins/drawings/lines.rs",
+      "crates/pine-runtime/src/builtins/drawings/tables.rs",
+      "crates/pine-runtime/src/builtins/math.rs",
+      "crates/pine-runtime/src/builtins/variables.rs",
+      "crates/pine-runtime/src/host_requirements/walk.rs",
+      "crates/pine-runtime/src/output/changes.rs",
+      "crates/pine-runtime/src/output/collect.rs",
+      "crates/pine-runtime/src/output/json/tests.rs",
+      "crates/pine-runtime/src/output/model.rs",
+      "crates/pine-runtime/src/output/view.rs",
+      "crates/pine-runtime/src/runtime/hir_walk.rs",
+      "crates/pine-runtime/src/runtime/plot_history.rs",
+      "crates/pine-runtime/src/strategy/broker/fill_origin_characterization_tests.rs",
+      "crates/pine-runtime/src/strategy/broker/mod.rs",
+      "crates/pine-runtime/src/strategy/broker/netting_matrix_tests.rs",
+      "crates/pine-runtime/src/strategy/broker/tests.rs",
+      "crates/pine-runtime/src/strategy/broker/types.rs",
+      "crates/pine-runtime/src/tests/mod.rs",
+      "crates/pine-runtime/src/tests/strategy.rs",
+      "crates/pine-runtime/tests/display_algebra.rs",
+      "crates/pine-runtime/tests/fixtures/delta_actions.jsonl",
+      "crates/pine-sema/src/analysis.rs",
+      "crates/pine-sema/src/analyzer/context.rs",
+      "crates/pine-sema/src/analyzer/user_types/tests.rs",
+      "crates/pine-sema/src/legacy/dialect.rs",
+      "crates/pine-sema/src/types/formatting.rs",
+      "crates/pine-wasm/src/snapshot.rs",
+      "docs/BITDUKE_SQUEEZE_STRATEGY_NATIVE_20260926.md",
+      "docs/BUILTIN_SIGNATURES.md",
+      "docs/CORE_SCRIPT_ACCEPTANCE.md",
+      "docs/CORE_SCRIPT_ACCEPTANCE_PLAN.json",
+      "docs/CORE_SCRIPT_ACCEPTANCE_RESULTS.json",
+      "docs/DEBT_REPAIR_20261003.md",
+      "docs/DEBT_REPAIR_RESULTS_20261003.json",
+      "docs/DELIVERY_ROADMAP.md",
+      "docs/DIRECT_OUTPUT_REPAIR_20261004.md",
+      "docs/DIRECT_OUTPUT_REPAIR_RESULTS_20261004.json",
+      "docs/HOTSPOT_PERFORMANCE_RESULTS_20261003.json",
+      "docs/HOTSPOT_REPAIR_20261004.md",
+      "docs/HOTSPOT_REPAIR_RESULTS_20261004.json",
+      "docs/HULL_FX_SOURCE_EXPANSION_20260927.md",
+      "docs/ICHIMOKU_NATIVE_PARITY_20260926.md",
+      "docs/INTRABAR_MTF_ACCEPTANCE_RESULTS.json",
+      "docs/JSON_PARSE_OWNERSHIP_REPAIR_20261004.md",
+      "docs/JSON_PARSE_OWNERSHIP_REPAIR_RESULTS_20261004.json",
+      "docs/METADATA_DELTA_REPAIR_20261004.md",
+      "docs/METADATA_DELTA_REPAIR_RESULTS_20261004.json",
+      "docs/NUMERIC_DISPATCH_REPAIR_20261004.md",
+      "docs/NUMERIC_DISPATCH_REPAIR_RESULTS_20261004.json",
+      "docs/NUMERIC_TAIL_REPAIR_20261004.md",
+      "docs/NUMERIC_TAIL_REPAIR_RESULTS_20261004.json",
+      "docs/OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md",
+      "docs/OPTIMIZED_DELIVERY_ACCEPTANCE_RESULTS.json",
+      "docs/OUTPUT_COPY_REPAIR_20261004.md",
+      "docs/OUTPUT_COPY_REPAIR_RESULTS_20261004.json",
+      "docs/PERFORMANCE_ATTRIBUTION_RESULTS_20261001.json",
+      "docs/PERFORMANCE_OUTPUT_RESULTS_20261002.json",
+      "docs/PERFORMANCE_RESOURCE_CLOSURE_20261002.md",
+      "docs/PERFORMANCE_RESOURCE_CLOSURE_RESULTS_20261002.json",
+      "docs/PRODUCT_COMPLETION_ARTIFACTS.json",
+      "docs/PRODUCT_COMPLETION_EXECUTION.md",
+      "docs/PRODUCT_STANDARD_CANDLE_RESOURCE_PLAN.json",
+      "docs/RELEASE_NOTES.md",
+      "docs/RUST_EMBEDDING.md",
+      "docs/SQUEEZE_LEGACY_NATIVE_20260926.md",
+      "docs/STATISTICS_QR_REPAIR_20261004.md",
+      "docs/STATISTICS_QR_REPAIR_RESULTS_20261004.json",
+      "docs/TA_MATRIX_REPAIR_20261004.md",
+      "docs/TA_MATRIX_REPAIR_RESULTS_20261004.json",
+      "docs/TYPED_DISPATCH_WINDOW_REPAIR_20261005.md",
+      "docs/TYPED_DISPATCH_WINDOW_REPAIR_RESULTS_20261005.json",
+      "docs/UT_BOT_FX_FOURHOUR_EXPANSION_20260927.md",
+      "python/tests/test_bindings.py",
+      "python/tests/test_candidate_embedding.py",
+      "python/tests/test_realtime_session.py",
+      "scripts/legacy_analysis_parity_required.txt",
+      "scripts/product_resource_probe.rs",
+      "scripts/tests/test_candidate_cli.py",
+      "scripts/tests/wasm_node_smoke.cjs",
+      "tests/fixtures/legacy/timenow_execution_times.txt",
+      "tests/fixtures/modern-strategy-corpus/r1/manifest.jsonl",
+      "tests/fixtures/pivot_na_native_values.json",
+      "tests/fixtures/runtime/timeframe.pine",
+      "tests/snapshots/host_requirements.json",
+      "tests/snapshots/runtime_extremes_edge_cases.json",
+      "tests/snapshots/runtime_strategy_closedtrades_fields.json",
+      "tests/snapshots/runtime_strategy_closedtrades_fields_pyramiding.json",
+      "tests/snapshots/runtime_strategy_opentrades_fields.json",
+      "tests/snapshots/runtime_strategy_opentrades_fields_pyramiding.json"
+    ],
+    "baseSourceTarSha256": "0e5f59bd3f81b82c38ce0113ccc5239b871937290ef31a6ac2fe6b4b1f51b134",
+    "compiledSourceManifestSha256": "2ab848046aa1419101a360fbac2f4dc7c46ad4c26c69fd74a61bd1371cdc91be",
+    "executableSha256": "d376c3523aa8d5bc151d46f1af4851b7b9543a6cec5477052efccfe94d696f2e",
+    "probeSha256": "e9307f2f27eee4722c7bb3fc45b5801b1d80e2c621d1ebc595d6e389ed7eddbb",
+    "libraryHashes": {
+      "target/release/deps/libserde_json-ff9aee5763d82a17.rlib": "d1a63c8ff35883596ade7695107646287976ab38d79303fabe8bfca3f40d62c5",
+      "target/release/libpine_sema.rlib": "3c3d230f0836d3cc4a044f9195ea71f5c86b50bad28b9ce76bae060df209977e",
+      "target/release/deps/libpine_ir-84e4e71f9d3b13fa.rlib": "ad0fed7ba0de4d2f110c5e97e8a08e53b3dc5e9c53077cdb56bc29c41ae9e2c1",
+      "target/release/libpine_syntax.rlib": "5141b6174016c8b88243e7dc6912dca9f000085a4520b659dd09bba9184176cf",
+      "target/release/libpine_runtime.rlib": "ee7ef54d10f84cde1cd669d4ff395a3d23c82a27bec826566442b11c13054c79"
+    },
+    "processExitCode": 0,
+    "stdoutSha256": "873754858784ad112db595bc40cd5f5dcfbf69650eb3180a810f8f370680359d",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "result": {
+      "schema": "pine.shared-rolling-key-behavior.v1",
+      "source": "//@version=6\nindicator(\"shared rolling key\")\nplot(ta.wma(close, 2))\nplot(ta.wma(close, 2))\nplot(ta.sma(close + 1.0, 2))\nplot(ta.wma(close + 1.0, 2))\nplot(ta.sma(close + 98.0, 2))\n",
+      "modifiedTaCalls": 5,
+      "originalTaCallSiteIds": [
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "sharedTaCallSiteId": 4294967295,
+      "finiteBarsAttempted": 1,
+      "appendOutcome": "ok",
+      "detail": null,
+      "retainedPlotCount": 5,
+      "plots": [
+        {
+          "position": 0,
+          "callee": "ta.wma",
+          "present": true,
+          "values": [
+            {
+              "type": "na"
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "callee": "ta.wma",
+          "present": true,
+          "values": [
+            {
+              "type": "float",
+              "bits": "3ff0000000000000"
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "callee": "ta.sma",
+          "present": true,
+          "values": [
+            {
+              "type": "float",
+              "bits": "3ff8000000000000"
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "callee": "ta.wma",
+          "present": true,
+          "values": [
+            {
+              "type": "float",
+              "bits": "4000000000000000"
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "callee": "ta.sma",
+          "present": true,
+          "values": [
+            {
+              "type": "float",
+              "bits": "4049000000000000"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "candidateReleaseReproduction": {
+    "status": "PASS_CORRECTED_DECLARED_TA_STATE_PARTITION",
+    "processExitCode": 0,
+    "sourceManifestSha256": "32ffeaea77a7b6319e3449bbea01c05ee8887687012dd714f16d5b9f6701e240",
+    "executableSha256": "27a0cc74dd631778f7d0fe8084e3aac44683ababc06f077b37f10a75310f95dd",
+    "probeSha256": "e9307f2f27eee4722c7bb3fc45b5801b1d80e2c621d1ebc595d6e389ed7eddbb",
+    "stdoutSha256": "c7d24742bf691eb12e175fbb5ea77d79d7b38632094c278384f7552aed258fb0",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "expectedTypedValues": [
+      {
+        "type": "na"
+      },
+      {
+        "type": "float",
+        "bits": "3ff0000000000000"
+      },
+      {
+        "type": "na"
+      },
+      {
+        "type": "float",
+        "bits": "3ffaaaaaaaaaaaab"
+      },
+      {
+        "type": "na"
+      }
+    ],
+    "result": {
+      "schema": "pine.shared-rolling-key-behavior.v1",
+      "source": "//@version=6\nindicator(\"shared rolling key\")\nplot(ta.wma(close, 2))\nplot(ta.wma(close, 2))\nplot(ta.sma(close + 1.0, 2))\nplot(ta.wma(close + 1.0, 2))\nplot(ta.sma(close + 98.0, 2))\n",
+      "modifiedTaCalls": 5,
+      "originalTaCallSiteIds": [
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "sharedTaCallSiteId": 4294967295,
+      "finiteBarsAttempted": 1,
+      "appendOutcome": "ok",
+      "detail": null,
+      "retainedPlotCount": 5,
+      "plots": [
+        {
+          "position": 0,
+          "callee": "ta.wma",
+          "present": true,
+          "values": [
+            {
+              "type": "na"
+            }
+          ]
+        },
+        {
+          "position": 1,
+          "callee": "ta.wma",
+          "present": true,
+          "values": [
+            {
+              "type": "float",
+              "bits": "3ff0000000000000"
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "callee": "ta.sma",
+          "present": true,
+          "values": [
+            {
+              "type": "na"
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "callee": "ta.wma",
+          "present": true,
+          "values": [
+            {
+              "type": "float",
+              "bits": "3ffaaaaaaaaaaaab"
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "callee": "ta.sma",
+          "present": true,
+          "values": [
+            {
+              "type": "na"
+            }
+          ]
+        }
+      ]
+    },
+    "publicOriginalSourceAndTaIdsUnchanged": true,
+    "beforeLastValue": {
+      "type": "float",
+      "bits": "4049000000000000"
+    },
+    "scope": "release public API reproduction only; no timers, allocator or RSS measurement"
+  },
+  "gates": {
+    "status": "PASS",
+    "qualifiedSourceFiles": 6352,
+    "sourceManifestSha256": "32ffeaea77a7b6319e3449bbea01c05ee8887687012dd714f16d5b9f6701e240",
+    "sourceArchiveSha256": "6f2e6d3b7b7d59e69825b59afb86f793a9f77e063510b03a813923f38902fa00",
+    "toolCompletionsSha256": "8404d1d848be6ff99570faaa8a7ca8283be8038624e54375821bb39e4581868a",
+    "checkerSha256": "40ce368d232263ec4fad36955b68090178d90415f0a665d243484a3648090a68",
+    "qualifiedChangedSourceSha256": {
+      "crates/pine-runtime/src/builtins/ta_opcode.rs": "eaba57618ab35fdd2f1c6cf7e0c33bc465642d9596156c7001596bb04a7b71a3",
+      "crates/pine-runtime/src/runtime/call_plan.rs": "d0eaee0ab3bd9125407b9204b3a565a2fd9f81673cb6c3248c29fd93dfbf848c",
+      "crates/pine-runtime/src/runtime/calls.rs": "211a47619b1756cf740deedbd7b39316a506a91f9f975821eef73245185672b8",
+      "crates/pine-runtime/src/runtime/mod.rs": "8f04d9104110020e4db081e07b77bcb5490a7d49623944f9eb4a78ff5ac4f039",
+      "crates/pine-runtime/src/runtime/ta_state_plan_tests.rs": "0f48e4a7e57419f50764cfdd47b40306ddf6c2baff662ecb6ff48c63fa404621",
+      "crates/pine-runtime/src/runtime/ta_state_identity_tests.rs": "2df8641ac54a9bee28e9e647ed85c40d5041d1afeb7f7ea91582cf7b04d01535",
+      "docs/RUST_EMBEDDING.md": "b964a770623cd4962fda013dd002d0ae7ad6935c81167b2d22d654ac25848cf2"
+    },
+    "gates": [
+      {
+        "platform": "windows",
+        "actualToolCompletion": {
+          "exitCode": 0,
+          "chunk": "7ab0a5"
+        },
+        "runnerExitCode": 0,
+        "logSha256": "7830a859db9d44f194070e5201b87d6a728d215ccfaa1e010a41fc37f7f40eb3",
+        "rustPassed": 7442,
+        "rustFailed": 0,
+        "rustIgnored": 0,
+        "pythonPassed": 794,
+        "toolingTests": 166,
+        "toolingSkipped": 0,
+        "productionRustFiles": 406,
+        "orderedCanonicalStagesChecked": 11,
+        "freshWheelAndVenvRoot": "e:/cachevault/temp/pine-python-release-gate-d886c8cbf46c425ab3a131ad584bcbc8",
+        "builtAndInstalledWheel": "e:/cachevault/temp/pine-python-release-gate-d886c8cbf46c425ab3a131ad584bcbc8/wheels/pine_compat_runtime-0.3.0rc1-cp310-abi3-win_amd64.whl",
+        "actualNodeWasmHostParityAndFreshWheelPytestVerified": true
+      },
+      {
+        "platform": "linux",
+        "actualToolCompletion": {
+          "exitCode": 0,
+          "chunk": "ea833e"
+        },
+        "runnerExitCode": 0,
+        "logSha256": "c0d11a4249fb87ff94e0039f01a7500d5aa1ed33e7bbe67819b0dc9213c1c99b",
+        "rustPassed": 7442,
+        "rustFailed": 0,
+        "rustIgnored": 0,
+        "pythonPassed": 794,
+        "toolingTests": 166,
+        "toolingSkipped": 1,
+        "productionRustFiles": 406,
+        "orderedCanonicalStagesChecked": 11,
+        "freshWheelAndVenvRoot": "/tmp/pine-python-release-gate.qgWdiz",
+        "builtAndInstalledWheel": "/tmp/pine-python-release-gate.qgWdiz/wheels/pine_compat_runtime-0.3.0rc1-cp310-abi3-manylinux_2_35_x86_64.whl",
+        "actualNodeWasmHostParityAndFreshWheelPytestVerified": true
+      }
+    ],
+    "preservedBoundedRequestFixtureFailure": {
+      "stage": "initial targeted bounded request fixture",
+      "actualToolCompletion": {
+        "exitCode": 1,
+        "chunk": "54410a"
+      },
+      "cargoExitCode": 101,
+      "passed": 11,
+      "failed": 1,
+      "ignored": 0,
+      "failureDiagnostic": "request.security bounded equal-timeframe history requires a known historical dataset end",
+      "preservedSourceSha256": "fc60b58675ac576a4bb95b11894ae6987f4ee91967ca11922fcad8f6b3f2150c",
+      "preservedLogSha256": "e7cc09810cc88afeb62c06d0fee6f22b068d30bc582a668acac24ae40fea7df1",
+      "preservedExitFileSha256": "bdc830287616dae1818ced3e7c186e1387155900ad30d5983ec02da1519c4a95",
+      "repair": "Supply complete dataset through append_bars; preserve bounded request contract and production code.",
+      "qualifiedSourceSha256": "2df8641ac54a9bee28e9e647ed85c40d5041d1afeb7f7ea91582cf7b04d01535",
+      "fixtureDiff": "--- preserved-initial-fixture\n\n+++ qualified-fixture\n\n@@ -287,11 +287,10 @@\n\n         overrides.clone(),\n     );\n     let mut expected = HistoricalRuntime::with_input_overrides(&reference, overrides);\n-    for index in 0..8 {\n-        actual.append_bar(bar(index, index as f64 + 1.0)).unwrap();\n-        expected.append_bar(bar(index, index as f64 + 1.0)).unwrap();\n-        assert_same(&actual.result(), &expected.result());\n-    }\n+    let bars: Vec<_> = (0..8).map(|index| bar(index, index as f64 + 1.0)).collect();\n+    actual.append_bars(&bars).unwrap();\n+    expected.append_bars(&bars).unwrap();\n+    assert_same(&actual.result(), &expected.result());\n     assert_eq!(actual.result().plots[0].values[1], PineValue::Float(10.5));\n     assert!(!actual.bounded_same_context_evaluations.is_empty());\n }",
+      "onlyReviewedCompleteDatasetFixtureRepair": true,
+      "repairedActualToolCompletion": {
+        "exitCode": 0,
+        "chunk": "34eade"
+      },
+      "repairedPassed": 12,
+      "repairedFailed": 0,
+      "repairedLogSha256": "5b8789560a279e3ccd44c74e37ec314103964fe054b61e02aa7b1fb9f2238619"
+    },
+    "limits": "Checks actual root-supplied tool receipts and final logs; does not execute gates, prove speed/RSS, or independently obtain root tool chunks."
+  },
+  "sourceReview": {
+    "status": "PASS_COMPLETE",
+    "auditScriptSha256": "3764826b5eab2180ace6b7f6443b7946efa62815c9cedab49157c979f154a133",
+    "source": {
+      "status": "PASS_NO_SOURCE_REVIEW_BLOCKERS",
+      "frozenSourceFiles": 6352,
+      "sourceManifestSha256": "32ffeaea77a7b6319e3449bbea01c05ee8887687012dd714f16d5b9f6701e240",
+      "sourceTarSha256": "6f2e6d3b7b7d59e69825b59afb86f793a9f77e063510b03a813923f38902fa00",
+      "changedExistingFiles": [
+        "crates/pine-runtime/src/builtins/ta_opcode.rs",
+        "crates/pine-runtime/src/runtime/call_plan.rs",
+        "crates/pine-runtime/src/runtime/calls.rs",
+        "crates/pine-runtime/src/runtime/mod.rs",
+        "docs/RUST_EMBEDDING.md"
+      ],
+      "newFiles": [
+        "crates/pine-runtime/src/runtime/ta_state_identity_tests.rs",
+        "crates/pine-runtime/src/runtime/ta_state_plan_tests.rs"
+      ],
+      "newTestCount": 11,
+      "newTestFileLines": {
+        "crates/pine-runtime/src/runtime/ta_state_plan_tests.rs": 283,
+        "crates/pine-runtime/src/runtime/ta_state_identity_tests.rs": 296
+      },
+      "existingFileNumstat": {
+        "crates/pine-runtime/src/builtins/ta_opcode.rs": {
+          "insertions": 1,
+          "deletions": 1
+        },
+        "crates/pine-runtime/src/runtime/call_plan.rs": {
+          "insertions": 58,
+          "deletions": 3
+        },
+        "crates/pine-runtime/src/runtime/calls.rs": {
+          "insertions": 1,
+          "deletions": 1
+        },
+        "crates/pine-runtime/src/runtime/mod.rs": {
+          "insertions": 3,
+          "deletions": 0
+        },
+        "docs/RUST_EMBEDDING.md": {
+          "insertions": 10,
+          "deletions": 0
+        }
+      },
+      "codeGrowth": {
+        "existingRustNetLines": 58,
+        "testModuleDeclarationLines": 7,
+        "productionRustNetLinesExcludingTestModuleDeclarations": 51,
+        "newRegressionFileLines": 579,
+        "embeddingDocumentationLines": 10
+      },
+      "semanticPolicyReview": {
+        "allActualCallIdsExcludedFromAliases": true,
+        "aliasesDeterministicAndDistinct": true,
+        "fallbackOnlyDeclaredSiteOpcodePairs": true,
+        "normalBoundCallsDoNotLookUpAliases": true,
+        "sameCalleeSharingAndArgumentLayoutsRetained": true,
+        "fixnanOriginalStateSlotIsolatedFromTa": true,
+        "publicHirAndHostIdsUnchanged": true,
+        "checkpointMapCloneSemanticsUnchanged": true,
+        "requestedChildKeepsOrDeterministicallyRebuildsMetadata": true,
+        "stateIdExhaustionExplicitPanicRatherThanWrap": true,
+        "normalMetadataOverhead": "One additional empty HashMap object in shared prepared metadata, a CallSiteId field per dispatch, and one preparation-time bindings scan. Normal calls have no alias lookup or alias entries. Exact layout and timing unmeasured.",
+        "oracle": "Separate HIR gives one high public ID per callee, preserves same-callee invocation sharing, checks complete public JSON plus Float bits and independent exact first-bar values.",
+        "compatibilityBoundary": "Declared HIR conflicts only; arbitrary private eval_call IDs outside prepared HIR are not a universal state namespace."
+      }
+    },
+    "baseline": {
+      "status": "PASS_ACTUAL_OLD_WRONG_50_RECEIPT",
+      "compiledWorkingFiles": 6348,
+      "gitArchiveFiles": 6350,
+      "lineEndingEquivalentFiles": 103,
+      "baselineReceiptSha256": "da5c087f9e6cc4267c1d188244063e274127660add3d1d52b731cb98cb866536",
+      "oldExecutableSha256": "d376c3523aa8d5bc151d46f1af4851b7b9543a6cec5477052efccfe94d696f2e",
+      "stdoutSha256": "873754858784ad112db595bc40cd5f5dcfbf69650eb3180a810f8f370680359d",
+      "selfContainedLineEndingProofSha256": "4bf6d476a187f90ed7b0aaefe6b3401c6a399bc6f91870594ba8ba4589dd05dd",
+      "statement": "103 differences verified by normalizing BOTH sides; all prior raw compiled tar bytes and 103 self-contained copies independently match their recorded manifest."
+    },
+    "targetedTestsAndFailures": {
+      "status": "PASS",
+      "newTestsPassed": 11,
+      "targetedTotalTestsPassed": 12,
+      "existingRequestIsolationTestsIncluded": 1,
+      "targetedLogSha256": "5b8789560a279e3ccd44c74e37ec314103964fe054b61e02aa7b1fb9f2238619",
+      "targetedExitCode": 0,
+      "boundedFixtureFailureExitCode": 101,
+      "boundedFixtureRepair": "Use append_bars to provide known dataset end; only test fixture changed.",
+      "baselineLineEndingFailureExitCode": 1,
+      "baselineLineEndingFailureToolChunk": "b28e53",
+      "failureArtifactsSha256": {
+        "failures/audit-inspection/receipt.json": "1b1294b1560cf96faf503bb2fc5e7f9054538ebe847ac477f9070b86364aa65b",
+        "failures/baseline-line-endings/original-seal.py": "e5dab001fe284a6ea40439623525cf637803d83754e6ab6dfb13ac772e06b9a7",
+        "failures/baseline-line-endings/receipt.json": "661d2f05071ef9f9b7db1fba6e9f370a286bfd358997180109bfcb98a67f4ae2",
+        "failures/bounded-request-fixture/original-test.rs": "fc60b58675ac576a4bb95b11894ae6987f4ee91967ca11922fcad8f6b3f2150c",
+        "failures/bounded-request-fixture/receipt.json": "1d11eec3f685fd1bef02547accf875ea5938a5a930938a6e7155b5e925bd5d30",
+        "failures/bounded-request-fixture/targeted-tests.exit": "bdc830287616dae1818ced3e7c186e1387155900ad30d5983ec02da1519c4a95",
+        "failures/bounded-request-fixture/targeted-tests.log": "e7cc09810cc88afeb62c06d0fee6f22b068d30bc582a668acac24ae40fea7df1"
+      }
+    },
+    "gates": {
+      "windows": {
+        "status": "PASS",
+        "rustPassed": 7442,
+        "rustIgnored": 0,
+        "pythonPassed": 794,
+        "toolingTestsRun": 166,
+        "freshWheelRoot": "pine-python-release-gate-d886c8cbf46c425ab3a131ad584bcbc8",
+        "toolingSkipped": 0,
+        "productionRustFiles": 406,
+        "logSha256": "7830a859db9d44f194070e5201b87d6a728d215ccfaa1e010a41fc37f7f40eb3",
+        "exitCode": 0,
+        "actualToolCompletion": {
+          "exitCode": 0,
+          "chunk": "7ab0a5"
+        },
+        "independentlyMatchedGateReceiptSha256": "74ff8617df80c8b970d5390323a804551dd7d507f78715659a89f5780f13db45"
+      },
+      "linux": {
+        "status": "PASS",
+        "rustPassed": 7442,
+        "rustIgnored": 0,
+        "pythonPassed": 794,
+        "toolingTestsRun": 166,
+        "freshWheelRoot": "pine-python-release-gate.qgWdiz",
+        "toolingSkipped": 1,
+        "productionRustFiles": 406,
+        "logSha256": "c0d11a4249fb87ff94e0039f01a7500d5aa1ed33e7bbe67819b0dc9213c1c99b",
+        "exitCode": 0,
+        "actualToolCompletion": {
+          "exitCode": 0,
+          "chunk": "ea833e"
+        },
+        "independentlyMatchedGateReceiptSha256": "74ff8617df80c8b970d5390323a804551dd7d507f78715659a89f5780f13db45"
+      }
+    },
+    "candidateReleaseBehavior": {
+      "status": "PASS_ACTUAL_REPAIRED_RELEASE_BEHAVIOR",
+      "receiptSha256": "72909c24a7c33bb0ee7729333807b6d11f5b0a115cec67b9d4550e2e8f80415c",
+      "afterLinkSha256": "afb01cc7c700c3382cdb3fca61588d4b7307cdc9affee5768f6da951294a3c76",
+      "typedPlots": [
+        {
+          "type": "na"
+        },
+        {
+          "type": "float",
+          "bits": "3ff0000000000000"
+        },
+        {
+          "type": "na"
+        },
+        {
+          "type": "float",
+          "bits": "3ffaaaaaaaaaaaab"
+        },
+        {
+          "type": "na"
+        }
+      ]
+    },
+    "finalToolCompletionsSha256": "8404d1d848be6ff99570faaa8a7ca8283be8038624e54375821bb39e4581868a",
+    "actualCompletionsSuppliedByParent": {
+      "windows": {
+        "exitCode": 0,
+        "chunk": "7ab0a5"
+      },
+      "linux": {
+        "exitCode": 0,
+        "chunk": "ea833e"
+      },
+      "targetedTests": {
+        "exitCode": 0,
+        "chunk": "34eade"
+      },
+      "boundedRequestFixtureFailure": {
+        "exitCode": 1,
+        "chunk": "54410a"
+      },
+      "baselineArchiveFailure": {
+        "exitCode": 1,
+        "chunk": "b28e53"
+      },
+      "baselineLineEndingProof": {
+        "exitCode": 0,
+        "chunk": "a0825e"
+      },
+      "sourceSnapshot": {
+        "exitCode": 0,
+        "chunk": "0f3729"
+      },
+      "candidateReleaseBuild": {
+        "exitCode": 0,
+        "chunk": "9d9e6c"
+      },
+      "gateReceiptCheckerFailure": {
+        "exitCode": 1,
+        "chunk": "01ed5b"
+      },
+      "gateReceiptChecker": {
+        "exitCode": 0,
+        "chunk": "04b9b4"
+      },
+      "candidateLink": {
+        "exitCode": 0,
+        "chunk": "79af82"
+      },
+      "candidateBehavior": {
+        "exitCode": 0,
+        "chunk": "1f9b54"
+      }
+    },
+    "limitations": [
+      "No latency, allocation, RSS, TradingView, host integration or full resource qualification claimed.",
+      "Theoretical u32 state-ID exhaustion remains an explicit constructor panic, without wrapping."
+    ]
+  },
+  "actualToolCompletions": {
+    "windows": {
+      "exitCode": 0,
+      "chunk": "7ab0a5"
+    },
+    "linux": {
+      "exitCode": 0,
+      "chunk": "ea833e"
+    },
+    "targetedTests": {
+      "exitCode": 0,
+      "chunk": "34eade"
+    },
+    "boundedRequestFixtureFailure": {
+      "exitCode": 1,
+      "chunk": "54410a"
+    },
+    "baselineArchiveFailure": {
+      "exitCode": 1,
+      "chunk": "b28e53"
+    },
+    "baselineLineEndingProof": {
+      "exitCode": 0,
+      "chunk": "a0825e"
+    },
+    "sourceSnapshot": {
+      "exitCode": 0,
+      "chunk": "0f3729"
+    },
+    "candidateReleaseBuild": {
+      "exitCode": 0,
+      "chunk": "9d9e6c"
+    },
+    "gateReceiptCheckerFailure": {
+      "exitCode": 1,
+      "chunk": "01ed5b"
+    },
+    "gateReceiptChecker": {
+      "exitCode": 0,
+      "chunk": "04b9b4"
+    },
+    "candidateLink": {
+      "exitCode": 0,
+      "chunk": "79af82"
+    },
+    "candidateBehavior": {
+      "exitCode": 0,
+      "chunk": "1f9b54"
+    }
+  },
+  "independentAuditToolCompletion": {
+    "exitCode": 0,
+    "chunk": "f9fdc5",
+    "auditorSha256": "3764826b5eab2180ace6b7f6443b7946efa62815c9cedab49157c979f154a133"
+  },
+  "finalGateReceiptCheckerToolCompletion": {
+    "exitCode": 0,
+    "chunk": "6001c0"
+  },
+  "newTests": 11,
+  "targetedTests": {
+    "passed": 12,
+    "failed": 0,
+    "new": 11,
+    "preExisting": 1
+  },
+  "preservedFailures": {
+    "baselineArchiveLineEndings": {
+      "stage": "baseline source comparison before probe execution",
+      "exitCode": 1,
+      "toolChunk": "b28e53",
+      "failure": "AssertionError: .gitignore",
+      "reason": "git archive retains CRLF for some legacy blobs; previous compiled working copies use LF",
+      "repair": "accept only CRLF/LF equivalence after verifying actual current working bytes exactly match the previous compiled manifest; record every such file; never accept other source differences"
+    },
+    "boundedRequestFixture": {
+      "stage": "initial targeted bounded request fixture",
+      "actualToolCompletion": {
+        "exitCode": 1,
+        "chunk": "54410a"
+      },
+      "cargoExitCode": 101,
+      "passed": 11,
+      "failed": 1,
+      "ignored": 0,
+      "failureDiagnostic": "request.security bounded equal-timeframe history requires a known historical dataset end",
+      "preservedSourceSha256": "fc60b58675ac576a4bb95b11894ae6987f4ee91967ca11922fcad8f6b3f2150c",
+      "preservedLogSha256": "e7cc09810cc88afeb62c06d0fee6f22b068d30bc582a668acac24ae40fea7df1",
+      "preservedExitFileSha256": "bdc830287616dae1818ced3e7c186e1387155900ad30d5983ec02da1519c4a95",
+      "repair": "Supply complete dataset through append_bars; preserve bounded request contract and production code.",
+      "qualifiedSourceSha256": "2df8641ac54a9bee28e9e647ed85c40d5041d1afeb7f7ea91582cf7b04d01535",
+      "fixtureDiff": "--- preserved-initial-fixture\n\n+++ qualified-fixture\n\n@@ -287,11 +287,10 @@\n\n         overrides.clone(),\n     );\n     let mut expected = HistoricalRuntime::with_input_overrides(&reference, overrides);\n-    for index in 0..8 {\n-        actual.append_bar(bar(index, index as f64 + 1.0)).unwrap();\n-        expected.append_bar(bar(index, index as f64 + 1.0)).unwrap();\n-        assert_same(&actual.result(), &expected.result());\n-    }\n+    let bars: Vec<_> = (0..8).map(|index| bar(index, index as f64 + 1.0)).collect();\n+    actual.append_bars(&bars).unwrap();\n+    expected.append_bars(&bars).unwrap();\n+    assert_same(&actual.result(), &expected.result());\n     assert_eq!(actual.result().plots[0].values[1], PineValue::Float(10.5));\n     assert!(!actual.bounded_same_context_evaluations.is_empty());\n }",
+      "onlyReviewedCompleteDatasetFixtureRepair": true,
+      "repairedActualToolCompletion": {
+        "exitCode": 0,
+        "chunk": "34eade"
+      },
+      "repairedPassed": 12,
+      "repairedFailed": 0,
+      "repairedLogSha256": "5b8789560a279e3ccd44c74e37ec314103964fe054b61e02aa7b1fb9f2238619"
+    },
+    "diagnosticInspectionReceipts": {
+      "diagnostic-reader-encoding.json": {
+        "stage": "auxiliary preview of prior window-undo gate log format",
+        "qualificationImpact": "none; read-only preview, before this checker was written; no build, gate or tracked source changed",
+        "before": {
+          "observedFailure": "UnicodeEncodeError: 'gbk' codec can't encode character '\\U0001f4e6' in position 248: illegal multibyte sequence",
+          "cause": "An auxiliary Python stdin script printed a prior maturin log emoji through Windows default GBK stdout",
+          "outerActualExitCode": null,
+          "toolCompletionChunk": null,
+          "captureLimit": "The initial tool wrapper emitted only result.output, so its exit_code and chunk_id were not retained; do not infer or claim them"
+        },
+        "after": {
+          "repair": "Render preview lines through json.dumps(..., ensure_ascii=True); retain explicit UTF-16/UTF-8 log decoding",
+          "outerActualExitCode": 0,
+          "toolCompletionChunk": "49f2cb",
+          "samePriorLogsReadWithoutMutation": true
+        },
+        "classification": "auxiliary diagnostic rendering failure, not a gate failure or independently audited qualification receipt"
+      },
+      "diagnostics/checker-cargo-exit-code/receipt.json": {
+        "stage": "read-only gate receipt checker, preserved fixture exit assertion",
+        "actualToolCompletion": {
+          "exitCode": 1,
+          "chunk": "01ed5b"
+        },
+        "actualEvidenceSource": "root observed checker tool completion supplied in parent instruction",
+        "checkerSha256": "5cdd45112fb2e34df2862bf5fdb2ee0e28d831311141572c291e778a928e5768",
+        "diagnosticSha256": "aba7d68fe5af8f53639292078512e5994134c66b12ecfed04fb3e7ffd23bba3d",
+        "failure": "Initial checker incorrectly required preserved Cargo exit 1; Cargo test returned 101 while enclosing PowerShell tool returned 1.",
+        "repair": "Require Cargo exit 101 separately from root enclosing tool exit 1; preserve original fixture exit, log and root completions.",
+        "qualificationImpact": "Auxiliary checker assertion only; no test/gate/source execution or qualification change.",
+        "classification": "audit diagnostic, not test or gate failure"
+      }
+    }
+  },
+  "limits": [
+    "Correctness repair; no fresh timing, allocation, metadata-size or RSS benchmark.",
+    "Normal preparation adds an empty alias-map header, cached state-site field and conflict scan.",
+    "Existing schemas/strategy/host lifecycle contracts remain unchanged.",
+    "No TradingView reference, full resource matrix or release qualification claim.",
+    "Same-callee duplicate IDs deliberately share history; distinct logical calls should use unique IDs."
+  ],
+  "remainingDebt": [
+    "Shared page-directory COW retains O(L/128) reference copying.",
+    "General WMA/HMA and variance scans still require preservation of floating operation order.",
+    "Map/Matrix secondary dispatch and recursive HIR execution need measured hotspot attribution."
+  ],
+  "evidenceArtifactsSha256": {
+    "source-identity.json": "32ffeaea77a7b6319e3449bbea01c05ee8887687012dd714f16d5b9f6701e240",
+    "source.tar": "6f2e6d3b7b7d59e69825b59afb86f793a9f77e063510b03a813923f38902fa00",
+    "base-source.tar": "0e5f59bd3f81b82c38ce0113ccc5239b871937290ef31a6ac2fe6b4b1f51b134",
+    "baseline-receipt.json": "da5c087f9e6cc4267c1d188244063e274127660add3d1d52b731cb98cb866536",
+    "baseline-compiled-source.json": "2ab848046aa1419101a360fbac2f4dc7c46ad4c26c69fd74a61bd1371cdc91be",
+    "baseline-link.json": "b2c9df1f76fa0bbd56ad1ee3be3fe388038688d26ceb7f7ca140bda5d4dadf2d",
+    "baseline-line-ending-proof.json": "4bf6d476a187f90ed7b0aaefe6b3401c6a399bc6f91870594ba8ba4589dd05dd",
+    "baseline.exe": "d376c3523aa8d5bc151d46f1af4851b7b9543a6cec5477052efccfe94d696f2e",
+    "baseline.stdout.json": "873754858784ad112db595bc40cd5f5dcfbf69650eb3180a810f8f370680359d",
+    "baseline.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "shared_key_probe.rs": "e9307f2f27eee4722c7bb3fc45b5801b1d80e2c621d1ebc595d6e389ed7eddbb",
+    "shared_key-after.exe": "27a0cc74dd631778f7d0fe8084e3aac44683ababc06f077b37f10a75310f95dd",
+    "identity-shared_key-after.json": "afb01cc7c700c3382cdb3fca61588d4b7307cdc9affee5768f6da951294a3c76",
+    "candidate-receipt.json": "72909c24a7c33bb0ee7729333807b6d11f5b0a115cec67b9d4550e2e8f80415c",
+    "candidate.stdout.json": "c7d24742bf691eb12e175fbb5ea77d79d7b38632094c278384f7552aed258fb0",
+    "candidate.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gate-windows.log": "7830a859db9d44f194070e5201b87d6a728d215ccfaa1e010a41fc37f7f40eb3",
+    "gate-linux.log": "c0d11a4249fb87ff94e0039f01a7500d5aa1ed33e7bbe67819b0dc9213c1c99b",
+    "gate-receipts.json": "74ff8617df80c8b970d5390323a804551dd7d507f78715659a89f5780f13db45",
+    "review-receipt.json": "ce000e4c80c0aace9fa39c622258bb65f25fa7abbb35f2c2d0c4160316c8adc6",
+    "targeted-tests.log": "5b8789560a279e3ccd44c74e37ec314103964fe054b61e02aa7b1fb9f2238619",
+    "tool-completions.json": "8404d1d848be6ff99570faaa8a7ca8283be8038624e54375821bb39e4581868a",
+    "audit_candidate.py": "3764826b5eab2180ace6b7f6443b7946efa62815c9cedab49157c979f154a133",
+    "check_gates.py": "40ce368d232263ec4fad36955b68090178d90415f0a665d243484a3648090a68",
+    "audit-tool-completion.json": "d5172460d5a83165221ce43f79df1f564aabbd497fdc56ac5839825f4df1bd83",
+    "final-gate-check-tool-completion.json": "ffc26746bf76b32be44a34dbc93663be845b63ab0ae8cab7034418229a810995",
+    "failures/baseline-line-endings/original-seal.py": "e5dab001fe284a6ea40439623525cf637803d83754e6ab6dfb13ac772e06b9a7",
+    "failures/baseline-line-endings/receipt.json": "661d2f05071ef9f9b7db1fba6e9f370a286bfd358997180109bfcb98a67f4ae2",
+    "failures/bounded-request-fixture/original-test.rs": "fc60b58675ac576a4bb95b11894ae6987f4ee91967ca11922fcad8f6b3f2150c",
+    "failures/bounded-request-fixture/targeted-tests.log": "e7cc09810cc88afeb62c06d0fee6f22b068d30bc582a668acac24ae40fea7df1",
+    "failures/bounded-request-fixture/receipt.json": "1d11eec3f685fd1bef02547accf875ea5938a5a930938a6e7155b5e925bd5d30",
+    "diagnostic-reader-encoding.json": "b6c999e1f6750457cd21c83e4d2a47dab858c0c91a50a839f6d3267cf3fc15e8",
+    "diagnostics/checker-cargo-exit-code/receipt.json": "25fecf4c8629732d3c02ccec59c61e3a7854a494270770c427a2dfcfe80ecd7b"
+  },
+  "publicApiProbeSource": "//! Public-API behavior reproduction only; no timers or allocation counters.\n//! Compile the identical source against the sealed baseline and candidate.\nuse std::panic::{AssertUnwindSafe, catch_unwind};\nuse std::process::ExitCode;\n\nuse pine_ir::{CallSiteId, HirExprKind, HirStmtKind};\nuse pine_runtime::{Bar, HistoricalRuntime, PineValue, PreparedProgram};\n\nconst SOURCE: &str = \"//@version=6\\nindicator(\\\"shared rolling key\\\")\\nplot(ta.wma(close, 2))\\nplot(ta.wma(close, 2))\\nplot(ta.sma(close + 1.0, 2))\\nplot(ta.wma(close + 1.0, 2))\\nplot(ta.sma(close + 98.0, 2))\\n\";\nconst CALLEES: [&str; 5] = [\"ta.wma\", \"ta.wma\", \"ta.sma\", \"ta.wma\", \"ta.sma\"];\n\nfn quoted(text: &str) -> String {\n    let mut encoded = String::from(\"\\\"\");\n    for character in text.chars() {\n        match character {\n            '\\\\' => encoded.push_str(\"\\\\\\\\\"),\n            '\"' => encoded.push_str(\"\\\\\\\"\"),\n            '\\n' => encoded.push_str(\"\\\\n\"),\n            '\\r' => encoded.push_str(\"\\\\r\"),\n            '\\t' => encoded.push_str(\"\\\\t\"),\n            control if control.is_control() => {\n                encoded.push_str(&format!(\"\\\\u{:04x}\", u32::from(control)));\n            }\n            other => encoded.push(other),\n        }\n    }\n    encoded.push('\"');\n    encoded\n}\n\nfn typed(value: &PineValue) -> String {\n    match value {\n        PineValue::Float(value) => {\n            format!(\"{{\\\"type\\\":\\\"float\\\",\\\"bits\\\":\\\"{:016x}\\\"}}\", value.to_bits())\n        }\n        PineValue::Int(value) => format!(\"{{\\\"type\\\":\\\"int\\\",\\\"value\\\":{value}}}\"),\n        PineValue::Na => \"{\\\"type\\\":\\\"na\\\"}\".to_owned(),\n        other => format!(\"{{\\\"type\\\":\\\"unexpected\\\",\\\"debug\\\":{}}}\", quoted(&format!(\"{other:?}\"))),\n    }\n}\n\nfn main() -> ExitCode {\n    let source = pine_syntax::SourceFile::new(\"shared_key_probe.pine\", SOURCE);\n    let analysis = pine_sema::analyze_source(&source);\n    if !analysis.diagnostics.is_empty() {\n        eprintln!(\"fixture analysis failed: {:?}\", analysis.diagnostics);\n        return ExitCode::FAILURE;\n    }\n    let mut hir = analysis.hir.expect(\"successful analysis must produce HIR\");\n    let mut modified = 0;\n    let mut original_ids = Vec::new();\n    for statement in &mut hir.statements {\n        let HirStmtKind::Expr(expression) = &mut statement.kind else {\n            continue;\n        };\n        let HirExprKind::Call { callee, args, .. } = &mut expression.kind else {\n            continue;\n        };\n        if callee != \"plot\" {\n            continue;\n        }\n        let HirExprKind::Call { callee, call_site_id, .. } = &mut args[0].value.kind else {\n            panic!(\"fixture plot must directly wrap a TA call\");\n        };\n        assert_eq!(callee, CALLEES[modified]);\n        original_ids.push(call_site_id.0.to_string());\n        // Only these five identities change. In particular, preserve plot IDs,\n        // series metadata, next_call_site_id, arguments and statement order.\n        *call_site_id = CallSiteId(u32::MAX);\n        modified += 1;\n    }\n    assert_eq!(modified, 5);\n\n    let prepared = PreparedProgram::new(hir);\n    let mut runtime = HistoricalRuntime::from_prepared(&prepared);\n    let appended = catch_unwind(AssertUnwindSafe(|| {\n        runtime.append_bar(Bar {\n            time: 0,\n            open: 1.0,\n            high: 1.0,\n            low: 1.0,\n            close: 1.0,\n            volume: 1.0,\n        })\n    }));\n    let (outcome, detail) = match appended {\n        Ok(Ok(())) => (\"ok\", None),\n        Ok(Err(error)) => (\"runtime_error\", Some(error.message)),\n        Err(payload) => {\n            let message = payload.downcast_ref::<String>().cloned()\n                .or_else(|| payload.downcast_ref::<&str>().map(|value| (*value).to_owned()))\n                .unwrap_or_else(|| \"non-string panic payload\".to_owned());\n            (\"panic\", Some(message))\n        }\n    };\n    // Failed execution is inspected only, never retried. The default panic hook\n    // still writes the actual panic location to stderr. Each of the five plot\n    // positions is emitted, including a missing final plot after an unwind.\n    let result = runtime.result();\n    let plots: Vec<_> = (0..5).map(|index| {\n        let (present, values) = match result.plots.get(index) {\n            Some(plot) => (true, plot.values.iter().map(typed).collect::<Vec<_>>().join(\",\")),\n            None => (false, String::new()),\n        };\n        format!(\"{{\\\"position\\\":{index},\\\"callee\\\":{},\\\"present\\\":{present},\\\"values\\\":[{values}]}}\", quoted(CALLEES[index]))\n    }).collect();\n    println!(\"{{\\\"schema\\\":\\\"pine.shared-rolling-key-behavior.v1\\\",\\\"source\\\":{},\\\"modifiedTaCalls\\\":5,\\\"originalTaCallSiteIds\\\":[{}],\\\"sharedTaCallSiteId\\\":{},\\\"finiteBarsAttempted\\\":1,\\\"appendOutcome\\\":{},\\\"detail\\\":{},\\\"retainedPlotCount\\\":{},\\\"plots\\\":[{}]}}\",\n        quoted(SOURCE), original_ids.join(\",\"), u32::MAX, quoted(outcome),\n        detail.as_deref().map(quoted).unwrap_or_else(|| \"null\".to_owned()),\n        result.plots.len(), plots.join(\",\"));\n    if outcome == \"ok\" { ExitCode::SUCCESS } else { ExitCode::FAILURE }\n}\n"
+}

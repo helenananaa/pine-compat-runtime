@@ -285,6 +285,57 @@ mod tests {
     }
 
     #[test]
+    fn valuewhen_retained_collection_events_are_roots_but_expired_leaf_cells_are_not() {
+        let program = program("//@version=6\nindicator(\"gc\")\nplot(close)\n");
+        let mut runtime = HistoricalRuntime::new(&program);
+        let mut ids = Vec::new();
+        for index in 0..300 {
+            let value = runtime.new_array_from_values(
+                ArrayElementKind::Float,
+                vec![PineValue::Float(index as f64)],
+            );
+            let PineValue::Array(id) = value else {
+                panic!("array")
+            };
+            ids.push(id);
+            runtime
+                .valuewhen_state
+                .entry(CallSiteId(0))
+                .or_default()
+                .push_retained(value, 129);
+        }
+        let mut checkpoint = runtime.clone();
+        for index in 300..600 {
+            let value = runtime.new_array_from_values(
+                ArrayElementKind::Float,
+                vec![PineValue::Float(index as f64)],
+            );
+            let PineValue::Array(id) = value else {
+                panic!("array")
+            };
+            ids.push(id);
+            runtime
+                .valuewhen_state
+                .entry(CallSiteId(0))
+                .or_default()
+                .push_retained(value, 129);
+        }
+        runtime.collection_gc_next_id = 0;
+        runtime.collect_temporary_collections();
+        assert_eq!(runtime.array_store.len(), 129);
+        for (index, id) in ids.iter().enumerate() {
+            assert_eq!(runtime.array_store.get(id).is_some(), index >= 471);
+        }
+        // The old evaluator owns its store and logical roots independently.
+        checkpoint.collection_gc_next_id = 0;
+        checkpoint.collect_temporary_collections();
+        assert_eq!(checkpoint.array_store.len(), 129);
+        for (index, id) in ids[..300].iter().enumerate() {
+            assert_eq!(checkpoint.array_store.get(id).is_some(), index >= 171);
+        }
+    }
+
+    #[test]
     fn unbounded_dynamic_array_history_remains_readable_after_many_collections() {
         let program = program(
             "//@version=6\nindicator(\"gc\")\na = array.new_float(1, close)\nold = a[bar_index]\nplot(na(old) ? na : array.get(old, 0))\n",

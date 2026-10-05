@@ -667,32 +667,25 @@ impl<'a> HistoricalRuntime<'a> {
             .map(|arg| self.eval_expr(arg))
             .transpose()?
             .and_then(|value| value.as_i64())
-            .unwrap_or(-1);
+            .and_then(|value| usize::try_from(value).ok())
+            .filter(|&value| value < MAX_SERIES_HISTORY_VALUES);
 
         if matches!(condition, PineValue::Bool(true)) {
             let retain = if occurrence_arg
                 .is_some_and(|arg| arg.pine_type.qualifier == pine_ir::Qualifier::Series)
             {
                 MAX_SERIES_HISTORY_VALUES
-            } else if occurrence >= 0 && (occurrence as usize) < MAX_SERIES_HISTORY_VALUES {
-                occurrence as usize + 1
             } else {
-                0
+                occurrence.map_or(0, |value| value + 1)
             };
 
             let values = self.valuewhen_state.entry(call_site_id).or_default();
-            values.push_front(source);
-            values.truncate(retain);
+            values.push_retained(source, retain);
         }
 
-        if occurrence < 0 {
+        let Some(occurrence) = occurrence else {
             return Ok(PineValue::Na);
-        }
-
-        let occurrence = occurrence as usize;
-        if occurrence >= MAX_SERIES_HISTORY_VALUES {
-            return Ok(PineValue::Na);
-        }
+        };
 
         Ok(self
             .valuewhen_state

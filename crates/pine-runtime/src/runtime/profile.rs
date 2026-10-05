@@ -1,6 +1,8 @@
 use crate::*;
 use pine_ir::ScriptMode;
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
+
+use super::valuewhen_history::ValueWhenHistory;
 
 impl HistoricalRuntime<'_> {
     #[must_use]
@@ -170,12 +172,12 @@ impl HistoricalRuntime<'_> {
         let valuewhen_state_values = self
             .valuewhen_state
             .values()
-            .map(VecDeque::len)
+            .map(ValueWhenHistory::len)
             .sum::<usize>();
         let valuewhen_state_value_capacity = self
             .valuewhen_state
             .values()
-            .map(VecDeque::capacity)
+            .map(ValueWhenHistory::capacity)
             .sum::<usize>();
         let array_values = self
             .array_store

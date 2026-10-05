@@ -30,3 +30,4 @@ mod strategy_history;
 pub(crate) mod strategy_path;
 pub(crate) mod strategy_scheduler;
 pub(crate) mod streaming;
+pub(crate) mod valuewhen_history;

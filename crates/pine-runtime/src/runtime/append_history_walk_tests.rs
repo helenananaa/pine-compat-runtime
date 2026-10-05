@@ -135,7 +135,7 @@ fn assert_no_empty_branch_chains<T>(node: &Node<T>) -> bool {
         Node::Empty => false,
         Node::Leaf(values) => !values.is_empty(),
         Node::Repeat { len, .. } => *len != 0,
-        Node::Branch { left, right } => {
+        Node::Branch { left, right, .. } => {
             let left_has_values = assert_no_empty_branch_chains(left);
             let right_has_values = right.as_deref().is_some_and(assert_no_empty_branch_chains);
             assert!(
@@ -252,4 +252,191 @@ fn repeat_and_mixed_leaves_preserve_float_bits_and_checkpoint_branches() {
             .map(|index| bits[(index / 131) % bits.len()])
             .collect::<Vec<_>>()
     );
+}
+
+// Recompute exclusively from owned value buffers and repeat payloads. Never use
+// Node::allocated_slots as an oracle; also check each intermediate branch cache.
+fn assert_capacity_matches_allocations<T>(history: &AppendHistory<T>) {
+    fn actual_slots<T>(node: &Node<T>) -> usize {
+        match node {
+            Node::Empty => 0,
+            Node::Leaf(values) => values.capacity(),
+            Node::Repeat { .. } => 1,
+            Node::Branch {
+                left,
+                right,
+                allocated_slots,
+            } => {
+                let actual =
+                    actual_slots(left).saturating_add(right.as_deref().map_or(0, actual_slots));
+                assert_eq!(*allocated_slots, actual);
+                actual
+            }
+        }
+    }
+    assert_eq!(history.capacity(), actual_slots(&history.root));
+}
+
+#[test]
+fn capacity_tracks_vec_clone_and_mutation_across_branch_paths() {
+    let mut leaf = AppendHistory::from_values(0..5);
+    let leaf_checkpoint = leaf.clone();
+    assert!(leaf.capacity() > leaf.len());
+    *leaf.last_mut().unwrap() = -1;
+    assert_capacity_matches_allocations(&leaf);
+    assert_capacity_matches_allocations(&leaf_checkpoint);
+    assert!(leaf.capacity() < leaf_checkpoint.capacity());
+    assert_eq!(leaf_checkpoint.to_vec(), [0, 1, 2, 3, 4]);
+    leaf.truncate(3);
+    assert_capacity_matches_allocations(&leaf);
+    leaf.push(10);
+    assert_capacity_matches_allocations(&leaf);
+
+    let mut history = AppendHistory::from_values(0..385);
+    let original = history.clone();
+    *history.last_mut().unwrap() = -1;
+    assert_capacity_matches_allocations(&history);
+    assert_capacity_matches_allocations(&original);
+    assert!(history.capacity() < original.capacity());
+
+    history.truncate(259);
+    let truncated = history.clone();
+    *history.get_mut(258).unwrap() = -258;
+    assert_capacity_matches_allocations(&history);
+    assert_capacity_matches_allocations(&truncated);
+    // A shared three-value tail clones its live values rather than its old
+    // full-leaf reservation. Every parent must observe that smaller Vec.
+    assert!(history.capacity() < truncated.capacity());
+    history.push(9000);
+    assert_capacity_matches_allocations(&history);
+    assert_eq!(truncated[258], 258);
+    assert_eq!(original.to_vec(), (0..385).collect::<Vec<_>>());
+
+    history.drop_prefix(129);
+    assert_capacity_matches_allocations(&history);
+    history.truncate(1);
+    assert_capacity_matches_allocations(&history);
+    history.truncate(0);
+    assert_eq!(history.capacity(), 0);
+    assert_capacity_matches_allocations(&history);
+    history.push(99);
+    assert_capacity_matches_allocations(&history);
+    history.drop_prefix(usize::MAX);
+    assert_eq!(history.capacity(), 0);
+    assert_capacity_matches_allocations(&history);
+}
+
+#[test]
+fn capacity_tracks_repeat_expansion_compaction_and_pruned_subtrees() {
+    use crate::PineValue;
+    let mut history = AppendHistory::from_compact_values(std::iter::repeat_n(PineValue::Na, 1024));
+    let original = history.clone();
+    assert_eq!(history.capacity(), 8);
+    *history.get_mut(129).unwrap() = PineValue::Int(7);
+    assert_eq!(history.capacity(), 7 + APPEND_LEAF_SIZE);
+    assert_capacity_matches_allocations(&history);
+    assert_capacity_matches_allocations(&original);
+
+    history.drop_prefix(300);
+    assert_eq!(history.capacity(), 6);
+    assert_capacity_matches_allocations(&history);
+    history.truncate(129);
+    let truncated = history.clone();
+    assert_eq!(history.capacity(), 2);
+    *history.last_mut().unwrap() = PineValue::Int(8);
+    assert_capacity_matches_allocations(&history);
+    assert!(history.capacity() > truncated.capacity());
+    history.push_compact(PineValue::Na);
+    assert_capacity_matches_allocations(&history);
+    *history.get_mut(0).unwrap() = PineValue::Int(9);
+    assert_capacity_matches_allocations(&history);
+    assert_eq!(truncated.capacity(), 2);
+    assert_capacity_matches_allocations(&truncated);
+    assert_eq!(original.capacity(), 8);
+    assert!(original.iter().all(|value| value == &PineValue::Na));
+
+    let mut small = AppendHistory::default();
+    small.push_compact(PineValue::String("constant".into()));
+    let uncompressed = small.clone();
+    small.push_compact(PineValue::String("constant".into()));
+    assert_eq!(small.capacity(), 1);
+    assert_capacity_matches_allocations(&small);
+    assert_capacity_matches_allocations(&uncompressed);
+    small.push_compact(PineValue::String("different".into()));
+    assert_capacity_matches_allocations(&small);
+    assert_eq!(uncompressed.len(), 1);
+}
+
+#[test]
+fn capacity_matches_all_allocations_during_mixed_checkpoint_edits() {
+    use crate::PineValue;
+    let mut history = AppendHistory::default();
+    let mut expected = Vec::new();
+    let mut checkpoints = Vec::new();
+    for index in 0..4096 {
+        if index % 127 == 0 {
+            checkpoints.push((history.clone(), expected.clone()));
+            if checkpoints.len() > 4 {
+                checkpoints.remove(0);
+            }
+        }
+        let value = match (index / 141) % 3 {
+            0 => PineValue::Na,
+            1 => PineValue::String("repeat".into()),
+            _ => PineValue::Int(index),
+        };
+        if index % 13 == 0 {
+            history.push(value.clone());
+        } else {
+            history.push_compact(value.clone());
+        }
+        expected.push(value);
+        if index % 19 == 0 {
+            let changed = expected.len() / 3;
+            *history.get_mut(changed).unwrap() = PineValue::Bool(true);
+            expected[changed] = PineValue::Bool(true);
+        }
+        if index % 23 == 0 {
+            *history.last_mut().unwrap() = PineValue::Int(-index);
+            *expected.last_mut().unwrap() = PineValue::Int(-index);
+        }
+        if index % 97 == 0 && expected.len() > 200 {
+            let retained = expected.len() - 137;
+            history.truncate(retained);
+            expected.truncate(retained);
+        }
+        if expected.len() > 400 {
+            let count = (index % 11 + 1) as usize;
+            history.drop_prefix(count);
+            expected.drain(..count);
+        }
+        assert_capacity_matches_allocations(&history);
+        assert_eq!(history.to_vec(), expected);
+        if index % 127 == 0 {
+            for (checkpoint, values) in &checkpoints {
+                assert_capacity_matches_allocations(checkpoint);
+                assert_eq!(checkpoint.to_vec(), *values);
+            }
+        }
+    }
+}
+
+#[test]
+fn zero_sized_capacity_saturates_across_shared_leaf_paths() {
+    let mut history = AppendHistory::from_values(std::iter::repeat_n((), 1025));
+    let checkpoint = history.clone();
+    assert_eq!(history.capacity(), usize::MAX);
+    assert_capacity_matches_allocations(&history);
+    *history.get_mut(129).unwrap() = ();
+    history.truncate(513);
+    history.drop_prefix(256);
+    history.push(());
+    *history.last_mut().unwrap() = ();
+    assert_capacity_matches_allocations(&history);
+    assert_capacity_matches_allocations(&checkpoint);
+    assert_eq!(history.capacity(), usize::MAX);
+    assert_eq!(checkpoint.len(), 1025);
+    history.truncate(0);
+    assert_eq!(history.capacity(), Vec::<()>::new().capacity());
+    assert_capacity_matches_allocations(&history);
 }

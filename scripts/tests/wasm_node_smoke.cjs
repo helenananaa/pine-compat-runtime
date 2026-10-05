@@ -679,6 +679,64 @@ assert.deepEqual(metadataResult.plots[0].values, [8 + Math.PI, 8 + Math.PI, 8 + 
   extremeProgram.free();
 }
 
+// i64 occurrences must be validated before conversion to wasm32 usize. Long
+// series histories also exercise persistent valuewhen checkpoints in the ABI.
+{
+  const valuewhenSource = `//@version=6
+indicator("valuewhen offset and checkpoints")
+huge = 4294967296 + bar_index % 2
+plot(ta.valuewhen(true, close, 4294967296))
+plot(ta.valuewhen(true, close, 4294967303))
+plot(ta.valuewhen(true, close, 9223372036854775807))
+plot(ta.valuewhen(true, close, huge))
+plot(ta.valuewhen(true, close, 0))
+plot(ta.valuewhen(true, close, 7))
+plot(ta.valuewhen(true, close, bar_index % 257))
+`;
+  const count = 260;
+  const csv = ['time,open,high,low,close,volume', ...Array.from({length:count}, (_, index) =>
+    `${index},${index + 1},${index + 1},${index + 1},${index + 1},1`), ''].join('\n');
+  const expected = [
+    ...Array.from({length:4}, () => Array(count).fill(null)),
+    Array.from({length:count}, (_, index) => index + 1),
+    Array.from({length:count}, (_, index) => index < 7 ? null : index - 6),
+    Array.from({length:count}, (_, index) => index + 1 - index % 257),
+  ];
+  for (const version of [5,6]) {
+    const result = JSON.parse(pine.runScriptCsv(valuewhenSource.replace('version=6', `version=${version}`), csv));
+    assert.deepEqual(result.diagnostics, []);
+    assert.deepEqual(result.plots.map(plot => plot.values), expected);
+  }
+  const valuewhenProgram = pine.compileScript(valuewhenSource);
+  const session = valuewhenProgram.realtimeSession();
+  assert.deepEqual(JSON.parse(session.seed(csv)).plots.map(plot => plot.values), expected);
+  const confirmedBefore = session.confirmedResult();
+  const consumer = session.replica();
+  for (const close of [700001,700002]) {
+    const update = JSON.stringify({time:count, open:close, high:close, low:close, close, volume:1});
+    const delta = session.applyForming(update);
+    assert.equal(consumer.apply(delta), true);
+    assert.equal(consumer.apply(delta), false);
+    const visible = session.result();
+    const result = JSON.parse(visible);
+    assert.deepEqual(result.plots.map(plot => plot.values.at(-1)), [null,null,null,null,close,254,258]);
+    assert.deepEqual(result.plots.map(plot => plot.values.slice(0,count)), expected);
+    assert.equal(consumer.result(), visible);
+    assert.equal(session.confirmedResult(), confirmedBefore);
+  }
+  const delta = session.applyConfirmed(JSON.stringify({time:count, open:700002, high:700002,
+    low:700002, close:700002, volume:1}));
+  assert.equal(consumer.apply(delta), true);
+  assert.equal(consumer.apply(delta), false);
+  assert.equal(consumer.result(), session.result());
+  assert.equal(session.confirmedResult(), session.result());
+  assert.deepEqual(JSON.parse(session.result()).plots.map(plot => plot.values.at(-1)),
+    [null,null,null,null,700002,254,258]);
+  consumer.free();
+  session.free();
+  valuewhenProgram.free();
+}
+
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );

@@ -27,7 +27,38 @@ enum Node<T> {
     Branch {
         left: Arc<Node<T>>,
         right: Option<Arc<Node<T>>>,
+        // Real leaf-buffer slots and compact repeat values, not address span.
+        allocated_slots: usize,
     },
+}
+
+impl<T> Node<T> {
+    fn allocated_slots(&self) -> usize {
+        match self {
+            Self::Empty => 0,
+            Self::Leaf(values) => values.capacity(),
+            Self::Repeat { .. } => 1,
+            Self::Branch {
+                allocated_slots, ..
+            } => *allocated_slots,
+        }
+    }
+
+    fn branch(left: Arc<Self>, right: Option<Arc<Self>>) -> Self {
+        let allocated_slots = branch_slots(&left, right.as_deref());
+        Self::Branch {
+            left,
+            right,
+            allocated_slots,
+        }
+    }
+}
+
+fn branch_slots<T>(left: &Node<T>, right: Option<&Node<T>>) -> usize {
+    // Zero-sized Vecs report usize::MAX even when empty. Several such leaves
+    // cannot be summed exactly in usize; preserve that sentinel without overflow.
+    left.allocated_slots()
+        .saturating_add(right.map_or(0, Node::allocated_slots))
 }
 
 impl<T> Default for AppendHistory<T> {
@@ -52,17 +83,7 @@ impl<T> AppendHistory<T> {
 
     // Existing profile field counts allocated value slots, not branch headers.
     pub(crate) fn capacity(&self) -> usize {
-        fn slots<T>(node: &Node<T>) -> usize {
-            match node {
-                Node::Empty => 0,
-                Node::Leaf(values) => values.capacity(),
-                Node::Repeat { .. } => 1,
-                Node::Branch { left, right } => {
-                    slots(left) + right.as_ref().map_or(0, |r| slots(r))
-                }
-            }
-        }
-        slots(&self.root)
+        self.root.allocated_slots()
     }
 
     pub(crate) fn get(&self, index: usize) -> Option<&T> {
@@ -128,10 +149,7 @@ impl<T: Clone> AppendHistory<T> {
 
     pub(crate) fn push(&mut self, value: T) {
         if self.start + self.len == self.capacity {
-            self.root = Arc::new(Node::Branch {
-                left: self.root.clone(),
-                right: None,
-            });
+            self.root = Arc::new(Node::branch(self.root.clone(), None));
             self.capacity *= 2;
         }
         insert(&mut self.root, self.capacity, self.start + self.len, value);
@@ -140,11 +158,7 @@ impl<T: Clone> AppendHistory<T> {
 
     pub(crate) fn last_mut(&mut self) -> Option<&mut T> {
         let index = self.len.checked_sub(1)?;
-        Some(element_mut(
-            &mut self.root,
-            self.capacity,
-            self.start + index,
-        ))
+        Some(element_mut(&mut self.root, self.capacity, self.start + index).0)
     }
 
     #[cfg(test)]
@@ -152,11 +166,7 @@ impl<T: Clone> AppendHistory<T> {
         if index >= self.len {
             return None;
         }
-        Some(element_mut(
-            &mut self.root,
-            self.capacity,
-            self.start + index,
-        ))
+        Some(element_mut(&mut self.root, self.capacity, self.start + index).0)
     }
 
     pub(crate) fn tail(&self, start: usize) -> Vec<T> {
@@ -247,10 +257,7 @@ impl AppendHistory<crate::PineValue> {
 
     pub(crate) fn push_compact(&mut self, value: crate::PineValue) {
         if self.start + self.len == self.capacity {
-            self.root = Arc::new(Node::Branch {
-                left: self.root.clone(),
-                right: None,
-            });
+            self.root = Arc::new(Node::branch(self.root.clone(), None));
             self.capacity *= 2;
         }
         insert_compact(&mut self.root, self.capacity, self.start + self.len, value);
@@ -282,13 +289,18 @@ fn insert_compact(
         Node::Leaf(values) if values.len() == 1 && same_plot_value(&values[0], &value) => {
             *node = Arc::new(Node::Repeat { value, len: 2 });
         }
-        Node::Branch { left, right } => {
+        Node::Branch {
+            left,
+            right,
+            allocated_slots,
+        } => {
             let half = span / 2;
             if index < half {
                 insert_compact(left, half, index, value);
             } else {
                 insert_compact(right.get_or_insert_with(empty), half, index - half, value);
             }
+            *allocated_slots = branch_slots(left, right.as_deref());
         }
         _ => insert(node, span, index, value),
     }
@@ -377,7 +389,7 @@ impl<'a, T> Iter<'a, T> {
                     };
                     return;
                 }
-                Node::Branch { left, right } => {
+                Node::Branch { left, right, .. } => {
                     span /= 2;
                     let split = base + span;
                     if self.index < split {
@@ -492,7 +504,7 @@ impl<'a, T> RevIter<'a, T> {
                     };
                     return;
                 }
-                Node::Branch { left, right } => {
+                Node::Branch { left, right, .. } => {
                     span /= 2;
                     let split = base + span;
                     if self.end > split {
@@ -547,7 +559,11 @@ fn prune_suffix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, keep: usize) {
         Node::Empty => {}
         Node::Leaf(values) => values.truncate(keep),
         Node::Repeat { len, .. } => *len = (*len).min(keep),
-        Node::Branch { left, right } => {
+        Node::Branch {
+            left,
+            right,
+            allocated_slots,
+        } => {
             let half = span / 2;
             if keep <= half {
                 prune_suffix(left, half, keep);
@@ -555,6 +571,7 @@ fn prune_suffix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, keep: usize) {
             } else if let Some(right) = right {
                 prune_suffix(right, half, keep - half);
             }
+            *allocated_slots = branch_slots(left, right.as_deref());
         }
     }
 }
@@ -572,7 +589,12 @@ fn prune_prefix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, count: usize) {
     if matches!(node.as_ref(), Node::Leaf(_) | Node::Repeat { .. }) {
         return;
     }
-    if let Node::Branch { left, right } = Arc::make_mut(node) {
+    if let Node::Branch {
+        left,
+        right,
+        allocated_slots,
+    } = Arc::make_mut(node)
+    {
         let half = span / 2;
         prune_prefix(left, half, count.min(half));
         if count > half
@@ -580,6 +602,7 @@ fn prune_prefix<T: Clone>(node: &mut Arc<Node<T>>, span: usize, count: usize) {
         {
             prune_prefix(right, half, count - half);
         }
+        *allocated_slots = branch_slots(left, right.as_deref());
     }
 }
 
@@ -592,10 +615,7 @@ fn expand_empty<T: Clone>(node: &mut Arc<Node<T>>, span: usize) {
         *Arc::make_mut(node) = if span == APPEND_LEAF_SIZE {
             Node::Leaf(Vec::new())
         } else {
-            Node::Branch {
-                left: empty(),
-                right: None,
-            }
+            Node::branch(empty(), None)
         };
     }
 }
@@ -610,13 +630,18 @@ fn insert<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize, value: T
             values.push(value);
         }
         Node::Repeat { .. } => unreachable!("expanded leaf"),
-        Node::Branch { left, right } => {
+        Node::Branch {
+            left,
+            right,
+            allocated_slots,
+        } => {
             let half = span / 2;
             if index < half {
                 insert(left, half, index, value);
             } else {
                 insert(right.get_or_insert_with(empty), half, index - half, value);
             }
+            *allocated_slots = branch_slots(left, right.as_deref());
         }
     }
 }
@@ -629,7 +654,7 @@ fn element<T>(node: &Node<T>, span: usize, index: usize) -> &T {
             assert!(index < *len);
             value
         }
-        Node::Branch { left, right } => {
+        Node::Branch { left, right, .. } => {
             let half = span / 2;
             if index < half {
                 element(left, half, index)
@@ -644,22 +669,36 @@ fn element<T>(node: &Node<T>, span: usize, index: usize) -> &T {
     }
 }
 
-fn element_mut<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize) -> &mut T {
+fn element_mut<T: Clone>(node: &mut Arc<Node<T>>, span: usize, index: usize) -> (&mut T, usize) {
     expand_repeat(node);
     match Arc::make_mut(node) {
         Node::Empty => unreachable!("occupied append path"),
-        Node::Leaf(values) => &mut values[index],
+        Node::Leaf(values) => {
+            // Arc::make_mut may clone a shared Vec into a smaller allocation.
+            let allocated_slots = values.capacity();
+            (&mut values[index], allocated_slots)
+        }
         Node::Repeat { .. } => unreachable!("expanded leaf"),
-        Node::Branch { left, right } => {
+        Node::Branch {
+            left,
+            right,
+            allocated_slots,
+        } => {
             let half = span / 2;
             if index < half {
-                element_mut(left, half, index)
+                let sibling_slots = right.as_deref().map_or(0, Node::allocated_slots);
+                let (value, left_slots) = element_mut(left, half, index);
+                *allocated_slots = left_slots.saturating_add(sibling_slots);
+                (value, *allocated_slots)
             } else {
-                element_mut(
+                let left_slots = left.allocated_slots();
+                let (value, right_slots) = element_mut(
                     right.as_mut().expect("occupied append path"),
                     half,
                     index - half,
-                )
+                );
+                *allocated_slots = left_slots.saturating_add(right_slots);
+                (value, *allocated_slots)
             }
         }
     }
@@ -678,7 +717,7 @@ fn collect<T: Clone>(node: &Node<T>, span: usize, start: usize, out: &mut Vec<T>
                 len.saturating_sub(start),
             ));
         }
-        Node::Branch { left, right } => {
+        Node::Branch { left, right, .. } => {
             let half = span / 2;
             if start < half {
                 collect(left, half, start, out);

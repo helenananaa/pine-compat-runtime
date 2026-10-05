@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeSet, HashMap, HashSet, VecDeque},
+    collections::{BTreeSet, HashMap, HashSet},
     ops::Deref,
     sync::Arc,
 };
@@ -16,6 +16,7 @@ use super::plot_history::{
     RuntimeColorSeries, RuntimeFill, RuntimePlotArrow, RuntimePlotBar, RuntimePlotCandle,
     RuntimePlotChar, RuntimePlotShape,
 };
+use super::valuewhen_history::ValueWhenHistory;
 use crate::*;
 
 #[derive(Clone)]
@@ -88,7 +89,7 @@ struct StrategyEvalCheckpoint {
     macd_state: HashMap<CallSiteId, MacdState>,
     call_state: HashMap<CallSiteId, PineValue>,
     cross_state: HashMap<CallSiteId, CrossCallState>,
-    valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
+    valuewhen_state: HashMap<CallSiteId, ValueWhenHistory>,
     vwap_call_state: HashMap<CallSiteId, VwapState>,
     pivot_point_state: HashMap<CallSiteId, PivotPointState>,
     random_state: HashMap<CallSiteId, u64>,
@@ -173,7 +174,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) next_map_id: u32,
     pub(crate) call_state: HashMap<CallSiteId, PineValue>,
     pub(crate) cross_state: HashMap<CallSiteId, CrossCallState>,
-    pub(crate) valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
+    pub(crate) valuewhen_state: HashMap<CallSiteId, ValueWhenHistory>,
     pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
     pub(crate) extreme_windows:
         HashMap<CallSiteId, crate::algorithms::rolling_extreme::RollingExtremeState>,

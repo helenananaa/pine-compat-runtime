@@ -5,6 +5,7 @@ use crate::*;
 
 mod calls;
 mod constructors;
+mod opcode;
 mod ordering;
 #[cfg(test)]
 mod paged_tests;
@@ -12,6 +13,7 @@ mod statistics;
 mod store;
 mod support;
 
+pub(crate) use opcode::ArrayOpcode;
 pub(crate) use support::*;
 
 impl<'a> HistoricalRuntime<'a> {

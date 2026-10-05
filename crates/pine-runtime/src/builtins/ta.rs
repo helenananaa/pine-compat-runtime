@@ -385,7 +385,7 @@ impl<'a> HistoricalRuntime<'a> {
             return None;
         }
         let source = source?;
-        let length_us = length as usize;
+        let length_us = usize::try_from(length).ok()?;
         let mean = {
             let window = self.update_rolling_window_key(
                 RollingWindowKey::Rma {

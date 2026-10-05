@@ -21,7 +21,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(series_id) = source_arg.series_id else {
             return Ok(PineValue::Na);
         };
-        let previous = self.series_store.read(series_id, length as usize);
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
+        let previous = self.series_store.read(series_id, length);
 
         match (current, previous) {
             (PineValue::Bool(current), PineValue::Bool(previous)) => {
@@ -82,7 +85,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(series_id) = source_arg.series_id else {
             return Ok(None);
         };
-        let previous = self.series_store.read(series_id, length as usize);
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(None);
+        };
+        let previous = self.series_store.read(series_id, length);
         let Some(previous) = previous.as_f64() else {
             return Ok(None);
         };
@@ -171,7 +177,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let (positive_change, negative_change) =
             match (source.as_f64(), source_arg.and_then(|arg| arg.series_id)) {
                 (Some(source), Some(series_id)) => {

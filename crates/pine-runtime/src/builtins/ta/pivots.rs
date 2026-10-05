@@ -12,9 +12,16 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let leftbars = leftbars as usize;
-        let rightbars = rightbars as usize;
-        let length = leftbars + rightbars + 1;
+        let (Ok(leftbars), Ok(rightbars)) = (usize::try_from(leftbars), usize::try_from(rightbars))
+        else {
+            return Ok(PineValue::Na);
+        };
+        let Some(length) = leftbars
+            .checked_add(rightbars)
+            .and_then(|length| length.checked_add(1))
+        else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if window.values.len() != length {
             return Ok(PineValue::Na);

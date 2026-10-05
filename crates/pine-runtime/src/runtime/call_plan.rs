@@ -3,6 +3,8 @@ use std::collections::HashMap;
 
 use pine_ir::{CallSiteId, HirCallArg, HirExprKind, HirProgram};
 
+use crate::builtins::arrays::ArrayOpcode;
+use crate::builtins::math::MathOpcode;
 use crate::builtins::ta::TaOpcode;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -76,6 +78,8 @@ pub(crate) struct CallDispatch {
     pub(crate) family: CallFamily,
     pub(crate) positional_args: bool,
     pub(crate) ta_opcode: Option<TaOpcode>,
+    pub(crate) math_opcode: Option<MathOpcode>,
+    pub(crate) array_opcode: Option<ArrayOpcode>,
 }
 
 impl CallDispatch {
@@ -86,6 +90,16 @@ impl CallDispatch {
             positional_args: positional_layout(args),
             ta_opcode: if family == CallFamily::Ta {
                 TaOpcode::for_name(callee)
+            } else {
+                None
+            },
+            math_opcode: if family == CallFamily::Math {
+                MathOpcode::for_name(callee)
+            } else {
+                None
+            },
+            array_opcode: if family == CallFamily::Array {
+                ArrayOpcode::for_name(callee)
             } else {
                 None
             },
@@ -197,6 +211,14 @@ fn positional_layout(args: &[HirCallArg]) -> bool {
 #[cfg(test)]
 #[path = "ta_dispatch_tests.rs"]
 mod ta_dispatch_tests;
+
+#[cfg(test)]
+#[path = "math_dispatch_tests.rs"]
+mod math_dispatch_tests;
+
+#[cfg(test)]
+#[path = "array_dispatch_tests.rs"]
+mod array_dispatch_tests;
 
 #[cfg(test)]
 mod tests {

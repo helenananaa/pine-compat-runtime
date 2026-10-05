@@ -30,7 +30,7 @@ impl<'a> HistoricalRuntime<'a> {
             CallFamily::Cast => self.eval_cast_call(callee, args),
             CallFamily::Math => crate::builtins::math::eval_math_call(
                 &mut RuntimeCallContext::new(self),
-                callee,
+                dispatch.math_opcode,
                 call_site_id,
                 args,
                 dispatch.positional_args,
@@ -41,7 +41,7 @@ impl<'a> HistoricalRuntime<'a> {
                 args,
                 dispatch.positional_args,
             ),
-            CallFamily::Array => self.eval_array_call(callee, args),
+            CallFamily::Array => self.eval_array_call(dispatch.array_opcode, callee, args),
             CallFamily::Map => self.eval_map_call(callee, args),
             CallFamily::Matrix => self.eval_matrix_call(callee, args),
             CallFamily::Unsupported => None,

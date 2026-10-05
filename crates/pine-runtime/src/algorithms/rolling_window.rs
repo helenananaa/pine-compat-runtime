@@ -2,6 +2,13 @@ use pine_ir::CallSiteId;
 
 use super::shared_deque::SharedDeque;
 
+fn weighted_denominator(length: usize) -> f64 {
+    // Widen before both the addition and multiplication. The exact triangular
+    // number fits u128 for every supported usize, including 32-bit Wasm.
+    let length = length as u128;
+    (length * (length + 1) / 2) as f64
+}
+
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct RollingWindowState {
     pub(crate) values: SharedDeque<Option<f64>>,
@@ -73,6 +80,9 @@ impl RollingWindowState {
     }
 
     pub(crate) fn push(&mut self, value: Option<f64>, length: usize) {
+        if length == 0 {
+            return;
+        }
         let mut recover_tail = false;
         while self.values.len() >= length {
             recover_tail |= self.remove_front();
@@ -92,6 +102,9 @@ impl RollingWindowState {
     /// then applies `value`. A different `bar` commits the previous append.
     /// `None` is an ordinary NA sample, not a discard.
     pub(crate) fn push_for_bar(&mut self, value: Option<f64>, length: usize, bar: usize) {
+        if length == 0 {
+            return;
+        }
         if self.open_bar == Some(bar) {
             self.undo_open_append();
         }
@@ -161,7 +174,7 @@ impl RollingWindowState {
     }
 
     pub(crate) fn is_ready(&self, length: usize) -> bool {
-        self.values.len() == length && self.na_count == 0
+        length != 0 && self.values.len() == length && self.na_count == 0
     }
 
     pub(crate) fn is_constant_ready(&self, length: usize) -> bool {
@@ -244,8 +257,7 @@ impl RollingWindowState {
             .enumerate()
             .map(|(index, value)| *value * (index + 1) as f64)
             .sum::<f64>();
-        let denominator = length * (length + 1) / 2;
-        let mean = weighted_sum / denominator as f64;
+        let mean = weighted_sum / weighted_denominator(length);
         if mean.is_finite() {
             mean
         } else {
@@ -274,10 +286,8 @@ impl RollingWindowState {
                 weighted_sum += *value * full_weight as f64;
                 tail_weighted_sum += *value * (index + 1) as f64;
             });
-        let denominator = length * (length + 1) / 2;
-        let tail_denominator = tail_length * (tail_length + 1) / 2;
-        let full_mean = weighted_sum / denominator as f64;
-        let tail_mean = tail_weighted_sum / tail_denominator as f64;
+        let full_mean = weighted_sum / weighted_denominator(length);
+        let tail_mean = tail_weighted_sum / weighted_denominator(tail_length);
         (
             if full_mean.is_finite() {
                 full_mean
@@ -358,7 +368,7 @@ impl RollingWindowState {
         // The exact expansion is rounded once before division.
         let rounded = two_sum(total, correction).0;
         let weighted_length = length - start;
-        let denominator = (weighted_length * (weighted_length + 1) / 2) as f64;
+        let denominator = weighted_denominator(weighted_length);
         let numerator = rounded * scale;
         if numerator.is_finite() && (numerator / scale).to_bits() == rounded.to_bits() {
             // Restore first when cancellation leaves a small numerator: dividing
@@ -780,3 +790,7 @@ mod recovery_tests;
 #[cfg(test)]
 #[path = "rolling_window_weighted_recovery_tests.rs"]
 mod weighted_recovery_tests;
+
+#[cfg(test)]
+#[path = "rolling_window_length_tests.rs"]
+mod length_tests;

@@ -11,7 +11,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -53,7 +55,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -72,7 +76,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -107,7 +113,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let left = left.as_f64();
         let right = right.as_f64();
         let product = left.zip(right).map(|(left, right)| left * right);
@@ -184,7 +192,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let left = left.as_f64();
         let right = right.as_f64();
         let product = left.zip(right).map(|(left, right)| left * right);
@@ -284,7 +294,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -320,7 +332,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -350,7 +364,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         // Native linear interpolation retains the bar-count window but omits
         // NA samples within it. Nearest-rank behavior is qualified separately.
@@ -409,7 +425,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let target = source.as_f64();
         let window = self.update_rolling_window(call_site_id, source, length);
         let Some(target) = target else {
@@ -443,7 +461,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) || (!biased && length < 2) {
             return Ok(PineValue::Na);

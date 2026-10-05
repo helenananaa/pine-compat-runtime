@@ -66,12 +66,14 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let Some(current) = source.as_f64() else {
-            self.update_rolling_window(call_site_id, source, length as usize);
+            self.update_rolling_window(call_site_id, source, length);
             return Ok(PineValue::Na);
         };
 
-        let length = length as usize;
         let window = self.update_rolling_window(call_site_id, PineValue::Float(current), length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -97,7 +99,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) || window.sum == 0.0 {
             return Ok(PineValue::Na);
@@ -116,7 +120,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let Some(source) = source.as_f64() else {
             self.update_rolling_window_key(
                 RollingWindowKey::VwmaWeighted(call_site_id),
@@ -213,7 +219,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let Some(source) = source.as_f64() else {
             self.update_mfi_windows(call_site_id, None, None, length);
             return Ok(PineValue::Na);
@@ -378,7 +386,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         self.update_rolling_window_key(RollingWindowKey::StochHigh(call_site_id), high, length);
         self.update_rolling_window_key(RollingWindowKey::StochLow(call_site_id), low, length);
 
@@ -427,7 +437,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let close = self.current_builtin_f64("close");
         self.update_rolling_window_key(
             RollingWindowKey::WprHigh(call_site_id),
@@ -535,7 +547,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Bool(false));
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Bool(false));
+        };
         let Some(current) = source.as_f64() else {
             return Ok(PineValue::Bool(false));
         };

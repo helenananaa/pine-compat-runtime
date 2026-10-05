@@ -10,6 +10,7 @@ if (process.argv.length !== 3) {
 // Requiring wasm-bindgen's Node target synchronously instantiates the real
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
+require('./wasm_window_lengths.cjs')(process.argv[2]);
 
 for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript', 'packageVersion']) {
   assert.equal(typeof pine[name], 'function', `missing Wasm export ${name}`);

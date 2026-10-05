@@ -19,7 +19,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window_for_bar(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -42,7 +44,9 @@ impl<'a> HistoricalRuntime<'a> {
             ]));
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(three_na_tuple());
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Tuple(vec![
@@ -80,7 +84,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -194,7 +200,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -213,7 +221,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let half_length = (length / 2).max(1);
         let smooth_length = (length as f64).sqrt().round().max(1.0) as usize;
         let source = source.as_f64();
@@ -338,7 +348,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -383,7 +395,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
@@ -445,13 +459,16 @@ impl<'a> HistoricalRuntime<'a> {
                 PineValue::Float(alpha * source + (1.0 - alpha) * previous)
             }
             (Some(source), None) => {
+                let Some(length) = usize::try_from(length).ok() else {
+                    return Ok(PineValue::Na);
+                };
                 let window = self.update_rolling_window_for_bar(
                     call_site_id,
                     PineValue::Float(source),
-                    length as usize,
+                    length,
                 );
-                if window.is_ready(length as usize) {
-                    PineValue::Float(window.mean(length as usize))
+                if window.is_ready(length) {
+                    PineValue::Float(window.mean(length))
                 } else {
                     PineValue::Na
                 }
@@ -697,10 +714,9 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(previous) = previous {
             return Some(ema_next(Some(previous), source, length));
         }
+        let length = usize::try_from(length).ok()?;
         let window = self.rolling_windows.entry(key).or_default();
-        window.push_for_bar(Some(source), length as usize, self.bars);
-        window
-            .is_ready(length as usize)
-            .then(|| window.mean(length as usize))
+        window.push_for_bar(Some(source), length, self.bars);
+        window.is_ready(length).then(|| window.mean(length))
     }
 }

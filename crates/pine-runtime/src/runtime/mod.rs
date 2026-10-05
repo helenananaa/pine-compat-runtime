@@ -32,3 +32,6 @@ pub(crate) mod strategy_scheduler;
 pub(crate) mod streaming;
 pub(crate) mod valuewhen_history;
 pub(crate) mod valuewhen_limits;
+
+#[cfg(test)]
+mod window_length_tests;

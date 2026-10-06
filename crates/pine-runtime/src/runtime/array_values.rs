@@ -82,6 +82,17 @@ impl<T> ArrayValues<T> {
         self.view(0, self.len()).iter()
     }
 
+    /// Borrow the logical payload as contiguous slices, visiting pages once.
+    pub(crate) fn slices(&self) -> impl Iterator<Item = &[T]> {
+        match &self.storage {
+            Storage::Small(values) => ArraySlices::Small(Some(values.as_slice())),
+            Storage::Paged { pages, len } => ArraySlices::Paged {
+                pages: pages.iter(),
+                remaining: *len,
+            },
+        }
+    }
+
     /// Cells copied by cloning this payload; paged clones share their directory.
     pub(crate) fn clone_allocation_values(&self) -> &[T] {
         match &self.storage {
@@ -389,6 +400,33 @@ impl<'a, T> IntoIterator for &'a ArrayValues<T> {
     type IntoIter = ArrayIter<'a, T>;
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+enum ArraySlices<'a, T> {
+    Small(Option<&'a [T]>),
+    Paged {
+        pages: std::slice::Iter<'a, Arc<Vec<T>>>,
+        remaining: usize,
+    },
+}
+
+impl<'a, T> Iterator for ArraySlices<'a, T> {
+    type Item = &'a [T];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Small(values) => values.take(),
+            Self::Paged { pages, remaining } => {
+                if *remaining == 0 {
+                    return None;
+                }
+                let page = pages.next().expect("valid paged array length");
+                let visible = page.len().min(*remaining);
+                *remaining -= visible;
+                Some(&page[..visible])
+            }
+        }
     }
 }
 

@@ -16,6 +16,10 @@ mod linear_algebra;
 mod mutation;
 mod user_types;
 
+#[cfg(test)]
+#[path = "matrix_stochastic_tests.rs"]
+mod stochastic_tests;
+
 const MAX_MATRIX_CELLS: usize = 100_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -821,30 +825,68 @@ impl<'a> HistoricalRuntime<'a> {
             if matrix.values.is_empty() {
                 return false;
             }
-            let mut values = Vec::with_capacity(matrix.values.len());
-            for value in &matrix.values {
+            // Match f64 Sum's seed and each row's original left-to-right order.
+            // A failed row stops row sums, but every remaining cell is validated.
+            let mut rows_sum_to_one = true;
+            let mut row_sum = -0.0;
+            let mut first_column_sum = -0.0;
+            let mut column = 0;
+            for value in matrix.values.slices().flatten() {
                 let Some(number) = value.as_f64() else {
                     return false;
                 };
                 if !number.is_finite() || number < 0.0 {
                     return false;
                 }
-                values.push(number);
+                if column == 0 {
+                    first_column_sum += number;
+                }
+                if rows_sum_to_one {
+                    row_sum += number;
+                }
+                column += 1;
+                if column == matrix.columns {
+                    if rows_sum_to_one {
+                        rows_sum_to_one = row_sum == 1.0;
+                        row_sum = -0.0;
+                    }
+                    column = 0;
+                }
+            }
+            if rows_sum_to_one {
+                return true;
+            }
+            if first_column_sum != 1.0 {
+                return false;
+            }
+            if matrix.columns == 1 {
+                return true;
+            }
+            if matrix.rows == 1 {
+                return matrix
+                    .values
+                    .slices()
+                    .flatten()
+                    .skip(1)
+                    .all(|value| value.as_f64().expect("validated numeric matrix cell") == 1.0);
             }
 
-            let rows_sum_to_one = (0..matrix.rows).all(|row| {
-                let start = row * matrix.columns;
-                let end = start + matrix.columns;
-                values[start..end].iter().sum::<f64>() == 1.0
-            });
-            let columns_sum_to_one = (0..matrix.columns).all(|column| {
-                (0..matrix.rows)
-                    .map(|row| values[row * matrix.columns + column])
-                    .sum::<f64>()
-                    == 1.0
-            });
-
-            rows_sum_to_one || columns_sum_to_one
+            // The first column is already known to sum to one. Accumulate the
+            // remaining columns in row-major storage order, preserving each
+            // column's original top-to-bottom addition order.
+            let mut column_sums = vec![-0.0; matrix.columns - 1];
+            let mut values = matrix.values.slices().flatten();
+            for _ in 0..matrix.rows {
+                let _ = values.next().expect("valid matrix shape");
+                for sum in &mut column_sums {
+                    *sum += values
+                        .next()
+                        .expect("valid matrix shape")
+                        .as_f64()
+                        .expect("validated numeric matrix cell");
+                }
+            }
+            column_sums.into_iter().all(|sum| sum == 1.0)
         })
     }
 

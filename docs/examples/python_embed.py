@@ -1,4 +1,4 @@
-"""Minimal Python embedding path for the local 0.3.0-rc.2 candidate."""
+"""Minimal Python embedding path for the 0.3.0 release."""
 from __future__ import annotations
 
 import json

@@ -26,7 +26,7 @@ class CandidateCliTests(unittest.TestCase):
         version = subprocess.run(
             [str(self.binary), '--version'], cwd=ROOT, text=True, capture_output=True, check=True,
         )
-        self.assertEqual(version.stdout.strip(), 'pine-compat 0.3.0-rc.2')
+        self.assertEqual(version.stdout.strip(), 'pine-compat 0.3.0')
         args = [
             str(self.binary), 'run',
             str(ROOT / 'tests/fixtures/runtime/macd.pine'),

@@ -10,10 +10,9 @@ The `abi3-py310` PyO3 feature makes each platform wheel compatible with
 ordinary GIL-enabled CPython 3.10 and newer. macOS, musllinux, ARM, and
 free-threaded CPython remain outside the release matrix.
 
-The current candidate is `0.3.0-rc.2` (PEP 440 `0.3.0rc2`). Its scoped GitHub
-prerelease is opt-in; the latest stable release remains `v0.2.0`.
-See [RC2 acceptance](RC2_ACCEPTANCE_20261006.md),
-[migration and limits](RC2_MIGRATION.md), and the
+The current stable release is `0.3.0`. See
+[stable acceptance](STABLE_ACCEPTANCE_20261006.md),
+[migration and limits](STABLE_MIGRATION.md), and the
 [delivery ledger](DELIVERY_ROADMAP.md).
 Earlier `.local/candidate-0.3.0-rc.1/`, streaming and delivery inventories
 preserve their own source pins. Never substitute an older wheel for a newer
@@ -57,7 +56,9 @@ does not match the packaged version or if the two expected wheels are missing.
    scripts/verify.sh
    ```
 
-3. Push the candidate branch and manually dispatch `wheels.yml` at that branch.
+3. For a stable release, rerun the unchanged fixed resource matrix on the
+   selected implementation; all trials, output audits and budgets must pass.
+   Push the candidate branch and manually dispatch `wheels.yml` at that branch.
    Confirm the run's `headSha`, both installed-wheel test jobs, actual wheel
    versions, and Linux manylinux2014 floor. Download and freshly install the
    artifacts, checking the named reference cases before tagging.
@@ -67,11 +68,11 @@ does not match the packaged version or if the two expected wheels are missing.
 5. Create and push the annotated tag at the selected release commit:
 
    ```text
-   git tag -a v0.3.0-rc.2 -m "Pine Compat Runtime v0.3.0-rc.2"
-   git push origin v0.3.0-rc.2
+   git tag -a v0.3.0 -m "Pine Compat Runtime v0.3.0"
+   git push origin v0.3.0
    ```
 
-6. Confirm the tag workflow succeeds and the GitHub prerelease contains exactly
+6. Confirm the tag workflow succeeds and the GitHub Release contains exactly
    two wheels plus manifest/checksums, with matching version and release commit.
    Compare/download the actual assets and verify their SHA-256 digests.
 7. Freshly install each published wheel and run the binding examples and named
@@ -79,8 +80,8 @@ does not match the packaged version or if the two expected wheels are missing.
    are not final asset verification.
 
 A stable release additionally needs fresh qualification of the unchanged fixed
-resource matrix and explicit strategy/capability scope. The RC's deterministic
-per-bar allowances do not prove RSS or long-session resource bounds.
+resource matrix and explicit strategy/capability scope. Deterministic per-bar
+allowances do not prove RSS or indefinite-session resource bounds.
 
 ## Application Update Contract
 

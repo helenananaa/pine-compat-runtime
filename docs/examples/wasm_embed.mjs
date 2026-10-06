@@ -1,4 +1,4 @@
-// Minimal WASM/Node embedding path for the local 0.3.0-rc.2 candidate.
+// Minimal WASM/Node embedding path for the 0.3.0 release.
 // Usage: node docs/examples/wasm_embed.mjs <generated-pine_wasm.js>
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -10,7 +10,7 @@ if (process.argv.length !== 3) {
 
 const require = createRequire(import.meta.url);
 const pine = require(path.resolve(process.argv[2]));
-assert.equal(pine.packageVersion(), '0.3.0-rc.2');
+assert.equal(pine.packageVersion(), '0.3.0');
 
 const source = '//@version=6\nindicator("wasm embed")\nplot(close * 2)\nplot(timenow)\n';
 const bars = [

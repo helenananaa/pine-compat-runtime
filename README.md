@@ -42,30 +42,29 @@ application to a charting service.
 
 ## Quick Start
 
-The downloads below are the `v0.3.0-rc.2` GitHub prerelease (Python wheel
-`0.3.0rc2`). It is an opt-in candidate for the named compatibility scope.
-The latest stable release remains `v0.2.0`; `/releases/latest` follows stable
-releases. See [RC2 acceptance](docs/RC2_ACCEPTANCE_20261006.md),
-[migration and limits](docs/RC2_MIGRATION.md),
+The downloads below are the stable `v0.3.0` release. See
+[acceptance](docs/STABLE_ACCEPTANCE_20261006.md),
+[migration and limits](docs/STABLE_MIGRATION.md),
 [delivery surfaces](docs/DELIVERY_SURFACES.md), and
 [the delivery ledger](docs/DELIVERY_ROADMAP.md).
 
 Release assets contain optimized Python wheels for ordinary GIL-enabled
-CPython 3.10+ on glibc Linux x86-64 and Windows x86-64, a machine-readable
-manifest, and SHA-256 checksums. Rust, CLI and WASM can be built from the tag.
-The RC does not claim full Pine compatibility or stable resource qualification.
+CPython 3.10+ on glibc Linux x86-64 and Windows x86-64, a manifest, and SHA-256
+checksums. Rust, CLI and WASM can be built from the tag. Compatibility is
+qualified for the named Pine subset; the fixed resource plan passes all 216
+fresh trials at the unchanged budgets.
 
 Linux x86-64:
 
 ```bash
 python -m pip install \
-  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0-rc.2/pine_compat_runtime-0.3.0rc2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0/pine_compat_runtime-0.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 ```
 
 Windows x86-64:
 
 ```powershell
-py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0-rc.2/pine_compat_runtime-0.3.0rc2-cp310-abi3-win_amd64.whl"
+py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0/pine_compat_runtime-0.3.0-cp310-abi3-win_amd64.whl"
 ```
 
 Then run an indicator directly from Python:
@@ -96,8 +95,7 @@ partial strategy broker output — all without requiring a chart UI.
 ## What Works Today
 
 The current source tree provides a broad indicator runtime and a deliberately
-bounded strategy runtime. Features below describe this checkout; the `v0.2.0`
-downloads above do not include the later candidate and streaming additions.
+bounded strategy runtime. Features below describe the `v0.3.0` source and current release wheels.
 
 | Area | Current executable subset |
 | --- | --- |
@@ -345,9 +343,8 @@ behavior.
 
 ## Honest Compatibility
 
-The published `0.2.0` tag and this `0.3.0-rc.2` candidate are
-compatibility-focused, not a full drop-in implementation of every Pine
-feature. Important current boundaries include:
+The stable `0.3.0` release qualifies the documented executable Pine subset.
+Current boundaries include:
 
 - the strategy broker model is still a partial side-aware long/short subset;
 - `request.*` support is limited and all requested data must be supplied by the

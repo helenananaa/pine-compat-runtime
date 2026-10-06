@@ -1036,7 +1036,7 @@ pub(crate) fn series_change_from_lens(
     new_len: usize,
     display_origin: usize,
     fields_from: impl Fn(usize) -> SeriesFields,
-    header: Option<SeriesHeader>,
+    header: impl FnOnce() -> Option<SeriesHeader>,
 ) -> Option<SeriesChange> {
     if new_len == 0 && old_len.unwrap_or(0) == 0 {
         return None;
@@ -1055,6 +1055,10 @@ pub(crate) fn series_change_from_lens(
         op,
         start,
         fields: fields_from(start),
-        header: old_len.is_none().then_some(header).flatten(),
+        header: old_len.is_none().then(header).flatten(),
     })
 }
+
+#[cfg(test)]
+#[path = "changes/lazy_header_tests.rs"]
+mod lazy_header_tests;

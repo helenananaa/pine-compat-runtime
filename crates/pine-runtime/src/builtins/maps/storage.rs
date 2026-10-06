@@ -17,14 +17,14 @@ pub(crate) struct MapEntries {
     len: usize,
 }
 
-// Valid for one immediate put on the same logical entries, including a COW
-// clone. Keep fields private and consume it so callers cannot reuse it.
-pub(super) struct PutLookup {
+// Valid for one immediate put or remove on the same logical entries, including
+// a COW clone. Keep fields private and consume it so callers cannot reuse it.
+pub(super) struct EntryLookup {
     hash: u64,
     slot: Option<usize>,
 }
 
-impl PutLookup {
+impl EntryLookup {
     pub(super) fn is_present(&self) -> bool {
         self.slot.is_some()
     }
@@ -164,15 +164,24 @@ impl MapEntries {
 
     pub(super) fn put_allocation_bytes_for_lookup(
         &self,
-        lookup: &PutLookup,
+        lookup: &EntryLookup,
         cloned_self: bool,
     ) -> usize {
         let index = lookup.slot.unwrap_or(self.values.len());
         Self::payload_allocation_bytes(self.values.write_allocation_values(index, cloned_self))
     }
 
+    #[cfg(test)]
     pub(super) fn remove_allocation_bytes(&self, key: &PineValue, cloned_self: bool) -> usize {
-        let Some(index) = self.find(key) else {
+        self.remove_allocation_bytes_for_lookup(&self.lookup_for_remove(key), cloned_self)
+    }
+
+    pub(super) fn remove_allocation_bytes_for_lookup(
+        &self,
+        lookup: &EntryLookup,
+        cloned_self: bool,
+    ) -> usize {
+        let Some(index) = lookup.slot else {
             return if cloned_self {
                 self.clone_allocation_bytes()
             } else {
@@ -216,9 +225,17 @@ impl MapEntries {
         self.find_hashed(key, hash_key(key))
     }
 
-    pub(super) fn lookup_for_put(&self, key: &PineValue) -> PutLookup {
+    pub(super) fn lookup_for_put(&self, key: &PineValue) -> EntryLookup {
+        self.lookup(key)
+    }
+
+    pub(super) fn lookup_for_remove(&self, key: &PineValue) -> EntryLookup {
+        self.lookup(key)
+    }
+
+    fn lookup(&self, key: &PineValue) -> EntryLookup {
         let hash = hash_key(key);
-        PutLookup {
+        EntryLookup {
             hash,
             slot: self.find_hashed(key, hash),
         }
@@ -255,7 +272,12 @@ impl MapEntries {
         self.put_with_lookup(key, value, lookup);
     }
 
-    pub(super) fn put_with_lookup(&mut self, key: PineValue, value: PineValue, lookup: PutLookup) {
+    pub(super) fn put_with_lookup(
+        &mut self,
+        key: PineValue,
+        value: PineValue,
+        lookup: EntryLookup,
+    ) {
         if let Some(slot) = lookup.slot {
             self.values
                 .get_mut(slot)
@@ -275,11 +297,17 @@ impl MapEntries {
         *self = Self::default();
     }
 
+    #[cfg(test)]
     pub(crate) fn remove(&mut self, key: &PineValue) {
-        let Some(slot) = self.find(key) else {
+        let lookup = self.lookup_for_remove(key);
+        self.remove_with_lookup(lookup);
+    }
+
+    pub(super) fn remove_with_lookup(&mut self, lookup: EntryLookup) {
+        let Some(slot) = lookup.slot else {
             return;
         };
-        remove_index_slot(&mut self.index, hash_key(key), slot);
+        remove_index_slot(&mut self.index, lookup.hash, slot);
         *self.values.get_mut(slot).expect("indexed slot") = None;
         self.len -= 1;
         if self.is_empty() {
@@ -295,6 +323,10 @@ impl MapEntries {
 #[cfg(test)]
 #[path = "put_lookup_tests.rs"]
 mod put_lookup_tests;
+
+#[cfg(test)]
+#[path = "remove_lookup_tests.rs"]
+mod remove_lookup_tests;
 
 impl From<Vec<(PineValue, PineValue)>> for MapEntries {
     fn from(values: Vec<(PineValue, PineValue)>) -> Self {

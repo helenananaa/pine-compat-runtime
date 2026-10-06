@@ -216,14 +216,21 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let key_kind = storage.key_kind;
         let key = self.eval_map_key(&args[1], key_kind)?;
-        let copied = self.map_store.get(&id).map_or(0, |storage| {
-            storage
-                .entries
-                .remove_allocation_bytes(&key, self.map_store.get_mut_clones_value(&id))
-        });
+        // Locate after key evaluation, which may have changed the map, and
+        // measure original payload capacities before store-entry COW.
+        let (lookup, copied) = if let Some(storage) = self.map_store.get(&id) {
+            let lookup = storage.entries.lookup_for_remove(&key);
+            let copied = storage.entries.remove_allocation_bytes_for_lookup(
+                &lookup,
+                self.map_store.get_mut_clones_value(&id),
+            );
+            (Some(lookup), copied)
+        } else {
+            (None, 0)
+        };
         self.record_collection_bytes(copied);
-        if let Some(storage) = self.map_store.get_mut(&id) {
-            storage.entries.remove(&key);
+        if let (Some(storage), Some(lookup)) = (self.map_store.get_mut(&id), lookup) {
+            storage.entries.remove_with_lookup(lookup);
         }
         Ok(PineValue::Void)
     }

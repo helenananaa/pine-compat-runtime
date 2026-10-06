@@ -269,7 +269,7 @@ fn diff_plots(
                     .tail(start.saturating_sub(runtime.stored_origin)),
                 ..SeriesFields::default()
             },
-            Some(plot_header(plot)),
+            || Some(plot_header(plot)),
         ) {
             changes.series.push(change);
         }
@@ -298,7 +298,7 @@ fn diff_plot_chars(
                 sizes: slice_from(&item.sizes, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -327,7 +327,7 @@ fn diff_plot_shapes(
                 sizes: slice_from(&item.sizes, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -354,7 +354,7 @@ fn diff_plot_arrows(
                 max_heights: slice_from(&item.max_heights, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -381,7 +381,7 @@ fn diff_plot_bars(
                 colors: slice_from(&item.colors, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -410,7 +410,7 @@ fn diff_plot_candles(
                 border_colors: slice_from(&item.border_colors, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -435,7 +435,7 @@ fn diff_color_series(
                 values: slice_from(&item.values, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }

@@ -17,6 +17,19 @@ pub(crate) struct MapEntries {
     len: usize,
 }
 
+// Valid for one immediate put on the same logical entries, including a COW
+// clone. Keep fields private and consume it so callers cannot reuse it.
+pub(super) struct PutLookup {
+    hash: u64,
+    slot: Option<usize>,
+}
+
+impl PutLookup {
+    pub(super) fn is_present(&self) -> bool {
+        self.slot.is_some()
+    }
+}
+
 impl Default for MapEntries {
     fn default() -> Self {
         Self {
@@ -146,7 +159,15 @@ impl MapEntries {
     }
 
     pub(super) fn put_allocation_bytes(&self, key: &PineValue, cloned_self: bool) -> usize {
-        let index = self.find(key).unwrap_or(self.values.len());
+        self.put_allocation_bytes_for_lookup(&self.lookup_for_put(key), cloned_self)
+    }
+
+    pub(super) fn put_allocation_bytes_for_lookup(
+        &self,
+        lookup: &PutLookup,
+        cloned_self: bool,
+    ) -> usize {
+        let index = lookup.slot.unwrap_or(self.values.len());
         Self::payload_allocation_bytes(self.values.write_allocation_values(index, cloned_self))
     }
 
@@ -192,7 +213,18 @@ impl MapEntries {
     }
 
     fn find(&self, key: &PineValue) -> Option<usize> {
+        self.find_hashed(key, hash_key(key))
+    }
+
+    pub(super) fn lookup_for_put(&self, key: &PineValue) -> PutLookup {
         let hash = hash_key(key);
+        PutLookup {
+            hash,
+            slot: self.find_hashed(key, hash),
+        }
+    }
+
+    fn find_hashed(&self, key: &PineValue, hash: u64) -> Option<usize> {
         let mut node = self.index.as_deref();
         while let Some(current) = node {
             match hash.cmp(&current.hash) {
@@ -219,7 +251,12 @@ impl MapEntries {
     }
 
     pub(crate) fn put(&mut self, key: PineValue, value: PineValue) {
-        if let Some(slot) = self.find(&key) {
+        let lookup = self.lookup_for_put(&key);
+        self.put_with_lookup(key, value, lookup);
+    }
+
+    pub(super) fn put_with_lookup(&mut self, key: PineValue, value: PineValue, lookup: PutLookup) {
+        if let Some(slot) = lookup.slot {
             self.values
                 .get_mut(slot)
                 .expect("indexed slot")
@@ -228,7 +265,7 @@ impl MapEntries {
                 .1 = value;
         } else {
             let slot = self.values.len();
-            insert_index(&mut self.index, hash_key(&key), slot);
+            insert_index(&mut self.index, lookup.hash, slot);
             self.values.insert(slot, Some((key, value)));
             self.len += 1;
         }
@@ -254,6 +291,10 @@ impl MapEntries {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "put_lookup_tests.rs"]
+mod put_lookup_tests;
 
 impl From<Vec<(PineValue, PineValue)>> for MapEntries {
     fn from(values: Vec<(PineValue, PineValue)>) -> Self {

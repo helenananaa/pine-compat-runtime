@@ -104,17 +104,25 @@ impl<'a> HistoricalRuntime<'a> {
         let value_kind = storage.value_kind;
         let key = self.eval_map_key(&args[1], key_kind)?;
         let value = self.eval_map_value(&args[2], value_kind)?;
-        if self.map_store.get(&id).is_some_and(|storage| {
-            storage.entries.len() >= MAX_MAP_ENTRIES && storage.entries.get(&key).is_none()
-        }) {
-            return Err(map_capacity_error("map.put"));
-        }
-        self.record_map_put_pressure(id, &key);
-        self.record_collection_values([&key, &value]);
-        let Some(storage) = self.map_store.get_mut(&id) else {
-            return Ok(PineValue::Void);
+        // Arguments may have mutated this map. Locate only after both have
+        // finished, and account for the original payload before store COW.
+        let (lookup, copied) = if let Some(storage) = self.map_store.get(&id) {
+            let lookup = storage.entries.lookup_for_put(&key);
+            if storage.entries.len() >= MAX_MAP_ENTRIES && !lookup.is_present() {
+                return Err(map_capacity_error("map.put"));
+            }
+            let copied = storage
+                .entries
+                .put_allocation_bytes_for_lookup(&lookup, self.map_store.get_mut_clones_value(&id));
+            (Some(lookup), copied)
+        } else {
+            (None, 0)
         };
-        storage.entries.put(key, value);
+        self.record_collection_bytes(copied);
+        self.record_collection_values([&key, &value]);
+        if let (Some(storage), Some(lookup)) = (self.map_store.get_mut(&id), lookup) {
+            storage.entries.put_with_lookup(key, value, lookup);
+        }
         Ok(PineValue::Void)
     }
 

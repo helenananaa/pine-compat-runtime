@@ -450,10 +450,10 @@ Initial coercion rules:
 - `int` can promote to `float`.
 - `float` must not silently narrow to `int`.
 - Arithmetic on `int` and `float` returns `float` when either side is `float`.
-- Division is versioned: Pine v1-v4 `int / int` returns `int`; Pine v5 does so
-  only when both operands are `const int`; Pine v5 input/simple/series integer
-  division and every Pine v6 integer division return `float`. Truncating forms
-  lower through an explicit canonical `int(...)` conversion.
+- Division is versioned: Pine v1-v3 `int / int` returns `int`; Pine v4-v5 do so
+  only when both operands are `const int`. Pine v4-v5 input/simple/series
+  integer division and every Pine v6 integer division return `float`.
+  Truncating forms lower through an explicit canonical `int(...)` conversion.
 - Modulo requires numeric operands and should follow the selected Pine version's
   documented behavior.
 

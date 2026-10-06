@@ -399,7 +399,7 @@ fn collect_runtime_legacy_sources(dir: &Path, output: &mut BTreeSet<String>) {
 #[test]
 fn release_manifest_is_complete_versioned_and_source_licensed() {
     let fixtures = release_fixtures();
-    assert_eq!(fixtures.len(), 44);
+    assert_eq!(fixtures.len(), 45);
     let ids = fixtures.iter().map(|row| &row.id).collect::<BTreeSet<_>>();
     assert_eq!(ids.len(), fixtures.len(), "duplicate release fixture id");
     let paths = fixtures

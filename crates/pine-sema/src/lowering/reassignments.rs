@@ -122,6 +122,7 @@ impl Analyzer {
         match &expr.kind {
             ExprKind::Unary { expr, .. }
             | ExprKind::History { expr, .. }
+            | ExprKind::Member { receiver: expr, .. }
             | ExprKind::Group(expr) => {
                 self.collect_lower_reassigned_symbols_from_expr(expr, symbols);
             }

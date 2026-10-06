@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use pine_ir::{HirCallArg, HirExpr};
 
-use crate::runtime::drawing_history::RuntimeBox;
+use crate::runtime::drawing_history::{RuntimeBox, drawing_by_id, drawing_by_id_mut};
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -155,6 +157,7 @@ impl<'a> HistoricalRuntime<'a> {
                 text_formatting: fields.text_formatting,
             },
         ));
+        Arc::make_mut(&mut self.active_boxes).insert(id);
         Ok(PineValue::Box(id))
     }
 
@@ -422,7 +425,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(box_output) = self.boxes.iter_mut().find(|box_output| box_output.id == id) else {
+        let Some(box_output) = drawing_by_id_mut(&mut self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });
@@ -439,6 +445,7 @@ impl<'a> HistoricalRuntime<'a> {
         next.bar_index = self.bars;
         next.exists = false;
         box_output.snapshots.push(next);
+        Arc::make_mut(&mut self.active_boxes).remove(&id);
         Ok(PineValue::Void)
     }
 
@@ -447,7 +454,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(box_output) = self.boxes.iter().find(|box_output| box_output.id == id) else {
+        let Some(box_output) = drawing_by_id(&self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Na);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });
@@ -472,20 +482,18 @@ impl<'a> HistoricalRuntime<'a> {
         copied.bar_index = self.bars;
         self.boxes
             .push(RuntimeBox::from_snapshot(copied_id, copied));
+        Arc::make_mut(&mut self.active_boxes).insert(copied_id);
         Ok(PineValue::Box(copied_id))
     }
 
     fn evict_oldest_boxes_at_limit(&mut self) -> Result<(), RuntimeError> {
         let limit = self.max_box_count();
-        while self.active_box_count() >= limit {
-            let Some(box_output) = self.boxes.iter_mut().find(|box_output| {
-                box_output
-                    .snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            }) else {
+        while self.active_boxes.len() >= limit {
+            let Some(id) = Arc::make_mut(&mut self.active_boxes).pop_first() else {
                 break;
             };
+            let box_output = drawing_by_id_mut(&mut self.boxes, id)
+                .expect("active drawing identity must exist in history");
             let Some(latest) = box_output.snapshots.last().cloned() else {
                 return Err(RuntimeError {
                     message: format!("box `{}` has no snapshots", box_output.id),
@@ -497,18 +505,6 @@ impl<'a> HistoricalRuntime<'a> {
             box_output.snapshots.push(next);
         }
         Ok(())
-    }
-
-    fn active_box_count(&self) -> usize {
-        self.boxes
-            .iter()
-            .filter(|box_output| {
-                box_output
-                    .snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            })
-            .count()
     }
 
     fn max_box_count(&self) -> usize {
@@ -647,7 +643,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(box_output) = self.boxes.iter_mut().find(|box_output| box_output.id == id) else {
+        let Some(box_output) = drawing_by_id_mut(&mut self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });
@@ -679,7 +678,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(box_output) = self.boxes.iter().find(|box_output| box_output.id == id) else {
+        let Some(box_output) = drawing_by_id(&self.boxes, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_box_id) {
+                return Ok(PineValue::Na);
+            }
             return Err(RuntimeError {
                 message: format!("invalid box id `{id}`"),
             });

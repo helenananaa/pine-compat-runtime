@@ -15,6 +15,36 @@ fn analyze_import(root: &str, library: &str) -> pine_sema::Analysis {
 }
 
 #[test]
+fn udf_mutates_global_imported_udt_object_field() {
+    let analysis = analyze_import(
+        r#"//@version=5
+import user/lib/1 as lib
+indicator("imported global UDT field")
+point = lib.Point.new(close)
+touch() =>
+    point.x := point.x + 1
+    point.x
+plot(touch())
+plot(point.x)
+"#,
+        r#"//@version=5
+library("lib")
+export type Point
+    float x
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 3.0, 4.0]);
+}
+
+#[test]
 fn runs_imported_constants_and_pure_functions() {
     let analysis = analyze_import(
         r#"indicator("imports")

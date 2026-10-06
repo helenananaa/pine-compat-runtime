@@ -1,0 +1,20 @@
+//@version=6
+indicator("Member access control")
+type Leaf
+    float value
+type Branch
+    Leaf leaf
+type Drawing
+    line handle
+wrap(float value) => Branch.new(Leaf.new(value))
+next() =>
+    var int count = 0
+    count += 1
+    Leaf.new(count)
+plot(wrap(close).leaf.value, "nested")
+current = next().value
+plot(current, "once")
+plot(current[1], "history")
+plot(chart.point.from_index(bar_index, close).price, "point")
+plot(Drawing.new(line.new(bar_index, close, bar_index + 1, close + 2)).handle.get_x2(), "drawing")
+plot(chart.point.from_index(bar_index, close).price[1], "direct history")

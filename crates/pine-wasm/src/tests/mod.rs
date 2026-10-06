@@ -5,7 +5,32 @@ use std::{collections::HashMap, env, fs, path::PathBuf};
 
 #[test]
 fn package_version_is_the_coordinated_prerelease_identity() {
-    assert_eq!(package_version(), "0.3.0-rc.1");
+    assert_eq!(package_version(), "0.3.0-rc.2");
+}
+
+#[test]
+fn analysis_library_diagnostics_preserve_unicode_source_identity() {
+    let root =
+        "//@version=6\nindicator(\"根\")\nimport audit/Library/1 as lib\nplot(lib.f(close))\n";
+    let text = "//@version=6\nlibrary(\"库\")\n// 中文\nexport f(float x) => str.length(\"中文\") + missingName + x\n";
+    let library = pine_syntax::SourceFile::new("<wasm:audit/Library/1>", text);
+    let offset = text.find("missingName").unwrap();
+    let location = library.line_col(offset);
+    let libraries = serde_json::json!({"audit/Library/1": text}).to_string();
+    let report: serde_json::Value =
+        serde_json::from_str(&analyze_script_with_libraries(root, &libraries)).unwrap();
+    let diagnostic = report["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["code"] == "E_UNKNOWN_SYMBOL")
+        .unwrap();
+    assert_eq!(diagnostic["span"]["sourceId"], 1);
+    assert_eq!(diagnostic["span"]["libraryKey"], "audit/Library/1");
+    assert_eq!(diagnostic["span"]["sourceName"], "<wasm:audit/Library/1>");
+    assert_eq!(diagnostic["span"]["start"], offset);
+    assert_eq!(diagnostic["span"]["line"], location.line);
+    assert_eq!(diagnostic["span"]["column"], location.column);
 }
 
 #[test]
@@ -57,6 +82,7 @@ fn analyzes_script_input_call_sites_to_json() {
     );
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     assert_eq!(parsed["inputs"][0]["name"], serde_json::json!("input.int"));
+    assert_eq!(parsed["inputs"][0]["isSource"], serde_json::json!(false));
     assert_eq!(parsed["inputs"][0]["title"], serde_json::json!("Length"));
     assert_eq!(parsed["inputs"][0]["default"], serde_json::json!(2));
     assert_eq!(parsed["inputs"][0]["min"], serde_json::json!(1));
@@ -75,6 +101,18 @@ fn analyzes_script_input_call_sites_to_json() {
         serde_json::json!(["SMA", "EMA"])
     );
     assert!(parsed["inputs"][1]["callSiteId"].as_u64().is_some());
+}
+
+#[test]
+fn analyzes_source_input_selectors_to_json() {
+    let output = analyze_script(
+        "//@version=5\nindicator(\"sources\")\na = input(close, \"Generic source\")\nb = input.source(close, \"Source\")\nc = input(1.5, \"Scale\")\nplot(a + b + c)\n",
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["inputs"][0]["isSource"], serde_json::json!(true));
+    assert_eq!(parsed["inputs"][1]["isSource"], serde_json::json!(true));
+    assert_eq!(parsed["inputs"][2]["isSource"], serde_json::json!(false));
 }
 
 #[test]
@@ -107,7 +145,7 @@ fn analyzes_implicit_v1_legacy_indicator_contract() {
 }
 
 #[test]
-fn analyzes_legacy_strategy_as_one_out_of_scope_error() {
+fn analyzes_executable_v4_strategy() {
     let output = analyze_script(
         "//@version=4\nstrategy(\"legacy\")\nstrategy.entry(\"L\", strategy.long)\n",
     );
@@ -116,15 +154,8 @@ fn analyzes_legacy_strategy_as_one_out_of_scope_error() {
     assert_eq!(parsed["languageVersion"], serde_json::json!(4));
     assert_eq!(parsed["dialect"], serde_json::json!("v4"));
     assert_eq!(parsed["scriptMode"], serde_json::json!("strategy"));
-    assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(1));
-    assert_eq!(
-        parsed["diagnostics"][0]["code"],
-        serde_json::json!("E_LEGACY_STRATEGY_OUT_OF_SCOPE")
-    );
-    assert_eq!(
-        parsed["compatibility"]["unsupported"][0]["feature"],
-        serde_json::json!("legacy strategy")
-    );
+    assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(0));
+    assert_eq!(parsed["executable"], serde_json::json!(true));
 }
 
 #[test]
@@ -446,6 +477,20 @@ bgcolor(shade)
             serde_json::json!([4311679104_u64, 4311679104_u64, 4311679104_u64])
         );
     }
+}
+
+#[test]
+fn generic_source_input_override_selects_chart_series() {
+    let source = "//@version=5\nindicator(\"source\")\nsrc = input(close, \"Source\")\nplot(src)\n";
+    let bars = "time,open,high,low,close,volume\n0,1,5,2,4,1\n1,3,9,6,8,1\n";
+    let input_ids = input_call_ids_by_title(source);
+    let overrides_json = input_overrides_json(&[(input_ids["Source"], serde_json::json!("hl2"))]);
+    let output = run_script_csv_with_input_overrides(source, bars, &overrides_json)
+        .expect("generic chart source override");
+    let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([3.5, 7.5]));
+    let invalid = input_overrides_json(&[(input_ids["Source"], serde_json::json!("other plot"))]);
+    assert!(run_script_csv_with_input_overrides_internal(source, bars, &invalid).is_err());
 }
 
 #[test]
@@ -2315,7 +2360,7 @@ fn run_script_csv_returns_varip_array_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_type_varip_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_type_varip.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_type_varip_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user type varip fixture should run");
@@ -2381,7 +2426,7 @@ fn run_script_csv_returns_request_security_time_close_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_types_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_types.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_types_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user-defined types fixture should run");
@@ -2392,7 +2437,7 @@ fn run_script_csv_returns_user_types_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_type_functions_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_type_functions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_type_functions_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user-defined type functions fixture should run");
@@ -2403,7 +2448,7 @@ fn run_script_csv_returns_user_type_functions_fixture_contract() {
 #[test]
 fn run_script_csv_returns_user_methods_fixture_contract() {
     let output = run_script_csv(
-        include_str!("../../../../tests/fixtures/runtime/user_methods.pine"),
+        include_str!("../../../../tests/fixtures/runtime/user_methods_guarded.pine"),
         include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("user-defined methods fixture should run");
@@ -2464,27 +2509,14 @@ fn analyze_script_reports_unsupported_user_type_varip_fixture() {
 }
 
 #[test]
-fn analyze_script_reports_unsupported_user_type_field_mutation_fixture() {
+fn analyze_script_accepts_user_type_field_mutation_fixture() {
     let output = analyze_script(include_str!(
-        "../../../../tests/fixtures/sema/unsupported_user_type_field_mutation.pine"
+        "../../../../tests/fixtures/sema/supported_user_type_field_mutation.pine"
     ));
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert_eq!(parsed["executable"], serde_json::json!(false));
-    assert_eq!(
-        parsed["diagnostics"][0]["code"],
-        serde_json::json!("E_UNSUPPORTED_FEATURE")
-    );
-    assert_eq!(
-        parsed["compatibility"]["unsupported"][0]["feature"],
-        serde_json::json!("function_side_effect")
-    );
-    assert!(
-        parsed["compatibility"]["unsupported"][0]["reason"]
-            .as_str()
-            .expect("unsupported reason should be a string")
-            .contains("mutating fields on global user-defined type values")
-    );
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
 }
 
 #[test]
@@ -9164,17 +9196,20 @@ fn request_host_data_runs_through_direct_wasm_api() {
         parsed["plots"][49]["values"],
         serde_json::json!([null, 9, 9, 9.16, 9.4504])
     );
+    // CCI for consecutive prices has deviation 2/3; preserve the actual f64
+    // formula result instead of relying on lossy JSON parsing to round to 100.
+    let cci = 1.0_f64 / (0.015 * (2.0 / 3.0));
     assert_eq!(
         parsed["plots"][50]["values"],
-        serde_json::json!([null, null, 100.0, 100.0, 100.0])
+        serde_json::json!([null, null, cci, cci, cci])
     );
     assert_eq!(
         parsed["plots"][51]["values"],
         serde_json::json!([
             null,
             null,
-            -1.968253968253968,
-            -1.9696969696969695,
+            -1.9682539682539681,
+            -1.9696969696969697,
             -1.9710144927536233
         ])
     );
@@ -9201,7 +9236,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
             1.170731707317073,
             1.5058823529411764,
             1.6271186440677967,
-            1.6476964769647696
+            1.6476964769647697
         ])
     );
     assert_eq!(
@@ -9218,11 +9253,11 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][60]["values"],
-        serde_json::json!([null, null, 0, 0, 0])
+        serde_json::json!([0, 0, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][61]["values"],
-        serde_json::json!([null, null, 2, 2, 2])
+        serde_json::json!([0, -1, -2, -2, -2])
     );
     assert_eq!(
         parsed["plots"][62]["values"],
@@ -9257,7 +9292,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             null,
             5,
-            9.761904761904765,
+            9.761904761904763,
             14.30735930735931,
             18.65518539431583
         ])
@@ -9349,7 +9384,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             20,
             21.5,
-            22.63299316185547,
+            22.632993161855474,
             23.73606797749979,
             24.82842712474619
         ])
@@ -9359,7 +9394,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             20,
             19.5,
-            19.36700683814453,
+            19.367006838144526,
             19.26393202250021,
             19.17157287525381
         ])
@@ -9594,19 +9629,19 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][147]["values"],
-        serde_json::json!([null, null, 0, 0, 0])
+        serde_json::json!([0, 0, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][148]["values"],
-        serde_json::json!([null, null, 2, 2, 2])
+        serde_json::json!([0, -1, -2, -2, -2])
     );
     assert_eq!(
         parsed["plots"][149]["values"],
-        serde_json::json!([null, null, null, null, 0])
+        serde_json::json!([null, null, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][150]["values"],
-        serde_json::json!([null, null, null, null, 1])
+        serde_json::json!([null, null, 0, 0, -1])
     );
     assert_eq!(
         parsed["plots"][151]["values"],
@@ -9810,15 +9845,21 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][192]["values"],
-        serde_json::json!([null, null, 100.0, 100.0, 100.0])
+        serde_json::json!([
+            null,
+            null,
+            100.00000000000001,
+            100.00000000000001,
+            100.00000000000001
+        ])
     );
     assert_eq!(
         parsed["plots"][193]["values"],
         serde_json::json!([
             null,
             null,
-            -1.968253968253968,
-            -1.9696969696969695,
+            -1.9682539682539681,
+            -1.9696969696969697,
             -1.9710144927536233
         ])
     );
@@ -9841,7 +9882,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
             1.170731707317073,
             1.5058823529411764,
             1.6271186440677967,
-            1.6476964769647695
+            1.6476964769647697
         ])
     );
     assert_eq!(
@@ -9873,7 +9914,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             null,
             5,
-            9.761904761904765,
+            9.761904761904763,
             14.30735930735931,
             18.65518539431583
         ])
@@ -10076,11 +10117,11 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][248]["values"],
-        serde_json::json!([null, null, null, null, 0])
+        serde_json::json!([null, null, 0, 0, 0])
     );
     assert_eq!(
         parsed["plots"][249]["values"],
-        serde_json::json!([null, null, null, null, 1])
+        serde_json::json!([null, null, 0, 0, -1])
     );
     assert_eq!(
         parsed["plots"][123]["values"],
@@ -10104,7 +10145,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][253]["values"],
-        serde_json::json!([null, null, 10, 10, 14.142135623730953])
+        serde_json::json!([null, null, 10, 10, 14.142135623730951])
     );
     assert_eq!(
         parsed["plots"][254]["values"],
@@ -10127,7 +10168,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
             null,
             0.8414709848078965,
             0.8414709848078965,
-            0.9092974268256816
+            0.9092974268256817
         ])
     );
     assert_eq!(
@@ -10145,9 +10186,9 @@ fn request_host_data_runs_through_direct_wasm_api() {
         serde_json::json!([
             null,
             null,
-            0.10033467208545056,
-            0.10033467208545056,
-            0.10033467208545056
+            0.10033467208545055,
+            0.10033467208545055,
+            0.10033467208545055
         ])
     );
     assert_eq!(
@@ -10465,8 +10506,14 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_plot_values_close(303, &[None, Some(12.0), Some(13.0), Some(14.0), Some(15.0)]);
     assert_plot_values_close(304, &[None, Some(9.0), Some(10.0), Some(11.0), Some(12.0)]);
-    assert_plot_values_close(305, &[None, Some(0.0), Some(0.0), Some(0.0), Some(0.0)]);
-    assert_plot_values_close(306, &[None, Some(1.0), Some(1.0), Some(1.0), Some(1.0)]);
+    assert_plot_values_close(
+        305,
+        &[Some(0.0), Some(0.0), Some(0.0), Some(0.0), Some(0.0)],
+    );
+    assert_plot_values_close(
+        306,
+        &[Some(0.0), Some(-1.0), Some(-1.0), Some(-1.0), Some(-1.0)],
+    );
     assert_plot_values_close(307, &[None, Some(41.0), Some(43.0), Some(45.0), Some(47.0)]);
     assert_plot_values_close(
         308,
@@ -10583,7 +10630,7 @@ fn run_csv_with_request_bars_accepts_reserved_magnifier_envelope() {
     let host_input = r#"{"$magnifier":{"schemaVersion":1,"chartBars":[]}}"#;
     let output = run_script_csv_with_request_bars(source, bars, host_input)
         .expect("empty magnifier envelope is valid");
-    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    assert!(output.contains("\"schemaVersion\":9"), "{output}");
     let invalid = run_script_csv_with_request_bars_internal(
         source,
         bars,
@@ -10600,7 +10647,7 @@ fn run_csv_with_request_bars_accepts_reserved_session_windows_envelope() {
     let host_input = r#"{"$sessionWindows":{"schemaVersion":1,"bars":[{"barIndex":0,"windowId":"eth","tradingDayId":"d1"}]}}"#;
     let output = run_script_csv_with_request_bars(source, bars, host_input)
         .expect("session window envelope is valid");
-    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    assert!(output.contains("\"schemaVersion\":9"), "{output}");
     let invalid = run_script_csv_with_request_bars_internal(
         source,
         bars,
@@ -10866,7 +10913,7 @@ fn library_source_json_reports_missing_library() {
     assert_eq!(parsed["executable"], serde_json::json!(false));
     assert!(supported_features.contains(&"import"));
     assert!(diagnostic_codes.contains(&"E_IMPORT_MISSING_LIBRARY"));
-    assert!(diagnostic_codes.contains(&"E_IMPORT_ALIAS_REQUIRED"));
+    assert!(!diagnostic_codes.contains(&"E_IMPORT_ALIAS_REQUIRED"));
 }
 
 #[test]

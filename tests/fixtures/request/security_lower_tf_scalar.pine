@@ -1,0 +1,6 @@
+//@version=6
+indicator("intrabar arrays")
+a = request.security_lower_tf("NYSE:IBM", "1", close)
+plot(array.size(a))
+plot(array.size(a) > 0 ? array.first(a) : na)
+plot(array.size(a) > 0 ? array.last(a) : na)

@@ -22,6 +22,7 @@ mod pending_entries;
 mod pending_entry_fills;
 mod pending_exits;
 mod realtime;
+mod result_view;
 mod risk;
 mod shared_history;
 mod state;
@@ -69,6 +70,8 @@ pub struct BrokerState {
     margin_long: StrategyMarginSetting,
     margin_short: StrategyMarginSetting,
     quantity_scale: u32,
+    configured_quantity_scale: Option<u32>,
+    price_tick: Option<f64>,
     open_entry_commission: f64,
     slippage_price_offset: f64,
     limit_verification_price_offset: f64,
@@ -113,7 +116,7 @@ pub struct BrokerState {
 impl BrokerState {
     fn expand_persistent_all_entry_exit_for_new_entry(&mut self, bar_index: usize) {
         let position_size = self.position_size;
-        if !position_size.is_finite() || position_size <= 0.0 {
+        if !position_size.is_finite() || position_size == 0.0 {
             return;
         }
         let Some(pending_exit) = self.order_book.exits_mut().current_mut() else {
@@ -130,7 +133,7 @@ impl BrokerState {
                     | PendingExitTrigger::Trailing(_)
             )
         {
-            pending_exit.reserved_quantity = position_size;
+            pending_exit.reserved_quantity = position_size.abs();
             pending_exit.last_update_bar_index = bar_index;
         }
     }
@@ -280,6 +283,12 @@ impl BrokerState {
                 allocate,
             );
         });
+    }
+
+    pub(crate) fn set_pending_market_same_bar_percent_of_equity(&mut self, id: &str, percent: f64) {
+        self.order_book
+            .entries_mut()
+            .set_same_bar_percent_of_equity(id, percent);
     }
 
     #[allow(dead_code)]
@@ -1034,15 +1043,6 @@ impl BrokerState {
         self.order_book.entries().quantity_for_id(id).is_some()
     }
 
-    fn has_pending_short_entry(&self, id: &str) -> bool {
-        self.order_book
-            .entries()
-            .find_by_id(id)
-            .is_some_and(|pending_entry| {
-                pending_entry.direction == pending_entries::PendingEntryDirection::Short
-            })
-    }
-
     fn open_position_size_for_entry(&self, id: &str) -> f64 {
         if id.is_empty() {
             return self.position_size.abs();
@@ -1073,6 +1073,17 @@ impl BrokerState {
 
     fn has_open_position_for_entry(&self, id: &str) -> bool {
         self.open_position_size_for_entry(id) > 0.0
+    }
+
+    fn pending_exit_has_position(&self, pending: &PendingExit) -> bool {
+        if self.position_size == 0.0 || pending.reserved_quantity <= 0.0 {
+            return false;
+        }
+        if let Some(key) = pending.target_trade_key {
+            return self.trade_ledger.open_quantity_for_key(key) > 0.0;
+        }
+        self.close_entries_rule == StrategyCloseEntriesRule::Fifo
+            || self.has_open_position_for_entry(&pending.from_entry)
     }
 
     pub(crate) fn reject_entry_relative_exit_for_pending_entry(
@@ -1152,8 +1163,7 @@ impl BrokerState {
         if pending_exit.last_update_bar_index >= bar_index {
             return;
         }
-        if self.position_size == 0.0 || !self.has_open_position_for_entry(&pending_exit.from_entry)
-        {
+        if !self.pending_exit_has_position(&pending_exit) {
             if self.position_size == 0.0 && self.has_pending_entry(&pending_exit.from_entry) {
                 return;
             }
@@ -1216,8 +1226,14 @@ impl BrokerState {
             );
             if self.position_size == 0.0 {
                 self.order_book.exits_mut().clear_all();
-            } else {
+            } else if self.close_entries_rule == StrategyCloseEntriesRule::Any {
                 self.order_book.exits_mut().clear_for_entry(&from_entry);
+            } else {
+                self.order_book.exits_mut().remove_identities(&[(
+                    exit_id,
+                    from_entry,
+                    target_trade_key,
+                )]);
             }
         }
     }
@@ -1265,7 +1281,7 @@ impl BrokerState {
             if pending_exit.last_update_bar_index >= bar_index {
                 continue;
             }
-            if !self.has_open_position_for_entry(&pending_exit.from_entry) {
+            if !self.pending_exit_has_position(&pending_exit) {
                 self.order_book
                     .exits_mut()
                     .clear_for_entry(&pending_exit.from_entry);
@@ -1325,7 +1341,7 @@ impl BrokerState {
             if self.position_size == 0.0 {
                 break;
             }
-            if !self.has_open_position_for_entry(&pending_exit.from_entry) {
+            if !self.pending_exit_has_position(&pending_exit) {
                 self.order_book
                     .exits_mut()
                     .clear_for_entry(&pending_exit.from_entry);

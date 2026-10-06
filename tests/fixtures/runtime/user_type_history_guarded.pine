@@ -1,0 +1,177 @@
+//@version=5
+indicator("User type history")
+
+type Point
+    float x
+
+dyn = bar_index == 0 ? na : 1
+dyn_two = bar_index < 2 ? na : 2
+p = Point.new(close)
+prior = p[1]
+dynamic_prior = p[dyn]
+dynamic_sibling = p[dyn]
+dynamic_two_prior = p[dyn_two]
+plot(na(prior) ? na : prior.x)
+float dynamic_prior_x = na
+float dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    dynamic_prior_x := dynamic_prior.x
+    dynamic_prior.x := close + 700
+    dynamic_sibling_x_after_dynamic_mutation := dynamic_sibling.x
+plot(dynamic_prior_x)
+plot(na(dynamic_two_prior) ? na : dynamic_two_prior.x)
+plot(dynamic_sibling_x_after_dynamic_mutation)
+
+var Point sticky = Point.new(open)
+sticky_prior = sticky[1]
+plot(na(sticky_prior) ? na : sticky_prior.x)
+
+type Wrapper
+    Point point
+
+wrapper = Wrapper.new(Point.new(high))
+wrapper_prior = wrapper[1]
+wrapper_dynamic_prior = wrapper[dyn]
+wrapper_dynamic_sibling = wrapper[dyn]
+plot(na(wrapper_prior) ? na : wrapper_prior.point.x)
+float wrapper_dynamic_prior_x = na
+float wrapper_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapper_dynamic_prior_x := wrapper_dynamic_prior.point.x
+    wrapper_dynamic_prior.point := Point.new(close + 800)
+    wrapper_dynamic_sibling_x_after_dynamic_mutation := wrapper_dynamic_sibling.point.x
+plot(wrapper_dynamic_prior_x)
+plot(wrapper_dynamic_sibling_x_after_dynamic_mutation)
+
+points = array.from(Point.new(close), Point.new(close + 1), Point.new(close + 2))
+
+if_point = if close > open
+    Point.new(close)
+else
+    Point.new(open)
+if_prior = if_point[1]
+if_dynamic = if_point[dyn]
+if_dynamic_sibling = if_point[dyn]
+plot(na(if_prior) ? na : if_prior.x)
+float if_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    if_dynamic.x := close + 900
+    if_dynamic_sibling_x_after_dynamic_mutation := if_dynamic_sibling.x
+plot(if_dynamic_sibling_x_after_dynamic_mutation)
+
+switch_point = switch bar_index % 2
+    0 => Point.new(close + 10)
+    => Point.new(open + 10)
+switch_prior = switch_point[1]
+switch_dynamic = switch_point[dyn]
+switch_dynamic_sibling = switch_point[dyn]
+plot(na(switch_prior) ? na : switch_prior.x)
+float switch_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    switch_dynamic.x := close + 910
+    switch_dynamic_sibling_x_after_dynamic_mutation := switch_dynamic_sibling.x
+plot(switch_dynamic_sibling_x_after_dynamic_mutation)
+
+for_point = for i = 0 to 2
+    Point.new(close + i + 20)
+for_prior = for_point[1]
+for_dynamic = for_point[dyn]
+for_dynamic_sibling = for_point[dyn]
+plot(na(for_prior) ? na : for_prior.x)
+float for_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    for_dynamic.x := close + 920
+    for_dynamic_sibling_x_after_dynamic_mutation := for_dynamic_sibling.x
+plot(for_dynamic_sibling_x_after_dynamic_mutation)
+
+for_in_point = for point in points
+    point
+for_in_prior = for_in_point[1]
+for_in_dynamic = for_in_point[dyn]
+for_in_dynamic_sibling = for_in_point[dyn]
+plot(na(for_in_prior) ? na : for_in_prior.x)
+float for_in_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    for_in_dynamic.x := close + 930
+    for_in_dynamic_sibling_x_after_dynamic_mutation := for_in_dynamic_sibling.x
+plot(for_in_dynamic_sibling_x_after_dynamic_mutation)
+
+while_i = 0
+while_point = while while_i < 2
+    while_i := while_i + 1
+    Point.new(close + while_i + 30)
+while_prior = while_point[1]
+while_dynamic = while_point[dyn]
+while_dynamic_sibling = while_point[dyn]
+plot(na(while_prior) ? na : while_prior.x)
+float while_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    while_dynamic.x := close + 940
+    while_dynamic_sibling_x_after_dynamic_mutation := while_dynamic_sibling.x
+plot(while_dynamic_sibling_x_after_dynamic_mutation)
+
+wrapped_if = if close > open
+    Wrapper.new(Point.new(close + 40))
+else
+    Wrapper.new(Point.new(open + 40))
+wrapped_if_prior = wrapped_if[1]
+wrapped_if_dynamic = wrapped_if[dyn]
+wrapped_if_dynamic_sibling = wrapped_if[dyn]
+plot(na(wrapped_if_prior) ? na : wrapped_if_prior.point.x)
+float wrapped_if_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapped_if_dynamic.point := Point.new(close + 950)
+    wrapped_if_dynamic_sibling_x_after_dynamic_mutation := wrapped_if_dynamic_sibling.point.x
+plot(wrapped_if_dynamic_sibling_x_after_dynamic_mutation)
+
+wrapped_switch = switch bar_index % 2
+    0 => Wrapper.new(Point.new(close + 50))
+    => Wrapper.new(Point.new(open + 50))
+wrapped_switch_prior = wrapped_switch[1]
+wrapped_switch_dynamic = wrapped_switch[dyn]
+wrapped_switch_dynamic_sibling = wrapped_switch[dyn]
+plot(na(wrapped_switch_prior) ? na : wrapped_switch_prior.point.x)
+float wrapped_switch_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapped_switch_dynamic.point := Point.new(close + 960)
+    wrapped_switch_dynamic_sibling_x_after_dynamic_mutation := wrapped_switch_dynamic_sibling.point.x
+plot(wrapped_switch_dynamic_sibling_x_after_dynamic_mutation)
+
+wrapped_for = for i = 0 to 2
+    Wrapper.new(Point.new(close + i + 60))
+wrapped_for_prior = wrapped_for[1]
+wrapped_for_dynamic = wrapped_for[dyn]
+wrapped_for_dynamic_sibling = wrapped_for[dyn]
+plot(na(wrapped_for_prior) ? na : wrapped_for_prior.point.x)
+float wrapped_for_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapped_for_dynamic.point := Point.new(close + 970)
+    wrapped_for_dynamic_sibling_x_after_dynamic_mutation := wrapped_for_dynamic_sibling.point.x
+plot(wrapped_for_dynamic_sibling_x_after_dynamic_mutation)
+
+wrapper_values = array.from(Wrapper.new(Point.new(close + 70)), Wrapper.new(Point.new(close + 71)))
+wrapped_for_in = for item in wrapper_values
+    item
+wrapped_for_in_prior = wrapped_for_in[1]
+wrapped_for_in_dynamic = wrapped_for_in[dyn]
+wrapped_for_in_dynamic_sibling = wrapped_for_in[dyn]
+plot(na(wrapped_for_in_prior) ? na : wrapped_for_in_prior.point.x)
+float wrapped_for_in_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapped_for_in_dynamic.point := Point.new(close + 980)
+    wrapped_for_in_dynamic_sibling_x_after_dynamic_mutation := wrapped_for_in_dynamic_sibling.point.x
+plot(wrapped_for_in_dynamic_sibling_x_after_dynamic_mutation)
+
+wrapped_while_i = 0
+wrapped_while = while wrapped_while_i < 2
+    wrapped_while_i := wrapped_while_i + 1
+    Wrapper.new(Point.new(close + wrapped_while_i + 80))
+wrapped_while_prior = wrapped_while[1]
+wrapped_while_dynamic = wrapped_while[dyn]
+wrapped_while_dynamic_sibling = wrapped_while[dyn]
+plot(na(wrapped_while_prior) ? na : wrapped_while_prior.point.x)
+float wrapped_while_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapped_while_dynamic.point := Point.new(close + 990)
+    wrapped_while_dynamic_sibling_x_after_dynamic_mutation := wrapped_while_dynamic_sibling.point.x
+plot(wrapped_while_dynamic_sibling_x_after_dynamic_mutation)

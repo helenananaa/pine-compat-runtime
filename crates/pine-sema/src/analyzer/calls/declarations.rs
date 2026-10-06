@@ -1,6 +1,91 @@
 use crate::prelude::*;
 
 impl Analyzer {
+    pub(crate) fn select_fill_signature(
+        &mut self,
+        signature: &'static BuiltinSignature,
+        args: &[CallArg],
+        types: &[Option<PineType>],
+    ) -> &'static BuiltinSignature {
+        if signature.name == "fill"
+            && pine_builtins::is_gradient_fill_call(args.iter().enumerate().map(|(i, arg)| {
+                (
+                    arg.name.as_deref(),
+                    types.get(i).copied().flatten().map(|ty| ty.kind),
+                )
+            }))
+        {
+            if self.legacy.dialect() < crate::PineDialect::V5 {
+                self.unsupported(
+                    "fill.gradient",
+                    "vertical gradient fills require Pine v5 or v6",
+                    args.first().map_or(Span::default(), |arg| arg.span),
+                );
+            }
+            pine_builtins::gradient_fill_signature()
+        } else {
+            signature
+        }
+    }
+
+    pub(crate) fn validate_versioned_input_output_metadata(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) {
+        if self.legacy.dialect() >= crate::PineDialect::V6 {
+            return;
+        }
+        for (index, arg) in args.iter().enumerate() {
+            if signature.name.starts_with("input.") && is_call_arg(signature, arg, index, "active")
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    format!("`{}` argument `active` requires Pine v6", signature.name),
+                    arg.span,
+                ));
+            }
+            if matches!(signature.name, "plot" | "plotshape" | "fill") {
+                let old_const_metadata = is_call_arg(signature, arg, index, "editable")
+                    || (self.legacy.dialect() < crate::PineDialect::V5
+                        && is_call_arg(signature, arg, index, "display"));
+                if old_const_metadata
+                    && arg_types
+                        .get(index)
+                        .copied()
+                        .flatten()
+                        .is_some_and(|ty| ty.qualifier != Qualifier::Const)
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_TYPE",
+                        format!(
+                            "`{}` metadata argument requires a const value in this Pine version",
+                            signature.name
+                        ),
+                        arg.span,
+                    ));
+                }
+            }
+        }
+    }
+
+    pub(crate) fn validate_indicator_timeframe_args(&mut self, args: &[CallArg]) {
+        let signature =
+            pine_builtins::get_phase_1_builtin("indicator").expect("indicator signature");
+        for (index, arg) in args.iter().enumerate() {
+            if is_call_arg(signature, arg, index, "timeframe")
+                && self.known_const_string_value(&arg.value).as_deref() != Some("")
+            {
+                self.unsupported(
+                    "indicator.timeframe",
+                    "only an empty timeframe inheriting the host chart is supported; non-empty program-level timeframes require separate execution and output alignment",
+                    arg.span,
+                );
+            }
+        }
+    }
+
     pub(crate) fn validate_label_string_arg(
         &mut self,
         signature: &BuiltinSignature,
@@ -92,6 +177,11 @@ impl Analyzer {
                 continue;
             }
 
+            if is_call_arg(signature, arg, index, "calc_bars_count") {
+                self.validate_calc_bars_count_arg("indicator", arg);
+                continue;
+            }
+
             let is_max_bars_back = arg.name.as_deref() == Some("max_bars_back")
                 || (arg.name.is_none()
                     && signature
@@ -133,6 +223,26 @@ impl Analyzer {
         if let Some(message) = message {
             self.diagnostics
                 .push(Diagnostic::error("E_CALL_ARG_VALUE", message, arg.span));
+        }
+    }
+
+    pub(crate) fn validate_calc_bars_count_arg(&mut self, call_name: &str, arg: &CallArg) {
+        let Some(value) = self.known_const_int_for_validation(&arg.value) else {
+            return;
+        };
+        match value
+            .ok()
+            .filter(|value| *value >= 0)
+            .and_then(|value| u32::try_from(value).ok())
+        {
+            Some(value) => self.calc_bars_count = Some(value),
+            None => self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_VALUE",
+                format!(
+                    "`{call_name}` argument `calc_bars_count` must be a non-negative 32-bit integer"
+                ),
+                arg.span,
+            )),
         }
     }
 

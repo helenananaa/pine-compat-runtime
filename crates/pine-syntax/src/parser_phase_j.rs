@@ -75,7 +75,10 @@ impl Parser {
                 }
             }
         } else {
-            None
+            key.split('/').nth(1).map(|name| ImportAlias {
+                name: name.to_owned(),
+                span: key_start.merge(key_end),
+            })
         };
 
         let end = alias.as_ref().map_or(key_end, |alias| alias.span);
@@ -203,10 +206,24 @@ impl Parser {
                     self.error_here("E_PARSE_TYPE", "expected dedent before end of type");
                     break;
                 }
+                let varip = self.at(TokenKind::Varip);
+                if varip {
+                    self.bump();
+                }
                 let (type_name, type_span) = self.expect_field_type_name()?;
                 let (field_name, field_span) = self.expect_identifier("expected field name")?;
                 end = field_span;
+                let default_value = if self.at(TokenKind::Eq) {
+                    self.bump();
+                    let value = self.parse_expr(0)?;
+                    end = value.span;
+                    Some(value)
+                } else {
+                    None
+                };
                 fields.push(UserTypeField {
+                    default_value,
+                    varip,
                     type_name,
                     name: field_name,
                     span: type_span.merge(field_span),
@@ -279,10 +296,11 @@ impl Parser {
                 );
                 return None;
             }
-            let Some(type_name) = param.type_name else {
-                self.error_here("E_PARSE_METHOD", "method parameters must declare a type");
+            let type_name = param.type_name.unwrap_or_default();
+            if params.is_empty() && type_name.is_empty() {
+                self.error_here("E_PARSE_METHOD", "method receiver must declare a type");
                 return None;
-            };
+            }
             params.push(MethodParam {
                 type_name,
                 name: param.name,
@@ -344,7 +362,7 @@ impl Parser {
         end
     }
 
-    fn expect_identifier(&mut self, message: &str) -> Option<(String, Span)> {
+    pub(crate) fn expect_identifier(&mut self, message: &str) -> Option<(String, Span)> {
         match self.current().kind.clone() {
             TokenKind::Identifier(name) => {
                 let span = self.current().span;
@@ -371,13 +389,20 @@ impl Parser {
             let end = self.expect(TokenKind::Gt, "expected `>` after array field type")?;
             return Some((format!("array<{element}>"), first_span.merge(end)));
         }
-        if self.at(TokenKind::Dot) {
+        let (type_name, type_span) = if self.at(TokenKind::Dot) {
             self.bump();
             let (second, second_span) =
                 self.expect_identifier("expected field type name after `.`")?;
-            return Some((format!("{first}.{second}"), first_span.merge(second_span)));
+            (format!("{first}.{second}"), first_span.merge(second_span))
+        } else {
+            (first, first_span)
+        };
+        if self.at(TokenKind::LBracket) {
+            self.bump();
+            let end = self.expect(TokenKind::RBracket, "expected `]` after array field type")?;
+            return Some((format!("{type_name}[]"), type_span.merge(end)));
         }
-        Some((first, first_span))
+        Some((type_name, type_span))
     }
 
     fn nth_identifier(&self, offset: usize) -> bool {
@@ -519,6 +544,24 @@ mod tests {
     }
 
     #[test]
+    fn parses_user_type_array_alias_fields() {
+        let parsed =
+            parse("type Handles\n    line[] paths\n    box[] zones\n    chart.point[] anchors\n");
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::UserType(user_type) = &parsed.program.statements[0].kind else {
+            panic!("expected user-defined type");
+        };
+        assert_eq!(
+            user_type
+                .fields
+                .iter()
+                .map(|field| field.type_name.as_str())
+                .collect::<Vec<_>>(),
+            ["line[]", "box[]", "chart.point[]"]
+        );
+    }
+
+    #[test]
     fn parses_export_as_plain_identifier_when_not_followed_by_item_name() {
         let parsed = parse("export = 5\n");
 
@@ -553,6 +596,7 @@ mod tests {
 
         let StmtKind::FieldReassign {
             receiver,
+            path,
             field,
             value,
         } = &parsed.program.statements[0].kind
@@ -560,18 +604,27 @@ mod tests {
             panic!("expected field mutation");
         };
         assert_eq!(receiver, "p");
+        assert!(path.is_empty());
         assert_eq!(field, "x");
         assert!(matches!(value.kind, ExprKind::Literal(_)));
     }
 
     #[test]
-    fn parses_nested_field_mutation_as_unsupported_boundary() {
+    fn parses_nested_field_mutation_with_structural_path() {
         let parsed = parse("p.inner.x := 1\n");
 
-        let StmtKind::Unsupported { feature } = &parsed.program.statements[0].kind else {
-            panic!("expected unsupported nested field mutation");
+        let StmtKind::FieldReassign {
+            receiver,
+            path,
+            field,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected nested field mutation");
         };
-        assert_eq!(feature, "nested field mutation");
+        assert_eq!(receiver, "p");
+        assert_eq!(path, &["inner"]);
+        assert_eq!(field, "x");
         assert!(
             !parsed
                 .diagnostics

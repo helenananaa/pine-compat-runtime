@@ -101,9 +101,11 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
         },
         StmtKind::FieldReassign {
             receiver,
+            path,
             field,
             value,
         } => StmtKind::FieldReassign {
+            path: path.clone(),
             receiver: receiver.clone(),
             field: field.clone(),
             value: rewrite_expr(value, context),
@@ -212,6 +214,10 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
     }
 
     let kind = match &expr.kind {
+        ExprKind::Member { receiver, name } => ExprKind::Member {
+            receiver: Box::new(rewrite_expr(receiver, context)),
+            name: name.clone(),
+        },
         ExprKind::Call { callee, args } => {
             let postfix_call_result_method =
                 postfix_call_result_method_parts(callee, args).is_some();

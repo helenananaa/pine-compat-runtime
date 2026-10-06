@@ -12,10 +12,13 @@ pub(crate) struct SymbolState {
     symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
     typed_na_scalar_symbols: std::collections::HashSet<SymbolId>,
+    const_declared_symbols: std::collections::HashSet<SymbolId>,
     legacy_v3_untyped_na_symbols: HashMap<SymbolId, Span>,
     legacy_v3_pending_na_symbols: std::collections::HashSet<SymbolId>,
     non_scalar_udt_varip_symbols: std::collections::HashSet<SymbolId>,
     symbol_user_type_arrays: HashMap<SymbolId, String>,
+    symbol_user_type_matrices: HashMap<SymbolId, String>,
+    symbol_tuple_value_sources: HashMap<SymbolId, (SourcedExpr, usize)>,
     symbol_tuple_element_types: HashMap<SymbolId, Vec<PineType>>,
     symbol_tuple_user_type_arrays: HashMap<SymbolId, Vec<UserTypeArrayIdentityResult>>,
     symbol_maps: HashMap<SymbolId, MapTypeInfo>,
@@ -258,6 +261,16 @@ impl Analyzer {
             } => {
                 let diagnostic_start = self.diagnostics.len();
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
+                if *mode == pine_syntax::DeclMode::Const
+                    && is_scalar_assignment_kind(value_type.kind)
+                    && value_type.qualifier != Qualifier::Const
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CONST_DECL_VALUE",
+                        "`const` declaration requires a compile-time constant value",
+                        value.span,
+                    ));
+                }
                 let invalid_legacy_input_constant =
                     self.reject_legacy_input_constant_declaration(value);
                 let value_has_errors = self.diagnostics[diagnostic_start..]
@@ -304,7 +317,13 @@ impl Analyzer {
                     .then(|| self.user_type_array_name_of_expr(value))
                     .flatten();
                 if let Some(target_type) = declared_pine_type {
-                    self.validate_typed_declaration(name, target_type, value_type, statement.span);
+                    self.validate_typed_declaration(
+                        name,
+                        target_type,
+                        value_type,
+                        value.span,
+                        statement.span,
+                    );
                     if let Some(target_user_type_name) = declared_user_type_name.as_deref() {
                         self.validate_user_type_value_assignment(
                             name,
@@ -417,7 +436,20 @@ impl Analyzer {
                     is_non_scalar_typed_na_udt_varip_decl,
                     statement.span,
                 );
-                let symbol = if self.block_depth > 0 || self.function_depth > 0 {
+                let symbol = if self.function_depth > 0
+                    && self.scope.resolve(name).is_some_and(|existing| {
+                        self.legacy_v2_predeclared_symbols.contains(&existing.id)
+                    }) {
+                    let existing = self.scope.resolve(name).expect("predeclared local symbol");
+                    let updated = crate::resolver::SymbolInfo {
+                        pine_type: symbol_type,
+                        persistence,
+                        var_slot_id,
+                        ..existing
+                    };
+                    self.scope.update(name, updated);
+                    updated
+                } else if self.block_depth > 0 || self.function_depth > 0 {
                     self.define_local_symbol_with_persistence(
                         name,
                         symbol_type,
@@ -457,6 +489,9 @@ impl Analyzer {
                 }
                 if is_typed_na_scalar_decl {
                     self.typed_na_scalar_symbols.insert(symbol.id);
+                }
+                if *mode == pine_syntax::DeclMode::Const {
+                    self.const_declared_symbols.insert(symbol.id);
                 }
                 if is_legacy_v3_untyped_na_decl {
                     self.legacy_v3_untyped_na_symbols
@@ -522,6 +557,16 @@ impl Analyzer {
                     self.diagnostics.push(Diagnostic::error(
                         "E_UNKNOWN_SYMBOL",
                         format!("cannot reassign unknown symbol `{name}`"),
+                        statement.span,
+                    ));
+                } else if self
+                    .scope
+                    .resolve(name)
+                    .is_some_and(|symbol| self.const_declared_symbols.contains(&symbol.id))
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CONST_REASSIGN",
+                        format!("cannot reassign `const` symbol `{name}`"),
                         statement.span,
                     ));
                 } else if self.function_depth > 0 && self.scope.resolves_to_global(name) {
@@ -752,15 +797,20 @@ impl Analyzer {
             }
             StmtKind::FieldReassign {
                 receiver,
+                path,
                 field,
                 value,
             } => {
-                let target = if let Some(target) =
-                    self.resolve_chart_point_field_mutation(receiver, field, statement.span)
+                let target = if let Some(target) = path
+                    .is_empty()
+                    .then(|| {
+                        self.resolve_chart_point_field_mutation(receiver, field, statement.span)
+                    })
+                    .flatten()
                 {
                     Some((target.pine_type, None, "chart.point field mutation", None))
                 } else {
-                    self.resolve_user_type_field_mutation(receiver, field, statement.span)
+                    self.resolve_user_type_path_mutation(receiver, path, field, statement.span)
                         .map(|target| {
                             (
                                 target.pine_type,
@@ -797,16 +847,15 @@ impl Analyzer {
                     .last()
                     .copied()
                     .unwrap_or(false);
-                let allowed_function_local_udt_mutation =
+                let allowed_function_udt_mutation =
                     target
                         .as_ref()
                         .is_some_and(|(_, _, feature, receiver_symbol)| {
                             *feature == "user-defined type field mutation"
                                 && receiver_symbol.is_some()
-                                && !receiver_is_global
-                                && !receiver_is_function_param
+                                && !(receiver_is_function_param && is_method_context)
                         });
-                if self.function_depth > 0 && !allowed_function_local_udt_mutation {
+                if self.function_depth > 0 && !allowed_function_udt_mutation {
                     let reason = match target.as_ref().map(|(_, _, feature, _)| *feature) {
                         Some("user-defined type field mutation") if is_method_context => {
                             "mutating user-defined type fields inside methods is not supported"
@@ -963,6 +1012,7 @@ impl Analyzer {
                 self.unsupported(feature, unsupported_syntax_reason(feature), statement.span);
             }
         }
+        self.record_udt_matrix_statement(statement);
     }
 
     fn assignment_contextualized_type(&self, value_type: PineType) -> PineType {
@@ -1025,10 +1075,13 @@ impl Analyzer {
             symbol_user_type_identities: self.symbol_user_type_identities.clone(),
             symbol_init_exprs: self.symbol_init_exprs.clone(),
             typed_na_scalar_symbols: self.typed_na_scalar_symbols.clone(),
+            const_declared_symbols: self.const_declared_symbols.clone(),
             legacy_v3_untyped_na_symbols: self.legacy_v3_untyped_na_symbols.clone(),
             legacy_v3_pending_na_symbols: self.legacy_v3_pending_na_symbols.clone(),
             non_scalar_udt_varip_symbols: self.non_scalar_udt_varip_symbols.clone(),
             symbol_user_type_arrays: self.symbol_user_type_arrays.clone(),
+            symbol_user_type_matrices: self.symbol_user_type_matrices.clone(),
+            symbol_tuple_value_sources: self.symbol_tuple_value_sources.clone(),
             symbol_tuple_element_types: self.symbol_tuple_element_types.clone(),
             symbol_tuple_user_type_arrays: self.symbol_tuple_user_type_arrays.clone(),
             symbol_maps: self.symbol_maps.clone(),
@@ -1046,10 +1099,13 @@ impl Analyzer {
         self.symbol_user_type_identities = state.symbol_user_type_identities;
         self.symbol_init_exprs = state.symbol_init_exprs;
         self.typed_na_scalar_symbols = state.typed_na_scalar_symbols;
+        self.const_declared_symbols = state.const_declared_symbols;
         self.legacy_v3_untyped_na_symbols = state.legacy_v3_untyped_na_symbols;
         self.legacy_v3_pending_na_symbols = state.legacy_v3_pending_na_symbols;
         self.non_scalar_udt_varip_symbols = state.non_scalar_udt_varip_symbols;
         self.symbol_user_type_arrays = state.symbol_user_type_arrays;
+        self.symbol_user_type_matrices = state.symbol_user_type_matrices;
+        self.symbol_tuple_value_sources = state.symbol_tuple_value_sources;
         self.symbol_tuple_element_types = state.symbol_tuple_element_types;
         self.symbol_tuple_user_type_arrays = state.symbol_tuple_user_type_arrays;
         self.symbol_maps = state.symbol_maps;
@@ -1139,7 +1195,7 @@ fn collect_request_reassigned_names(
     }
 }
 
-fn collect_request_reassigned_names_from_function_body(
+pub(crate) fn collect_request_reassigned_names_from_function_body(
     body: &FunctionBody,
     names: &mut std::collections::HashSet<String>,
 ) {
@@ -1154,7 +1210,9 @@ fn collect_request_reassigned_names_from_expr(
     names: &mut std::collections::HashSet<String>,
 ) {
     match &expr.kind {
-        ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => {
+        ExprKind::Unary { expr, .. }
+        | ExprKind::Group(expr)
+        | ExprKind::Member { receiver: expr, .. } => {
             collect_request_reassigned_names_from_expr(expr, names)
         }
         ExprKind::History { expr, offset } => {

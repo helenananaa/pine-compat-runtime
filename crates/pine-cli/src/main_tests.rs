@@ -18,9 +18,42 @@ use std::{
 
 #[test]
 fn package_version_is_the_coordinated_prerelease_identity() {
-    assert_eq!(crate::package_version(), "0.3.0-rc.1");
-    assert_eq!(crate::package_version_line(), "pine-compat 0.3.0-rc.1");
+    assert_eq!(crate::package_version(), "0.3.0-rc.2");
+    assert_eq!(crate::package_version_line(), "pine-compat 0.3.0-rc.2");
     assert!(crate::usage().contains("pine-compat --version"));
+}
+
+#[test]
+fn analysis_library_diagnostics_use_unicode_source_locations() {
+    let root = SourceFile::new(
+        "根.pine",
+        "//@version=6\nindicator(\"根\")\nimport audit/Library/1 as lib\nplot(lib.f(close))\n",
+    );
+    let text = "//@version=6\nlibrary(\"库\")\n// 中文\nexport f(float x) => str.length(\"中文\") + missingName + x\n";
+    let library = SourceFile::new("库.pine", text);
+    let offset = text.find("missingName").unwrap();
+    let location = library.line_col(offset);
+    let input = AnalysisInput::with_library_sources(
+        root.clone(),
+        vec![("audit/Library/1".to_owned(), library)],
+    )
+    .unwrap();
+    let analysis = analyze_input(&input);
+    let report: serde_json::Value =
+        serde_json::from_str(&crate::commands::analyze::analysis_json(&root, &analysis)).unwrap();
+    let diagnostic = report["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["code"] == "E_UNKNOWN_SYMBOL")
+        .unwrap();
+    assert_eq!(diagnostic["span"]["sourceId"], 1);
+    assert_eq!(diagnostic["span"]["libraryKey"], "audit/Library/1");
+    assert_eq!(diagnostic["span"]["sourceName"], "库.pine");
+    assert_eq!(diagnostic["span"]["start"], offset);
+    assert_eq!(diagnostic["span"]["line"], location.line);
+    assert_eq!(diagnostic["span"]["column"], location.column);
+    assert_eq!(report["schemaVersion"], 6);
 }
 
 fn strategy_orders_segment(output: &str) -> &str {
@@ -119,6 +152,7 @@ fn expected_partial_builtin(name: &str) -> bool {
         || matches!(
             name,
             "request.security"
+                | "request.security_lower_tf"
                 | "strategy"
                 | "max_bars_back"
                 | "alert"
@@ -158,9 +192,33 @@ fn runtime_fixture_files_are_referenced_by_rust_gates() {
         .collect::<Vec<_>>()
         .join("\n");
 
+    // The incremental gate executes the immutable originals as exact runtime
+    // errors and their guarded counterparts as successful programs.
+    let incremental_gate =
+        fs::read_to_string(workspace.join("crates/pine-runtime/tests/incremental.rs")).unwrap();
+    assert!(
+        incremental_gate
+            .contains("include_str!(\"../../../tests/fixtures/undefined_udt_access.tsv\")")
+    );
+    let catalog = include_str!("../../../tests/fixtures/undefined_udt_access.tsv");
+    let catalog_paths = catalog
+        .lines()
+        .skip(1)
+        .flat_map(|line| {
+            let (original, guarded) = line.split_once('\t').expect("undefined-object catalog row");
+            [original, guarded].map(|name| {
+                assert!(
+                    name.ends_with(".pine") && !name.contains(['/', '\\']),
+                    "catalog entries must be filenames"
+                );
+                format!("tests/fixtures/runtime/{name}")
+            })
+        })
+        .collect::<Vec<_>>();
+
     let untracked_fixtures: Vec<_> = fixture_paths
         .into_iter()
-        .filter(|fixture| !rust_sources.contains(fixture))
+        .filter(|fixture| !rust_sources.contains(fixture) && !catalog_paths.contains(fixture))
         .collect();
     assert!(
         untracked_fixtures.is_empty(),
@@ -732,6 +790,149 @@ fn strategy_exit_bracket_fixture_has_single_exit_order_and_trade() {
     assert!(output.contains(
             r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":100,"exitPrice":95,"qty":2,"profit":-10}]"#
         ));
+}
+
+#[test]
+fn strategy_limit_exit_fills_at_equal_previous_close_open_when_marketable() {
+    let source = SourceFile::new(
+        "equal_open_limit_exit.pine",
+        "//@version=6\nstrategy(\"Equal open limit exit\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long)\nif strategy.position_size > 0\n    strategy.exit(\"X\", \"L\", limit=105)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = parse_bars_csv(
+        "time,open,high,low,close,volume\n1,100,100,100,100,1\n2,100,110,100,110,1\n3,110,112,108,111,1\n",
+    )
+    .expect("bars");
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime");
+    let strategy = result.strategy.expect("strategy");
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_bar_index, 2);
+    assert_eq!(strategy.trades[0].exit_price, 110.0);
+}
+
+#[test]
+fn strategy_exit_limit_snaps_to_favorable_quote_tick_by_order_side() {
+    let bars = parse_bars_csv(
+        "time,open,high,low,close,volume\n1,100,100,100,100,1\n2,100,100,100,100,1\n3,100,110,90,100,1\n",
+    )
+    .expect("bars");
+    for (direction, price, expected) in [
+        ("strategy.long", 105.001, 105.01),
+        ("strategy.short", 94.999, 94.99),
+    ] {
+        let source = SourceFile::new(
+            "quote_tick_limit_exit.pine",
+            format!(
+                "//@version=6\nstrategy(\"Quote tick exit\")\nif bar_index == 0\n    strategy.entry(\"E\", {direction})\nif strategy.position_size != 0\n    strategy.exit(\"X\", \"E\", limit={price})\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime");
+        let strategy = result.strategy.expect("strategy");
+        assert_eq!(strategy.trades.len(), 1);
+        assert!((strategy.trades[0].exit_price - expected).abs() < 1e-9);
+    }
+}
+
+#[test]
+fn strategy_exit_bracket_snaps_limit_and_stop_legs_by_order_side() {
+    let bars = parse_bars_csv(
+        "time,open,high,low,close,volume\n1,100,100,100,100,1\n2,100,100,100,100,1\n3,100,110,90,100,1\n",
+    )
+    .expect("bars");
+    for (direction, stop, limit, expected) in [
+        ("strategy.long", 50.001, 105.001, 105.01),
+        ("strategy.short", 150.001, 94.999, 94.99),
+        ("strategy.long", 94.999, 150.001, 94.99),
+        ("strategy.short", 105.001, 50.001, 105.01),
+    ] {
+        let source = SourceFile::new(
+            "quote_tick_bracket_exit.pine",
+            format!(
+                "//@version=6\nstrategy(\"Quote tick bracket\")\nif bar_index == 0\n    strategy.entry(\"E\", {direction})\nif strategy.position_size != 0\n    strategy.exit(\"X\", \"E\", stop={stop}, limit={limit})\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime");
+        let strategy = result.strategy.expect("strategy");
+        assert_eq!(strategy.trades.len(), 1);
+        assert!((strategy.trades[0].exit_price - expected).abs() < 1e-9);
+    }
+}
+
+#[test]
+fn strategy_exit_bracket_uses_pending_entry_side_for_quote_tick() {
+    let source = SourceFile::new(
+        "pending_entry_bracket_tick.pine",
+        "//@version=6\nstrategy(\"Pending entry bracket tick\")\nif bar_index == 0\n    strategy.entry(\"S\", strategy.short)\n    strategy.exit(\"X\", \"S\", stop=105.001, limit=50.001)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = parse_bars_csv(
+        "time,open,high,low,close,volume\n1,100,100,100,100,1\n2,100,110,95,100,1\n",
+    )
+    .expect("bars");
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime");
+    let strategy = result.strategy.expect("strategy");
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_bar_index, 1);
+    assert!((strategy.trades[0].exit_price - 105.01).abs() < 1e-9);
+}
+
+#[test]
+fn strategy_exit_with_na_bracket_leg_keeps_the_finite_leg() {
+    let bars = parse_bars_csv(
+        "time,open,high,low,close,volume\n1,100,100,100,100,1\n2,100,100,100,100,1\n3,100,110,90,100,1\n",
+    )
+    .expect("bars");
+    for (stop, limit, expected) in [
+        ("94.999", "na", Some(94.99)),
+        ("na", "105.001", Some(105.01)),
+        ("na", "na", None),
+    ] {
+        let source = SourceFile::new(
+            "na_bracket_leg.pine",
+            format!(
+                "//@version=6\nstrategy(\"NA bracket leg\")\nfloat stopPrice = {stop}\nfloat limitPrice = {limit}\nif bar_index == 0\n    strategy.entry(\"E\", strategy.long)\nif strategy.position_size > 0\n    strategy.exit(\"X\", \"E\", stop=stopPrice, limit=limitPrice)\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime");
+        let strategy = result.strategy.expect("strategy");
+        assert!(
+            strategy.diagnostics.is_empty(),
+            "{:?}",
+            strategy.diagnostics
+        );
+        assert_eq!(strategy.trades.len(), usize::from(expected.is_some()));
+        if let Some(expected) = expected {
+            assert!((strategy.trades[0].exit_price - expected).abs() < 1e-9);
+        }
+    }
 }
 
 #[test]

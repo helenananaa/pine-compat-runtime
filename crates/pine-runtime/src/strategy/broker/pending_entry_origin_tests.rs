@@ -120,6 +120,7 @@ fn pending_entry_equality_includes_origin_and_key() {
         direction: PendingEntryDirection::Long,
         kind: PendingEntryKind::Market,
         quantity: 1.0,
+        same_bar_percent_of_equity: None,
         created_bar_index: 0,
         metadata: StrategyOrderMetadata::default(),
         enforce_pyramiding: true,

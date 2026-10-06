@@ -1,5 +1,11 @@
 # Execution Semantics
 
+For `ta.pivothigh`/`ta.pivotlow`, the complete raw left+right+1 history window
+must exist and the candidate must be non-null. Each directional comparison
+stops at its nearest null. Equal older values are allowed, while equal newer
+values prevent confirmation, so a plateau belongs to its rightmost candidate.
+See `PIVOT_NA_AUDIT.md` for independent v5/v6 controls and complete RSI evidence.
+
 Pine Compat Runtime should be designed around time-series execution, not around
 ordinary one-shot script execution.
 
@@ -181,7 +187,8 @@ positive const numeric fixed default entry quantity.
 positive const numeric cash amount. When a supported `strategy.entry` omits
 `qty`, the cash subset calculates the absolute quantity once at placement time as
 `N / close`, using the current close and the current no-currency-conversion
-boundary.
+boundary. When the host explicitly supplies chart quantity precision, the
+result is truncated to that contract grid before placing the order.
 `strategy(..., default_qty_type=strategy.percent_of_equity, default_qty_value=N)`
 accepts a positive const numeric default entry percentage. When a supported
 `strategy.entry` omits `qty`, the percent-of-equity subset calculates the
@@ -473,7 +480,7 @@ leaves supplied magnifier input inert. Forming/live realtime bars never consume
 historical magnifier groups. `calc_on_every_history_tick` remains unimplemented
 and rejected.
 `fill_orders_on_standard_ohlc` remains unsupported. Public RuntimeResult
-schemaVersion stays 8. Python `REALTIME_SESSION_SCHEMA_VERSION` stays 1, with
+schemaVersion is now 9 following the gradient-fill extension. Python `REALTIME_SESSION_SCHEMA_VERSION` stays 1, with
 optional seed-only `magnifier_bars`.
 Internal broker state keeps `StrategyRiskRules` configuration separate from
 `StrategyRiskState` tripped/window state, with hooks before order admission,
@@ -819,8 +826,9 @@ used, it resolves against the current open position size as
 fills clamp to the current position size. Omitted `qty` and omitted
 `qty_percent` keep the previous full-position behavior.
 
-Profit/loss and trailing tick arguments convert positive tick distances from
-`strategy.position_avg_price` using the fixed default `syminfo.mintick`, then
+Profit/loss and trailing tick arguments convert finite non-negative tick
+distances from `strategy.position_avg_price` using the host-supplied chart
+`syminfo.mintick`, then
 reuse the same pending-exit lifecycle: accepted calls are not eligible on the
 bar where they are created or replaced, and a later historical bar with
 `low <= stop/loss price` or `high >= limit/profit price` fills at the selected
@@ -891,6 +899,57 @@ The error is an internal execution outcome, not an alert, log event, output
 snapshot, or host callback. It therefore adds no public runtime-result schema
 field and does not enter the output rollback or collection-mutation side-effect
 models.
+
+`HistoricalRuntime` commits successful bars incrementally and does not copy the
+entire evaluator before each bar. Once an error is reached during execution
+(including `runtime.error`, an invalid reached expression, or a resource limit),
+that instance rejects further execution with `E_RUNTIME_POISONED`. Rebuild the
+runtime from the desired successful history before retrying. The failed bar may
+have changed evaluator state or emitted partial output; `result()` on that failed
+instance is not a committed checkpoint. Previously returned owned results remain
+valid. Dropping a failed historical dataset iterator releases its dataset context
+but does not clear this failure state. Cloning a failed instance also preserves it.
+
+Host-input validation performed before bar execution, such as a mismatched clock
+count or missing session-window coverage, leaves the runtime usable and may be
+fixed and retried. `RealtimeRuntime` executes updates and history replacement on
+separate candidates, so a failed update, seed, correction or replay leaves its
+previous session usable.
+
+## Deterministic Resource Allowances
+
+`ResourceLimits` supplements `ExecutionLimits` with two independently optional
+per-chart-bar allowances. Rust callers configure either historical or realtime
+runtimes with `with_resource_limits` and inspect the settings with
+`resource_limits()`. `max_collection_bytes_per_bar` defaults to
+`Some(64 * 1024 * 1024)`; `max_matrix_work_per_bar` defaults to
+`Some(100_000_000)`. `None` disables the corresponding allowance.
+
+Collection bytes count logical Pine value payload allocations and recorded
+copies, including variable-sized payloads. They limit allocation work during an
+execution, rather than retained collection size, process RSS or the entire Rust
+heap. Matrix units account for deterministic estimates of numerical work. The
+guards cover `matrix.mult`, `matrix.pow`, `matrix.det`, `matrix.inv`,
+`matrix.rank`, `matrix.eigenvalues`, `matrix.eigenvectors` and `matrix.pinv`,
+including iterative QR and Jacobi phases. They do not measure wall-clock time.
+An exhausted allowance fails the reached execution with `E_RESOURCE_BUDGET`.
+
+A new chart-bar execution resets these allowances. Requested contexts spend the
+same remaining allowance as their parent chart execution; evaluating several
+requested bars or resuming a requested checkpoint does not replenish it.
+Repeated strategy fill passes also share the allowance. Strategy rollback
+restores calculation state and local retained `valuewhen` accounting, while
+leaving consumed execution steps, loop iterations and resource units consumed.
+TA and stateful scalar-helper maps are captured together in `TaRollbackState`;
+pure caches, scratch buffers, broker persistence and `varip` retain their
+separate lifetime rules.
+
+Each realtime update evaluates on a candidate with its own chart execution
+allowance. A failed update, historical seed, correction or replay discards that
+candidate and preserves the session state published before the attempt,
+including its revision and visible output. An error during historical execution
+instead poisons that historical instance as described above; its partially
+evaluated failed bar is not a committed result.
 
 ## Alert Events
 
@@ -965,7 +1024,8 @@ compile-time int-index/string-name selector resolving to an int/float/string fie
 pop/remove/shift return field reads, clear size reset, copy independent field
 reads, reverse reordered field reads, slice window field reads, concat appended
 field reads, and statement/expression/index-value for-in value-copy field reads.
-It intentionally excludes remote lookup, re-exports, unaliased imports,
+It infers an omitted import alias from the library name in the import path.
+It intentionally excludes remote lookup, re-exports,
 side-effecting exported functions, imported UDT flow outside the covered same-identity scalar-tree paths, collections,
 direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset, and alias-qualified imported method receiver type
 mismatches.
@@ -1212,7 +1272,10 @@ mutating either name mutates the same runtime-owned array. Passing an array to a
 user-defined function also passes the array id, so helpers read the same
 backing values through parameters. Pine v4 UDF bodies additionally admit the
 exact namespace-call mutation subset `array.set`, `array.pop`,
-`array.unshift`, and `array.clear`; all other UDF collection mutation remains
+`array.unshift`, and `array.clear`. Modern v5/v6 local UDFs admit
+`array.unshift` and `array.push`, including caller parameters and global array
+references, aliases and nested calls. Imported functions retain their separate
+pure-library admission restrictions. Other UDF collection mutation remains
 outside the executable subset. Top-level
 branches and loops mutate the same array id they can read after control flow
 continues. `array.copy` and `values.copy()` allocate a new array id initialized
@@ -2110,6 +2173,17 @@ caches, callsite state, and history reads continue to roll back to the confirmed
 baseline. A confirmed update also seeds from the latest forming `varip` values
 before executing and then commits the resulting values into the confirmed
 runtime for the next bar.
+`RealtimeRuntime` enforces the chart timestamp protocol in the core: each newly
+confirmed or historical bar must be later than the last confirmed bar, and
+replacements and confirmation of an open forming bar must retain its timestamp.
+Python and WASM sessions use this same validation and read their bar counts and
+timestamps from the core. Historical seed batches must be strictly increasing
+and follow the existing confirmed prefix; replay and correction validate their
+complete replacement history before execution. Input or execution failures keep
+the previous realtime state, revision, cached delta and timestamps. Successful
+historical discovery, seed, replay or correction discard the speculative bar.
+Python/WASM sessions still require one initial seed before live updates; Rust
+hosts may start with a single historical or realtime observation.
 Committed and realtime forming history reads from supported UDT `varip` values
 use the same confirmed-history baseline, including representative same-local and
 same-imported nested scalar-tree Wrapper values initialized from ternary
@@ -3016,7 +3090,9 @@ Rust runtime is run with call-site keyed `InputOverrides`, the CLI supplies
 `--input-override CALL_SITE_ID=value`, or the Python host supplies a call-site
 keyed `input_overrides` dictionary to `Program.run()` or `run_script()`, or the
 WASM host supplies an `inputOverridesJson` object to a `*WithInputOverrides` run
-API. Host-side `input.source` overrides are not implemented yet.
+API. `input.source` overrides select the chart's `open`, `high`, `low`, `close`,
+`hl2`, `hlc3`, `ohlc4`, or `hlcc4` series. External indicator plot sources are
+not yet supplied by a host contract.
 
 ## Built-In OHLCV Series
 
@@ -3155,6 +3231,12 @@ the synthetic 1/100 default; no exchange lookup is performed. Same-symbol reques
 contexts inherit the grid; other symbols retain the existing default metadata.
 Tick orders, slippage, limit verification, rounding and mintick scalar/collection
 formatting use this grid. Public output schema is unchanged.
+Broker market fill helpers snap an off-grid historical open to the nearest
+chart tick before applying configured slippage and recording the fill. Opens
+already on the chart grid keep their original floating-point value. This
+matters for adjusted stock bars whose exported OHLC carries fractional ticks;
+the [AAPL daily receipt](UT_BOT_AAPL_DAILY_EXPANSION_20260927.md) compares the
+resulting closed-trade prices and profits with TradingView.
 
 TradingView v5/v6 captures establish zero for absent closedtrades.commission
 and closedtrades.profit (including negative/out-of-range integer indices),
@@ -3179,8 +3261,9 @@ four-times cover multiplier and position clamp. Script-visible
 `strategy.margin_liquidation_price` rounds down for longs and up for shorts on
 the chart price grid; internal candidate accounting retains its raw formula.
 This field alone does not specify a tick-level liquidation event threshold.
-The quantity profile does not impose general order-size rounding or implement
-arbitrary lot steps, non-unit point values, or account-currency conversion.
+Configured quantity precision truncates supported explicit and default entry
+quantities to the chart contract grid. It does not implement arbitrary lot
+steps, non-unit point values, or account-currency conversion.
 
 Absent integer records for `strategy.closedtrades.size` and
 `strategy.opentrades.size` return zero, including negative indices. An `na`

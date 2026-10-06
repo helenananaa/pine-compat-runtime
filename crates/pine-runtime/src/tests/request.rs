@@ -8,6 +8,124 @@ fn runtime_program() -> pine_ir::HirProgram {
     compile_program("indicator(\"request scaffold\")\nplot(close)\n")
 }
 
+#[test]
+fn dynamic_security_selects_historical_contexts_and_rejects_new_realtime_context() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"dynamic request\")\nsymbol = bar_index % 3 == 0 ? \"B\" : bar_index % 3 == 1 ? \"C\" : \"D\"\nplot(request.security(symbol, timeframe.period, close))\n",
+    );
+    let timeframe = RequestTimeframe::default();
+    let provider = InMemoryRequestDataProvider::from_streams([
+        (
+            RequestKey::new("B", timeframe.clone()),
+            vec![timed_bar(0, 10.0), timed_bar(60_000, 11.0)],
+        ),
+        (
+            RequestKey::new("C", timeframe.clone()),
+            vec![timed_bar(0, 20.0), timed_bar(60_000, 21.0)],
+        ),
+        (
+            RequestKey::new("D", timeframe),
+            vec![
+                timed_bar(0, 30.0),
+                timed_bar(60_000, 31.0),
+                timed_bar(120_000, 32.0),
+            ],
+        ),
+    ])
+    .unwrap();
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        RequestEnvironment::new(ChartContext::default(), Arc::new(provider)),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 100.0)))
+        .unwrap();
+    let historical = runtime
+        .update(BarUpdate::historical(timed_bar(60_000, 101.0)))
+        .unwrap();
+    assert_values_close(&historical.plots[0].values, &[10.0, 21.0]);
+    let error = runtime
+        .update(BarUpdate::forming(timed_bar(120_000, 102.0)))
+        .unwrap_err();
+    assert!(error.message.contains("new dynamic context"), "{error:?}");
+}
+
+#[test]
+fn dynamic_lower_tf_selects_intrabar_context_per_chart_bar() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"dynamic intrabars\")\ntf = bar_index == 0 ? \"1\" : \"2\"\nvalues = request.security_lower_tf(\"B\", tf, close)\nplot(array.size(values))\nplot(array.size(values) > 0 ? array.get(values, array.size(values) - 1) : na)\n",
+    );
+    let provider = InMemoryRequestDataProvider::from_streams([
+        (
+            RequestKey::new("B", RequestTimeframe::parse("1").unwrap()),
+            vec![
+                timed_bar(0, 1.0),
+                timed_bar(60_000, 2.0),
+                timed_bar(120_000, 3.0),
+            ],
+        ),
+        (
+            RequestKey::new("B", RequestTimeframe::parse("2").unwrap()),
+            vec![
+                timed_bar(0, 10.0),
+                timed_bar(120_000, 11.0),
+                timed_bar(240_000, 12.0),
+                timed_bar(360_000, 13.0),
+                timed_bar(480_000, 14.0),
+            ],
+        ),
+    ])
+    .unwrap();
+    let environment = RequestEnvironment::new(
+        ChartContext::new("CHART", RequestTimeframe::parse("5").unwrap()),
+        Arc::new(provider),
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0), timed_bar(300_000, 101.0)])
+        .unwrap();
+    assert_values_close(&result.plots[0].values, &[3.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[3.0, 14.0]);
+}
+
+#[test]
+fn dynamic_security_in_local_scope_warms_only_executed_contexts() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"conditional request\")\nsymbol = bar_index == 1 ? \"B\" : \"C\"\nfloat value = na\nif bar_index > 0\n    value := request.security(symbol, timeframe.period, close)\nplot(value)\n",
+    );
+    let timeframe = RequestTimeframe::default();
+    let provider = InMemoryRequestDataProvider::from_streams([
+        (
+            RequestKey::new("B", timeframe.clone()),
+            vec![timed_bar(0, 10.0), timed_bar(60_000, 11.0)],
+        ),
+        (
+            RequestKey::new("C", timeframe),
+            vec![
+                timed_bar(0, 20.0),
+                timed_bar(60_000, 21.0),
+                timed_bar(120_000, 22.0),
+            ],
+        ),
+    ])
+    .unwrap();
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        RequestEnvironment::new(ChartContext::default(), Arc::new(provider)),
+    );
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 100.0)))
+        .unwrap();
+    let historical = runtime
+        .update(BarUpdate::historical(timed_bar(60_000, 101.0)))
+        .unwrap();
+    assert_eq!(historical.plots[0].values[0], PineValue::Na);
+    assert_values_close(&historical.plots[0].values[1..], &[11.0]);
+    let error = runtime
+        .update(BarUpdate::forming(timed_bar(120_000, 102.0)))
+        .unwrap_err();
+    assert!(error.message.contains("new dynamic context"), "{error:?}");
+}
+
 fn compile_program(text: &str) -> pine_ir::HirProgram {
     let source = SourceFile::new("test.pine", text);
     let analysis = analyze_source(&source);
@@ -90,6 +208,874 @@ fn external_symbol_environment_with_chart_timeframe(
         ),
         Arc::new(provider),
     )
+}
+
+#[test]
+fn request_security_calc_bars_count_resets_requested_history_before_alignment() {
+    let program = compile_program(include_str!(
+        "../../../../tests/fixtures/request/security_calc_bars_count.pine"
+    ));
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        (0..5)
+            .map(|index| timed_bar(index * 60_000, (index + 1) as f64))
+            .collect(),
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(
+            &(0..5)
+                .map(|index| timed_bar(index * 60_000, 100.0 + index as f64))
+                .collect::<Vec<_>>(),
+        )
+        .expect("bounded security should run with explicit merge policies");
+    assert_eq!(result.plots[0].values[..3], vec![PineValue::Na; 3]);
+    assert_values_close(&result.plots[0].values[3..], &[4.0, 9.0]);
+    assert_eq!(result.plots[1].values[..3], vec![PineValue::Na; 3]);
+    assert_values_close(&result.plots[1].values[3..], &[0.0, 1.0]);
+}
+
+#[test]
+fn request_calc_bars_count_zero_uses_all_available_history() {
+    let requested = (0..5)
+        .map(|index| timed_bar(index * 60_000, (index + 1) as f64))
+        .collect::<Vec<_>>();
+    let chart = (0..5)
+        .map(|index| timed_bar(index * 60_000, 100.0 + index as f64))
+        .collect::<Vec<_>>();
+    let security = compile_program(
+        "//@version=6\nindicator(\"unbounded zero\")\nplot(request.security(\"NYSE:IBM\", \"1\", ta.cum(close), calc_bars_count=0))\n",
+    );
+    let security_result = HistoricalRuntime::with_request_environment(
+        &security,
+        external_symbol_environment("NYSE:IBM", requested.clone()),
+    )
+    .run(&chart)
+    .expect("zero must mean all requested bars");
+    assert_values_close(
+        &security_result.plots[0].values,
+        &[1.0, 3.0, 6.0, 10.0, 15.0],
+    );
+
+    let lower_tf = compile_program(
+        "//@version=6\nindicator(\"unbounded zero intrabars\")\na = request.security_lower_tf(\"NYSE:IBM\", \"1\", ta.cum(close), calc_bars_count=0)\nplot(array.last(a))\n",
+    );
+    let intrabar_result = HistoricalRuntime::with_request_environment(
+        &lower_tf,
+        external_symbol_environment_with_chart_timeframe("NYSE:IBM", "1", "5", requested),
+    )
+    .run(&[timed_bar(0, 100.0)])
+    .expect("zero must mean all intrabars");
+    assert_values_close(&intrabar_result.plots[0].values, &[15.0]);
+}
+
+#[test]
+fn request_security_bounded_equal_context_preserves_tuple_shape() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"bounded equal tuple\")\n[price, index] = request.security(syminfo.tickerid, timeframe.period, [close, bar_index], calc_bars_count=1)\nplot(price)\nplot(index)\n",
+    );
+    let result = HistoricalRuntime::new(&program)
+        .run(&[
+            timed_bar(0, 7.0),
+            timed_bar(60_000, 9.0),
+            timed_bar(120_000, 11.0),
+        ])
+        .expect("bounded same-context tuple should keep both fields");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[11.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..], &[0.0]);
+}
+
+#[test]
+fn request_security_bounded_equal_context_restarts_expression_state() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"bounded equal state\")\n[total, index] = request.security(syminfo.tickerid, timeframe.period, [ta.cum(close), bar_index], calc_bars_count=3)\nplot(total)\nplot(index)\n",
+    );
+    let result = HistoricalRuntime::new(&program)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 9.0),
+            timed_bar(180_000, 11.0),
+        ])
+        .expect("bounded same-context state should restart at retained history");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[7.0, 16.0, 27.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[0.0, 1.0, 2.0]);
+}
+
+#[test]
+fn request_security_lower_tf_returns_ordered_intrabar_arrays_and_empty_gaps() {
+    let program = compile_program(include_str!(
+        "../../../../tests/fixtures/request/security_lower_tf_scalar.pine"
+    ));
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(180_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(360_000, 5.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(300_000, 200.0),
+            timed_bar(600_000, 300.0),
+        ])
+        .expect("intrabar request should run");
+
+    assert_values_close(&result.plots[0].values, &[3.0, 2.0, 0.0]);
+    assert_values_close(&result.plots[1].values[..2], &[1.0, 4.0]);
+    assert_eq!(result.plots[1].values[2], PineValue::Na);
+    assert_values_close(&result.plots[2].values[..2], &[3.0, 5.0]);
+    assert_eq!(result.plots[2].values[2], PineValue::Na);
+}
+
+#[test]
+fn request_security_lower_tf_evaluates_series_on_requested_bars() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"intrabar history\")\na = request.security_lower_tf(\"NYSE:IBM\", \"1\", ta.change(close))\nplot(array.size(a) > 0 ? array.last(a) : na)\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 3.0),
+            timed_bar(300_000, 8.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0), timed_bar(300_000, 200.0)])
+        .expect("intrabar history should advance across chart bars");
+
+    assert_values_close(&result.plots[0].values, &[2.0, 5.0]);
+}
+
+#[test]
+fn request_security_lower_tf_preserves_main_period_inside_requested_context() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"request period contexts\")\n[mainPeriods, requestedPeriods] = request.security_lower_tf(\"NYSE:IBM\", \"1\", [timeframe.in_seconds(timeframe.main_period), timeframe.in_seconds(timeframe.period)])\nplot(mainPeriods.size() > 0 ? mainPeriods.first() : na)\nplot(requestedPeriods.size() > 0 ? requestedPeriods.first() : na)\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![timed_bar(0, 1.0), timed_bar(60_000, 2.0)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0)])
+        .expect("main and requested timeframes remain distinct");
+    assert_values_close(&result.plots[0].values, &[300.0]);
+    assert_values_close(&result.plots[1].values, &[60.0]);
+}
+
+#[test]
+fn nested_security_empty_symbol_uses_outer_request_symbol_and_main_period() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"nested request\")\ninnerTime = request.security(\"\", timeframe.main_period, time)\nplot(request.security(\"NYSE:IBM\", \"1\", innerTime))\n",
+    );
+    let minute = RequestTimeframe::parse("1").unwrap();
+    let five_minutes = RequestTimeframe::parse("5").unwrap();
+    let provider = InMemoryRequestDataProvider::from_streams([
+        (
+            RequestKey::new("NYSE:IBM", minute),
+            (0..10)
+                .map(|index| timed_bar(index * 60_000, index as f64))
+                .collect(),
+        ),
+        (
+            RequestKey::new("NYSE:IBM", five_minutes.clone()),
+            vec![timed_bar(0, 10.0), timed_bar(300_000, 20.0)],
+        ),
+    ])
+    .unwrap();
+    let environment = RequestEnvironment::new(
+        ChartContext::new("NASDAQ:AAPL", five_minutes),
+        Arc::new(provider),
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0), timed_bar(300_000, 200.0)])
+        .expect("nested request inherits the outer provider symbol");
+    assert_values_close(&result.plots[0].values, &[0.0, 300_000.0]);
+}
+
+#[test]
+fn request_security_lower_tf_replays_literal_tuple_dependencies_on_intrabar_context() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"tuple dependencies\")\n[up, down] = [close > open ? volume : 0.0, close < open ? -volume : 0.0]\n[ups, downs] = request.security_lower_tf(\"NYSE:IBM\", \"1\", [up, down])\nplot(ups.sum())\nplot(downs.sum())\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_ohlcv(0, 1.0, 2.0, 1.0, 2.0, 10.0),
+            timed_ohlcv(60_000, 3.0, 3.0, 2.0, 2.0, 20.0),
+            timed_ohlcv(300_000, 4.0, 5.0, 4.0, 5.0, 30.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0), timed_bar(300_000, 200.0)])
+        .expect("tuple dependencies replay on intrabars");
+    assert_values_close(&result.plots[0].values, &[10.0, 30.0]);
+    assert_values_close(&result.plots[1].values, &[-20.0, 0.0]);
+}
+
+#[test]
+fn request_security_replays_literal_tuple_dependencies_on_provider_context() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"tuple provider dependencies\")\n[up, down] = [close > open ? volume : 0.0, close < open ? -volume : 0.0]\n[requestedUp, requestedDown] = request.security(\"NYSE:IBM\", \"5\", [up, down])\nplot(requestedUp)\nplot(requestedDown)\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "5",
+        "5",
+        vec![
+            timed_ohlcv(0, 1.0, 2.0, 1.0, 2.0, 10.0),
+            timed_ohlcv(300_000, 3.0, 3.0, 2.0, 2.0, 20.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0), timed_bar(300_000, 200.0)])
+        .expect("tuple dependencies replay on provider bars");
+    assert_values_close(&result.plots[0].values, &[10.0, 0.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, -20.0]);
+}
+
+#[test]
+fn request_security_lower_tf_replays_stateful_udf_tuple_once_per_intrabar() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"stateful tuple\")\npolarized() =>\n    var float positive = 0.0\n    var float negative = 0.0\n    if close > open\n        positive += volume\n    else\n        negative -= volume\n    [positive, negative]\n[accumulatedUp, accumulatedDown] = polarized()\n[ups, downs] = request.security_lower_tf(\"NYSE:IBM\", \"1\", [accumulatedUp, accumulatedDown])\nplot(ups.size() > 0 ? ups.last() : na)\nplot(downs.size() > 0 ? downs.last() : na)\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_ohlcv(0, 1.0, 2.0, 1.0, 2.0, 10.0),
+            timed_ohlcv(60_000, 3.0, 3.0, 2.0, 2.0, 20.0),
+            timed_ohlcv(300_000, 4.0, 5.0, 4.0, 5.0, 30.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0), timed_bar(300_000, 200.0)])
+        .expect("stateful tuple UDF replays once per requested intrabar");
+    assert_values_close(&result.plots[0].values, &[10.0, 40.0]);
+    assert_values_close(&result.plots[1].values, &[-20.0, -20.0]);
+}
+
+#[test]
+fn request_security_replays_stateful_udf_tuple_once_per_provider_bar() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"stateful provider tuple\")\npolarized() =>\n    var float positive = 0.0\n    var float negative = 0.0\n    if close > open\n        positive += volume\n    else\n        negative -= volume\n    [positive, negative]\n[accumulatedUp, accumulatedDown] = polarized()\n[up, down] = request.security(\"NYSE:IBM\", \"5\", [accumulatedUp, accumulatedDown])\nplot(up)\nplot(down)\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "5",
+        "5",
+        vec![
+            timed_ohlcv(0, 1.0, 2.0, 1.0, 2.0, 10.0),
+            timed_ohlcv(300_000, 3.0, 3.0, 2.0, 2.0, 20.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0), timed_bar(300_000, 200.0)])
+        .expect("stateful tuple UDF replays once per provider bar");
+    assert_values_close(&result.plots[0].values, &[10.0, 10.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, -20.0]);
+}
+
+#[test]
+fn request_security_lower_tf_returns_tuple_of_typed_arrays_from_udf() {
+    let program = compile_program(include_str!(
+        "../../../../tests/fixtures/request/security_lower_tf_tuple.pine"
+    ));
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_ohlcv(0, 1.0, 3.0, 1.0, 2.0, 1.0),
+            timed_ohlcv(60_000, 3.0, 3.0, 1.0, 2.0, 1.0),
+            timed_ohlcv(300_000, 4.0, 6.0, 4.0, 5.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(300_000, 200.0),
+            timed_bar(600_000, 300.0),
+        ])
+        .expect("tuple request should return aligned typed intrabar arrays");
+    assert_values_close(&result.plots[0].values, &[2.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[2].values[..2], &[2.0, 5.0]);
+    assert_eq!(result.plots[2].values[2], PineValue::Na);
+    assert_values_close(&result.plots[3].values, &[0.0, 1.0, 0.0]);
+}
+
+#[test]
+fn request_security_lower_tf_calc_bars_count_limits_requested_state() {
+    let program = compile_program(include_str!(
+        "../../../../tests/fixtures/request/security_lower_tf_calc_bars_count.pine"
+    ));
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(180_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(360_000, 5.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(300_000, 200.0),
+            timed_bar(600_000, 300.0),
+        ])
+        .expect("bounded request should evaluate only the final two requested bars");
+    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 0.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 2.0, 0.0]);
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_values_close(&result.plots[2].values[1..2], &[9.0]);
+    assert_eq!(result.plots[2].values[2], PineValue::Na);
+    assert_eq!(result.plots[3].values[0], PineValue::Na);
+    assert_values_close(&result.plots[3].values[1..2], &[1.0]);
+    assert_eq!(result.plots[3].values[2], PineValue::Na);
+}
+
+#[test]
+fn request_security_lower_tf_equal_chart_context_returns_one_element() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"equal timeframe\")\na = request.security_lower_tf(syminfo.tickerid, timeframe.period, close)\nplot(array.size(a))\nplot(array.first(a))\n",
+    );
+    let result = HistoricalRuntime::new(&program)
+        .run(&[timed_bar(0, 7.0), timed_bar(60_000, 9.0)])
+        .expect("same-context request should not need a provider");
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[7.0, 9.0]);
+}
+
+#[test]
+fn request_security_lower_tf_equal_chart_context_obeys_calc_bars_count() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"bounded equal timeframe\")\na = request.security_lower_tf(syminfo.tickerid, timeframe.period, close, calc_bars_count=1)\nplot(array.size(a))\nplot(array.size(a) > 0 ? array.first(a) : na)\n",
+    );
+    let result = HistoricalRuntime::new(&program)
+        .run(&[
+            timed_bar(0, 7.0),
+            timed_bar(60_000, 9.0),
+            timed_bar(120_000, 11.0),
+        ])
+        .expect("equal-timeframe request should respect the requested history limit");
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..], &[11.0]);
+}
+
+#[test]
+fn request_security_lower_tf_bounded_equal_context_requires_history_end() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"bounded equal timeframe\")\na = request.security_lower_tf(syminfo.tickerid, timeframe.period, close, calc_bars_count=1)\nplot(array.size(a))\n",
+    );
+    let mut runtime = HistoricalRuntime::new(&program);
+    let error = runtime
+        .append_bar(timed_bar(0, 7.0))
+        .expect_err("streaming requests cannot infer the final bounded history origin");
+    assert!(
+        error.message.contains("known historical dataset end"),
+        "{error:?}"
+    );
+}
+
+#[test]
+fn request_security_lower_tf_realtime_arrays_follow_ordered_intrabar_feed() {
+    let program = compile_program(include_str!(
+        "../../../../tests/fixtures/request/security_lower_tf_realtime.pine"
+    ));
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::parse("1").unwrap());
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(180_000, 3.0),
+        ],
+    );
+    let mut runtime = RealtimeRuntime::with_request_environment(&program, environment);
+    let historical = runtime
+        .update(BarUpdate::historical(timed_bar(0, 100.0)))
+        .expect("historical chart seed");
+    for (plot, expected) in [(0, 3.0), (1, 1.0), (2, 3.0), (3, 2.0), (4, 5.0), (5, 1.0)] {
+        assert_values_close(&historical.plots[plot].values, &[expected]);
+    }
+
+    let empty = runtime
+        .update(BarUpdate::forming(timed_bar(300_000, 101.0)))
+        .expect("no current intrabars should return empty arrays");
+    assert_values_close(&empty.plots[0].values, &[3.0, 0.0]);
+    assert_values_close(&empty.plots[3].values, &[2.0, 0.0]);
+    for plot in [1, 2, 4, 5] {
+        assert_eq!(empty.plots[plot].values[1], PineValue::Na);
+    }
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(300_000, 4.0)))
+        .expect("first forming intrabar");
+    let first = runtime.result();
+    for (plot, expected) in [(0, 1.0), (1, 4.0), (2, 4.0), (3, 1.0), (4, 7.0), (5, 1.0)] {
+        assert_values_close(&first.plots[plot].values[1..], &[expected]);
+    }
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::confirmed(timed_bar(300_000, 4.0)))
+        .expect("first intrabar confirmed");
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(360_000, 5.0)))
+        .expect("second forming intrabar");
+    let second = runtime.result();
+    for (plot, expected) in [(0, 2.0), (1, 4.0), (2, 5.0), (3, 2.0), (4, 9.0), (5, 1.0)] {
+        assert_values_close(&second.plots[plot].values[1..], &[expected]);
+    }
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(360_000, 6.0)))
+        .expect("forming intrabar replacement");
+    let replacement = runtime.result();
+    assert_values_close(&replacement.plots[2].values[1..], &[6.0]);
+    assert_values_close(&replacement.plots[4].values[1..], &[10.0]);
+    assert_values_close(&runtime.confirmed_result().plots[0].values, &[3.0]);
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::confirmed(timed_bar(360_000, 6.0)))
+        .expect("second intrabar confirmed");
+    let before_future = runtime.result();
+    let error = runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(600_000, 99.0)))
+        .expect_err("future-period intrabar must not enter current preview");
+    assert!(error.message.contains("future chart period"));
+    assert_eq!(runtime.result(), before_future);
+
+    let committed = runtime
+        .update(BarUpdate::confirmed(timed_bar(300_000, 101.0)))
+        .expect("chart confirmation should retain ordered arrays");
+    assert_values_close(&committed.plots[0].values, &[3.0, 2.0]);
+    assert_values_close(&committed.plots[2].values, &[3.0, 6.0]);
+    assert_values_close(&committed.plots[4].values, &[5.0, 10.0]);
+}
+
+#[test]
+fn request_security_lower_tf_v5_forming_ignores_future_provider_rows_without_feed() {
+    let source = include_str!("../../../../tests/fixtures/request/security_lower_tf_realtime.pine")
+        .replace("//@version=6", "//@version=5");
+    let program = compile_program(&source);
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1",
+        "5",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(300_000, 3.0),
+            timed_bar(360_000, 4.0),
+        ],
+    );
+    let mut runtime = RealtimeRuntime::with_request_environment(&program, environment);
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 100.0)))
+        .expect("Pine v5 historical intrabar arrays");
+    let forming = runtime
+        .update(BarUpdate::forming(timed_bar(300_000, 101.0)))
+        .expect("Pine v5 forming arrays should be empty without a feed update");
+    assert_values_close(&forming.plots[0].values, &[2.0, 0.0]);
+    assert_values_close(&forming.plots[3].values, &[0.0, 0.0]);
+    for plot in [1, 2, 4, 5] {
+        assert_eq!(forming.plots[plot].values[1], PineValue::Na);
+    }
+}
+
+#[test]
+fn request_security_lower_tf_rejects_higher_timeframe_at_runtime() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"invalid intrabar timeframe\")\na = request.security_lower_tf(\"NYSE:IBM\", \"10\", close)\nplot(array.size(a))\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "10",
+        "5",
+        vec![timed_bar(0, 1.0)],
+    );
+    let error = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 100.0)])
+        .expect_err("higher timeframe is invalid for intrabar arrays");
+    assert!(
+        error.message.contains("exceeds chart timeframe"),
+        "{error:?}"
+    );
+}
+
+#[test]
+fn legacy_security_evaluates_recursive_history_in_provider_context() {
+    let program = compile_program(
+        "//@version=2\nstudy(\"provider recursion\")\nacc = nz(acc[1]) + close\nplot(security(\"NYSE:IBM\", \"1\", acc))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(120_000, 3.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(60_000, 200.0),
+            timed_bar(120_000, 300.0),
+        ])
+        .expect("recursive series should use requested bars");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 3.0, 6.0]);
+}
+
+#[test]
+fn legacy_security_keeps_recursive_history_on_requested_timeframe() {
+    let program = compile_program(
+        "//@version=2\nstudy(\"higher timeframe recursion\")\nacc = nz(acc[1]) + close\nplot(security(\"NYSE:IBM\", \"5\", acc))\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![timed_bar(0, 1.0), timed_bar(300_000, 2.0)],
+    );
+    let chart_bars = [
+        timed_bar(0, 100.0),
+        timed_bar(60_000, 200.0),
+        timed_bar(300_000, 300.0),
+        timed_bar(360_000, 400.0),
+    ];
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&chart_bars)
+        .expect("recursive series should advance once per requested bar");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0, 3.0, 3.0]);
+}
+
+#[test]
+fn legacy_security_evaluates_matching_nested_global_alias() {
+    let program = compile_program(
+        "//@version=2\nstudy(\"nested provider alias\")\nacc = nz(acc[1]) + close\ninner = security(\"NYSE:IBM\", \"1\", acc)\nouter = inner * 2\nplot(security(\"NYSE:IBM\", \"1\", outer))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(120_000, 3.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(60_000, 200.0),
+            timed_bar(120_000, 300.0),
+        ])
+        .expect("matching nested request should use requested bars");
+
+    assert_values_close(&result.plots[0].values, &[2.0, 6.0, 12.0]);
+}
+
+#[test]
+fn request_security_empty_input_timeframe_inherits_daily_chart() {
+    let program = compile_program(
+        "//@version=5\nindicator(\"chart timeframe request\")\ntf = input.timeframe(\"\", \"Timeframe\")\nplot(request.security(syminfo.tickerid, tf, close[1]))\n",
+    );
+    let chart = ChartContext::new(
+        "BINANCE:BTCUSDT",
+        RequestTimeframe::parse("1D").expect("daily timeframe"),
+    );
+    let environment =
+        RequestEnvironment::new(chart, Arc::new(InMemoryRequestDataProvider::default()));
+    let bars = vec![
+        timed_bar(0, 10.0),
+        timed_bar(86_400_000, 12.0),
+        timed_bar(172_800_000, 14.0),
+    ];
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&bars)
+        .expect("empty input timeframe should use the daily chart context");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[10.0, 12.0]);
+}
+
+#[test]
+fn request_security_empty_timeframe_uses_daily_chart_for_external_symbol() {
+    let program = compile_program(
+        "//@version=5\nindicator(\"external chart timeframe request\")\nplot(request.security(\"NYSE:IBM\", \"\", close))\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "1D",
+        "1D",
+        vec![timed_bar(0, 100.0), timed_bar(86_400_000, 110.0)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 1.0), timed_bar(86_400_000, 2.0)])
+        .expect("empty request timeframe should select the daily provider");
+
+    assert_values_close(&result.plots[0].values, &[100.0, 110.0]);
+}
+
+#[test]
+fn modern_request_merge_policies_align_open_close_and_gap_events() {
+    let chart = (0..10)
+        .map(|i| timed_bar(i * 60000, 1.))
+        .collect::<Vec<_>>();
+    let cases = [
+        (
+            "off",
+            "off",
+            vec![
+                None,
+                None,
+                None,
+                None,
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(20.),
+            ],
+        ),
+        (
+            "off",
+            "on",
+            vec![
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(10.),
+                Some(20.),
+                Some(20.),
+                Some(20.),
+                Some(20.),
+                Some(20.),
+            ],
+        ),
+        (
+            "on",
+            "off",
+            vec![
+                None,
+                None,
+                None,
+                None,
+                Some(10.),
+                None,
+                None,
+                None,
+                None,
+                Some(20.),
+            ],
+        ),
+        (
+            "on",
+            "on",
+            vec![
+                Some(10.),
+                None,
+                None,
+                None,
+                None,
+                Some(20.),
+                None,
+                None,
+                None,
+                None,
+            ],
+        ),
+    ];
+    for version in [5, 6] {
+        for (gaps, lookahead, expected) in &cases {
+            let program = compile_program(&format!(
+                "//@version={version}\nindicator(\"merge\")\nplot(request.security(\"B\",\"5\",close,lookahead=barmerge.lookahead_{lookahead},gaps=barmerge.gaps_{gaps}))\n"
+            ));
+            let environment = external_symbol_environment_with_chart_timeframe(
+                "B",
+                "5",
+                "1",
+                vec![timed_bar(0, 10.), timed_bar(300000, 20.)],
+            );
+            let result = HistoricalRuntime::with_request_environment(&program, environment)
+                .run(&chart)
+                .unwrap();
+            assert_eq!(
+                result.plots[0]
+                    .values
+                    .iter()
+                    .map(PineValue::as_f64)
+                    .collect::<Vec<_>>(),
+                *expected,
+                "v{version}, gaps {gaps}, lookahead {lookahead}"
+            );
+            assert!(result.diagnostics.is_empty());
+        }
+    }
+}
+
+#[test]
+fn requested_scalar_arrays_are_caller_owned_and_cached_samples_stay_immutable() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"request arrays\")\nown=array.from(999.0)\nvalues=request.security(\"B\",\"1\",array.from(close,close+1))\nplot(values.get(0))\nplot(own.get(0))\nvalues.set(0,777)\n[a,b,n]=request.security(\"B\",\"1\",[array.from(close),array.new_float(1,close+10),bar_index])\nplot(a.get(0))\nplot(b.get(0))\nplot(n)\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "B",
+        "1",
+        "1",
+        vec![timed_bar(0, 10.), timed_bar(60000, 20.)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.),
+            timed_bar(60000, 2.),
+            timed_bar(120000, 3.),
+        ])
+        .unwrap();
+    assert_values_close(&result.plots[0].values, &[10., 20., 20.]);
+    assert_values_close(&result.plots[1].values, &[999., 999., 999.]);
+    assert_values_close(&result.plots[2].values, &[10., 20., 20.]);
+    assert_values_close(&result.plots[3].values, &[20., 30., 30.]);
+    assert_values_close(&result.plots[4].values, &[0., 1., 1.]);
+}
+
+#[test]
+fn modern_request_udf_array_slots_are_independent() {
+    for version in [5, 6] {
+        let program = compile_program(&format!(
+            "//@version={version}\nindicator(\"alias\")\npair()=>\n    a=array.from(close)\n    [a,a]\n[a,b]=request.security(\"B\",\"1\",pair())\na.set(0,-123)\nplot(a.get(0))\nplot(b.get(0))\n"
+        ));
+        let environment = external_symbol_environment_with_chart_timeframe(
+            "B",
+            "1",
+            "1",
+            vec![timed_bar(0, 10.), timed_bar(60000, 20.)],
+        );
+        let result = HistoricalRuntime::with_request_environment(&program, environment)
+            .run(&[
+                timed_bar(0, 1.),
+                timed_bar(60000, 2.),
+                timed_bar(120000, 3.),
+            ])
+            .unwrap();
+        assert_values_close(&result.plots[0].values, &[-123., -123., -123.]);
+        assert_values_close(&result.plots[1].values, &[10., 20., 20.]);
+    }
+}
+
+#[test]
+fn modern_request_stateful_udf_and_dependencies_use_requested_bars() {
+    for version in [5, 6] {
+        let program = compile_program(&format!(
+            "//@version={version}\nindicator(\"counter\")\ncounter(bool condition)=>\n    var int n=0\n    if condition\n        n+=1\n    n\ndep=close+1\n[a,b]=request.security(\"B\",\"5\",[counter(close>15),dep],lookahead=barmerge.lookahead_on)\nplot(a)\nplot(b)\n"
+        ));
+        let environment = external_symbol_environment_with_chart_timeframe(
+            "B",
+            "5",
+            "1",
+            vec![
+                timed_bar(0, 10.),
+                timed_bar(300000, 20.),
+                timed_bar(600000, 30.),
+            ],
+        );
+        let chart = (0..15)
+            .map(|i| timed_bar(i * 60000, 100.))
+            .collect::<Vec<_>>();
+        let result = HistoricalRuntime::with_request_environment(&program, environment)
+            .run(&chart)
+            .unwrap();
+        assert_values_close(
+            &result.plots[0].values,
+            &[0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 2., 2., 2., 2., 2.],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[
+                11., 11., 11., 11., 11., 21., 21., 21., 21., 21., 31., 31., 31., 31., 31.,
+            ],
+        );
+    }
+}
+
+#[test]
+fn modern_request_stateful_udf_can_select_ma_with_switch() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"switch request\")\nMA(float source, int length, string kind) =>\n    switch kind\n        \"SMA\" => ta.sma(source, length)\n        \"EMA\" => ta.ema(source, length)\n        => ta.sma(source, length)\nstate(int length, string kind) =>\n    upper = MA(high, length, kind)\n    lower = MA(low, length, kind)\n    var int direction = 1\n    direction := close > upper ? 1 : close < lower ? -1 : nz(direction[1], 1)\n    direction\nplot(request.security(\"B\", \"5\", state(2, \"SMA\")[1], lookahead=barmerge.lookahead_on))\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "B",
+        "5",
+        "1",
+        vec![
+            timed_bar(0, 10.0),
+            timed_bar(300_000, 20.0),
+            timed_bar(600_000, 5.0),
+        ],
+    );
+    let chart = (0..15)
+        .map(|i| timed_bar(i * 60_000, 100.0))
+        .collect::<Vec<_>>();
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&chart)
+        .expect("requested switch MA and local state should execute");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[5], PineValue::Int(1));
+    assert_eq!(result.plots[0].values[10], PineValue::Int(1));
+}
+
+#[test]
+fn modern_request_conditional_initializer_runs_only_in_its_branch() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"conditional init\")\nbump()=>\n    var int n=0\n    n+=1\n    n\nrouted()=>\n    if close>15\n        value=bump()\n        value\n    else\n        0\nplot(request.security(\"B\",\"1\",routed()))\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "B",
+        "1",
+        "1",
+        vec![
+            timed_bar(0, 10.),
+            timed_bar(60000, 20.),
+            timed_bar(120000, 30.),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.),
+            timed_bar(60000, 100.),
+            timed_bar(120000, 100.),
+        ])
+        .unwrap();
+    assert_values_close(&result.plots[0].values, &[0., 1., 2.]);
 }
 
 #[test]
@@ -1880,10 +2866,10 @@ fn request_security_evaluates_provider_tuple_literal_ta_default_bar_offsets_in_r
         );
 
     assert_eq!(result.plots.len(), 2);
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[..1], &[0.0]);
     assert_values_close(&result.plots[0].values[1..], &[0.0, 0.0]);
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_values_close(&result.plots[1].values[1..], &[1.0, 1.0]);
+    assert_values_close(&result.plots[1].values[..1], &[0.0]);
+    assert_values_close(&result.plots[1].values[1..], &[-1.0, -1.0]);
 }
 
 #[test]
@@ -2007,12 +2993,10 @@ fn request_security_evaluates_provider_tuple_literal_ta_bars_in_requested_contex
         .expect("provider tuple literal ta bars request.security expression should run");
 
     assert_eq!(result.plots.len(), 2);
-    for plot in &result.plots {
-        assert_eq!(plot.values[0], PineValue::Na);
-        assert_eq!(plot.values[1], PineValue::Na);
-    }
+    assert_values_close(&result.plots[0].values[..2], &[0.0, 0.0]);
+    assert_values_close(&result.plots[1].values[..2], &[0.0, -1.0]);
     assert_values_close(&result.plots[0].values[2..], &[0.0, 0.0, 0.0]);
-    assert_values_close(&result.plots[1].values[2..], &[2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[1].values[2..], &[-2.0, -2.0, -2.0]);
 }
 
 #[test]
@@ -3291,6 +4275,38 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_range() {
 }
 
 #[test]
+fn legacy_v3_security_evaluates_synthetic_ohlc_with_atr_on_provider_bars() {
+    let program = compile_program(include_str!(
+        "../../../../tests/fixtures/request/legacy_v3_security_synthetic_ohlc.pine"
+    ));
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![
+            timed_ohlcv(0, 90.0, 110.0, 80.0, 100.0, 1000.0),
+            timed_ohlcv(300_000, 190.0, 210.0, 180.0, 200.0, 1000.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("legacy v3 provider expression should run");
+
+    assert_eq!(result.plots.len(), 1);
+    assert!(
+        result.plots[0].values[..4]
+            .iter()
+            .all(|value| *value == PineValue::Na)
+    );
+    assert_values_close(&result.plots[0].values[4..], &[55.0]);
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_window_extrema() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal ta window extrema\")\n[highest_value, lowest_value] = request.security(\"NYSE:IBM\", \"5\", [ta.highest(high, 2), ta.lowest(low, 2)])\nplot(highest_value)\nplot(lowest_value)\n",
@@ -3514,12 +4530,13 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_default_ba
 
     assert_eq!(result.plots.len(), 2);
     for plot in &result.plots {
-        for value in &plot.values[..4] {
+        for value in &plot.values[..2] {
             assert_eq!(*value, PineValue::Na);
         }
+        assert_values_close(&plot.values[2..4], &[0.0, 0.0]);
     }
     assert_values_close(&result.plots[0].values[4..], &[0.0]);
-    assert_values_close(&result.plots[1].values[4..], &[1.0]);
+    assert_values_close(&result.plots[1].values[4..], &[-1.0]);
 }
 
 #[test]
@@ -4057,11 +5074,10 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_bars() {
     for plot in &result.plots {
         assert_eq!(plot.values[0], PineValue::Na);
         assert_eq!(plot.values[1], PineValue::Na);
-        assert_eq!(plot.values[2], PineValue::Na);
-        assert_eq!(plot.values[3], PineValue::Na);
+        assert_values_close(&plot.values[2..4], &[0.0, 0.0]);
     }
     assert_values_close(&result.plots[0].values[4..], &[0.0]);
-    assert_values_close(&result.plots[1].values[4..], &[1.0]);
+    assert_values_close(&result.plots[1].values[4..], &[-1.0]);
 }
 
 #[test]
@@ -4997,12 +6013,10 @@ fn request_security_evaluates_provider_highestbars_in_requested_context() {
         ])
         .expect("provider ta.highestbars expression should run");
 
-    for plot in &result.plots {
-        assert_eq!(plot.values[0], PineValue::Na);
-        assert_eq!(plot.values[1], PineValue::Na);
-    }
-    assert_values_close(&result.plots[0].values[2..], &[1.0, 0.0, 0.0, 1.0]);
-    assert_values_close(&result.plots[1].values[2..], &[2.0, 1.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[0].values[..2], &[0.0, 0.0]);
+    assert_values_close(&result.plots[1].values[..2], &[0.0, -1.0]);
+    assert_values_close(&result.plots[0].values[2..], &[-1.0, 0.0, 0.0, -1.0]);
+    assert_values_close(&result.plots[1].values[2..], &[-2.0, -1.0, 0.0, -1.0]);
 }
 
 #[test]
@@ -5032,12 +6046,10 @@ fn request_security_evaluates_provider_lowestbars_in_requested_context() {
         ])
         .expect("provider ta.lowestbars expression should run");
 
-    for plot in &result.plots {
-        assert_eq!(plot.values[0], PineValue::Na);
-        assert_eq!(plot.values[1], PineValue::Na);
-    }
-    assert_values_close(&result.plots[0].values[2..], &[1.0, 0.0, 1.0, 2.0]);
-    assert_values_close(&result.plots[1].values[2..], &[2.0, 1.0, 2.0, 0.0]);
+    assert_values_close(&result.plots[0].values[..2], &[0.0, 0.0]);
+    assert_values_close(&result.plots[1].values[..2], &[0.0, -1.0]);
+    assert_values_close(&result.plots[0].values[2..], &[-1.0, 0.0, -1.0, -2.0]);
+    assert_values_close(&result.plots[1].values[2..], &[-2.0, -1.0, -2.0, 0.0]);
 }
 
 #[test]
@@ -5108,6 +6120,30 @@ fn request_security_evaluates_provider_vwap_in_requested_context() {
         &result.plots[1].values,
         &[4.0, 4.666666666666667, 5.333333333333333, 6.0],
     );
+}
+
+#[test]
+fn request_security_evaluates_builtin_vwap_variable_in_requested_context() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"request vwap variable\")\nplot(request.security(\"B\", timeframe.period, ta.vwap))\nplot(ta.vwap)\n",
+    );
+    let environment = external_symbol_environment(
+        "B",
+        vec![
+            timed_ohlcv(0, 9.0, 12.0, 6.0, 9.0, 1.0),
+            timed_ohlcv(60_000, 18.0, 24.0, 12.0, 18.0, 3.0),
+            timed_ohlcv(86_400_000, 27.0, 36.0, 18.0, 27.0, 2.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 100.0),
+            timed_bar(60_000, 100.0),
+            timed_bar(86_400_000, 100.0),
+        ])
+        .expect("requested bare ta.vwap should use provider HLC3, volume and day reset");
+    assert_values_close(&result.plots[0].values, &[9.0, 15.75, 27.0]);
+    assert_values_close(&result.plots[1].values, &[100.0, 100.0, 100.0]);
 }
 
 #[test]
@@ -6478,20 +7514,199 @@ fn request_security_higher_timeframe_supports_chart_symbol_provider_data() {
 }
 
 #[test]
-fn request_security_rejects_lower_timeframe_provider_requests() {
-    let program = compile_program(
-        "indicator(\"request ltf\")\nplot(request.security(\"NYSE:IBM\", \"30S\", close))\n",
-    );
-    let runtime =
-        HistoricalRuntime::with_request_environment(&program, RequestEnvironment::default());
-    let error = runtime
-        .run(&[timed_bar(0, 1.0)])
-        .expect_err("lower timeframe should fail");
+fn request_security_lower_timeframe_selects_historical_intrabars() {
+    let requested = vec![
+        timed_bar(0, 1.0),
+        timed_bar(30_000, 2.0),
+        timed_bar(60_000, 3.0),
+        timed_bar(90_000, 4.0),
+        timed_bar(120_000, 5.0),
+        timed_bar(150_000, 6.0),
+    ];
+    let chart = (0..4)
+        .map(|index| timed_bar(index * 60_000, 100.0))
+        .collect::<Vec<_>>();
+    for version in [5, 6] {
+        let source = format!(
+            "//@version={version}\nindicator(\"request ltf\")\nplot(request.security(\"NYSE:IBM\", \"30S\", close))\nplot(request.security(\"NYSE:IBM\", \"30S\", close, lookahead=barmerge.lookahead_on))\nplot(request.security(\"NYSE:IBM\", \"30S\", close, gaps=barmerge.gaps_on))\n",
+        );
+        let program = compile_program(&source);
+        let result = HistoricalRuntime::with_request_environment(
+            &program,
+            external_symbol_environment_with_chart_timeframe(
+                "NYSE:IBM",
+                "30S",
+                "1",
+                requested.clone(),
+            ),
+        )
+        .run(&chart)
+        .expect("lower timeframe request should return one intrabar per chart bar");
+        assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0, 6.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 3.0, 5.0, 5.0]);
+        assert_values_close(&result.plots[2].values[..3], &[2.0, 4.0, 6.0]);
+        assert_eq!(result.plots[2].values[3], PineValue::Na);
+    }
+}
 
+#[test]
+fn legacy_security_lower_timeframe_respects_versioned_lookahead_default() {
+    let requested = vec![
+        timed_bar(0, 1.0),
+        timed_bar(60_000, 2.0),
+        timed_bar(300_000, 3.0),
+        timed_bar(360_000, 4.0),
+    ];
+    let chart = vec![timed_bar(0, 100.0), timed_bar(300_000, 101.0)];
+    for (version, expected) in [
+        (1, [1.0, 3.0]),
+        (2, [1.0, 3.0]),
+        (3, [2.0, 4.0]),
+        (4, [2.0, 4.0]),
+    ] {
+        let source = match version {
+            2 => include_str!(
+                "../../../../tests/fixtures/request/legacy_v2_security_lower_timeframe.pine"
+            )
+            .to_owned(),
+            4 => include_str!(
+                "../../../../tests/fixtures/request/legacy_v4_security_lower_timeframe.pine"
+            )
+            .to_owned(),
+            _ => format!(
+                "//@version={version}\nstudy(\"legacy ltf\")\nplot(security(\"NYSE:IBM\", \"1\", close))\n"
+            ),
+        };
+        let program = compile_program(&source);
+        let result = HistoricalRuntime::with_request_environment(
+            &program,
+            external_symbol_environment_with_chart_timeframe(
+                "NYSE:IBM",
+                "1",
+                "5",
+                requested.clone(),
+            ),
+        )
+        .run(&chart)
+        .expect("legacy lower timeframe request should run");
+        assert_values_close(&result.plots[0].values, &expected);
+    }
+}
+
+#[test]
+fn request_security_lower_timeframe_calc_bars_count_resets_requested_state() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"bounded ltf\")\nplot(request.security(\"NYSE:IBM\", \"30S\", ta.cum(close), calc_bars_count=2))\n",
+    );
+    let requested = vec![
+        timed_bar(0, 1.0),
+        timed_bar(30_000, 2.0),
+        timed_bar(60_000, 3.0),
+        timed_bar(90_000, 4.0),
+        timed_bar(150_000, 6.0),
+    ];
+    let chart = (0..4)
+        .map(|index| timed_bar(index * 60_000, 100.0))
+        .collect::<Vec<_>>();
+    let result = HistoricalRuntime::with_request_environment(
+        &program,
+        external_symbol_environment_with_chart_timeframe("NYSE:IBM", "30S", "1", requested),
+    )
+    .run(&chart)
+    .expect("bounded lower timeframe request should run");
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[4.0, 10.0, 10.0]);
+}
+
+#[test]
+fn request_security_lower_timeframe_forming_update_fails_explicitly() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"forming ltf\")\nplot(request.security(\"NYSE:IBM\", \"30S\", close))\n",
+    );
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "30S",
+        "1",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(30_000, 2.0),
+            timed_bar(60_000, 3.0),
+            timed_bar(90_000, 4.0),
+        ],
+    );
+    let mut runtime = RealtimeRuntime::with_request_environment(&program, environment);
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 100.0)))
+        .expect("historical lower timeframe request");
+    let error = runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 101.0)))
+        .expect_err("forming lower timeframe request must fail without an ordered feed");
     assert_eq!(
         error.message,
-        "request.security lower timeframe requests are not supported for symbol `NYSE:IBM` timeframe `30S` on chart timeframe `1`"
+        "request.security lower-timeframe forming updates require an ordered intrabar feed for the current chart bar"
     );
+}
+
+#[test]
+fn request_security_lower_timeframe_realtime_uses_ordered_intrabar_updates() {
+    let program = compile_program(
+        "//@version=6\nindicator(\"live ltf\")\nplot(request.security(\"NYSE:IBM\", \"30S\", close))\nplot(request.security(\"NYSE:IBM\", \"30S\", close, lookahead=barmerge.lookahead_on))\nplot(request.security(\"NYSE:IBM\", \"30S\", ta.cum(close), calc_bars_count=2))\nplot(request.security(\"NYSE:IBM\", \"30S\", ta.cum(close)))\n",
+    );
+    let key = RequestKey::new("NYSE:IBM", RequestTimeframe::parse("30S").unwrap());
+    let environment = external_symbol_environment_with_chart_timeframe(
+        "NYSE:IBM",
+        "30S",
+        "1",
+        vec![timed_bar(0, 1.0), timed_bar(30_000, 2.0)],
+    );
+    let mut runtime = RealtimeRuntime::with_request_environment(&program, environment);
+    let historical = runtime
+        .update(BarUpdate::historical(timed_bar(0, 100.0)))
+        .expect("historical chart seed");
+    assert_values_close(&historical.plots[0].values, &[2.0]);
+    assert_values_close(&historical.plots[1].values, &[1.0]);
+    assert_values_close(&historical.plots[3].values, &[3.0]);
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(60_000, 3.0)))
+        .expect("first ordered intrabar");
+    let first = runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 101.0)))
+        .expect("chart forming with one observed intrabar");
+    assert_values_close(&first.plots[0].values, &[2.0, 3.0]);
+    assert_values_close(&first.plots[1].values, &[1.0, 3.0]);
+    assert_values_close(&first.plots[2].values, &[3.0, 5.0]);
+    assert_values_close(&first.plots[3].values, &[3.0, 6.0]);
+    assert_values_close(&runtime.confirmed_result().plots[0].values, &[2.0]);
+
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::confirmed(timed_bar(60_000, 3.0)))
+        .expect("first intrabar confirmation");
+    let before_future_update = runtime.result();
+    let future_error = runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(120_000, 99.0)))
+        .expect_err("next chart period must not enter the current chart preview");
+    assert!(future_error.message.contains("current chart bar"));
+    assert_eq!(runtime.result(), before_future_update);
+    runtime
+        .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(90_000, 4.0)))
+        .expect("second ordered intrabar");
+    let second = runtime.result();
+    assert_values_close(&second.plots[0].values, &[2.0, 4.0]);
+    assert_values_close(&second.plots[1].values, &[1.0, 4.0]);
+    assert_values_close(&second.plots[2].values, &[3.0, 7.0]);
+    assert_values_close(&second.plots[3].values, &[3.0, 10.0]);
+
+    runtime
+        .apply_request_update(key, BarUpdate::confirmed(timed_bar(90_000, 4.0)))
+        .expect("second intrabar confirmation");
+    let committed = runtime
+        .update(BarUpdate::confirmed(timed_bar(60_000, 101.0)))
+        .expect("chart confirmation after ordered intrabars");
+    assert_values_close(&committed.plots[0].values, &[2.0, 4.0]);
+    assert_values_close(&committed.plots[1].values, &[1.0, 4.0]);
+    assert_values_close(&committed.plots[2].values, &[3.0, 7.0]);
+    assert_values_close(&committed.plots[3].values, &[3.0, 10.0]);
 }
 
 #[test]
@@ -6651,7 +7866,7 @@ fn realtime_request_security_reuses_immutable_provider_data_during_rollback() {
 }
 
 #[test]
-fn request_feed_interleaves_with_chart_updates_without_leaking_unconfirmed_request_bars() {
+fn request_feed_interleaves_realtime_values_without_leaking_into_historical_updates() {
     let program = compile_program(
         "indicator(\"request feed\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
     );
@@ -6692,8 +7907,12 @@ fn request_feed_interleaves_with_chart_updates_without_leaking_unconfirmed_reque
     assert_values_close(&preview.plots[0].values, &[20.0, 99.0, 50.0]);
     let committed = runtime
         .update(BarUpdate::confirmed(timed_bar(120_000, 7.0)))
-        .expect("chart confirm ignores unconfirmed request bar");
-    assert_values_close(&committed.plots[0].values, &[20.0, 99.0, 99.0]);
+        .expect("realtime chart confirmation retains the available developing request value");
+    assert_values_close(&committed.plots[0].values, &[20.0, 99.0, 50.0]);
+    let historical = runtime
+        .update(BarUpdate::historical(timed_bar(180_000, 8.0)))
+        .unwrap();
+    assert_values_close(&historical.plots[0].values, &[20.0, 99.0, 50.0, 99.0]);
 }
 
 #[test]
@@ -6747,4 +7966,38 @@ fn request_feed_higher_timeframe_forming_does_not_leak_before_close() {
     let preview = runtime.result();
     assert_eq!(preview.plots[0].values[0], PineValue::Na);
     assert_values_close(&preview.plots[0].values[1..], &[100.0]);
+}
+
+#[test]
+fn modern_realtime_merge_uses_available_developing_htf_values() {
+    for lookahead in ["off", "on"] {
+        for gaps in ["off", "on"] {
+            let program = compile_program(&format!(
+                "//@version=6\nindicator(\"live merge\")\nplot(request.security(\"B\",\"5\",close,gaps=barmerge.gaps_{gaps},lookahead=barmerge.lookahead_{lookahead}))\n"
+            ));
+            let environment = external_symbol_environment_with_chart_timeframe(
+                "B",
+                "5",
+                "1",
+                vec![timed_bar(0, 100.)],
+            );
+            let mut runtime = RealtimeRuntime::with_request_environment(&program, environment);
+            runtime
+                .update(BarUpdate::historical(timed_bar(240000, 1.)))
+                .unwrap();
+            runtime
+                .update(BarUpdate::forming(timed_bar(360000, 1.)))
+                .unwrap();
+            let key = RequestKey::new("B", RequestTimeframe::parse("5").unwrap());
+            runtime
+                .apply_request_update(key.clone(), BarUpdate::forming(timed_bar(300000, 200.)))
+                .unwrap();
+            let expected = if gaps == "off" { Some(200.) } else { None };
+            assert_eq!(runtime.result().plots[0].values[1].as_f64(), expected);
+            runtime
+                .update(BarUpdate::confirmed(timed_bar(360000, 1.)))
+                .unwrap();
+            assert_eq!(runtime.result().plots[0].values[1].as_f64(), expected);
+        }
+    }
 }

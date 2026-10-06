@@ -792,7 +792,7 @@ fn production_price_based_entry_reverses_flatten_then_open_requested_qty() {
     assert_eq!(limit.position_size, 1.0);
     assert_eq!(limit.closed_trade_count(), 1);
     assert_eq!(limit.open_trade_count(), 1);
-    assert_eq!(limit.orders.last().map(|order| order.qty), Some(1.0));
+    assert_eq!(limit.orders.last().map(|order| order.qty), Some(3.0));
     assert_eq!(limit.orders.last().map(|order| order.price), Some(90.0));
     limit.assert_ledger_aggregates();
 
@@ -802,7 +802,7 @@ fn production_price_based_entry_reverses_flatten_then_open_requested_qty() {
     stop.fill_pending_stop_short_entries(2, 20, 89.0);
     assert_eq!(stop.position_size, -1.0);
     assert_eq!(stop.closed_trade_count(), 1);
-    assert_eq!(stop.orders.last().map(|order| order.qty), Some(1.0));
+    assert_eq!(stop.orders.last().map(|order| order.qty), Some(3.0));
     stop.assert_ledger_aggregates();
 
     let mut stop_limit = BrokerState::new(100_000.0);

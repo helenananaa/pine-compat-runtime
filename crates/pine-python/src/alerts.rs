@@ -1,7 +1,7 @@
-use pine_runtime::{
+use pine_host_support::{
     RunningAlertConfig, RunningAlertEventSelection, RunningAlertRealtimePolicy,
-    StrategyOrderFillAlertOutput,
 };
+use pine_runtime::StrategyOrderFillAlertOutput;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
@@ -23,7 +23,7 @@ pub(crate) fn render_strategy_order_fill_running_alert(
 ) -> PyResult<String> {
     let config = parse_running_alert_config(config)?;
     let alert = parse_strategy_order_fill_alert(alert)?;
-    pine_runtime::render_strategy_order_fill_running_alert(&config, &alert)
+    pine_host_support::render_strategy_order_fill_running_alert(&config, &alert)
         .map_err(|err| PyValueError::new_err(err.to_string()))
 }
 

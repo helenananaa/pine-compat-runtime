@@ -1,8 +1,9 @@
 use std::{collections::HashMap, fs, sync::Arc};
 
+use pine_host_support::RunningAlertConfig;
 use pine_runtime::{
     BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, MagnifierInput,
-    RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe, RunningAlertConfig,
+    NoRequestDataProvider, RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe,
     RuntimeProfile, RuntimeResult, input_calls, magnifier_input_from_json,
     public_runtime_profiled_result_json, public_runtime_result_json,
     session_window_input_from_json,
@@ -150,15 +151,7 @@ fn run_profiled_json_with_options_in_mode(
     let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         for diagnostic in analysis.diagnostics {
-            let line_col = source.line_col(diagnostic.span.start);
-            eprintln!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            );
+            eprintln!("{}", diagnostic.format(&source));
         }
         return Err("analysis failed".to_owned());
     }
@@ -215,15 +208,7 @@ fn run_result_with_options_in_mode(
     let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         for diagnostic in analysis.diagnostics {
-            let line_col = source.line_col(diagnostic.span.start);
-            eprintln!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            );
+            eprintln!("{}", diagnostic.format(&source));
         }
         return Err("analysis failed".to_owned());
     }
@@ -275,15 +260,7 @@ fn run_non_batch_with_options(
     let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         for diagnostic in analysis.diagnostics {
-            let line_col = source.line_col(diagnostic.span.start);
-            eprintln!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            );
+            eprintln!("{}", diagnostic.format(&source));
         }
         return Err("analysis failed".to_owned());
     }
@@ -357,14 +334,11 @@ fn run_non_batch_with_options(
             runtime
                 .prepare_magnifier_chart_bar_count(bars.len())
                 .map_err(|err| format!("runtime failed: {}", err.message))?;
-            for (index, bar) in bars.iter().copied().enumerate() {
-                match execution_times.as_ref().map(|values| values[index]) {
-                    Some(execution_time) => runtime
-                        .update_with_execution_time(BarUpdate::historical(bar), execution_time),
-                    None => runtime.update(BarUpdate::historical(bar)),
-                }
-                .map_err(|err| format!("runtime failed: {}", err.message))?;
+            match execution_times.as_deref() {
+                Some(times) => runtime.seed_historical_with_execution_times(&bars, times),
+                None => runtime.seed_historical(&bars),
             }
+            .map_err(|err| format!("runtime failed: {}", err.message))?;
             Ok((runtime.confirmed_result(), runtime.confirmed_profile()))
         }
         ExecutionMode::RealtimeForming => {
@@ -387,14 +361,13 @@ fn run_non_batch_with_options(
             runtime
                 .prepare_magnifier_chart_bar_count(history.len())
                 .map_err(|err| format!("runtime failed: {}", err.message))?;
-            for (index, bar) in history.iter().copied().enumerate() {
-                match execution_times.as_ref().map(|values| values[index]) {
-                    Some(execution_time) => runtime
-                        .update_with_execution_time(BarUpdate::historical(bar), execution_time),
-                    None => runtime.update(BarUpdate::historical(bar)),
+            match execution_times.as_deref() {
+                Some(times) => {
+                    runtime.seed_historical_with_execution_times(history, &times[..history.len()])
                 }
-                .map_err(|err| format!("runtime failed: {}", err.message))?;
+                None => runtime.seed_historical(history),
             }
+            .map_err(|err| format!("runtime failed: {}", err.message))?;
             let confirmed_execution_time = execution_times
                 .as_ref()
                 .and_then(|values| values.last().copied());
@@ -464,7 +437,7 @@ fn render_strategy_running_alert(
             strategy.alerts.len()
         )
     })?;
-    pine_runtime::render_strategy_order_fill_running_alert(&running_alert.config, alert)
+    pine_host_support::render_strategy_order_fill_running_alert(&running_alert.config, alert)
         .map_err(|err| err.to_string())
 }
 
@@ -544,6 +517,15 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     return Err("chart symbol must not be empty".to_owned());
                 }
                 options.chart_context = options.chart_context.clone().with_symbol(value.trim());
+            }
+            "--chart-currency" => {
+                index += 1;
+                let value = args.get(index).ok_or_else(usage)?;
+                options.chart_context = options
+                    .chart_context
+                    .clone()
+                    .with_currency(value.trim())
+                    .map_err(str::to_owned)?;
             }
             "--chart-timeframe" => {
                 index += 1;
@@ -780,7 +762,10 @@ fn request_environment_from_specs(
     chart_context: ChartContext,
 ) -> Result<RequestEnvironment, String> {
     if specs.is_empty() {
-        return Ok(RequestEnvironment::default().for_chart(chart_context));
+        return Ok(RequestEnvironment::new(
+            chart_context,
+            Arc::new(NoRequestDataProvider),
+        ));
     }
 
     let mut streams = Vec::with_capacity(specs.len());

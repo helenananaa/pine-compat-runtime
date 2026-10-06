@@ -1,5 +1,13 @@
 # Language Scope
 
+Modern declarations admit an explicitly empty `indicator(timeframe="")`, with
+const `timeframe_gaps`, to inherit the host chart; non-empty or unresolved
+program-level timeframes remain rejected. Typed v6 input families admit `active`
+as const/input bool metadata without changing input values. For `plot`,
+`plotshape` and `fill`, input-qualified display is accepted in v5/v6 and
+input-qualified editable only in v6. See `INPUT_METADATA_AUDIT.md` for native
+version controls and the remaining host-UI discovery boundary.
+
 Modern v5/v6 scalar UDF parameters additionally accept explicit `simple`
 qualifiers. Const/input/simple actuals are accepted and remain bound as Simple;
 series actuals and series defaults are rejected. Local and host-provided
@@ -38,9 +46,10 @@ The analyzer carries the validated dialect into HIR so the runtime can select
 version-specific behavior. For v1-v4, script-mode classification runs before
 ordinary symbol and call diagnostics. The fixture-backed v1-v4 `study()`
 subsets are executable through versioned declaration, input, alias, output,
-and request translation. `strategy()` and any `strategy.*` use in v1-v4 stop with
-one `E_LEGACY_STRATEGY_OUT_OF_SCOPE` diagnostic; legacy strategies are not in
-scope. Explicit v5/v6 `indicator()` and `strategy()` continue through the
+and request translation. Pine v1-v4 `strategy()` sources enter the host-neutral
+strategy analyzer and broker; the measured v1, v2/v3, and v4 slices are linked
+from the delivery roadmap. `strategy.*` use in a legacy `study()` source is
+rejected by script-mode checks. Explicit v5/v6 `indicator()` and `strategy()` continue through the
 existing modern paths, and legacy-only declaration names are not activated for
 modern sources.
 
@@ -475,7 +484,7 @@ without `else` yields `na` when its condition is false; final loops may produce
 `void` when their body is side-effect-only. Pine v4 additionally admits the
 exact namespace-call subset `array.set/pop/unshift/clear`,
 `label.new/delete`, and `line.new/delete` inside UDF bodies. Pine v5/v6 admit
-`box.new` constructors and `array.unshift` (namespace and method) inside UDF
+`box.new` constructors and `array.unshift`/`array.push` (namespace and method) inside local UDF
 bodies. Recursive
 functions, all other collection/drawing side effects, output/alert side
 effects, global reassignment inside functions, and side-effecting calls as UDF
@@ -581,7 +590,9 @@ Request data:
   `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
-  same-or-higher-timeframe bars. The provider expression subset includes
+  lower, equal, or higher-timeframe bars. Higher fixed timeframes must be
+  integer multiples of the chart timeframe; calendar months instead align by
+  calendar boundaries. The provider expression subset includes
   requested-context `syminfo.tickerid`/`timeframe.period`, direct OHLCV/time
   sources, pure arithmetic and ternaries, history references, `na`,
   `nz`, `time(timeframe)` and `time_close(timeframe)` function calls including
@@ -658,15 +669,17 @@ The analyzer should reject these with clear diagnostics:
   `strategy.risk.max_intraday_loss`,
   `strategy.risk.max_intraday_filled_orders`, and
   `strategy.risk.max_cons_loss_days`
-- `request.*` variants outside the narrow same-context and same-or-higher-timeframe
+- `request.*` variants outside the narrow same-context and
   provider-backed `request.security` subsets
-- legacy lower-timeframe `security`, requested expressions outside the same
-  provider-backed subset, and non-empty or dynamic declaration-level
+- requested expressions outside the same provider-backed `security` subset,
+  and non-empty or dynamic declaration-level
   `study(resolution=...)`; the exact empty-string chart-inherited subset is
   supported, while all execution-timeframe-changing forms remain a precise
   unsupported program-context feature
-- `request.security_lower_tf`; lower-timeframe array-returning request APIs need
-  typed array return semantics and host output shapes before support is claimed
+- `request.security_lower_tf` optional policies beyond named `calc_bars_count`
+  and collection expressions; the scalar and scalar-tuple subset returns typed
+  intrabar arrays from host-provided bars, with forming arrays limited to
+  explicitly received current-period intrabars
 - unsupported alert frequency values outside the claimed const-string
   frequency subset and alert placeholder interpolation outside the
   supported `alertcondition` message subset

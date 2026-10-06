@@ -1,0 +1,85 @@
+//@version=6
+indicator("Local non-scalar UDT typed-na history")
+
+type Marker
+    label id
+
+method retain(Marker value) =>
+    value
+
+method nestedRetain(Marker value) =>
+    value.retain()
+
+pass(Marker value) =>
+    value
+
+type Tool
+    int seed
+
+method keep(Tool tool, Marker value) =>
+    value
+
+Marker marker = na
+var Marker sticky = na
+varip Marker intrabar = na
+tool = Tool.new(1)
+prior = marker[1]
+sticky_prior = sticky[1]
+intrabar_prior = intrabar[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_prior = marker[dynamic_offset]
+dynamic_sticky_prior = sticky[dynamic_offset]
+dynamic_intrabar_prior = intrabar[dynamic_offset]
+ternary_choice = bar_index > 0 ? marker : na
+if_choice = if bar_index > 0
+    sticky
+else
+    na
+switch_choice = switch bar_index % 2
+    0 => marker
+    => na
+for_choice = for i = 0 to 1
+    marker
+for_in_choice = for value in array.from(1, 2)
+    marker
+count = 0
+while_choice = while count < 1
+    count := count + 1
+    marker
+udf_choice = pass(marker)
+method_choice = tool.keep(marker)
+receiver_choice = marker.retain()
+nested_receiver_choice = marker.nestedRetain()
+field = na(marker) ? na : marker.id
+field_prior = field[1]
+field_dynamic_prior = field[dynamic_offset]
+
+plot(na(prior) ? 1 : 0)
+plot(na(dynamic_prior) ? 1 : 0)
+plot(na(sticky_prior) ? 1 : 0)
+plot(na(dynamic_sticky_prior) ? 1 : 0)
+plot(na(intrabar_prior) ? 1 : 0)
+plot(na(dynamic_intrabar_prior) ? 1 : 0)
+plot(na(ternary_choice[1]) ? 1 : 0)
+plot(na(ternary_choice[dynamic_offset]) ? 1 : 0)
+plot(na(if_choice[1]) ? 1 : 0)
+plot(na(if_choice[dynamic_offset]) ? 1 : 0)
+plot(na(switch_choice[1]) ? 1 : 0)
+plot(na(switch_choice[dynamic_offset]) ? 1 : 0)
+plot(na(for_choice[1]) ? 1 : 0)
+plot(na(for_choice[dynamic_offset]) ? 1 : 0)
+plot(na(for_in_choice[1]) ? 1 : 0)
+plot(na(for_in_choice[dynamic_offset]) ? 1 : 0)
+plot(na(while_choice[1]) ? 1 : 0)
+plot(na(while_choice[dynamic_offset]) ? 1 : 0)
+plot(na(udf_choice[1]) ? 1 : 0)
+plot(na(udf_choice[dynamic_offset]) ? 1 : 0)
+plot(na(method_choice[1]) ? 1 : 0)
+plot(na(method_choice[dynamic_offset]) ? 1 : 0)
+plot(na(receiver_choice[1]) ? 1 : 0)
+plot(na(receiver_choice[dynamic_offset]) ? 1 : 0)
+plot(na(nested_receiver_choice[1]) ? 1 : 0)
+plot(na(nested_receiver_choice[dynamic_offset]) ? 1 : 0)
+plot(na(field) ? 1 : 0)
+plot(na(field_prior) ? 1 : 0)
+plot(na(field_dynamic_prior) ? 1 : 0)

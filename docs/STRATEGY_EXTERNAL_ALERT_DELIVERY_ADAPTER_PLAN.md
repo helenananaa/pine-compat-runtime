@@ -2,6 +2,11 @@
 
 Status: design gate closed on 2026-06-11.
 
+Implementation location updated 2026-10-03: all running-alert and delivery
+helpers described below now live in the optional `pine-host-support` crate.
+The core retains public alert events and neutral template formatting. See the
+[0.3 prerelease Rust import migration](HOST_SUPPORT_MIGRATION_20261003.md).
+
 This document defines the external delivery-adapter boundary for future
 running-alert delivery. It does not implement webhook, email, push, SMS,
 persistence, retry scheduling, UI, or network clients.

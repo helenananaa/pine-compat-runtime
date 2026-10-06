@@ -1,0 +1,13 @@
+# Dynamic request selectors (2026-09-25)
+
+`request.security()` and `request.security_lower_tf()` now accept `series string` symbol and timeframe selectors when dynamic requests are enabled. The default is enabled for Pine v6 and disabled for Pine v5; v5 can opt in with `dynamic_requests=true`, and v6 can opt out with `dynamic_requests=false` in `indicator()` or `strategy()`. Earlier versions retain their existing simple-selector boundary.
+
+The runtime resolves each selector on the chart bar and separates requested-expression state and cached values by call site, symbol, and timeframe. A dynamic request on a realtime bar can use only contexts that its call site visited on historical bars; otherwise it raises a runtime error. The host still supplies requested bars and, for live intrabars, ordered feed updates.
+
+Focused semantic tests cover both request functions and v5/v6 declaration gates. Runtime tests cover switching provider symbols, switching lower timeframes, and rejecting a new realtime context. This is a selector subset, not general dynamic-request qualification: nested requests, collection expressions, library declaration policy, and other request options remain outside the admitted profiles. No native TradingView numeric export was used for these focused fixtures. The version rules and realtime-context rule follow TradingView's [v6 migration guide](https://www.tradingview.com/pine-script-docs/migration-guides/to-pine-version-6/) and [request documentation](https://www.tradingview.com/pine-script-docs/concepts/other-timeframes-and-data/).
+
+The subsequent local-scope gate admits conditional request calls with dynamic requests enabled. It rejects direct calls in local blocks when dynamic requests are disabled. Pine v5 retains its documented exception for a request wrapped in a UDF and invoked from a local block; Pine v6 with `dynamic_requests=false` rejects that pattern. A runtime regression verifies a v6 conditional request warms only the contexts it actually reaches on historical bars. This does not qualify arbitrary nested requests or requests whose expression captures mutable state.
+
+After the local-scope gate, `cargo test -p pine-builtins -p pine-sema -p pine-runtime --locked --quiet` passed; output is retained in ignored `.local/community-coverage-20260923/dynamic-request-local-scope-three-package-tests-20260925.log`. `cargo fmt --all -- --check` and `git diff --check` passed.
+
+The subsequent [TradingView native comparison](DYNAMIC_REQUEST_NATIVE_PARITY_20260925.md) exercised a v6 local-scope request switching between chart and external-symbol contexts. All 891 output cells across 297 overlapping daily bars match the local run; the remaining three native rows fall after the local chart archive ends.

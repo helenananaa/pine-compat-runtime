@@ -1,0 +1,35 @@
+//@version=6
+indicator("Tuple final declaration control")
+pair(float x) => [x, x + 10]
+direct(float x) =>
+    [a, b] = pair(x)
+discard(float x) =>
+    [_, b] = pair(x)
+both(float x) =>
+    [_, _] = pair(x)
+choose(float x) =>
+    if bar_index % 2 == 0
+        [a, b] = pair(x)
+    else
+        [c, d] = pair(-x)
+counted() =>
+    var int calls = 0
+    calls += 1
+    [calls, calls * 10]
+once() =>
+    [a, b] = counted()
+[a, b] = direct(close)
+[c, d] = discard(close)
+[e, f] = both(close)
+[g, h] = choose(close)
+[i, j] = once()
+plot(a, "TUP direct a")
+plot(b, "TUP direct b")
+plot(c, "TUP discard a")
+plot(d, "TUP discard b")
+plot(e, "TUP both a")
+plot(f, "TUP both b")
+plot(g, "TUP branch a")
+plot(h, "TUP branch b")
+plot(i, "TUP once a")
+plot(j, "TUP once b")

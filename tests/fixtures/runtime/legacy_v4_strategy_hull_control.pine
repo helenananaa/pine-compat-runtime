@@ -1,0 +1,9 @@
+//@version=4
+strategy("Hull control", initial_capital=100000, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+fast = wma(close, 2)
+slow = wma(close, 3)
+plot(fast)
+if fast > slow
+    strategy.entry("L", strategy.long)
+if fast < slow
+    strategy.entry("S", strategy.short)

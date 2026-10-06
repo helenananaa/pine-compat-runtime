@@ -1,0 +1,18 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT array typed UDF params")
+
+points = array.from(lib.Point.new(close + 1), lib.Point.new(close + 2))
+first = lib.firstPoint(points)
+second = lib.secondPoint(points)
+firstNamed = lib.firstPoint(points=points)
+secondNamed = lib.secondPoint(points=points)
+firstPrior = first[1]
+firstNamedPrior = firstNamed[1]
+value = (na(first) ? na : first.x) + (na(second) ? na : second.x)
+previous = value[1]
+
+plot(value)
+plot(previous)
+plot((na(firstNamed) ? na : firstNamed.x) + (na(secondNamed) ? na : secondNamed.x))
+plot((na(firstPrior) ? na : firstPrior.x) + (na(firstNamedPrior) ? na : firstNamedPrior.x))

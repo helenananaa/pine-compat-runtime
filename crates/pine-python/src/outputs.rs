@@ -1,4 +1,10 @@
 use crate::tables::tables_to_py;
+use pine_runtime::{
+    BoxOutputView, ColorSeriesView, FillOutputView, LabelOutputView, LineFillOutputView,
+    LineOutputView, PlotArrowSeriesView, PlotBarSeriesView, PlotCandleSeriesView,
+    PlotCharSeriesView, PlotSeriesView, PlotShapeSeriesView, PolylineOutputView, RuntimeResultView,
+    StrategyResultView,
+};
 use pine_runtime::{PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList};
@@ -6,6 +12,13 @@ use pyo3::types::{PyAny, PyDict, PyList};
 pub(crate) fn runtime_result_to_py(
     py: Python<'_>,
     result: &pine_runtime::RuntimeResult,
+) -> PyResult<Py<PyAny>> {
+    runtime_result_view_to_py(py, &result.view())
+}
+
+pub(crate) fn runtime_result_view_to_py(
+    py: Python<'_>,
+    result: &RuntimeResultView<'_>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
     output.set_item("schemaVersion", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
@@ -18,7 +31,7 @@ pub(crate) fn runtime_result_to_py(
     output.set_item("plotCandles", plot_candles_to_py(py, &result.plot_candles)?)?;
     output.set_item("bgColors", colors_to_py(py, &result.bg_colors)?)?;
     output.set_item("barColors", colors_to_py(py, &result.bar_colors)?)?;
-    output.set_item("hlines", hlines_to_py(py, &result.hlines)?)?;
+    output.set_item("hlines", hlines_to_py(py, result.hlines)?)?;
     output.set_item("fills", fills_to_py(py, &result.fills)?)?;
     output.set_item("labels", labels_to_py(py, &result.labels)?)?;
     output.set_item("lines", lines_to_py(py, &result.lines)?)?;
@@ -26,40 +39,40 @@ pub(crate) fn runtime_result_to_py(
     output.set_item("polylines", polylines_to_py(py, &result.polylines)?)?;
     output.set_item("boxes", boxes_to_py(py, &result.boxes)?)?;
     output.set_item("tables", tables_to_py(py, &result.tables)?)?;
-    output.set_item("alerts", alerts_to_py(py, &result.alerts)?)?;
+    output.set_item("alerts", alerts_to_py(py, result.alerts)?)?;
     if let Some(strategy) = &result.strategy {
-        output.set_item("strategy", strategy_result_to_py(py, strategy)?)?;
+        output.set_item("strategy", strategy_result_view_to_py(py, strategy)?)?;
     }
     output.set_item(
         "diagnostics",
-        runtime_diagnostics_to_py(py, &result.diagnostics)?,
+        runtime_diagnostics_to_py(py, result.diagnostics.as_ref())?,
     )?;
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn strategy_result_to_py(
+pub(crate) fn strategy_result_view_to_py(
     py: Python<'_>,
-    strategy: &pine_runtime::StrategyResult,
+    strategy: &StrategyResultView<'_>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
-    output.set_item("orders", strategy_orders_to_py(py, &strategy.orders)?)?;
-    output.set_item("trades", strategy_trades_to_py(py, &strategy.trades)?)?;
-    output.set_item("position", strategy_position_to_py(py, &strategy.position)?)?;
-    output.set_item("equity", strategy_equity_to_py(py, &strategy.equity)?)?;
+    output.set_item("orders", strategy_orders_to_py(py, strategy.orders)?)?;
+    output.set_item("trades", strategy_trades_to_py(py, strategy.trades)?)?;
+    output.set_item("position", strategy_position_to_py(py, strategy.position)?)?;
+    output.set_item("equity", strategy_equity_to_py(py, strategy.equity)?)?;
     output.set_item(
         "alerts",
-        strategy_order_fill_alerts_to_py(py, &strategy.alerts)?,
+        strategy_order_fill_alerts_to_py(py, strategy.alerts)?,
     )?;
     output.set_item(
         "diagnostics",
-        runtime_diagnostics_to_py(py, &strategy.diagnostics)?,
+        runtime_diagnostics_to_py(py, strategy.diagnostics)?,
     )?;
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn strategy_order_fill_alerts_to_py(
+pub(crate) fn strategy_order_fill_alerts_to_py<'a>(
     py: Python<'_>,
-    alerts: &[pine_runtime::StrategyOrderFillAlertOutput],
+    alerts: impl IntoIterator<Item = &'a pine_runtime::StrategyOrderFillAlertOutput>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for alert in alerts {
@@ -98,9 +111,9 @@ pub(crate) fn runtime_diagnostics_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn strategy_trades_to_py(
+pub(crate) fn strategy_trades_to_py<'a>(
     py: Python<'_>,
-    trades: &[pine_runtime::StrategyTrade],
+    trades: impl IntoIterator<Item = &'a pine_runtime::StrategyTrade>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for trade in trades {
@@ -119,9 +132,9 @@ pub(crate) fn strategy_trades_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn strategy_orders_to_py(
+pub(crate) fn strategy_orders_to_py<'a>(
     py: Python<'_>,
-    orders: &[pine_runtime::StrategyOrderEvent],
+    orders: impl IntoIterator<Item = &'a pine_runtime::StrategyOrderEvent>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for order in orders {
@@ -137,9 +150,9 @@ pub(crate) fn strategy_orders_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn strategy_position_to_py(
+pub(crate) fn strategy_position_to_py<'a>(
     py: Python<'_>,
-    position: &[pine_runtime::StrategyPositionSnapshot],
+    position: impl IntoIterator<Item = &'a pine_runtime::StrategyPositionSnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in position {
@@ -152,9 +165,9 @@ pub(crate) fn strategy_position_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn strategy_equity_to_py(
+pub(crate) fn strategy_equity_to_py<'a>(
     py: Python<'_>,
-    equity: &[pine_runtime::StrategyEquitySnapshot],
+    equity: impl IntoIterator<Item = &'a pine_runtime::StrategyEquitySnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in equity {
@@ -169,157 +182,167 @@ pub(crate) fn strategy_equity_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn plots_to_py(py: Python<'_>, plots: &[pine_runtime::PlotSeries]) -> PyResult<Py<PyAny>> {
+fn plots_to_py<'a>(
+    py: Python<'_>,
+    plots: impl IntoIterator<Item = impl Into<PlotSeriesView<'a>>>,
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for plot in plots {
+    for plot in plots.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", plot.id)?;
-        item.set_item("values", values_to_py(py, &plot.values)?)?;
+        item.set_item("values", values_to_py(py, plot.values)?)?;
         if plot.colors.iter().any(|value| *value != PineValue::Na) {
-            item.set_item("colors", values_to_py(py, &plot.colors)?)?;
+            item.set_item("colors", values_to_py(py, plot.colors)?)?;
         }
-        set_non_default_value(py, &item, "linewidth", &plot.linewidth, &PineValue::Int(1))?;
+        set_non_default_value(py, &item, "linewidth", plot.linewidth, &PineValue::Int(1))?;
         set_non_default_value(
             py,
             &item,
             "style",
-            &plot.style,
+            plot.style,
             &PineValue::String("plot.style_line".to_owned()),
         )?;
         set_non_default_value(
             py,
             &item,
             "trackPrice",
-            &plot.track_price,
+            plot.track_price,
             &PineValue::Bool(false),
         )?;
-        set_non_default_value(py, &item, "histBase", &plot.hist_base, &PineValue::Int(0))?;
-        set_non_default_value(py, &item, "join", &plot.join, &PineValue::Bool(false))?;
+        set_non_default_value(py, &item, "histBase", plot.hist_base, &PineValue::Int(0))?;
+        set_non_default_value(py, &item, "join", plot.join, &PineValue::Bool(false))?;
         set_non_default_value(
             py,
             &item,
             "format",
-            &plot.format,
+            plot.format,
             &PineValue::String("format.inherit".to_owned()),
         )?;
-        set_non_default_value(py, &item, "precision", &plot.precision, &PineValue::Na)?;
-        set_output_metadata(py, &item, &plot.metadata)?;
+        set_non_default_value(py, &item, "precision", plot.precision, &PineValue::Na)?;
+        set_non_default_value(
+            py,
+            &item,
+            "linestyle",
+            plot.linestyle,
+            &PineValue::String("plot.linestyle_solid".to_owned()),
+        )?;
+        set_output_metadata(py, &item, plot.metadata)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn colors_to_py(py: Python<'_>, colors: &[pine_runtime::ColorSeries]) -> PyResult<Py<PyAny>> {
+fn colors_to_py<'a>(
+    py: Python<'_>,
+    colors: impl IntoIterator<Item = impl Into<ColorSeriesView<'a>>>,
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for colors in colors {
+    for colors in colors.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", colors.id)?;
-        item.set_item("values", values_to_py(py, &colors.values)?)?;
-        set_output_metadata(py, &item, &colors.metadata)?;
+        item.set_item("values", values_to_py(py, colors.values)?)?;
+        set_output_metadata(py, &item, colors.metadata)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn plot_chars_to_py(
+fn plot_chars_to_py<'a>(
     py: Python<'_>,
-    plot_chars: &[pine_runtime::PlotCharSeries],
+    plot_chars: impl IntoIterator<Item = impl Into<PlotCharSeriesView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for plot_char in plot_chars {
+    for plot_char in plot_chars.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", plot_char.id)?;
-        item.set_item("values", values_to_py(py, &plot_char.values)?)?;
-        item.set_item("chars", values_to_py(py, &plot_char.chars)?)?;
-        item.set_item("colors", values_to_py(py, &plot_char.colors)?)?;
-        item.set_item("locations", values_to_py(py, &plot_char.locations)?)?;
-        item.set_item("texts", values_to_py(py, &plot_char.texts)?)?;
-        item.set_item("textColors", values_to_py(py, &plot_char.text_colors)?)?;
-        item.set_item("sizes", values_to_py(py, &plot_char.sizes)?)?;
-        set_output_metadata(py, &item, &plot_char.metadata)?;
+        item.set_item("values", values_to_py(py, plot_char.values)?)?;
+        item.set_item("chars", values_to_py(py, plot_char.chars)?)?;
+        item.set_item("colors", values_to_py(py, plot_char.colors)?)?;
+        item.set_item("locations", values_to_py(py, plot_char.locations)?)?;
+        item.set_item("texts", values_to_py(py, plot_char.texts)?)?;
+        item.set_item("textColors", values_to_py(py, plot_char.text_colors)?)?;
+        item.set_item("sizes", values_to_py(py, plot_char.sizes)?)?;
+        set_output_metadata(py, &item, plot_char.metadata)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn plot_shapes_to_py(
+fn plot_shapes_to_py<'a>(
     py: Python<'_>,
-    plot_shapes: &[pine_runtime::PlotShapeSeries],
+    plot_shapes: impl IntoIterator<Item = impl Into<PlotShapeSeriesView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for plot_shape in plot_shapes {
+    for plot_shape in plot_shapes.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", plot_shape.id)?;
-        item.set_item("values", values_to_py(py, &plot_shape.values)?)?;
-        item.set_item("styles", values_to_py(py, &plot_shape.styles)?)?;
-        item.set_item("locations", values_to_py(py, &plot_shape.locations)?)?;
-        item.set_item("colors", values_to_py(py, &plot_shape.colors)?)?;
-        item.set_item("texts", values_to_py(py, &plot_shape.texts)?)?;
-        item.set_item("textColors", values_to_py(py, &plot_shape.text_colors)?)?;
-        item.set_item("sizes", values_to_py(py, &plot_shape.sizes)?)?;
-        set_output_metadata(py, &item, &plot_shape.metadata)?;
+        item.set_item("values", values_to_py(py, plot_shape.values)?)?;
+        item.set_item("styles", values_to_py(py, plot_shape.styles)?)?;
+        item.set_item("locations", values_to_py(py, plot_shape.locations)?)?;
+        item.set_item("colors", values_to_py(py, plot_shape.colors)?)?;
+        item.set_item("texts", values_to_py(py, plot_shape.texts)?)?;
+        item.set_item("textColors", values_to_py(py, plot_shape.text_colors)?)?;
+        item.set_item("sizes", values_to_py(py, plot_shape.sizes)?)?;
+        set_output_metadata(py, &item, plot_shape.metadata)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn plot_arrows_to_py(
+fn plot_arrows_to_py<'a>(
     py: Python<'_>,
-    plot_arrows: &[pine_runtime::PlotArrowSeries],
+    plot_arrows: impl IntoIterator<Item = impl Into<PlotArrowSeriesView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for plot_arrow in plot_arrows {
+    for plot_arrow in plot_arrows.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", plot_arrow.id)?;
-        item.set_item("values", values_to_py(py, &plot_arrow.values)?)?;
-        item.set_item("colorUps", values_to_py(py, &plot_arrow.color_ups)?)?;
-        item.set_item("colorDowns", values_to_py(py, &plot_arrow.color_downs)?)?;
-        item.set_item("minHeights", values_to_py(py, &plot_arrow.min_heights)?)?;
-        item.set_item("maxHeights", values_to_py(py, &plot_arrow.max_heights)?)?;
-        set_output_metadata(py, &item, &plot_arrow.metadata)?;
+        item.set_item("values", values_to_py(py, plot_arrow.values)?)?;
+        item.set_item("colorUps", values_to_py(py, plot_arrow.color_ups)?)?;
+        item.set_item("colorDowns", values_to_py(py, plot_arrow.color_downs)?)?;
+        item.set_item("minHeights", values_to_py(py, plot_arrow.min_heights)?)?;
+        item.set_item("maxHeights", values_to_py(py, plot_arrow.max_heights)?)?;
+        set_output_metadata(py, &item, plot_arrow.metadata)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn plot_bars_to_py(
+fn plot_bars_to_py<'a>(
     py: Python<'_>,
-    plot_bars: &[pine_runtime::PlotBarSeries],
+    plot_bars: impl IntoIterator<Item = impl Into<PlotBarSeriesView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for plot_bar in plot_bars {
+    for plot_bar in plot_bars.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", plot_bar.id)?;
-        item.set_item("opens", values_to_py(py, &plot_bar.opens)?)?;
-        item.set_item("highs", values_to_py(py, &plot_bar.highs)?)?;
-        item.set_item("lows", values_to_py(py, &plot_bar.lows)?)?;
-        item.set_item("closes", values_to_py(py, &plot_bar.closes)?)?;
-        item.set_item("colors", values_to_py(py, &plot_bar.colors)?)?;
-        set_output_metadata(py, &item, &plot_bar.metadata)?;
+        item.set_item("opens", values_to_py(py, plot_bar.opens)?)?;
+        item.set_item("highs", values_to_py(py, plot_bar.highs)?)?;
+        item.set_item("lows", values_to_py(py, plot_bar.lows)?)?;
+        item.set_item("closes", values_to_py(py, plot_bar.closes)?)?;
+        item.set_item("colors", values_to_py(py, plot_bar.colors)?)?;
+        set_output_metadata(py, &item, plot_bar.metadata)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn plot_candles_to_py(
+fn plot_candles_to_py<'a>(
     py: Python<'_>,
-    plot_candles: &[pine_runtime::PlotCandleSeries],
+    plot_candles: impl IntoIterator<Item = impl Into<PlotCandleSeriesView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for plot_candle in plot_candles {
+    for plot_candle in plot_candles.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", plot_candle.id)?;
-        item.set_item("opens", values_to_py(py, &plot_candle.opens)?)?;
-        item.set_item("highs", values_to_py(py, &plot_candle.highs)?)?;
-        item.set_item("lows", values_to_py(py, &plot_candle.lows)?)?;
-        item.set_item("closes", values_to_py(py, &plot_candle.closes)?)?;
-        item.set_item("colors", values_to_py(py, &plot_candle.colors)?)?;
-        item.set_item("wickColors", values_to_py(py, &plot_candle.wick_colors)?)?;
-        item.set_item(
-            "borderColors",
-            values_to_py(py, &plot_candle.border_colors)?,
-        )?;
-        set_output_metadata(py, &item, &plot_candle.metadata)?;
+        item.set_item("opens", values_to_py(py, plot_candle.opens)?)?;
+        item.set_item("highs", values_to_py(py, plot_candle.highs)?)?;
+        item.set_item("lows", values_to_py(py, plot_candle.lows)?)?;
+        item.set_item("closes", values_to_py(py, plot_candle.closes)?)?;
+        item.set_item("colors", values_to_py(py, plot_candle.colors)?)?;
+        item.set_item("wickColors", values_to_py(py, plot_candle.wick_colors)?)?;
+        item.set_item("borderColors", values_to_py(py, plot_candle.border_colors)?)?;
+        set_output_metadata(py, &item, plot_candle.metadata)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
@@ -375,46 +398,43 @@ pub(crate) fn hlines_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn fills_to_py(
+pub(crate) fn fills_to_py<'a>(
     py: Python<'_>,
-    fills: &[pine_runtime::FillOutput],
+    fills: impl IntoIterator<Item = impl Into<FillOutputView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for fill in fills {
+    for fill in fills.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", fill.id)?;
         item.set_item("firstId", fill.first_id)?;
         item.set_item("secondId", fill.second_id)?;
         item.set_item("firstIsHLine", fill.first_is_hline)?;
         item.set_item("secondIsHLine", fill.second_is_hline)?;
-        item.set_item("colors", values_to_py(py, &fill.colors)?)?;
+        item.set_item("colors", values_to_py(py, fill.colors)?)?;
+        if let Some(samples) = &fill.gradient {
+            item.set_item("gradient", crate::gradient::samples_to_py(py, samples)?)?;
+        }
         set_non_default_value(
             py,
             &item,
             "title",
-            &fill.title,
+            fill.title,
             &PineValue::String(String::new()),
         )?;
-        set_non_default_value(
-            py,
-            &item,
-            "editable",
-            &fill.editable,
-            &PineValue::Bool(true),
-        )?;
-        set_non_default_value(py, &item, "showLast", &fill.show_last, &PineValue::Na)?;
+        set_non_default_value(py, &item, "editable", fill.editable, &PineValue::Bool(true))?;
+        set_non_default_value(py, &item, "showLast", fill.show_last, &PineValue::Na)?;
         set_non_default_value(
             py,
             &item,
             "fillGaps",
-            &fill.fill_gaps,
+            fill.fill_gaps,
             &PineValue::Bool(true),
         )?;
         set_non_default_value(
             py,
             &item,
             "display",
-            &fill.display,
+            fill.display,
             &PineValue::String("display.all".to_owned()),
         )?;
         output.append(item)?;
@@ -472,23 +492,23 @@ pub(crate) fn set_output_metadata(
     )
 }
 
-pub(crate) fn labels_to_py(
+pub(crate) fn labels_to_py<'a>(
     py: Python<'_>,
-    labels: &[pine_runtime::LabelOutput],
+    labels: impl IntoIterator<Item = impl Into<LabelOutputView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for label in labels {
+    for label in labels.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", label.id)?;
-        item.set_item("snapshots", label_snapshots_to_py(py, &label.snapshots)?)?;
+        item.set_item("snapshots", label_snapshots_to_py(py, label.snapshots)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn label_snapshots_to_py(
+fn label_snapshots_to_py<'a>(
     py: Python<'_>,
-    snapshots: &[pine_runtime::LabelSnapshot],
+    snapshots: impl IntoIterator<Item = &'a pine_runtime::LabelSnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in snapshots {
@@ -521,23 +541,23 @@ fn label_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn lines_to_py(
+pub(crate) fn lines_to_py<'a>(
     py: Python<'_>,
-    lines: &[pine_runtime::LineOutput],
+    lines: impl IntoIterator<Item = impl Into<LineOutputView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for line in lines {
+    for line in lines.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", line.id)?;
-        item.set_item("snapshots", line_snapshots_to_py(py, &line.snapshots)?)?;
+        item.set_item("snapshots", line_snapshots_to_py(py, line.snapshots)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn line_snapshots_to_py(
+fn line_snapshots_to_py<'a>(
     py: Python<'_>,
-    snapshots: &[pine_runtime::LineSnapshot],
+    snapshots: impl IntoIterator<Item = &'a pine_runtime::LineSnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in snapshots {
@@ -560,26 +580,26 @@ fn line_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn line_fills_to_py(
+pub(crate) fn line_fills_to_py<'a>(
     py: Python<'_>,
-    line_fills: &[pine_runtime::LineFillOutput],
+    line_fills: impl IntoIterator<Item = impl Into<LineFillOutputView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for line_fill in line_fills {
+    for line_fill in line_fills.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", line_fill.id)?;
         item.set_item(
             "snapshots",
-            line_fill_snapshots_to_py(py, &line_fill.snapshots)?,
+            line_fill_snapshots_to_py(py, line_fill.snapshots)?,
         )?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn line_fill_snapshots_to_py(
+fn line_fill_snapshots_to_py<'a>(
     py: Python<'_>,
-    snapshots: &[pine_runtime::LineFillSnapshot],
+    snapshots: impl IntoIterator<Item = &'a pine_runtime::LineFillSnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in snapshots {
@@ -596,26 +616,26 @@ fn line_fill_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn polylines_to_py(
+pub(crate) fn polylines_to_py<'a>(
     py: Python<'_>,
-    polylines: &[pine_runtime::PolylineOutput],
+    polylines: impl IntoIterator<Item = impl Into<PolylineOutputView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for polyline in polylines {
+    for polyline in polylines.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", polyline.id)?;
         item.set_item(
             "snapshots",
-            polyline_snapshots_to_py(py, &polyline.snapshots)?,
+            polyline_snapshots_to_py(py, polyline.snapshots)?,
         )?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn polyline_snapshots_to_py(
+fn polyline_snapshots_to_py<'a>(
     py: Python<'_>,
-    snapshots: &[pine_runtime::PolylineSnapshot],
+    snapshots: impl IntoIterator<Item = &'a pine_runtime::PolylineSnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in snapshots {
@@ -638,23 +658,23 @@ fn polyline_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn boxes_to_py(
+pub(crate) fn boxes_to_py<'a>(
     py: Python<'_>,
-    boxes: &[pine_runtime::BoxOutput],
+    boxes: impl IntoIterator<Item = impl Into<BoxOutputView<'a>>>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for box_output in boxes {
+    for box_output in boxes.into_iter().map(Into::into) {
         let item = PyDict::new(py);
         item.set_item("id", box_output.id)?;
-        item.set_item("snapshots", box_snapshots_to_py(py, &box_output.snapshots)?)?;
+        item.set_item("snapshots", box_snapshots_to_py(py, box_output.snapshots)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
 
-fn box_snapshots_to_py(
+fn box_snapshots_to_py<'a>(
     py: Python<'_>,
-    snapshots: &[pine_runtime::BoxSnapshot],
+    snapshots: impl IntoIterator<Item = &'a pine_runtime::BoxSnapshot>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for snapshot in snapshots {
@@ -692,9 +712,9 @@ fn box_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn alerts_to_py(
+pub(crate) fn alerts_to_py<'a>(
     py: Python<'_>,
-    alerts: &[pine_runtime::AlertEvent],
+    alerts: impl IntoIterator<Item = &'a pine_runtime::AlertEvent>,
 ) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for alert in alerts {
@@ -709,12 +729,46 @@ pub(crate) fn alerts_to_py(
     Ok(output.into_any().unbind())
 }
 
-pub(crate) fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
+pub(crate) fn values_to_py<'a>(
+    py: Python<'_>,
+    values: impl IntoIterator<Item = &'a PineValue>,
+) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
-    for value in values {
-        output.append(value_to_py(py, value)?)?;
+    // Repeated immutable scalars (especially color histories) can share one
+    // Python object. Containers must remain independently mutable, and float
+    // identity uses bits so negative zero is not replaced with positive zero.
+    let mut previous: Option<(&PineValue, Py<PyAny>)> = None;
+    let mut values = values.into_iter().peekable();
+    let mut index = 0;
+    while let Some(value) = values.next() {
+        if let Some((old, item)) = &previous
+            && same_python_scalar(old, value)
+        {
+            output.append(item.bind(py))?;
+        } else {
+            append_value(py, &output, value)?;
+            previous = None;
+        }
+        if previous.is_none()
+            && values
+                .peek()
+                .is_some_and(|next| same_python_scalar(value, next))
+        {
+            previous = Some((value, output.get_item(index)?.unbind()));
+        }
+        index += 1;
     }
     Ok(output.into_any().unbind())
+}
+
+fn same_python_scalar(left: &PineValue, right: &PineValue) -> bool {
+    match (left, right) {
+        (PineValue::Int(left), PineValue::Int(right)) => left == right,
+        (PineValue::Float(left), PineValue::Float(right)) => left.to_bits() == right.to_bits(),
+        (PineValue::Color(left), PineValue::Color(right)) => left == right,
+        (PineValue::String(left), PineValue::String(right)) => left == right,
+        _ => false,
+    }
 }
 
 pub(crate) fn value_to_py(py: Python<'_>, value: &PineValue) -> PyResult<Py<PyAny>> {
@@ -750,6 +804,7 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
             output.append(values_to_py(py, values)?)
         }
         PineValue::Array(_)
+        | PineValue::UserTypeRef(_)
         | PineValue::Matrix(_)
         | PineValue::Map(_)
         | PineValue::Na

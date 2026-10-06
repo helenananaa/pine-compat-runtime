@@ -3,6 +3,128 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn drawing_setters_apply_function_returned_styles_per_bar() {
+    let source = SourceFile::new(
+        "function_drawing_styles.pine",
+        r#"//@version=6
+indicator("function drawing styles")
+styleFor(int i) => i % 3 == 0 ? line.style_solid : i % 3 == 1 ? line.style_dotted : line.style_dashed
+var line id = line.new(bar_index, close, bar_index + 1, close)
+line.set_style(id, styleFor(bar_index))
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("function-returned drawing style");
+    assert_eq!(result.lines.len(), 1);
+    let styles: Vec<_> = result.lines[0]
+        .snapshots
+        .iter()
+        .map(|s| s.style.clone())
+        .collect();
+    assert_eq!(
+        styles,
+        ["line.style_solid", "line.style_dotted", "line.style_dashed"]
+            .map(|s| PineValue::String(s.to_owned()))
+    );
+}
+
+#[test]
+fn drawing_constructors_accept_series_style_through_udf_parameters() {
+    let source = SourceFile::new(
+        "series_drawing_styles.pine",
+        r#"//@version=5
+indicator("series drawing styles")
+drawLine(string style) => line.new(bar_index, low, bar_index, high, style=style)
+drawLabel(string style) => label.new(bar_index, high, "x", style=style)
+lineStyle = bar_index % 2 == 0 ? line.style_solid : line.style_dashed
+labelStyle = bar_index % 2 == 0 ? label.style_label_up : label.style_label_down
+lineId = drawLine(lineStyle)
+labelId = drawLabel(labelStyle)
+plot(line.get_x2(lineId) + label.get_x(labelId))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 4.0]);
+    assert_eq!(result.lines.len(), 3);
+    assert_eq!(result.labels.len(), 3);
+}
+
+#[test]
+fn drawing_constructor_rejects_invalid_dynamic_style_at_runtime() {
+    let source = SourceFile::new(
+        "invalid_series_style.pine",
+        r#"//@version=5
+indicator("invalid series style")
+drawLine(string style) => line.new(bar_index, low, bar_index, high, style=style)
+drawLine(str.tostring(close))
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("invalid style must fail at runtime");
+    assert!(error.message.contains("line.new style"), "{error:?}");
+}
+
+#[test]
+fn drawing_created_as_udf_argument_is_evaluated_once() {
+    let source = SourceFile::new(
+        "udf_drawing_arg.pine",
+        "//@version=5\nindicator(\"UDF drawing arg\")\nxOf(label id) => label.get_x(id)\nplot(xOf(label.new(bar_index, close)))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 2.0]);
+    assert_eq!(result.labels.len(), 3);
+}
+
+#[test]
+fn repeated_table_new_at_one_position_survives_more_than_fifty_bars() {
+    let source = SourceFile::new(
+        "repeated_table.pine",
+        "//@version=5\nindicator(\"repeated table\")\nt = table.new(position.bottom_right, 1, 1)\ntable.cell(table_id=t, column=0, row=0, text=str.tostring(close))\nplot(close)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = (0..60).map(|i| bar(f64::from(i))).collect::<Vec<_>>();
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    assert_eq!(result.tables.len(), 60);
+    assert_values_close(
+        &result.plots[0].values,
+        &(0..60).map(f64::from).collect::<Vec<_>>(),
+    );
+}
+
+#[test]
 fn collects_hline_and_fill_once() {
     let source = SourceFile::new(
         "test.pine",
@@ -749,6 +871,33 @@ plot(close)
 }
 
 #[test]
+fn chart_point_copy_method_keeps_an_independent_snapshot_in_function() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=5
+indicator("chart point method copy")
+copy_point(chart.point point) =>
+    point.copy()
+original = chart.point.now(close)
+copied = copy_point(original)
+original.price := close + 10
+plot(copied.price)
+plot(original.price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[11.0, 12.0]);
+}
+
+#[test]
 fn evicts_oldest_polyline_when_creation_exceeds_declared_limit() {
     let source = SourceFile::new(
         "test.pine",
@@ -828,6 +977,53 @@ plot(close)
     assert_eq!(profiled.profile.box_snapshots, 3);
     assert!(profiled.profile.box_capacity >= 1);
     assert!(profiled.profile.box_snapshot_capacity >= 3);
+}
+
+#[test]
+fn table_dynamic_font_and_position_follow_input_and_series_values() {
+    let source = SourceFile::new(
+        "table_dynamic_font_position.pine",
+        include_str!("../../../../tests/fixtures/runtime/table_dynamic_font_position.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    let bars = [bar(1.0), bar(2.0), bar(3.0)];
+    for length in 1..=3 {
+        let result = run_historical(&program, &bars[..length]).expect("runtime result");
+        let even = (length - 1) % 2 == 0;
+        let table = &result.tables[0];
+        assert_eq!(
+            table.position,
+            PineValue::String(
+                if even {
+                    "position.top_left"
+                } else {
+                    "position.bottom_right"
+                }
+                .into()
+            )
+        );
+        let cells = &table.snapshots.last().expect("table snapshot").cells;
+        assert_eq!(cells.len(), 2);
+        for cell in cells {
+            assert_eq!(
+                cell.text_font_family,
+                PineValue::String(
+                    if even {
+                        "font.family_default"
+                    } else {
+                        "font.family_monospace"
+                    }
+                    .into()
+                )
+            );
+        }
+    }
 }
 
 #[test]

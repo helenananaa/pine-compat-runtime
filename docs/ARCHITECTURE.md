@@ -279,6 +279,14 @@ reserved `$executionTimes` array in request-host JSON. Missing reached reads or
 batch/bar count mismatches fail closed. No core or host adapter reads the
 process wall clock or substitutes a chart-bar timestamp.
 
+The `time_close` variable and empty-timeframe `time`/`time_close` calls use the
+active `ChartContext`, including the isolated requested context. Fixed chart
+periods close one configured duration after the supplied bar open; weekly and
+monthly periods use the same calendar buckets as the time functions. Calendar
+chart `bars_back` offsets move between calendar periods rather than subtracting
+nominal month seconds. Same-chart fixed-period offsets without a session preserve
+the supplied bar-open alignment for both past and future `bars_back` values.
+
 Provider-backed `request.security` expressions are evaluated in a separate
 requested-context `HistoricalRuntime` over the immutable provider bars, then
 cached by callsite, requested symbol, requested timeframe, and HIR expression
@@ -300,18 +308,56 @@ while `gaps_on` returns values only on the corresponding open or confirmation
 boundary. Chart bars before the first eligible requested value return `na`.
 Each provider evaluation receives a child request environment whose chart
 symbol/timeframe match the requested key; cache and callsite state remain
-isolated. Legacy missing-data errors add the original security call span, and
+isolated. Modern named `calc_bars_count` bounds requested history before
+expression execution; zero uses all available bars. Legacy missing-data errors add the original security call span, and
 v1/v2 historical lookahead emits one non-error warning per callsite.
-Lower-timeframe `request.security` alignment is intentionally not implemented
-in Phase F because it needs a separate rule for selecting intrabars inside each
-chart bar and bounded storage for multiple requested bars per chart bar. The
-array-returning `request.security_lower_tf` API remains unsupported until typed
-array return shapes and host JSON bindings are designed together. Phase F's
+Historical lower-timeframe `request.security` alignment now selects the first
+or last requested intrabar inside each chart bar according to lookahead. Forming
+updates use only explicitly received intrabars from the ordered request feed;
+without a current-period feed update, they fail explicitly. The
+array-returning `request.security_lower_tf` now supports historical scalar and
+scalar-tuple expressions from host-provided lower-or-equal-timeframe bars,
+returning ordered typed arrays and empty arrays where no intrabars exist.
+Named nonnegative `calc_bars_count` bounds the requested historical dataset before expression
+execution. Forming arrays use only explicitly received current-period intrabars
+from the ordered request feed. Other optional policies remain gated. Phase F's
 closed request boundary and maintenance tails are recorded in
 [`PHASE_F_AUDIT.md`](PHASE_F_AUDIT.md).
 
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).
+
+Callsite-local TA and scalar-helper calculation state is owned by
+`HistoricalRuntime::ta_state` (`TaRollbackState`). Strategy fill recalculation
+captures this group once and restores it through one allocation-reusing method;
+the method exhaustively destructures the group so adding a rollback field
+requires an explicit restoration rule. Logical local `valuewhen` event counts
+are restored alongside the values, while execution/resource allowances,
+requested-context allowances, pure caches and scratch, broker state, and `varip`
+storage retain their existing separate policies. This groups the existing
+calculation checkpoint; it does not change other runtime state ownership.
+
+Deterministic resource policy is exposed by `ResourceLimits`, configured through
+`HistoricalRuntime::with_resource_limits` or
+`RealtimeRuntime::with_resource_limits` and inspected with `resource_limits()`.
+The defaults allow 64 MiB of logical collection payload allocations and copies,
+and 100,000,000 matrix work units per chart-bar execution. Setting either field
+to `None` disables that allowance independently. Collection accounting includes
+recorded value payloads and copies; it is not a process RSS or total-heap quota.
+Matrix work guards cover multiplication and powers, determinant, inverse, rank,
+eigenvalue/eigenvector and pseudoinverse operations, including the iterative QR
+and Jacobi phases. Work units are deterministic kernel estimates, not elapsed
+time or hardware instruction counts.
+
+Requested evaluators inherit the chart execution's remaining resource allowance
+and return the consumed counters, including when replaying retained requested
+checkpoints. They do not obtain a new allowance for each requested bar. Strategy
+fill recalculation restores Pine calculation state without refunding resource or
+execution work already spent on that chart bar. Realtime updates execute on
+candidates: an exhausted allowance returns `E_RESOURCE_BUDGET` and leaves the
+previously published confirmed/forming session intact. Historical in-execution
+failure follows the poisoned-instance contract in
+[`EXECUTION_SEMANTICS.md`](EXECUTION_SEMANTICS.md#runtime-errors).
 
 Strategy execution is owned by `pine-runtime::strategy`. `BrokerState` remains
 the runtime facade used by historical execution, runtime built-ins, strategy
@@ -343,6 +389,16 @@ Initial namespaces:
 
 Built-ins must be implemented against runtime abstractions instead of directly
 depending on host charting code.
+
+### `pine-host-support`
+
+Optional host-side running-alert configuration and delivery policy. It depends
+on public runtime events and the neutral template renderer; `pine-runtime` has
+no dependency on it. It owns delivery candidates and dedupe, attempt stores,
+adapter orchestration, retry policy, webhook HTTP classification, and
+secret/transport interfaces. Concrete network clients and durable infrastructure
+remain application responsibilities. See the
+[0.3 prerelease import migration](HOST_SUPPORT_MIGRATION_20261003.md).
 
 ### `pine-cli`
 
@@ -516,8 +572,9 @@ WASM input overrides are exposed through `runScriptCsvWithInputOverrides`,
 `Program.runCsvWithInputOverrides`, and
 `Program.runCsvWithRequestBarsAndInputOverrides`. The `inputOverridesJson`
 value is an object keyed by analysis `inputs[].callSiteId`; values are parsed
-against the analyzed `input.*` call type. Host-side `input.source` overrides
-remain unsupported.
+against the analyzed `input.*` call type. `input.source` accepts the chart's
+`open`, `high`, `low`, `close`, `hl2`, `hlc3`, `ohlc4`, and `hlcc4` series names.
+External indicator plot sources require a separate host capability contract.
 
 ## Output Model
 
@@ -525,7 +582,7 @@ The core output must remain host-neutral:
 
 ```json
 {
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -573,11 +630,18 @@ when they forward machine-readable runtime results.
 Machine-readable analysis and matrix outputs use separate schema ownership.
 `pine-sema::PUBLIC_ANALYSIS_SCHEMA_VERSION` owns CLI/Python/WASM analysis
 reports, while `PUBLIC_MATRIX_SCHEMA_VERSION` owns CLI matrix JSON. Runtime is
-currently `8`; analysis is currently `5`, adding compile-time input defaults,
-constraints, and options to the existing version, diagnostic, dialect,
-translation/emulation, and compatibility evidence; matrix
+currently `9`; analysis is currently `6`, adding `inputs[].isSource` to
+compile-time input defaults, constraints, and options alongside version,
+diagnostic, dialect, translation/emulation, and compatibility evidence; matrix
 remains `2`. These contracts can evolve independently when a runtime-only
 output field does not affect analysis or matrix contracts.
+
+Analysis schema 6 also carries optional `sourceId`, `libraryKey`, and
+`sourceName` in library diagnostic spans. Offsets and Unicode columns refer to
+that source. Root diagnostic spans retain their existing shape. The
+[frontend contract](FRONTEND_DIAGNOSTICS_AND_INPUT_METADATA.md) describes source
+identity, the Rust `Diagnostic.source` migration, bounded statement parsing,
+and constant input metadata evaluation.
 
 Drawing-object outputs use sparse snapshot families. The Phase E drawing
 contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have

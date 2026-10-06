@@ -29,6 +29,27 @@ fn runtime_for_source(source: &str) -> RealtimeRuntime<'static> {
     RealtimeRuntime::from_program(hir)
 }
 
+#[test]
+fn completed_replica_transfers_full_output_after_forming_and_confirmation() {
+    let mut runtime = runtime_for_source(
+        "//@version=6\nindicator(\"final snapshot\")\nplot(close)\nbgcolor(color.red)\nlabel.new(bar_index,close,\"你好\")\n",
+    );
+    runtime.seed_historical(&[bar(0, 1.0)]).unwrap();
+    let mut replica = runtime.replica();
+    for update in [
+        BarUpdate::forming(bar(60000, 2.0)),
+        BarUpdate::confirmed(bar(60000, 3.0)),
+    ] {
+        let changes = runtime.apply_update(update).unwrap();
+        replica.apply(&changes).unwrap();
+    }
+    let expected = pine_runtime::public_runtime_result_json(&runtime.result());
+    assert_eq!(
+        pine_runtime::public_runtime_result_json(&replica.into_result()),
+        expected
+    );
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let path = workspace_fixture(path);
     let source = std::fs::read_to_string(&path).expect("fixture");
@@ -129,6 +150,29 @@ fn streaming_plot_forming_and_confirm_match_snapshots() {
     visible = assert_visible_matches_applied(&visible, &confirmed, &runtime);
     assert_eq!(visible, runtime.confirmed_result());
     assert_eq!(runtime.last_changes(), Some(&confirmed));
+}
+
+#[test]
+fn sparse_drawing_identities_survive_retention_and_forming_replacement() {
+    let mut runtime = runtime_for_source("//@version=6\nindicator(\"sparse drawings\", max_labels_count=500)\nvar label pinned = label.new(bar_index, close, \"pinned\")\nlabel.new(bar_index, close, \"bar\")\nif barstate.islast\n    label.set_text(pinned, str.tostring(close))\n")
+        .with_output_retention(OutputRetention::keep_confirmed_bars(8));
+    let seed: Vec<_> = (0..256).map(|index| bar(index * 60_000, 10.0)).collect();
+    let mut visible = runtime.seed_historical(&seed).unwrap();
+    assert!(visible.labels.iter().any(|label| label.id == 1));
+    assert!(visible.labels.iter().any(|label| label.id > 250));
+    for index in 256..260 {
+        for close in [20.0, 21.0] {
+            let changes = runtime
+                .apply_update(BarUpdate::forming(bar(index * 60_000, close)))
+                .unwrap();
+            visible = assert_visible_matches_applied(&visible, &changes, &runtime);
+        }
+        let changes = runtime
+            .apply_update(BarUpdate::confirmed(bar(index * 60_000, 22.0)))
+            .unwrap();
+        visible = assert_visible_matches_applied(&visible, &changes, &runtime);
+        assert!(visible.labels.iter().any(|label| label.id == 1));
+    }
 }
 
 #[test]

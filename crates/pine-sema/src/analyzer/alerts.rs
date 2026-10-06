@@ -9,7 +9,11 @@ fn unsupported_alert_placeholder(value: &str, supported: &[&str]) -> Option<Stri
         };
         let end = relative_end + 2;
         let placeholder = &placeholder_tail[..end];
-        if !supported.contains(&placeholder) {
+        let named_plot = placeholder
+            .strip_prefix("{{plot(\"")
+            .and_then(|title| title.strip_suffix("\")}}"))
+            .is_some_and(|title| !title.is_empty() && !title.contains('"'));
+        if !(supported.contains(&placeholder) || named_plot && !supported.is_empty()) {
             return Some(placeholder.to_owned());
         }
         remaining = &placeholder_tail[end..];
@@ -53,22 +57,37 @@ impl Analyzer {
             }
 
             if matches!(param_name, "message" | "title") {
-                let supported_placeholders =
-                    if signature.name == "alertcondition" && param_name == "message" {
-                        &[
-                            "{{open}}",
-                            "{{high}}",
-                            "{{low}}",
-                            "{{close}}",
-                            "{{volume}}",
-                            "{{ticker}}",
-                            "{{interval}}",
-                            "{{exchange}}",
-                            "{{time}}",
-                        ][..]
-                    } else {
-                        &[][..]
-                    };
+                let supported_placeholders = if signature.name == "alertcondition"
+                    && param_name == "message"
+                    && matches!(self.script_declaration, Some((ScriptMode::Strategy, _)))
+                {
+                    &[
+                        "{{open}}",
+                        "{{high}}",
+                        "{{low}}",
+                        "{{close}}",
+                        "{{volume}}",
+                        "{{ticker}}",
+                        "{{interval}}",
+                        "{{exchange}}",
+                        "{{time}}",
+                        "{{strategy.position_size}}",
+                    ][..]
+                } else if signature.name == "alertcondition" && param_name == "message" {
+                    &[
+                        "{{open}}",
+                        "{{high}}",
+                        "{{low}}",
+                        "{{close}}",
+                        "{{volume}}",
+                        "{{ticker}}",
+                        "{{interval}}",
+                        "{{exchange}}",
+                        "{{time}}",
+                    ][..]
+                } else {
+                    &[][..]
+                };
 
                 if let Some(placeholder) = self
                     .known_const_string_value(&arg.value)

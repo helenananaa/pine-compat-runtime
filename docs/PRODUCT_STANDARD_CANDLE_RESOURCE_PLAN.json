@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "state": "frozen-before-measurement",
+  "scope": "Offline standard-candle full-script execution; no network/data acquisition in the runtime",
+  "scripts": [
+    "frozen original Relative Strength Index, default inputs",
+    "frozen original Relative Strength Index, SMA+BB and divergence inputs from native alternate reference",
+    "frozen original Pivot Points Standard, Traditional/Auto daily-based inputs"
+  ],
+  "platforms": [
+    "Windows x86_64",
+    "Linux x86_64"
+  ],
+  "surfaces": [
+    "optimized native Rust probe",
+    "optimized installed Python wheel",
+    "optimized actual WASM under Node"
+  ],
+  "historyCases": [
+    {
+      "historyBars": 1024,
+      "tailBars": 128
+    },
+    {
+      "historyBars": 16384,
+      "tailBars": 128
+    },
+    {
+      "historyBars": 100000,
+      "tailBars": 10000
+    }
+  ],
+  "repetitions": 2,
+  "formingReplacementsPerTailBar": 1,
+  "independentSessionCounts": [
+    1,
+    4
+  ],
+  "sessionScheduling": "Interleaved independent sessions in one process; do not label this as parallel throughput",
+  "data": {
+    "chart": "Deterministic positive synthetic standard OHLCV minute bars, generator/source/input hashes recorded before execution",
+    "pivotProvider": "Completed daily bars for historical seed; separately delivered cumulative daily forming/confirmation events during live tail",
+    "seedBoundary": "Align historical seed end to a daily close so the forming provider starts after completed provider history",
+    "nativeReference": "Synthetic resource data is not native TradingView numerical evidence"
+  },
+  "budgets": {
+    "compileMaxSeconds": 15,
+    "historicalSeedMaxSecondsPerSession": 120,
+    "appendP95Ms": 5,
+    "formingP95Ms": 5,
+    "replacementP95Ms": 5,
+    "confirmationP95Ms": 5,
+    "requestUpdateP95Ms": 5,
+    "replicaApplyP95Ms": 1,
+    "fullSnapshotAndSerializationMaxSecondsPerSession": 10,
+    "peakRssBytesPerSingleSessionProcess": 536870912,
+    "peakRssBytesPerFourSessionProcess": 2147483648,
+    "maxP50TailGrowthRatio1024To100000": 4
+  },
+  "requiredEvidence": [
+    "Actual installed/built artifact hashes, source identity, host CPU/RAM, runtime versions and build profiles",
+    "Measured operation counts equal planned counts; no warmup/tail omission or silent truncation",
+    "Historical batch versus incremental final-output parity under identical input context",
+    "Live sequence repeatability and streaming-replica parity; do not force live output to equal historical lookahead output",
+    "Independent session isolation with distinct input streams and one compiled source where supported",
+    "Separate update, request-update, snapshot/serialization and peak-memory measurements",
+    "No concurrent compilation or other known benchmark jobs during acceptance measurement",
+    "Failures/timeouts and all repeated trials retained; no budget relaxation after measuring"
+  ],
+  "acceptance": "Not evaluated. Every required script/platform/surface/history/session-count case must meet its budget and correctness checks. An unavailable case remains unverified.",
+  "baselineImplementationCommit": "4f32668a738e600590d187f79ecf81c3e266436d",
+  "measurementImplementation": "Each receipt must pin the actual committed implementation and artifact hashes; source repairs may advance the baseline while frozen workloads/budgets remain unchanged"
+}

@@ -50,7 +50,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "editable",
-        accepts: Accepts::ConstBool,
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
     BuiltinParam {
@@ -60,7 +60,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -76,6 +76,11 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "force_overlay",
         accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "linestyle",
+        accepts: Accepts::AtMostInputString,
         optional: true,
     },
 ];
@@ -108,7 +113,7 @@ const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -171,7 +176,7 @@ const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -219,7 +224,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "editable",
-        accepts: Accepts::ConstBool,
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
     BuiltinParam {
@@ -234,7 +239,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -292,7 +297,7 @@ const PLOTARROW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -345,7 +350,7 @@ const PLOTBAR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -403,7 +408,7 @@ const PLOTCANDLE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
 ];
@@ -441,7 +446,7 @@ const HLINE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -469,7 +474,7 @@ const FILL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "editable",
-        accepts: Accepts::ConstBool,
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
     BuiltinParam {
@@ -484,7 +489,7 @@ const FILL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputPlotDisplay,
         optional: true,
     },
     BuiltinParam {
@@ -493,6 +498,65 @@ const FILL_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
 ];
+
+pub(crate) const GRADIENT_FILL_SIGNATURE: BuiltinSignature = BuiltinSignature {
+    name: "fill",
+    phase: BuiltinPhase::Phase1Core,
+    params: &[
+        BuiltinParam {
+            name: "plot1",
+            accepts: Accepts::Kind(pine_ir::ValueKind::Plot),
+            optional: false,
+        },
+        BuiltinParam {
+            name: "plot2",
+            accepts: Accepts::Kind(pine_ir::ValueKind::Plot),
+            optional: false,
+        },
+        BuiltinParam {
+            name: "top_value",
+            accepts: Accepts::NumericCompatible,
+            optional: false,
+        },
+        BuiltinParam {
+            name: "bottom_value",
+            accepts: Accepts::NumericCompatible,
+            optional: false,
+        },
+        BuiltinParam {
+            name: "top_color",
+            accepts: Accepts::ColorCompatible,
+            optional: false,
+        },
+        BuiltinParam {
+            name: "bottom_color",
+            accepts: Accepts::ColorCompatible,
+            optional: false,
+        },
+        BuiltinParam {
+            name: "title",
+            accepts: Accepts::ConstString,
+            optional: true,
+        },
+        BuiltinParam {
+            name: "editable",
+            accepts: Accepts::AtMostInputBool,
+            optional: true,
+        },
+        BuiltinParam {
+            name: "fillgaps",
+            accepts: Accepts::ConstBool,
+            optional: true,
+        },
+        BuiltinParam {
+            name: "display",
+            accepts: Accepts::AtMostInputPlotDisplay,
+            optional: true,
+        },
+    ],
+    returns: ReturnSpec::Fixed(VOID),
+    variadic: false,
+};
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
@@ -565,4 +629,5 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
+    GRADIENT_FILL_SIGNATURE,
 ];

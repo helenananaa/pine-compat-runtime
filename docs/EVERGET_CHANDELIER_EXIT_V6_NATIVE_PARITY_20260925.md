@@ -1,0 +1,10 @@
+# everget Chandelier Exit Pine v6 native parity (2026-09-25)
+
+The original open-source [Chandelier Exit [everget]](https://www.tradingview.com/script/AqXxNS7j-Chandelier-Exit-everget/) was updated to Pine v6 in July 2025. Its TradingView publication displayed 29,170 boosts during this audit. The 57-line Source code tab was retained in ignored `.local/community-coverage-20260923/everget-chandelier-exit-v6-20260925.pine` (SHA-256 `96d319587b9e985fdc88260443d46239ecff1809254b1fe6165d94f17669027a`). The browser text extraction omitted empty lines, leaving 43 nonempty lines; statements and expressions were unchanged. The published GPL-3.0 source is not committed.
+
+The original indicator analyzed with zero diagnostics and completed a local run with zero runtime diagnostics. It was also inserted into a `COINBASE:BTCUSD` daily chart at published default inputs. The native chart export was expanded to December 1, 2014 through September 25, 2026. The exported CSV (SHA-256 `3b26c1df674c30c41f6028eea4a05e6b85dc759300da22bb32c715749d657c47`) has 4,283 rows; the September 25 row was forming and was excluded. The local run used the same 4,282 confirmed OHLCV bars through September 24. All aligned OHLC values agree.
+
+The ignored `compare_everget_chandelier.py` and `everget-chandelier-comparison-v6-20260925.json` compare all six CSV series, including blank positions, at absolute tolerance `1e-8`. `Long Stop` has 2,375 native nonblank positions and `Short Stop` has 1,886. `Long Stop Start`, `Buy Label`, `Short Stop Start`, and `Sell Label` each have 65 native nonblank positions. Each series has zero mismatches over all 4,282 confirmed bars. This also verifies the 65 buy and 65 sell signal positions and their numerical y coordinates.
+
+The comparison covers one symbol, daily confirmed bars, and default inputs. The CSV does not establish fill colors, label appearance, or realtime alert behavior. The hidden `ohlc4` plot is omitted by the native chart export.
+The temporary study and date-range change were undone; the research layout was saved and both TradingView tabs closed.

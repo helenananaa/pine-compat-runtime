@@ -26,7 +26,7 @@ class CandidateCliTests(unittest.TestCase):
         version = subprocess.run(
             [str(self.binary), '--version'], cwd=ROOT, text=True, capture_output=True, check=True,
         )
-        self.assertEqual(version.stdout.strip(), 'pine-compat 0.3.0-rc.1')
+        self.assertEqual(version.stdout.strip(), 'pine-compat 0.3.0-rc.2')
         args = [
             str(self.binary), 'run',
             str(ROOT / 'tests/fixtures/runtime/macd.pine'),
@@ -37,7 +37,7 @@ class CandidateCliTests(unittest.TestCase):
         self.assertEqual(first.stdout, second.stdout)
         payload = json.loads(first.stdout)
         expected = json.loads((ROOT / 'tests/snapshots/runtime_macd.json').read_text(encoding='utf-8'))
-        self.assertEqual(payload['schemaVersion'], 8)
+        self.assertEqual(payload['schemaVersion'], 9)
         self.assertEqual(payload['plots'][0]['values'], expected['plots'][0]['values'])
         incremental = subprocess.run(
             [str(self.binary), 'run-incremental',

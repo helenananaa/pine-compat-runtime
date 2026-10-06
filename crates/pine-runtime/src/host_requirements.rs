@@ -7,9 +7,10 @@ use std::collections::{BTreeSet, HashMap};
 use pine_ir::{HirExpr, HirExprKind, HirLiteral, HirProgram, ScriptMode, SymbolId};
 use serde::Serialize;
 
+mod merge;
 mod walk;
 
-pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 1;
+pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -72,6 +73,9 @@ pub struct ChartInputDefaults {
 #[serde(rename_all = "camelCase")]
 pub struct AccountInputContract {
     pub profile: &'static str,
+    /// An explicit strategy currency must equal the host chart's quote currency.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub declared_currency: Option<&'static str>,
     pub point_value: u32,
     pub currency_conversion: bool,
     pub unsupported_profiles: Vec<&'static str>,
@@ -122,6 +126,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         .map(|symbol| (symbol.id, symbol.name.as_str()))
         .collect();
     let defaults = crate::ChartContext::default();
+    let initializers = crate::builtins::requests::request_dependency_initializers(program);
     let mut requests = Vec::new();
     let mut metadata = BTreeSet::new();
     let mut input_ids = BTreeSet::new();
@@ -152,7 +157,11 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
                 | "strategy.risk.max_intraday_filled_orders"
                 | "strategy.risk.max_cons_loss_days"
         );
-        if callee == "request.security" || callee.starts_with("$legacy.security.") {
+        if matches!(
+            callee.as_str(),
+            "request.security" | "request.security_lower_tf"
+        ) || callee.starts_with("$legacy.security.")
+        {
             let argument = |index, name, symbol| {
                 crate::builtins::args::call_arg_expr(args, index, name)
                     .map_or(RequestArgument::RuntimeExpression, |value| {
@@ -169,13 +178,33 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
                 symbol: argument(0, "symbol", true),
                 timeframe: argument(1, "timeframe", false),
                 provider: "whenEvaluatedOutsideCurrentContext",
-                timeframe_relation: "sameOrHigherIntegerMultiple",
-                gaps: if callee.contains(".gaps_on.") {
+                timeframe_relation: if callee == "request.security_lower_tf" {
+                    "sameOrLower"
+                } else {
+                    crate::RequestTimeframe::SECURITY_RELATION
+                },
+                gaps: if callee == "request.security_lower_tf" {
+                    "notApplicable"
+                } else if callee == "request.security" {
+                    merge::option(program, &initializers, args, 3, "gaps", "gapsOn", "gapsOff")
+                } else if callee.contains(".gaps_on.") {
                     "gapsOn"
                 } else {
                     "gapsOff"
                 },
-                lookahead: if callee.ends_with(".lookahead_on") {
+                lookahead: if callee == "request.security_lower_tf" {
+                    "notApplicable"
+                } else if callee == "request.security" {
+                    merge::option(
+                        program,
+                        &initializers,
+                        args,
+                        4,
+                        "lookahead",
+                        "lookaheadOn",
+                        "lookaheadOff",
+                    )
+                } else if callee.ends_with(".lookahead_on") {
                     "lookaheadOn"
                 } else {
                     "lookaheadOff"
@@ -233,6 +262,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         },
         account: strategy.then_some(AccountInputContract {
             profile: "linearUnitPointValueSameCurrency",
+            declared_currency: program.strategy_settings.account_currency,
             point_value: 1,
             currency_conversion: false,
             unsupported_profiles: vec![

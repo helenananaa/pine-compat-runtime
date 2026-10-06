@@ -800,6 +800,37 @@ plot(under ? 1 : 0)
 }
 
 #[test]
+fn cross_calls_keep_their_own_history_when_conditional_execution_skips_bars() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=5
+indicator("conditional crosses")
+run_cross = bar_index >= 2 and bar_index != 3
+over = if run_cross
+    ta.crossover(close, 2.0)
+else
+    false
+under = if run_cross
+    ta.crossunder(close, 2.0)
+else
+    false
+plot(over ? 1 : 0)
+plot(under ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = vec![bar(1.0), bar(1.0), bar(3.0), bar(1.0), bar(1.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
+}
+
+#[test]
 fn runs_vwma_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",
@@ -1068,6 +1099,31 @@ plot(na(invalid) ? 1 : 0)
     );
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn stoch_uses_available_samples_after_sparse_source_warmup() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=4
+study("sparse stochastic")
+value = bar_index < 2 ? na : close
+plot(stoch(value, value, value, 4))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = vec![bar(0.0), bar(0.0), bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    assert_eq!(
+        result.plots[0].values[..3],
+        [PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_values_close(&result.plots[0].values[3..], &[100.0, 100.0]);
 }
 
 #[test]

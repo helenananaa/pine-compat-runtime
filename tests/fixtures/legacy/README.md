@@ -10,10 +10,12 @@ common legacy failure families rather than claiming to represent the user's
 private indicator library. Authorized whole-script samples can be added to a
 private manifest without changing the analyzer.
 
-`legacy_strategy_excluded` rows prove that strategy sources stay outside the
-indicator denominator and are not sent through the corpus compiler path. The
-analyzer also derives strategy mode from source so an incorrect manifest scope
-cannot bypass that exclusion.
+`legacy_strategy_excluded` rows keep strategy sources outside the indicator
+denominator and corpus compiler path. Pine v4 strategies now have a separate,
+measured strategy execution slice, as do v1-v3 strategy controls; this
+indicator corpus does not count them.
+The analyzer derives strategy mode from source so an incorrect manifest scope
+cannot silently count a strategy as an indicator.
 
 Five `invalid_control` rows exercise lexer, parser, unknown-name, call-shape,
 and type failures. `control_modern_v6` must still analyze and run successfully.
@@ -175,13 +177,13 @@ requested symbol fail-closed, while
 under a local `if`; reassignment, persistence, recursion, and the modern
 provider-local boundary are unchanged.
 
-The following call-shape slice adds
-`v4/runtime/contextual_integer_division_legacy.pine` and its explicit-v6
-canonical rewrite. They prove that every Pine v1-v4 `int / int` expression
-produces an integer by discarding its fractional remainder, including named
+The integer-division call-shape slice first covered v1-v3 truncation, including
 aliases, history offsets, integer-compatible calls, and untyped UDF arguments.
-Float operands are unaffected. The distinct v5 qualifier-dependent rule and v6
-fractional rule remain outside this Pine v1-v4 compatibility feature. A later
+Native Pine v4 Gaussian Channel output then established a different boundary:
+`2 / N` retains a fraction when `N` comes from `input()`. The focused
+`v4/runtime/contextual_integer_division_v4_native_legacy.pine` fixture and its
+explicit-v6 canonical rewrite cover v4 `const int / const int` truncation and
+fractional input division. Float operands remain fractional. The separate
 version-boundary fixture pair,
 `../runtime/v5_const_integer_division.pine` and
 `../runtime/v6_fractional_integer_division.pine`, proves that v5 truncates only

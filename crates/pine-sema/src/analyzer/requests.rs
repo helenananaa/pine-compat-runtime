@@ -1,8 +1,9 @@
 use crate::prelude::*;
+mod modern;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional gaps/lookahead are limited to barmerge.gaps_off and barmerge.lookahead_off, while lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
-const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided same-or-higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases, const/input/simple captures, pure scalar UDF calls, and direct UDF-local immutable dependency graphs whose nested legacy requests use the same selector and merge policy; lower-timeframe requests, control-flow-local requests, different-selector nested requests, mutable or persistent UDF state, recursive UDFs, mutable captures, and side effects remain unsupported";
-const REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON: &str = "array-returning lower-timeframe request semantics and host output shape for request.security_lower_tf are not designed in the supported request runtime";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "same-context and provider-backed scalar expressions, immutable scalar dependencies, selected scalar-array results, tuples and admitted UDF-local state are supported with explicit gaps/lookahead policies and named calc_bars_count; provider timeframes may be lower or equal, while higher fixed timeframes must be integer multiples of the chart timeframe and calendar months use calendar boundaries; nested requests, recursive UDFs, external mutable or series-persistent captures, reference graph captures and drawing/output side effects remain unsupported";
+const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided lower/equal/higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases, const/input/simple captures, pure scalar UDF calls, and direct UDF-local immutable dependency graphs whose nested legacy requests use the same selector and merge policy; higher fixed timeframes must be integer multiples of the chart timeframe and calendar months use calendar boundaries; control-flow-local requests, different-selector nested requests, mutable or persistent UDF state, recursive UDFs, mutable captures, and side effects remain unsupported";
+const REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON: &str = "host-provided lower-or-equal-timeframe scalar intrabar arrays and tuples of scalar intrabar arrays support three positional arguments and optional named nonnegative calc_bars_count; other optional policies, collection expressions, mutable captures, and side effects remain unsupported";
 
 #[derive(Debug, Clone)]
 struct LegacyProviderRequestContext {
@@ -18,12 +19,20 @@ impl Analyzer {
         span: Span,
         args: &[CallArg],
     ) -> Option<PineType> {
+        if !self.dynamic_requests
+            && self.block_depth > 0
+            && (self.legacy.dialect() >= crate::PineDialect::V6 || self.function_depth == 0)
+        {
+            self.unsupported(
+                name,
+                "request calls in local scopes require dynamic_requests=true",
+                span,
+            );
+            return None;
+        }
         match name {
             "request.security" => self.analyze_request_security(span, args),
-            "request.security_lower_tf" => {
-                self.unsupported(name, REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON, span);
-                None
-            }
+            "request.security_lower_tf" => self.analyze_request_security_lower_tf(span, args),
             _ => {
                 self.unsupported(
                     name,
@@ -46,7 +55,7 @@ impl Analyzer {
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
         let mut unsupported = false;
-        if !(3..=5).contains(&args.len()) {
+        if !(3..=6).contains(&args.len()) {
             unsupported = true;
         }
         if args.iter().take(3).any(|arg| arg.name.is_some()) {
@@ -60,6 +69,15 @@ impl Analyzer {
         if !self.validate_request_security_merge_args(args) {
             unsupported = true;
         }
+        for (arg, ty) in args.iter().zip(&arg_types) {
+            if arg.name.as_deref() == Some("calc_bars_count")
+                && !ty.is_some_and(|ty| {
+                    ty.kind == ValueKind::Int && qualifier_at_most(ty.qualifier, Qualifier::Simple)
+                })
+            {
+                unsupported = true;
+            }
+        }
 
         self.analyze_request_security_core(
             span,
@@ -69,6 +87,79 @@ impl Analyzer {
             None,
             REQUEST_SECURITY_UNSUPPORTED_REASON,
         )
+    }
+
+    fn analyze_request_security_lower_tf(
+        &mut self,
+        span: Span,
+        args: &[CallArg],
+    ) -> Option<PineType> {
+        let arg_types: Vec<_> = args
+            .iter()
+            .map(|arg| self.analyze_expr(&arg.value))
+            .collect();
+        let signature = pine_builtins::get_phase_1_builtin("request.security_lower_tf")
+            .expect("request.security_lower_tf signature must exist");
+        self.validate_call_args(signature, args, &arg_types);
+        let expression_type = arg_types.get(2).copied().flatten();
+        let symbol_ok = args.first().is_some_and(|arg| {
+            self.request_symbol_is_chart(&arg.value, false)
+                || arg_types.first().copied().flatten().is_some_and(|ty| {
+                    ty.kind == ValueKind::String
+                        && (self.dynamic_requests
+                            || qualifier_at_most(ty.qualifier, Qualifier::Simple))
+                })
+        });
+        let timeframe_ok = args.get(1).is_some_and(|arg| {
+            self.request_timeframe_is_chart(&arg.value, false)
+                || arg_types.get(1).copied().flatten().is_some_and(|ty| {
+                    ty.kind == ValueKind::String
+                        && (self.dynamic_requests
+                            || qualifier_at_most(ty.qualifier, Qualifier::Simple))
+                })
+        });
+        let tuple_array_kinds = (expression_type.is_some_and(|ty| ty.kind == ValueKind::Tuple))
+            .then(|| self.tuple_element_types(&args[2].value))
+            .flatten()
+            .filter(|types| {
+                !types.is_empty()
+                    && types
+                        .iter()
+                        .all(|ty| lower_tf_scalar_array_kind(ty.kind).is_some())
+            });
+        let array_kind = expression_type.and_then(|ty| lower_tf_scalar_array_kind(ty.kind));
+        let result_type = if tuple_array_kinds.is_some() {
+            Some(PineType::new(Qualifier::Series, ValueKind::Tuple))
+        } else {
+            array_kind.map(|kind| PineType::new(Qualifier::Series, kind))
+        };
+        let admitted_args = (args.len() == 3
+            || (args.len() == 4
+                && args[3].name.as_deref() == Some("calc_bars_count")
+                && arg_types.get(3).copied().flatten().is_some_and(|ty| {
+                    ty.kind == ValueKind::Int && qualifier_at_most(ty.qualifier, Qualifier::Simple)
+                })))
+            && args.iter().take(3).all(|arg| arg.name.is_none());
+        if !admitted_args
+            || !symbol_ok
+            || !timeframe_ok
+            || !args
+                .get(2)
+                .is_some_and(|arg| self.modern_request_expression_supported(&arg.value))
+            || result_type.is_none()
+        {
+            self.unsupported(
+                "request.security_lower_tf",
+                REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON,
+                span,
+            );
+            return result_type;
+        }
+        self.compatibility.supported.push(FeatureUse {
+            feature: "request.security_lower_tf".to_owned(),
+            span,
+        });
+        result_type
     }
 
     pub(crate) fn analyze_bound_legacy_security(
@@ -119,15 +210,15 @@ impl Analyzer {
             matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
         });
         let provider_symbol = literal_provider_symbol
-            || (legacy
-                && arg_types
-                    .first()
-                    .copied()
-                    .flatten()
-                    .is_some_and(|pine_type| {
-                        pine_type.kind == ValueKind::String
-                            && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
-                    }));
+            || (arg_types
+                .first()
+                .copied()
+                .flatten()
+                .is_some_and(|pine_type| {
+                    pine_type.kind == ValueKind::String
+                        && (self.dynamic_requests
+                            || qualifier_at_most(pine_type.qualifier, Qualifier::Simple))
+                }));
         if !same_context_symbol && !provider_symbol {
             unsupported = true;
         }
@@ -138,15 +229,15 @@ impl Analyzer {
             matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
         });
         let provider_timeframe = literal_timeframe
-            || (legacy
-                && arg_types
-                    .get(1)
-                    .copied()
-                    .flatten()
-                    .is_some_and(|pine_type| {
-                        pine_type.kind == ValueKind::String
-                            && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
-                    }));
+            || (arg_types
+                .get(1)
+                .copied()
+                .flatten()
+                .is_some_and(|pine_type| {
+                    pine_type.kind == ValueKind::String
+                        && (self.dynamic_requests
+                            || qualifier_at_most(pine_type.qualifier, Qualifier::Simple))
+                }));
         if !same_chart_timeframe && !provider_timeframe {
             unsupported = true;
         }
@@ -163,8 +254,15 @@ impl Analyzer {
             unsupported = true;
         }
         let supported_expression = args.get(2).is_some_and(|arg| {
+            if !legacy {
+                return self.modern_request_expression_supported(&arg.value);
+            }
             if same_context_request {
-                self.request_expression_is_same_context_value(&arg.value)
+                if legacy {
+                    self.request_expression_is_same_context_value(&arg.value)
+                } else {
+                    self.request_expression_is_modern_same_context_value(&arg.value)
+                }
             } else if expression_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple) {
                 if legacy {
                     legacy_request_context.is_some_and(|request_context| {
@@ -185,7 +283,7 @@ impl Analyzer {
                         )
                     })
                 } else {
-                    self.request_expression_is_provider_scalar(&arg.value)
+                    self.request_expression_is_provider_value(&arg.value)
                 }
             } else {
                 false
@@ -226,19 +324,26 @@ impl Analyzer {
         let mut supported = true;
         let signature = pine_builtins::get_phase_1_builtin("request.security")
             .expect("request.security signature must exist");
-        self.validate_label_string_arg(signature, args, 3, "gaps", &["barmerge.gaps_off"]);
+        self.validate_label_string_arg(
+            signature,
+            args,
+            3,
+            "gaps",
+            &["barmerge.gaps_off", "barmerge.gaps_on"],
+        );
         self.validate_label_string_arg(
             signature,
             args,
             4,
             "lookahead",
-            &["barmerge.lookahead_off"],
+            &["barmerge.lookahead_off", "barmerge.lookahead_on"],
         );
 
         for (index, arg) in args.iter().enumerate().skip(3) {
             let allowed_name = match arg.name.as_deref() {
                 Some("gaps") => "gaps",
                 Some("lookahead") => "lookahead",
+                Some("calc_bars_count") => continue,
                 Some(_) => {
                     supported = false;
                     continue;
@@ -260,7 +365,7 @@ impl Analyzer {
             } else {
                 "barmerge.lookahead_off"
             };
-            if value != allowed_value {
+            if value != allowed_value && value != allowed_value.replace("_off", "_on") {
                 supported = false;
             }
         }
@@ -278,6 +383,7 @@ impl Analyzer {
 
     fn request_expression_is_pure_scalar(&self, expr: &Expr) -> bool {
         match &expr.kind {
+            ExprKind::Member { .. } => false,
             ExprKind::Literal(_) | ExprKind::Identifier(_) => true,
             ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()
@@ -339,7 +445,7 @@ impl Analyzer {
         match &expr.kind {
             ExprKind::Tuple(items) => items
                 .iter()
-                .all(|item| self.request_expression_is_provider_scalar(item)),
+                .all(|item| self.request_expression_is_provider_value(item)),
             ExprKind::Call { callee, args } => {
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;
@@ -404,6 +510,7 @@ impl Analyzer {
         allow_nested_legacy_security: bool,
     ) -> bool {
         match &expr.kind {
+            ExprKind::Member { .. } => false,
             ExprKind::Literal(_) => true,
             ExprKind::Identifier(name) => {
                 if local_names.contains(name) {
@@ -450,7 +557,11 @@ impl Analyzer {
                             &std::collections::HashSet::new(),
                             udf_stack,
                             request_context,
-                            active_function_local,
+                            // Immutable global aliases are evaluated again in
+                            // the requested context. A nested legacy request
+                            // may be inlined there when its selector and merge
+                            // policy match the enclosing request.
+                            active_function_local || global,
                         ))
                     })
                     .unwrap_or(false);
@@ -515,6 +626,20 @@ impl Analyzer {
                 )
             }
             ExprKind::History { expr, offset } => {
+                if crate::types::const_int_value(offset).is_some_and(|value| value > 0)
+                    && let ExprKind::Identifier(name) = &expr.kind
+                    && let Some(symbol) = self.bindings.get(&self.binding_key(name, expr.span))
+                    && visiting.contains(&symbol.id)
+                {
+                    return self.request_expression_is_legacy_provider_scalar_inner(
+                        offset,
+                        visiting,
+                        local_names,
+                        udf_stack,
+                        request_context,
+                        allow_nested_legacy_security,
+                    );
+                }
                 self.request_expression_is_legacy_provider_scalar_inner(
                     expr,
                     visiting,
@@ -682,8 +807,10 @@ impl Analyzer {
                         else {
                             return false;
                         };
-                        if *mode != pine_syntax::DeclMode::Normal
-                            || function_locals.contains(name)
+                        if !matches!(
+                            mode,
+                            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const
+                        ) || function_locals.contains(name)
                             || !analyzer.request_expression_is_legacy_provider_scalar_inner(
                                 value,
                                 visiting,
@@ -772,6 +899,7 @@ impl Analyzer {
 
     fn request_expression_is_provider_scalar(&self, expr: &Expr) -> bool {
         match &expr.kind {
+            ExprKind::Member { .. } => false,
             ExprKind::Literal(_) => true,
             ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()
@@ -837,6 +965,55 @@ impl Analyzer {
                 .map_or(name, str::to_owned),
         )
     }
+
+    fn request_expression_is_provider_value(&self, expr: &Expr) -> bool {
+        self.request_expression_is_provider_scalar(expr)
+            || self.request_expression_is_provider_array(expr)
+    }
+
+    fn request_expression_is_modern_same_context_value(&self, expr: &Expr) -> bool {
+        match &expr.kind {
+            ExprKind::Tuple(items) => items
+                .iter()
+                .all(|item| self.request_expression_is_modern_same_context_value(item)),
+            _ => {
+                self.request_expression_is_provider_array(expr)
+                    || self.request_expression_is_same_context_value(expr)
+            }
+        }
+    }
+
+    fn request_expression_is_provider_array(&self, expr: &Expr) -> bool {
+        if !self
+            .type_of_expr_with_params(expr, &HashMap::new())
+            .is_some_and(|ty| crate::types::is_scalar_array_kind(ty.kind))
+        {
+            return false;
+        }
+        let ExprKind::Call { callee, args } = &expr.without_groups().kind else {
+            return false;
+        };
+        let Some(name) = self.request_expression_call_name(callee) else {
+            return false;
+        };
+        matches!(
+            name.as_str(),
+            "array.from"
+                | "array.new_float"
+                | "array.new_int"
+                | "array.new_bool"
+                | "array.new_string"
+                | "array.new_color"
+                | "array.new<float>"
+                | "array.new<int>"
+                | "array.new<bool>"
+                | "array.new<string>"
+                | "array.new<color>"
+                | "ta.pivot_point_levels"
+        ) && args
+            .iter()
+            .all(|arg| self.request_expression_is_provider_scalar(&arg.value))
+    }
 }
 
 fn series_request_type(pine_type: PineType) -> PineType {
@@ -855,12 +1032,25 @@ fn is_request_scalar_type(pine_type: PineType) -> bool {
     )
 }
 
+fn lower_tf_scalar_array_kind(kind: ValueKind) -> Option<ValueKind> {
+    matches!(
+        kind,
+        ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::String | ValueKind::Color
+    )
+    .then(|| kind.array_kind_from_element_kind())
+    .flatten()
+}
+
 fn is_request_same_context_type(pine_type: PineType) -> bool {
-    is_request_scalar_type(pine_type) || pine_type.kind == ValueKind::Tuple
+    is_request_scalar_type(pine_type)
+        || pine_type.kind == ValueKind::Tuple
+        || crate::types::is_scalar_array_kind(pine_type.kind)
 }
 
 fn is_request_provider_type(pine_type: PineType) -> bool {
-    is_request_scalar_type(pine_type) || pine_type.kind == ValueKind::Tuple
+    is_request_scalar_type(pine_type)
+        || pine_type.kind == ValueKind::Tuple
+        || crate::types::is_scalar_array_kind(pine_type.kind)
 }
 
 fn request_tuple_call_is_supported(name: &str) -> bool {
@@ -886,8 +1076,14 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "high"
             | "low"
             | "close"
+            | "hl2"
+            | "hlc3"
+            | "hlcc4"
+            | "ohlc4"
             | "volume"
             | "time"
+            | "tr"
+            | "bar_index"
             | "barstate.isfirst"
             | "barstate.islast"
             | "barstate.islastconfirmedhistory"
@@ -901,6 +1097,8 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "ta.obv"
             | "ta.pvi"
             | "ta.pvt"
+            | "ta.tr"
+            | "ta.vwap"
             | "ta.wvad"
     )
 }
@@ -911,6 +1109,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
         "na" | "nz"
             | "time"
             | "time_close"
+            | "timeframe.in_seconds"
             | "math.abs"
             | "math.max"
             | "math.min"

@@ -1,0 +1,10 @@
+//@version=4
+study("V4 mixed integer division")
+length = input(5, title="Length")
+lag = int(length / 2)
+weighted(source, window) => wma(source, window)
+plot(wma(close, lag))
+plot(weighted(close, int(length / 2)))
+plot(length / 2)
+plot(close[lag])
+plot(close[5 / 2])

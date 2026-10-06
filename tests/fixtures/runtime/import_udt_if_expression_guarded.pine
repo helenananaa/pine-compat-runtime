@@ -1,0 +1,32 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT if expression")
+
+p = if close > open
+    lib.Point.new(close)
+else
+    lib.Point.new(open)
+
+lib.Point typed = if close > open
+    p
+else
+    lib.Point.new(high)
+
+p_prior = p[1]
+
+wrapped = if close > open
+    lib.Wrapper.new(lib.Point.new(close))
+else
+    lib.Wrapper.new(lib.Point.new(open))
+
+lib.Wrapper wrapped_typed = if close > open
+    wrapped
+else
+    lib.Wrapper.new(lib.Point.new(high))
+
+wrapped_prior = wrapped[1]
+
+plot((na(p) ? na : p.x) + (na(typed) ? na : typed.x))
+plot((na(wrapped) ? na : na(wrapped.nested) ? na : wrapped.nested.x) + (na(wrapped_typed) ? na : na(wrapped_typed.nested) ? na : wrapped_typed.nested.x))
+plot((na(p_prior) ? na : p_prior.x))
+plot((na(wrapped_prior) ? na : na(wrapped_prior.nested) ? na : wrapped_prior.nested.x))

@@ -5,6 +5,8 @@ use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_expr(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
+        self.resource_budget.check()?;
+        self.charge_execution_steps(1)?;
         if self.eval_expr_depth >= MAX_RUNTIME_EVAL_DEPTH {
             return Err(RuntimeError {
                 message: "runtime expression evaluation exceeded maximum depth".to_owned(),
@@ -15,9 +17,11 @@ impl<'a> HistoricalRuntime<'a> {
         let result = self.eval_expr_inner(expr);
         self.eval_expr_depth -= 1;
 
+        self.resource_budget.check()?;
         let value = result?;
-        if let Some(series_id) = expr.series_id {
-            self.activate_bar_aligned_series(series_id);
+        if let Some(series_id) = expr.series_id
+            && self.activate_bar_aligned_series(series_id)
+        {
             self.current_series.insert(series_id, value.clone());
         }
 
@@ -116,19 +120,28 @@ impl<'a> HistoricalRuntime<'a> {
                     .map(|item| self.eval_expr(item))
                     .collect::<Result<_, _>>()?,
             ),
-            HirExprKind::UserTypeConstruct { fields, .. } => PineValue::UserType(
-                fields
+            HirExprKind::UserTypeConstruct { fields, identity } => {
+                let fields = fields
                     .iter()
                     .map(|field| self.eval_expr(field))
-                    .collect::<Result<_, _>>()?,
-            ),
+                    .collect::<Result<_, _>>()?;
+                self.allocate_object(fields, identity)?
+            }
             HirExprKind::UserTypeArrayConstruct {
                 type_name,
                 elements,
             } => self.eval_user_type_array_construct(type_name, elements)?,
             HirExprKind::FieldAccess { value, index } => match self.eval_expr(value)? {
                 PineValue::UserType(fields) => fields.get(*index).cloned().unwrap_or(PineValue::Na),
+                PineValue::UserTypeRef(id) => self.object_field(id, *index)?,
                 PineValue::ChartPoint(point) => point.field(*index),
+                PineValue::Na if value.pine_type.kind == pine_ir::ValueKind::UserType => {
+                    return Err(RuntimeError {
+                        message: format!(
+                            "E_UDT_NA_FIELD: cannot access field {index} of an undefined (na) user-defined object"
+                        ),
+                    });
+                }
                 PineValue::Na => PineValue::Na,
                 _ => {
                     return Err(RuntimeError {
@@ -140,8 +153,16 @@ impl<'a> HistoricalRuntime<'a> {
                 for statement in statements {
                     match self.eval_stmt(statement)? {
                         StmtControl::None => {}
-                        StmtControl::Break => return Err(RuntimeError::loop_break()),
-                        StmtControl::Continue => return Err(RuntimeError::loop_continue()),
+                        StmtControl::Break => {
+                            return Err(
+                                self.raise_loop_control(crate::error::RuntimeLoopControl::Break)
+                            );
+                        }
+                        StmtControl::Continue => {
+                            return Err(
+                                self.raise_loop_control(crate::error::RuntimeLoopControl::Continue)
+                            );
+                        }
                     }
                 }
                 self.eval_expr(result)?
@@ -227,7 +248,11 @@ pub(crate) fn eval_literal(literal: &HirLiteral) -> PineValue {
 
 pub(crate) fn eval_unary(op: HirUnaryOp, value: PineValue) -> PineValue {
     if value.is_na() {
-        return PineValue::Na;
+        return if op == HirUnaryOp::Not {
+            PineValue::Bool(true)
+        } else {
+            PineValue::Na
+        };
     }
 
     match op {
@@ -261,8 +286,8 @@ pub(crate) fn eval_binary_with_semantics(
     uses_v6_semantics: bool,
 ) -> Result<PineValue, RuntimeError> {
     Ok(match op {
-        HirBinaryOp::And => eval_logical_and(left, right, uses_v6_semantics),
-        HirBinaryOp::Or => eval_logical_or(left, right, uses_v6_semantics),
+        HirBinaryOp::And => eval_logical_and(left, right),
+        HirBinaryOp::Or => eval_logical_or(left, right),
         HirBinaryOp::Eq
         | HirBinaryOp::NotEq
         | HirBinaryOp::Gt
@@ -278,51 +303,38 @@ pub(crate) fn eval_binary_with_semantics(
             }
         }
         _ if left.is_na() || right.is_na() => PineValue::Na,
+        HirBinaryOp::DisplayUnion => super::display_value::combine(left, right, false)?,
+        HirBinaryOp::DisplayDifference => super::display_value::combine(left, right, true)?,
         HirBinaryOp::Add => add(left, right)?,
         HirBinaryOp::Sub => numeric_sub(left, right),
         HirBinaryOp::Mul => numeric_mul(left, right),
         HirBinaryOp::Div => numeric_float_binary(left, right, |left, right| left / right),
         HirBinaryOp::Mod => numeric_mod(left, right),
-        HirBinaryOp::Eq => PineValue::Bool(values_equal(&left, &right)),
-        HirBinaryOp::NotEq => PineValue::Bool(!values_equal(&left, &right)),
+        HirBinaryOp::Eq => PineValue::Bool(if uses_v6_semantics {
+            values_equal(&left, &right)
+        } else {
+            legacy_values_equal(&left, &right)
+        }),
+        HirBinaryOp::NotEq => PineValue::Bool(!if uses_v6_semantics {
+            values_equal(&left, &right)
+        } else {
+            legacy_values_equal(&left, &right)
+        }),
         HirBinaryOp::Gt | HirBinaryOp::Gte | HirBinaryOp::Lt | HirBinaryOp::Lte => {
             compare_binary(op, left, right)
         }
     })
 }
 
-fn eval_logical_and(left: PineValue, right: PineValue, uses_v6_semantics: bool) -> PineValue {
-    match (left, right) {
-        (PineValue::Bool(false), _) | (_, PineValue::Bool(false)) => PineValue::Bool(false),
-        (PineValue::Bool(true), PineValue::Bool(true)) => PineValue::Bool(true),
-        (PineValue::Na, PineValue::Na)
-        | (PineValue::Na, PineValue::Bool(true))
-        | (PineValue::Bool(true), PineValue::Na) => {
-            if uses_v6_semantics {
-                PineValue::Bool(false)
-            } else {
-                PineValue::Na
-            }
-        }
-        _ => PineValue::Na,
-    }
+// Pine logical operators treat missing boolean operands as false, including
+// versions that preserve NA for numeric comparisons. Evaluation eagerness is
+// handled separately by eval_expr (v6 short-circuits, older versions do not).
+fn eval_logical_and(left: PineValue, right: PineValue) -> PineValue {
+    PineValue::Bool(matches!(left, PineValue::Bool(true)) && matches!(right, PineValue::Bool(true)))
 }
 
-fn eval_logical_or(left: PineValue, right: PineValue, uses_v6_semantics: bool) -> PineValue {
-    match (left, right) {
-        (PineValue::Bool(true), _) | (_, PineValue::Bool(true)) => PineValue::Bool(true),
-        (PineValue::Bool(false), PineValue::Bool(false)) => PineValue::Bool(false),
-        (PineValue::Na, PineValue::Na)
-        | (PineValue::Na, PineValue::Bool(false))
-        | (PineValue::Bool(false), PineValue::Na) => {
-            if uses_v6_semantics {
-                PineValue::Bool(false)
-            } else {
-                PineValue::Na
-            }
-        }
-        _ => PineValue::Na,
-    }
+fn eval_logical_or(left: PineValue, right: PineValue) -> PineValue {
+    PineValue::Bool(matches!(left, PineValue::Bool(true)) || matches!(right, PineValue::Bool(true)))
 }
 
 fn add(left: PineValue, right: PineValue) -> Result<PineValue, RuntimeError> {
@@ -411,6 +423,16 @@ pub(crate) fn values_equal(left: &PineValue, right: &PineValue) -> bool {
             pine_ir::pine_numeric_comparison(HirBinaryOp::Eq, left, right).unwrap_or(false)
         }
         _ => left == right,
+    }
+}
+
+fn legacy_values_equal(left: &PineValue, right: &PineValue) -> bool {
+    match (left, right) {
+        (PineValue::Bool(value), PineValue::Int(number))
+        | (PineValue::Int(number), PineValue::Bool(value)) => *value == (*number != 0),
+        (PineValue::Bool(value), PineValue::Float(number))
+        | (PineValue::Float(number), PineValue::Bool(value)) => *value == (*number != 0.0),
+        _ => values_equal(left, right),
     }
 }
 

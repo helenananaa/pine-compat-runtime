@@ -195,26 +195,45 @@ impl<'a> Lexer<'a> {
     fn starts_legacy_line_wrap(&self) -> bool {
         let bytes = self.text.as_bytes();
         let mut next = self.pos + 1;
-        let mut indent = 0_usize;
-        let mut only_spaces = true;
-
-        while let Some(byte) = bytes.get(next) {
-            match byte {
-                b' ' => indent += 1,
-                b'\t' => {
-                    indent += 4;
-                    only_spaces = false;
+        let (indent, only_spaces, next) = loop {
+            let mut indent = 0_usize;
+            let mut only_spaces = true;
+            while let Some(byte) = bytes.get(next) {
+                match byte {
+                    b' ' => indent += 1,
+                    b'\t' => {
+                        indent += 4;
+                        only_spaces = false;
+                    }
+                    _ => break,
                 }
-                _ => break,
+                next += 1;
             }
-            next += 1;
-        }
+            // Blank physical lines may separate an assignment from its
+            // wrapped expression. Pine ignores them when deciding whether the
+            // following nonblank line continues the current statement.
+            if bytes.get(next) == Some(&b'\r') {
+                next += 1;
+            }
+            if bytes.get(next) == Some(&b'\n') {
+                next += 1;
+                continue;
+            }
+            break (indent, only_spaces, next);
+        };
 
         let current_indent = *self
             .indent_stack
             .last()
             .expect("indent stack always contains root indent");
         (indent > current_indent && !indent.is_multiple_of(4))
+            || (self.saw_version_directive
+                && current_indent > 0
+                && indent > 0
+                && !indent.is_multiple_of(4)
+                && self.tokens.last().is_some_and(|token| {
+                    matches!(token.kind, TokenKind::Question | TokenKind::Colon)
+                }))
             || self.starts_implicit_v1_four_space_ternary_wrap(
                 bytes,
                 next,

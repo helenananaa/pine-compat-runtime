@@ -310,7 +310,7 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
     ),
     (
         "runtime_user_type_varip.json",
-        "tests/fixtures/runtime/user_type_varip.pine",
+        "tests/fixtures/runtime/user_type_varip_guarded.pine",
     ),
     (
         "runtime_request_security_barstate_flags.json",
@@ -334,11 +334,11 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
     ),
     (
         "runtime_user_types.json",
-        "tests/fixtures/runtime/user_types.pine",
+        "tests/fixtures/runtime/user_types_guarded.pine",
     ),
     (
         "runtime_user_type_functions.json",
-        "tests/fixtures/runtime/user_type_functions.pine",
+        "tests/fixtures/runtime/user_type_functions_guarded.pine",
     ),
     (
         "runtime_user_type_typed_udf_params.json",
@@ -346,10 +346,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
     ),
     (
         "runtime_user_methods.json",
-        "tests/fixtures/runtime/user_methods.pine",
+        "tests/fixtures/runtime/user_methods_guarded.pine",
     ),
     (
         "runtime_local_constructor_method_receiver.json",
-        "tests/fixtures/runtime/local_constructor_method_receiver.pine",
+        "tests/fixtures/runtime/local_constructor_method_receiver_guarded.pine",
     ),
 ];

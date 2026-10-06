@@ -363,6 +363,44 @@ plot(enabled and mode == "SMA" ? math.max(src, length) * scale : close, color=sh
 }
 
 #[test]
+fn source_override_selects_each_bars_builtin_series_and_rejects_external_sources() {
+    let source = SourceFile::new(
+        "source-override.pine",
+        "indicator(\"source override\")\nsrc = input.source(close, \"Source\")\nplot(src)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    let id = first_call_site_id(&program, "input.source");
+    let bars = [bar_ohlc(1.0, 5.0, 2.0, 4.0), bar_ohlc(3.0, 9.0, 6.0, 8.0)];
+    for (selector, expected) in [
+        ("open", [1.0, 3.0]),
+        ("high", [5.0, 9.0]),
+        ("low", [2.0, 6.0]),
+        ("close", [4.0, 8.0]),
+        ("hl2", [3.5, 7.5]),
+        ("hlc3", [11.0 / 3.0, 23.0 / 3.0]),
+        ("ohlc4", [3.0, 6.5]),
+        ("hlcc4", [3.75, 7.75]),
+    ] {
+        let overrides = InputOverrides::new().with_value(
+            id,
+            chart_source_input_override(selector).expect("chart source"),
+        );
+        let result = run_historical_with_input_overrides(&program, &bars, overrides)
+            .expect("source override result");
+        assert_values_close(&result.plots[0].values, &expected);
+    }
+    assert!(chart_source_input_override("other indicator plot").is_err());
+    let invalid = InputOverrides::new().with_value(id, PineValue::String("other plot".into()));
+    assert!(run_historical_with_input_overrides(&program, &bars, invalid).is_err());
+}
+
+#[test]
 fn runs_generic_input_series_float_source_defval() {
     let source = SourceFile::new(
         "test.pine",
@@ -383,4 +421,277 @@ plot(src)
 
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+}
+
+#[test]
+fn generic_source_input_override_tracks_chart_series() {
+    let source = SourceFile::new(
+        "generic-source-override.pine",
+        "indicator(\"generic source\")\nsrc = input(close, \"Source\")\nscale = input(2.0, \"Scale\")\nplot(src * scale)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    let calls = input_calls(&program);
+    let source_call = calls
+        .iter()
+        .find(|call| call.title.as_deref() == Some("Source"))
+        .unwrap();
+    let scale_call = calls
+        .iter()
+        .find(|call| call.title.as_deref() == Some("Scale"))
+        .unwrap();
+    assert!(source_call.is_source);
+    assert!(!scale_call.is_source);
+    let bars = [bar_ohlc(1.0, 5.0, 2.0, 4.0), bar_ohlc(3.0, 9.0, 6.0, 8.0)];
+    let overrides = InputOverrides::new()
+        .with_value(
+            source_call.call_site_id,
+            chart_source_input_override("hl2").unwrap(),
+        )
+        .with_value(scale_call.call_site_id, PineValue::Float(2.0));
+    let result = run_historical_with_input_overrides(&program, &bars, overrides).unwrap();
+    assert_values_close(&result.plots[0].values, &[7.0, 15.0]);
+    let invalid = InputOverrides::new().with_value(
+        source_call.call_site_id,
+        PineValue::String("other plot".into()),
+    );
+    assert!(run_historical_with_input_overrides(&program, &bars, invalid).is_err());
+}
+
+#[test]
+fn input_metadata_const_aliases_match_literals_and_execution() {
+    let alias = SourceFile::new(
+        "aliases.pine",
+        r#"//@version=6
+indicator("const inputs")
+const int base = 3
+const string caption = "Length"
+length = input.int(base + 2, caption, minval=base, maxval=base * 3, step=base - 2, options=[1, base + 2, 7])
+plot(length)
+"#,
+    );
+    let literal = SourceFile::new(
+        "literals.pine",
+        "//@version=6\nindicator(\"const inputs\")\nlength = input.int(5, \"Length\", minval=3, maxval=9, step=1, options=[1, 5, 7])\nplot(length)\n",
+    );
+    let alias = analyze_source(&alias);
+    let literal = analyze_source(&literal);
+    assert!(alias.diagnostics.is_empty(), "{:?}", alias.diagnostics);
+    assert!(literal.diagnostics.is_empty(), "{:?}", literal.diagnostics);
+    let alias = alias.hir.unwrap();
+    let literal = literal.hir.unwrap();
+    let metadata = input_calls(&alias);
+    assert_eq!(metadata, input_calls(&literal));
+    assert_eq!(metadata[0].default_value, Some(PineValue::Int(5)));
+    assert_eq!(
+        metadata[0].options,
+        vec![PineValue::Int(1), PineValue::Int(5), PineValue::Int(7)]
+    );
+    let output = run_historical(&alias, &[bar(1.0)]).unwrap();
+    assert_values_close(&output.plots[0].values, &[5.0]);
+}
+
+#[test]
+fn input_metadata_evaluates_pure_calls_static_constants_and_selected_branches() {
+    let source = SourceFile::new(
+        "constant-calls.pine",
+        r#"//@version=6
+indicator("const metadata")
+const int base = math.abs(-3)
+const string caption = str.upper("长度") + " " + str.tostring(base)
+a = input.int(true ? base + 2 : 99, caption, options=[1, math.max(base, 5), 7])
+b = input.float(math.pi, "Pi")
+c = input.float(math.sqrt(9), "Square root")
+plot(a + b + c)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.unwrap();
+    let metadata = input_calls(&program);
+    assert_eq!(metadata[0].title.as_deref(), Some("长度 3"));
+    assert_eq!(metadata[0].default_value, Some(PineValue::Int(5)));
+    assert_eq!(
+        metadata[0].options,
+        vec![PineValue::Int(1), PineValue::Int(5), PineValue::Int(7)]
+    );
+    assert_eq!(
+        metadata[1].default_value,
+        Some(PineValue::Float(std::f64::consts::PI))
+    );
+    assert_eq!(metadata[2].default_value, Some(PineValue::Float(3.0)));
+    let output = run_historical(&program, &[bar(1.0)]).unwrap();
+    assert_values_close(&output.plots[0].values, &[8.0 + std::f64::consts::PI]);
+}
+
+#[test]
+fn input_metadata_unknown_options_are_atomic_and_chart_format_is_unknown() {
+    let source = SourceFile::new(
+        "options.pine",
+        "//@version=6\nindicator(\"metadata\")\nx = input.int(5, \"Length\", options=[1, 5, 7])\nplot(x)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut program = analysis.hir.unwrap();
+    let pine_ir::HirStmtKind::Decl { value, .. } = &mut program.statements[1].kind else {
+        panic!("input declaration");
+    };
+    let pine_ir::HirExprKind::Call { args, .. } = &mut value.kind else {
+        panic!("input call");
+    };
+    assert_eq!(
+        args.iter()
+            .filter(|arg| matches!(&arg.value.kind, pine_ir::HirExprKind::Tuple(_)))
+            .count(),
+        1,
+        "the normalized input call must retain its unique options tuple"
+    );
+    let options = args
+        .iter_mut()
+        .find(|arg| matches!(&arg.value.kind, pine_ir::HirExprKind::Tuple(_)))
+        .unwrap();
+    let pine_ir::HirExprKind::Tuple(values) = &mut options.value.kind else {
+        panic!("options tuple");
+    };
+    values[1].kind = pine_ir::HirExprKind::Builtin("close".to_owned());
+    let calls = input_calls(&program);
+    assert!(
+        calls[0].options.is_empty(),
+        "an unknown option must not shorten the list"
+    );
+    let chart_format = SourceFile::new(
+        "format.pine",
+        "//@version=6\nindicator(\"metadata\")\ns = input.string(str.tostring(1.234, format.mintick), \"Title\")\nplot(close)\n",
+    );
+    let analysis = analyze_source(&chart_format);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(input_calls(&analysis.hir.unwrap())[0].default_value, None);
+    let chart_pattern = SourceFile::new(
+        "pattern.pine",
+        "//@version=6\nindicator(\"metadata\")\ns = input.string(str.format(\"{0,number,format.mintick}\", 1.234), \"Title\")\nplot(close)\n",
+    );
+    let analysis = analyze_source(&chart_pattern);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(input_calls(&analysis.hir.unwrap())[0].default_value, None);
+    let huge_empty_repeat = SourceFile::new(
+        "repeat.pine",
+        "//@version=6\nindicator(\"metadata\")\ns = input.string(str.repeat(\"\", 9223372036854775807), \"Title\")\nplot(close)\n",
+    );
+    let analysis = analyze_source(&huge_empty_repeat);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        input_calls(&analysis.hir.unwrap())[0].default_value,
+        Some(PineValue::String(String::new()))
+    );
+}
+
+#[test]
+fn input_metadata_preflights_string_expansion_before_pure_execution() {
+    for expression in [
+        format!(
+            "str.replace_all(\"{}\", \"\", \"{}\")",
+            "a".repeat(40_000),
+            "b".repeat(40_000)
+        ),
+        format!(
+            "str.format(\"{}\", \"{}\")",
+            "{0}".repeat(2000),
+            "b".repeat(40_000)
+        ),
+    ] {
+        let source = SourceFile::new(
+            "large-format.pine",
+            format!(
+                "//@version=6\nindicator(\"metadata\")\ns = input.string({expression}, \"Title\")\nplot(close)\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert_eq!(input_calls(&analysis.hir.unwrap())[0].default_value, None);
+    }
+    let source = SourceFile::new(
+        "small-format.pine",
+        "//@version=6\nindicator(\"metadata\")\na = input.string(str.replace_all(\"aaa\", \"a\", \"b\"), \"Replace\")\nb = input.string(str.format(\"Value {0}\", 5), \"Format\")\nplot(close)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let calls = input_calls(&analysis.hir.unwrap());
+    assert_eq!(
+        calls[0].default_value,
+        Some(PineValue::String("bbb".to_owned()))
+    );
+    assert_eq!(
+        calls[1].default_value,
+        Some(PineValue::String("Value 5".to_owned()))
+    );
+}
+
+#[test]
+fn input_metadata_reassigned_alias_does_not_report_an_obsolete_initializer() {
+    let source = SourceFile::new(
+        "mutable-alias.pine",
+        "//@version=6\nindicator(\"mutable alias\")\nx = 3\nx := 4\ny = input.int(x, \"Value\")\nplot(y)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.unwrap();
+    assert_eq!(input_calls(&program)[0].default_value, None);
+    let result = run_historical(&program, &[bar(1.0)]).unwrap();
+    assert_values_close(&result.plots[0].values, &[4.0]);
+}
+
+#[test]
+fn input_metadata_depth_failure_does_not_poison_shorter_aliases() {
+    let mut text = String::from("//@version=6\nindicator(\"constant cache\")\nconst int s0 = 1\n");
+    for index in 1..=80 {
+        text.push_str(&format!("const int s{index} = s{}\n", index - 1));
+    }
+    text.push_str("long = input.int(s80, \"Long alias\")\nshort = input.int(s20, \"Short alias\")\nplot(short)\n");
+    let analysis = analyze_source(&SourceFile::new("alias-depth.pine", text));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.unwrap();
+    let calls = input_calls(&program);
+    assert_eq!(calls[0].default_value, None);
+    assert_eq!(calls[1].default_value, Some(PineValue::Int(1)));
 }

@@ -1,0 +1,31 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT qualified method")
+
+p = lib.Point.new(close)
+other = lib.Point.new(close + 10)
+wrapped = lib.Wrapper.new(p)
+otherWrapped = lib.Wrapper.new(other)
+shifted = lib.shift(p, 5)
+chosen = lib.choose(p, other)
+made = lib.make(p, close + 20)
+wrappedShifted = lib.nestedShift(wrapped, 7)
+wrappedChosen = lib.chooseWrapper(wrapped, otherWrapped)
+wrappedMutated = lib.mutateWrapperLocal(wrapped, 30)
+qualifiedTernary = lib.chooseTernary(p, other, bar_index % 2 == 0)
+qualifiedWhile = lib.chooseWhile(p, other, close > 0)
+qualifiedSwitch = lib.sameSwitch(p, bar_index % 2)
+namedShifted = p.shift(delta=9)
+namedChosen = p.choose(other=other)
+namedChosenPrior = namedChosen[1]
+namedNestedSource = p.otherNestedSourceNamed(delta=11, other=otherWrapped)
+qualifiedNamedShifted = lib.shift(p, delta=13)
+qualifiedNamedChosen = lib.choose(p, other=other)
+qualifiedNamedChosenPrior = qualifiedNamedChosen[1]
+qualifiedNamedNestedSource = lib.otherNestedSourceNamed(p, delta=17, other=otherWrapped)
+plot(shifted + (na(chosen) ? na : chosen.x) + (na(made) ? na : made.x) + wrappedShifted + (na(wrappedChosen) ? na : na(wrappedChosen.nested) ? na : wrappedChosen.nested.x))
+plot((na(wrappedMutated) ? na : na(wrappedMutated.nested) ? na : wrappedMutated.nested.x))
+plot((na(qualifiedTernary) ? na : qualifiedTernary.x) + (na(qualifiedWhile) ? na : qualifiedWhile.x) + (na(qualifiedSwitch) ? na : qualifiedSwitch.x))
+plot(namedShifted + (na(namedChosen) ? na : namedChosen.x) + namedNestedSource)
+plot(qualifiedNamedShifted + (na(qualifiedNamedChosen) ? na : qualifiedNamedChosen.x) + qualifiedNamedNestedSource)
+plot((na(namedChosenPrior) ? na : namedChosenPrior.x) + (na(qualifiedNamedChosenPrior) ? na : qualifiedNamedChosenPrior.x))

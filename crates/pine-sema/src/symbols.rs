@@ -52,6 +52,8 @@ pub(crate) const INITIAL_SYMBOLS: &[(&str, PineType)] = &[
         "bar_index",
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
+    ("ask", PineType::new(Qualifier::Series, ValueKind::Float)),
+    ("bid", PineType::new(Qualifier::Series, ValueKind::Float)),
     ("na", PineType::new(Qualifier::Const, ValueKind::Na)),
 ];
 pub(crate) fn initial_symbols() -> HashMap<String, SymbolInfo> {

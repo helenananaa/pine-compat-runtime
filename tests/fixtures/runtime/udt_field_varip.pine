@@ -1,0 +1,24 @@
+//@version=6
+indicator("UDT field varip control")
+type Counter
+    int regular = 0
+    varip int ticks = 0
+var Counter normal = Counter.new()
+varip Counter persistentRef = Counter.new()
+normal.regular += 1
+normal.ticks += 1
+persistentRef.regular += 1
+persistentRef.ticks += 1
+varip Counter transient = na
+if barstate.isrealtime and na(transient)
+    transient := Counter.new()
+if barstate.isrealtime
+    transient.regular += 1
+    transient.ticks += 1
+plot(normal.regular, "UV normal regular")
+plot(normal.ticks, "UV normal ticks")
+plot(persistentRef.regular, "UV varip ref regular")
+plot(persistentRef.ticks, "UV varip ref ticks")
+plot(na(transient) ? na : transient.regular, "UV transient regular")
+plot(na(transient) ? na : transient.ticks, "UV transient ticks")
+plot(bar_index, "UV index")

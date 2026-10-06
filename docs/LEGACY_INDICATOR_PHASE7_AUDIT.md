@@ -197,13 +197,18 @@ A later corpus-ranked follow-up adds
 nested pure requested UDFs, immutable UDF locals, legacy source-input defaults,
 and the retained mutable-state boundary.
 
-A subsequent integer-division follow-up adds
-`tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine`.
+A subsequent integer-division follow-up originally added a v4 fixture that
+assumed all integer divisions truncate.
 The initial implementation covered integer-compatible call parameters. The
-later corpus follow-up completes the documented Pine v1-v4 rule: every
-`int / int` expression produces an integer by discarding the fractional
-remainder, including ordinary values, aliases, history offsets, built-in calls,
-and untyped UDF arguments. A separate version-boundary follow-up adds
+later corpus follow-up originally applied integer truncation to every Pine
+v1-v4 `int / int` expression, including ordinary values, aliases, history
+offsets, built-in calls, and untyped UDF arguments. The independent Pine v4
+Gaussian Channel comparison later disproved this for input integers: its
+`2 / N`, with `N` from `input()`, must retain `0.5` when `N=4`. The v4 rule
+now truncates only `const int / const int`, while v1-v3 retain the older
+behavior. The corrected v4 fixture is
+`tests/fixtures/legacy/v4/runtime/contextual_integer_division_v4_native_legacy.pine`.
+A separate version-boundary follow-up adds
 `tests/fixtures/runtime/v5_const_integer_division.pine` and its explicit-v6
 rewrite: v5 truncates only when both operands are `const int`, while input,
 simple, or series integers preserve fractions.
@@ -295,11 +300,11 @@ supply the Phase 7 incremental/realtime evidence.
 - Pine v1-v3 whole indicator declarations and their wider name/constant/type
   surfaces remain Phases 8 and 9, even though the shared security binder and
   runtime policies are versioned now.
-- Pine v1-v4 integer division applies only when both operands are integers and
-  then produces an integer by discarding the fractional remainder. Float
-  operands remain on their existing path. The separately fixture-backed v5
-  rule truncates only two `const int` operands; input, simple, or series
-  integers and all v6 integer divisions retain fractional results.
+- Pine v1-v3 division of two integers discards the fractional remainder.
+  Pine v4-v5 truncate only `const int / const int`; input, simple, or series
+  integer divisions retain fractional results. Pine v6 always retains the
+  fractional result. Explicit `int(...)` remains available for integer
+  history offsets and function parameters.
 - Pre-v6 numeric-to-bool call conversion applies only to explicitly
   bool-compatible built-in parameters. Generic inferred collection element
   types and unrelated argument families are not widened by that follow-up.

@@ -1,7 +1,6 @@
-use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, BarUpdate, OutputRetention, RealtimeRuntime, RealtimeUpdateContext, RequestKey,
-    RequestTimeframe, RuntimeReplica, public_runtime_changes_json, public_runtime_result_json,
+    BarUpdate, OutputRetention, RealtimeRuntime, RealtimeUpdateContext, RequestKey,
+    RequestTimeframe, RuntimeReplica, ValueWhenLimits, public_runtime_changes_json,
     runtime_changes_from_json, runtime_result_from_json, session_window_input_from_json,
 };
 use serde_json::Value;
@@ -29,9 +28,6 @@ pub fn runtime_changes_schema_version() -> u32 {
 pub struct WasmRealtimeSession {
     runtime: RealtimeRuntime<'static>,
     seeded: bool,
-    confirmed_bars: usize,
-    last_confirmed_time: Option<i64>,
-    forming_time: Option<i64>,
 }
 
 #[wasm_bindgen(js_name = RuntimeReplica)]
@@ -41,7 +37,7 @@ pub struct WasmRuntimeReplica {
 
 impl WasmRealtimeSession {
     pub(crate) fn from_program(
-        hir: HirProgram,
+        hir: pine_runtime::PreparedProgram,
         request_bars_json: &str,
         input_overrides_json: &str,
     ) -> Result<Self, String> {
@@ -64,8 +60,8 @@ impl WasmRealtimeSession {
         }
         let input_overrides = input_overrides_from_json(overrides_json, &hir)?;
         let mut runtime =
-            RealtimeRuntime::from_program_with_request_environment_and_input_overrides(
-                hir,
+            RealtimeRuntime::from_prepared_with_request_environment_and_input_overrides(
+                &hir,
                 parsed.environment,
                 input_overrides,
             );
@@ -80,9 +76,6 @@ impl WasmRealtimeSession {
         Ok(Self {
             runtime,
             seeded: false,
-            confirmed_bars: 0,
-            last_confirmed_time: None,
-            forming_time: None,
         })
     }
 
@@ -94,47 +87,35 @@ impl WasmRealtimeSession {
         }
     }
 
-    fn validate_next_bar(&self, bar: &Bar, forming: bool) -> Result<(), String> {
-        if let Some(last_confirmed_time) = self.last_confirmed_time
-            && bar.time <= last_confirmed_time
-        {
-            return Err(format!(
-                "realtime bar time `{}` must be later than confirmed time `{last_confirmed_time}`",
-                bar.time
-            ));
-        }
-        if let Some(forming_time) = self.forming_time
-            && bar.time != forming_time
-        {
-            let action = if forming { "replace" } else { "confirm" };
-            return Err(format!(
-                "realtime {action} time `{}` does not match forming time `{forming_time}`",
-                bar.time
-            ));
-        }
-        Ok(())
-    }
-
     pub(crate) fn seed_internal(
         &mut self,
         bars_csv: &str,
         execution_times: Option<&[i64]>,
     ) -> Result<String, String> {
+        self.seed_state_internal(bars_csv, execution_times)?;
+        Ok(crate::snapshot::result_view_snapshot_json(
+            &self.runtime.result_view(),
+        ))
+    }
+
+    pub(crate) fn seed_state_internal(
+        &mut self,
+        bars_csv: &str,
+        execution_times: Option<&[i64]>,
+    ) -> Result<(), String> {
         if self.seeded {
             return Err("realtime session history has already been seeded".to_owned());
         }
         let bars = parse_bars_csv(bars_csv)?;
-        let result = match execution_times {
+        match execution_times {
             Some(times) => self
                 .runtime
-                .seed_historical_with_execution_times(&bars, times),
-            None => self.runtime.seed_historical(&bars),
+                .seed_historical_with_execution_times_without_output(&bars, times),
+            None => self.runtime.seed_historical_without_output(&bars),
         }
         .map_err(|err| err.message)?;
         self.seeded = true;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        Ok(public_runtime_result_json(&result))
+        Ok(())
     }
 
     pub(crate) fn replay_internal(
@@ -144,17 +125,16 @@ impl WasmRealtimeSession {
     ) -> Result<String, String> {
         self.require_seeded()?;
         let bars = parse_bars_csv(bars_csv)?;
-        let result = match execution_times {
+        match execution_times {
             Some(times) => self
                 .runtime
-                .replay_historical_with_execution_times(&bars, times),
-            None => self.runtime.replay_historical(&bars),
+                .replay_historical_with_execution_times_without_output(&bars, times),
+            None => self.runtime.replay_historical_without_output(&bars),
         }
         .map_err(|err| err.message)?;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
-        Ok(public_runtime_result_json(&result))
+        Ok(crate::snapshot::result_view_snapshot_json(
+            &self.runtime.result_view(),
+        ))
     }
 
     pub(crate) fn correct_internal(
@@ -165,17 +145,18 @@ impl WasmRealtimeSession {
     ) -> Result<String, String> {
         self.require_seeded()?;
         let bars = parse_bars_csv(bars_csv)?;
-        let result = match execution_times {
+        match execution_times {
             Some(times) => self
                 .runtime
-                .correct_historical_with_execution_times(from_time, &bars, times),
-            None => self.runtime.correct_historical(from_time, &bars),
+                .correct_historical_with_execution_times_without_output(from_time, &bars, times),
+            None => self
+                .runtime
+                .correct_historical_without_output(from_time, &bars),
         }
         .map_err(|err| err.message)?;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
-        Ok(public_runtime_result_json(&result))
+        Ok(crate::snapshot::result_view_snapshot_json(
+            &self.runtime.result_view(),
+        ))
     }
 
     fn parse_from_time(from_time: f64) -> Result<i64, String> {
@@ -194,7 +175,6 @@ impl WasmRealtimeSession {
     ) -> Result<String, String> {
         self.require_seeded()?;
         let bar = bar_from_json(bar_json)?;
-        self.validate_next_bar(&bar, forming)?;
         let context = context_from_json(context_json)?;
         let update = if forming {
             BarUpdate::forming(bar)
@@ -204,23 +184,15 @@ impl WasmRealtimeSession {
         let output = if changes {
             let changes = self
                 .runtime
-                .apply_update_with_context(update, context)
+                .apply_update_with_context_ref(update, context)
                 .map_err(|err| err.message)?;
-            public_runtime_changes_json(&changes)
+            public_runtime_changes_json(changes)
         } else {
-            let result = self
-                .runtime
-                .update_with_context(update, context)
+            self.runtime
+                .update_with_context_without_output(update, context)
                 .map_err(|err| err.message)?;
-            public_runtime_result_json(&result)
+            crate::snapshot::result_view_snapshot_json(&self.runtime.result_view())
         };
-        if forming {
-            self.forming_time = Some(bar.time);
-        } else {
-            self.confirmed_bars = self.runtime.confirmed_bar_count();
-            self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-            self.forming_time = None;
-        }
         Ok(output)
     }
 
@@ -242,10 +214,10 @@ impl WasmRealtimeSession {
         };
         match self
             .runtime
-            .apply_request_update(key, update)
+            .apply_request_update_ref(key, update)
             .map_err(|err| err.message)?
         {
-            Some(changes) => Ok(public_runtime_changes_json(&changes)),
+            Some(changes) => Ok(public_runtime_changes_json(changes)),
             None => Ok("null".to_owned()),
         }
     }
@@ -253,6 +225,72 @@ impl WasmRealtimeSession {
 
 #[wasm_bindgen]
 impl WasmRealtimeSession {
+    /// Limit logical valuewhen events, including requested-context checkpoints.
+    /// Passing null/undefined restores unlimited aggregate retention.
+    #[wasm_bindgen(js_name = setValueWhenLimit)]
+    pub fn set_valuewhen_limit(&mut self, max_values: JsValue) -> Result<(), JsValue> {
+        let max_retained_values = if max_values.is_null() || max_values.is_undefined() {
+            None
+        } else {
+            let value = max_values.as_f64().ok_or_else(|| {
+                JsValue::from_str(
+                    "maxValues must be a nonnegative safe integer that fits this platform",
+                )
+            })?;
+            if !value.is_finite()
+                || value < 0.0
+                || value.fract() != 0.0
+                || value > 9_007_199_254_740_991.0
+            {
+                return Err(JsValue::from_str(
+                    "maxValues must be a nonnegative safe integer that fits this platform",
+                ));
+            }
+            Some(usize::try_from(value as u64).map_err(|_| {
+                JsValue::from_str(
+                    "maxValues must be a nonnegative safe integer that fits this platform",
+                )
+            })?)
+        };
+        self.runtime
+            .set_valuewhen_limits(ValueWhenLimits {
+                max_retained_values,
+            })
+            .map_err(|error| JsValue::from_str(&error.message))
+    }
+
+    #[wasm_bindgen(js_name = valueWhenLimit)]
+    pub fn valuewhen_limit(&self) -> Option<usize> {
+        self.runtime.valuewhen_limits().max_retained_values
+    }
+
+    #[wasm_bindgen(js_name = valueWhenRetainedValues)]
+    pub fn valuewhen_retained_values(&self) -> usize {
+        self.runtime.valuewhen_retained_values()
+    }
+
+    #[wasm_bindgen(js_name = confirmedValueWhenRetainedValues)]
+    pub fn confirmed_valuewhen_retained_values(&self) -> usize {
+        self.runtime.confirmed_valuewhen_retained_values()
+    }
+
+    #[wasm_bindgen(js_name = seedState)]
+    pub fn seed_state(&mut self, bars_csv: &str) -> Result<(), JsValue> {
+        self.seed_state_internal(bars_csv, None)
+            .map_err(|err| JsValue::from_str(&err))
+    }
+
+    #[wasm_bindgen(js_name = seedStateWithExecutionTimes)]
+    pub fn seed_state_with_execution_times(
+        &mut self,
+        bars_csv: &str,
+        execution_times_json: &str,
+    ) -> Result<(), JsValue> {
+        let times = execution_times_from_json(execution_times_json)
+            .map_err(|err| JsValue::from_str(&err))?;
+        self.seed_state_internal(bars_csv, Some(&times))
+            .map_err(|err| JsValue::from_str(&err))
+    }
     #[wasm_bindgen(js_name = seed)]
     pub fn seed(&mut self, bars_csv: &str) -> Result<String, JsValue> {
         self.seed_internal(bars_csv, None)
@@ -401,11 +439,10 @@ impl WasmRealtimeSession {
 
     #[wasm_bindgen(js_name = streamSnapshot)]
     pub fn stream_snapshot(&self) -> String {
-        format!(
-            "{{\"revision\":{},\"retainedFrom\":{},\"result\":{}}}",
+        crate::snapshot::stream_snapshot_json(
+            &self.runtime.result_view(),
             self.runtime.revision(),
             self.runtime.display_origin(),
-            public_runtime_result_json(&self.runtime.result())
         )
     }
 
@@ -434,12 +471,12 @@ impl WasmRealtimeSession {
 
     #[wasm_bindgen(js_name = result)]
     pub fn result(&self) -> String {
-        public_runtime_result_json(&self.runtime.result())
+        crate::snapshot::result_view_snapshot_json(&self.runtime.result_view())
     }
 
     #[wasm_bindgen(js_name = confirmedResult)]
     pub fn confirmed_result(&self) -> String {
-        public_runtime_result_json(&self.runtime.confirmed_result())
+        crate::snapshot::result_view_snapshot_json(&self.runtime.confirmed_result_view())
     }
 
     #[wasm_bindgen(js_name = lastChanges)]
@@ -462,17 +499,19 @@ impl WasmRealtimeSession {
 
     #[wasm_bindgen(getter, js_name = confirmedBars)]
     pub fn confirmed_bars(&self) -> usize {
-        self.confirmed_bars
+        self.runtime.confirmed_bar_count()
     }
 
     #[wasm_bindgen(getter, js_name = lastConfirmedTime)]
     pub fn last_confirmed_time(&self) -> Option<f64> {
-        self.last_confirmed_time.map(|value| value as f64)
+        self.runtime
+            .last_confirmed_bar_time()
+            .map(|value| value as f64)
     }
 
     #[wasm_bindgen(getter, js_name = formingTime)]
     pub fn forming_time(&self) -> Option<f64> {
-        self.forming_time.map(|value| value as f64)
+        self.runtime.forming_bar_time().map(|value| value as f64)
     }
 
     #[wasm_bindgen(getter)]
@@ -509,7 +548,14 @@ impl WasmRuntimeReplica {
 
     #[wasm_bindgen]
     pub fn result(&self) -> String {
-        public_runtime_result_json(self.inner.result())
+        crate::snapshot::borrowed_snapshot_json(self.inner.result())
+    }
+
+    /// Finalize this replica and return its complete output. The JavaScript
+    /// handle is consumed; use `result` to keep receiving stream updates.
+    #[wasm_bindgen(js_name = intoResult)]
+    pub fn into_result(self) -> String {
+        pine_runtime::into_public_runtime_result_json(self.inner.into_result())
     }
 
     #[wasm_bindgen]

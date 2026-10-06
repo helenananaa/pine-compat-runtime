@@ -46,12 +46,12 @@ pub(super) fn validate_language_versions(
 
         if let (Some(root_dialect), Some(module_dialect)) =
             (root_policy.language.dialect, selection.dialect)
-            && root_dialect != module_dialect
+            && root_dialect < module_dialect
         {
             diagnostics.push(Diagnostic::error(
                 "E_LANGUAGE_VERSION_CONFLICT",
                 format!(
-                    "root {} source cannot use library `{}` declared as {}; root and library language versions must match",
+                    "root {} source cannot use library `{}` declared as newer {}; importing a newer library version is unsupported",
                     root_dialect.name(),
                     module.key.as_deref().unwrap_or("<unknown>"),
                     module_dialect.name()

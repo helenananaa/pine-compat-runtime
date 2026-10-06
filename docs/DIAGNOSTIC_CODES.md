@@ -31,14 +31,18 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_LIBRARY`: invalid library declaration.
 - `E_PARSE_NAME`: invalid qualified name.
 - `E_PARSE_SWITCH`: invalid switch expression.
+- `E_PARSE_STMT`: invalid statement.
+- `E_PARSE_STMT_DEPTH`: recursive statement nesting exceeds the parser resource
+  limit, including `else if` chains, expression blocks, and inline switch arms.
 - `E_PARSE_TYPE`: invalid user-defined type declaration.
 - `E_LANGUAGE_VERSION_DUPLICATE`: more than one recognized `//@version=N`
   directive, including the spaced-equals compatibility form, was found.
-- `E_LANGUAGE_VERSION_PLACEMENT`: a recognized version directive appeared
-  after a source statement instead of in the leading comment/directive region.
 
 ## Semantic Analysis
 
+- `E_CONST_DECL_VALUE`: a scalar `const` declaration is initialized with a
+  value that is not available at compile time.
+- `E_CONST_REASSIGN`: reassignment of a `const` declaration.
 - `E_HOST_INPUT`: a host binding rejected malformed input before semantic
   analysis, such as invalid WASM library-source JSON.
 - `E_LANGUAGE_VERSION_`: internal diagnostic-family prefix used to stop before
@@ -83,8 +87,6 @@ improved over time, but codes should remain stable once published.
 - `E_LEGACY_SECURITY_MERGE`: a v1-v4 `security` gaps/lookahead argument is not
   a compile-time bool or the corresponding `barmerge` constant; runtime
   alignment is not guessed from series metadata.
-- `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
-  references `strategy.*`; legacy strategy execution is outside this project.
 - `E_LEGACY_V3_NA_INFERENCE`: a Pine v3 untyped `na` declaration cannot infer
   exactly one stable scalar type from a later assignment because it is
   unresolved, collection/object-valued, or conflicts with another assignment;
@@ -146,8 +148,15 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_UDT_DUPLICATE`: duplicate user-defined type declaration.
 - `E_UDT_FIELD_DUPLICATE`: duplicate field in a user-defined type declaration.
 - `E_UDT_FIELD_TYPE`: unsupported or unknown user-defined type field type.
+- `E_UDT_FIELD_DEFAULT`: a UDT field default is not a compatible literal or built-in variable.
+- `E_UDT_COPY_ARG`: UDT copy has invalid arguments or a mismatched object type.
+- `E_UDT_MATRIX_ARG`: UDT matrix construction has invalid argument binding, dimension types, or element identity.
 - `E_UDT_FIELD_MUTATION`: field reassignment targets a value that is not a
   supported local user-defined type.
+- `E_UDT_FIELD_HISTORY`: Pine v6 rejects history directly on a UDT field;
+  reference `(object[offset]).field` or store the field in a variable first.
+- `E_UDT_NA_FIELD`: execution attempted to read a field of an undefined (`na`)
+  user-defined object. Test the object with `na()` before dereferencing it.
 - `E_UDT_UNKNOWN_FIELD`: field read references a field not declared on the
   receiver's user-defined type.
 - `E_CHART_POINT_UNKNOWN_FIELD`: field read or mutation references a field not
@@ -165,8 +174,8 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
   or generated temporary-symbol budget.
 - `E_MAP_ASSIGN_TYPE`: reassignment changed a map key/value template identity.
 - `E_IMPORT_CYCLE`: import dependency graph contains a cycle.
-- `E_IMPORT_ALIAS_REQUIRED`: an import used by the executable subset omitted
-  the required alias.
+- `E_IMPORT_ALIAS_REQUIRED`: an import key is malformed and provides no
+  library name from which to derive the optional implicit alias.
 - `E_IMPORT_CONST_VALUE`: an exported library constant is not a const
   expression in the supported import subset.
 - `E_IMPORT_DUPLICATE_ALIAS`: root imports reuse the same alias.
@@ -214,6 +223,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 ## Runtime
 
 - `E_RUNTIME`: runtime execution emitted a host-visible diagnostic.
+- `E_UNSUPPORTED_ALERT_PLACEHOLDER`: a triggered `alertcondition` message
+  references a named plot with no numeric value on the current bar. The alert
+  event is suppressed, the diagnostic is deduplicated by message, and the
+  indicator continues to execute.
 - `W_LEGACY_SECURITY_LOOKAHEAD`: a reached legacy `security` callsite uses
   historical lookahead-on alignment, whether by v1/v2 default or explicit
   selection, and can repaint. The warning
@@ -224,7 +237,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_STRATEGY_MARGIN`: supported strategy entry fill requires more margin than
   available simulated equity.
 - `E_STRATEGY_PRICE`: strategy order fill price is not finite.
-- `E_STRATEGY_QTY`: strategy order quantity is not finite and positive.
+- `E_STRATEGY_QTY`: low-level broker placement receives an invalid strategy
+  quantity. Script-level `strategy.entry` and `strategy.order` stop execution
+  with a runtime error for invalid nonzero quantities; zero is a no-op and
+  `na` selects declared default sizing.
 - `E_STRATEGY_CLOSE_QTY`: `strategy.close` quantity is not finite and positive.
 - `E_STRATEGY_CLOSE_QTY_PERCENT`: `strategy.close` percent quantity is not
   finite and positive.
@@ -275,7 +291,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 These errors reject an incoming delta without mutating the consumer result or
 revision. They do not change the existing runtime output schema.
 
-- `E_STREAM_SCHEMA`: changes schema is unsupported; schema 2 and 3 are accepted.
+- `E_STREAM_SCHEMA`: changes schema is unsupported; schemas 2, 3 and 4 are
+  accepted, but gradient fill data requires schema 4.
+- `E_STREAM_GRADIENT`: a typed change has non-finite gradient values, invalid
+  color encodings, or a fill-add sample count inconsistent with its colors.
 - `E_STREAM_REVISION`: revision does not immediately follow baseRevision.
 - `E_STREAM_STALE`: change revision precedes the consumer's current revision.
 - `E_STREAM_CONFLICT`: the current revision has a different payload, or was
@@ -293,3 +312,21 @@ revision. They do not change the existing runtime output schema.
   history, or the replacement bars do not follow the retained prefix.
 - `E_HISTORY_CLOCK`: historical correction mixed execution timestamps with a
   prefix recorded without them, or omitted timestamps when the prefix has them.
+- `E_RUNTIME_POISONED`: a historical runtime is asked to execute after an earlier
+  bar execution error. Rebuild it before retrying; validation failures before
+  execution do not disable the runtime, and realtime transactions retain their
+  previous session on failure.
+- `E_EXECUTION_BUDGET`: a chart-bar execution exhausted its configured evaluation
+  steps or aggregate loop iterations. Requested evaluation and strategy fill
+  recalculation share this allowance; see EXECUTION_LIMITS.md.
+- `E_RESOURCE_BUDGET`: a chart-bar execution exhausted its configured logical
+  collection allocation/copy allowance or numerical matrix work allowance.
+  Realtime preparation, requested evaluation and strategy fill recalculation
+  share the allowance. Realtime failure preserves the published state, delta
+  and revision; historical execution failure poisons that instance. See
+  EXECUTION_SEMANTICS.md for ResourceLimits and its payload/RSS boundary.
+- `E_VALUEWHEN_BUDGET`: retained or actively evaluated `ta.valuewhen` events
+  exceed the optional logical event limit, or their aggregate count overflows.
+  A rejected configuration keeps its prior limits and state; a rejected realtime
+  execution keeps its result, delta cache and revision. See EXECUTION_LIMITS.md
+  for requested-checkpoint accounting and the event-count scope.

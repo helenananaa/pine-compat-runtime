@@ -1,0 +1,184 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT varip")
+
+dyn = bar_index == 0 ? na : 1
+
+varip lib.Point seeded = na
+if bar_index == 0
+    seeded := lib.Point.new(close)
+else
+    seeded := lib.Point.new((na(seeded) ? na : seeded.x) + 1)
+plot((na(seeded) ? na : seeded.x))
+seeded_prior = seeded[1]
+seeded_dynamic_prior = seeded[dyn]
+plot((na(seeded_prior) ? na : seeded_prior.x))
+plot((na(seeded_dynamic_prior) ? na : seeded_dynamic_prior.x))
+
+varip lib.Point constructed = lib.Point.new(close + 10)
+constructed := lib.Point.new((na(constructed) ? na : constructed.x) + 1)
+plot((na(constructed) ? na : constructed.x))
+constructed_prior = constructed[1]
+constructed_dynamic_prior = constructed[dyn]
+plot((na(constructed_prior) ? na : constructed_prior.x))
+plot((na(constructed_dynamic_prior) ? na : constructed_dynamic_prior.x))
+
+varip inferred = lib.Point.new(close + 20)
+inferred := lib.Point.new((na(inferred) ? na : inferred.x) + 1)
+plot((na(inferred) ? na : inferred.x))
+inferred_prior = inferred[1]
+inferred_dynamic_prior = inferred[dyn]
+plot((na(inferred_prior) ? na : inferred_prior.x))
+plot((na(inferred_dynamic_prior) ? na : inferred_dynamic_prior.x))
+
+aliasPointSource = lib.Point.new(close + 25)
+varip aliasPoint = aliasPointSource
+aliasPoint := lib.Point.new((na(aliasPoint) ? na : aliasPoint.x) + 1)
+plot((na(aliasPoint) ? na : aliasPoint.x))
+aliasPoint_prior = aliasPoint[1]
+aliasPoint_dynamic_prior = aliasPoint[dyn]
+plot((na(aliasPoint_prior) ? na : aliasPoint_prior.x))
+plot((na(aliasPoint_dynamic_prior) ? na : aliasPoint_dynamic_prior.x))
+
+varip lib.Point typed_ternary = bar_index == 0 ? lib.Point.new(close + 100) : lib.Point.new(open + 100)
+typed_ternary := lib.Point.new((na(typed_ternary) ? na : typed_ternary.x) + 1)
+plot((na(typed_ternary) ? na : typed_ternary.x))
+typed_ternary_prior = typed_ternary[1]
+typed_ternary_dynamic_prior = typed_ternary[dyn]
+plot((na(typed_ternary_prior) ? na : typed_ternary_prior.x))
+plot((na(typed_ternary_dynamic_prior) ? na : typed_ternary_dynamic_prior.x))
+
+varip lib.Point typed_switch = switch bar_index
+    0 => lib.Point.new(close + 110)
+    => lib.Point.new(open + 110)
+typed_switch := lib.Point.new((na(typed_switch) ? na : typed_switch.x) + 1)
+plot((na(typed_switch) ? na : typed_switch.x))
+typed_switch_prior = typed_switch[1]
+typed_switch_dynamic_prior = typed_switch[dyn]
+plot((na(typed_switch_prior) ? na : typed_switch_prior.x))
+plot((na(typed_switch_dynamic_prior) ? na : typed_switch_dynamic_prior.x))
+
+varip lib.Point typed_if = if bar_index == 0
+    lib.Point.new(close + 120)
+else
+    lib.Point.new(open + 120)
+typed_if := lib.Point.new((na(typed_if) ? na : typed_if.x) + 1)
+plot((na(typed_if) ? na : typed_if.x))
+typed_if_prior = typed_if[1]
+typed_if_dynamic_prior = typed_if[dyn]
+plot((na(typed_if_prior) ? na : typed_if_prior.x))
+plot((na(typed_if_dynamic_prior) ? na : typed_if_dynamic_prior.x))
+
+varip lib.Point typed_for = for i = 0 to 1
+    lib.Point.new(close + 130 + i)
+typed_for := lib.Point.new((na(typed_for) ? na : typed_for.x) + 1)
+plot((na(typed_for) ? na : typed_for.x))
+typed_for_prior = typed_for[1]
+typed_for_dynamic_prior = typed_for[dyn]
+plot((na(typed_for_prior) ? na : typed_for_prior.x))
+plot((na(typed_for_dynamic_prior) ? na : typed_for_dynamic_prior.x))
+
+point_values = array.from(lib.Point.new(close + 140), lib.Point.new(close + 141))
+varip lib.Point typed_for_in = for point in point_values
+    point
+typed_for_in := lib.Point.new((na(typed_for_in) ? na : typed_for_in.x) + 1)
+plot((na(typed_for_in) ? na : typed_for_in.x))
+typed_for_in_prior = typed_for_in[1]
+typed_for_in_dynamic_prior = typed_for_in[dyn]
+plot((na(typed_for_in_prior) ? na : typed_for_in_prior.x))
+plot((na(typed_for_in_dynamic_prior) ? na : typed_for_in_dynamic_prior.x))
+
+counter = 0
+varip lib.Point typed_while = while counter < 2
+    counter := counter + 1
+    lib.Point.new(close + 150 + counter)
+typed_while := lib.Point.new((na(typed_while) ? na : typed_while.x) + 1)
+plot((na(typed_while) ? na : typed_while.x))
+typed_while_prior = typed_while[1]
+typed_while_dynamic_prior = typed_while[dyn]
+plot((na(typed_while_prior) ? na : typed_while_prior.x))
+plot((na(typed_while_dynamic_prior) ? na : typed_while_dynamic_prior.x))
+
+varip lib.Wrapper wrapped_ternary = bar_index == 0 ? lib.Wrapper.new(lib.Point.new(close + 160)) : lib.Wrapper.new(lib.Point.new(open + 160))
+wrapped_ternary := lib.Wrapper.new(lib.Point.new((na(wrapped_ternary) ? na : na(wrapped_ternary.nested) ? na : wrapped_ternary.nested.x) + 1))
+plot((na(wrapped_ternary) ? na : na(wrapped_ternary.nested) ? na : wrapped_ternary.nested.x))
+wrapped_ternary_prior = wrapped_ternary[1]
+wrapped_ternary_dynamic_prior = wrapped_ternary[dyn]
+plot((na(wrapped_ternary_prior) ? na : na(wrapped_ternary_prior.nested) ? na : wrapped_ternary_prior.nested.x))
+plot((na(wrapped_ternary_dynamic_prior) ? na : na(wrapped_ternary_dynamic_prior.nested) ? na : wrapped_ternary_dynamic_prior.nested.x))
+
+varip lib.Wrapper wrapped_switch = switch bar_index
+    0 => lib.Wrapper.new(lib.Point.new(close + 170))
+    => lib.Wrapper.new(lib.Point.new(open + 170))
+wrapped_switch := lib.Wrapper.new(lib.Point.new((na(wrapped_switch) ? na : na(wrapped_switch.nested) ? na : wrapped_switch.nested.x) + 1))
+plot((na(wrapped_switch) ? na : na(wrapped_switch.nested) ? na : wrapped_switch.nested.x))
+wrapped_switch_prior = wrapped_switch[1]
+wrapped_switch_dynamic_prior = wrapped_switch[dyn]
+plot((na(wrapped_switch_prior) ? na : na(wrapped_switch_prior.nested) ? na : wrapped_switch_prior.nested.x))
+plot((na(wrapped_switch_dynamic_prior) ? na : na(wrapped_switch_dynamic_prior.nested) ? na : wrapped_switch_dynamic_prior.nested.x))
+
+varip lib.Wrapper wrapped_if = if bar_index == 0
+    lib.Wrapper.new(lib.Point.new(close + 180))
+else
+    lib.Wrapper.new(lib.Point.new(open + 180))
+wrapped_if := lib.Wrapper.new(lib.Point.new((na(wrapped_if) ? na : na(wrapped_if.nested) ? na : wrapped_if.nested.x) + 1))
+plot((na(wrapped_if) ? na : na(wrapped_if.nested) ? na : wrapped_if.nested.x))
+wrapped_if_prior = wrapped_if[1]
+wrapped_if_dynamic_prior = wrapped_if[dyn]
+plot((na(wrapped_if_prior) ? na : na(wrapped_if_prior.nested) ? na : wrapped_if_prior.nested.x))
+plot((na(wrapped_if_dynamic_prior) ? na : na(wrapped_if_dynamic_prior.nested) ? na : wrapped_if_dynamic_prior.nested.x))
+
+varip lib.Wrapper wrapped_for = for i = 0 to 1
+    lib.Wrapper.new(lib.Point.new(close + 190 + i))
+wrapped_for := lib.Wrapper.new(lib.Point.new((na(wrapped_for) ? na : na(wrapped_for.nested) ? na : wrapped_for.nested.x) + 1))
+plot((na(wrapped_for) ? na : na(wrapped_for.nested) ? na : wrapped_for.nested.x))
+wrapped_for_prior = wrapped_for[1]
+wrapped_for_dynamic_prior = wrapped_for[dyn]
+plot((na(wrapped_for_prior) ? na : na(wrapped_for_prior.nested) ? na : wrapped_for_prior.nested.x))
+plot((na(wrapped_for_dynamic_prior) ? na : na(wrapped_for_dynamic_prior.nested) ? na : wrapped_for_dynamic_prior.nested.x))
+
+wrapper_values = array.from(lib.Wrapper.new(lib.Point.new(close + 200)), lib.Wrapper.new(lib.Point.new(close + 201)))
+varip lib.Wrapper wrapped_for_in = for item in wrapper_values
+    item
+wrapped_for_in := lib.Wrapper.new(lib.Point.new((na(wrapped_for_in) ? na : na(wrapped_for_in.nested) ? na : wrapped_for_in.nested.x) + 1))
+plot((na(wrapped_for_in) ? na : na(wrapped_for_in.nested) ? na : wrapped_for_in.nested.x))
+wrapped_for_in_prior = wrapped_for_in[1]
+wrapped_for_in_dynamic_prior = wrapped_for_in[dyn]
+plot((na(wrapped_for_in_prior) ? na : na(wrapped_for_in_prior.nested) ? na : wrapped_for_in_prior.nested.x))
+plot((na(wrapped_for_in_dynamic_prior) ? na : na(wrapped_for_in_dynamic_prior.nested) ? na : wrapped_for_in_dynamic_prior.nested.x))
+
+wrapped_counter = 0
+varip lib.Wrapper wrapped_while = while wrapped_counter < 2
+    wrapped_counter := wrapped_counter + 1
+    lib.Wrapper.new(lib.Point.new(close + 210 + wrapped_counter))
+wrapped_while := lib.Wrapper.new(lib.Point.new((na(wrapped_while) ? na : na(wrapped_while.nested) ? na : wrapped_while.nested.x) + 1))
+plot((na(wrapped_while) ? na : na(wrapped_while.nested) ? na : wrapped_while.nested.x))
+wrapped_while_prior = wrapped_while[1]
+wrapped_while_dynamic_prior = wrapped_while[dyn]
+plot((na(wrapped_while_prior) ? na : na(wrapped_while_prior.nested) ? na : wrapped_while_prior.nested.x))
+plot((na(wrapped_while_dynamic_prior) ? na : na(wrapped_while_dynamic_prior.nested) ? na : wrapped_while_dynamic_prior.nested.x))
+
+varip lib.Wrapper wrapped = lib.Wrapper.new(lib.Point.new(close + 30))
+wrapped := lib.Wrapper.new(lib.Point.new((na(wrapped) ? na : na(wrapped.nested) ? na : wrapped.nested.x) + 1))
+plot((na(wrapped) ? na : na(wrapped.nested) ? na : wrapped.nested.x))
+wrapped_prior = wrapped[1]
+wrapped_dynamic_prior = wrapped[dyn]
+plot((na(wrapped_prior) ? na : na(wrapped_prior.nested) ? na : wrapped_prior.nested.x))
+plot((na(wrapped_dynamic_prior) ? na : na(wrapped_dynamic_prior.nested) ? na : wrapped_dynamic_prior.nested.x))
+
+varip inferredWrapped = lib.Wrapper.new(lib.Point.new(close + 40))
+inferredWrapped := lib.Wrapper.new(lib.Point.new((na(inferredWrapped) ? na : na(inferredWrapped.nested) ? na : inferredWrapped.nested.x) + 1))
+plot((na(inferredWrapped) ? na : na(inferredWrapped.nested) ? na : inferredWrapped.nested.x))
+inferredWrapped_prior = inferredWrapped[1]
+inferredWrapped_dynamic_prior = inferredWrapped[dyn]
+plot((na(inferredWrapped_prior) ? na : na(inferredWrapped_prior.nested) ? na : inferredWrapped_prior.nested.x))
+plot((na(inferredWrapped_dynamic_prior) ? na : na(inferredWrapped_dynamic_prior.nested) ? na : inferredWrapped_dynamic_prior.nested.x))
+
+aliasSource = lib.Wrapper.new(lib.Point.new(close + 50))
+varip aliasWrapped = aliasSource
+aliasWrapped := lib.Wrapper.new(lib.Point.new((na(aliasWrapped) ? na : na(aliasWrapped.nested) ? na : aliasWrapped.nested.x) + 1))
+plot((na(aliasWrapped) ? na : na(aliasWrapped.nested) ? na : aliasWrapped.nested.x))
+aliasWrapped_prior = aliasWrapped[1]
+aliasWrapped_dynamic_prior = aliasWrapped[dyn]
+plot((na(aliasWrapped_prior) ? na : na(aliasWrapped_prior.nested) ? na : aliasWrapped_prior.nested.x))
+plot((na(aliasWrapped_dynamic_prior) ? na : na(aliasWrapped_dynamic_prior.nested) ? na : aliasWrapped_dynamic_prior.nested.x))

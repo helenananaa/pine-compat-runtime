@@ -1,0 +1,22 @@
+//@version=6
+indicator("Pine completion UDF push reference", precision=8)
+appendValue(array<float> values, float value) =>
+    array.push(values, value)
+    array.size(values)
+appendNested(array<float> values, float value) =>
+    alias = values
+    appendValue(alias, value)
+    alias.push(value + 2)
+    array.sum(values)
+values = array.new_float()
+count = appendValue(values, 3)
+sum = appendNested(values, 7)
+plot(count, "PUSH count")
+plot(array.size(values), "PUSH alias size")
+plot(sum, "PUSH nested sum")
+plot(array.get(values, 2), "PUSH last")
+var history = array.new_float()
+if bar_index < 5
+    appendValue(history, bar_index)
+plot(array.sum(history), "PUSH persistent sum")
+plot(array.size(history), "PUSH persistent size")

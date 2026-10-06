@@ -1,3 +1,5 @@
+use pine_ir::ValueKind;
+
 use crate::signature::{Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
 use super::types::*;
@@ -401,7 +403,7 @@ const LINEFILL_NEW_PARAMS: &[BuiltinParam] = &[
 const POLYLINE_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "points",
-        accepts: Accepts::Exact(SIMPLE_CHART_POINT_ARRAY),
+        accepts: Accepts::Kind(ValueKind::ChartPointArray),
         optional: false,
     },
     BuiltinParam {

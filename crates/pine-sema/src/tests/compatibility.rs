@@ -5,6 +5,194 @@ use pine_builtins::{Accepts, PHASE_1_BUILTINS, ReturnSpec};
 use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
+fn dynamic_request_selectors_obey_versioned_declaration_gate() {
+    for (version, declaration, accepted) in [
+        (6, "indicator(\"dynamic\")", true),
+        (6, "indicator(\"static\", dynamic_requests=false)", false),
+        (5, "indicator(\"dynamic v5\", dynamic_requests=true)", true),
+        (
+            5,
+            "strategy(\"dynamic strategy v5\", dynamic_requests=true)",
+            true,
+        ),
+        (
+            6,
+            "strategy(\"static strategy\", dynamic_requests=false)",
+            false,
+        ),
+        (5, "indicator(\"legacy\")", false),
+    ] {
+        for request in [
+            "request.security(\"NYSE:IBM\", tf, close)",
+            "request.security_lower_tf(\"NYSE:IBM\", tf, close)",
+        ] {
+            let source = format!(
+                "//@version={version}\n{declaration}\ntf = bar_index % 2 == 0 ? \"1\" : \"5\"\nx = {request}\n"
+            );
+            let analysis = analyze(&source);
+            assert_eq!(
+                analysis.hir.is_some(),
+                accepted,
+                "{source}: {:?}",
+                analysis.diagnostics
+            );
+        }
+    }
+}
+
+#[test]
+fn nested_request_context_inheritance_obeys_dynamic_requests_gate() {
+    for (version, declaration, accepted) in [
+        (6, "indicator(\"nested\")", true),
+        (6, "indicator(\"static\", dynamic_requests=false)", false),
+        (5, "indicator(\"nested v5\", dynamic_requests=true)", true),
+        (5, "indicator(\"static v5\")", false),
+    ] {
+        let nested_timeframe = if version == 5 {
+            "timeframe.period"
+        } else {
+            "timeframe.main_period"
+        };
+        let source = format!(
+            "//@version={version}\n{declaration}\ninnerTime = request.security(\"\", {nested_timeframe}, time)\nplot(request.security(\"B\", \"1\", innerTime))\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn timeframe_in_seconds_accepts_series_timeframe_in_v6_only() {
+    for (version, accepted) in [(5, false), (6, true)] {
+        let source = format!(
+            "//@version={version}\nindicator(\"series timeframe conversion\")\ntf = bar_index % 2 == 0 ? \"1\" : \"5\"\nplot(timeframe.in_seconds(tf))\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn bid_ask_are_v6_tick_variables() {
+    let v6 = analyze(
+        "//@version=6\nindicator(\"quotes\")\nplot(na(ask) ? 1 : 0)\nplot(na(bid) ? 1 : 0)\n",
+    );
+    assert!(v6.hir.is_some(), "{:?}", v6.diagnostics);
+    let v5 = analyze("//@version=5\nindicator(\"quotes\")\nplot(ask)\nplot(bid)\n");
+    assert!(v5.hir.is_none());
+    assert!(
+        v5.diagnostics
+            .iter()
+            .any(|d| d.code == "E_LEGACY_VERSION_FEATURE")
+    );
+}
+
+#[test]
+fn local_request_calls_obey_dynamic_requests_gate() {
+    for (version, declaration, accepted) in [
+        (6, "indicator(\"default dynamic\")", true),
+        (6, "indicator(\"static\", dynamic_requests=false)", false),
+        (
+            5,
+            "indicator(\"explicit dynamic\", dynamic_requests=true)",
+            true,
+        ),
+        (5, "indicator(\"default static\")", false),
+    ] {
+        let source = format!(
+            "//@version={version}\n{declaration}\nfloat value = na\nif bar_index > 0\n    value := request.security(\"B\", timeframe.period, close)\nplot(value)\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn v5_udf_wrapped_local_request_keeps_legacy_exception() {
+    for (version, declaration, accepted) in [
+        (5, "indicator(\"v5 wrapper\")", true),
+        (
+            6,
+            "indicator(\"v6 static wrapper\", dynamic_requests=false)",
+            false,
+        ),
+        (6, "indicator(\"v6 dynamic wrapper\")", true),
+    ] {
+        let source = format!(
+            "//@version={version}\n{declaration}\nfetch() => request.security(\"B\", timeframe.period, close)\nfloat value = na\nif bar_index > 0\n    value := fetch()\nplot(value)\n"
+        );
+        let analysis = analyze(&source);
+        assert_eq!(
+            analysis.hir.is_some(),
+            accepted,
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn modern_requests_reject_unsafe_external_state_and_object_captures() {
+    for source in [
+        "var float saved=close\nplot(request.security(\"B\",\"5\",saved))",
+        "value=close\nvalue:=open\nplot(request.security(\"B\",\"5\",value))",
+        "[up, down]=[close, open]\nup:=high\nplot(request.security(\"B\",\"5\",up))",
+        "a=array.from(close)\nb=request.security(\"B\",\"5\",a)",
+        "draw()=>label.new(bar_index,close)\na=request.security(\"B\",\"5\",draw())",
+    ] {
+        let analysis = analyze(&format!(
+            "//@version=6\nindicator(\"boundary\")\n{source}\n"
+        ));
+        assert!(analysis.hir.is_none(), "{source}");
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|d| d.code == "E_UNSUPPORTED_FEATURE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+    }
+}
+
+#[test]
+fn modern_request_tuple_binding_distinguishes_helper_local_mutation() {
+    let prefix = "//@version=6\nindicator(\"tuple names\")\nhelper() =>\n    var float posVol = 0.0\n    posVol += volume\n    [posVol, -posVol]\nfetch() =>\n    [posVol, negVol] = helper()\n";
+    let accepted = analyze(&format!(
+        "{prefix}    [ups, downs] = request.security_lower_tf(\"B\", \"1\", [posVol, negVol])\n    ups.size() + downs.size()\nplot(fetch())\n"
+    ));
+    assert!(accepted.hir.is_some(), "{:?}", accepted.diagnostics);
+
+    let rejected = analyze(&format!(
+        "{prefix}    posVol := close\n    [ups, downs] = request.security_lower_tf(\"B\", \"1\", [posVol, negVol])\n    ups.size() + downs.size()\nplot(fetch())\n"
+    ));
+    assert!(rejected.hir.is_none());
+    assert!(
+        rejected.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_UNSUPPORTED_FEATURE"
+                && diagnostic.message.contains("request.security_lower_tf")
+        }),
+        "{:?}",
+        rejected.diagnostics
+    );
+}
+
+#[test]
 fn reports_supported_phase_1_calls() {
     let analysis = analyze("plot(ta.sma(close, 20))\n");
 
@@ -113,6 +301,8 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         "matrix.col",
         "matrix.eigenvalues",
         "matrix.mult",
+        "matrix.remove_col",
+        "matrix.remove_row",
         "matrix.row",
         "str.split",
         "ta.pivot_point_levels",
@@ -738,6 +928,23 @@ fn accepts_request_security_time_function_calls() {
 }
 
 #[test]
+fn accepts_early_pine_exp_alias() {
+    for source in [
+        "//@version=1\nstudy(\"v1 exp\")\nplot(exp(close / 100))\n",
+        "//@version=2\nstudy(\"v2 exp\")\nplot(exp(close / 100))\n",
+    ] {
+        let analysis = analyze(source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
+        assert!(analysis.hir.is_some());
+    }
+}
+
+#[test]
 fn accepts_legacy_security_time_function_alias_graph() {
     let analysis = analyze(
         "//@version=4\nstudy(\"legacy time alias\")\ndayOpen = time(\"D\")\nnewDay = dayOpen != dayOpen[1]\ndayClose = valuewhen(newDay, close, 0)\nplot(security(\"NYSE:IBM\", \"60\", dayOpen))\nplot(security(\"NYSE:IBM\", \"60\", dayClose))\n",
@@ -783,31 +990,33 @@ fn accepts_request_security_named_time_function_arguments() {
 }
 
 #[test]
-fn rejects_request_security_named_sma_arguments() {
+fn accepts_request_security_named_sma_arguments() {
     let analysis = analyze(
         "plot(request.security(syminfo.tickerid, timeframe.period, ta.sma(source=close, length=14)))\n",
     );
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_modern_provider_request_security_time_alias() {
+fn accepts_modern_provider_request_security_time_alias() {
     let analysis = analyze(
         "day_open = time(\"D\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, day_open))\n",
     );
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3286,57 +3495,75 @@ fn rejects_provider_request_security_unsupported_call() {
 }
 
 #[test]
-fn rejects_request_security_non_default_merge_args() {
+fn request_security_checks_every_switch_arm_in_nested_udf() {
     let analysis = analyze(
-        "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_on))\nplot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on))\n",
+        "//@version=6\nindicator(\"request switch\")\nchoose(string kind) =>\n    switch kind\n        \"safe\" => ta.sma(close, 2)\n        => math.random(0, 1, 7)\nplot(request.security(\"B\", \"5\", choose(\"safe\")))\n",
     );
-    let codes = diagnostic_codes(&analysis);
 
-    assert!(codes.contains(&"E_CALL_ARG_VALUE"), "{codes:?}");
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "request.security")
+            .any(|feature| { feature.feature == "request.security" })
     );
+    assert!(analysis.hir.is_none());
 }
 
 #[test]
-fn rejects_provider_request_security_tuple_literal_with_local_alias_expression() {
+fn accepts_request_security_non_default_merge_args() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_on))\nplot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_provider_request_security_tuple_literal_with_local_alias_expression() {
     let analysis = analyze(
         "src = close\n[first, second] = request.security(\"NYSE:IBM\", timeframe.period, [src, open])\n",
     );
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_provider_request_security_local_variable_expression() {
+fn accepts_provider_request_security_local_variable_expression() {
     let analysis =
         analyze("src = close\nx = request.security(\"NYSE:IBM\", timeframe.period, src)\n");
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn rejects_higher_timeframe_request_security_local_variable_expression() {
+fn accepts_higher_timeframe_request_security_local_variable_expression() {
     let analysis = analyze("src = close\nx = request.security(\"NYSE:IBM\", \"5\", src)\n");
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3352,7 +3579,7 @@ fn rejects_request_security_side_effect_expression() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("side-effecting requested expressions")
+            .contains("drawing/output side effects")
     );
 }
 
@@ -3370,7 +3597,7 @@ fn rejects_request_security_alertcondition_side_effect_expression() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("side-effecting requested expressions")
+            .contains("drawing/output side effects")
     );
 }
 
@@ -3387,7 +3614,7 @@ fn rejects_request_security_alert_side_effect_expression() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("side-effecting requested expressions")
+            .contains("drawing/output side effects")
     );
 }
 
@@ -3403,8 +3630,70 @@ fn rejects_other_request_variants() {
 }
 
 #[test]
-fn rejects_request_security_lower_tf_api() {
+fn accepts_request_security_lower_tf_scalar_api() {
     let analysis = analyze("x = request.security_lower_tf(\"NYSE:IBM\", \"30S\", close)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|item| item.feature == "request.security_lower_tf")
+    );
+}
+
+#[test]
+fn accepts_request_security_lower_tf_tuple_api() {
+    let analysis = analyze(
+        "[opens, closes] = request.security_lower_tf(\"NYSE:IBM\", \"30S\", [open, close])\nplot(array.size(opens) + array.size(closes))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_request_security_lower_tf_calc_bars_count_api() {
+    let analysis = analyze(
+        "[prices, indices] = request.security_lower_tf(\"NYSE:IBM\", \"30S\", [close, bar_index], calc_bars_count=200000)\nplot(array.size(prices) + array.size(indices))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_request_security_calc_bars_count_with_merge_policies() {
+    let analysis = analyze(
+        "[totals, indices] = request.security(\"NYSE:IBM\", \"1\", [ta.cum(close), bar_index], gaps=barmerge.gaps_on, lookahead=barmerge.lookahead_off, calc_bars_count=200000)\nplot(totals + indices)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn rejects_request_security_lower_tf_optional_policy_api() {
+    let analysis = analyze(
+        "x = request.security_lower_tf(\"NYSE:IBM\", \"30S\", close, ignore_invalid_symbol=true)\n",
+    );
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
     assert_eq!(
@@ -3714,14 +4003,35 @@ plot(box.importedOffset())
 }
 
 #[test]
-fn import_reports_missing_alias_for_executable_subset() {
+fn import_uses_library_name_when_alias_is_omitted() {
     let analysis = analyze_with_libraries(
-        "import user/lib/1\nplot(close)\n",
+        "import user/lib/1\nplot(lib.value)\n",
         vec![("user/lib/1", "library(\"lib\")\nexport value = 1\n")],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_IMPORT_ALIAS_REQUIRED"), "{codes:?}");
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_before_version_directive_uses_declared_dialect_and_implicit_alias() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1\n//@version=6\nindicator(\"root\")\nplot(lib.value)\n",
+        vec![(
+            "user/lib/1",
+            "//@version=6\nlibrary(\"lib\")\nexport value = 1\n",
+        )],
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3750,6 +4060,24 @@ fn import_rejects_exported_function_side_effects() {
         codes.contains(&"E_IMPORT_FUNCTION_SIDE_EFFECT"),
         "{codes:?}"
     );
+}
+
+#[test]
+fn import_accepts_pure_exported_function_with_nested_loops() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(lib.sum(3))\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport sum(n) =>\n    total = 0\n    for i = 0 to n\n        for j = 0 to i\n            total += j\n    total\n",
+        )],
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3927,7 +4255,7 @@ fn import_rejects_scalar_imported_user_type_varip_identity_mismatch() {
 }
 
 #[test]
-fn import_rejects_private_dependency_imported_user_type_varip_constructor_arg() {
+fn import_accepts_na_for_private_dependency_imported_user_type_varip_field() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_varip.pine"),
         vec![(
@@ -3937,8 +4265,8 @@ fn import_rejects_private_dependency_imported_user_type_varip_constructor_arg() 
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UDT_CONSTRUCTOR_ARG"), "{codes:?}");
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3998,10 +4326,10 @@ fn import_rejects_scalar_imported_user_type_field_mutation_type() {
 }
 
 #[test]
-fn import_rejects_scalar_imported_user_type_parameter_field_mutation() {
+fn import_accepts_scalar_imported_user_type_parameter_field_mutation() {
     let analysis = analyze_with_libraries(
         include_str!(
-            "../../../../tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine"
+            "../../../../tests/fixtures/sema/supported_imported_udt_parameter_field_mutation.pine"
         ),
         vec![(
             "user/udt/1",
@@ -4009,20 +4337,16 @@ fn import_rejects_scalar_imported_user_type_parameter_field_mutation() {
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
-        analysis.compatibility.unsupported.iter().any(|feature| {
-            feature.feature == "function_side_effect" && feature.reason.contains("parameter fields")
-        }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn import_rejects_scalar_imported_user_type_global_field_mutation() {
+fn import_accepts_scalar_imported_user_type_global_field_mutation() {
     let analysis = analyze_with_libraries(
         include_str!(
             "../../../../tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine"
@@ -4033,17 +4357,12 @@ fn import_rejects_scalar_imported_user_type_global_field_mutation() {
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
-        analysis.compatibility.unsupported.iter().any(|feature| {
-            feature.feature == "function_side_effect"
-                && feature.reason.contains("global user-defined type values")
-        }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -4079,7 +4398,7 @@ fn import_accepts_exported_user_type_history_with_private_scalar_dependency_meta
 }
 
 #[test]
-fn import_rejects_nested_imported_user_type_field_mutation() {
+fn import_accepts_nested_imported_user_type_field_mutation() {
     let analysis = analyze_with_libraries(
         include_str!(
             "../../../../tests/fixtures/sema/unsupported_imported_udt_nested_field_mutation.pine"
@@ -4090,18 +4409,12 @@ fn import_rejects_nested_imported_user_type_field_mutation() {
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "nested field mutation"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -4585,7 +4898,7 @@ fn import_accepts_imported_user_type_udf_nested_control_flow_constructor_returns
 }
 
 #[test]
-fn import_rejects_private_dependency_imported_user_type_constructor_arg() {
+fn import_accepts_na_for_private_dependency_imported_user_type_field() {
     let analysis = analyze_with_libraries(
         "import user/udt/1 as lib\np = lib.Wrapper.new(na)\nplot(close)\n",
         vec![(
@@ -4595,18 +4908,8 @@ fn import_rejects_private_dependency_imported_user_type_constructor_arg() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UDT_CONSTRUCTOR_ARG"), "{codes:?}");
-    assert!(
-        analysis.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_UDT_CONSTRUCTOR_ARG"
-                && diagnostic
-                    .message
-                    .contains("cannot assign const na to imported field `nested`")
-        }),
-        "{:?}",
-        analysis.diagnostics
-    );
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

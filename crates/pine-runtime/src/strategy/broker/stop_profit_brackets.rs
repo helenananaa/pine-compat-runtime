@@ -72,9 +72,6 @@ impl BrokerState {
         spec: StopProfitBracketSpec,
         bar_index: usize,
     ) {
-        if self.position_size < 0.0 {
-            return;
-        }
         if !spec.stop_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_PRICE".to_owned(),
@@ -82,7 +79,7 @@ impl BrokerState {
             });
             return;
         }
-        let Some(profit_offset) = self.exit_tick_price_offset(spec.profit_ticks, spec.mintick)
+        let Some(profit_offset) = self.exit_tick_signed_offset(spec.profit_ticks, spec.mintick)
         else {
             return;
         };
@@ -161,10 +158,7 @@ impl BrokerState {
             });
             return;
         }
-        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
-            if self.has_pending_short_entry(&from_entry) {
-                return;
-            }
+        if self.has_pending_entry(&from_entry) && !self.has_open_position_for_entry(&from_entry) {
             self.place_deferred_relative_stop_profit_bracket(
                 id, from_entry, spec, quantity, bar_index,
             );

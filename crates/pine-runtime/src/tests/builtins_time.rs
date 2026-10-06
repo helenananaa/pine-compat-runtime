@@ -3,6 +3,43 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn timeframe_in_seconds_evaluates_series_selector_per_bar() {
+    let source = SourceFile::new(
+        "series_timeframe.pine",
+        "//@version=6\nindicator(\"series timeframe\")\ntf = bar_index % 2 == 0 ? \"1\" : \"5\"\nplot(timeframe.in_seconds(tf))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("series timeframe HIR");
+    let result = HistoricalRuntime::new(&program)
+        .run(&[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("timeframe conversion");
+    assert_values_close(&result.plots[0].values, &[60.0, 300.0, 60.0]);
+}
+
+#[test]
+fn bid_ask_are_na_on_time_based_charts() {
+    let source = SourceFile::new(
+        "quotes.pine",
+        "//@version=6\nindicator(\"quotes\")\nplot(na(ask) ? 1 : 0)\nplot(na(bid) ? 1 : 0)\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("quotes HIR");
+    let result = HistoricalRuntime::new(&program).run(&[bar(1.0)]).unwrap();
+    assert_values_close(&result.plots[0].values, &[1.0]);
+    assert_values_close(&result.plots[1].values, &[1.0]);
+}
+
+#[test]
 fn runs_utc_time_component_variables() {
     let source = SourceFile::new(
         "test.pine",
@@ -535,16 +572,16 @@ plot(timeframe.in_seconds("12M"))
 plot(na(timeframe.in_seconds(na)) ? 1 : 0)
 plot(timeframe.from_seconds(60) == "1" ? 1 : 0)
 plot(timeframe.from_seconds(3600) == "60" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("1440")) == "D" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("7D")) == "W" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("30D")) == "M" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("1440")) == "1D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("7D")) == "1W" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("30D")) == "30D" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("45S")) == "45S" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("D")) == "D" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("W")) == "W" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("D")) == "1D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("W")) == "1W" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("2W")) == "2W" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("M")) == "M" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("M")) == "1M" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("3M")) == "3M" ? 1 : 0)
-plot(timeframe.from_seconds(timeframe.in_seconds("365D")) == "365D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("365D")) == "12M" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("52W")) == "52W" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("12M")) == "12M" ? 1 : 0)
 plot(na(timeframe.from_seconds(na)) ? 1 : 0)
@@ -577,11 +614,11 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1_209_600.0, 1_209_600.0]);
-    assert_values_close(&result.plots[12].values, &[7_776_000.0, 7_776_000.0]);
+    assert_values_close(&result.plots[12].values, &[7_884_009.0, 7_884_009.0]);
     assert_values_close(&result.plots[13].values, &[86_400.0, 86_400.0]);
     assert_values_close(&result.plots[14].values, &[31_536_000.0, 31_536_000.0]);
     assert_values_close(&result.plots[15].values, &[31_449_600.0, 31_449_600.0]);
-    assert_values_close(&result.plots[16].values, &[31_104_000.0, 31_104_000.0]);
+    assert_values_close(&result.plots[16].values, &[31_536_036.0, 31_536_036.0]);
     assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
@@ -598,9 +635,9 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[30].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[31].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[32].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[33].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[34].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[35].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[33].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[34].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[35].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[36].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[37].values, &[1.0, 1.0]);
 }
@@ -666,8 +703,8 @@ plot(na(timeframe.change(na)) ? 1 : 0)
     ];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
 
-    assert_values_close(&result.plots[0].values, &[1.0, 0.0, 1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[1].values, &[1.0, 0.0, 0.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0, 1.0, 0.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0]);
 }
 
@@ -710,19 +747,67 @@ plot(timeframe.change("3M") ? 1 : 0)
 
     assert_values_close(
         &result.plots[0].values,
-        &[1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0],
+        &[0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0],
     );
     assert_values_close(
         &result.plots[1].values,
-        &[1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
+        &[0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
     );
     assert_values_close(
         &result.plots[2].values,
-        &[1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+        &[0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
     );
     assert_values_close(
         &result.plots[3].values,
-        &[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        &[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+    );
+}
+
+#[test]
+fn seven_month_timeframe_resets_at_january_and_august() {
+    let source = SourceFile::new(
+        "seven_month.pine",
+        "//@version=6\nindicator(\"7M boundary\")\nplot(timeframe.change(\"7M\") ? 1 : 0)\nplot(time(\"7M\"))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let timestamps = [
+        1_617_408_000_000, // April 3, 2021
+        1_627_689_600_000, // July 31, 2021
+        1_627_776_000_000, // August 1, 2021
+        1_640_908_800_000, // December 31, 2021
+        1_640_995_200_000, // January 1, 2022
+        1_659_225_600_000, // July 31, 2022
+        1_659_312_000_000, // August 1, 2022
+    ];
+    let bars = timestamps.map(|time| Bar {
+        time,
+        open: 1.0,
+        high: 1.0,
+        low: 1.0,
+        close: 1.0,
+        volume: 1.0,
+    });
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+    assert_values_close(
+        &result.plots[0].values,
+        &[0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[
+            1_609_459_200_000.0,
+            1_609_459_200_000.0,
+            1_627_776_000_000.0,
+            1_627_776_000_000.0,
+            1_640_995_200_000.0,
+            1_640_995_200_000.0,
+            1_659_312_000_000.0,
+        ],
     );
 }
 
@@ -878,7 +963,7 @@ plot(timeframe.in_seconds("1H"))
 }
 
 #[test]
-fn rejects_unsupported_timeframe_from_seconds_value() {
+fn rounds_nonstandard_timeframe_from_seconds_value() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("bad timeframe seconds")
@@ -892,13 +977,8 @@ plot(timeframe.from_seconds(46) == "" ? 1 : 0)
         analysis.diagnostics
     );
 
-    let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
-        .expect_err("expected timeframe error");
-    assert!(
-        err.message
-            .contains("timeframe.from_seconds unsupported seconds `46`"),
-        "unexpected error: {err:?}"
-    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).unwrap();
+    assert_values_close(&result.plots[0].values, &[0.0]);
 }
 
 #[test]

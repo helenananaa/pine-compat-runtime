@@ -121,6 +121,8 @@ impl BrokerState {
             margin_short,
             open_entry_commission: 0.0,
             quantity_scale: 1,
+            configured_quantity_scale: None,
+            price_tick: None,
             slippage_price_offset,
             limit_verification_price_offset,
             cash: initial_capital,
@@ -184,6 +186,17 @@ impl BrokerState {
     pub(crate) fn with_quantity_scale(mut self, scale: u32) -> Self {
         debug_assert!(scale > 0);
         self.quantity_scale = scale;
+        self
+    }
+
+    pub(crate) fn with_configured_quantity_scale(mut self, scale: Option<u32>) -> Self {
+        self.configured_quantity_scale = scale;
+        self
+    }
+
+    pub(crate) fn with_price_tick(mut self, tick: f64) -> Self {
+        debug_assert!(tick.is_finite() && tick > 0.0);
+        self.price_tick = Some(tick);
         self
     }
 
@@ -254,19 +267,33 @@ impl BrokerState {
     }
 
     pub(super) fn long_entry_fill_price(&self, price: f64) -> f64 {
-        price + self.slippage_price_offset
+        self.snap_fill_price(price) + self.slippage_price_offset
     }
 
     pub(super) fn short_entry_fill_price(&self, price: f64) -> f64 {
-        price - self.slippage_price_offset
+        self.snap_fill_price(price) - self.slippage_price_offset
     }
 
     pub(super) fn short_exit_fill_price(&self, price: f64) -> f64 {
-        price + self.slippage_price_offset
+        self.snap_fill_price(price) + self.slippage_price_offset
     }
 
     pub(super) fn long_exit_fill_price(&self, price: f64) -> f64 {
-        price - self.slippage_price_offset
+        self.snap_fill_price(price) - self.slippage_price_offset
+    }
+
+    fn snap_fill_price(&self, price: f64) -> f64 {
+        let Some(tick) = self.price_tick else {
+            return price;
+        };
+        if !price.is_finite() {
+            return price;
+        }
+        let ticks = price / tick;
+        if (ticks - ticks.round()).abs() <= 1e-8 {
+            return price;
+        }
+        (ticks + 0.5).floor() * tick
     }
 
     #[allow(dead_code)]
@@ -274,8 +301,8 @@ impl BrokerState {
         high >= limit_price + self.limit_verification_price_offset
     }
 
-    pub(crate) fn public_order_event_count(&self) -> usize {
-        self.orders.len()
+    pub(crate) fn public_fill_event_count(&self) -> usize {
+        self.orders.len() + self.trades.len()
     }
 
     #[must_use]

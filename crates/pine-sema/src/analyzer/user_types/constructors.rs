@@ -19,21 +19,30 @@ impl Analyzer {
         let user_type = self.user_types.get(type_name).cloned()?;
 
         let resolved = self.resolve_constructor_args(&user_type, args, span)?;
-        let mut qualifier = Qualifier::Const;
+        let mut qualifier = Qualifier::Series;
         let mut field_args = Vec::with_capacity(resolved.len());
+        let mut field_defaults = Vec::with_capacity(resolved.len());
         for (field, arg) in user_type.fields.iter().zip(resolved) {
-            let Some(arg) = arg else {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_UDT_CONSTRUCTOR_ARG",
-                    format!(
-                        "missing field `{}` for `{}` constructor",
-                        field.name, type_name
-                    ),
+            let is_default = arg.is_none();
+            field_defaults.push(is_default);
+            let arg = arg.unwrap_or_else(|| {
+                let value = self.udt_default_argument(
+                    value_kind_name(field.pine_type.kind),
+                    field.default_value.as_ref(),
                     span,
-                ));
-                return None;
-            };
-            let arg_type = self.analyze_expr(&arg.value).unwrap_or(UNKNOWN);
+                );
+                CallArg {
+                    name: Some(field.name.clone()),
+                    span: value.span,
+                    value,
+                }
+            });
+            let arg_type = if is_default {
+                self.analyze_udt_default(&arg.value)
+            } else {
+                self.analyze_expr(&arg.value)
+            }
+            .unwrap_or(UNKNOWN);
             if !self.can_assign_user_type_field(field, &arg.value, arg_type) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_UDT_CONSTRUCTOR_ARG",
@@ -57,6 +66,7 @@ impl Analyzer {
             span,
         });
         Some(UdtConstructor {
+            field_defaults,
             identity: user_type.identity.clone(),
             field_args,
             pine_type,
@@ -71,10 +81,10 @@ impl Analyzer {
     ) -> Option<PineType> {
         let type_name = callee_name.strip_suffix(".new")?;
         let user_type = self.user_types.get(type_name)?;
-        if args.len() != user_type.fields.len() {
+        if args.len() > user_type.fields.len() {
             return None;
         }
-        let mut qualifier = Qualifier::Const;
+        let mut qualifier = Qualifier::Series;
         for arg in args {
             let arg_type = self.type_of_expr_with_params(&arg.value, param_types)?;
             qualifier = strongest_qualifier(qualifier, arg_type.qualifier);
@@ -107,8 +117,21 @@ impl Analyzer {
             field_args[index] = Some(arg.value.clone());
         }
         Some(UdtConstructor {
+            field_defaults: field_args.iter().map(Option::is_none).collect(),
             identity: user_type.identity.clone(),
-            field_args: field_args.into_iter().collect::<Option<_>>()?,
+            field_args: field_args
+                .into_iter()
+                .zip(&user_type.fields)
+                .map(|(arg, field)| {
+                    arg.unwrap_or_else(|| {
+                        self.udt_default_argument(
+                            value_kind_name(field.pine_type.kind),
+                            field.default_value.as_ref(),
+                            Span::new(0, 0),
+                        )
+                    })
+                })
+                .collect(),
             pine_type: self.type_of_user_type_constructor_with_params(
                 callee_name,
                 args,
@@ -192,6 +215,9 @@ impl Analyzer {
         value: &Expr,
         value_type: PineType,
     ) -> bool {
+        if value_type.kind == ValueKind::Na {
+            return true;
+        }
         if let Some(expected_type_name) = &field.user_type_name {
             return self
                 .user_type_name_of_expr(value)

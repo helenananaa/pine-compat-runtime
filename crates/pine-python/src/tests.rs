@@ -9,12 +9,14 @@ fn diagnostics_have_errors_ignores_warning_and_info() {
             severity: Severity::Warning,
             message: "warning".to_owned(),
             span: Span { start: 0, end: 0 },
+            source: None,
         },
         Diagnostic {
             code: "I_TEST".to_owned(),
             severity: Severity::Info,
             message: "info".to_owned(),
             span: Span { start: 0, end: 0 },
+            source: None,
         },
     ];
 

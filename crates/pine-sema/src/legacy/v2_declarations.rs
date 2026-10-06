@@ -292,7 +292,7 @@ impl Analyzer {
         false
     }
 
-    fn legacy_graph_type_of_expr(
+    pub(crate) fn legacy_graph_type_of_expr(
         &self,
         expr: &Expr,
         inferred: &HashMap<String, PineType>,
@@ -373,6 +373,58 @@ impl Analyzer {
             ExprKind::History { expr, .. } => self
                 .legacy_graph_type_of_expr(expr, inferred)
                 .map(|pine_type| PineType::new(Qualifier::Series, pine_type.kind)),
+            ExprKind::Call { callee, args }
+                if expr_name(callee).as_deref() == Some("iff") && args.len() == 3 =>
+            {
+                let condition = self.legacy_graph_type_of_expr(&args[0].value, inferred)?;
+                let then_type = self.legacy_graph_type_of_expr(&args[1].value, inferred)?;
+                let else_type = self.legacy_graph_type_of_expr(&args[2].value, inferred)?;
+                Some(PineType::new(
+                    strongest_qualifier(
+                        condition.qualifier,
+                        strongest_qualifier(then_type.qualifier, else_type.qualifier),
+                    ),
+                    common_kind(then_type.kind, else_type.kind)?,
+                ))
+            }
+            ExprKind::Call { callee, args }
+                if expr_name(callee).as_deref() == Some("nz") && args.len() == 2 =>
+            {
+                let value_type = self.legacy_graph_type_of_expr(&args[0].value, inferred)?;
+                let fallback_type = self.legacy_graph_type_of_expr(&args[1].value, inferred)?;
+                Some(PineType::new(
+                    strongest_qualifier(value_type.qualifier, fallback_type.qualifier),
+                    common_kind(value_type.kind, fallback_type.kind)?,
+                ))
+            }
+            ExprKind::Call { callee, args }
+                if matches!(expr_name(callee).as_deref(), Some("min" | "max"))
+                    && args.len() >= 2 =>
+            {
+                let types = args
+                    .iter()
+                    .map(|arg| self.legacy_graph_type_of_expr(&arg.value, inferred))
+                    .collect::<Option<Vec<_>>>()?;
+                if types
+                    .iter()
+                    .any(|pine_type| pine_type.kind == ValueKind::Float)
+                    && types.iter().all(|pine_type| {
+                        matches!(
+                            pine_type.kind,
+                            ValueKind::Float | ValueKind::Int | ValueKind::Na
+                        )
+                    })
+                {
+                    Some(PineType::new(
+                        types.iter().fold(Qualifier::Const, |qualifier, pine_type| {
+                            strongest_qualifier(qualifier, pine_type.qualifier)
+                        }),
+                        ValueKind::Float,
+                    ))
+                } else {
+                    self.type_of_expr_with_params(expr, inferred)
+                }
+            }
             _ => self.type_of_expr_with_params(expr, inferred),
         }
     }
@@ -412,6 +464,21 @@ fn collect_expr_dependencies(
     unsafe_initializer: &mut Option<UnsafeInitializer>,
 ) {
     match &expr.kind {
+        ExprKind::Member { receiver, .. } => {
+            collect_expr_dependencies(
+                receiver,
+                names,
+                historical,
+                functions,
+                dependencies,
+                unsafe_initializer,
+            );
+            record_unsafe(
+                unsafe_initializer,
+                "member accesses on graph declarations are outside the scalar subset",
+                expr.span,
+            );
+        }
         ExprKind::Identifier(name) => {
             if let Some(target) = names.get(name.as_str()) {
                 dependencies.push(Dependency {

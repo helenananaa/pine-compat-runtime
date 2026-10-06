@@ -17,17 +17,7 @@ pub(crate) fn diagnostics_have_errors(diagnostics: &[Diagnostic]) -> bool {
 pub(crate) fn format_diagnostics(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
     diagnostics
         .iter()
-        .map(|diagnostic| {
-            let line_col = source.line_col(diagnostic.span.start);
-            format!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            )
-        })
+        .map(|diagnostic| diagnostic.format(source))
         .collect::<Vec<_>>()
         .join("\n")
 }

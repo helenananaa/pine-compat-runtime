@@ -1,9 +1,596 @@
 # Release Notes
 
-## Unreleased streaming worktree
+## 0.3.0-rc.2 - scoped GitHub prerelease
 
-- Separate streaming updates from complete result snapshots in Rust/Python.
-- Changes schema 2 adds a required base revision. `RuntimeReplica` consumes
+- Unique rc.2 package identity replaces reused local rc.1 identities.
+- Chart/request context now governs `time_close`, empty timeframe arguments
+  and `timeframe.change`; realtime updates reject duplicate, reversed or
+  mismatched bar timestamps before state changes.
+- Deterministic per-bar collection/copy and matrix-work budgets fail with
+  `E_RESOURCE_BUDGET`; defaults are 64 MiB and 100,000,000 work units.
+- Sparse paged collection rollback, map lookups, matrix scans and ALMA
+  coefficient reuse reduce measured work. Full-result output remains
+  proportional to retained output; ordinary window scans remain O(L).
+- Optimized Windows/Linux artifacts requalify the unchanged fifteen-case plan;
+  official release wheels target Windows x86-64 and manylinux2014 x86-64.
+- Read [acceptance](RC2_ACCEPTANCE_20261006.md) and
+  [migration/known gaps](RC2_MIGRATION.md) before upgrading. The historical
+  four-session resource growth failure remains open; this is not a stable
+  release or blanket native strategy/live-Tick compatibility.
+
+## Earlier evidence and local candidates
+
+- [Reversal order quantity fix](REVERSAL_ORDER_QUANTITY_FIX_20260930.md)
+  repairs transaction quantities in order and entry fill-alert receipts.
+  A fresh full gate passes; six native commission-probe and twelve full UT Bot
+  historical outputs requalify the changed core. Account and trade fields
+  remain unchanged. Eleven snapshots change only 22 quantity fields.
+
+- [Reversal commission-type finding](REVERSAL_FEE_TYPES_FINDING_20260930.md):
+  two native percentage/per-contract cases match account fields and trades,
+  but expose an unresolved reversal order quantity gap (30,000 vs 105,000).
+  Six complete outputs reproduce the issue; full output parity is unqualified.
+
+- [Reversal input matrix expansion](REVERSAL_INPUT_MATRIX_EXPANSION_20260930.md)
+  matches three fresh native EURUSD four-hour cases, 696 plot cells and nine
+  closed allocations. Short-first and 50% inputs confirm quantity-based
+  fixed-fee sharing across reversal legs. Nine complete outputs agree.
+
+- [Partial-close reversal expansion](REVERSAL_PARTIAL_FEE_EXPANSION_20260930.md)
+  matches a fresh EURUSD four-hour native sample: 232 plot cells, three closed
+  allocations and proportional fixed-fee sharing across reversal legs.
+  Three complete mode outputs agree; no new core change was required.
+
+- [Price exit and fee expansion](PRICE_EXIT_FEE_EXPANSION_20260930.md)
+  matches three native EURUSD four-hour cases, 696 plot cells and eight
+  closed allocations, including reversed short exit order and 50% exits.
+  Nine complete outputs agree across three modes. No core change was needed.
+
+- [UT Bot GBPUSD four-hour/opening expansion](UT_BOT_GBPUSD_FOURHOUR_EXPANSION_20260930.md)
+  matches four native cases, 7,842 closed trades and 170,816 closed signals.
+  Twelve historical outputs agree across three modes. Four unconfirmed
+  public-runtime opening replays reproduce native reversals at 1.32750,
+  preserving committed history. PnL uses each native value's display precision.
+  No core change is needed; general live Tick parity remains unqualified.
+
+- [UT Bot ETHUSD four-hour expansion](UT_BOT_ETHUSD_FOURHOUR_EXPANSION_20260930.md)
+  matches four fresh native cases, 7,053 closed trades and 170,816 signal cells
+  over 21,352 closed bars. Twelve complete outputs agree across three modes,
+  with exact closed OHLCV and fill prices. No core/golden change is needed.
+  A new concurrently changed editor draft was preserved during cleanup.
+  Existing monetary/order gaps and live Tick qualification remain open.
+
+- [UT Bot ETHUSD daily expansion](UT_BOT_ETHUSD_DAILY_EXPANSION_20260930.md)
+  matches four fresh native cases, 1,206 closed trades and 30,256 signal cells
+  over 3,782 closed daily bars. All twelve complete outputs agree across
+  three modes. An incomplete HA export was rejected and recaptured; three
+  precise volume revisions are retained for this volume-independent script.
+  No core change is needed. Live Tick, forming PnL and visual/account fields
+  remain outside the receipt.
+
+- [UT Bot ETHUSD weekly expansion](UT_BOT_ETHUSD_WEEKLY_EXPANSION_20260930.md)
+  adds default, sensitivity 2, ATR 14 and Heikin Ashi native cases on one
+  540-bar closed weekly history. All 160 closed trades, 4,320 Buy/Sell cells
+  and final open-entry fields match in twelve outputs across three modes.
+  Source is unchanged; no semantic repair or golden update is required.
+  Prior full-gate source pins are revalidated. Native visual/account fields,
+  forming-week PnL and live ticks remain outside the qualified scope.
+
+- [Partial-close fee expansion](PARTIAL_CLOSE_FEE_EXPANSION_20260930.md)
+  adds three new native v5/v6 controls covering fixed, per-contract and
+  percent commissions. Partial E1 close and a later single close-all match
+  29 fields and three closed allocations in all three modes. The current
+  core, executable and prior full-gate source pins remain unchanged and
+  verified; no new semantic change or golden update is introduced. Further
+  symbol/period complete-script sampling and non-market partial-fill
+  controls remain open.
+
+- [Pyramiding commission / profit repair](PYRAMIDING_COMMISSION_PROFIT_FIX_20260930.md)
+  matches three official two-entry fee controls, 21 fields and nine mode
+  outputs. Individual profits deduct paid entry and estimated exit fees;
+  profit percentages include entry commission in capital, and total open
+  percentage includes already-paid fees in realized equity. Absent closed
+  percent is zero. Twelve full Hull / equity / SSL outputs retain their hashes.
+  Four stale percentage plot arrays in two goldens were narrowly corrected.
+  Full gate passes with 1,988 runtime, 242 CLI and 774 installed-wheel tests.
+  Partial fee allocations, v6/cash-per-contract/non-unit point-value native
+  controls and full Hull monetary display remain open; expansion Goal is active.
+
+- [Open-trade profit field repair](OPEN_TRADE_PROFIT_FIELDS_FIX_20260930.md)
+  fixes short profit-percentage direction and tick marking, and returns zero
+  for absent integer-index profits. v5 long/short and v6 short official controls
+  match in nine mode outputs. Twelve full Hull / equity / SSL outputs remain
+  byte-identical. Two stale golden snapshots were corrected only for the native
+  zero behavior. Full gate passes with 1,987 runtime and 774 installed-wheel
+  tests; commissions, pyramiding and native monetary display remain open.
+
+- [Half-tick position marking repair](HULL_HALF_TICK_MARK_FIX_20260930.md)
+  follows independent TradingView long/short controls and removes all three
+  full-history HL2 equity residuals. Equity agrees within 6.6e-9 USD; three
+  Hull inputs each pass all three modes and preserve prior order/trade arrays.
+  Nine budget controls and two SSL guards pass. Full release gate passes,
+  including 1,986 runtime and 774 installed-wheel tests. Native monetary display
+  differences, unopened-trade zero/null and per-trade profit-percent controls
+  remain outside full compatibility qualification.
+
+- [Percent-of-equity budget rounding repair](HULL_PERCENT_BUDGET_FIX_20260930.md)
+  rounds cash budget to ten significant decimal digits before quantity sizing.
+  Nine native controls match across 27 mode outputs. The complete Hull HL2
+  replay changes only trade 265's quantity to the native 956317; Close/HLC3 and
+  two SSL guards remain byte-identical. Full release gate passes, including
+  1,985 runtime and 774 installed-wheel tests. Three half-tick equity marks and
+  monetary display differences remain outside full compatibility qualification.
+
+- [Hull sizing magnitude / percentage / direction / helper controls](HULL_SIZING_MAGNITUDE_CONTROLS_20260929.md)
+  support a concrete ten-significant-digit budget-rounding candidate across
+  two capital magnitudes, 100%/25% equity, both directions and the v5 helper.
+  Fifteen local mode executions agree; four one-unit residuals remain.
+  The candidate is not yet implemented or fully qualified.
+
+- [Hull v4 isolated first-entry sizing controls](HULL_FIRST_ENTRY_SIZING_BOUNDARY_20260929.md)
+  reproduce the one-unit residual without prior trades or reversal. Four
+  native capital controls bracket a quantity change between .70849 and .70851;
+  twelve local mode runs agree. A general budget-rounding rule is not yet
+  established. No new core repair or full compatibility claim.
+
+- [Hull v4 current-core/native equity diagnostic](HULL_CURRENT_CORE_EQUITY_PROBE_20260929.md)
+  preserves the one-unit HL2 residual after nine identical replay outputs.
+  A fresh full-precision native probe matches equity/net profit before the
+  differing entry, narrowing the investigation to entry sizing. Realized PnL
+  diverges after the trade closes. No new compatibility claim or core change.
+
+- [BTCUSD weekly second Hull 55 / 57](SSL_HYBRID_BTCUSD_WEEKLY_SECOND_HULL_20260929.md)
+  adds two isolated odd-length captures: 4,709/4,704 observations, 555/552
+  Hull values, 60/63 initial missing bars and 9/7 dots match with zero numeric
+  error. Both match 60 closed trades, 34 explicit exits and five surviving
+  longs. Current open valuation CSV differences are retained and classified;
+  execution fields and local strategy objects agree. Six modes pass; no repair.
+
+- [BTCUSD weekly second T3 and cross dots](SSL_HYBRID_BTCUSD_WEEKLY_CROSSDOTS_20260929.md)
+  adds a fresh cross-period capture with equal native Inputs: 615 bars,
+  4,469 observations, three dots, 60 closed trades and 34 explicit exits match.
+  Five surviving long entries total 0.00715 BTC at 77,672.10. Native history
+  gaps remain intact. Three mode outputs agree; no new repair, gate reused.
+
+- [BTCUSD second T3 and cross dots](SSL_HYBRID_BTCUSD_CROSSDOTS_20260929.md)
+  adds a fresh complete-strategy daily capture with quantity precision 6:
+  33,900 observations, 66 dots, 4,220 missing positions, 420 closed trades,
+  266 explicit exit fills and final flat position match. All three mode outputs
+  are byte-identical; no new core repair, unchanged-source gate reused.
+
+- [ETHUSD cross dots off / on](SSL_HYBRID_ETHUSD_CROSSDOTS_20260929.md)
+  qualifies the original conditional cross plot, including all 54 enabled
+  dots and every missing position on 3,781 bars. Native duplicate Plot columns
+  are disambiguated without consuming the unrelated probe output. One checkbox
+  differs; OHLCV, named columns and trades agree between cases. Both match
+  460 closed trades, 263 explicit exits and flat positions in three modes.
+  No new core repair; unchanged-source full gate reused.
+
+- [ETHUSD original second TEMA / T3](SSL_HYBRID_ETHUSD_SECOND_MA_TEMA_T3_20260929.md)
+  adds direct numeric qualification with 3,724/3,487 values and 57/294 initial
+  missing bars. The original secondary TEMA's primary-length reference is
+  retained and explained; T3 uses second length 50 / factor 0.7. Native input
+  isolation and identical OHLCV yield identical trades and local strategy
+  objects: 460 closed trades, 263 explicit exits, flat in both cases. All six
+  mode runs pass; no new core repair, unchanged-source full gate reused.
+
+- [ETHUSD optional second VWMA / RMA](SSL_HYBRID_ETHUSD_SECOND_MA_VWMA_RMA_20260929.md)
+  adds direct numeric second-MA qualification: 3,732 values per case, 49
+  initial missing bars and 30,039 total matching observations. Second type is
+  isolated on identical OHLCV with primary CF RMA20 fixed; both native trades
+  and local strategy objects agree across cases. Each matches 460 closed
+  trades, 263 explicit exits and flat positions in all three execution modes.
+  No new core repair; unchanged-source full gate reused.
+
+- [ETHUSD daily enabled VWMA / RMA](SSL_HYBRID_ETHUSD_DAILY_CF_VWMA_RMA_20260929.md)
+  qualifies two further full-script CF branches on identical 3,781 bars and
+  native inputs differing only in CF type. Each matches 26,307 observations;
+  479/460 closed trades, 315/263 explicit exits and long 0.0209 ETH/flat match.
+  Direction columns differ at 544 bars each. All six mode runs agree within
+  each case; no new core repair, unchanged-source full gate reused.
+
+- [ETHUSD daily / weekly Kijun and T3](SSL_HYBRID_ETHUSD_T3_CROSS_PERIOD_20260929.md)
+  adds two fresh native captures: 26,117/3,430 observations, 245/43 confirmed
+  closed trades, 223/39 explicit exits and flat/short 0.0312 ETH positions match.
+  Quantity precision 4 gives zero quantity differences; all six runs pass.
+  Weekly forming-period exits and entries remain in raw evidence and are
+  separated from the confirmed boundary. No new core repair; gate reused.
+
+- [Crypto precision and BTCUSD T3](SSL_HYBRID_CRYPTO_PRECISION_AND_T3_20260929.md)
+  adds one fresh original-script capture with 29,652 matching observations,
+  249 closed trades, 215 explicit exits and long 0.000747 BTC. Two older
+  BTC/ETH daily HMA30 captures receive stronger current-core quantity and
+  monetary checks with explicit precision 6/4. All nine mode runs agree
+  within each case; no new core repair. BTC entry-value rounding is checked
+  at native ten-significant-digit display precision.
+
+- [EURUSD daily exit settings](SSL_HYBRID_FX_EURUSD_DAILY_EXIT_PARAMETERS_20260929.md)
+  qualifies disabled TP/SL and fixed-stop branches on identical 14,326 bars.
+  Each matches 99,932 observations, including startup NA positions; 190/193
+  closed trades, 0/177 explicit exits and final shorts -435/-86 match.
+  All three execution modes agree. Two switches differ between captures;
+  no isolated single-parameter causal claim or new core repair.
+
+- [GBPUSD four-hour / EURUSD weekly enabled T3](SSL_HYBRID_T3_CROSS_MARKET_20260929.md)
+  extends native full-script qualification with factor 0.7 / length 20.
+  149,072/19,999 observations, 1,162/45 closed trades, 1,099/43 explicit
+  exits and final flat positions match in all three modes. Startup NA positions
+  are retained. Same-period request.security only; no new core repair.
+
+- [EURUSD daily T3 factor 0.3 / 0.9](SSL_HYBRID_FX_EURUSD_DAILY_T3_FACTORS_20260929.md)
+  adds two independent native parameter cases. 99,932 observations each,
+  170/192 confirmed closed trades, 162/184 explicit exits and -442/-216
+  boundary positions match in three execution modes. Direction columns
+  change at 2,310 positions on identical bars. One forming-period exit is
+  preserved and separated; unchanged-source full gate reused.
+
+- [EURUSD daily enabled CF TEMA / Tilson T3 filters](SSL_HYBRID_FX_EURUSD_DAILY_CF_FILTERS_20260929.md)
+  adds two original-source entry-filter settings with 100,046/99,932 matching
+  observations, 574/193 closed trades, 251/188 explicit exits and matching
+  remaining positions. All three modes agree; identical confirmed bars show
+  5,703 changed positions per direction column. Startup NA values remain
+  checked. Same-period request.security only; no new core repair.
+
+- [GBPUSD four-hour / EURUSD weekly Kijun v2 30](SSL_HYBRID_KIJUN_CROSS_MARKET_20260929.md)
+  extends native qualification with divider 3 to two further histories.
+  149,262/20,189 observations, 5,166/155 closed trades, 1,538/39 explicit
+  exits and flat/short -432 boundary positions match in all three modes.
+  Startup NA positions remain checked. The weekly open-entry comparison
+  handles a 2.22e-16 price representation difference with its existing
+  numeric tolerance. No new core repair; unchanged-source gate reused.
+
+- [EURUSD daily Kijun v2 30, divider 1/3](SSL_HYBRID_FX_EURUSD_DAILY_KIJUN30_HL2_20260929.md)
+  adds independent native qualification for equal/different extrema windows.
+  Each matches 100,122 observations on 14,326 confirmed bars, including
+  29 initial NA positions; closed trades 494/854, explicit exits 211/226
+  and final shorts -43/-42 match. Three modes agree. Input isolation and
+  identical OHLCV support the divider sensitivity comparison. No new core
+  repair; source gate reused. Native live-tick behavior remains unqualified.
+
+- [EURUSD daily MF beta and feedback weight](SSL_HYBRID_FX_EURUSD_DAILY_MF_PARAMETERS_20260929.md)
+  now have independent native qualification at beta 0.2 / weight 0.5 and
+  beta 0.8 / weight 0.8, with feedback on. Each matches 100,180 observations;
+  187/564 confirmed closed trades, 156/276 explicit exits and cutoff shorts
+  -217/-43 match. Three modes agree. Single-parameter sensitivity uses
+  identical confirmed OHLCV and a reverified native control. One forming-day
+  exit is excluded explicitly. No new core repair; source gate reused.
+
+- [EURUSD daily SSL Hybrid MF 30 HL2](SSL_HYBRID_FX_EURUSD_DAILY_MF30_HL2_20260929.md)
+  has independent Chrome native captures with feedback off/on, beta 0.8
+  and weight 0.5. Each matches 100,180 observations on 14,326 confirmed bars;
+  closed trades 654/454, explicit exits 263/271 and final short -43 match.
+  All three historical modes agree. Feedback changes 14,325 baseline/SSL1
+  positions. Forming-day/live-tick behavior remains outside scope.
+  No new core repair; identical-source gate reused.
+
+- [EURUSD daily SSL Hybrid EDSMA 30 HL2](SSL_HYBRID_FX_EURUSD_DAILY_EDSMA30_HL2_20260929.md)
+  has independent Chrome native captures for the original two- and three-pole
+  filters at length 20. Each matches 100,180 observations on identical
+  14,326 confirmed bars, including 30 initial zeros; 524/514 closed trades,
+  276 explicit exits each and final shorts -43/-42 match. All three historical
+  modes agree. Pole sensitivity changes 14,296 baseline/SSL1 positions.
+  Forming-day calculations remain outside scope. No new core fix; gate reused.
+
+- [GBPUSD and EURUSD daily SSL Hybrid McGinley 30 HL2](SSL_HYBRID_FX_DAILY_MCGINLEY30_HL2_20260929.md)
+  now have independent Chrome native qualification of the original recursive
+  baseline family. Leading NA and startup at bar 29 match; 100,087/100,122
+  observations, 193/187 confirmed closed trades, 162/151 explicit exits and
+  final shorts -74/-216 match. All three historical modes agree.
+  EURUSD's forming-day exit stays outside scope; its original entry row
+  identifies the confirmed boundary position. Native quote revisions
+  against earlier captures are recorded. No new core fix; source gate reused.
+
+- [GBPUSD and EURUSD daily SSL Hybrid JMA 30 HL2](SSL_HYBRID_FX_DAILY_JMA30_POWER2_HL2_20260929.md)
+  now have independent Chrome native captures at Phase 3, Power 2.
+  On 14,321/14,326 confirmed bars, 100,145/100,180 observations match;
+  each matches 484 closed trades and one remaining short entry.
+  Explicit exits are 295/293 and final quantities are -37/-43.
+  Startup from bar zero and all three historical modes agree.
+  Each preserves its own calendar and original OHLCV; the forming day
+  stays outside scope. No new core fix; identical-source gate is reused.
+
+- [AUDUSD four-hour SSL Hybrid JMA Phase](SSL_HYBRID_FX_AUDUSD_FOURHOUR_JMA_PHASE_20260929.md)
+  has new Chrome native captures for Phase -101 and 101 at Power 2,
+  covering both original outer phase-ratio branches. Each matches 149,320
+  nonblank observations on identical 21,346 confirmed bars; 2,841/3,455
+  closed trades and 1,831/2,085 explicit exits match. Startup from bar zero,
+  flat confirmed positions and all three historical modes are checked.
+  Phase 101's five forming-bar short entries stay outside scope.
+  No new core fix; identical-source full gate is reused.
+
+- [AUDUSD four-hour SSL Hybrid JMA 30 HL2](SSL_HYBRID_FX_AUDUSD_FOURHOUR_JMA30_HL2_20260929.md)
+  has two new Chrome native captures, Power 1 and 2 at Phase 3. On identical
+  21,345 confirmed bars, each matches 149,313 nonblank observations;
+  2,229/3,122 closed trades and 1,629/1,990 explicit exits match. Recursive
+  startup from bar zero and final positions -66/+655 are checked.
+  Three historical modes agree. Power 2's forming-bar exits/new shorts
+  stay outside scope; original entry rows identify its confirmed boundary
+  longs. No new core fix; identical-source full gate is reused.
+
+- [AUDUSD weekly SSL Hybrid VAMA 30 HL2](SSL_HYBRID_FX_AUDUSD_WEEKLY_VAMA30_HL2_20260929.md)
+  now has two new Chrome native parameter captures, windows 60 and 20.
+  On identical 2,907 confirmed bars, 20,071/20,189 observations, 55/120
+  closed trades and 33/52 explicit exits match; all three historical modes
+  agree. Startup at bar 59/29 and five surviving entry records are checked.
+  Window 20's forming-week reversal and new shorts remain outside this scope;
+  confirmed boundary longs are identified from their original native entry
+  rows. No new core fix; identical-source full gate is reused.
+
+- [UT Bot Strategy v4](UT_BOT_CURRENT_CORE_REQUALIFICATION_20260929.md)
+  now has fresh current-core execution receipts for twelve preserved native
+  settings on EURUSD four-hour and AAPL daily/weekly. All 36 historical mode
+  outputs are byte-identical to earlier outputs; fresh native signals,
+  closed trades and open-entry comparisons pass. Original external Heikin
+  Ashi providers rebuild exactly. Native captures remain dated 2026-09-27;
+  no new core repair or full-gate rerun was needed.
+
+- New Chrome native captures qualify SSL Hybrid Strategy v5 VAMA 30 HL2
+  volatility lookback 60 on [AUDUSD four-hour](SSL_HYBRID_FX_AUDUSD_FOURHOUR_VAMA30_VOL60_HL2_20260929.md)
+  and [daily](SSL_HYBRID_FX_AUDUSD_DAILY_VAMA30_VOL60_HL2_20260929.md):
+  149,130/99,934 chart observations, 2,067/336 closed trades, five/four
+  open entries and 1,400/200 explicit exits match. Native startup at bar
+  59 verifies the complete global window boundary; all historical modes
+  agree. No additional core fix; identical-source full gate is reused.
+  [Nine preceding native cases](SSL_HYBRID_EXTREMA_REQUALIFICATION_20260929.md)
+  have fresh runs in all three modes and fresh native comparisons on the
+  extrema repair. Original outputs are byte-identical and receipts preserved.
+
+- Fixed window highest/lowest to skip missing source samples without
+  extending the existing bar window; an all-missing window returns `na`.
+  V3-v6 regression covers leading/interior/current missing samples and
+  expiry. Corrected only the two affected extrema golden result columns.
+  The unchanged SSL Hybrid Strategy v5 now has
+  [AUDUSD VAMA 30 HL2 lookback 10](SSL_HYBRID_FX_AUDUSD_FOURHOUR_VAMA30_HL2_20260929.md)
+  and [lookback 20](SSL_HYBRID_FX_AUDUSD_FOURHOUR_VAMA30_VOL20_HL2_20260929.md)
+  native comparisons: 149,248 chart positions each, 3,890/2,964 closed
+  trades, five open entries each, and 2,112/1,914 explicit exits match.
+  Three historical modes agree per setting. Fresh full gate passes.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:AUDUSD four-hour LSMA 30 `hl2` comparison](SSL_HYBRID_FX_AUDUSD_FOURHOUR_LSMA30_HL2_20260929.md):
+  149,248 chart positions, 3,185 closed trades, five open entries, and
+  2,075 explicit exit fills match on 21,344 confirmed bars. Three historical
+  modes agree. TEMA 30 reproduces its preceding native-qualified output
+  byte-for-byte on identical bars. Verified unchanged core reuses the full gate.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:AUDUSD four-hour TEMA 30 `hl2` comparison](SSL_HYBRID_FX_AUDUSD_FOURHOUR_TEMA30_HL2_20260929.md):
+  149,018 chart positions, 3,452 closed trades, five open entries, and
+  2,031 explicit exit fills match on 21,344 confirmed bars. Three historical
+  modes agree. The same-bar local DEMA 30 control produces 2,911 trades;
+  native DEMA parity is not yet qualified. Unchanged core reuses the full gate.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:USDJPY weekly TEMA 30 `hl2` comparison](SSL_HYBRID_FX_USDJPY_WEEKLY_TEMA30_HL2_20260929.md):
+  19,952 chart positions, 28 closed trades, and 24 explicit exit fills match
+  on 2,906 confirmed bars, including weekly session dates and warmup.
+  Three historical modes agree; current source hashes reuse the preceding
+  full gate. Chrome capture resumed after the user-approved empty-window recovery.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:USDJPY daily TEMA 30 `hl2` comparison](SSL_HYBRID_FX_USDJPY_DAILY_TEMA30_HL2_20260929.md):
+  99,822 chart positions, 134 closed trades, and 77 explicit exit fills match
+  on 14,316 confirmed bars, after restoring the native 1971 warmup start.
+  Daily session dates are compared at native display precision. Three
+  historical modes agree; unchanged source reuses the preceding full gate.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:USDJPY four-hour TEMA 30 `hl2` comparison](SSL_HYBRID_FX_USDJPY_FOURHOUR_TEMA30_HL2_20260929.md):
+  149,025 chart positions, 768 closed trades, and 507 explicit exit fills
+  match on 21,345 confirmed bars, including three-layer EMA warmup. DEMA 30
+  retains 658 trades and its prior byte-identical output on these same bars.
+  Three historical modes agree; verified unchanged source reuses the full gate.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:USDJPY four-hour DEMA 30 `hl2` comparison](SSL_HYBRID_FX_USDJPY_FOURHOUR_DEMA30_HL2_20260929.md):
+  149,141 chart positions, 658 closed trades, and 480 explicit exit fills
+  match on 21,345 confirmed bars, including nested-EMA warmup. EMA 30 yields
+  470 trades and its prior byte-identical output on the same bars. Three
+  historical modes agree; current source hashes reuse the preceding full gate.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:USDJPY four-hour EMA 30 `hl2` comparison](SSL_HYBRID_FX_USDJPY_FOURHOUR_EMA30_HL2_20260929.md):
+  149,255 chart positions, 470 closed trades, and 319 explicit exit fills
+  match on 21,345 confirmed bars. HMA 30 yields 892 trades on the same bars
+  and retains its preceding output byte-for-byte. Three historical modes
+  agree; no new core change was required, and the prior full gate is reused
+  against verified current core and CLI hashes.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:USDJPY four-hour HMA 30 `hl2` comparison](SSL_HYBRID_FX_USDJPY_FOURHOUR_HMA30_HL2_20260929.md):
+  149,241 chart positions, 892 closed trades, and 581 explicit exit fills
+  match on 21,345 confirmed bars. HMA 20 yields 1,088 closed trades on the
+  same bars and retains its prior output byte-for-byte. Three historical
+  modes agree; the core and CLI match the preceding full gate's hashes.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:USDJPY four-hour HMA 20 `hl2` comparison](SSL_HYBRID_FX_USDJPY_FOURHOUR_HMA20_HL2_20260929.md):
+  149,285 chart positions, 1,088 closed trades, and 592 explicit exit fills
+  match on 21,345 confirmed bars in a JPY account. Positive explicit entry
+  quantities rounded to zero retain the closing leg of an opposite-position
+  transaction, pending-entry exits, and OCA peer effects. Three historical
+  modes agree byte-for-byte; prior GBPUSD/EURUSD HMA 20/30 results remain
+  unchanged. The complete repository verification gate passes.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:GBPUSD four-hour HMA 30 `hl2` comparison](SSL_HYBRID_FX_GBPUSD_FOURHOUR_HMA30_HL2_20260929.md):
+  149,234 chart positions, 3,721 closed trades, five open entries, and 2,193
+  explicit exit fills match on 21,344 confirmed bars. A broker repair handles
+  machine-roundoff bar extremes without filling genuine sub-tick misses.
+  HMA 20 yields 4,731 closed trades on the same bars; three historical modes
+  and the prior GBPUSD/EURUSD regression outputs remain byte-identical.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:GBPUSD four-hour HMA 20 `hl2` comparison](SSL_HYBRID_FX_GBPUSD_FOURHOUR_HMA20_HL2_20260929.md):
+  149,278 chart positions, 4,731 closed trades, five open entries, and 2,268
+  explicit exit fills agree on 21,344 confirmed bars. The forming final bar
+  is excluded; three historical modes are byte-identical on the current build.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:EURUSD four-hour HMA 30 `hl2` comparison](SSL_HYBRID_FX_EURUSD_FOURHOUR_HMA30_HL2_20260927.md):
+  149,192 chart positions, 3,603 closed trades, five open entries, and 2,150
+  explicit exit fills agree on 21,338 confirmed bars. On the same frozen bars,
+  HMA 20 yields 4,645 closed trades. The three historical modes are identical.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [FX:EURUSD four-hour HMA 20 `hl2` comparison](SSL_HYBRID_FX_EURUSD_FOURHOUR_HMA20_HL2_20260927.md):
+  149,236 chart positions, 4,645 closed trades, and five open entries agree
+  on 21,338 confirmed bars. Broker fixes cover five-decimal tick touches,
+  default FIFO attribution, and marketable gap-exit ordering. HMA 30 yields
+  3,603 closed trades on the same bars; three historical modes are identical.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [FX:EURUSD weekly HMA 20 `hl2` comparison](SSL_HYBRID_FX_EURUSD_WEEKLY_HMA20_HL2_20260927.md):
+  20,212 chart positions and 170 confirmed-week closed trades match from the
+  1971 FXCM history origin. Five forming-week exits and five new entries are
+  explicitly excluded. HMA 30 gives 140 closed trades on the same bars.
+
+- The unchanged SSL Hybrid Strategy v5 now has an
+  [ETHUSD weekly HMA 20 `hl2` comparison](SSL_HYBRID_LENGTH20_HL2_ETHUSD_WEEKLY_20260927.md):
+  3,643 chart values, 148 closed trades, and two open entries agree on
+  539 confirmed bars. The same frozen bars yield 98 closed trades at HMA 30.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [BTCUSD weekly HMA 20 `hl2` comparison](SSL_HYBRID_LENGTH20_HL2_BTCUSD_WEEKLY_20260927.md):
+  4,168 chart values, 168 closed trades, and two open entries agree on
+  614 confirmed bars. Reducing baseline length from 30 to 20 changes the
+  closed-trade count from 115 to 168 on the same frozen bars.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [COINBASE:BTCUSD weekly HMA 30 `hl2` comparison](SSL_HYBRID_LENGTH30_HL2_BTCUSD_WEEKLY_20260927.md):
+  4,124 chart values, 115 closed trades, and five open entries agree across
+  614 confirmed bars. Six-decimal native trade quantities match exactly;
+  the two source-dependent channels change at all 581 defined positions.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [COINBASE:ETHUSD weekly HMA 30 `hl2` comparison](SSL_HYBRID_LENGTH30_HL2_ETHUSD_WEEKLY_20260927.md):
+  3,599 chart values, 98 closed trades, and two open entries agree across
+  539 confirmed bars. Source selection changes 506 values in each channel
+  without changing the historical trade path on the same bars.
+
+- The unchanged SSL Hybrid Strategy v5 now matches a
+  [COINBASE:ETHUSD weekly HMA 30 comparison](SSL_HYBRID_LENGTH30_ETHUSD_WEEKLY_20260927.md):
+  3,599 chart values, 98 closed native trades, and two open entries agree
+  across 539 confirmed bars. `ta.cross`, `ta.crossover`, and `ta.crossunder`
+  retain per-callsite history when evaluated conditionally.
+
+- The unchanged SSL Hybrid Strategy v5 now matches a
+  [COINBASE:ETHUSD daily HMA 30 comparison](SSL_HYBRID_LENGTH30_ETHUSD_DAILY_20260927.md):
+  26,279 exported chart values, 786 closed native trade identities, dates and
+  displayed prices, and four open entries across 3,779 confirmed bars.
+
+- The unchanged SSL Hybrid Strategy v5 now has a
+  [BTCUSD daily baseline-length 30 comparison](SSL_HYBRID_LENGTH30_BTCUSD_DAILY_20260927.md):
+  29,814 nonblank chart values and 868 closed native trade identities, dates,
+  and displayed prices agree, with two open entries. This parameter changes
+  the trade path from the default-length control's 475 closed trades.
+
+- The unchanged Pine v5 SSL Hybrid Strategy now has a
+  [BTCUSD daily `hl2` source comparison](SSL_HYBRID_SOURCE_BTCUSD_DAILY_20260927.md).
+  Its eight CSV series match 29,682 nonblank positions on 4,284 confirmed
+  bars, while 475 closed trade identities, dates and displayed prices plus
+  five open entries agree. Three historical modes produce identical JSON.
+
+- Public analysis schema 6 adds `inputs[].isSource` across CLI, Python, and
+  WASM. Hosts can identify both generic `input(close)` and explicit
+  `input.source(close)` as chart-source selectors; numeric float inputs remain
+  distinct. See the [host-contract check](GENERIC_SOURCE_INPUT_EXPANSION_20260927.md).
+
+- The unchanged UT Bot Strategy has a
+  [complete AAPL weekly comparison](UT_BOT_AAPL_WEEKLY_EXPANSION_20260927.md):
+  four input settings match 974 native closed trades, four open trades, and
+  19,120 Buy/Sell signal positions.
+
+- Market fills now snap to the host chart's price grid before slippage and
+  broker accounting. The unchanged public UT Bot Strategy matches the
+  [AAPL daily native report](UT_BOT_AAPL_DAILY_EXPANSION_20260927.md) across
+  four input settings: 5,056 closed trades and 92,264 Buy/Sell signal positions.
+  A follow-up strict fill-price check also corrected one half-tick EURUSD
+  reversal in the [four-hour comparison](UT_BOT_FX_FOURHOUR_EXPANSION_20260927.md).
+
+- The unchanged UT Bot Strategy v4 now has a
+  [EURUSD four-hour comparison](UT_BOT_FX_FOURHOUR_EXPANSION_20260927.md)
+  across default, sensitivity, ATR, and Heikin Ashi inputs. All 7,819 native
+  closed trades and 170,704 Buy/Sell signal positions agree; no runtime change
+  was needed.
+
+- The unchanged State-Dependent EMA v6 indicator now has a
+  [EURUSD four-hour comparison](STATE_EMA_FX_FOURHOUR_EXPANSION_20260927.md)
+  across four state/source settings. All 682,750 numeric cells from the first
+  exported chart bar agree with TradingView; no runtime change was needed.
+
+- Pine v4 `ema` now accepts an integer-operand quotient in its length context,
+  as used by the unchanged Hull Suite Strategy EHMA function. The
+  [ETHUSD daily comparison](HULL_ETH_DAILY_EXPANSION_20260927.md) matches
+  358 native closed trades and 22,308 Hull plot values across three settings.
+
+- The [EURUSD four-hour Hull comparison](HULL_FX_FOURHOUR_EXPANSION_20260927.md)
+  extends that public script to forex, intraday bars, THMA, and length 89.
+  Four settings match 2,566 closed native trades and 170,180 plot values;
+  no additional runtime behavior changed in this slice.
+
+- The [Hull source-input comparison](HULL_FX_SOURCE_EXPANSION_20260927.md)
+  verifies HL2 and HLC3 against independent EURUSD four-hour native exports.
+  Both match 42,502 plot values and 578 trade times/prices/directions; HLC3
+  matches all quantities, while HL2 retains one one-unit quantity difference.
+
+- Host-side `input.source` overrides now select eight built-in chart price
+  series through Rust, CLI, Python, and WASM. The unchanged State-Dependent EMA
+  matches native ETHUSD and EURUSD weekly exports; see the
+  [source comparison](PARAMETER_TIMEFRAME_EXPANSION_20260927.md) and
+  [FX comparison](FX_SYMBOL_EXPANSION_20260927.md).
+
+- Omitted-quantity cash strategy orders now honor an explicitly configured
+  chart quantity grid. The [Bitduke EURUSD weekly receipt](FX_BITDUKE_STRATEGY_EXPANSION_20260927.md)
+  matches 116 native trades and 232 order rows.
+
+- Executed `strategy.close` orders now emit public fill events. The
+  [Bitduke EURUSD four-hour receipt](FX_BITDUKE_FOURHOUR_20260927.md)
+  matches 64 native trades and 128 order rows, including two close fills.
+
+- Two further [EURUSD four-hour parameter settings](FX_BITDUKE_PARAMETER_EXPANSION_20260927.md)
+  match 53 and 48 native Bitduke trades respectively, including a momentum
+  filter branch. No additional runtime semantics were changed for this slice.
+
+- Relative strategy exit tick distances now accept zero, matching the
+  [Bitduke EURUSD four-hour zero-input receipt](FX_BITDUKE_TRAILING_ZERO_20260927.md):
+  64 native trades, 128 order rows, and 27,212 post-warmup plot cells.
+
+- The unchanged Bitduke strategy also matches the
+  [Coinbase ETHUSD four-hour native report](ETH_BITDUKE_FOURHOUR_20260927.md):
+  78 trades, 156 order rows, and 38,204 post-warmup plot cells. This slice
+  needed no further runtime change.
+
+- On Coinbase ETHUSD daily history with the date filter disabled, the
+  [Bitduke native comparison](ETH_BITDUKE_DAILY_FULL_HISTORY_20260927.md)
+  matches 154 trades, 308 order rows, and all 7,558 plot cells from the
+  first confirmed exported chart bar.
+
+- Pine v1-v4 `strategy.entry` accepts boolean directions (`true` long,
+  `false` short) while v5-v6 keep their stricter direction type. The unchanged
+  public UT Bot Strategy now matches all 457 closed native trades and the
+  remaining open entry; see [the native receipt](UT_BOT_STRATEGY_NATIVE_20260926.md).
+
+- Pine v4 `strategy.close` binds its second positional boolean as `when`.
+  Unpaired `trail_points` competes with a fixed profit target in the observed
+  legacy combination. The [native Bitduke receipt](BITDUKE_SQUEEZE_STRATEGY_NATIVE_20260926.md)
+  covers 14 complete strategy trades.
+
+- Logical operators treat missing boolean operands as false, including legacy
+  Pine versions; missing numeric comparisons retain their versioned semantics.
+  [Squeeze native evidence](SQUEEZE_LEGACY_NATIVE_20260926.md) covers the
+  full public script and an independent v5 probe.
+
+- Immediate strategy closes now fill after the script pass; later statements
+  preserve pre-fill account visibility. Native Ichimoku qualification covers
+  150 trades and 239,700 state cells; see
+  [the evidence receipt](ICHIMOKU_NATIVE_PARITY_20260926.md).
+
+## Unreleased streaming additions (integrated 2026-09-11)
+
+- Separate streaming updates from complete result snapshots in Rust/Python/WASM.
+- Changes schema 3 adds `retainedFrom` to the revisioned protocol introduced in
+  schema 2. Runtime snapshots remain schema 8. `RuntimeReplica` consumes
   changes in place, rejects stale/conflicting/gapped revisions atomically and
   supports explicit snapshot recovery. Identical retransmissions are no-ops.
 - Replace the unreleased unversioned dictionary merge helper with
@@ -13,12 +600,66 @@
   build drawing deltas from the whole mutable-bar suffix without copying
   closed snapshots. Preserve repeated identical alert occurrences and explicit
   `None` table attributes during Python roundtrips.
-- [Streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) records source,
-  validation and finite workload limits; older candidate artifacts do not
-  contain these changes.
+- Add host-selected display retention with absolute delta indexes and physical
+  pruning; increasing the window only retains future output. Input history,
+  collections and script-readable broker records remain outside this policy.
+- Add live requested-context forming/confirmed updates and conservative
+  incremental evaluation for eligible expressions; complex expressions retain
+  full evaluation. Historical correction rebuilds history and requires a
+  replica snapshot reset.
+- WASM exposes persistent sessions, replicas, retention and requested-context
+  updates through the actual generated JavaScript module.
+- These changes are integrated in `5f158f59c` and `f368ab96e`, included in main
+  by `7b70095f6`. [Streaming expansion](STREAMING_EXPANSION_AUDIT.md) records
+  Windows installed-wheel and actual WASM checks plus 18 finite budget cases.
+  Its retained artifact is bound to a pre-commit source digest; it is not a
+  newly built main-commit or Linux artifact. Earlier
+  [streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) retains its own scope.
 
 
 ## Unreleased
+
+- Implement nominal display values and set addition/subtraction, including
+  `display.pine_screener` in v6. Preserve `all` as distinct from named-location
+  sums and carry canonical composite expressions in output metadata. The
+  [native display receipt](DISPLAY_ALGEBRA_NATIVE_20260926.md) records 3,588 exact
+  comparisons and zero admission diagnostics for the TASC source.
+
+- Preserve `plot(linestyle=...)` through snapshot, streaming and Python output
+  contracts. Native probes accept input-controlled styles and reject series
+  styles. The additive `linestyle` wire field defaults to solid; see the
+  [line-style receipt](PLOT_LINESTYLE_NATIVE_20260926.md).
+
+- `alertcondition` now accepts omitted title/message arguments, including a
+  named message with omitted title. The title defaults to `Alert`; explicit
+  empty strings remain empty. See the [optional alert receipt](OPTIONAL_ALERT_NATIVE_20260926.md).
+
+- Accept dynamic table position/font strings and mark strategy accounts at the
+  current fill price during fill callbacks. Historical closing-pass immediate
+  exits no longer generate a phantom recalculation. The
+  [Fractional EMA native receipt](FRACTIONAL_EMA_NATIVE_PARITY_20260926.md)
+  records agreement for all 70 trades and 5,348 original plot cells.
+
+- Accept UDT field assignments as the result of `for`, `for...in`, and `while`
+  expression bodies, preserving the assigned value and single mutation. This
+  admits the complete public Reaction Level Matrix indicator. See the
+  [native Reaction/Memory evidence](REACTION_MEMORY_NATIVE_PARITY_20260926.md)
+  for two full-script state comparisons and remaining candidate blockers.
+
+- Explicit `strategy.entry` and `strategy.order` quantities honor host-configured
+  decimal contract precision without binary scaling boundary errors. Raw invalid
+  quantities are validated first; unspecified precision and default sizing retain
+  their existing behavior. The [native indicator/strategy expansion](EXPANDED_INDICATOR_STRATEGY_NATIVE_PARITY_20260926.md)
+  qualifies four complete v6 sources and five historical parameter scenarios,
+  including 334 closed trades and one open position, within stated tolerances.
+
+- The [September 26 native profile comparison](POPULAR_PROFILE_V6_NATIVE_PARITY_20260926.md)
+  repairs bounded drawing-style helper returns, history carried across skipped
+  UDF evaluations, and call-specific nested history offsets (including legacy
+  `offset()`). The native v4/v6 gap controls supersede the earlier claim below
+  that UDF history advances only on evaluated calls. BigBeluga and Zeiierman
+  complete v6 indicators match 59,962 exported state values over 4,283 confirmed
+  daily bars each. Visual and packaged-distribution qualification remain separate.
 
 - Pending realtime market entries and closes use a newly expanded high or low
   when exactly one side of the same bar's range expands. Unchanged extremes
@@ -58,7 +699,8 @@ arguments remain an engineering/host contract boundary.
   `pine_compat.__version__`, and WASM `packageVersion()`.
 - Four-surface capability list and embedding examples for compile →
   requirements → historical / incremental / realtime → error → owned result.
-  WASM remains historical-only.
+  At that candidate checkpoint WASM was historical-only; the later streaming
+  additions above add persistent realtime sessions.
 - Long-session budget verifier accepts Magnifier historical-only plans; new
   remaining D4 workloads are measured separately from the already-qualified
   Windows trend 100k/10k result.

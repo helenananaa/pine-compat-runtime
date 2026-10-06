@@ -1,0 +1,6 @@
+//@version=6
+indicator("Vertical gradient control")
+upper = plot(close + 2, "upper")
+lower = plot(close - 2, "lower")
+top = bar_index % 3 == 0 ? na : close + 1
+fill(upper, lower, top, close - 1, color.new(color.green, 20), color.new(color.red, 80), title="gradient", fillgaps=false)

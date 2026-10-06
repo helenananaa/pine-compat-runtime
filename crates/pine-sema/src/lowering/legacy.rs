@@ -97,7 +97,7 @@ impl Analyzer {
             .find(|arg| arg.name.as_deref() == Some("offset"))
             .expect("validated legacy offset amount");
         let offset = match self
-            .known_history_offset_int_value(&offset_arg.value)
+            .lowering_history_offset_constant(&offset_arg.value, param_exprs)
             .and_then(|value| u32::try_from(value).ok())
         {
             Some(offset) => HirHistoryOffset::Constant(offset),

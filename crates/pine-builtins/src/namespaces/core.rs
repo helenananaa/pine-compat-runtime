@@ -60,6 +60,26 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
+    BuiltinParam {
+        name: "timeframe",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "timeframe_gaps",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "calc_bars_count",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "dynamic_requests",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const STRATEGY_PARAMS: &[BuiltinParam] = &[
@@ -193,6 +213,26 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
+    BuiltinParam {
+        name: "scale",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "calc_bars_count",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "linktoseries",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "dynamic_requests",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[
@@ -233,7 +273,7 @@ const INPUT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
         optional: true,
     },
 ];
@@ -291,7 +331,12 @@ const INPUT_INT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "active",
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
 ];
@@ -349,7 +394,12 @@ const INPUT_FLOAT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "active",
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
 ];
@@ -387,7 +437,12 @@ const INPUT_BOOL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "active",
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
 ];
@@ -425,7 +480,12 @@ const INPUT_COLOR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "active",
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
 ];
@@ -468,7 +528,12 @@ const INPUT_STRING_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "active",
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
 ];
@@ -501,7 +566,12 @@ const INPUT_TEXT_AREA_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "active",
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
 ];
@@ -539,7 +609,12 @@ const INPUT_SOURCE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "display",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "active",
+        accepts: Accepts::AtMostInputBool,
         optional: true,
     },
 ];

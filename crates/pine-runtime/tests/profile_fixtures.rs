@@ -215,12 +215,24 @@ fn array_heavy_profile_fixture_bounds_array_capacity() {
 }
 
 #[test]
-fn matrix_heavy_profile_fixture_records_matrix_storage() {
-    let profile = profile_fixture("tests/fixtures/profile/matrix_heavy.pine");
+fn matrix_heavy_profile_fixture_bounds_temporary_matrix_storage() {
+    let profiled = profiled_fixture("tests/fixtures/profile/matrix_heavy.pine");
+    assert!(
+        profiled.result.plots[0]
+            .values
+            .iter()
+            .all(|value| value.as_f64() == Some(9.0))
+    );
+    let profile = profiled.profile;
 
     assert_eq!(profile.bars, PROFILE_BARS);
-    assert_eq!(profile.matrix_slots, PROFILE_BARS * 3);
-    assert_eq!(profile.matrix_cells, PROFILE_BARS * 12);
+    // Three matrices are reachable in the last bar. Retired bar-local matrices
+    // may remain between amortized collections, but must not accumulate for
+    // the whole dataset. Every retained group has two six-cell matrices and
+    // one empty matrix.
+    assert!((3..=1027).contains(&profile.matrix_slots), "{profile:?}");
+    assert_eq!(profile.matrix_slots % 3, 0);
+    assert_eq!(profile.matrix_cells, profile.matrix_slots / 3 * 12);
     assert_eq!(profile.plots, 1);
     assert_eq!(profile.plot_values, PROFILE_BARS);
     assert!(profile.matrix_capacity >= profile.matrix_slots);
@@ -2794,7 +2806,9 @@ fn strategy_variable_history_profile_uses_static_trimmed_history() {
     assert_eq!(profile.history_max_bars_back, None);
     assert!(!profile.history_has_dynamic_offsets);
     assert_eq!(profile.max_series_depth, 1);
-    assert!(profile.series_buffers >= 2);
+    // The strategy position history is captured by the broker's dedicated
+    // bounded buffer; only openprofit uses the generic series store here.
+    assert!(profile.series_buffers >= 1);
     assert!(
         profile.series_values <= profile.series_buffers,
         "constant one-bar strategy variable history should retain at most one value per buffer: {:?}",

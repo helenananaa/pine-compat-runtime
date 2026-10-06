@@ -157,6 +157,18 @@ impl TradeLedger {
         allocations
     }
 
+    pub(super) fn allocate_all_for_direction(
+        &self,
+        direction: TradeDirection,
+    ) -> Vec<TradeAllocation> {
+        self.open_trades
+            .iter()
+            .enumerate()
+            .filter(|(_, trade)| trade.direction == direction)
+            .map(|(index, trade)| Self::allocation_for_trade(index, trade, trade.quantity))
+            .collect()
+    }
+
     #[allow(dead_code)]
     pub(super) fn allocate_exit_any_for_entry(
         &self,

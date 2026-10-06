@@ -1,0 +1,3 @@
+//@version=4
+study("Legacy lower timeframe")
+plot(security("NYSE:IBM", "1", close))

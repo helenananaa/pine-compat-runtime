@@ -181,6 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "timingsMs": timings, "result": serde_json::from_str::<Value>(&final_result)?,
             "liveResult": expected_live.map(|s| serde_json::from_str::<Value>(&s)).transpose()?,
             "profile": profile, "confirmedRealtimeProfile": live_profile,
+            "rssKiB": memory.resident_kib, "commitKiB": memory.commit_kib,
             "peakRssKiB": memory.peak_resident_kib, "peakCommitKiB": memory.peak_commit_kib, "memorySource": memory::SOURCE, "orderCount": order_count,
             "correctness": {"batchEqualsIncremental": true, "repeatedHistoricalStable": true,
                 "repeatedLiveStable": if input.magnifier.is_none() { Some(true) } else { None }},

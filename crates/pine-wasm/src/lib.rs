@@ -8,6 +8,7 @@ mod library_sources;
 mod realtime;
 mod request_bars;
 mod run;
+mod snapshot;
 mod strategy_alerts;
 #[cfg(test)]
 use analysis_json::json_escape;

@@ -16,8 +16,12 @@ use crate::types::UNKNOWN;
 
 mod arrays;
 mod constructors;
+mod copy;
+mod defaults;
+pub(crate) use defaults::field_default_type;
 mod flow;
 mod imported;
+mod matrices;
 mod types;
 
 use self::flow::{
@@ -39,8 +43,50 @@ enum UserTypeArrayResultName {
 }
 
 impl Analyzer {
+    pub(crate) fn resolve_user_type_path_mutation(
+        &mut self,
+        receiver: &str,
+        path: &[String],
+        field: &str,
+        span: Span,
+    ) -> Option<UdtFieldMutation> {
+        if path.is_empty() {
+            return self.resolve_user_type_field_mutation(receiver, field, span);
+        }
+        let symbol = self.scope.resolve(receiver);
+        let identity = symbol
+            .and_then(|symbol| self.symbol_user_types.get(&symbol.id))
+            .cloned();
+        let (Some(symbol), Some(identity)) = (symbol, identity) else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UDT_FIELD_MUTATION",
+                "nested field mutation requires a defined user-defined type receiver",
+                span,
+            ));
+            return None;
+        };
+        let mut names = path.to_vec();
+        names.push(field.to_owned());
+        let (pine_type, user_type_name, _) = if self.imported_user_types.contains_key(&identity) {
+            self.resolve_imported_user_type_field_path(&identity, Qualifier::Series, &names, span)?
+        } else {
+            self.resolve_user_type_field_path(&identity, Qualifier::Series, &names, span)?
+        };
+        self.bind_symbol(receiver, span, symbol);
+        Some(UdtFieldMutation {
+            pine_type,
+            user_type_name,
+            receiver_symbol: symbol,
+        })
+    }
     pub(crate) fn local_user_type_has_scalar_tree_fields(&self, type_name: &str) -> bool {
         self.local_user_type_scalar_tree_fields_are_supported(type_name, &mut HashSet::new())
+    }
+    pub(crate) fn local_user_type_array_is_supported(&self, type_name: &str) -> bool {
+        matches!(
+            classify_user_type_array_element_names(&self.user_types, &[type_name.to_owned()]),
+            Some(UserTypeArrayElementInference::SameLocal(_))
+        )
     }
 
     pub(crate) fn local_user_type_history_is_supported(&self, type_name: &str) -> bool {
@@ -108,7 +154,23 @@ impl Analyzer {
                 else {
                     continue;
                 };
+                if let Some(value) = &field.default_value
+                    && !field_default_type(value).is_some_and(|actual| {
+                        crate::types::can_assign(
+                            PineType::new(Qualifier::Series, pine_type.kind),
+                            actual,
+                        )
+                    })
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_FIELD_DEFAULT",
+                        "UDT field defaults must be compatible literals or built-in variables",
+                        value.span,
+                    ));
+                }
                 fields.push(UserTypeFieldInfo {
+                    default_value: field.default_value.clone(),
+                    varip: field.varip,
                     name: field.name.clone(),
                     pine_type,
                     user_type_name,
@@ -631,6 +693,9 @@ impl Analyzer {
         then_branch: &[Stmt],
         else_branch: &[Stmt],
     ) -> Option<String> {
+        if else_branch.is_empty() {
+            return self.user_type_name_of_branch_return(then_branch);
+        }
         let (_, then_expr) = branch_return_expr(then_branch)?;
         let (_, else_expr) = branch_return_expr(else_branch)?;
         match (
@@ -649,6 +714,29 @@ impl Analyzer {
         self.user_type_name_of_expr_with_local_aliases(expr, &aliases)
     }
 
+    pub(crate) fn user_type_name_of_tuple_element(
+        &self,
+        value: &Expr,
+        index: usize,
+    ) -> Option<String> {
+        let ExprKind::Call { callee, .. } = &value.kind else {
+            return None;
+        };
+        let function = self.functions.get(&expr_name(callee)?)?;
+        if !function.overloads.is_empty() {
+            return None;
+        }
+        let FunctionBody::Block(statements) = &function.body else {
+            return None;
+        };
+        let (prefix, returned) = branch_return_expr(statements)?;
+        let ExprKind::Tuple(items) = &returned.kind else {
+            return None;
+        };
+        let aliases = self.local_user_type_aliases(prefix, &HashMap::new());
+        self.user_type_name_of_expr_with_local_aliases(items.get(index)?, &aliases)
+    }
+
     fn local_user_type_aliases(
         &self,
         prefix: &[Stmt],
@@ -656,11 +744,26 @@ impl Analyzer {
     ) -> HashMap<String, String> {
         let mut aliases = outer_aliases.clone();
         for statement in prefix {
-            if let StmtKind::Decl { name, value, .. } = &statement.kind
-                && let Some(type_name) =
-                    self.user_type_name_of_expr_with_local_aliases(value, &aliases)
+            if let StmtKind::Decl {
+                name,
+                value,
+                declared_type,
+                ..
+            } = &statement.kind
             {
-                aliases.insert(name.clone(), type_name);
+                let type_name = self
+                    .user_type_name_of_expr_with_local_aliases(value, &aliases)
+                    .or_else(|| match declared_type {
+                        Some(pine_syntax::DeclaredType::Named(type_name))
+                            if self.user_types.contains_key(type_name) =>
+                        {
+                            Some(type_name.clone())
+                        }
+                        _ => None,
+                    });
+                if let Some(type_name) = type_name {
+                    aliases.insert(name.clone(), type_name);
+                }
             }
         }
         aliases
@@ -765,6 +868,13 @@ impl Analyzer {
             FunctionBody::Expr(expr) => self.user_type_name_of_expr(expr),
             FunctionBody::Block(statements) => {
                 let last = statements.last()?;
+                if matches!(
+                    last.kind,
+                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. }
+                ) && let Some(name) = self.expr_user_types.get(&self.expr_key(last.span))
+                {
+                    return Some(name.clone());
+                }
                 match &last.kind {
                     StmtKind::Expr(expr) => self.user_type_name_of_expr(expr),
                     StmtKind::If {
@@ -814,7 +924,7 @@ impl Analyzer {
         self.symbol_user_type_arrays.insert(symbol.id, type_name);
     }
 
-    fn user_type_identity_for_name(&self, type_name: &str) -> Option<UserTypeIdentity> {
+    pub(crate) fn user_type_identity_for_name(&self, type_name: &str) -> Option<UserTypeIdentity> {
         self.user_types
             .get(type_name)
             .map(|user_type| user_type.identity.clone())
@@ -848,7 +958,7 @@ impl Analyzer {
             .map(|(pine_type, _, _)| pine_type)
     }
 
-    fn resolve_user_type_field_path(
+    pub(crate) fn resolve_user_type_field_path(
         &mut self,
         type_name: &str,
         qualifier: Qualifier,
@@ -897,7 +1007,7 @@ impl Analyzer {
         self.user_type_field_path(type_name, qualifier, field_names)
     }
 
-    fn user_type_field_path(
+    pub(crate) fn user_type_field_path(
         &self,
         type_name: &str,
         qualifier: Qualifier,
@@ -954,6 +1064,14 @@ impl Analyzer {
         name: &str,
         span: Span,
     ) -> Option<(PineType, Option<String>)> {
+        if let Some(element) = name
+            .strip_prefix("array<")
+            .and_then(|element| element.strip_suffix('>'))
+            .or_else(|| name.strip_suffix("[]"))
+            && let Some(kind) = crate::types::array_kind_from_element_type_name(element)
+        {
+            return Some((PineType::new(Qualifier::Series, kind), None));
+        }
         let kind = match name {
             "int" => ValueKind::Int,
             "float" => ValueKind::Float,

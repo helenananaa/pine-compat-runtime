@@ -1,6 +1,6 @@
 use pine_ir::HirCallArg;
 
-use super::linalg::{eigenvalues, eigenvectors, pseudo_inverse};
+use super::linalg::{eigenvalues_with_work, eigenvectors_with_work, pseudo_inverse_with_work};
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -64,7 +64,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.matrix_rank(id).unwrap_or(PineValue::Na))
     }
 
-    pub(crate) fn matrix_det(&self, id: u32) -> Result<Option<PineValue>, RuntimeError> {
+    pub(crate) fn matrix_det(&mut self, id: u32) -> Result<Option<PineValue>, RuntimeError> {
         let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(None);
         };
@@ -78,6 +78,14 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(Some(PineValue::Float(1.0)));
         }
 
+        if !self.resource_budget.matrix.spend(
+            (matrix.rows as u64)
+                .saturating_mul(matrix.columns as u64)
+                .saturating_mul(matrix.rows.min(matrix.columns) as u64)
+                .saturating_mul(3),
+        ) {
+            return Err(self.resource_budget.matrix_error());
+        }
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -126,7 +134,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn matrix_inv(&mut self, id: u32) -> Result<PineValue, RuntimeError> {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         if matrix.rows != matrix.columns {
@@ -136,6 +144,14 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let size = matrix.rows;
+        if !self.resource_budget.matrix.spend(
+            (matrix.rows as u64)
+                .saturating_mul(matrix.columns as u64)
+                .saturating_mul(matrix.rows.min(matrix.columns) as u64)
+                .saturating_mul(3),
+        ) {
+            return Err(self.resource_budget.matrix_error());
+        }
         let mut left = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -197,16 +213,23 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        Ok(self.insert_matrix_storage(
+        if !self.record_collection_allocation(right.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             size,
             size,
-            right.into_iter().map(finite_float_or_na).collect(),
+            right
+                .into_iter()
+                .map(finite_float_or_na)
+                .collect::<Vec<_>>()
+                .into(),
         ))
     }
 
     pub(crate) fn matrix_eigenvalues(&mut self, id: u32) -> Result<PineValue, RuntimeError> {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         if matrix.rows != matrix.columns {
@@ -215,6 +238,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
+        let size = matrix.rows;
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -226,17 +250,22 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let Some(values) = eigenvalues(&values, matrix.rows) else {
+        let result = eigenvalues_with_work(&values, size, &mut self.resource_budget.matrix);
+        self.resource_budget.check()?;
+        let Some(values) = result else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(
+        if !self.record_collection_allocation(values.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(self.insert_precharged_array_values(
             ArrayElementKind::Float,
             values.into_iter().map(finite_float_or_na).collect(),
         ))
     }
 
     pub(crate) fn matrix_eigenvectors(&mut self, id: u32) -> Result<PineValue, RuntimeError> {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         if matrix.rows != matrix.columns {
@@ -257,22 +286,33 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let Some(vectors) = eigenvectors(&values, size) else {
+        let result = eigenvectors_with_work(&values, size, &mut self.resource_budget.matrix);
+        self.resource_budget.check()?;
+        let Some(vectors) = result else {
             return Ok(PineValue::Na);
         };
-        Ok(self.insert_matrix_storage(
+        if !self.record_collection_allocation(vectors.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             size,
             size,
-            vectors.into_iter().map(finite_float_or_na).collect(),
+            vectors
+                .into_iter()
+                .map(finite_float_or_na)
+                .collect::<Vec<_>>()
+                .into(),
         ))
     }
 
     pub(crate) fn matrix_pinv(&mut self, id: u32) -> PineValue {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return PineValue::Na;
         };
 
+        let rows = matrix.rows;
+        let columns = matrix.columns;
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -284,21 +324,40 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let inverse_values = pseudo_inverse(&values, matrix.rows, matrix.columns);
-        self.insert_matrix_storage(
+        let inverse_values =
+            pseudo_inverse_with_work(&values, rows, columns, &mut self.resource_budget.matrix);
+        if self.resource_budget.check().is_err() {
+            return PineValue::Na;
+        }
+        if !self.record_collection_allocation(inverse_values.len()) {
+            return PineValue::Na;
+        }
+        self.insert_matrix_payload(
             MatrixElementKind::Float,
-            matrix.columns,
-            matrix.rows,
-            inverse_values.into_iter().map(finite_float_or_na).collect(),
+            columns,
+            rows,
+            inverse_values
+                .into_iter()
+                .map(finite_float_or_na)
+                .collect::<Vec<_>>()
+                .into(),
         )
     }
 
-    pub(crate) fn matrix_rank(&self, id: u32) -> Option<PineValue> {
+    pub(crate) fn matrix_rank(&mut self, id: u32) -> Option<PineValue> {
         let matrix = self.matrix_store.get(&id)?;
         if matrix.values.is_empty() {
             return Some(PineValue::Int(0));
         }
 
+        if !self.resource_budget.matrix.spend(
+            (matrix.rows as u64)
+                .saturating_mul(matrix.columns as u64)
+                .saturating_mul(matrix.rows.min(matrix.columns) as u64)
+                .saturating_mul(3),
+        ) {
+            return None;
+        }
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -310,48 +369,17 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let mut rank = 0_usize;
-        let mut pivot_row = 0_usize;
-        for column in 0..matrix.columns {
-            let mut best_row = pivot_row;
-            let mut best_abs = 0.0;
-            for row in pivot_row..matrix.rows {
-                let candidate_abs = values[row * matrix.columns + column].abs();
-                if candidate_abs > best_abs {
-                    best_abs = candidate_abs;
-                    best_row = row;
-                }
-            }
-            if best_abs == 0.0 {
-                continue;
-            }
-
-            if best_row != pivot_row {
-                for swap_column in 0..matrix.columns {
-                    values.swap(
-                        pivot_row * matrix.columns + swap_column,
-                        best_row * matrix.columns + swap_column,
-                    );
-                }
-            }
-
-            let pivot_value = values[pivot_row * matrix.columns + column];
-            for row in (pivot_row + 1)..matrix.rows {
-                let factor = values[row * matrix.columns + column] / pivot_value;
-                values[row * matrix.columns + column] = 0.0;
-                for elimination_column in (column + 1)..matrix.columns {
-                    values[row * matrix.columns + elimination_column] -=
-                        factor * values[pivot_row * matrix.columns + elimination_column];
-                }
-            }
-
-            rank += 1;
-            pivot_row += 1;
-            if pivot_row == matrix.rows {
-                break;
-            }
-        }
-
-        Some(PineValue::Int(rank as i64))
+        let rank = super::linalg::rank(&mut values, matrix.rows, matrix.columns, || {
+            matrix
+                .values
+                .iter()
+                .map(|value| value.as_f64().expect("numeric matrix validated"))
+                .collect()
+        });
+        Some(rank.map_or(PineValue::Na, |rank| PineValue::Int(rank as i64)))
     }
 }
+
+#[cfg(test)]
+#[path = "linear_algebra_tests.rs"]
+mod tests;

@@ -81,20 +81,16 @@ fn resolve_udf_arg_indices_with_defaults(
 pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Call { callee, args } => {
-            let name = expr_name(callee);
-            name.as_deref().is_some_and(|name| {
-                is_output_or_declaration_builtin(name)
-                    || is_array_mutation_builtin(name)
-                    || is_array_mutation_method_call_name(name)
-                    || is_map_mutation_builtin(name)
-                    || is_map_mutation_method_call_name(name)
-            }) || args
-                .iter()
-                .any(|arg| contains_output_or_declaration_call(&arg.value))
+            call_has_side_effect(callee)
+                || contains_output_or_declaration_call(callee)
+                || args
+                    .iter()
+                    .any(|arg| contains_output_or_declaration_call(&arg.value))
         }
-        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } | ExprKind::Group(expr) => {
-            contains_output_or_declaration_call(expr)
-        }
+        ExprKind::Unary { expr, .. }
+        | ExprKind::History { expr, .. }
+        | ExprKind::Group(expr)
+        | ExprKind::Member { receiver: expr, .. } => contains_output_or_declaration_call(expr),
         ExprKind::Binary { left, right, .. } => {
             contains_output_or_declaration_call(left) || contains_output_or_declaration_call(right)
         }
@@ -143,46 +139,9 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                 || step
                     .as_deref()
                     .is_some_and(contains_output_or_declaration_call)
-                || body.iter().any(|statement| match &statement.kind {
-                    StmtKind::Expr(expr) => contains_output_or_declaration_call(expr),
-                    StmtKind::Decl { value, .. }
-                    | StmtKind::Reassign { value, .. }
-                    | StmtKind::FieldReassign { value, .. }
-                    | StmtKind::TupleDecl { value, .. } => {
-                        contains_output_or_declaration_call(value)
-                    }
-                    StmtKind::ArrayFieldReassign {
-                        array,
-                        index,
-                        value,
-                        ..
-                    } => {
-                        contains_output_or_declaration_call(array)
-                            || contains_output_or_declaration_call(index)
-                            || contains_output_or_declaration_call(value)
-                    }
-                    StmtKind::If {
-                        condition,
-                        then_branch,
-                        else_branch,
-                    } => {
-                        contains_output_or_declaration_call(condition)
-                            || then_branch.iter().any(|statement| {
-                                statement_contains_output_or_declaration_call(statement)
-                            })
-                            || else_branch.iter().any(|statement| {
-                                statement_contains_output_or_declaration_call(statement)
-                            })
-                    }
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => true,
-                    StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
-                    StmtKind::Import(_)
-                    | StmtKind::Library(_)
-                    | StmtKind::Export(_)
-                    | StmtKind::UserType(_)
-                    | StmtKind::Method(_) => false,
-                    StmtKind::Unsupported { .. } => false,
-                })
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
         }
         ExprKind::While { condition, body } => {
             contains_output_or_declaration_call(condition)
@@ -199,6 +158,29 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
         ExprKind::Tuple(items) => items.iter().any(contains_output_or_declaration_call),
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
     }
+}
+
+pub(crate) fn call_has_side_effect(callee: &Expr) -> bool {
+    matches!(&callee.kind, ExprKind::Member { name, .. } if member_method_may_have_side_effect(name))
+        || expr_name(callee).as_deref().is_some_and(|name| {
+            is_output_or_declaration_builtin(name)
+                || is_array_mutation_builtin(name)
+                || is_array_mutation_method_call_name(name)
+                || is_map_mutation_builtin(name)
+                || is_map_mutation_method_call_name(name)
+        })
+}
+
+fn member_method_may_have_side_effect(method: &str) -> bool {
+    pine_builtins::PHASE_1_BUILTINS.iter().any(|signature| {
+        signature
+            .name
+            .rsplit_once('.')
+            .is_some_and(|(_, name)| name == method)
+            && (is_output_or_declaration_builtin(signature.name)
+                || is_array_mutation_builtin(signature.name)
+                || is_map_mutation_builtin(signature.name))
+    })
 }
 
 fn switch_arm_result_contains_output_or_declaration_call(result: &SwitchArmResult) -> bool {
@@ -218,7 +200,9 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
     match &statement.kind {
         StmtKind::Expr(_)
         | StmtKind::Decl { .. }
+        | StmtKind::TupleDecl { .. }
         | StmtKind::Reassign { .. }
+        | StmtKind::FieldReassign { .. }
         | StmtKind::For { .. }
         | StmtKind::ForIn { .. }
         | StmtKind::While { .. } => true,
@@ -232,6 +216,32 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
         }
         _ => false,
     }
+}
+
+pub(crate) fn field_reassign_result_expr(
+    receiver: &str,
+    path: &[String],
+    field: &str,
+    span: Span,
+) -> Expr {
+    let mut result = Expr {
+        kind: ExprKind::Identifier(receiver.to_owned()),
+        span,
+    };
+    for name in path
+        .iter()
+        .map(String::as_str)
+        .chain(std::iter::once(field))
+    {
+        result = Expr {
+            kind: ExprKind::Member {
+                receiver: Box::new(result),
+                name: name.to_owned(),
+            },
+            span,
+        };
+    }
+    result
 }
 
 pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
@@ -264,7 +274,34 @@ pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) ->
                     .iter()
                     .any(statement_contains_output_or_declaration_call)
         }
-        StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => true,
+        StmtKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            contains_output_or_declaration_call(from)
+                || contains_output_or_declaration_call(to)
+                || step
+                    .as_ref()
+                    .is_some_and(contains_output_or_declaration_call)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
+        StmtKind::ForIn { iterable, body, .. } => {
+            contains_output_or_declaration_call(iterable)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
+        StmtKind::While { condition, body } => {
+            contains_output_or_declaration_call(condition)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
         StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
         StmtKind::Import(_)
         | StmtKind::Library(_)
@@ -308,58 +345,27 @@ impl Analyzer {
         } else {
             Qualifier::Series
         };
-        let (pine_type, user_type_name) =
-            match type_name {
-                _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
-                    let element_type = &type_name["array<".len()..type_name.len() - 1];
-                    if let Some(kind) = array_kind_from_element_type_name(element_type) {
-                        (PineType::new(Qualifier::Series, kind), None)
-                    } else if matches!(
-                        classify_user_type_array_element_names(
-                            &self.user_types,
-                            &[element_type.to_owned()]
-                        ),
-                        Some(UserTypeArrayElementInference::SameScalarLocal(_))
-                    ) || self.imported_user_types.get(element_type).is_some_and(
-                        |user_type| self.imported_user_type_has_scalar_tree_fields(user_type),
-                    ) {
-                        (
-                            PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
-                            Some(element_type.to_owned()),
-                        )
-                    } else {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_FUNCTION_PARAM_TYPE",
-                            format!("function parameter type `{type_name}` is not supported"),
-                            span,
-                        ));
-                        return None;
-                    }
-                }
-                "int" => (PineType::new(qualifier, ValueKind::Int), None),
-                "float" => (PineType::new(qualifier, ValueKind::Float), None),
-                "bool" => (PineType::new(qualifier, ValueKind::Bool), None),
-                "string" => (PineType::new(qualifier, ValueKind::String), None),
-                "color" => (PineType::new(qualifier, ValueKind::Color), None),
-                "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
-                "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
-                "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
-                "polyline" => (PineType::new(Qualifier::Series, ValueKind::Polyline), None),
-                "box" => (PineType::new(Qualifier::Series, ValueKind::Box), None),
-                "table" => (PineType::new(Qualifier::Series, ValueKind::Table), None),
-                "chart.point" => (
-                    PineType::new(Qualifier::Series, ValueKind::ChartPoint),
-                    None,
-                ),
-                _ if self.user_types.contains_key(type_name) => (
-                    PineType::new(Qualifier::Series, ValueKind::UserType),
-                    Some(type_name.to_owned()),
-                ),
-                _ if self.imported_user_types.contains_key(type_name) => (
-                    PineType::new(Qualifier::Series, ValueKind::UserType),
-                    Some(type_name.to_owned()),
-                ),
-                _ => {
+        let (pine_type, user_type_name) = match type_name {
+            _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
+                let element_type = &type_name["array<".len()..type_name.len() - 1];
+                if let Some(kind) = array_kind_from_element_type_name(element_type) {
+                    (PineType::new(Qualifier::Series, kind), None)
+                } else if matches!(
+                    classify_user_type_array_element_names(
+                        &self.user_types,
+                        &[element_type.to_owned()]
+                    ),
+                    Some(UserTypeArrayElementInference::SameLocal(_))
+                ) || self
+                    .imported_user_types
+                    .get(element_type)
+                    .is_some_and(|_| self.imported_user_type_array_is_supported(element_type))
+                {
+                    (
+                        PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
+                        Some(element_type.to_owned()),
+                    )
+                } else {
                     self.diagnostics.push(Diagnostic::error(
                         "E_FUNCTION_PARAM_TYPE",
                         format!("function parameter type `{type_name}` is not supported"),
@@ -367,7 +373,39 @@ impl Analyzer {
                     ));
                     return None;
                 }
-            };
+            }
+            "int" => (PineType::new(qualifier, ValueKind::Int), None),
+            "float" => (PineType::new(qualifier, ValueKind::Float), None),
+            "bool" => (PineType::new(qualifier, ValueKind::Bool), None),
+            "string" => (PineType::new(qualifier, ValueKind::String), None),
+            "color" => (PineType::new(qualifier, ValueKind::Color), None),
+            "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
+            "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
+            "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
+            "polyline" => (PineType::new(Qualifier::Series, ValueKind::Polyline), None),
+            "box" => (PineType::new(Qualifier::Series, ValueKind::Box), None),
+            "table" => (PineType::new(Qualifier::Series, ValueKind::Table), None),
+            "chart.point" => (
+                PineType::new(Qualifier::Series, ValueKind::ChartPoint),
+                None,
+            ),
+            _ if self.user_types.contains_key(type_name) => (
+                PineType::new(Qualifier::Series, ValueKind::UserType),
+                Some(type_name.to_owned()),
+            ),
+            _ if self.imported_user_types.contains_key(type_name) => (
+                PineType::new(Qualifier::Series, ValueKind::UserType),
+                Some(type_name.to_owned()),
+            ),
+            _ => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_PARAM_TYPE",
+                    format!("function parameter type `{type_name}` is not supported"),
+                    span,
+                ));
+                return None;
+            }
+        };
         Some(FunctionParamInfo {
             pine_type,
             explicit_series,
@@ -505,8 +543,8 @@ impl Analyzer {
                 && self.block_depth == 0
                 && matches!(&arg.value.kind, ExprKind::Call { callee, args }
                     if expr_name(callee).is_some_and(|name| name.starts_with("input."))
-                        && args.iter().all(|arg| !contains_output_or_declaration_call(&arg.value)));
-            if !direct_global_input && contains_output_or_declaration_call(&arg.value) {
+                        && args.iter().all(|arg| !self.argument_has_side_effect(&arg.value)));
+            if !direct_global_input && self.argument_has_disallowed_udf_side_effect(&arg.value) {
                 self.unsupported(
                     "function_side_effect",
                     "side-effecting calls cannot be passed as user-defined function arguments",
@@ -622,29 +660,32 @@ impl Analyzer {
             }
             if let Some(expected_type) = expected_type {
                 if !can_assign(expected_type.pine_type, arg_type) {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_FUNCTION_ARG_TYPE",
-                        format!(
-                            "cannot pass {} to function parameter `{}` of type {}",
-                            pine_type_name(arg_type),
-                            param,
-                            pine_type_name(expected_type.pine_type)
+                    self.push_diagnostic_in_context(
+                        Diagnostic::error(
+                            "E_FUNCTION_ARG_TYPE",
+                            format!(
+                                "cannot pass {} to function parameter `{}` of type {}",
+                                pine_type_name(arg_type),
+                                param,
+                                pine_type_name(expected_type.pine_type)
+                            ),
+                            expected_type.span,
                         ),
-                        expected_type.span,
-                    ));
+                        function.source_context_id,
+                    );
                 }
                 if expected_type.pine_type.kind == ValueKind::UserTypeArray {
                     if let Some(expected_type_name) = &expected_type.user_type_name {
                         if arg_user_type_array.as_deref() == Some(expected_type_name.as_str()) {
                             self.mark_symbol_user_type_array(symbol, expected_type_name.clone());
                         } else if arg_type.kind == ValueKind::UserTypeArray {
-                            self.diagnostics.push(Diagnostic::error(
+                            self.push_diagnostic_in_context(Diagnostic::error(
                                 "E_FUNCTION_ARG_TYPE",
                                 format!(
                                     "cannot pass a different user-defined type array to function parameter `{param}`",
                                 ),
                                 expected_type.span,
-                            ));
+                            ), function.source_context_id);
                         }
                     }
                 } else {
@@ -813,12 +854,33 @@ impl Analyzer {
                     return None;
                 };
                 for statement in prefix {
+                    if self.legacy.dialect().version() <= 2 && self.function_depth > 0 {
+                        self.predeclare_legacy_function_self_history(statement);
+                    }
                     self.analyze_stmt(statement);
+                }
+                if self.legacy.dialect().version() <= 2 && self.function_depth > 0 {
+                    self.predeclare_legacy_function_self_history(last);
                 }
                 match &last.kind {
                     StmtKind::Expr(expr) => self.analyze_expr(expr),
+                    StmtKind::TupleDecl { value, .. } => {
+                        self.analyze_stmt(last);
+                        self.type_of_expr_with_params(value, &HashMap::new())
+                    }
                     StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                         self.analyze_function_symbol_statement_return(last, name)
+                    }
+                    StmtKind::FieldReassign {
+                        receiver,
+                        path,
+                        field,
+                        ..
+                    } => {
+                        self.analyze_stmt(last);
+                        self.analyze_expr(&field_reassign_result_expr(
+                            receiver, path, field, last.span,
+                        ))
                     }
                     StmtKind::If {
                         condition,
@@ -875,6 +937,49 @@ impl Analyzer {
                 }
             }
         }
+    }
+
+    fn predeclare_legacy_function_self_history(&mut self, statement: &Stmt) {
+        let StmtKind::Decl {
+            mode: pine_syntax::DeclMode::Normal,
+            declared_type: None,
+            name,
+            value,
+        } = &statement.kind
+        else {
+            return;
+        };
+        let mut self_history_span = None;
+        crate::modules::visit_expression(value, &mut |expr| {
+            if let ExprKind::History { expr: target, .. } = &expr.kind
+                && matches!(&target.kind, ExprKind::Identifier(target_name) if target_name == name)
+            {
+                self_history_span = Some(expr.span);
+            }
+        });
+        let Some(history_span) = self_history_span else {
+            return;
+        };
+        // Prior locals have their actual types by this point. Seed only the
+        // current recurrence before analyzing its own initializer.
+        let seed = PineType::new(Qualifier::Series, ValueKind::Float);
+        let inferred = std::collections::HashMap::from([(name.clone(), seed)]);
+        if !self
+            .legacy_graph_type_of_expr(value, &inferred)
+            .is_some_and(|pine_type| pine_type.kind == ValueKind::Float)
+        {
+            return;
+        }
+        let symbol = self.define_local_symbol(name, seed, None, false);
+        self.legacy_v2_predeclared_symbols.insert(symbol.id);
+        self.compatibility
+            .legacy_emulations
+            .push(crate::compatibility::LegacyEmulation {
+                feature: format!("v{}.self_reference", self.legacy.dialect().version()),
+                behavior: "legacy function-local self-history uses one series identity across bars"
+                    .to_owned(),
+                span: history_span,
+            });
     }
 
     fn analyze_function_symbol_statement_return(
@@ -985,8 +1090,23 @@ impl Analyzer {
         }
         let pine_type = match &last.kind {
             StmtKind::Expr(expr) => self.analyze_expr(expr),
+            StmtKind::TupleDecl { value, .. } => {
+                self.analyze_stmt(last);
+                self.type_of_expr_with_params(value, &HashMap::new())
+            }
             StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                 self.analyze_function_symbol_statement_return(last, name)
+            }
+            StmtKind::FieldReassign {
+                receiver,
+                path,
+                field,
+                ..
+            } => {
+                self.analyze_stmt(last);
+                self.analyze_expr(&field_reassign_result_expr(
+                    receiver, path, field, last.span,
+                ))
             }
             StmtKind::If {
                 condition,

@@ -56,6 +56,14 @@ like forming updates, then commit current series values to historical buffers.
 
 ## State Partitions
 
+Request-provider forming or confirmed updates can re-execute an existing
+forming chart bar. This re-execution is a subsequent observation:
+`opening_update` is false and the chart's latest explicit execution timestamp
+is retained. A provider confirmation does not confirm the chart bar or advance
+its committed history. The host must send a chart `Confirmed` update separately.
+The regression and offline cross-surface receipt are recorded in
+[intrabar/MTF acceptance](INTRABAR_MTF_ACCEPTANCE_20261001.md).
+
 Realtime execution needs explicit state partitions:
 
 - committed series history
@@ -103,9 +111,10 @@ replica.apply(&changes)?;
 assert_eq!(replica.result(), &runtime.result());
 ```
 
-`RuntimeChanges` schema 2 carries this-update series append/current-bar replace,
+`RuntimeChanges` schema 4 carries this-update series append/current-bar replace,
 drawing tails and deletion, order/fill/alert changes, preview/confirmed visibility,
-`baseRevision` and `revision`. A cursor-bearing `RuntimeReplica` applies changes
+`baseRevision`, `revision` and the absolute display origin `retainedFrom`.
+A cursor-bearing `RuntimeReplica` applies changes
 in place. Identical retransmission returns false; stale, conflicting, wrong-schema
 and missing revisions fail before mutation. After a gap, capture a producer
 snapshot with its revision and reset the consumer; do not infer a missing base.
@@ -115,10 +124,21 @@ Python uses `session.replica()`, `apply_forming` / `apply_confirmed`, then
 `replica.apply(changes)`. `apply_runtime_changes(replica, changes)` is the same
 in-place operation and returns a bool; the unreleased dictionary-to-dictionary
 helper is replaced. `session.stream_snapshot()` atomically captures a result and
-revision for `RuntimeReplica(result, revision=...)` or `replica.reset(...)`.
+revision and `retainedFrom` for replica construction or `replica.reset(...)`.
+Preserve all three fields when restoring a physically pruned stream:
+
+```python
+snapshot = session.stream_snapshot()
+replica.reset(
+    snapshot["result"],
+    revision=snapshot["revision"],
+    retained_from=snapshot["retainedFrom"],
+)
+```
+
 Only explicit `replica.result()` constructs a complete Python dictionary.
 Existing `update_forming`, `update_confirmed`, `result()` and `confirmed_result()`
-retain their complete snapshot contracts (runtime output schema 8 unchanged).
+retain their complete snapshot contracts (runtime output schema 9).
 
 A host-owned historical correction is `correct_historical(from_time, bars)` /
 Python `session.correct(from_time, bars)` / WASM `correct(fromTime, barsCsv)`.
@@ -126,9 +146,17 @@ The session keeps confirmed bars with `time < from_time` and re-executes that
 prefix plus the supplied suffix from a blank runtime that preserves the same
 program, inputs, request environment, request feed, magnifier and session
 windows, then discards forming state. Confirmed request-feed extras that close
-after the new last confirmed chart bar are dropped so replay cannot see
-`barstate.islast` or HTF close times from a discarded tail. Later forming
-request extras are kept for the next chart forming bar. An empty suffix
+after the close of the new last confirmed chart bar are dropped so replay cannot
+see `barstate.islast` or HTF close times from a discarded tail. The last retained
+request extra must have a nominal close within that chart boundary; earlier
+extras may close sooner at the next retained request open. If a discarded early
+successor supplied the only earlier close, trimming also removes its now-unclosed
+predecessor, continuing until the remaining prefix has a stable terminal close.
+This conservatively drops that irregular suffix and makes repeated replay stable.
+Later forming request extras that have not nominally closed by that boundary
+are kept for the next chart forming bar, even if their higher-timeframe open
+precedes the chart boundary. Closed lower-timeframe extras within the final
+retained chart bar are kept. Monthly boundaries use calendar months. An empty suffix
 truncates from `from_time`.
 `replay_historical` / `session.replay` still replaces the entire confirmed
 history when the host already has the combined list. Failed correct/replay
@@ -246,7 +274,12 @@ Next work:
 
 ## Observed realtime broker ticks
 
-A forming or confirmed update supplies one observed price at `bar.close`. The
+A forming or confirmed update supplies an observed close and OHLC range.
+For pending market entries and closes, a same-timestamp update that expands
+exactly one extreme uses that new high or low. First observations, unchanged
+ranges and simultaneous high/low expansion use close; price-condition orders
+continue to evaluate close. The two-sided fallback is not native-qualified.
+See [the scoped market-order correction](REALTIME_MARKET_EXTREME_AUDIT.md).
 OHLC fields remain available to the script but are not replayed as historical
 price paths. Supply every required price observation through the host adapter;
 the core cannot reconstruct unobserved fills from candle summaries. Pending

@@ -13,7 +13,7 @@ use super::strategy::{
 };
 use crate::PineValue;
 
-pub const PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 3;
+pub const PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 4;
 pub const MIN_RUNTIME_CHANGES_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -108,6 +108,7 @@ pub struct SeriesHeader {
     pub join: PineValue,
     pub format: PineValue,
     pub precision: PineValue,
+    pub linestyle: PineValue,
 }
 
 impl Default for SeriesHeader {
@@ -121,6 +122,7 @@ impl Default for SeriesHeader {
             join: PineValue::Bool(false),
             format: PineValue::String("format.inherit".to_owned()),
             precision: PineValue::Na,
+            linestyle: PineValue::String("plot.linestyle_solid".to_owned()),
         }
     }
 }
@@ -319,6 +321,10 @@ pub enum FillAction {
         start: usize,
         values: Vec<PineValue>,
     },
+    SetGradient {
+        start: usize,
+        values: Vec<crate::FillGradientSample>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -489,6 +495,9 @@ pub(crate) fn drop_display_prefix(result: &mut RuntimeResult, advance: usize, or
         }
         for item in &mut result.fills {
             drain_prefix(&mut item.colors, advance);
+            if let Some(samples) = &mut item.gradient {
+                drain_prefix(samples, advance);
+            }
         }
     }
     if origin == 0 {
@@ -648,6 +657,7 @@ fn apply_plot_header(plot: &mut PlotSeries, header: &SeriesHeader) {
     plot.join = header.join.clone();
     plot.format = header.format.clone();
     plot.precision = header.precision.clone();
+    plot.linestyle = header.linestyle.clone();
 }
 
 fn apply_plot_char(result: &mut RuntimeResult, change: &SeriesChange) {
@@ -892,6 +902,13 @@ fn apply_fill_change(result: &mut RuntimeResult, change: &FillChange, origin: us
                 splice_values(&mut existing.colors, local_start(*start, origin), values);
             }
         }
+        FillAction::SetGradient { start, values } => {
+            if let Some(existing) = result.fills.iter_mut().find(|fill| fill.id == change.id) {
+                let samples = existing.gradient.get_or_insert_with(Vec::new);
+                let start = local_start(*start, origin);
+                splice_vec(samples, start, values);
+            }
+        }
     }
 }
 
@@ -1019,7 +1036,7 @@ pub(crate) fn series_change_from_lens(
     new_len: usize,
     display_origin: usize,
     fields_from: impl Fn(usize) -> SeriesFields,
-    header: Option<SeriesHeader>,
+    header: impl FnOnce() -> Option<SeriesHeader>,
 ) -> Option<SeriesChange> {
     if new_len == 0 && old_len.unwrap_or(0) == 0 {
         return None;
@@ -1038,6 +1055,10 @@ pub(crate) fn series_change_from_lens(
         op,
         start,
         fields: fields_from(start),
-        header: old_len.is_none().then_some(header).flatten(),
+        header: old_len.is_none().then(header).flatten(),
     })
 }
+
+#[cfg(test)]
+#[path = "changes/lazy_header_tests.rs"]
+mod lazy_header_tests;

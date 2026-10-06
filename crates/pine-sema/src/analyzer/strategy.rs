@@ -168,8 +168,30 @@ impl Analyzer {
         }
 
         self.script_declaration = Some((mode, span));
+        let signature = pine_builtins::get_phase_1_builtin(name).expect("script signature");
+        if let Some(value) = args.iter().enumerate().find_map(|(index, arg)| {
+            (arg.name.as_deref() == Some("dynamic_requests")
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(index)
+                        .is_some_and(|param| param.name == "dynamic_requests")))
+            .then_some(arg)
+        }) {
+            if self.legacy.dialect() < crate::PineDialect::V5 {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`dynamic_requests` requires Pine v5 or v6",
+                    value.span,
+                ));
+            } else if let Some(enabled) = self.known_const_bool_value(&value.value) {
+                self.dynamic_requests = enabled;
+            }
+        }
         if mode == ScriptMode::Strategy {
             self.validate_strategy_declaration_args(args);
+        } else {
+            self.validate_indicator_timeframe_args(args);
         }
     }
 
@@ -212,6 +234,8 @@ impl Analyzer {
             self.validate_strategy_order_args(args);
         } else if name == "strategy.close" {
             self.validate_strategy_close_args(args);
+        } else if name == "strategy.close_all" {
+            self.validate_strategy_close_all_args(args);
         } else if name == "strategy.exit" {
             self.validate_strategy_exit_args(args);
         } else if name == "strategy.risk.allow_entry_in" {
@@ -302,17 +326,9 @@ impl Analyzer {
                         ));
                     }
                 }
-                "qty" => {
-                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
-                        && qty <= 0.0
-                    {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy.entry` argument `qty` must be positive",
-                            arg.span,
-                        ));
-                    }
-                }
+                // Order quantities are checked at execution time. A zero
+                // quantity is a no-op and `na` selects the declared default.
+                "qty" => {}
                 "limit" => {
                     if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
@@ -595,17 +611,7 @@ impl Analyzer {
                         ));
                     }
                 }
-                "qty" => {
-                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
-                        && (!qty.is_finite() || qty <= 0.0)
-                    {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy.order` argument `qty` must be finite and positive",
-                            arg.span,
-                        ));
-                    }
-                }
+                "qty" => {}
                 "limit" => {
                     if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
@@ -658,6 +664,13 @@ impl Analyzer {
                 continue;
             };
             match name {
+                "when" if self.legacy.dialect() >= crate::PineDialect::V6 => {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        "`strategy.close` argument `when` was removed in Pine v6",
+                        arg.span,
+                    ));
+                }
                 "qty" => {
                     if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && (!qty.is_finite() || qty <= 0.0)
@@ -681,6 +694,20 @@ impl Analyzer {
                     }
                 }
                 _ => {}
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_close_all_args(&mut self, args: &[CallArg]) {
+        for (index, arg) in args.iter().enumerate() {
+            if (arg.name.as_deref() == Some("when") || (arg.name.is_none() && index == 4))
+                && self.legacy.dialect() >= crate::PineDialect::V6
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`strategy.close_all` argument `when` was removed in Pine v6",
+                    arg.span,
+                ));
             }
         }
     }
@@ -742,13 +769,22 @@ impl Analyzer {
                 }
             }
         }
+        let legacy_unpaired_trail = self.legacy.dialect() <= crate::PineDialect::V4
+            && has_trail_points
+            && !has_trail_offset
+            && !has_trail_price;
+        let legacy_trail_profit = legacy_unpaired_trail && has_profit;
         let trigger_count = usize::from(has_stop)
             + usize::from(has_limit)
-            + usize::from(has_profit)
+            + usize::from(has_profit || legacy_trail_profit)
             + usize::from(has_loss);
         let trailing_activation_count =
             usize::from(has_trail_price) + usize::from(has_trail_points);
-        let has_trailing_args = trailing_activation_count > 0 || has_trail_offset;
+        let has_trailing_args = !legacy_unpaired_trail
+            && (has_trail_offset || (trailing_activation_count > 0 && trigger_count == 0));
+        if legacy_unpaired_trail && trigger_count == 0 {
+            return;
+        }
         if has_trailing_args {
             if trigger_count > 0 {
                 self.diagnostics.push(Diagnostic::error(

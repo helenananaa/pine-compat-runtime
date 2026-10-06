@@ -2,6 +2,32 @@ use crate::signature::{Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, Re
 
 use super::types::*;
 
+/// String builtins with deterministic scalar results. Callers that require
+/// scalar-only inputs must also validate argument types and dependencies;
+/// `str.tostring` and `str.format` can otherwise consume collections.
+pub fn is_pure_scalar_string_builtin(name: &str) -> bool {
+    matches!(
+        name,
+        "str.length"
+            | "str.upper"
+            | "str.lower"
+            | "str.contains"
+            | "str.startswith"
+            | "str.endswith"
+            | "str.pos"
+            | "str.substring"
+            | "str.trim"
+            | "str.repeat"
+            | "str.replace"
+            | "str.replace_all"
+            | "str.tonumber"
+            | "str.tostring"
+            | "str.format"
+            | "str.match"
+            | "str.format_time"
+    )
+}
+
 const STR_TEXT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "string",
     accepts: Accepts::StringCompatible,

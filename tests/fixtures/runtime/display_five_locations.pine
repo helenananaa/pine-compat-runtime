@@ -1,0 +1,4 @@
+//@version=6
+indicator("Five display locations probe")
+plot((display.pane+display.price_scale+display.status_line+display.data_window+display.pine_screener==display.all)?1:0,"five equal all")
+plot((display.all-display.pane-display.price_scale-display.status_line-display.data_window==display.pine_screener)?1:0,"remaining screener")

@@ -47,6 +47,7 @@ impl<'a> HistoricalRuntime<'a> {
                 force_overlay,
             },
         ));
+        std::sync::Arc::make_mut(&mut self.active_polylines).insert(id);
         Ok(PineValue::Polyline(id))
     }
 
@@ -58,7 +59,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(polyline) = self.polylines.iter_mut().find(|polyline| polyline.id == id) else {
+        let Some(polyline) = self.polylines.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_polyline_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid polyline id `{id}`"),
             });
@@ -75,20 +79,17 @@ impl<'a> HistoricalRuntime<'a> {
         next.bar_index = self.bars;
         next.exists = false;
         polyline.snapshots.push(next);
+        std::sync::Arc::make_mut(&mut self.active_polylines).remove(&id);
         Ok(PineValue::Void)
     }
 
     fn evict_oldest_polylines_at_limit(&mut self) -> Result<(), RuntimeError> {
         let limit = self.max_polyline_count();
         while self.active_polyline_count() >= limit {
-            let Some(polyline) = self.polylines.iter_mut().find(|polyline| {
-                polyline
-                    .snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            }) else {
+            let Some(id) = self.active_polylines.first().copied() else {
                 break;
             };
+            let polyline = self.polylines.get_mut(id).expect("active polyline exists");
             let Some(latest) = polyline.snapshots.last().cloned() else {
                 return Err(RuntimeError {
                     message: format!("polyline `{}` has no snapshots", polyline.id),
@@ -98,20 +99,13 @@ impl<'a> HistoricalRuntime<'a> {
             next.bar_index = self.bars;
             next.exists = false;
             polyline.snapshots.push(next);
+            std::sync::Arc::make_mut(&mut self.active_polylines).remove(&id);
         }
         Ok(())
     }
 
     fn active_polyline_count(&self) -> usize {
-        self.polylines
-            .iter()
-            .filter(|polyline| {
-                polyline
-                    .snapshots
-                    .last()
-                    .is_some_and(|snapshot| snapshot.exists)
-            })
-            .count()
+        self.active_polylines.len()
     }
 
     fn max_polyline_count(&self) -> usize {

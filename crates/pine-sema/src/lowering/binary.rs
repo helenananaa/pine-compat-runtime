@@ -72,7 +72,15 @@ impl Analyzer {
                         pine_type,
                         series_id,
                         kind: HirExprKind::Binary {
-                            op: lower_binary_op(op),
+                            op: if pine_type.kind == ValueKind::PlotDisplay {
+                                match op {
+                                    BinaryOp::Add => pine_ir::HirBinaryOp::DisplayUnion,
+                                    BinaryOp::Sub => pine_ir::HirBinaryOp::DisplayDifference,
+                                    _ => lower_binary_op(op),
+                                }
+                            } else {
+                                lower_binary_op(op)
+                            },
                             left: Box::new(left),
                             right: Box::new(right),
                         },

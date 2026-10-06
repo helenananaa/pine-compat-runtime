@@ -92,52 +92,27 @@ fn fixed_timezone_short_name(offset: i32) -> String {
     format!("GMT{sign}{:02}:{:02}", offset / 3600, (offset % 3600) / 60)
 }
 
-pub(crate) fn timeframe_from_seconds(seconds: i64) -> Option<String> {
-    if seconds <= 0 {
-        return None;
-    }
-    if matches!(seconds, 1 | 5 | 10 | 15 | 30 | 45) {
-        return Some(format!("{seconds}S"));
-    }
-
-    if seconds % 2_592_000 == 0 {
-        let months = seconds / 2_592_000;
-        if (1..=12).contains(&months) {
-            return Some(if months == 1 {
-                "M".to_owned()
-            } else {
-                format!("{months}M")
-            });
+pub(crate) fn timeframe_from_seconds(seconds: i64) -> String {
+    // Native conversion clamps and rounds to a supported timeframe. Nominal
+    // months have their own exact duration; fixed days are not 30-day months.
+    for duration in [1, 5, 10, 15, 30, 45] {
+        if seconds <= duration {
+            return format!("{duration}S");
         }
+    }
+    if seconds >= 31_536_000 {
+        return "12M".to_owned();
+    }
+    if seconds % 2_628_003 == 0 {
+        return format!("{}M", seconds / 2_628_003);
     }
     if seconds % 604_800 == 0 {
-        let weeks = seconds / 604_800;
-        if (1..=52).contains(&weeks) {
-            return Some(if weeks == 1 {
-                "W".to_owned()
-            } else {
-                format!("{weeks}W")
-            });
-        }
+        return format!("{}W", seconds / 604_800);
     }
-    if seconds % 86_400 == 0 {
-        let days = seconds / 86_400;
-        if (1..=365).contains(&days) {
-            return Some(if days == 1 {
-                "D".to_owned()
-            } else {
-                format!("{days}D")
-            });
-        }
+    if seconds >= 86_400 {
+        return format!("{}D", (seconds + 86_399) / 86_400);
     }
-    if seconds % 60 == 0 {
-        let minutes = seconds / 60;
-        if (1..=1440).contains(&minutes) {
-            return Some(minutes.to_string());
-        }
-    }
-
-    None
+    ((seconds + 59) / 60).to_string()
 }
 
 pub(crate) fn timeframe_bucket(timestamp_ms: i64, seconds: i64) -> Option<i64> {
@@ -148,7 +123,11 @@ pub(crate) fn timeframe_bucket(timestamp_ms: i64, seconds: i64) -> Option<i64> {
     Some(timestamp_ms.div_euclid(duration_ms))
 }
 
-fn timeframe_change_bucket(timestamp_ms: i64, timeframe: &str, seconds: i64) -> Option<i64> {
+pub(crate) fn timeframe_change_bucket(
+    timestamp_ms: i64,
+    timeframe: &str,
+    seconds: i64,
+) -> Option<i64> {
     if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'W') {
         let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
         let epoch_monday = NaiveDate::from_ymd_opt(1970, 1, 5)?;
@@ -161,6 +140,12 @@ fn timeframe_change_bucket(timestamp_ms: i64, timeframe: &str, seconds: i64) -> 
 
     if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
         let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
+        if multiplier <= 12 {
+            let periods_per_year = (12 + multiplier - 1) / multiplier;
+            return i64::from(datetime.year())
+                .checked_mul(periods_per_year)?
+                .checked_add(i64::from(datetime.month0()) / multiplier);
+        }
         let month = i64::from(datetime.year())
             .checked_mul(12)?
             .checked_add(i64::from(datetime.month0()))?;
@@ -185,6 +170,19 @@ fn timeframe_bucket_bounds(bucket: i64, timeframe: &str, seconds: i64) -> Option
     }
 
     if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
+        if multiplier <= 12 {
+            let periods_per_year = (12 + multiplier - 1) / multiplier;
+            let year = bucket.div_euclid(periods_per_year);
+            let first_month = bucket
+                .rem_euclid(periods_per_year)
+                .checked_mul(multiplier)?;
+            let last_month = first_month.checked_add(multiplier)?.min(12);
+            let year_start = year.checked_mul(12)?;
+            return Some((
+                calendar_month_start(year_start.checked_add(first_month)?)?,
+                calendar_month_start(year_start.checked_add(last_month)?)?,
+            ));
+        }
         let open_month = bucket.checked_mul(multiplier)?;
         let close_month = open_month.checked_add(multiplier)?;
         return Some((
@@ -204,9 +202,40 @@ pub(crate) fn calendar_timeframe_close(
     timeframe: &str,
     seconds: i64,
 ) -> Option<i64> {
-    calendar_timeframe_multiplier(timeframe, 'M')?;
+    calendar_timeframe_multiplier(timeframe, 'M')
+        .or_else(|| calendar_timeframe_multiplier(timeframe, 'W'))?;
     let bucket = timeframe_change_bucket(timestamp_ms, timeframe, seconds)?;
     timeframe_bucket_bounds(bucket, timeframe, seconds).map(|(_, close)| close)
+}
+
+pub(crate) fn chart_timeframe_close(
+    timestamp_ms: i64,
+    timeframe: &str,
+    seconds: i64,
+) -> Option<i64> {
+    if timeframe.ends_with(['M', 'W']) {
+        calendar_timeframe_close(timestamp_ms, timeframe, seconds)
+    } else {
+        timestamp_ms.checked_add(seconds.checked_mul(1000)?)
+    }
+}
+
+fn chart_timeframe_offset(
+    timestamp_ms: i64,
+    timeframe: &str,
+    seconds: i64,
+    bars_back: i64,
+) -> Option<i64> {
+    if bars_back == 0 {
+        return Some(timestamp_ms);
+    }
+    if timeframe.ends_with(['M', 'W']) {
+        let bucket =
+            timeframe_change_bucket(timestamp_ms, timeframe, seconds)?.checked_sub(bars_back)?;
+        timeframe_bucket_bounds(bucket, timeframe, seconds).map(|(open, _)| open)
+    } else {
+        timestamp_ms.checked_sub(bars_back.checked_mul(seconds.checked_mul(1000)?)?)
+    }
 }
 
 fn calendar_month_start(month: i64) -> Option<i64> {
@@ -257,7 +286,9 @@ pub(crate) fn timeframe_seconds(timeframe: &str) -> Option<i64> {
         Some('S') if matches!(multiplier, 1 | 5 | 10 | 15 | 30 | 45) => Some(multiplier),
         Some('D') if (1..=365).contains(&multiplier) => multiplier.checked_mul(86_400),
         Some('W') if (1..=52).contains(&multiplier) => multiplier.checked_mul(604_800),
-        Some('M') if (1..=12).contains(&multiplier) => multiplier.checked_mul(2_592_000),
+        // Pine's nominal month conversion is 2,628,003 seconds. Calendar
+        // boundaries still use the month-aware bucket/close helpers.
+        Some('M') if (1..=12).contains(&multiplier) => multiplier.checked_mul(2_628_003),
         _ => None,
     }
 }
@@ -526,8 +557,10 @@ impl<'a> HistoricalRuntime<'a> {
                 })?,
             ),
         };
+        let chart_timeframe = self.request_environment.chart().timeframe();
+        let chart_seconds = chart_timeframe.seconds();
         let timeframe = if args.timeframe.is_empty() {
-            DEFAULT_CHART_TIMEFRAME
+            chart_timeframe.value()
         } else {
             args.timeframe.trim()
         };
@@ -536,18 +569,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
         };
-        let Some(chart_seconds) = timeframe_seconds(DEFAULT_CHART_TIMEFRAME) else {
-            return Err(RuntimeError {
-                message: format!("unsupported default chart timeframe `{DEFAULT_CHART_TIMEFRAME}`"),
-            });
-        };
         if seconds < chart_seconds {
             return Err(RuntimeError {
                 message: format!("{name} unsupported lower timeframe `{timeframe}`"),
             });
         }
         if session.is_none()
-            && seconds == chart_seconds
+            && timeframe == chart_timeframe.value()
             && args.bars_back == 0
             && args.timeframe_bars_back == 0
         {
@@ -560,21 +588,34 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(current_time) = self.current_builtin_i64("time") else {
             return Ok(PineValue::Na);
         };
-        let Some(chart_duration_ms) = chart_seconds.checked_mul(1000) else {
-            return Err(RuntimeError {
-                message: format!("{name} unsupported timeframe `{timeframe}`"),
-            });
-        };
-        let Some(offset_ms) = args.bars_back.checked_mul(chart_duration_ms) else {
-            return Err(RuntimeError {
-                message: format!("{name} bars_back timestamp is out of range"),
-            });
-        };
-        let Some(base_time) = current_time.checked_sub(offset_ms) else {
+        let Some(base_time) = chart_timeframe_offset(
+            current_time,
+            chart_timeframe.value(),
+            chart_seconds,
+            args.bars_back,
+        ) else {
             return Err(RuntimeError {
                 message: format!("{name} bars_back timestamp is out of range"),
             });
         };
+        if session.is_none()
+            && timeframe == chart_timeframe.value()
+            && args.timeframe_bars_back == 0
+        {
+            // A chart-period offset preserves the supplied fixed-period open.
+            // Calendar chart offsets already use their calendar bucket opens.
+            // Other timeframe/session queries continue through bucket alignment.
+            let timestamp = if close_time {
+                chart_timeframe_close(base_time, timeframe, seconds).ok_or_else(|| {
+                    RuntimeError {
+                        message: format!("{name} bars_back timestamp is out of range"),
+                    }
+                })?
+            } else {
+                base_time
+            };
+            return Ok(PineValue::Int(timestamp));
+        }
         let Some(bucket) = timeframe_change_bucket(base_time, timeframe, seconds) else {
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
@@ -810,10 +851,14 @@ impl<'a> HistoricalRuntime<'a> {
                 _ => return Ok(PineValue::Na),
             }
         } else {
-            DEFAULT_CHART_TIMEFRAME.to_owned()
+            self.request_environment
+                .chart()
+                .timeframe()
+                .value()
+                .to_owned()
         };
         let timeframe = if timeframe.is_empty() {
-            DEFAULT_CHART_TIMEFRAME
+            self.request_environment.chart().timeframe().value()
         } else {
             timeframe.trim()
         };
@@ -838,13 +883,7 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Na => return Ok(PineValue::Na),
             _ => return Ok(PineValue::Na),
         };
-        let Some(timeframe) = timeframe_from_seconds(seconds) else {
-            return Err(RuntimeError {
-                message: format!("timeframe.from_seconds unsupported seconds `{seconds}`"),
-            });
-        };
-
-        Ok(PineValue::String(timeframe))
+        Ok(PineValue::String(timeframe_from_seconds(seconds)))
     }
 
     pub(crate) fn eval_timeframe_change(
@@ -860,7 +899,7 @@ impl<'a> HistoricalRuntime<'a> {
             _ => return Ok(PineValue::Na),
         };
         let timeframe = if timeframe.is_empty() {
-            DEFAULT_CHART_TIMEFRAME
+            self.request_environment.chart().timeframe().value()
         } else {
             timeframe.trim()
         };
@@ -873,7 +912,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let Some(previous_time) = self.previous_bar_time else {
-            return Ok(PineValue::Bool(true));
+            return Ok(PineValue::Bool(false));
         };
         let Some(current_bucket) = timeframe_change_bucket(current_time, timeframe, seconds) else {
             return Err(RuntimeError {

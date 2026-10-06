@@ -73,7 +73,9 @@ impl Analyzer {
         span: Span,
     ) -> (PersistenceKind, Option<pine_ir::VarSlotId>) {
         match mode {
-            pine_syntax::DeclMode::Normal => (PersistenceKind::None, None),
+            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const => {
+                (PersistenceKind::None, None)
+            }
             pine_syntax::DeclMode::Var => (PersistenceKind::Var, Some(self.alloc_var_slot())),
             pine_syntax::DeclMode::Varip => {
                 if is_drawing_id_value(value_type.kind) {
@@ -101,7 +103,8 @@ impl Analyzer {
                     return (PersistenceKind::None, None);
                 }
                 if value_type.kind == ValueKind::UserTypeArray
-                    && declared_user_type_array_name.is_none()
+                    && !declared_user_type_array_name
+                        .is_some_and(|name| self.is_scalar_tree_user_type(name))
                 {
                     self.unsupported("varip", VARIP_UDT_ARRAY_UNSUPPORTED_REASON, span);
                     return (PersistenceKind::None, None);
@@ -173,7 +176,7 @@ impl Analyzer {
                     std::slice::from_ref(element_type),
                 ) {
                     match inference {
-                        UserTypeArrayElementInference::SameScalarLocal(_) => {
+                        UserTypeArrayElementInference::SameLocal(_) => {
                             Some(PineType::new(Qualifier::Series, ValueKind::UserTypeArray))
                         }
                         UserTypeArrayElementInference::UnsupportedFieldType(_) => {
@@ -199,8 +202,8 @@ impl Analyzer {
                             None
                         }
                     }
-                } else if let Some(user_type) = self.imported_user_types.get(element_type) {
-                    if self.imported_user_type_has_scalar_tree_fields(user_type) {
+                } else if self.imported_user_types.contains_key(element_type) {
+                    if self.imported_user_type_array_is_supported(element_type) {
                         Some(PineType::new(Qualifier::Series, ValueKind::UserTypeArray))
                     } else {
                         self.diagnostics.push(Diagnostic::error(
@@ -232,6 +235,11 @@ impl Analyzer {
                     "bool" => Some(PineType::new(Qualifier::Series, ValueKind::BoolMatrix)),
                     "string" => Some(PineType::new(Qualifier::Series, ValueKind::StringMatrix)),
                     "color" => Some(PineType::new(Qualifier::Series, ValueKind::ColorMatrix)),
+                    name if self.local_user_type_array_is_supported(name)
+                        || self.imported_user_type_array_is_supported(name) =>
+                    {
+                        Some(PineType::new(Qualifier::Series, ValueKind::UserTypeMatrix))
+                    }
                     _ => {
                         self.diagnostics.push(Diagnostic::error(
                             "E_DECL_TYPE",
@@ -290,13 +298,11 @@ impl Analyzer {
             &self.user_types,
             std::slice::from_ref(&element_type.to_owned()),
         ) {
-            Some(UserTypeArrayElementInference::SameScalarLocal(type_name)) => Some(type_name),
+            Some(UserTypeArrayElementInference::SameLocal(type_name)) => Some(type_name),
             _ if self
                 .imported_user_types
                 .get(element_type)
-                .is_some_and(|user_type| {
-                    self.imported_user_type_has_scalar_tree_fields(user_type)
-                }) =>
+                .is_some_and(|_| self.imported_user_type_array_is_supported(element_type)) =>
             {
                 Some(element_type.to_owned())
             }
@@ -313,9 +319,17 @@ impl Analyzer {
         name: &str,
         target_type: PineType,
         value_type: PineType,
+        value_span: Span,
         span: Span,
     ) {
         if can_assign(target_type, value_type) || value_type.kind == ValueKind::Na {
+            return;
+        }
+        if self.legacy.dialect().version() <= 5
+            && target_type.kind == ValueKind::Bool
+            && matches!(value_type.kind, ValueKind::Int | ValueKind::Float)
+        {
+            self.record_numeric_to_bool_coercion(value_span);
             return;
         }
 
@@ -453,14 +467,41 @@ impl Analyzer {
 
         let local = self.block_depth > 0 || self.function_depth > 0;
         for (index, (name, pine_type)) in names.iter().zip(element_types).enumerate() {
+            let tuple_user_type = (pine_type.kind == ValueKind::UserType)
+                .then(|| self.user_type_name_of_tuple_element(value, index))
+                .flatten();
             let symbol = if local {
                 self.define_local_symbol(name, pine_type, None, self.function_depth == 0)
             } else {
                 self.define_symbol(name, pine_type, None)
             };
             self.bind_symbol(name, statement.span, symbol);
+            // A literal tuple binds each element to its own expression. Request
+            // evaluation can replay that element in the requested context.
+            if let ExprKind::Tuple(items) = &value.without_groups().kind {
+                self.symbol_init_exprs.insert(
+                    symbol.id,
+                    SourcedExpr {
+                        expr: items[index].clone(),
+                        source_context_id: self.current_source_context_id(),
+                    },
+                );
+            }
+            self.symbol_tuple_value_sources.insert(
+                symbol.id,
+                (
+                    SourcedExpr {
+                        expr: value.clone(),
+                        source_context_id: self.current_source_context_id(),
+                    },
+                    index,
+                ),
+            );
             self.symbol_tuple_element_types.remove(&symbol.id);
             self.symbol_tuple_user_type_arrays.remove(&symbol.id);
+            if let Some(type_name) = tuple_user_type {
+                self.mark_symbol_user_type(symbol, type_name);
+            }
             if pine_type.kind != ValueKind::UserTypeArray {
                 continue;
             }

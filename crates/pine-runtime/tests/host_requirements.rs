@@ -2,6 +2,23 @@ use pine_runtime::{RequestArgument, host_requirements, host_requirements_json, r
 use pine_sema::{AnalysisInput, analyze_input, analyze_source};
 use pine_syntax::SourceFile;
 
+#[test]
+fn modern_merge_options_and_calendar_relation_are_reported_without_execution() {
+    let hir = program(
+        "//@version=6\nindicator(\"merge inventory\")\ng=barmerge.gaps_on\na=g\nplot(request.security(\"OTHER\",\"M\",close,gaps=a,lookahead=barmerge.lookahead_on))\nplot(request.security(\"OTHER\",\"M\",close))\n",
+    );
+    let report = host_requirements(&hir);
+    assert_eq!(report.schema_version, 2);
+    assert_eq!(report.requests[0].gaps, "gapsOn");
+    assert_eq!(report.requests[0].lookahead, "lookaheadOn");
+    assert_eq!(
+        report.requests[0].timeframe_relation,
+        "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
+    );
+    assert_eq!(report.requests[1].gaps, "gapsOff");
+    assert_eq!(report.requests[1].lookahead, "lookaheadOff");
+}
+
 fn program(source: &str) -> pine_ir::HirProgram {
     let analysis = analyze_source(&SourceFile::new("requirements.pine", source));
     assert!(
@@ -140,22 +157,120 @@ fn legacy_runtime_request_arguments_are_not_mislabeled_as_literal_defaults() {
 
 #[test]
 fn discovery_does_not_expand_modern_request_admission() {
-    for expr in [
-        "request.security(s, \"60\", close)",
-        "request.security(\"\", \"\", close)",
-    ] {
-        let source = format!(
-            "//@version=6\nindicator(\"boundary\")\ns=input.symbol(\"OTHER\")\nplot({expr})\n"
-        );
-        let analysis = analyze_source(&SourceFile::new("boundary.pine", source));
-        assert!(analysis.hir.is_none());
-        assert!(
-            analysis
-                .diagnostics
-                .iter()
-                .any(|d| d.code == "E_UNSUPPORTED_FEATURE")
-        );
+    let expr = "request.security(s, \"60\", math.random(0, 1, 7))";
+    let source =
+        format!("//@version=6\nindicator(\"boundary\")\ns=input.symbol(\"OTHER\")\nplot({expr})\n");
+    let analysis = analyze_source(&SourceFile::new("boundary.pine", source));
+    assert!(analysis.hir.is_none());
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_UNSUPPORTED_FEATURE")
+    );
+}
+
+#[test]
+fn lower_timeframe_request_is_reported_as_host_data_obligation() {
+    let hir = program(
+        "//@version=6\nindicator(\"lower timeframe\")\ns=input.symbol(\"OTHER\")\na=request.security_lower_tf(s, \"30S\", close)\nplot(array.size(a))\n",
+    );
+    let report = host_requirements(&hir);
+    assert_eq!(report.requests.len(), 1);
+    let request = &report.requests[0];
+    assert_eq!(request.function, "request.security_lower_tf");
+    assert_eq!(request.symbol, RequestArgument::RuntimeExpression);
+    assert_eq!(request.timeframe, RequestArgument::Literal("30S".into()));
+    assert_eq!(request.timeframe_relation, "sameOrLower");
+    assert_eq!(request.gaps, "notApplicable");
+    assert_eq!(request.lookahead, "notApplicable");
+}
+
+#[test]
+fn security_timeframe_inventory_matches_executable_modern_and_legacy_relations() {
+    use std::sync::Arc;
+
+    use pine_runtime::{
+        Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, RequestEnvironment,
+        RequestKey, RequestTimeframe,
+    };
+
+    for version in [4, 5, 6] {
+        let declaration = if version == 4 { "study" } else { "indicator" };
+        let function = if version == 4 {
+            "security"
+        } else {
+            "request.security"
+        };
+        // A three-minute request is lower than a five-minute chart without
+        // being an integer divisor. Six minutes is a forbidden higher ratio;
+        // calendar months retain their explicit boundary-based exception.
+        for (timeframe, accepted) in [
+            ("3", true),
+            ("5", true),
+            ("10", true),
+            ("6", false),
+            ("M", true),
+        ] {
+            let hir = program(&format!(
+                "//@version={version}\n{declaration}(\"relation\")\nplot({function}(\"REMOTE\", \"{timeframe}\", close))\n"
+            ));
+            let report = host_requirements(&hir);
+            assert_eq!(
+                report.requests[0].timeframe_relation,
+                "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
+            );
+            let mut provider = InMemoryRequestDataProvider::new();
+            provider
+                .insert(
+                    RequestKey::new("REMOTE", RequestTimeframe::parse(timeframe).unwrap()),
+                    vec![Bar {
+                        time: 0,
+                        open: 1.0,
+                        high: 1.0,
+                        low: 1.0,
+                        close: 1.0,
+                        volume: 1.0,
+                    }],
+                )
+                .unwrap();
+            let env = RequestEnvironment::new(
+                ChartContext::new("CHART", RequestTimeframe::parse("5").unwrap()),
+                Arc::new(provider),
+            );
+            let mut runtime = HistoricalRuntime::with_request_environment(&hir, env);
+            let outcome = runtime.append_bars(&[Bar {
+                time: 0,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            }]);
+            assert_eq!(
+                outcome.is_ok(),
+                accepted,
+                "v{version} {timeframe}: {outcome:?}"
+            );
+            if timeframe == "3" {
+                outcome.unwrap();
+                assert_eq!(runtime.result().plots[0].values[0].as_f64(), Some(1.0));
+            } else if !accepted {
+                assert!(outcome.unwrap_err().message.contains("integer multiple"));
+            }
+        }
     }
+}
+
+#[test]
+fn modern_input_request_selector_remains_a_host_obligation() {
+    let hir = program(
+        "//@version=6\nindicator(\"selector\")\ns=input.symbol(\"OTHER\")\nplot(request.security(s,\"60\",close))\n",
+    );
+    assert_eq!(
+        host_requirements(&hir).requests[0].symbol,
+        RequestArgument::RuntimeExpression
+    );
 }
 
 #[test]

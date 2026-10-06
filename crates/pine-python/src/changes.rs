@@ -115,6 +115,13 @@ fn series_header_to_py(py: Python<'_>, header: &SeriesHeader) -> PyResult<Py<PyA
         &header.precision,
         &defaults.precision,
     )?;
+    set_non_default_value(
+        py,
+        &item,
+        "linestyle",
+        &header.linestyle,
+        &defaults.linestyle,
+    )?;
     Ok(item.into_any().unbind())
 }
 
@@ -176,6 +183,11 @@ fn fill_changes_to_py(py: Python<'_>, changes: &[FillChange]) -> PyResult<Py<PyA
                 item.set_item("start", *start)?;
                 item.set_item("values", values_to_py(py, values)?)?;
             }
+            FillAction::SetGradient { start, values } => {
+                item.set_item("action", "setGradient")?;
+                item.set_item("start", *start)?;
+                item.set_item("values", crate::gradient::samples_to_py(py, values)?)?;
+            }
         }
         output.append(item)?;
     }
@@ -215,7 +227,9 @@ fn drawing_object_to_py(py: Python<'_>, object: &DrawingObject) -> PyResult<Py<P
             first_item(py, polylines_to_py(py, std::slice::from_ref(item))?)
         }
         DrawingObject::Box(item) => first_item(py, boxes_to_py(py, std::slice::from_ref(item))?),
-        DrawingObject::Table(item) => first_item(py, tables_to_py(py, std::slice::from_ref(item))?),
+        DrawingObject::Table(item) => {
+            first_item(py, tables_to_py(py, std::slice::from_ref(item.as_ref()))?)
+        }
     }
 }
 
@@ -333,6 +347,17 @@ pub(crate) fn runtime_changes_from_py(
     }
     if let Some(fills) = dict.get_item("fills")? {
         changes.fills = fill_changes_from_py(py, &fills)?;
+    }
+    if changes.schema_version < 4
+        && changes.fills.iter().any(|fill| match &fill.action {
+            FillAction::Add(fill) => fill.gradient.is_some(),
+            FillAction::SetGradient { .. } => true,
+            _ => false,
+        })
+    {
+        return Err(PyValueError::new_err(
+            "gradient fill requires changes schema 4",
+        ));
     }
     if let Some(drawings) = dict.get_item("drawings")? {
         changes.drawings = drawing_changes_from_py(py, &drawings)?;
@@ -493,6 +518,14 @@ fn fill_changes_from_py(py: Python<'_>, value: &Bound<'_, PyAny>) -> PyResult<Ve
                 start: dict_usize(dict, "start")?,
                 values: optional_values(py, dict, "values")?,
             },
+            "setGradient" => FillAction::SetGradient {
+                start: dict_usize(dict, "start")?,
+                values: crate::gradient::samples_from_py(
+                    &dict
+                        .get_item("values")?
+                        .ok_or_else(|| PyValueError::new_err("setGradient missing values"))?,
+                )?,
+            },
             "add" => {
                 let object = dict
                     .get_item("object")?
@@ -501,6 +534,7 @@ fn fill_changes_from_py(py: Python<'_>, value: &Bound<'_, PyAny>) -> PyResult<Ve
                 let list = PyList::empty(py);
                 list.append(object)?;
                 wrapper.set_item("fills", list)?;
+                wrapper.set_item("schemaVersion", 9)?;
                 let parsed = runtime_result_from_py(py, wrapper.as_any())?;
                 FillAction::Add(
                     parsed

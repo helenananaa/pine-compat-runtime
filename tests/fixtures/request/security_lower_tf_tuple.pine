@@ -1,0 +1,8 @@
+//@version=6
+indicator("Intrabar tuple request")
+metrics() => [close, close > open]
+[prices, rises] = request.security_lower_tf("NYSE:IBM", "1", metrics())
+plot(array.size(prices))
+plot(array.size(rises))
+plot(array.size(prices) > 0 ? array.last(prices) : na)
+plot(array.size(rises) > 0 and array.last(rises) ? 1 : 0)

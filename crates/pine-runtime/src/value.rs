@@ -55,9 +55,26 @@ pub enum PineValue {
     Matrix(u32),
     Map(u32),
     UserType(Vec<PineValue>),
+    /// Runtime-owned UDT identity. The owning runtime resolves its fields.
+    UserTypeRef(u32),
     Tuple(Vec<PineValue>),
     Na,
     Void,
+}
+
+/// Selects one of the chart's built-in price series for `input.source`.
+/// External indicator plots require a separate host capability contract.
+pub fn chart_source_input_override(source: &str) -> Result<PineValue, String> {
+    if matches!(
+        source,
+        "open" | "high" | "low" | "close" | "hl2" | "hlc3" | "ohlc4" | "hlcc4"
+    ) {
+        Ok(PineValue::String(source.to_owned()))
+    } else {
+        Err(format!(
+            "input.source override must be open, high, low, close, hl2, hlc3, ohlc4, or hlcc4; got `{source}`"
+        ))
+    }
 }
 
 /// Encodes an RGB or RGBA literal without conflating low-valued RGBA payloads
@@ -102,6 +119,19 @@ pub const fn is_valid_public_color(value: u64) -> bool {
 }
 
 impl PineValue {
+    pub(crate) fn can_reference_collection(&self) -> bool {
+        matches!(
+            self,
+            Self::Array(_)
+                | Self::Map(_)
+                | Self::Matrix(_)
+                | Self::UserTypeRef(_)
+                | Self::Tuple(_)
+                | Self::UserType(_)
+                | Self::ChartPoint(_)
+        )
+    }
+
     #[must_use]
     pub fn is_na(&self) -> bool {
         matches!(self, Self::Na)

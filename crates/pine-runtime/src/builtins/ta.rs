@@ -1,15 +1,22 @@
-use std::cmp::Ordering;
-
 use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
-use crate::builtins::args::call_arg_expr;
+use crate::builtins::args::RuntimeArgs;
 use crate::*;
 mod averages;
+mod extremes;
 mod flow;
 mod momentum;
+#[path = "ta_opcode.rs"]
+mod opcode;
 mod pivots;
 mod statistics;
 mod trend;
+
+pub(crate) use opcode::TaOpcode;
+
+#[cfg(test)]
+#[path = "ta_args_tests.rs"]
+mod args_tests;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct RsiState {
@@ -113,15 +120,15 @@ pub(crate) fn vwap_result_na(has_bands: bool) -> PineValue {
 }
 
 pub(crate) fn ta_arg<'a>(
-    args: &'a [HirCallArg],
+    args: RuntimeArgs<'a>,
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
-    call_arg_expr(args, positional, name)
+    args.expr(positional, name)
 }
 
 pub(crate) fn vwap_arg<'a>(
-    args: &'a [HirCallArg],
+    args: RuntimeArgs<'a>,
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
@@ -129,7 +136,7 @@ pub(crate) fn vwap_arg<'a>(
 }
 
 pub(crate) fn pivot_point_arg<'a>(
-    args: &'a [HirCallArg],
+    args: RuntimeArgs<'a>,
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
@@ -378,7 +385,7 @@ impl<'a> HistoricalRuntime<'a> {
             return None;
         }
         let source = source?;
-        let length_us = length as usize;
+        let length_us = usize::try_from(length).ok()?;
         let mean = {
             let window = self.update_rolling_window_key(
                 RollingWindowKey::Rma {
@@ -401,90 +408,92 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn eval_ta_call(
         &mut self,
-        callee: &str,
+        opcode: Option<TaOpcode>,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        raw_args: &[HirCallArg],
+        positional_args: bool,
     ) -> Option<Result<PineValue, RuntimeError>> {
-        if !callee.starts_with("ta.") {
-            return None;
-        }
-
-        Some(match callee {
-            "ta.sma" => self.eval_sma(call_site_id, args),
-            "ta.ema" => self.eval_ema(call_site_id, args),
-            "ta.dema" => self.eval_dema(call_site_id, args),
-            "ta.tema" => self.eval_tema(call_site_id, args),
-            "ta.rma" => self.eval_rma(call_site_id, args),
-            "ta.rsi" => self.eval_rsi(call_site_id, args),
-            "ta.rci" => self.eval_rci(call_site_id, args),
-            "ta.macd" => self.eval_macd(call_site_id, args),
-            "ta.tsi" => self.eval_tsi(call_site_id, args),
-            "ta.cmo" => self.eval_cmo(call_site_id, args),
-            "ta.cci" => self.eval_cci(call_site_id, args),
-            "ta.cog" => self.eval_cog(call_site_id, args),
-            "ta.ao" => self.eval_ao(call_site_id),
-            "ta.bop" => self.eval_bop(),
-            "ta.bb" => self.eval_bb(call_site_id, args),
-            "ta.bbw" => self.eval_bbw(call_site_id, args),
-            "ta.kc" => self.eval_kc(call_site_id, args),
-            "ta.kcw" => self.eval_kcw(call_site_id, args),
-            "ta.pivothigh" => self.eval_pivot(call_site_id, args, WindowExtreme::Highest),
-            "ta.pivotlow" => self.eval_pivot(call_site_id, args, WindowExtreme::Lowest),
-            "ta.pivot_point_levels" => self.eval_pivot_point_levels(call_site_id, args),
-            "ta.cum" => self.eval_cum(call_site_id, args),
-            "ta.max" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
-            "ta.min" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
-            "ta.stdev" => self.eval_stdev(call_site_id, args),
-            "ta.variance" => self.eval_variance(call_site_id, args),
-            "ta.range" => self.eval_range(call_site_id, args),
-            "ta.dev" => self.eval_dev(call_site_id, args),
-            "ta.vwap" => self.eval_vwap_source(call_site_id, args),
-            "ta.vwma" => self.eval_vwma(call_site_id, args),
-            "ta.mfi" => self.eval_mfi(call_site_id, args),
-            "ta.wma" => self.eval_wma(call_site_id, args),
-            "ta.hma" => self.eval_hma(call_site_id, args),
-            "ta.swma" => self.eval_swma(call_site_id, args),
-            "ta.alma" => self.eval_alma(call_site_id, args),
-            "ta.linreg" => self.eval_linreg(call_site_id, args),
-            "ta.stoch" => self.eval_stoch(call_site_id, args),
-            "ta.wpr" => self.eval_wpr(call_site_id, args),
-            "ta.correlation" => self.eval_correlation(call_site_id, args),
-            "ta.covariance" => self.eval_covariance(call_site_id, args),
-            "ta.median" => self.eval_median(call_site_id, args),
-            "ta.mode" => self.eval_mode(call_site_id, args),
-            "ta.percentile_nearest_rank" => {
+        let opcode = opcode?;
+        let args = RuntimeArgs::new(raw_args, positional_args);
+        Some(match opcode {
+            TaOpcode::Sma => self.eval_sma(call_site_id, args),
+            TaOpcode::Ema => self.eval_ema(call_site_id, args),
+            TaOpcode::Dema => self.eval_dema(call_site_id, args),
+            TaOpcode::Tema => self.eval_tema(call_site_id, args),
+            TaOpcode::Rma => self.eval_rma(call_site_id, args),
+            TaOpcode::Rsi => self.eval_rsi(call_site_id, args),
+            TaOpcode::Rci => self.eval_rci(call_site_id, args),
+            TaOpcode::Macd => self.eval_macd(call_site_id, args),
+            TaOpcode::Tsi => self.eval_tsi(call_site_id, args),
+            TaOpcode::Cmo => self.eval_cmo(call_site_id, args),
+            TaOpcode::Cci => self.eval_cci(call_site_id, args),
+            TaOpcode::Cog => self.eval_cog(call_site_id, args),
+            TaOpcode::Ao => self.eval_ao(call_site_id),
+            TaOpcode::Bop => self.eval_bop(),
+            TaOpcode::Bb => self.eval_bb(call_site_id, args),
+            TaOpcode::Bbw => self.eval_bbw(call_site_id, args),
+            TaOpcode::Kc => self.eval_kc(call_site_id, args),
+            TaOpcode::Kcw => self.eval_kcw(call_site_id, args),
+            TaOpcode::PivotHigh => self.eval_pivot(call_site_id, args, WindowExtreme::Highest),
+            TaOpcode::PivotLow => self.eval_pivot(call_site_id, args, WindowExtreme::Lowest),
+            TaOpcode::PivotPointLevels => self.eval_pivot_point_levels(call_site_id, args),
+            TaOpcode::Cum => self.eval_cum(call_site_id, args),
+            TaOpcode::Max => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
+            TaOpcode::Min => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
+            TaOpcode::Stdev => self.eval_stdev(call_site_id, args),
+            TaOpcode::Variance => self.eval_variance(call_site_id, args),
+            TaOpcode::Range => self.eval_range(call_site_id, args),
+            TaOpcode::Dev => self.eval_dev(call_site_id, args),
+            TaOpcode::Vwap => self.eval_vwap_source(call_site_id, args),
+            TaOpcode::Vwma => self.eval_vwma(call_site_id, args),
+            TaOpcode::Mfi => self.eval_mfi(call_site_id, args),
+            TaOpcode::Wma => self.eval_wma(call_site_id, args),
+            TaOpcode::Hma => self.eval_hma(call_site_id, args),
+            TaOpcode::Swma => self.eval_swma(call_site_id, args),
+            TaOpcode::Alma => self.eval_alma(call_site_id, args),
+            TaOpcode::Linreg => self.eval_linreg(call_site_id, args),
+            TaOpcode::Stoch => self.eval_stoch(call_site_id, args),
+            TaOpcode::Wpr => self.eval_wpr(call_site_id, args),
+            TaOpcode::Correlation => self.eval_correlation(call_site_id, args),
+            TaOpcode::Covariance => self.eval_covariance(call_site_id, args),
+            TaOpcode::Median => self.eval_median(call_site_id, args),
+            TaOpcode::Mode => self.eval_mode(call_site_id, args),
+            TaOpcode::PercentileNearestRank => {
                 self.eval_percentile(call_site_id, args, ArrayPercentileMode::NearestRank)
             }
-            "ta.percentile_linear_interpolation" => {
+            TaOpcode::PercentileLinearInterpolation => {
                 self.eval_percentile(call_site_id, args, ArrayPercentileMode::LinearInterpolation)
             }
-            "ta.percentrank" => self.eval_percentrank(call_site_id, args),
-            "ta.tr" => self.eval_tr(args),
-            "ta.atr" => self.eval_atr(call_site_id, args),
-            "ta.supertrend" => self.eval_supertrend(call_site_id, args),
-            "ta.dmi" => self.eval_dmi(call_site_id, args),
-            "ta.sar" => self.eval_sar(call_site_id, args),
-            "ta.change" => self.eval_change(args),
-            "ta.mom" => self.eval_mom(args),
-            "ta.roc" => self.eval_roc(args),
-            "ta.rising" => self.eval_rising_falling(call_site_id, args, RisingFallingMode::Rising),
-            "ta.falling" => {
+            TaOpcode::Percentrank => self.eval_percentrank(call_site_id, args),
+            TaOpcode::Tr => self.eval_tr(args),
+            TaOpcode::Atr => self.eval_atr(call_site_id, args),
+            TaOpcode::Supertrend => self.eval_supertrend(call_site_id, args),
+            TaOpcode::Dmi => self.eval_dmi(call_site_id, args),
+            TaOpcode::Sar => self.eval_sar(call_site_id, args),
+            TaOpcode::Change => self.eval_change(args),
+            TaOpcode::Mom => self.eval_mom(args),
+            TaOpcode::Roc => self.eval_roc(args),
+            TaOpcode::Rising => {
+                self.eval_rising_falling(call_site_id, args, RisingFallingMode::Rising)
+            }
+            TaOpcode::Falling => {
                 self.eval_rising_falling(call_site_id, args, RisingFallingMode::Falling)
             }
-            "ta.barssince" => self.eval_barssince(call_site_id, args),
-            "ta.valuewhen" => self.eval_valuewhen(call_site_id, args),
-            "ta.cross" => self.eval_cross(args, CrossMode::Any),
-            "ta.crossover" => self.eval_cross(args, CrossMode::Over),
-            "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
-            "ta.highest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Highest),
-            "ta.lowest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Lowest),
-            "ta.highestbars" => {
+            TaOpcode::BarsSince => self.eval_barssince(call_site_id, args),
+            TaOpcode::ValueWhen => self.eval_valuewhen(call_site_id, args),
+            TaOpcode::Cross => self.eval_cross(call_site_id, args, CrossMode::Any),
+            TaOpcode::Crossover => self.eval_cross(call_site_id, args, CrossMode::Over),
+            TaOpcode::Crossunder => self.eval_cross(call_site_id, args, CrossMode::Under),
+            TaOpcode::Highest => {
+                self.eval_window_extreme(call_site_id, args, WindowExtreme::Highest)
+            }
+            TaOpcode::Lowest => self.eval_window_extreme(call_site_id, args, WindowExtreme::Lowest),
+            TaOpcode::HighestBars => {
                 self.eval_window_extreme_offset(call_site_id, args, WindowExtreme::Highest)
             }
-            "ta.lowestbars" => {
+            TaOpcode::LowestBars => {
                 self.eval_window_extreme_offset(call_site_id, args, WindowExtreme::Lowest)
             }
-            _ => return None,
         })
     }
 }

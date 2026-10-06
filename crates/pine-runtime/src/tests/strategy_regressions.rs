@@ -76,7 +76,7 @@ fn stale_trade_key_exit_does_not_create_a_ghost_close() {
         ],
     );
 
-    assert_eq!(strategy.orders.len(), 3);
+    assert_eq!(strategy.orders.len(), 4);
     assert_eq!(strategy.trades.len(), 2);
     assert_eq!(strategy.trades[0].entry_price, 2.0);
     assert_eq!(strategy.trades[0].exit_price, 5.0);

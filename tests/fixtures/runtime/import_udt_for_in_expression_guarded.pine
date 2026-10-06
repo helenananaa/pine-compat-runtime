@@ -1,0 +1,40 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Imported UDT for-in expression")
+
+points = array.from(lib.Point.new(close), lib.Point.new(close + 1), lib.Point.new(close + 2))
+
+last = for point in points
+    point
+
+continued = for point in points
+    if (na(point) ? na : point.x) == close + 1
+        continue
+    point
+
+stopped = for point in points
+    if (na(point) ? na : point.x) == close + 2
+        break
+    point
+
+mutated_last = for point in points
+    point.x := (na(point) ? na : point.x) + 10
+    point
+
+source_first = points.get(0)
+
+lib.Point typed = for point in points
+    point
+typed := for point in points
+    lib.Point.new((na(point) ? na : point.x) + 20)
+
+last_prior = last[1]
+typed_prior = typed[1]
+
+index_value_last = for index, point in points
+    index + (na(point) ? na : point.x)
+
+plot((na(last) ? na : last.x) + (na(continued) ? na : continued.x) + (na(stopped) ? na : stopped.x) + (na(mutated_last) ? na : mutated_last.x) + (na(source_first) ? na : source_first.x) + index_value_last)
+plot((na(typed) ? na : typed.x) + (na(last) ? na : last.x))
+plot((na(last_prior) ? na : last_prior.x))
+plot((na(typed_prior) ? na : typed_prior.x))

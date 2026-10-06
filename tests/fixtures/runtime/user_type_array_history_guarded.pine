@@ -1,0 +1,62 @@
+//@version=5
+indicator("User type array history")
+type Point
+    float x
+    string label
+
+var array<Point> points = array.new<Point>()
+points.clear()
+points.push(Point.new(close, "live"))
+
+previous = points[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = points[dynamic_offset]
+dynamic_sibling = points[dynamic_offset]
+window = points.slice(0, 1)
+previous_window = window[1]
+dynamic_previous_window = window[dynamic_offset]
+dynamic_sibling_window = window[dynamic_offset]
+float previous_x_before = na
+float previous_x_after = na
+float previous_size = na
+float dynamic_previous_x = na
+float previous_window_x = na
+float dynamic_previous_window_x = na
+float dynamic_sibling_x_after_dynamic_mutation = na
+float dynamic_sibling_window_x_after_dynamic_mutation = na
+if bar_index > 0
+    previous_before = previous.get(0)
+    previous_x_before := previous_before.x
+    previous.set(0, Point.new(999.0, "snapshot"))
+    previous_after = previous.get(0)
+    previous_x_after := previous_after.x
+    previous_size := previous.size()
+    dynamic_previous_first = dynamic_previous.get(0)
+    dynamic_previous_x := dynamic_previous_first.x
+    previous_window_first = previous_window.get(0)
+    dynamic_previous_window_first = dynamic_previous_window.get(0)
+    previous_window_x := previous_window_first.x
+    dynamic_previous_window_x := dynamic_previous_window_first.x
+    dynamic_previous.set(0, Point.new(777.0, "dynamic"))
+    dynamic_sibling_first = dynamic_sibling.get(0)
+    dynamic_sibling_x_after_dynamic_mutation := dynamic_sibling_first.x
+    dynamic_previous_window.set(0, Point.new(888.0, "window"))
+    dynamic_sibling_window_first = dynamic_sibling_window.get(0)
+    dynamic_sibling_window_x_after_dynamic_mutation := dynamic_sibling_window_first.x
+current = points.get(0)
+current_prior = current[1]
+
+plot(na(previous) ? 1 : 0)
+plot(na(dynamic_previous) ? 1 : 0)
+plot(na(previous_window) ? 1 : 0)
+plot(na(dynamic_previous_window) ? 1 : 0)
+plot(previous_x_before)
+plot(previous_x_after)
+plot(current.x)
+plot(previous_size)
+plot(na(current_prior) ? na : current_prior.x)
+plot(dynamic_previous_x)
+plot(previous_window_x)
+plot(dynamic_previous_window_x)
+plot(dynamic_sibling_x_after_dynamic_mutation)
+plot(dynamic_sibling_window_x_after_dynamic_mutation)

@@ -1,0 +1,9 @@
+//@version=2
+strategy("SMA cross control", initial_capital=100000)
+fast = sma(close, 2)
+slow = sma(close, 3)
+plot(fast)
+plot(slow)
+strategy.entry("L", strategy.long, 2, when=crossover(fast, slow))
+if crossunder(fast, slow)
+    strategy.close("L")

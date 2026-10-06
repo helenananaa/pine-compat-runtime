@@ -6,6 +6,30 @@ use crate::builtins::strings::normalize_pine_regex;
 use super::*;
 
 #[test]
+fn formats_literal_timeframe_suffixes_in_legacy_tostring() {
+    let source = SourceFile::new(
+        "test.pine",
+        r####"//@version=3
+study("legacy timeframe formatting")
+plot(tostring(3, "###D") == "3D" ? 1 : 0)
+plot(tostring(3, "###W") == "3W" ? 1 : 0)
+plot(tostring(3, "###M") == "3M" ? 1 : 0)
+"####,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("legacy timeframe format should run");
+    for plot in &result.plots {
+        assert_eq!(plot.values, vec![PineValue::Int(1)]);
+    }
+}
+
+#[test]
 fn reordered_named_string_args_use_signature_order() {
     let source = SourceFile::new(
         "test.pine",
@@ -1709,7 +1733,7 @@ plot(formatted_time_day_of_year == "1 01 001" and formatted_time_day_of_year_lat
 plot(formatted_time_weekday == "Fri Friday" and formatted_time_weekday_later == "Tue Tuesday" ? 1 : 0)
 plot(formatted_time_week_of_year == "53 53" and formatted_time_week_of_year_later == "5 05" ? 1 : 0)
 plot(formatted_time_week_of_month == "1 01" and formatted_time_week_of_month_later == "2 02" and formatted_time_clock_tokens == "13 13 1 01:04:05.123 123 PM" ? 1 : 0)
-plot(text_mintick_down == "1.23" and text_mintick_up == "1.24" and text_mintick_negative_tie == "-1.23" and text_mintick_trailing_zeros == "1.00" ? 1 : 0)
+plot(text_mintick_down == "1.23" and text_mintick_up == "1.24" and text_mintick_negative_tie == "-1.24" and text_mintick_trailing_zeros == "1.00" ? 1 : 0)
 string_values = array.from("head", "tail")
 plot(str.tostring(string_values) == "[head, tail]" ? 1 : 0)
 int_values = array.from(1, 2)
@@ -1769,6 +1793,31 @@ plot(str.format("Flags {0}", bool_values) == "Flags [true, false]" ? 1 : 0)
 }
 
 #[test]
+fn formats_woodie_half_tick_like_tradingview() {
+    let source = SourceFile::new(
+        "woodie_mintick.pine",
+        r#"//@version=6
+indicator("Woodie mintick")
+woodie_pivot = (81478.87 + 62275.0 + 2.0 * 78581.3) / 4.0
+woodie_r1 = 2.0 * woodie_pivot - 62275.0
+plot(str.tostring(woodie_r1, format.mintick) == "88183.23" ? 1 : 0)
+plot(str.tostring(-1.235, format.mintick) == "-1.24" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("Woodie mintick run");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
 fn rejects_unbalanced_str_format_placeholders() {
     let source = SourceFile::new(
         "test.pine",
@@ -1816,6 +1865,86 @@ plot(str.length(str.match("abc", "(")))
         "{}",
         error.message
     );
+}
+
+#[test]
+fn string_match_cache_reuses_patterns_shares_checkpoints_and_keeps_dynamic_replacement_bounded() {
+    let source = SourceFile::new(
+        "cached-match.pine",
+        r#"indicator("cached match")
+plot(str.length(str.match("tail\n", "tail$")))
+pattern = bar_index < 2 ? "a+" : "b+"
+plot(str.length(str.match("aaabbb", pattern)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.unwrap();
+    let mut runtime = HistoricalRuntime::new(&hir);
+    runtime.append_bar(bar(1.0)).unwrap();
+    assert_eq!(runtime.regex_cache.len(), 2);
+    let initial = runtime.regex_cache.clone();
+    let checkpoint = runtime.clone();
+    for (call_site, compiled) in &initial {
+        assert!(std::sync::Arc::ptr_eq(
+            compiled,
+            &checkpoint.regex_cache[call_site]
+        ));
+    }
+    runtime.append_bar(bar(1.0)).unwrap();
+    for (call_site, compiled) in &initial {
+        assert!(std::sync::Arc::ptr_eq(
+            compiled,
+            &runtime.regex_cache[call_site]
+        ));
+    }
+    runtime.append_bar(bar(1.0)).unwrap();
+    assert_eq!(runtime.regex_cache.len(), 2);
+    assert_eq!(
+        initial
+            .iter()
+            .filter(|(call_site, compiled)| {
+                std::sync::Arc::ptr_eq(compiled, &runtime.regex_cache[call_site])
+            })
+            .count(),
+        1
+    );
+    let result = runtime.result();
+    assert_eq!(result.plots.len(), 2);
+    for (plot, length) in result.plots.iter().zip([4.0, 3.0]) {
+        assert_values_close(&plot.values, &[length; 3]);
+    }
+}
+
+#[test]
+fn invalid_match_patterns_are_compiled_only_when_the_source_and_call_execute() {
+    let source = SourceFile::new(
+        "lazy-match-error.pine",
+        r#"indicator("lazy error")
+float score = 0
+if bar_index > 0
+    score := str.length(str.match(bar_index < 2 ? na : "abc", "("))
+plot(score)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.unwrap();
+    let mut runtime = HistoricalRuntime::new(&hir);
+    runtime.append_bar(bar(1.0)).unwrap();
+    runtime.append_bar(bar(1.0)).unwrap();
+    assert!(runtime.regex_cache.is_empty());
+    let error = runtime.append_bar(bar(1.0)).unwrap_err();
+    assert!(error.message.contains("str.match invalid regex"));
+    assert_eq!(runtime.regex_cache.len(), 1);
 }
 
 #[test]
@@ -2094,4 +2223,112 @@ plot(str.length(str.repeat("x", 40961)))
         "{}",
         error.message
     );
+}
+
+#[test]
+fn huge_empty_repeat_returns_empty_after_separator_evaluation_and_type_validation() {
+    let source = SourceFile::new(
+        "empty_repeat.pine",
+        r#"//@version=6
+indicator("empty repeat")
+mark(array<int> receiver) =>
+    array.push(receiver, 1)
+    ""
+effects = array.new_int()
+first = str.repeat("", 9223372036854775807)
+second = str.repeat("", 9223372036854775807, mark(effects))
+third = str.repeat("", 9223372036854775807, "")
+fourth = str.repeat("", 1, "nonempty")
+fifth = str.repeat("payload", 0, "separator")
+missing = str.repeat("", 9223372036854775807, na)
+missingZero = str.repeat("", 0, na)
+plot(first == "" and second == "" and third == "" and fourth == "" and fifth == "" ? 1 : 0)
+plot(array.size(effects))
+plot(na(missing) and na(missingZero) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap();
+    for plot in result.plots {
+        assert_eq!(plot.values, [PineValue::Int(1)]);
+    }
+}
+
+#[test]
+fn empty_source_with_nonempty_separator_obeys_unicode_repeat_limit() {
+    let source = SourceFile::new(
+        "separator_repeat.pine",
+        "//@version=6\nindicator(\"separator repeat\")\nplot(str.length(str.repeat(\"\", 40961, \"界\")))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap();
+    assert_eq!(result.plots[0].values, [PineValue::Int(40960)]);
+    for count in [40962_i64, 4294967296, i64::MAX] {
+        let source = SourceFile::new(
+            "separator_repeat_limit.pine",
+            format!(
+                "//@version=6\nindicator(\"separator repeat limit\")\nplot(str.length(str.repeat(\"\", {count}, \"界\")))\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let error = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap_err();
+        assert_eq!(
+            error.message,
+            "str.repeat result cannot exceed 40960 characters"
+        );
+    }
+}
+
+#[test]
+fn large_nonempty_repeat_counts_cannot_wrap_to_empty_on_32_bit_targets() {
+    for count in [4294967296_i64, i64::MAX] {
+        let source = SourceFile::new(
+            "repeat_count_width.pine",
+            format!(
+                "//@version=6\nindicator(\"repeat count width\")\nplot(str.length(str.repeat(\"x\", {count})))\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let error = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap_err();
+        assert_eq!(
+            error.message,
+            "str.repeat result cannot exceed 40960 characters"
+        );
+    }
+}
+
+#[test]
+fn empty_repeat_still_rejects_negative_count() {
+    let source = SourceFile::new(
+        "empty_repeat_negative.pine",
+        "//@version=6\nindicator(\"negative empty repeat\")\nplot(str.length(str.repeat(\"\", -1, \"\")))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let error = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap_err();
+    assert_eq!(error.message, "str.repeat count cannot be negative: -1");
 }

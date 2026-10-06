@@ -8,7 +8,7 @@ const COLOR_NEW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "transp",
-        accepts: Accepts::SimpleIntCompatible,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
 ];
@@ -75,7 +75,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "color.new",
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_NEW_PARAMS,
-        returns: ReturnSpec::ColorFromArg(0),
+        returns: ReturnSpec::PromotedColor,
         variadic: false,
     },
     BuiltinSignature {

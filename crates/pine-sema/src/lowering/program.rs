@@ -58,8 +58,10 @@ impl Analyzer {
             next_series_id: self.next_series_id,
             next_call_site_id: self.next_call_site_id,
             call_site_sources: self.call_site_sources.clone(),
+            lower_tf_tuple_types: self.lower_tf_tuple_types.clone(),
             next_var_slot_id: self.next_var_slot_id,
             max_bars_back,
+            calc_bars_count: self.calc_bars_count,
             series_max_bars_back,
             history: history.program,
             series_history: history.series,
@@ -80,6 +82,7 @@ impl Analyzer {
             .map(|user_type| {
                 let type_name = user_type.name.clone();
                 HirUserTypeInfo {
+                    declaration_name: user_type.identity.name.clone(),
                     identity: HirUserTypeIdentity {
                         source_id: user_type.identity.source_id.get(),
                         type_name: type_name.clone(),
@@ -88,6 +91,7 @@ impl Analyzer {
                         .fields
                         .iter()
                         .map(|field| HirUserTypeField {
+                            varip: field.varip,
                             name: field.name.clone(),
                             user_type_name: field.user_type_name.clone(),
                         })
@@ -100,6 +104,7 @@ impl Analyzer {
             imported_user_types
                 .into_iter()
                 .map(|(type_name, user_type)| HirUserTypeInfo {
+                    declaration_name: user_type.identity.name.clone(),
                     identity: HirUserTypeIdentity {
                         source_id: user_type.identity.source_id.get(),
                         type_name: type_name.clone(),
@@ -108,6 +113,7 @@ impl Analyzer {
                         .fields
                         .iter()
                         .map(|field| HirUserTypeField {
+                            varip: field.varip,
                             name: field.name.clone(),
                             user_type_name: field.pine_type.is_none().then(|| {
                                 self.imported_user_types

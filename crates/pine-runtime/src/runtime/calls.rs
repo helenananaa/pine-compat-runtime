@@ -1,6 +1,7 @@
 use pine_ir::{CallSiteId, HirBinaryOp, HirCallArg, HirExpr};
 
 use crate::runtime::call_context::RuntimeCallContext;
+use crate::runtime::call_plan::CallFamily;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -10,74 +11,45 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        if let Some(result) = self.eval_legacy_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_variable_call(callee, call_site_id, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_runtime_error_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_alert_call(callee, call_site_id, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_output_call(callee, call_site_id, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_drawing_call(callee, call_site_id, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_chart_point_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_request_call(callee, call_site_id, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_strategy_call(callee, call_site_id, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_color_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_string_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_syminfo_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_ticker_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_time_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_cast_call(callee, args) {
-            return result;
-        }
-        {
-            let mut context = RuntimeCallContext::new(self);
-            if let Some(result) =
-                crate::builtins::math::eval_math_call(&mut context, callee, call_site_id, args)
-            {
-                return result;
-            }
-        }
-        if let Some(result) = self.eval_ta_call(callee, call_site_id, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_array_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_map_call(callee, args) {
-            return result;
-        }
-        if let Some(result) = self.eval_matrix_call(callee, args) {
-            return result;
-        }
-
-        Err(RuntimeError {
-            message: format!("unsupported runtime call `{callee}`"),
+        let dispatch = self.metadata.calls.dispatch(call_site_id, callee, args);
+        let result = match dispatch.family {
+            CallFamily::Legacy => self.eval_legacy_call(callee, args),
+            CallFamily::Variable => self.eval_variable_call(callee, call_site_id, args),
+            CallFamily::RuntimeError => self.eval_runtime_error_call(callee, args),
+            CallFamily::Alert => self.eval_alert_call(callee, call_site_id, args),
+            CallFamily::Output => self.eval_output_call(callee, call_site_id, args),
+            CallFamily::Drawing => self.eval_drawing_call(callee, call_site_id, args),
+            CallFamily::ChartPoint => self.eval_chart_point_call(callee, args),
+            CallFamily::Request => self.eval_request_call(callee, call_site_id, args),
+            CallFamily::Strategy => self.eval_strategy_call(callee, call_site_id, args),
+            CallFamily::Color => self.eval_color_call(callee, args),
+            CallFamily::String => self.eval_string_call(callee, call_site_id, args),
+            CallFamily::Syminfo => self.eval_syminfo_call(callee, args),
+            CallFamily::Ticker => self.eval_ticker_call(callee, args),
+            CallFamily::Time => self.eval_time_call(callee, args),
+            CallFamily::Cast => self.eval_cast_call(callee, args),
+            CallFamily::Math => crate::builtins::math::eval_math_call(
+                &mut RuntimeCallContext::new(self),
+                dispatch.math_opcode,
+                call_site_id,
+                args,
+                dispatch.positional_args,
+            ),
+            CallFamily::Ta => self.eval_ta_call(
+                dispatch.ta_opcode,
+                dispatch.state_site,
+                args,
+                dispatch.positional_args,
+            ),
+            CallFamily::Array => self.eval_array_call(dispatch.array_opcode, callee, args),
+            CallFamily::Map => self.eval_map_call(callee, args),
+            CallFamily::Matrix => self.eval_matrix_call(callee, args),
+            CallFamily::Unsupported => None,
+        };
+        result.unwrap_or_else(|| {
+            Err(RuntimeError {
+                message: format!("unsupported runtime call `{callee}`"),
+            })
         })
     }
 

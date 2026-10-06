@@ -590,6 +590,12 @@ impl PendingExitBook {
         self.exits.push(pending_exit);
     }
 
+    pub(super) fn replace_for_entry(&mut self, pending_exit: PendingExit) {
+        self.exits
+            .retain(|existing| existing.from_entry != pending_exit.from_entry);
+        self.exits.push(pending_exit);
+    }
+
     pub(super) fn replace_all_many(&mut self, pending_exits: Vec<PendingExit>) {
         self.exits = pending_exits;
     }
@@ -671,6 +677,16 @@ impl PendingExitBook {
     pub(super) fn clear_all(&mut self) {
         self.exits.clear();
         self.deferred_relative_exits.clear();
+    }
+
+    pub(super) fn retain_for_pending_entries(
+        &mut self,
+        pending_ids: &std::collections::HashSet<String>,
+    ) {
+        self.exits
+            .retain(|exit| pending_ids.contains(&exit.from_entry));
+        self.deferred_relative_exits
+            .retain(|exit| pending_ids.contains(&exit.from_entry));
     }
 
     pub(super) fn clear_for_entry(&mut self, entry_id: &str) {

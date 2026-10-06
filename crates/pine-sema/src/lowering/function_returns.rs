@@ -12,7 +12,9 @@ fn function_statement_has_return(statement: &Stmt) -> bool {
     match &statement.kind {
         StmtKind::Expr(_)
         | StmtKind::Decl { .. }
+        | StmtKind::TupleDecl { .. }
         | StmtKind::Reassign { .. }
+        | StmtKind::FieldReassign { .. }
         | StmtKind::For { .. }
         | StmtKind::ForIn { .. }
         | StmtKind::While { .. } => true,
@@ -144,6 +146,26 @@ fn implicit_na_result_expr(analyzer: &Analyzer) -> HirExpr {
 }
 
 impl Analyzer {
+    pub(super) fn lower_loop_tail(
+        &mut self,
+        last: &Stmt,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        match &last.kind {
+            StmtKind::Expr(expr) => self.lower_expr_with_params(expr, param_exprs, param_types),
+            StmtKind::If { .. } | StmtKind::FieldReassign { .. } => self.lower_function_body(
+                &FunctionBody::Block(vec![last.clone()]),
+                param_exprs,
+                param_types,
+            ),
+            _ => self.lower_expr_with_params(
+                &final_loop_statement_expr(last)?,
+                param_exprs,
+                param_types,
+            ),
+        }
+    }
     pub(crate) fn lower_function_body(
         &mut self,
         body: &FunctionBody,
@@ -160,12 +182,30 @@ impl Analyzer {
             FunctionBody::Block(statements) => {
                 let (last, prefix) = statements.split_last()?;
                 let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
+                    // Final tuple bindings are function-local and have no later reader.
+                    // Return the RHS once, retaining every slot even when bound to `_`.
+                    StmtKind::Expr(result) | StmtKind::TupleDecl { value: result, .. } => result,
                     StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
                         return self.lower_function_return_statement(
                             prefix,
                             last,
                             name,
+                            param_exprs,
+                            param_types,
+                        );
+                    }
+                    StmtKind::FieldReassign {
+                        receiver,
+                        path,
+                        field,
+                        ..
+                    } => {
+                        return self.lower_function_field_return_statement(
+                            prefix,
+                            last,
+                            &crate::analyzer::functions::field_reassign_result_expr(
+                                receiver, path, field, last.span,
+                            ),
                             param_exprs,
                             param_types,
                         );
@@ -254,6 +294,28 @@ impl Analyzer {
         result
     }
 
+    fn lower_function_field_return_statement(
+        &mut self,
+        prefix: &[Stmt],
+        last: &Stmt,
+        result: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        self.lower_symbol_overrides.push(HashMap::new());
+        let lowered_statements = prefix
+            .iter()
+            .chain(std::iter::once(last))
+            .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
+            .collect::<Option<Vec<_>>>();
+        let result = lowered_statements.and_then(|statements| {
+            let result = self.lower_expr_with_params(result, param_exprs, param_types)?;
+            Some(prepend_block_statements(statements, result))
+        });
+        self.lower_symbol_overrides.pop();
+        result
+    }
+
     fn lower_function_symbol_statement_result(
         &mut self,
         statement: &Stmt,
@@ -312,13 +374,16 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         let (last, prefix) = branch.split_last()?;
+        if matches!(last.kind, StmtKind::FieldReassign { .. }) {
+            return self.lower_function_branch_return(branch, param_exprs, param_types);
+        }
         let statements = prefix
             .iter()
             .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
             .collect::<Option<Vec<_>>>()?;
         let expr;
         let result = match &last.kind {
-            StmtKind::Expr(result) => result,
+            StmtKind::Expr(result) | StmtKind::TupleDecl { value: result, .. } => result,
             StmtKind::If {
                 condition,
                 then_branch,
@@ -466,7 +531,7 @@ impl Analyzer {
             .collect::<Option<Vec<_>>>()?;
         let expr;
         let result = match &last.kind {
-            StmtKind::Expr(result) => {
+            StmtKind::Expr(result) | StmtKind::TupleDecl { value: result, .. } => {
                 self.lower_expr_with_params(result, param_exprs, param_types)?
             }
             StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
@@ -478,6 +543,25 @@ impl Analyzer {
                 )?;
                 lowered_statements.push(statement);
                 result
+            }
+            StmtKind::FieldReassign {
+                receiver,
+                path,
+                field,
+                ..
+            } => {
+                lowered_statements.push(self.lower_stmt_with_params(
+                    last,
+                    param_exprs,
+                    param_types,
+                )?);
+                self.lower_expr_with_params(
+                    &crate::analyzer::functions::field_reassign_result_expr(
+                        receiver, path, field, last.span,
+                    ),
+                    param_exprs,
+                    param_types,
+                )?
             }
             StmtKind::If {
                 condition,

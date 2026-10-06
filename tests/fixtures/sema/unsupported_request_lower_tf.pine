@@ -1,4 +1,4 @@
 //@version=5
 indicator("Unsupported lower timeframe request")
-x = request.security_lower_tf("NYSE:IBM", "30S", close)
-plot(x)
+x = request.security_lower_tf("NYSE:IBM", "30S", close, ignore_invalid_symbol=true)
+plot(0)

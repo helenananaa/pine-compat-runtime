@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
-    pub(crate) fn eval_tr(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_tr(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let handle_na = if let Some(arg) = ta_arg(args, 0, "handle_na") {
             matches!(self.eval_expr(arg)?, PineValue::Bool(true))
         } else {
@@ -14,7 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_atr(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let length = ta_arg(args, 0, "length")
             .map(|arg| self.eval_expr(arg))
@@ -29,7 +29,8 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(value) = self.wilder_rma(
             call_site_id,
             0,
-            self.call_state
+            self.ta_state
+                .call_state
                 .get(&call_site_id)
                 .and_then(PineValue::as_f64),
             true_range.as_f64(),
@@ -38,14 +39,14 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let value = PineValue::Float(value);
-        self.call_state.insert(call_site_id, value.clone());
+        self.ta_state.call_state.insert(call_site_id, value.clone());
         Ok(value)
     }
 
     pub(crate) fn eval_supertrend(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some(factor) = ta_arg(args, 0, "factor")
             .map(|arg| self.eval_expr(arg))
@@ -74,7 +75,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(two_na_tuple());
         };
 
-        let previous = supertrend_state(self.call_state.get(&call_site_id));
+        let previous = supertrend_state(self.ta_state.call_state.get(&call_site_id));
         let Some(atr) = self.wilder_rma(
             call_site_id,
             0,
@@ -123,7 +124,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let supertrend = if direction < 0.0 { lower } else { upper };
 
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(atr),
@@ -142,7 +143,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_dmi(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let di_length = ta_arg(args, 0, "diLength")
             .map(|arg| self.eval_expr(arg))
@@ -187,7 +188,7 @@ impl<'a> HistoricalRuntime<'a> {
             0.0
         };
 
-        let previous = match self.call_state.get(&call_site_id) {
+        let previous = match self.ta_state.call_state.get(&call_site_id) {
             Some(PineValue::Tuple(values)) if values.len() == 4 => Some((
                 values[0].as_f64(),
                 values[1].as_f64(),
@@ -245,7 +246,7 @@ impl<'a> HistoricalRuntime<'a> {
             Some(dx),
             adx_smoothing,
         );
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(smoothed_tr),
@@ -264,7 +265,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_sar(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let Some(start) = ta_arg(args, 0, "start")
             .map(|arg| self.eval_expr(arg))
@@ -301,7 +302,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         let mut is_first_trend_bar = false;
         let (mut result, mut max_min, mut acceleration, mut is_below) =
-            if let Some(state) = sar_state(self.call_state.get(&call_site_id)) {
+            if let Some(state) = sar_state(self.ta_state.call_state.get(&call_site_id)) {
                 state
             } else {
                 let (Some(previous_close), Some(previous_high), Some(previous_low)) = (
@@ -364,7 +365,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(result),

@@ -1,6 +1,8 @@
 use crate::*;
 use pine_ir::ScriptMode;
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
+
+use super::valuewhen_history::ValueWhenHistory;
 
 impl HistoricalRuntime<'_> {
     #[must_use]
@@ -26,13 +28,13 @@ impl HistoricalRuntime<'_> {
             .series_store
             .buffers
             .values()
-            .map(Vec::len)
+            .map(|values| values.len())
             .sum::<usize>();
         let series_capacity = self
             .series_store
             .buffers
             .values()
-            .map(Vec::capacity)
+            .map(|values| values.capacity())
             .sum::<usize>();
         let plot_values = self
             .plots
@@ -147,27 +149,53 @@ impl HistoricalRuntime<'_> {
             .map(|colors| colors.values.capacity())
             .sum::<usize>();
         let rolling_window_values = self
+            .ta_state
             .rolling_windows
             .values()
             .map(RollingWindowState::retained_values)
-            .sum::<usize>();
+            .sum::<usize>()
+            + self
+                .ta_state
+                .extreme_windows
+                .values()
+                .map(crate::algorithms::rolling_extreme::RollingExtremeState::retained_values)
+                .sum::<usize>();
         let rolling_window_value_capacity = self
+            .ta_state
             .rolling_windows
             .values()
             .map(RollingWindowState::retained_capacity)
-            .sum::<usize>();
+            .sum::<usize>()
+            + self
+                .ta_state
+                .extreme_windows
+                .values()
+                .map(crate::algorithms::rolling_extreme::RollingExtremeState::retained_capacity)
+                .sum::<usize>()
+            + self.selection_scratch.capacity()
+            + self.alma_weights.capacity();
         let valuewhen_state_values = self
+            .ta_state
             .valuewhen_state
             .values()
-            .map(VecDeque::len)
+            .map(ValueWhenHistory::len)
             .sum::<usize>();
         let valuewhen_state_value_capacity = self
+            .ta_state
             .valuewhen_state
             .values()
-            .map(VecDeque::capacity)
+            .map(ValueWhenHistory::capacity)
             .sum::<usize>();
-        let array_values = self.array_store.values().map(Vec::len).sum::<usize>();
-        let array_value_capacity = self.array_store.values().map(Vec::capacity).sum::<usize>();
+        let array_values = self
+            .array_store
+            .values()
+            .map(|values| values.len())
+            .sum::<usize>();
+        let array_value_capacity = self
+            .array_store
+            .values()
+            .map(|values| values.capacity())
+            .sum::<usize>();
         let matrix_profile = self.matrix_store_profile();
         let label_snapshots = self
             .labels
@@ -280,20 +308,22 @@ impl HistoricalRuntime<'_> {
             matrix_capacity: matrix_profile.capacity,
             matrix_cells: matrix_profile.cells,
             matrix_cell_capacity: matrix_profile.cell_capacity,
-            call_state_slots: self.call_state.len(),
-            call_state_capacity: self.call_state.capacity(),
-            valuewhen_state_slots: self.valuewhen_state.len(),
-            valuewhen_state_capacity: self.valuewhen_state.capacity(),
+            call_state_slots: self.ta_state.call_state.len(),
+            call_state_capacity: self.ta_state.call_state.capacity(),
+            valuewhen_state_slots: self.ta_state.valuewhen_state.len(),
+            valuewhen_state_capacity: self.ta_state.valuewhen_state.capacity(),
             valuewhen_state_values,
             valuewhen_state_value_capacity,
-            rolling_window_slots: self.rolling_windows.len(),
-            rolling_window_capacity: self.rolling_windows.capacity(),
+            rolling_window_slots: self.ta_state.rolling_windows.len()
+                + self.ta_state.extreme_windows.len(),
+            rolling_window_capacity: self.ta_state.rolling_windows.capacity()
+                + self.ta_state.extreme_windows.capacity(),
             rolling_window_values,
             rolling_window_value_capacity,
-            rsi_state_slots: self.rsi_state.len(),
-            rsi_state_capacity: self.rsi_state.capacity(),
-            macd_state_slots: self.macd_state.len(),
-            macd_state_capacity: self.macd_state.capacity(),
+            rsi_state_slots: self.ta_state.rsi_state.len(),
+            rsi_state_capacity: self.ta_state.rsi_state.capacity(),
+            macd_state_slots: self.ta_state.macd_state.len(),
+            macd_state_capacity: self.ta_state.macd_state.capacity(),
             plots: self.plots.len(),
             plot_values,
             plot_capacity,

@@ -290,16 +290,17 @@ dependencies = [
 
 [[package]]
 name = "pine-builtins"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 dependencies = [
  "pine-ir",
 ]
 
 [[package]]
 name = "pine-cli"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 dependencies = [
  "pine-builtins",
+ "pine-host-support",
  "pine-runtime",
  "pine-sema",
  "pine-syntax",
@@ -307,13 +308,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pine-host-support"
+version = "0.3.0-rc.2"
+dependencies = [
+ "pine-runtime",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "pine-ir"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 
 [[package]]
 name = "pine-python"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 dependencies = [
+ "pine-host-support",
  "pine-ir",
  "pine-runtime",
  "pine-sema",
@@ -323,7 +334,7 @@ dependencies = [
 
 [[package]]
 name = "pine-runtime"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -340,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "pine-sema"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 dependencies = [
  "pine-builtins",
  "pine-ir",
@@ -349,12 +360,13 @@ dependencies = [
 
 [[package]]
 name = "pine-syntax"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 
 [[package]]
 name = "pine-wasm"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 dependencies = [
+ "pine-host-support",
  "pine-ir",
  "pine-runtime",
  "pine-sema",

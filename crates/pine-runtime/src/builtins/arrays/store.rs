@@ -1,5 +1,21 @@
 use super::{ArrayElementKind, ArraySlice, normalize_array_index, normalize_array_insert_index};
+use crate::runtime::array_values::ArrayView;
+use crate::runtime::collection_gc::collection_values_allocation_bytes;
 use crate::{HistoricalRuntime, MAX_ARRAY_ELEMENTS, PineValue, RuntimeError};
+
+fn array_payload_allocation_bytes(kind: Option<&ArrayElementKind>, values: ArrayView<'_>) -> usize {
+    if matches!(
+        kind,
+        Some(ArrayElementKind::String | ArrayElementKind::UserType | ArrayElementKind::ChartPoint)
+    ) || kind.is_none()
+    {
+        collection_values_allocation_bytes(values)
+    } else {
+        values
+            .len()
+            .saturating_mul(std::mem::size_of::<PineValue>())
+    }
+}
 
 impl<'a> HistoricalRuntime<'a> {
     fn array_index_out_of_bounds(index: i64, len: usize) -> RuntimeError {
@@ -12,16 +28,23 @@ impl<'a> HistoricalRuntime<'a> {
         &self,
         id: u32,
     ) -> Result<Option<Vec<PineValue>>, RuntimeError> {
+        Ok(self
+            .array_values(id)?
+            .map(|values| values.iter().cloned().collect()))
+    }
+
+    pub(crate) fn array_values(&self, id: u32) -> Result<Option<ArrayView<'_>>, RuntimeError> {
         if let Some(slice) = self.array_slices.get(&id).copied() {
             self.validate_array_slice(slice)?;
-            let end = slice.start + slice.len;
             return Ok(self
                 .array_store
                 .get(&slice.parent_id)
-                .map(|values| values[slice.start..end].to_vec()));
+                .map(|values| values.view(slice.start, slice.len)));
         }
-
-        Ok(self.array_store.get(&id).cloned())
+        Ok(self
+            .array_store
+            .get(&id)
+            .map(|values| values.view(0, values.len())))
     }
 
     #[cfg(test)]
@@ -70,7 +93,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(Some(slice.len));
         }
 
-        Ok(self.array_store.get(&id).map(Vec::len))
+        Ok(self.array_store.get(&id).map(|values| values.len()))
     }
 
     fn validate_array_slice(&self, slice: ArraySlice) -> Result<(), RuntimeError> {
@@ -137,7 +160,7 @@ impl<'a> HistoricalRuntime<'a> {
             .array_slices
             .get(&id)
             .map_or(id, |slice| slice.parent_id);
-        self.array_store.get(&target_id).map(Vec::len)
+        self.array_store.get(&target_id).map(|values| values.len())
     }
 
     pub(crate) fn array_get_cloned(
@@ -161,7 +184,45 @@ impl<'a> HistoricalRuntime<'a> {
         index: i64,
         value: PineValue,
     ) -> Result<(), RuntimeError> {
+        self.array_set_value_impl(id, index, value, false)
+    }
+
+    fn prepare_array_set(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: &PineValue,
+        incoming_precharged: bool,
+    ) -> Result<Option<(u32, usize)>, RuntimeError> {
         let Some((target_id, index)) = self.array_read_index(id, index)? else {
+            return Ok(None);
+        };
+        let copied =
+            self.array_store.get(&target_id).map_or(0, |values| {
+                collection_values_allocation_bytes(values.write_allocation_values(
+                    index,
+                    self.array_store.get_mut_clones_value(&target_id),
+                ))
+            });
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !incoming_precharged && !self.record_collection_values(std::iter::once(value)) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(Some((target_id, index)))
+    }
+
+    fn array_set_value_impl(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: PineValue,
+        incoming_precharged: bool,
+    ) -> Result<(), RuntimeError> {
+        let Some((target_id, index)) =
+            self.prepare_array_set(id, index, &value, incoming_precharged)?
+        else {
             return Ok(());
         };
         if let Some(slot) = self
@@ -170,6 +231,25 @@ impl<'a> HistoricalRuntime<'a> {
             .and_then(|values| values.get_mut(index))
         {
             *slot = value;
+        }
+        Ok(())
+    }
+
+    pub(super) fn array_set_borrowed_value(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: &PineValue,
+    ) -> Result<(), RuntimeError> {
+        let Some((target_id, index)) = self.prepare_array_set(id, index, value, false)? else {
+            return Ok(());
+        };
+        if let Some(slot) = self
+            .array_store
+            .get_mut(&target_id)
+            .and_then(|values| values.get_mut(index))
+        {
+            *slot = value.clone();
         }
         Ok(())
     }
@@ -191,11 +271,107 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("array.insert cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
             });
         }
+        let copied = self.array_store.get(&target_id).map_or(0, |values| {
+            if index < parent_len {
+                // Middle edits materialize paged payloads. Including moved
+                // small contents is a conservative allocation estimate.
+                array_payload_allocation_bytes(
+                    self.array_kinds.get(&target_id),
+                    values.view(0, values.len()),
+                )
+            } else {
+                collection_values_allocation_bytes(values.write_allocation_values(
+                    parent_len,
+                    self.array_store.get_mut_clones_value(&target_id),
+                ))
+            }
+        });
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !self.record_collection_values(std::iter::once(&value)) {
+            return Err(self.resource_budget.collection_error());
+        }
         if let Some(values) = self.array_store.get_mut(&target_id) {
             values.insert(index, value);
         }
         if let Some(slice) = self.array_slices.get_mut(&id) {
             slice.len += 1;
+        }
+        Ok(())
+    }
+
+    #[cfg(test)]
+    pub(super) fn array_insert_values(
+        &mut self,
+        id: u32,
+        index: i64,
+        incoming: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_insert_values_impl(id, index, incoming, false)
+    }
+
+    pub(super) fn array_insert_precharged_values(
+        &mut self,
+        id: u32,
+        index: i64,
+        incoming: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_insert_values_impl(id, index, incoming, true)
+    }
+
+    fn array_insert_values_impl(
+        &mut self,
+        id: u32,
+        index: i64,
+        incoming: Vec<PineValue>,
+        incoming_precharged: bool,
+    ) -> Result<(), RuntimeError> {
+        if incoming.is_empty() {
+            return Ok(());
+        }
+        let Some((target_id, index)) = self.array_insert_index(id, index)? else {
+            return Ok(());
+        };
+        let parent = self.array_store.get(&target_id).expect("validated parent");
+        let parent_len = parent.len();
+        let added = incoming.len();
+        if parent_len.saturating_add(added) > MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.concat cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
+        }
+        let copied = if index < parent_len {
+            array_payload_allocation_bytes(
+                self.array_kinds.get(&target_id),
+                parent.view(0, parent_len),
+            )
+        } else {
+            collection_values_allocation_bytes(
+                parent.append_allocation_values(self.array_store.get_mut_clones_value(&target_id)),
+            )
+        };
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !incoming_precharged && !self.record_collection_values(&incoming) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if index < parent_len {
+            let replacement = self
+                .array_store
+                .get(&target_id)
+                .expect("validated parent")
+                .with_inserted(index, incoming);
+            self.array_store.insert(target_id, replacement);
+        } else {
+            self.array_store
+                .get_mut(&target_id)
+                .expect("validated parent")
+                .extend(incoming);
+        }
+        if let Some(slice) = self.array_slices.get_mut(&id) {
+            slice.len += added;
         }
         Ok(())
     }
@@ -208,6 +384,22 @@ impl<'a> HistoricalRuntime<'a> {
         let Some((target_id, index)) = self.array_read_index(id, index)? else {
             return Ok(None);
         };
+        let copied = self.array_store.get(&target_id).map_or(0, |values| {
+            if index + 1 < values.len() {
+                array_payload_allocation_bytes(
+                    self.array_kinds.get(&target_id),
+                    values.view(0, values.len()),
+                )
+            } else {
+                collection_values_allocation_bytes(values.write_allocation_values(
+                    index,
+                    self.array_store.get_mut_clones_value(&target_id),
+                ))
+            }
+        });
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
         let removed = self
             .array_store
             .get_mut(&target_id)
@@ -220,10 +412,28 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(removed)
     }
 
+    #[cfg(test)]
     pub(super) fn array_replace_values(
         &mut self,
         id: u32,
         replacement: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_replace_values_impl(id, replacement, false)
+    }
+
+    pub(super) fn array_replace_precharged_values(
+        &mut self,
+        id: u32,
+        replacement: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_replace_values_impl(id, replacement, true)
+    }
+
+    fn array_replace_values_impl(
+        &mut self,
+        id: u32,
+        replacement: Vec<PineValue>,
+        incoming_precharged: bool,
     ) -> Result<(), RuntimeError> {
         if let Some(slice) = self.array_slices.get(&id).copied() {
             self.validate_array_slice(slice)?;
@@ -231,19 +441,48 @@ impl<'a> HistoricalRuntime<'a> {
                 if offset >= slice.len {
                     break;
                 }
-                if let Some(slot) = self
-                    .array_store
-                    .get_mut(&slice.parent_id)
-                    .and_then(|values| values.get_mut(slice.start + offset))
-                {
-                    *slot = value;
-                }
+                self.array_set_value_impl(id, offset as i64, value, incoming_precharged)?;
             }
             return Ok(());
         }
 
-        if let Some(values) = self.array_store.get_mut(&id) {
-            *values = replacement;
+        if self.array_store.contains_key(&id) {
+            // Replacing a payload must not first clone its discarded contents.
+            if !incoming_precharged && !self.record_collection_values(&replacement) {
+                return Err(self.resource_budget.collection_error());
+            }
+            self.array_store.insert(id, replacement.into());
+        }
+        Ok(())
+    }
+
+    pub(super) fn array_clear_values(&mut self, id: u32) -> Result<(), RuntimeError> {
+        if let Some(slice) = self.array_slices.get(&id).copied() {
+            self.validate_array_slice(slice)?;
+            if slice.len == 0 {
+                return Ok(());
+            }
+            let parent = self
+                .array_store
+                .get(&slice.parent_id)
+                .expect("validated slice parent");
+            let copied = array_payload_allocation_bytes(
+                self.array_kinds.get(&slice.parent_id),
+                parent.view(0, parent.len()),
+            );
+            if !self.record_collection_bytes(copied) {
+                return Err(self.resource_budget.collection_error());
+            }
+            let mut values = self
+                .array_store
+                .get(&slice.parent_id)
+                .expect("validated slice parent")
+                .to_vec();
+            values.drain(slice.start..slice.start + slice.len);
+            self.array_store.insert(slice.parent_id, values.into());
+            self.array_slices.get_mut(&id).expect("existing slice").len = 0;
+        } else if self.array_store.contains_key(&id) {
+            self.array_store.insert(id, Vec::new().into());
         }
         Ok(())
     }

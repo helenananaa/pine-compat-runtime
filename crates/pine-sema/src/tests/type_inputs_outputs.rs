@@ -34,6 +34,19 @@ fn accepts_input_string_in_conditions() {
 }
 
 #[test]
+fn accepts_named_table_cell_id_and_input_selected_position() {
+    let analysis = analyze(
+        "//@version=5\nindicator(\"table input\")\ny = input.string(\"bottom\")\nx = input.string(\"right\")\nif barstate.islast\n    t = table.new(y + \"_\" + x, 1, 1)\n    table.cell(table_id=t, column=0, row=0, text=\"ok\")\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_additional_input_variants() {
     let analysis = analyze(
         "threshold = input.price(2.5, \"Price\")\nstart = input.time(0, \"Start\")\nsymbol = input.symbol(\"AAPL\", \"Symbol\")\ntimeframe = input.timeframe(\"D\", \"Timeframe\")\nsession = input.session(\"0930-1600\", \"Session\")\nnotes = input.text_area(\"Plan\", \"Notes\")\nplot(time >= start and symbol == \"AAPL\" and timeframe == \"D\" and session == \"0930-1600\" and notes == \"Plan\" ? math.max(close, threshold) : open)\n",
@@ -185,6 +198,59 @@ plot(close, style=style)
 }
 
 #[test]
+fn drawing_enum_domain_follows_bounded_function_returns() {
+    let analysis = analyze(
+        r#"styleFor(string s) => s == "Dotted" ? line.style_dotted : s == "Dashed" ? line.style_dashed : line.style_solid
+wrapped(string s) => styleFor(s)
+extendFor(bool enabled) =>
+    if enabled
+        extend.right
+    else
+        extend.none
+labelFor(int i) =>
+    switch i
+        0 => label.style_circle
+        => label.style_cross
+choice = input.string("Solid", options=["Solid", "Dotted", "Dashed"])
+id = line.new(bar_index, low, bar_index, high)
+line.set_style(id, wrapped(choice))
+line.set_extend(id, extendFor(close > open))
+lbl = label.new(bar_index, high)
+label.set_style(lbl, labelFor(bar_index))
+plot(close)
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn drawing_enum_domain_does_not_prove_invalid_or_unbounded_function_returns() {
+    for helper in [
+        "styleFor(string s) => s == \"Solid\" ? line.style_solid : \"invalid\"",
+        "styleFor(string s) => s",
+        "styleFor(string s) =>\n    switch s\n        \"Solid\" => line.style_solid",
+    ] {
+        let analysis = analyze(&format!(
+            "s = line.style_solid\n{helper}\nchoice = input.string(\"Solid\")\nid = line.new(bar_index, low, bar_index, high)\nline.set_style(id, styleFor(choice))\nplot(close)\n"
+        ));
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|d| d.code == "E_CALL_ARG_VALUE"),
+            "{helper}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+}
+
+#[test]
 fn accepts_dynamic_plotshape_and_hline_style_enum_domain() {
     let analysis = analyze(
         r#"shapeStyle = bar_index % 2 == 0 ? shape.circle : shape.cross
@@ -292,6 +358,32 @@ fn accepts_indicator_string_metadata_ternary_constants() {
     );
     assert!(analysis.compatibility.unsupported.is_empty());
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn strategy_scale_metadata_uses_the_supported_const_values() {
+    for version in [4, 6] {
+        let source = format!(
+            "//@version={version}\nstrategy(\"Scale metadata\", overlay=true, scale=scale.left)\nplot(close)\n"
+        );
+        let analysis = analyze(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+
+        let invalid = format!(
+            "//@version={version}\nstrategy(\"Scale metadata\", overlay=true, scale=\"custom\")\nplot(close)\n"
+        );
+        let analysis = analyze(&invalid);
+        assert!(analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_VALUE"
+                && diagnostic.message
+                    == "`strategy` argument `scale` only supports scale.left, scale.right, scale.none"
+        }));
+    }
 }
 
 #[test]
@@ -489,6 +581,19 @@ fn rejects_alert_unsupported_frequency() {
             .any(|feature| feature.feature == "alert_frequency")
     );
     assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn plotcandle_display_accepts_input_selection() {
+    let analysis = analyze(
+        "//@version=6\nindicator(\"input display\")\nvisible = input.bool(false)\nplotcandle(open, high, low, close, display=visible ? display.all : display.none)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -963,21 +1068,17 @@ fn accepts_label_getter_methods() {
 }
 
 #[test]
-fn rejects_label_side_effects_inside_functions() {
+fn accepts_label_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = label.new(bar_index, price, \"High\")\n    copy = label.copy(id)\n    label.set_xloc(copy, time, xloc.bar_time)\n    label.set_yloc(copy, yloc.abovebar)\n    label.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1055,21 +1156,17 @@ fn rejects_unsupported_drawing_object_method_syntax() {
 }
 
 #[test]
-fn rejects_drawing_object_method_side_effects_inside_functions() {
+fn accepts_drawing_object_method_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = label.new(bar_index, price, \"start\")\n    id.set_text(\"method\")\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1292,21 +1389,17 @@ fn rejects_invalid_line_new_options() {
 }
 
 #[test]
-fn rejects_line_side_effects_inside_functions() {
+fn accepts_line_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = line.new(bar_index - 1, price, bar_index, price)\n    copy = line.copy(id)\n    line.set_xy1(copy, bar_index, low)\n    line.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1648,21 +1741,17 @@ fn rejects_invalid_box_new_options() {
 }
 
 #[test]
-fn rejects_box_side_effects_inside_functions() {
+fn accepts_box_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = box.new(bar_index, price, bar_index, low)\n    copy = box.copy(id)\n    box.set_lefttop(copy, bar_index, high)\n    box.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1817,6 +1906,43 @@ fn accepts_minimal_table_new_and_cell() {
             .any(|feature| feature.feature == "table.cell_set_text_formatting")
     );
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn table_dynamic_font_position_still_reject_invalid_constants_and_numeric_types() {
+    for (call, code) in [
+        (
+            "table.set_position(id, \"position.invalid\")",
+            "E_CALL_ARG_VALUE",
+        ),
+        (
+            "table.cell(id, 0, 0, \"A\", text_font_family=\"font.invalid\")",
+            "E_CALL_ARG_VALUE",
+        ),
+        (
+            "table.cell_set_text_font_family(id, 0, 0, \"font.invalid\")",
+            "E_CALL_ARG_VALUE",
+        ),
+        ("table.set_position(id, close)", "E_CALL_ARG_TYPE"),
+        (
+            "table.cell(id, 0, 0, \"A\", text_font_family=close)",
+            "E_CALL_ARG_TYPE",
+        ),
+        (
+            "table.cell_set_text_font_family(id, 0, 0, close)",
+            "E_CALL_ARG_TYPE",
+        ),
+    ] {
+        let analysis = analyze(&format!(
+            "//@version=6\nindicator(\"table validation\")\nvar id = table.new(position.top_right, 1, 1)\n{call}\nplot(close)\n"
+        ));
+        assert!(
+            analysis.diagnostics.iter().any(|d| d.code == code),
+            "{call}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
 }
 
 #[test]
@@ -2346,6 +2472,33 @@ fn accepts_strategy_numeric_metadata_constant_expressions() {
     assert_eq!(settings.margin_short.value_percent, 50.0);
     assert!(settings.margin_short.explicit);
     assert_eq!(settings.pyramiding_limit, 2);
+}
+
+#[test]
+fn v5_strategy_accepts_published_percent_commission_string() {
+    let analysis = analyze(
+        "//@version=5\nstrategy('SSL', commission_type='percent', commission_value=0.04)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .expect("v5 strategy HIR")
+            .strategy_settings
+            .commission,
+        Some(pine_ir::StrategyCommission::Percent(0.04))
+    );
+
+    let v6 = analyze("//@version=6\nstrategy('SSL', commission_type='percent')\n");
+    assert!(
+        v6.diagnostics
+            .iter()
+            .any(|item| item.code == "E_CALL_ARG_VALUE")
+    );
 }
 
 #[test]

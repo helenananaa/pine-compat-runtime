@@ -1,6 +1,6 @@
 [package]
 name = "pine-cli"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 description.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 pine-builtins = { path = "../pine-builtins" }
+pine-host-support = { path = "../pine-host-support" }
 pine-runtime = { path = "../pine-runtime" }
 pine-sema = { path = "../pine-sema" }
 pine-syntax = { path = "../pine-syntax" }

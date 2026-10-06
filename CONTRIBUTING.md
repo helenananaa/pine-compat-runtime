@@ -1,6 +1,9 @@
 # Contributing
 
-This project is a clean-room Pine-compatible indicator runtime.
+This project is a clean-room Pine-compatible indicator and strategy runtime
+for an explicitly supported subset. The core owns deterministic Pine semantics;
+hosts own data acquisition, services, persistence and application policy. See
+[AGENTS.md](AGENTS.md) for the architectural boundary.
 
 ## Rules
 
@@ -13,15 +16,19 @@ This project is a clean-room Pine-compatible indicator runtime.
 
 ## Development
 
-Before submitting changes, run:
+Use Rust 1.95+, Python 3.10+, Node.js, the `wasm32-unknown-unknown`
+Rust target, and `maturin>=1.13,<2.0` plus pytest. Before submitting runtime
+or binding changes, run the complete gate:
 
 ```bash
-cargo fmt --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-python3 scripts/check_structure.py
-cargo check -p pine-wasm --target wasm32-unknown-unknown
+scripts/verify.sh
 ```
+
+It covers formatting, clippy, workspace and tool tests, source structure,
+host parity, actual generated WASM/Node execution, and a freshly built wheel
+installed into a disposable test environment. `cargo check` alone does not
+qualify the JavaScript module or installed Python extension. Documentation-only
+changes can use focused source, example and link checks instead.
 
 Windows contributors can run the equivalent full gate with:
 
@@ -33,7 +40,7 @@ Python binding changes should also be checked in an active virtual environment
 where the extension module can be installed:
 
 ```bash
-python -m pip install --upgrade pip maturin pytest
+python -m pip install "maturin>=1.13,<2.0" pytest
 maturin develop --manifest-path crates/pine-python/Cargo.toml
 python -m pytest python/tests
 ```
@@ -45,6 +52,7 @@ New code should go to the crate and module that owns the behavior:
 - `pine-syntax`: source files, lexer, parser, AST, and syntax diagnostics.
 - `pine-builtins`: semantic signatures, built-in constants, namespace registry
   data, and shared return specifications.
+- `pine-ir`: host-neutral HIR and shared intermediate model contracts.
 - `pine-sema`: compatibility reports, resolver/scope rules, type acceptance,
   call validation, HIR lowering, and semantic history requirements.
 - `pine-runtime`: bar execution, runtime values/storage, built-in execution,

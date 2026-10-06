@@ -428,14 +428,11 @@ fn legacy_security_accepts_pure_udfs_and_keeps_mutable_state_fail_closed() {
         "//@version=6\nindicator(\"modern UDF request\")\ncalculate() => ta.sma(close, 2)\nplot(request.security(\"NYSE:IBM\", \"5\", calculate()))\n",
     );
     assert!(
-        modern_udf
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|item| item.feature == "request.security"),
+        modern_udf.diagnostics.is_empty(),
         "{:?}",
         modern_udf.diagnostics
     );
+    assert!(modern_udf.hir.is_some());
 }
 
 #[test]
@@ -504,6 +501,23 @@ fn legacy_security_accepts_same_selector_udf_local_dependencies_only() {
         "{:?}",
         modern.diagnostics
     );
+}
+
+#[test]
+fn legacy_security_global_alias_nested_request_requires_matching_selector() {
+    let supported = analyze_production(
+        "//@version=2\nstudy(\"matching global alias\")\nacc = nz(acc[1]) + close\ninner = security(\"NYSE:IBM\", \"5\", acc)\nplot(security(\"NYSE:IBM\", \"5\", inner * 2))\n",
+    );
+    assert!(
+        supported.diagnostics.is_empty(),
+        "{:?}",
+        supported.diagnostics
+    );
+
+    let mismatched = analyze_production(
+        "//@version=2\nstudy(\"mismatched global alias\")\ninner = security(\"NYSE:IBM\", \"15\", close)\nplot(security(\"NYSE:IBM\", \"5\", inner * 2))\n",
+    );
+    assert!(diagnostic_codes(&mismatched).contains(&"E_UNSUPPORTED_FEATURE"));
 }
 
 #[test]
@@ -1336,7 +1350,7 @@ fn v4_tostring_reshapes_historical_parameter_names() {
         ]
     );
 
-    for version in [1, 2, 3] {
+    for version in [1, 2] {
         let unavailable = analyze_production(&format!(
             "//@version={version}\nstudy(\"tostring boundary\")\nplot(tostring(close) != \"\" ? 1 : 0)\n"
         ));
@@ -1349,6 +1363,19 @@ fn v4_tostring_reshapes_historical_parameter_names() {
                 .all(|translation| translation.source_feature != "tostring")
         );
     }
+}
+
+#[test]
+fn v3_open_close_strategy_math_and_string_aliases_are_available() {
+    let analysis = analyze_production(
+        "//@version=3\nstudy(\"v3 aliases\")\nplot(alma(close, 8, 0.85, 6) + exp(-1.0) + cos(1.0) + (tostring(3, \"###D\") == \"3D\" ? 1 : 0))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1785,8 +1812,12 @@ fn v4_string_input_options_bound_drawing_enum_values() {
     let unbounded = analyze_production(
         "//@version=4\nstudy(\"unbounded drawing input\")\nstyle = input(line.style_solid, \"Style\", input.string)\nline.new(bar_index, low, bar_index + 1, high, style=style)\nplot(close)\n",
     );
-    assert_eq!(diagnostic_codes(&unbounded), vec!["E_CALL_ARG_VALUE"]);
-    assert!(unbounded.hir.is_none());
+    assert!(
+        unbounded.diagnostics.is_empty(),
+        "{:?}",
+        unbounded.diagnostics
+    );
+    assert!(unbounded.hir.is_some());
 }
 
 #[test]
@@ -2099,6 +2130,7 @@ fn qualified_builtin_version_inventory_covers_registered_namespaces() {
             ("display.price_scale", 5),
             ("display.status_line", 5),
             ("display.data_window", 5),
+            ("display.pine_screener", 6),
         ],
     );
     assert_registered_value_namespace_versions(
@@ -2805,6 +2837,35 @@ barcolor(color.red, title="bars")
 }
 
 #[test]
+fn v4_plotshape_tolerates_identical_duplicate_literal_transparency_only() {
+    let accepted = analyze_production(
+        "//@version=4\nstudy(\"legacy\")\nplotshape(close > open, transp=0, color=color.green, transp=0)\n",
+    );
+    assert!(
+        accepted.diagnostics.is_empty(),
+        "{:?}",
+        accepted.diagnostics
+    );
+    assert!(accepted.hir.is_some());
+
+    for source in [
+        "//@version=4\nstudy(\"conflict\")\nplotshape(close > open, transp=0, transp=10)\n",
+        "//@version=4\nstudy(\"other argument\")\nplotshape(close > open, color=color.red, color=color.red)\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&"E_CALL_ARG_DUPLICATE"),
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+    }
+    let modern = analyze_production(
+        "//@version=5\nindicator(\"modern\")\nplotshape(close > open, transp=0, transp=0)\n",
+    );
+    assert!(diagnostic_codes(&modern).contains(&"E_CALL_ARG_NAME"));
+}
+
+#[test]
 fn v4_v5_series_output_offsets_use_the_final_value_while_v3_v6_stay_strict() {
     for (version, source) in [
         (
@@ -2988,17 +3049,43 @@ fn v4_output_binder_rejects_unsupported_arguments_and_invalid_legacy_values() {
 #[test]
 fn legacy_output_compatibility_does_not_weaken_modern_unique_types() {
     for version in [5, 6] {
-        for call in [
-            "plot(close, transp=40)",
-            "plot(close, style=1)",
-            "hline(1, linestyle=1)",
-        ] {
+        for call in ["plot(close, style=1)", "hline(1, linestyle=1)"] {
             let source = format!("//@version={version}\nindicator(\"modern\")\n{call}\n");
             let analysis = analyze_production(&source);
             assert!(!analysis.diagnostics.is_empty(), "{version}: {call}");
             assert!(analysis.compatibility.legacy_translations.is_empty());
             assert!(analysis.compatibility.legacy_emulations.is_empty());
         }
+    }
+    let deprecated_v5 = analyze_production(
+        "//@version=5\nindicator(\"deprecated transparency\")\nplot(close, transp=40)\n",
+    );
+    assert!(deprecated_v5.diagnostics.is_empty());
+    assert!(deprecated_v5.hir.is_some());
+    let removed_v6 = analyze_production(
+        "//@version=6\nindicator(\"removed transparency\")\nplot(close, transp=40)\n",
+    );
+    assert!(diagnostic_codes(&removed_v6).contains(&"E_CALL_ARG_NAME"));
+}
+
+#[test]
+fn v4_strategy_entry_accepts_boolean_directions_without_weakening_v5_v6() {
+    let legacy = analyze_production(
+        "//@version=4\nstrategy(\"legacy direction\")\nstrategy.entry(\"L\", true)\nstrategy.entry(\"S\", false)\n",
+    );
+    assert!(legacy.diagnostics.is_empty(), "{:?}", legacy.diagnostics);
+    assert!(legacy.hir.is_some());
+
+    for version in [5, 6] {
+        let source = format!(
+            "//@version={version}\nstrategy(\"modern direction\")\nstrategy.entry(\"L\", true)\n"
+        );
+        let analysis = analyze_production(&source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&"E_CALL_ARG_TYPE"),
+            "{version}: {:?}",
+            analysis.diagnostics
+        );
     }
 }
 
@@ -3400,6 +3487,28 @@ fn v2_declaration_graph_preserves_symbol_identity_and_stable_current_order() {
 }
 
 #[test]
+fn v1_v2_allow_legacy_input_inside_udf_without_relaxing_v3() {
+    let body = "study(\"local input\")\nf() =>\n    factor = input(0.5)\n    factor\nplot(f())\n";
+    for source in [body.to_owned(), format!("//@version=2\n{body}")] {
+        let analysis = analyze_production(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+    let v3 = analyze_production(&format!("//@version=3\n{body}"));
+    assert!(v3.hir.is_none());
+    assert!(
+        v3.compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "function_side_effect")
+    );
+}
+
+#[test]
 fn v2_declaration_graph_treats_positive_const_expression_offsets_as_history() {
     let analysis = analyze_production(
         "//@version=2\nstudy(\"const history offset\")\nselfSeries = nz(selfSeries[1 + 0]) + close\nplot(selfSeries)\n",
@@ -3589,12 +3698,11 @@ fn v2_declaration_graph_enforces_the_edge_limit_independently() {
 }
 
 #[test]
-fn legacy_integer_division_is_truncated_across_the_complete_expression() {
-    for version in [1, 2, 3, 4] {
-        let source = include_str!(
-            "../../../../tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine"
-        )
-        .replacen("//@version=4", &format!("//@version={version}"), 1);
+fn v1_v3_integer_division_is_truncated_across_the_complete_expression() {
+    for version in [1, 2, 3] {
+        let source = format!(
+            "//@version={version}\nstudy(\"Legacy integer division\")\nlength = input(5, title=\"Length\")\nlag = length / 2\nweighted(source, window) => wma(source, window)\nplot(wma(close, lag))\nplot(weighted(close, length / 2))\nplot(length / 2)\nplot(close[lag])\nplot(close[5 / 2])\n"
+        );
         let analysis = analyze_production(&source);
         assert!(
             analysis.diagnostics.is_empty(),
@@ -3633,6 +3741,67 @@ fn legacy_integer_division_is_truncated_across_the_complete_expression() {
             HirExprKind::Call { ref callee, .. } if callee == "int"
         ));
     }
+}
+
+#[test]
+fn v4_integer_division_preserves_input_fractions_and_truncates_constants() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"v4 division\")\nlength = input(5)\nplot(length / 2)\nplot(5 / 2)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .filter(|emulation| emulation.feature == "v4.integer_division")
+            .count(),
+        1
+    );
+    let hir = analysis.hir.as_ref().expect("v4 division HIR");
+    let plots = hir
+        .statements
+        .iter()
+        .filter_map(|statement| match &statement.kind {
+            HirStmtKind::Expr(HirExpr {
+                kind: HirExprKind::Call { callee, args, .. },
+                ..
+            }) if callee == "plot" => args.first().map(|arg| &arg.value),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        plots[0].pine_type,
+        PineType::new(Qualifier::Input, ValueKind::Float)
+    );
+    assert_eq!(
+        plots[1].pine_type,
+        PineType::new(Qualifier::Const, ValueKind::Int)
+    );
+}
+
+#[test]
+fn v4_ema_length_accepts_integer_operand_quotient_in_public_hull_pattern() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"Hull EMA length\")\nlength = input(55)\nehma(src, len) => ema(2 * ema(src, len / 2) - ema(src, len), round(sqrt(len)))\nplot(ehma(close, length))\nplot(length / 2)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|emulation| emulation.feature == "v4.ema_division_length")
+    );
 }
 
 #[test]
@@ -4061,18 +4230,12 @@ fn v4_function_final_statements_and_reference_side_effects_are_supported() {
                     1,
                 ),
         );
-        assert_eq!(
-            modern
-                .compatibility
-                .unsupported
-                .iter()
-                .filter(|feature| feature.feature == "function_side_effect")
-                .count(),
-            3,
+        assert!(
+            modern.diagnostics.is_empty(),
             "v{version}: {:?}",
-            modern.compatibility.unsupported
+            modern.diagnostics
         );
-        assert!(modern.hir.is_none(), "v{version}");
+        assert!(modern.hir.is_some(), "v{version}");
     }
 
     let focused_boundary = analyze_production(include_str!(

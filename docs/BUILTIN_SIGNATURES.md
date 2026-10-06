@@ -288,12 +288,12 @@ box.get_bottom(id: box-compatible) -> series float
 box.get_left(id: box-compatible) -> series int
 box.get_right(id: box-compatible) -> series int
 box.all -> simple array<box>
-table.new(position: const string, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible, force_overlay?: const bool) -> series table
+table.new(position: string-compatible, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible, force_overlay?: const bool) -> series table
 table.delete(id: table-compatible) -> void
 table.clear(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
 table.merge_cells(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
-table.cell(id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: const string, text_formatting?: int-compatible) -> void
-table.set_position(id: table-compatible, position: const string) -> void
+table.cell(table_id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: string-compatible, text_formatting?: int-compatible) -> void
+table.set_position(id: table-compatible, position: string-compatible) -> void
 table.set_bgcolor(id: table-compatible, bgcolor: color-compatible) -> void
 table.set_frame_color(id: table-compatible, frame_color: color-compatible) -> void
 table.set_frame_width(id: table-compatible, frame_width: int-compatible) -> void
@@ -309,10 +309,10 @@ table.cell_set_text_halign(id: table-compatible, column: int-compatible, row: in
 table.cell_set_text_valign(id: table-compatible, column: int-compatible, row: int-compatible, text_valign: const string) -> void
 table.cell_set_text_wrap(id: table-compatible, column: int-compatible, row: int-compatible, text_wrap: const string) -> void
 table.cell_set_tooltip(id: table-compatible, column: int-compatible, row: int-compatible, tooltip: string-compatible) -> void
-table.cell_set_text_font_family(id: table-compatible, column: int-compatible, row: int-compatible, text_font_family: const string) -> void
+table.cell_set_text_font_family(id: table-compatible, column: int-compatible, row: int-compatible, text_font_family: string-compatible) -> void
 table.cell_set_text_formatting(id: table-compatible, column: int-compatible, row: int-compatible, text_formatting: int-compatible) -> void
 table.all -> simple array<table>
-polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
+polyline.new(points: array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
 polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
 ```
@@ -675,7 +675,7 @@ The current executable subset has two forms:
   `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` evaluate
-  side-effect-free expressions over host-provided same-or-higher-timeframe bars.
+  side-effect-free expressions over host-provided requested-context bars.
   The supported provider expression subset includes direct OHLCV/time sources,
   pure arithmetic and ternaries, history references, `na`, `nz`, positional
   `time(timeframe)` calls, `barstate.islast`, selected
@@ -696,11 +696,10 @@ The current executable subset has two forms:
   directly, currently `ta.macd`, `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`,
   and `ta.vwap(source, anchor, stdev_mult)`. Other provider-backed tuple
   expressions remain unsupported.
-  Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
-  confirmed requested bars are visible, and missing requested bars forward-fill
-  the last confirmed value.
-  Explicit default merge options are accepted as metadata:
-  `gaps=barmerge.gaps_off` and `lookahead=barmerge.lookahead_off`.
+  Higher-timeframe alignment defaults to `gaps_off` and `lookahead_off`;
+  historical chart bars receive confirmed requested values and missing bars
+  forward-fill. Explicit `gaps_off`/`gaps_on` and
+  `lookahead_off`/`lookahead_on` policies are supported.
 
 Historical Pine v1-v4 `security` keeps its separate versioned gaps/lookahead
 policy and widens only that legacy path to simple symbol/resolution expressions
@@ -715,14 +714,26 @@ enclosing request exactly. Different selectors, control-flow-local requests,
 mutable or persistent aliases, cycles, recursion, and side effects remain
 rejected. This does not widen modern `request.security` source analysis.
 
-For modern `request.security`, lower timeframe requests, provider expression
-local variable aliases, UDF calls, stateful math calls such as `math.random`,
+For modern `request.security`, lower-timeframe historical requests select the
+last intrabar in each chart period with `lookahead_off`, or the first with
+`lookahead_on`. Missing periods forward-fill with `gaps_off` and return `na`
+with `gaps_on`. Forming lower-timeframe updates use only intrabars explicitly
+received through the ordered request feed for the current chart bar; without
+one, they fail explicitly. Stateful math calls such as `math.random`,
 `ta.tr` variable form,
 output/drawing side effects, input
-declarations, array mutation, non-default barmerge behavior, and non-default
-explicit gaps/lookahead remain unsupported.
-`request.security_lower_tf` is unsupported; it returns arrays in Pine and is not
-claimed until typed array return semantics and host output shapes are designed.
+declarations and array mutation remain unsupported.
+Named nonnegative simple-int `calc_bars_count` limits the requested context's
+historical bars before expression execution; zero uses all available bars.
+`request.security_lower_tf(symbol, timeframe, expression, calc_bars_count=...)` supports historical
+scalar and scalar-tuple expressions on host-provided lower-or-equal-timeframe
+bars and returns time-ordered typed intrabar arrays, or a tuple of those arrays.
+An interval without intrabars returns empty arrays. Nonnegative simple-int
+`calc_bars_count` limits requested history before expression evaluation; zero
+uses all available bars. Provider-backed forming updates use current-period
+intrabar updates from the ordered request feed and return arrays containing
+only values received so far. With no current-period update, the arrays are
+empty. Other optional policies and collection expressions remain unsupported.
 `timeframe.in_seconds()` and `timeframe.in_seconds("")` return `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through
@@ -789,9 +800,12 @@ strategy(title: const string, shorttitle?: const string, overlay?: const bool, m
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, when?: bool-compatible v5 hidden)
+strategy.entry(id: simple string, direction: string-compatible, qty?: numeric-compatible, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, when?: bool-compatible v5 hidden)
 -> void
-strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+  Pine v1-v4 additionally accept boolean `direction` (`true` = long,
+  `false` = short), as used by the original UT Bot Strategy. Pine v5-v6 retain
+  the modern string-compatible direction rule.
+strategy.order(id: simple string, direction: string-compatible, qty?: numeric-compatible, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
 strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool)
 -> void
@@ -945,7 +959,8 @@ non-bool values stay rejected.
 `default_qty_type=strategy.cash` is also supported for positive const numeric
 `default_qty_value`; omitted supported entry `qty` resolves once at placement
 time as cash divided by the current close under the current
-no-currency-conversion boundary. `default_qty_type=strategy.percent_of_equity`
+no-currency-conversion boundary, then truncates to an explicitly configured
+chart quantity grid. `default_qty_type=strategy.percent_of_equity`
 is also supported for positive const numeric `default_qty_value`; omitted
 supported entry `qty` resolves once at placement time from current supported
 equity and current close. `strategy.default_entry_qty(fill_price)` exposes the
@@ -956,8 +971,8 @@ supported equity by `fill_price`; fixed sizing returns the configured unit
 count. The helper does not add reversal quantity for an open position. Direct,
 named, UDF, and history reads are supported. Non-positive or non-finite prices
 produce `na` for price-dependent modes, as does non-positive or non-finite
-supported equity for percent sizing. Currency conversion, symbol point value,
-precision, and lot-step handling remain outside this subset.
+supported equity for percent sizing. Currency conversion, non-unit symbol point
+value, and arbitrary lot-step handling remain outside this subset.
 `strategy(...)` accepts
 `commission_type=strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, or `strategy.commission.percent` with a
@@ -1275,19 +1290,19 @@ unsupported. Other open-trade namespace functions outside `entry_price`,
 ## Inputs
 
 ```text
-input(defval: const int/float/bool/string/color or series float, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input defval kind, or series float when defval is a source
-input.int(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
-input.float(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
-input.bool(defval: const bool, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input bool
-input.color(defval: const color, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input color
-input.string(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.price(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
-input.time(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
-input.symbol(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.timeframe(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.session(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.text_area(defval: const string, title?: const string, tooltip?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> series float
+input(defval: const int/float/bool/string/color or series float, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input defval kind, or series float when defval is a source
+input.int(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input int
+input.float(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input float
+input.bool(defval: const bool, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input bool
+input.color(defval: const color, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input color
+input.string(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.price(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input float
+input.time(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input int
+input.symbol(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.timeframe(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.session(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.text_area(defval: const string, title?: const string, tooltip?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> input string
+input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: const plot_display) -> series float
 ```
 
 Rules:
@@ -1304,49 +1319,50 @@ Rules:
   value only when explicitly supplied by the Rust, CLI, Python, or WASM host.
 - `input.session` and `input.text_area` currently execute their `defval`
   strings unless a Rust, CLI, Python, or WASM host override is supplied.
-- `input.source` returns the selected source series. Phase 1 may restrict this
-  to known OHLCV-derived series. Host-side `input.source` overrides remain
-  unsupported.
+- `input.source` returns the selected source series. Rust, CLI, Python, and WASM
+  host overrides accept `open`, `high`, `low`, `close`, `hl2`, `hlc3`, `ohlc4`,
+  and `hlcc4`; external indicator plot sources remain unsupported.
 - Generic `input(close)` (or another series float defval) infers the same
   source-input return as `input.source`. Const scalar defvals still promote to
   the `input` qualifier. Series int/bool/string/color defvals stay rejected.
-  Host-side source overrides remain unsupported.
+  Host-side overrides of generic series-float `input(...)` use the same built-in
+  chart-source selectors as `input.source`.
 
 ## Plotting
 
 ```text
-alertcondition(condition: bool-compatible, title: const string, message: const string)
+alertcondition(condition: bool-compatible, title: const string?, message: const string?)
   -> void
 
 alert(message: string-compatible, freq?: const string)
   -> void
 
-plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: input/const int, style?: string-compatible, trackprice?: const bool, histbase?: input/const numeric, offset?: simple integer-compatible, join?: const bool, editable?: const bool, show_last?: input/const int, display?: const string, format?: const string, precision?: simple integer-compatible, force_overlay?: const bool)
+plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: input/const int, style?: string-compatible, trackprice?: const bool, histbase?: input/const numeric, offset?: simple integer-compatible, join?: const bool, editable?: const bool, show_last?: input/const int, display?: const plot_display, format?: const string, precision?: simple integer-compatible, force_overlay?: const bool, linestyle?: input/const string)
   -> plot
 
-plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string)
+plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const plot_display)
   -> void
 
-plotshape(series: series/simple numeric-or-bool, title?: const string, style?: string-compatible, location?: const string, color?: color-compatible, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string, force_overlay?: const bool)
+plotshape(series: series/simple numeric-or-bool, title?: const string, style?: string-compatible, location?: const string, color?: color-compatible, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const plot_display, force_overlay?: const bool)
   -> void
 
-plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple integer-compatible, minheight?: simple integer-compatible, maxheight?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string, force_overlay?: const bool)
+plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple integer-compatible, minheight?: simple integer-compatible, maxheight?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display, force_overlay?: const bool)
   -> void
 
-plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: input/const int, display?: const string)
+plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display)
   -> void
 
-plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: const string)
+plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: input/const plot_display)
   -> void
 
-hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const string)
+hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const plot_display)
   -> hline
 
-fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string, transp?: simple integer-compatible v5 hidden)
+fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const plot_display, transp?: simple integer-compatible v5 hidden)
   -> void
 
-bgcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
-barcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
+bgcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display) -> void
+barcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const plot_display) -> void
 ```
 
 v5 `fill(..., transp=N)` applies simple-int transparency after the base color
@@ -1508,9 +1524,9 @@ existing string rendering convention.
 ## Arrays
 
 ```text
-array.new_float(size?: simple integer-compatible, initial_value?: numeric-compatible) -> simple float-array
+array.new_float(size?: int-compatible, initial_value?: numeric-compatible) -> simple float-array
 array.new<float>(size?: simple integer-compatible, initial_value?: numeric-compatible) -> simple float-array
-array.new_int(size?: simple integer-compatible, initial_value?: int-compatible) -> simple int-array
+array.new_int(size?: int-compatible, initial_value?: int-compatible) -> simple int-array
 array.new<int>(size?: simple integer-compatible, initial_value?: int-compatible) -> simple int-array
 array.new_bool(size?: simple integer-compatible, initial_value?: bool-compatible) -> simple bool-array
 array.new<bool>(size?: simple integer-compatible, initial_value?: bool-compatible) -> simple bool-array
@@ -1538,14 +1554,14 @@ array.get(id: float-array|int-array|bool-array|string-array|color-array|label-ar
 array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible, value: element-compatible) -> void
 array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible, value: element-compatible) -> void
 array.pop(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
-array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible) -> series element
+array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible) -> series element
 array.shift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.unshift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> void
 array.fill(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible, index_from?: simple integer-compatible, index_to?: simple integer-compatible) -> void
 array.first(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.last(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.copy(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> same array kind
-array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index_from: simple integer-compatible, index_to: simple integer-compatible) -> same array kind
+array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index_from: int-compatible, index_to: int-compatible) -> same array kind
 array.concat(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, id2: same array kind) -> same array kind
 array.includes(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> series bool
 array.includes(id: same-local-scalar-field-UDT-array, value: same local UDT) -> series bool
@@ -1645,7 +1661,10 @@ the parent window, slice insertions widen the window and insert into the parent,
 invalid creation bounds return `na`, and later parent mutations that move the
 window out of bounds are runtime errors.
 `array.concat` requires two arrays of the same kind,
-appends `id2` values to `id` in place, and returns `id`. Numeric array
+appends `id2` values to `id` in place, and returns `id`. The source is snapshotted
+before insertion, including self-concat and overlapping slices. A slice target
+widens its own range and inserts the batch into its parent; other slice ranges
+keep their existing offsets and lengths. Numeric array
 `binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev`
 helpers may also be called with method syntax on float and int array receivers.
 `every/some` may also be called with method syntax on float, int, and bool
@@ -1702,7 +1721,10 @@ to `,`, uses the default numeric string format, and renders colors as their
 normalized integer color values. The semantic analyzer also allows `array.join`
 for same-local scalar-tree UDT arrays; those elements render as
 `TypeName(field0, field1, ...)`, with `NaN` for `na` elements. Drawing-id,
-chart.point, map, and matrix arrays remain outside the join subset. Array assignment passes the runtime array
+chart.point, map, and matrix arrays remain outside the join subset. Join output
+is limited to 40,960 Unicode characters. Each separator and borrowed element
+field is checked before appending, so rejected output does not first expand
+into a complete oversized string. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same
 current element values.
 Same-local and same-imported scalar-tree UDT array element identities are
@@ -1740,7 +1762,11 @@ same scalar key/value template. `map.keys` and `map.values` return independent
 array snapshots in insertion order. `map.put_all` merges entries from a source
 map into a target map with the same scalar key/value template; existing keys
 replace values without moving order, and new keys append in source insertion
-order. Scalar `map<K,V>` typed declarations are supported with compatible or
+order. Maps have a maximum of 50,000 key-value pairs. At capacity, `map.put`
+still permits replacement of an existing key. After argument evaluation,
+`map.put_all` checks the distinct new keys before applying any overwrite or
+append; an oversized merge raises a runtime error with the target entries and
+their order unchanged. Scalar `map<K,V>` typed declarations are supported with compatible or
 `na` initialization and later same-template reassignment. Same-template map
 metadata is preserved through ternary, `if`, `switch`, `for`, `for...in`, and
 `while` expression results, including `map`/`na` branches and block-local map
@@ -2163,7 +2189,7 @@ Rules:
 ## Color
 
 ```text
-color.new(color: color-compatible, transp?: simple integer-compatible) -> same qualifier color
+color.new(color: color-compatible, transp?: numeric-compatible) -> color with strongest qualifier
 color.rgb(red: numeric-compatible, green: numeric-compatible, blue: numeric-compatible, transp?: numeric-compatible) -> color with strongest qualifier
 color.r(color: color-compatible) -> float with same qualifier
 color.g(color: color-compatible) -> float with same qualifier

@@ -154,13 +154,16 @@ impl BrokerState {
             }
         }
 
-        let all_entry_deferred_exits = self.order_book.exits().all_entry_deferred_relative_exits();
-        for deferred_exit in all_entry_deferred_exits {
-            self.resolve_all_entry_deferred_relative_exit_for_entry(
-                deferred_exit,
-                entry_id,
-                bar_index,
-            );
+        if self.position_size != 0.0 {
+            let all_entry_deferred_exits =
+                self.order_book.exits().all_entry_deferred_relative_exits();
+            for deferred_exit in all_entry_deferred_exits {
+                self.resolve_all_entry_deferred_relative_exit_for_entry(
+                    deferred_exit,
+                    entry_id,
+                    bar_index,
+                );
+            }
         }
     }
 }

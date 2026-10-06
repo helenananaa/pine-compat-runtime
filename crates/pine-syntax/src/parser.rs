@@ -9,9 +9,11 @@ mod declarations;
 mod phase_j;
 mod statements;
 
-// Keep the recursive parser comfortably below Rust's default test-thread stack.
+// Keep the recursive parser below the 1 MiB stack used by embedding threads.
 // The limit is a fail-closed resource bound, not part of Pine's syntax.
-const MAX_EXPR_DEPTH: u32 = 192;
+const MAX_EXPR_DEPTH: u32 = 64;
+const MAX_STMT_DEPTH: u32 = 32;
+const MAX_RECURSION_COST: u32 = 64;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Parse {
@@ -29,6 +31,7 @@ struct Parser {
     pos: usize,
     diagnostics: Vec<Diagnostic>,
     expr_depth: u32,
+    stmt_depth: u32,
     source_version: u16,
 }
 
@@ -52,20 +55,46 @@ struct ForInParts {
 }
 
 impl Parser {
+    fn within_depth_budget(&self, stmt_increment: u32, expr_increment: u32) -> bool {
+        let stmt_depth = self.stmt_depth + stmt_increment;
+        let expr_depth = self.expr_depth + expr_increment;
+        stmt_depth <= MAX_STMT_DEPTH
+            && expr_depth <= MAX_EXPR_DEPTH
+            && 2 * stmt_depth + expr_depth <= MAX_RECURSION_COST
+    }
+
     fn new(lexed: Lexed) -> Self {
         Self {
             tokens: lexed.tokens,
             pos: 0,
             diagnostics: lexed.diagnostics,
             expr_depth: 0,
+            stmt_depth: 0,
             source_version: 1,
         }
     }
 
     fn parse(mut self) -> Parse {
-        let version = self.parse_optional_version();
+        let directives: Vec<_> = self
+            .tokens
+            .iter()
+            .filter_map(|token| match token.kind {
+                TokenKind::VersionDirective(version) => Some(VersionDecl {
+                    version,
+                    span: token.span,
+                }),
+                _ => None,
+            })
+            .collect();
+        let version = directives.first().copied();
+        for duplicate in directives.iter().skip(1) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LANGUAGE_VERSION_DUPLICATE",
+                "source contains more than one version directive",
+                duplicate.span,
+            ));
+        }
         self.source_version = version.as_ref().map_or(1, |version| version.version);
-        let mut saw_version_directive = version.is_some();
         let mut statements = Vec::new();
 
         while !self.at(TokenKind::Eof) {
@@ -74,20 +103,6 @@ impl Parser {
                 break;
             }
             if matches!(self.current().kind, TokenKind::VersionDirective(_)) {
-                let (code, message) = if saw_version_directive {
-                    (
-                        "E_LANGUAGE_VERSION_DUPLICATE",
-                        "source contains more than one version directive",
-                    )
-                } else {
-                    (
-                        "E_LANGUAGE_VERSION_PLACEMENT",
-                        "version directive must appear before source statements",
-                    )
-                };
-                self.diagnostics
-                    .push(Diagnostic::error(code, message, self.current().span));
-                saw_version_directive = true;
                 self.bump();
                 continue;
             }
@@ -96,7 +111,7 @@ impl Parser {
                 Some(statement) => statements.push(statement),
                 None => self.recover_stmt(),
             }
-            self.skip_legacy_statement_commas();
+            self.skip_statement_separator();
             self.skip_newlines();
         }
 
@@ -109,20 +124,8 @@ impl Parser {
         }
     }
 
-    fn parse_optional_version(&mut self) -> Option<VersionDecl> {
-        self.skip_newlines();
-        match self.current().kind {
-            TokenKind::VersionDirective(version) => {
-                let span = self.current().span;
-                self.bump();
-                Some(VersionDecl { version, span })
-            }
-            _ => None,
-        }
-    }
-
     fn parse_expr(&mut self, min_bp: u8) -> Option<Expr> {
-        if self.expr_depth >= MAX_EXPR_DEPTH {
+        if !self.within_depth_budget(0, 1) {
             self.error_here("E_PARSE_EXPR_DEPTH", "expression nesting is too deep");
             return None;
         }
@@ -158,8 +161,21 @@ impl Parser {
             if self.at(TokenKind::Dot)
                 && self.nth_is_identifier(1)
                 && self.nth_at(2, TokenKind::LParen)
+                && !matches!(left.kind, ExprKind::Member { .. })
             {
                 left = self.finish_postfix_method_call(left)?;
+                continue;
+            }
+            if self.at(TokenKind::Dot) && self.nth_is_identifier(1) {
+                self.bump();
+                let (name, end) = self.expect_identifier("expected member name after `.`")?;
+                left = Expr {
+                    span: left.span.merge(end),
+                    kind: ExprKind::Member {
+                        receiver: Box::new(left),
+                        name,
+                    },
+                };
                 continue;
             }
             if self.at(TokenKind::LBracket) {
@@ -467,7 +483,9 @@ impl Parser {
                 // enforce the newline separating this inline arm from the next.
                 (SwitchArmResult::Block(vec![statement]), false)
             } else {
-                let result = self.parse_expr(0)?;
+                // Inline block expressions can recurse without entering a
+                // statement, so switch arms share the structural depth bound.
+                let result = self.with_stmt_depth(|parser| parser.parse_expr(0))?;
                 end = result.span;
                 (SwitchArmResult::Expr(result), false)
             };
@@ -729,10 +747,19 @@ impl Parser {
         }
     }
 
-    fn skip_legacy_statement_commas(&mut self) {
+    fn skip_statement_separator(&mut self) {
         if self.source_version <= 4 {
             while self.at(TokenKind::Comma) {
                 self.bump();
+            }
+        } else if self.at(TokenKind::Comma) {
+            // Modern Pine also permits distinct one-line statements separated
+            // by a comma. Consume one separator and parse the next statement
+            // in the same scope, preserving declaration order.
+            self.bump();
+            if self.at(TokenKind::Newline) || self.at(TokenKind::Dedent) || self.at(TokenKind::Eof)
+            {
+                self.error_here("E_PARSE_STMT", "expected statement after `,`");
             }
         }
     }
@@ -871,6 +898,8 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                         method.as_str(),
                         "row"
                             | "col"
+                            | "remove_row"
+                            | "remove_col"
                             | "eigenvalues"
                             | "slice"
                             | "concat"
@@ -967,7 +996,10 @@ fn is_builtin_array_result_qualified_callee(namespace: &str, member: &str) -> bo
             (namespace, member),
             ("str", "split")
                 | ("ta", "pivot_point_levels")
-                | ("matrix", "eigenvalues" | "row" | "col")
+                | (
+                    "matrix",
+                    "eigenvalues" | "row" | "col" | "remove_row" | "remove_col"
+                )
                 | ("map", "keys" | "values")
         )
 }

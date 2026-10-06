@@ -160,7 +160,7 @@ def test_analyze_script_reports_executable_script():
         '//@version=6\nindicator("demo")\nplot(close)\n'
     )
 
-    assert report["schemaVersion"] == 5
+    assert report["schemaVersion"] == 6
     assert report["languageVersion"] == 6
     assert report["languageVersionOrigin"] == "explicit"
     assert report["dialect"] == "v6"
@@ -184,7 +184,7 @@ def test_analyze_script_reports_input_call_sites():
         'plot(close)\n'
     )
 
-    assert report["schemaVersion"] == 5
+    assert report["schemaVersion"] == 6
     assert report["diagnostics"] == []
     assert [
         {"name": item["name"], "title": item["title"]}
@@ -196,10 +196,23 @@ def test_analyze_script_reports_input_call_sites():
     assert all(isinstance(item["callSiteId"], int) for item in report["inputs"])
 
 
+def test_analyze_script_identifies_chart_source_selectors():
+    report = pine_compat.analyze_script(
+        '//@version=5\nindicator("sources")\n'
+        'a = input(close, "Generic source")\n'
+        'b = input.source(close, "Source")\n'
+        'c = input(1.5, "Scale")\n'
+        'plot(a + b + c)\n'
+    )
+    assert report["schemaVersion"] == 6
+    assert report["diagnostics"] == []
+    assert [item["isSource"] for item in report["inputs"]] == [True, True, False]
+
+
 def test_analyze_script_reports_executable_implicit_v1_legacy_indicator():
     report = pine_compat.analyze_script('study("legacy")\nplot(close)\n')
 
-    assert report["schemaVersion"] == 5
+    assert report["schemaVersion"] == 6
     assert report["languageVersion"] == 1
     assert report["languageVersionOrigin"] == "implicit"
     assert report["dialect"] == "v1"
@@ -351,7 +364,7 @@ def test_analyze_script_reports_v4_legacy_security_routing():
     )
 
 
-def test_analyze_script_reports_one_legacy_strategy_hard_stop():
+def test_analyze_script_admits_v4_strategy():
     report = pine_compat.analyze_script(
         '//@version=4\nstrategy("legacy")\n'
         'strategy.entry("L", strategy.long)\n'
@@ -361,11 +374,8 @@ def test_analyze_script_reports_one_legacy_strategy_hard_stop():
     assert report["languageVersionOrigin"] == "explicit"
     assert report["dialect"] == "v4"
     assert report["scriptMode"] == "strategy"
-    assert report["executable"] is False
-    assert [item["code"] for item in report["diagnostics"]] == [
-        "E_LEGACY_STRATEGY_OUT_OF_SCOPE"
-    ]
-    assert report["compatibility"]["unsupported"][0]["feature"] == "legacy strategy"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
 
 
 def test_program_run_accepts_call_site_keyed_input_overrides():
@@ -412,8 +422,8 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
 
 
 def test_schema_versions_and_input_constraints_are_public():
-    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 5
-    assert pine_compat.RUNTIME_SCHEMA_VERSION == 8
+    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 6
+    assert pine_compat.RUNTIME_SCHEMA_VERSION == 9
     assert pine_compat.RENDER_METADATA_VERSION == 1
 
     report = pine_compat.analyze_script(
@@ -424,6 +434,7 @@ def test_schema_versions_and_input_constraints_are_public():
     assert report["inputs"][0] == {
         "callSiteId": 1,
         "name": "input.int",
+        "isSource": False,
         "title": "Length",
         "default": 3,
         "min": 1,
@@ -448,6 +459,7 @@ def test_program_run_accepts_v4_legacy_input_overrides():
     assert report["inputs"][0] == {
         "callSiteId": 1,
         "name": "input.int",
+        "isSource": False,
         "title": "Length",
         "default": 3,
         "min": 1,
@@ -597,7 +609,7 @@ def test_compile_script_returns_program_with_run_method():
     program = pine_compat.compile_script('//@version=5\nindicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
     assert result["lines"] == []
@@ -2483,7 +2495,7 @@ def test_run_script_returns_varip_array_fixture_contract():
 
 
 def test_run_script_returns_user_type_varip_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_type_varip.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_type_varip_guarded.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_user_type_varip.json").read_text())
 
     result = pine_compat.run_script(
@@ -2575,7 +2587,7 @@ def test_run_script_returns_request_security_time_close_fixture_contract():
 
 
 def test_run_script_returns_user_types_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_types.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_types_guarded.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_user_types.json").read_text())
 
     result = pine_compat.run_script(
@@ -2587,7 +2599,7 @@ def test_run_script_returns_user_types_fixture_contract():
 
 
 def test_run_script_returns_user_type_functions_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_type_functions.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_type_functions_guarded.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_user_type_functions.json").read_text()
     )
@@ -2601,7 +2613,7 @@ def test_run_script_returns_user_type_functions_fixture_contract():
 
 
 def test_run_script_returns_user_methods_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/user_methods.pine").read_text()
+    source = (ROOT / "tests/fixtures/runtime/user_methods_guarded.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_user_methods.json").read_text())
 
     result = pine_compat.run_script(
@@ -2651,20 +2663,11 @@ def test_compile_script_reports_unsupported_user_type_varip_fixture():
         raise AssertionError("unsupported UDT varip fixture should fail")
 
 
-def test_compile_script_reports_unsupported_user_type_field_mutation_fixture():
+def test_compile_script_accepts_user_type_field_mutation_fixture():
     source = (
-        ROOT / "tests/fixtures/sema/unsupported_user_type_field_mutation.pine"
+        ROOT / "tests/fixtures/sema/supported_user_type_field_mutation.pine"
     ).read_text()
-
-    try:
-        pine_compat.compile_script(source)
-    except ValueError as error:
-        message = str(error)
-        assert "E_UNSUPPORTED_FEATURE" in message
-        assert "`function_side_effect` is not supported" in message
-        assert "mutating fields on global user-defined type values" in message
-    else:
-        raise AssertionError("unsupported UDT field mutation fixture should fail")
+    assert pine_compat.compile_script(source) is not None
 
 
 def test_compile_script_reports_unsupported_user_method_side_effect_fixture():
@@ -4979,6 +4982,22 @@ def test_run_script_returns_strategy_pyramiding_close_contract():
             "qty": 3.0,
             "price": 3.0,
         },
+        {
+            "id": "Close entry(s) order L1",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.close",
+            "qty": 1.0,
+            "price": 4.0,
+        },
+        {
+            "id": "Close entry(s) order L2",
+            "barIndex": 4,
+            "time": 5,
+            "direction": "strategy.close",
+            "qty": 3.0,
+            "price": 5.0,
+        },
     ]
     assert result["strategy"]["trades"] == [
         {
@@ -6045,15 +6064,15 @@ def test_run_script_returns_strategy_exit_slippage_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, None, 2.0, 2.0],
-        [0.0, 0.0, -2.0, -2.0],
-        [1000000.0, 999998.0, 999998.0, 999998.0],
+        [None, None, 3.0, 3.0],
+        [0.0, 0.0, 0.0, 0.0],
+        [1000000.0, 999998.0, 1000000.0, 1000000.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
-    assert result["strategy"]["orders"][1]["price"] == 2.0
+    assert result["strategy"]["orders"][1]["price"] == 3.0
     assert result["strategy"]["trades"][0]["entryPrice"] == 3.0
-    assert result["strategy"]["trades"][0]["exitPrice"] == 2.0
-    assert result["strategy"]["trades"][0]["profit"] == -2.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
+    assert result["strategy"]["trades"][0]["profit"] == 0.0
 
 
 def test_run_script_returns_strategy_limit_verification_entry_plots():
@@ -9101,7 +9120,7 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9183,7 +9202,7 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9247,7 +9266,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9291,7 +9310,7 @@ def test_run_script_returns_strategy_exit_active_entry_trail_points_attachment_c
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9355,7 +9374,7 @@ def test_run_script_returns_strategy_exit_active_entry_stop_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9419,7 +9438,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_limit_bracket_contra
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9483,7 +9502,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9547,7 +9566,7 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -9715,7 +9734,7 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -10542,18 +10561,14 @@ def test_run_script_returns_omitted_trail_points_persistent_fixture_contract():
     assert result == expected
 
 
-def test_run_script_returns_strategy_runtime_diagnostics():
+def test_run_script_treats_zero_entry_quantity_as_noop():
     result = pine_compat.run_script(
         '//@version=5\nstrategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
         BARS,
     )
 
-    assert result["strategy"]["diagnostics"] == [
-        {
-            "code": "E_STRATEGY_QTY",
-            "message": "`strategy.entry` quantity must be positive",
-        }
-    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert result["strategy"]["orders"] == []
 
 
 def test_run_script_treats_strategy_exit_missing_entry_as_noop():
@@ -10954,16 +10969,15 @@ def test_analyze_script_accepts_library_sources_without_import_use():
     assert report["diagnostics"] == []
 
 
-def test_compile_script_requires_import_alias_for_library_source():
-    try:
-        pine_compat.compile_script(
-            'import user/lib/1\nindicator("root")\n',
-            library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
-        )
-    except ValueError as error:
-        assert "E_IMPORT_ALIAS_REQUIRED" in str(error)
-    else:
-        raise AssertionError("unaliased import should fail")
+def test_run_script_infers_import_alias_from_library_path():
+    result = pine_compat.run_script(
+        '//@version=5\nindicator("root")\nimport user/lib/1\nplot(lib.scale(close))\n',
+        BARS,
+        library_sources={
+            "user/lib/1": '//@version=5\nlibrary("lib")\nexport scale(value) => value * 2\n'
+        },
+    )
+    assert result["plots"][0]["values"] == [2.0, 4.0, 6.0]
 
 
 def test_run_script_accepts_imported_pure_function_subset():
@@ -10996,7 +11010,7 @@ def test_run_script_compiles_and_executes():
         BARS,
     )
 
-    assert result["schemaVersion"] == 8
+    assert result["schemaVersion"] == 9
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 
@@ -11396,8 +11410,8 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][57]["values"] == [None, None, None, None, None]
     assert result["plots"][58]["values"] == [None, None, None, None, None]
     assert result["plots"][59]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][60]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][61]["values"] == [None, None, 2.0, 2.0, 2.0]
+    assert result["plots"][60]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][61]["values"] == [0.0, -1.0, -2.0, -2.0, -2.0]
     assert result["plots"][62]["values"] == [None, None, None, 22.0, 23.0]
     assert result["plots"][63]["values"] == [20.0, 20.5, 21.0, 21.5, 22.0]
     assert result["plots"][64]["values"] == [1000.0, 2000.0, 3000.0, 4000.0, 5000.0]
@@ -11523,10 +11537,10 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][144]["values"] == [None, None, None, 22.0, 23.0]
     assert result["plots"][145]["values"] == [None, None, 0.0, 0.0, 0.0]
     assert result["plots"][146]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][147]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][148]["values"] == [None, None, 2.0, 2.0, 2.0]
-    assert result["plots"][149]["values"] == [None, None, None, None, 0.0]
-    assert result["plots"][150]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][147]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][148]["values"] == [0.0, -1.0, -2.0, -2.0, -2.0]
+    assert result["plots"][149]["values"] == [None, None, 0.0, 0.0, 0.0]
+    assert result["plots"][150]["values"] == [None, None, 0.0, 0.0, -1.0]
     assert result["plots"][151]["values"] == [None, None, None, 0.0, None]
     assert result["plots"][152]["values"] == [None, None, None, 0.0, None]
     assert result["plots"][153]["values"] == [None, None, None, None, 200.0]
@@ -11762,8 +11776,8 @@ def test_run_script_request_fixture_matches_cli_contract():
     ]
     assert result["plots"][246]["values"] == [None, None, None, None, 210.0]
     assert result["plots"][247]["values"] == [None, None, None, None, 80.0]
-    assert result["plots"][248]["values"] == [None, None, None, None, 0.0]
-    assert result["plots"][249]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][248]["values"] == [None, None, 0.0, 0.0, 0.0]
+    assert result["plots"][249]["values"] == [None, None, 0.0, 0.0, -1.0]
     assert result["plots"][123]["values"] == [None, None, None, None, 300.0]
     assert result["plots"][124]["values"] == [None, None, 100.01, 100.01, 200.01]
     assert result["plots"][250]["values"] == [None, None, 33.0, 33.0, 66.0]
@@ -12015,8 +12029,8 @@ def test_run_script_request_fixture_matches_cli_contract():
     ]
     assert result["plots"][303]["values"] == [None, 12.0, 13.0, 14.0, 15.0]
     assert result["plots"][304]["values"] == [None, 9.0, 10.0, 11.0, 12.0]
-    assert result["plots"][305]["values"] == [None, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][306]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
+    assert result["plots"][305]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][306]["values"] == [0.0, -1.0, -1.0, -1.0, -1.0]
     assert result["plots"][307]["values"] == [None, 41.0, 43.0, 45.0, 47.0]
     assert result["plots"][308]["values"] == [20.01, 21.01, 22.01, 23.01, 24.01]
 
@@ -13342,3 +13356,70 @@ def test_map_matrix_representative_host_golden_parity():
     }
 
     assert actual == expected
+
+
+def test_library_diagnostics_report_unicode_source_and_byte_offsets():
+    root = '//@version=6\nindicator("根")\nimport audit/Library/1 as lib\nplot(lib.f(close))\n'
+    library = '//@version=6\nlibrary("库")\n// 中文\nexport f(float x) => str.length("中文") + missingName + x\n'
+    report = pine_compat.analyze_script(root, library_sources={"audit/Library/1": library})
+    diagnostic = next(d for d in report["diagnostics"] if d["code"] == "E_UNKNOWN_SYMBOL")
+    offset = library.index("missingName")
+    span = diagnostic["span"]
+    assert span == {
+        "start": len(library[:offset].encode("utf-8")),
+        "end": len(library[:offset + len("missingName")].encode("utf-8")),
+        "line": 4,
+        "column": len(library.splitlines()[3].split("missingName")[0]) + 1,
+        "sourceId": 1,
+        "libraryKey": "audit/Library/1",
+        "sourceName": "<python:audit/Library/1>",
+    }
+    assert report["schemaVersion"] == 6
+    try:
+        pine_compat.compile_script(root, library_sources={"audit/Library/1": library})
+    except ValueError as error:
+        assert "audit/Library/1 (<python:audit/Library/1>):4:" in str(error)
+    else:
+        raise AssertionError("compile must reject invalid library with the same source location")
+    root_error = pine_compat.analyze_script('//@version=6\nindicator("root")\nplot(missingName)\n')
+    assert all("sourceId" not in d["span"] for d in root_error["diagnostics"])
+
+
+def test_input_metadata_resolves_constant_aliases_constraints_and_pure_calls():
+    aliases = """//@version=6
+indicator("const metadata")
+const int base = 3
+const string caption = "Length"
+length = input.int(base + 2, caption, minval=base, maxval=base * 3, step=base - 2, options=[1, base + 2, 7])
+pi = input.float(math.pi, "Pi")
+root = input.float(math.sqrt(9), "Root")
+plot(length + pi + root)
+"""
+    literals = '//@version=6\nindicator("const metadata")\nlength = input.int(5, "Length", minval=3, maxval=9, step=1, options=[1, 5, 7])\npi = input.float(3.141592653589793, "Pi")\nroot = input.float(3.0, "Root")\nplot(length + pi + root)\n'
+    report = pine_compat.analyze_script(aliases)
+    assert report["diagnostics"] == []
+    expected = pine_compat.analyze_script(literals)
+    clean = lambda inputs: [{k: v for k, v in item.items() if k != "callSiteId"} for item in inputs]
+    assert clean(report["inputs"]) == clean(expected["inputs"])
+    assert report["inputs"][0]["options"] == [1, 5, 7]
+    result = pine_compat.run_script(aliases, BARS)
+    assert result["plots"][0]["values"] == [8.0 + math.pi] * len(BARS)
+
+
+def test_deep_frontend_statement_nesting_returns_diagnostic_in_subprocess():
+    # Stack overflows abort the process. A subprocess tests the embedding
+    # boundary while keeping such a regression from aborting all pytest tests.
+    import subprocess
+    import sys
+    code = """import json, pine_compat
+source = '//@version=6\\nindicator("depth")\\nif true\\n    x = 1\\n' + 'else if false\\n    x = 2\\n' * 256
+print(json.dumps(pine_compat.analyze_script(source)))
+"""
+    result = subprocess.run([sys.executable, "-c", code], text=True, capture_output=True, timeout=15)
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["executable"] is False
+    assert any(
+        d["code"] in {"E_PARSE_STMT_DEPTH", "E_PARSE_EXPR_DEPTH"}
+        for d in report["diagnostics"]
+    )

@@ -15,7 +15,6 @@ pub use strategy::{
     StrategyDefaultQuantity, StrategyMarginSetting, StrategySettings,
 };
 pub use types::{PineType, Qualifier, ValueKind};
-
 pub use user_types::{HirUserTypeField, HirUserTypeIdentity, HirUserTypeInfo};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -64,13 +63,17 @@ pub struct HirProgram {
     /// Original physical source and byte range of lowered source calls.
     /// Generated/manual calls may have no entry; absence is not a root location.
     pub call_site_sources: Vec<HirCallSiteSource>,
+    /// Element types for tuple-valued intrabar requests, keyed by call site.
+    pub lower_tf_tuple_types: Vec<(CallSiteId, Vec<ValueKind>)>,
     pub next_var_slot_id: u32,
     pub max_bars_back: Option<u32>,
+    /// Restricts initial batch execution to the latest N bars; zero means all bars.
+    pub calc_bars_count: Option<u32>,
     pub series_max_bars_back: Vec<HirSeriesMaxBarsBack>,
     pub history: HirHistoryRequirements,
     pub series_history: Vec<HirSeriesHistoryRequirement>,
-    /// Series created while inlining a UDF/method. Their history advances only
-    /// when that inline body executes, not once per chart bar.
+    /// Series used while inlining a UDF/method. After their first evaluation,
+    /// history advances per chart bar, carrying the last value on skipped bars.
     pub execution_scoped_series: Vec<SeriesId>,
 }
 
@@ -148,6 +151,7 @@ pub enum HirStmtKind {
         value: HirExpr,
     },
     FieldReassign {
+        path: Vec<usize>,
         symbol: SymbolId,
         field_index: usize,
         value: HirExpr,
@@ -284,6 +288,8 @@ pub enum HirUnaryOp {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HirBinaryOp {
+    DisplayUnion,
+    DisplayDifference,
     Add,
     Sub,
     Mul,

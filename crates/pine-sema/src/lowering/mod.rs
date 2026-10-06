@@ -10,10 +10,12 @@ mod inline_calls;
 mod legacy;
 mod legacy_conversions;
 mod literals;
+mod members;
 mod program;
 mod pure_series;
 mod reassignments;
 mod tuple_returns;
+mod user_type_copy;
 pub(crate) mod user_types;
 
 pub(crate) use blocks::prepend_block_statements;
@@ -84,49 +86,6 @@ fn pure_fixed_builtin_call_name(name: &str) -> bool {
             | "color.b"
             | "color.t"
     )
-}
-
-fn final_loop_statement_expr(statement: &Stmt) -> Option<Expr> {
-    match &statement.kind {
-        StmtKind::For {
-            counter,
-            from,
-            to,
-            step,
-            body,
-        } => Some(Expr {
-            span: statement.span,
-            kind: ExprKind::For {
-                counter: counter.to_owned(),
-                from: Box::new(from.clone()),
-                to: Box::new(to.clone()),
-                step: step.clone().map(Box::new),
-                body: body.to_vec(),
-            },
-        }),
-        StmtKind::ForIn {
-            index,
-            value,
-            iterable,
-            body,
-        } => Some(Expr {
-            span: statement.span,
-            kind: ExprKind::ForIn {
-                index: index.clone(),
-                value: value.to_owned(),
-                iterable: Box::new(iterable.clone()),
-                body: body.to_vec(),
-            },
-        }),
-        StmtKind::While { condition, body } => Some(Expr {
-            span: statement.span,
-            kind: ExprKind::While {
-                condition: Box::new(condition.clone()),
-                body: body.to_vec(),
-            },
-        }),
-        _ => None,
-    }
 }
 
 pub(crate) fn lower_unary_op(op: UnaryOp) -> HirUnaryOp {
@@ -405,24 +364,37 @@ impl Analyzer {
             },
             StmtKind::FieldReassign {
                 receiver,
+                path,
                 field,
                 value,
             } => {
-                let parts = vec![receiver.clone(), field.clone()];
+                let mut parts = vec![receiver.clone()];
+                parts.extend(path.clone());
+                parts.push(field.clone());
                 let access = self
                     .chart_point_field_access_for_lowering(&parts, statement.span)
-                    .map(|access| (access.receiver, access.index))
+                    .map(|access| (access.receiver, access.index, Vec::new()))
                     .or_else(|| {
                         self.user_type_field_access_for_lowering(&parts, statement.span)
                             .and_then(|access| {
-                                access
-                                    .fields
-                                    .first()
-                                    .map(|field| (access.receiver, field.index))
+                                access.fields.last().map(|field| {
+                                    (
+                                        access.receiver,
+                                        field.index,
+                                        access.fields[..access.fields.len() - 1]
+                                            .iter()
+                                            .map(|field| field.index)
+                                            .collect(),
+                                    )
+                                })
                             })
                     })?;
                 HirStmtKind::FieldReassign {
-                    symbol: self.bound_symbol(&access.0, statement.span)?.id,
+                    path: access.2,
+                    symbol: match param_exprs.get(&access.0).map(|expr| &expr.kind) {
+                        Some(HirExprKind::Symbol(symbol)) => *symbol,
+                        _ => self.bound_symbol(&access.0, statement.span)?.id,
+                    },
                     field_index: access.1,
                     value: self.lower_expr_with_params(value, param_exprs, param_types)?,
                 }
@@ -498,6 +470,11 @@ impl Analyzer {
         if !self.record_lowering_node(expr.span) {
             return None;
         }
+        if let ExprKind::Call { callee, args } = &expr.kind
+            && let Some((receiver, _, true)) = self.udt_copy_receiver(callee, args, param_types)
+        {
+            return self.lower_udt_copy(expr, &receiver, param_exprs, param_types);
+        }
 
         if let ExprKind::Group(inner) = &expr.kind {
             let lowered = self.lower_expr_with_params(inner, param_exprs, param_types)?;
@@ -514,16 +491,55 @@ impl Analyzer {
             return self.finish_legacy_expr_coercion(expr, param_expr.clone());
         }
 
+        if let Some(member) = self.qualified_member_expression(expr)
+            && let ExprKind::Member { receiver, name } = &member.kind
+        {
+            return self.lower_member_access(expr, receiver, name, param_exprs, param_types);
+        }
+        if let ExprKind::Member { receiver, name } = &expr.kind {
+            return self.lower_member_access(expr, receiver, name, param_exprs, param_types);
+        }
+        if let ExprKind::Call { callee, args } = &expr.kind {
+            let normalized = self.qualified_member_callee(callee);
+            let callee = normalized.as_ref().unwrap_or(callee);
+            if let ExprKind::Member { receiver, name } = &callee.kind {
+                return self.lower_member_call(
+                    expr,
+                    receiver,
+                    name,
+                    args,
+                    param_exprs,
+                    param_types,
+                );
+            }
+        }
         let pine_type = self.type_of_expr_with_params(expr, param_types)?;
         let series_id = self.lower_expr_series_id(expr, pine_type);
 
         let kind = match &expr.kind {
+            ExprKind::Member { .. } => {
+                unreachable!("members are lowered with call-specific receiver identity")
+            }
             ExprKind::Literal(literal) => HirExprKind::Literal(lower_literal(literal)),
             ExprKind::Identifier(name) => {
                 if let Some(kind) = self.lower_legacy_value(expr.span) {
                     kind
                 } else {
-                    HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
+                    HirExprKind::Symbol(
+                        self.bound_symbol(name, expr.span)
+                            .or_else(|| {
+                                // Omitted UDT fields synthesize `na` without a source token.
+                                (name == "na")
+                                    .then(|| {
+                                        self.scope.all_symbols.iter().find_map(|(name, symbol)| {
+                                            (name == "na" && symbol.pine_type.kind == ValueKind::Na)
+                                                .then_some(*symbol)
+                                        })
+                                    })
+                                    .flatten()
+                            })?
+                            .id,
+                    )
                 }
             }
             ExprKind::QualifiedName(parts) => {
@@ -676,15 +692,6 @@ impl Analyzer {
                 body,
             } => {
                 let (last, prefix) = body.split_last()?;
-                let final_expr;
-                let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
-                        final_expr = final_loop_statement_expr(last)?;
-                        &final_expr
-                    }
-                    _ => return None,
-                };
                 HirExprKind::For {
                     counter: self.lower_decl_symbol(counter, expr.span)?.id,
                     from: Box::new(self.lower_expr_with_params(from, param_exprs, param_types)?),
@@ -703,11 +710,7 @@ impl Analyzer {
                             self.lower_stmt_with_params(statement, param_exprs, param_types)
                         })
                         .collect::<Option<_>>()?,
-                    result: Box::new(self.lower_expr_with_params(
-                        result,
-                        param_exprs,
-                        param_types,
-                    )?),
+                    result: Box::new(self.lower_loop_tail(last, param_exprs, param_types)?),
                 }
             }
             ExprKind::ForIn {
@@ -717,15 +720,6 @@ impl Analyzer {
                 body,
             } => {
                 let (last, prefix) = body.split_last()?;
-                let final_expr;
-                let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
-                        final_expr = final_loop_statement_expr(last)?;
-                        &final_expr
-                    }
-                    _ => return None,
-                };
                 let value_symbol = self.lower_decl_symbol(value, expr.span)?;
                 if let Some(type_name) =
                     self.user_type_array_name_of_expr_with_params(iterable, param_exprs)
@@ -749,24 +743,11 @@ impl Analyzer {
                             self.lower_stmt_with_params(statement, param_exprs, param_types)
                         })
                         .collect::<Option<_>>()?,
-                    result: Box::new(self.lower_expr_with_params(
-                        result,
-                        param_exprs,
-                        param_types,
-                    )?),
+                    result: Box::new(self.lower_loop_tail(last, param_exprs, param_types)?),
                 }
             }
             ExprKind::While { condition, body } => {
                 let (last, prefix) = body.split_last()?;
-                let final_expr;
-                let result = match &last.kind {
-                    StmtKind::Expr(result) => result,
-                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
-                        final_expr = final_loop_statement_expr(last)?;
-                        &final_expr
-                    }
-                    _ => return None,
-                };
                 HirExprKind::While {
                     condition: Box::new(self.lower_expr_with_params(
                         condition,
@@ -779,11 +760,7 @@ impl Analyzer {
                             self.lower_stmt_with_params(statement, param_exprs, param_types)
                         })
                         .collect::<Option<_>>()?,
-                    result: Box::new(self.lower_expr_with_params(
-                        result,
-                        param_exprs,
-                        param_types,
-                    )?),
+                    result: Box::new(self.lower_loop_tail(last, param_exprs, param_types)?),
                 }
             }
             ExprKind::Tuple(items) => HirExprKind::Tuple(
@@ -794,6 +771,31 @@ impl Analyzer {
             ),
             ExprKind::Call { callee, args } => {
                 let name = expr_name(callee)?;
+                if self.udt_matrix_constructor_name(&name).is_some() {
+                    let values = self.udt_matrix_constructor_args(args, expr.span)?;
+                    let args = values
+                        .iter()
+                        .map(|value| {
+                            Some(HirCallArg {
+                                name: None,
+                                value: self.lower_expr_with_params(
+                                    value,
+                                    param_exprs,
+                                    param_types,
+                                )?,
+                            })
+                        })
+                        .collect::<Option<Vec<_>>>()?;
+                    return Some(HirExpr {
+                        pine_type: PineType::new(Qualifier::Series, ValueKind::UserTypeMatrix),
+                        series_id,
+                        kind: HirExprKind::Call {
+                            callee: name,
+                            call_site_id: self.alloc_call_site_at(expr.span),
+                            args,
+                        },
+                    });
+                }
                 if let Some(constructor) = self
                     .user_type_constructor_for_lowering(&name, args, param_types)
                     .or_else(|| {
@@ -803,7 +805,14 @@ impl Analyzer {
                     let fields = constructor
                         .field_args
                         .iter()
-                        .map(|arg| self.lower_expr_with_params(arg, param_exprs, param_types))
+                        .zip(&constructor.field_defaults)
+                        .map(|(arg, is_default)| {
+                            if *is_default {
+                                self.lower_expr_with_params(arg, &HashMap::new(), &HashMap::new())
+                            } else {
+                                self.lower_expr_with_params(arg, param_exprs, param_types)
+                            }
+                        })
                         .collect::<Option<_>>()?;
                     let lowered = HirExpr {
                         pine_type,
@@ -892,7 +901,16 @@ impl Analyzer {
                     && self
                         .bound_symbol(receiver_name, callee.span)
                         .or_else(|| self.scope.resolve(receiver_name))
-                        .and_then(|symbol| self.symbol_user_types.get(&symbol.id))
+                        .and_then(|symbol| {
+                            self.symbol_user_types.get(&symbol.id).cloned().or_else(|| {
+                                (symbol.pine_type.kind == ValueKind::Color
+                                    && self.methods.contains_key(&(
+                                        "color".to_owned(),
+                                        method_name.to_owned(),
+                                    )))
+                                .then(|| "color".to_owned())
+                            })
+                        })
                         .is_some()
                 {
                     let pure_call_series_id = pure_series::pure_user_method_call_series_key(
@@ -996,6 +1014,13 @@ impl Analyzer {
                 let call_site_id = self.alloc_call_site_at(expr.span);
                 let lowered_args =
                     self.lower_builtin_call_args(&name, args, param_exprs, param_types)?;
+                if name == "request.security_lower_tf" && pine_type.kind == ValueKind::Tuple {
+                    let tuple_types = self.tuple_element_types(&args[2].value)?;
+                    self.lower_tf_tuple_types.push((
+                        call_site_id,
+                        tuple_types.into_iter().map(|ty| ty.kind).collect(),
+                    ));
+                }
                 HirExprKind::Call {
                     callee: name,
                     call_site_id,
@@ -1004,7 +1029,7 @@ impl Analyzer {
             }
             ExprKind::History { expr, offset } => {
                 let offset = match self
-                    .known_history_offset_int_value(offset)
+                    .lowering_history_offset_constant(offset, param_exprs)
                     .and_then(|value| u32::try_from(value).ok())
                 {
                     Some(offset) => HirHistoryOffset::Constant(offset),
@@ -1040,6 +1065,22 @@ impl Analyzer {
                 series_id,
             },
         )
+    }
+
+    /// Analysis-time symbol constants may belong to another call of an inlined
+    /// function, including constants propagated through local aliases. Within a
+    /// parameterized body fold only syntax-local constants; evaluate all other
+    /// offsets with the current call's lowered bindings.
+    pub(super) fn lowering_history_offset_constant(
+        &self,
+        offset: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+    ) -> Option<i64> {
+        if param_exprs.is_empty() {
+            self.known_history_offset_int_value(offset)
+        } else {
+            crate::types::const_int_value(offset)
+        }
     }
 
     fn lower_expr_series_id(

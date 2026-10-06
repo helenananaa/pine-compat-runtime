@@ -7,6 +7,27 @@ use super::{ForInParts, ForParts, Parser};
 
 impl Parser {
     pub(super) fn parse_stmt(&mut self) -> Option<Stmt> {
+        self.with_stmt_depth(Self::parse_stmt_inner)
+    }
+
+    pub(super) fn with_stmt_depth<T>(
+        &mut self,
+        parse: impl FnOnce(&mut Self) -> Option<T>,
+    ) -> Option<T> {
+        if !self.within_depth_budget(1, 0) {
+            self.error_here("E_PARSE_STMT_DEPTH", "statement nesting is too deep");
+            // Recovery must not recurse through the remaining adversarial
+            // blocks, or construct an AST too deep for subsequent passes.
+            self.pos = self.tokens.len().saturating_sub(1);
+            return None;
+        }
+        self.stmt_depth += 1;
+        let result = parse(self);
+        self.stmt_depth -= 1;
+        result
+    }
+
+    fn parse_stmt_inner(&mut self) -> Option<Stmt> {
         if self.at(TokenKind::Import) {
             return self.parse_import_decl();
         }
@@ -47,7 +68,12 @@ impl Parser {
             return self.parse_tuple_decl();
         }
 
-        let mode = if self.at(TokenKind::Var) {
+        let mode = if self.source_version >= 5
+            && matches!(&self.current().kind, TokenKind::Identifier(name) if name == "const")
+        {
+            self.bump();
+            Some(DeclMode::Const)
+        } else if self.at(TokenKind::Var) {
             self.bump();
             Some(DeclMode::Var)
         } else if self.at(TokenKind::Varip) {
@@ -69,6 +95,11 @@ impl Parser {
                     value,
                 },
             });
+        }
+
+        if mode == Some(DeclMode::Const) {
+            self.error_here("E_PARSE_DECL", "`const` requires a typed declaration");
+            return None;
         }
 
         if let TokenKind::Identifier(name) = self.current().kind.clone() {
@@ -128,14 +159,28 @@ impl Parser {
             }
 
             if let Some(colon_eq_offset) = self.nested_field_reassign_colon_eq_offset() {
+                let mut path = (2..colon_eq_offset)
+                    .step_by(2)
+                    .filter_map(|offset| {
+                        if let TokenKind::Identifier(name) = &self.tokens[self.pos + offset].kind {
+                            Some(name.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                let field = path.pop()?;
                 for _ in 0..=colon_eq_offset {
                     self.bump();
                 }
                 let value = self.parse_expr(0)?;
                 return Some(Stmt {
                     span: start.merge(value.span),
-                    kind: StmtKind::Unsupported {
-                        feature: "nested field mutation".to_owned(),
+                    kind: StmtKind::FieldReassign {
+                        receiver: name,
+                        path,
+                        field,
+                        value,
                     },
                 });
             }
@@ -145,17 +190,32 @@ impl Parser {
                     .tokens
                     .get(self.pos + 2)
                     .is_some_and(|token| matches!(token.kind, TokenKind::Identifier(_)))
-                && self.nth_at(3, TokenKind::ColonEq)
+                && (self.nth_at(3, TokenKind::ColonEq) || self.compound_assignment_op(3).is_some())
             {
+                let compound_op = self.compound_assignment_op(3);
                 self.bump();
                 self.bump();
                 let TokenKind::Identifier(field) = self.current().kind.clone() else {
                     self.error_here("E_PARSE_ASSIGN", "expected field name after `.`");
                     return None;
                 };
+                let field_span = start.merge(self.current().span);
                 self.bump();
-                self.expect(TokenKind::ColonEq, "expected `:=` in field reassignment")?;
-                let value = self.parse_expr(0)?;
+                self.bump(); // The reassignment operator was checked above.
+                let mut value = self.parse_expr(0)?;
+                if let Some(op) = compound_op {
+                    value = Expr {
+                        span: start.merge(value.span),
+                        kind: ExprKind::Binary {
+                            op,
+                            left: Box::new(Expr {
+                                span: field_span,
+                                kind: ExprKind::QualifiedName(vec![name.clone(), field.clone()]),
+                            }),
+                            right: Box::new(value),
+                        },
+                    };
+                }
                 if name == "strategy" {
                     return Some(Stmt {
                         span: start.merge(value.span),
@@ -167,6 +227,7 @@ impl Parser {
                 return Some(Stmt {
                     span: start.merge(value.span),
                     kind: StmtKind::FieldReassign {
+                        path: Vec::new(),
                         receiver: name,
                         field,
                         value,
@@ -284,7 +345,7 @@ impl Parser {
         let else_branch = if self.at(TokenKind::Else) {
             self.bump();
             if self.at(TokenKind::If) {
-                let nested_if = self.parse_if_stmt()?;
+                let nested_if = self.parse_stmt()?;
                 span = nested_if.span;
                 vec![nested_if]
             } else {
@@ -741,7 +802,7 @@ impl Parser {
                 Some(statement) => statements.push(statement),
                 None => self.recover_stmt(),
             }
-            self.skip_legacy_statement_commas();
+            self.skip_statement_separator();
             self.skip_newlines();
         }
 

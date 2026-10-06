@@ -73,10 +73,7 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
-        if self.position_size < 0.0 {
-            return;
-        }
-        let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+        let Some(price_offset) = self.exit_tick_signed_offset(ticks, mintick) else {
             return;
         };
         let metadata = self.take_next_exit_metadata();
@@ -123,10 +120,7 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
-            if self.has_pending_short_entry(&from_entry) {
-                return;
-            }
+        if self.has_pending_entry(&from_entry) && !self.has_open_position_for_entry(&from_entry) {
             self.place_deferred_relative_profit_exit(
                 id, from_entry, ticks, mintick, quantity, bar_index,
             );
@@ -256,10 +250,7 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
-        if self.position_size < 0.0 {
-            return;
-        }
-        let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+        let Some(price_offset) = self.exit_tick_signed_offset(ticks, mintick) else {
             return;
         };
         let metadata = self.take_next_exit_metadata();
@@ -281,9 +272,6 @@ impl BrokerState {
                 metadata: metadata.clone(),
             });
         }
-        if pending_exits.is_empty() {
-            return;
-        }
         self.order_book
             .exits_mut()
             .replace_all_entry_deferred_relative(DeferredRelativeExit {
@@ -294,6 +282,9 @@ impl BrokerState {
                 last_update_bar_index: bar_index,
                 metadata,
             });
+        if pending_exits.is_empty() {
+            return;
+        }
         self.replace_all_exits_and_assign_oca(pending_exits);
     }
 
@@ -306,10 +297,7 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
-            if self.has_pending_short_entry(&from_entry) {
-                return;
-            }
+        if self.has_pending_entry(&from_entry) && !self.has_open_position_for_entry(&from_entry) {
             self.place_deferred_relative_loss_exit(
                 id, from_entry, ticks, mintick, quantity, bar_index,
             );
@@ -487,10 +475,7 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
-        if self.position_size < 0.0 {
-            return;
-        }
-        let Some(activation_price_offset) = self.exit_tick_price_offset(activation_ticks, mintick)
+        let Some(activation_price_offset) = self.exit_tick_signed_offset(activation_ticks, mintick)
         else {
             return;
         };
@@ -525,9 +510,6 @@ impl BrokerState {
                 metadata: metadata.clone(),
             });
         }
-        if pending_exits.is_empty() {
-            return;
-        }
         self.order_book
             .exits_mut()
             .replace_all_entry_deferred_relative(DeferredRelativeExit {
@@ -542,6 +524,9 @@ impl BrokerState {
                 last_update_bar_index: bar_index,
                 metadata,
             });
+        if pending_exits.is_empty() {
+            return;
+        }
         self.replace_all_exits_and_assign_oca(pending_exits);
     }
 
@@ -587,10 +572,7 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
-            if self.has_pending_short_entry(&from_entry) {
-                return;
-            }
+        if self.has_pending_entry(&from_entry) && !self.has_open_position_for_entry(&from_entry) {
             self.place_deferred_relative_trail_points_exit(
                 id, from_entry, spec, quantity, bar_index,
             );

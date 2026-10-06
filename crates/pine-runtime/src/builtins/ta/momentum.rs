@@ -1,7 +1,7 @@
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
-    pub(crate) fn eval_change(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_change(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let Some(source_arg) = ta_arg(args, 0, "source") else {
             return Ok(PineValue::Na);
         };
@@ -21,7 +21,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(series_id) = source_arg.series_id else {
             return Ok(PineValue::Na);
         };
-        let previous = self.series_store.read(series_id, length as usize);
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
+        let previous = self.series_store.read(series_id, length);
 
         match (current, previous) {
             (PineValue::Bool(current), PineValue::Bool(previous)) => {
@@ -39,7 +42,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    pub(crate) fn eval_mom(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_mom(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let Some((current, previous)) = self.current_and_previous(args)? else {
             return Ok(PineValue::Na);
         };
@@ -47,7 +50,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Float(current - previous))
     }
 
-    pub(crate) fn eval_roc(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_roc(&mut self, args: RuntimeArgs<'_>) -> Result<PineValue, RuntimeError> {
         let Some((current, previous)) = self.current_and_previous(args)? else {
             return Ok(PineValue::Na);
         };
@@ -60,7 +63,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn current_and_previous(
         &mut self,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<Option<(f64, f64)>, RuntimeError> {
         let Some(source_arg) = ta_arg(args, 0, "source") else {
             return Ok(None);
@@ -82,7 +85,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(series_id) = source_arg.series_id else {
             return Ok(None);
         };
-        let previous = self.series_store.read(series_id, length as usize);
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(None);
+        };
+        let previous = self.series_store.read(series_id, length);
         let Some(previous) = previous.as_f64() else {
             return Ok(None);
         };
@@ -93,7 +99,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_tsi(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source_arg = ta_arg(args, 0, "source");
         let source = source_arg
@@ -125,7 +131,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         let momentum = source - previous_source;
-        let previous = tsi_state(self.call_state.get(&call_site_id));
+        let previous = tsi_state(self.ta_state.call_state.get(&call_site_id));
         let short_momentum = ema_next(previous.map(|state| state.0), momentum, short_length);
         let long_momentum = ema_next(previous.map(|state| state.1), short_momentum, long_length);
         let short_abs_momentum =
@@ -136,7 +142,7 @@ impl<'a> HistoricalRuntime<'a> {
             long_length,
         );
 
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(short_momentum),
@@ -155,7 +161,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_cmo(
         &mut self,
         call_site_id: CallSiteId,
-        args: &[HirCallArg],
+        args: RuntimeArgs<'_>,
     ) -> Result<PineValue, RuntimeError> {
         let source_arg = ta_arg(args, 0, "source");
         let source = source_arg
@@ -171,7 +177,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
+        let Some(length) = usize::try_from(length).ok() else {
+            return Ok(PineValue::Na);
+        };
         let (positive_change, negative_change) =
             match (source.as_f64(), source_arg.and_then(|arg| arg.series_id)) {
                 (Some(source), Some(series_id)) => {
@@ -189,9 +197,11 @@ impl<'a> HistoricalRuntime<'a> {
         self.update_cmo_windows(call_site_id, positive_change, negative_change, length);
 
         let positive_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CmoPositive(call_site_id));
         let negative_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CmoNegative(call_site_id));
         let (Some(positive_window), Some(negative_window)) = (positive_window, negative_window)

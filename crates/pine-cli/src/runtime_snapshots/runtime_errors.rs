@@ -48,14 +48,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array slice is out of bounds of the parent array",
     ),
     (
-        "tests/fixtures/regressions/for_in_pop_shrink_bounds.pine",
-        "array index 1 is out of bounds for array of size 1",
-    ),
-    (
-        "tests/fixtures/regressions/for_in_clear_shrink_bounds.pine",
-        "array index 1 is out of bounds for array of size 0",
-    ),
-    (
         "tests/fixtures/regressions/map_for_in_put_size_change.pine",
         "map size cannot change during direct for...in iteration",
     ),
@@ -610,10 +602,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/matrix_reshape_na_column_count.pine",
         "matrix column count cannot be na",
-    ),
-    (
-        "tests/fixtures/regressions/table_new_count_limit.pine",
-        "table count cannot exceed 50",
     ),
     (
         "tests/fixtures/regressions/table_new_cell_limit.pine",

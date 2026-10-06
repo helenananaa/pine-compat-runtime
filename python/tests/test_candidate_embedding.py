@@ -21,19 +21,19 @@ BARS = [
 
 
 def test_package_identity_is_the_coordinated_prerelease():
-    assert pine_compat.__version__ == "0.3.0-rc.1"
-    assert pine_compat.RUNTIME_SCHEMA_VERSION == 8
-    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 5
+    assert pine_compat.__version__ == "0.3.0-rc.2"
+    assert pine_compat.RUNTIME_SCHEMA_VERSION == 9
+    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 6
 
 
 def test_compile_requirements_historical_realtime_error_and_owned_result():
     program = pine_compat.compile_script(SOURCE)
     requirements = program.host_requirements()
-    assert requirements["schemaVersion"] == 1
+    assert requirements["schemaVersion"] == 2
     assert requirements["execution"]["clock"] == "explicitTimestampWhenEvaluated"
     clocks = [1_000, 2_000]
     historical = program.run(BARS, execution_times=clocks)
-    assert historical["schemaVersion"] == 8
+    assert historical["schemaVersion"] == 9
     assert historical["plots"][0]["values"] == [20.0, 22.0]
     assert historical["plots"][1]["values"] == [1_000, 2_000]
     owned = copy.deepcopy(historical)

@@ -1,0 +1,171 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Imported UDT array scalar tree")
+
+array<lib.Wrapper> wrappers = na
+wrappers := array.from(lib.Wrapper.new(lib.Point.new(close)), lib.Wrapper.new(lib.Point.new(open)))
+first = wrappers.get(0)
+second = array.get(wrappers, 1)
+
+lib.Wrapper[] aliases = array.from(lib.Wrapper.new(lib.Point.new(high)), lib.Wrapper.new(lib.Point.new(low)))
+copied = aliases.copy()
+copied.push(lib.Wrapper.new(lib.Point.new(close + 10)))
+copied_last = copied.last()
+
+set_values = array.from(lib.Wrapper.new(lib.Point.new(close)), lib.Wrapper.new(lib.Point.new(close + 10)))
+array.set(set_values, 0, lib.Wrapper.new(lib.Point.new(close + 40)))
+set_values.set(1, lib.Wrapper.new(lib.Point.new(close + 50)))
+set_first = set_values.get(0)
+set_second = array.get(set_values, 1)
+
+unshift_values = array.from(lib.Wrapper.new(lib.Point.new(close + 60)))
+array.unshift(unshift_values, lib.Wrapper.new(lib.Point.new(close + 70)))
+unshift_first = unshift_values.get(0)
+method_unshift_values = array.from(lib.Wrapper.new(lib.Point.new(close + 80)))
+method_unshift_values.unshift(lib.Wrapper.new(lib.Point.new(close + 90)))
+method_unshift_first = array.get(method_unshift_values, 0)
+
+insert_values = array.from(lib.Wrapper.new(lib.Point.new(close + 100)), lib.Wrapper.new(lib.Point.new(close + 110)))
+array.insert(insert_values, 1, lib.Wrapper.new(lib.Point.new(close + 120)))
+inserted = insert_values.get(1)
+method_insert_values = array.from(lib.Wrapper.new(lib.Point.new(close + 130)), lib.Wrapper.new(lib.Point.new(close + 140)))
+method_insert_values.insert(0, lib.Wrapper.new(lib.Point.new(close + 150)))
+method_inserted = array.get(method_insert_values, 0)
+
+search_values = array.from(lib.Wrapper.new(lib.Point.new(close)), lib.Wrapper.new(lib.Point.new(open)), lib.Wrapper.new(lib.Point.new(close)))
+search_same = lib.Wrapper.new(lib.Point.new(close))
+search_missing = lib.Wrapper.new(lib.Point.new(close + 100))
+includes_found = array.includes(search_values, search_same) ? 1 : 0
+index_found = search_values.indexof(search_same)
+last_index_found = array.lastindexof(search_values, search_same)
+missing_found = search_values.includes(search_missing) ? 1000 : 2
+
+filled = array.from(lib.Wrapper.new(lib.Point.new(1.0)), lib.Wrapper.new(lib.Point.new(2.0)), lib.Wrapper.new(lib.Point.new(3.0)))
+filled.fill(lib.Wrapper.new(lib.Point.new(9.0)), 1, 3)
+filled_first = filled.get(0)
+filled_third = array.get(filled, 2)
+
+pop_values = array.from(lib.Wrapper.new(lib.Point.new(close + 160)), lib.Wrapper.new(lib.Point.new(close + 170)))
+popped = array.pop(pop_values)
+method_pop_values = array.from(lib.Wrapper.new(lib.Point.new(close + 180)), lib.Wrapper.new(lib.Point.new(close + 190)))
+method_popped = method_pop_values.pop()
+
+shift_values = array.from(lib.Wrapper.new(lib.Point.new(close + 200)), lib.Wrapper.new(lib.Point.new(close + 210)))
+shifted = array.shift(shift_values)
+method_shift_values = array.from(lib.Wrapper.new(lib.Point.new(close + 220)), lib.Wrapper.new(lib.Point.new(close + 230)))
+method_shifted = method_shift_values.shift()
+
+remove_values = array.from(lib.Wrapper.new(lib.Point.new(close + 240)), lib.Wrapper.new(lib.Point.new(close + 250)), lib.Wrapper.new(lib.Point.new(close + 260)))
+removed = array.remove(remove_values, 1)
+method_remove_values = array.from(lib.Wrapper.new(lib.Point.new(close + 270)), lib.Wrapper.new(lib.Point.new(close + 280)), lib.Wrapper.new(lib.Point.new(close + 290)))
+method_removed = method_remove_values.remove(0)
+
+clear_values = array.from(lib.Wrapper.new(lib.Point.new(close + 300)), lib.Wrapper.new(lib.Point.new(close + 310)))
+array.clear(clear_values)
+clear_values.push(lib.Wrapper.new(lib.Point.new(close + 320)))
+clear_reader = clear_values.get(0)
+method_clear_values = array.from(lib.Wrapper.new(lib.Point.new(close + 330)))
+method_clear_values.clear()
+method_clear_values.push(lib.Wrapper.new(lib.Point.new(close + 340)))
+method_clear_reader = array.get(method_clear_values, 0)
+
+first_last_values = array.from(lib.Wrapper.new(lib.Point.new(close + 520)), lib.Wrapper.new(lib.Point.new(close + 530)))
+first_value = array.first(first_last_values)
+last_value = first_last_values.last()
+
+joined = array.from(lib.Wrapper.new(lib.Point.new(1.25)), lib.Wrapper.new(lib.Point.new(2.5)))
+join_ok = array.join(joined, "|") == "lib.Wrapper(lib.Point(1.25))|lib.Wrapper(lib.Point(2.5))" ? 1 : 0
+method_join_ok = joined.join() == "lib.Wrapper(lib.Point(1.25)),lib.Wrapper(lib.Point(2.5))" ? 1 : 0
+
+reverse_values = array.from(lib.Wrapper.new(lib.Point.new(close + 350)), lib.Wrapper.new(lib.Point.new(close + 360)))
+array.reverse(reverse_values)
+reverse_first = array.get(reverse_values, 0)
+method_reverse_values = array.from(lib.Wrapper.new(lib.Point.new(close + 370)), lib.Wrapper.new(lib.Point.new(close + 380)))
+method_reverse_values.reverse()
+method_reverse_second = method_reverse_values.get(1)
+
+slice_source = array.from(lib.Wrapper.new(lib.Point.new(close + 390)), lib.Wrapper.new(lib.Point.new(close + 400)), lib.Wrapper.new(lib.Point.new(close + 410)))
+slice_window = array.slice(slice_source, 1, 3)
+slice_first = slice_window.get(0)
+slice_window.set(1, lib.Wrapper.new(lib.Point.new(close + 420)))
+slice_second = array.get(slice_window, 1)
+slice_parent_third = slice_source.get(2)
+method_slice_source = array.from(lib.Wrapper.new(lib.Point.new(close + 430)), lib.Wrapper.new(lib.Point.new(close + 440)), lib.Wrapper.new(lib.Point.new(close + 450)))
+method_slice_window = method_slice_source.slice(0, 2)
+method_slice_second = array.get(method_slice_window, 1)
+
+concat_left = array.from(lib.Wrapper.new(lib.Point.new(close + 460)))
+concat_right = array.from(lib.Wrapper.new(lib.Point.new(close + 470)), lib.Wrapper.new(lib.Point.new(close + 480)))
+concat_returned = array.concat(concat_left, concat_right)
+concat_reader = concat_returned.get(2)
+method_concat_left = array.from(lib.Wrapper.new(lib.Point.new(close + 490)))
+method_concat_right = array.from(lib.Wrapper.new(lib.Point.new(close + 500)), lib.Wrapper.new(lib.Point.new(close + 510)))
+method_concat_returned = method_concat_left.concat(method_concat_right)
+method_concat_reader = array.get(method_concat_returned, 1)
+
+float for_sum = 0.0
+for item in joined
+    for_sum := for_sum + (na(item) ? na : na(item.nested) ? na : item.nested.x)
+
+int index_sum = 0
+float index_value_sum = 0.0
+for index, item in joined
+    index_sum := index_sum + index
+    index_value_sum := index_value_sum + (na(item) ? na : na(item.nested) ? na : item.nested.x)
+
+varip array<lib.Wrapper> persistent = array.from(lib.Wrapper.new(lib.Point.new(close + 20)))
+persistent.push(lib.Wrapper.new(lib.Point.new(close + 30)))
+persistent_last = persistent.last()
+
+mutation_total = (na(set_first) ? na : na(set_first.nested) ? na : set_first.nested.x) + (na(set_second) ? na : na(set_second.nested) ? na : set_second.nested.x) + (na(unshift_first) ? na : na(unshift_first.nested) ? na : unshift_first.nested.x) + (na(method_unshift_first) ? na : na(method_unshift_first.nested) ? na : method_unshift_first.nested.x) + unshift_values.size() + method_unshift_values.size() + (na(inserted) ? na : na(inserted.nested) ? na : inserted.nested.x) + (na(method_inserted) ? na : na(method_inserted.nested) ? na : method_inserted.nested.x) + insert_values.size() + method_insert_values.size()
+returned_total = (na(popped) ? na : na(popped.nested) ? na : popped.nested.x) + (na(method_popped) ? na : na(method_popped.nested) ? na : method_popped.nested.x) + (na(shifted) ? na : na(shifted.nested) ? na : shifted.nested.x) + (na(method_shifted) ? na : na(method_shifted.nested) ? na : method_shifted.nested.x) + (na(removed) ? na : na(removed.nested) ? na : removed.nested.x) + (na(method_removed) ? na : na(method_removed.nested) ? na : method_removed.nested.x) + (na(clear_reader) ? na : na(clear_reader.nested) ? na : clear_reader.nested.x) + (na(method_clear_reader) ? na : na(method_clear_reader.nested) ? na : method_clear_reader.nested.x) + clear_values.size() + method_clear_values.size() + (na(first_value) ? na : na(first_value.nested) ? na : first_value.nested.x) + (na(last_value) ? na : na(last_value.nested) ? na : last_value.nested.x)
+window_total = (na(reverse_first) ? na : na(reverse_first.nested) ? na : reverse_first.nested.x) + (na(method_reverse_second) ? na : na(method_reverse_second.nested) ? na : method_reverse_second.nested.x) + (na(slice_first) ? na : na(slice_first.nested) ? na : slice_first.nested.x) + (na(slice_second) ? na : na(slice_second.nested) ? na : slice_second.nested.x) + (na(slice_parent_third) ? na : na(slice_parent_third.nested) ? na : slice_parent_third.nested.x) + (na(method_slice_second) ? na : na(method_slice_second.nested) ? na : method_slice_second.nested.x) + (na(concat_reader) ? na : na(concat_reader.nested) ? na : concat_reader.nested.x) + (na(method_concat_reader) ? na : na(method_concat_reader.nested) ? na : method_concat_reader.nested.x) + concat_returned.size() + method_concat_returned.size()
+
+flow_left = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(close + 600)))
+flow_right = array.from(lib.Wrapper.new(lib.Point.new(close + 700)))
+flow_ternary = bar_index % 2 == 0 ? flow_left : flow_right
+flow_if = if bar_index % 2 == 0
+    made = flow_left.copy()
+    made
+else
+    made = flow_right.copy()
+    made
+flow_switch = switch bar_index % 2
+    0 => flow_left
+    => flow_right
+flow_for = for i = 0 to 0
+    flow_left
+flow_for_in = for item in array.from(0)
+    flow_right
+int flow_iterations = 0
+flow_while = while flow_iterations < 1
+    flow_iterations := flow_iterations + 1
+    flow_right
+array<lib.Wrapper> flow_typed = if bar_index % 2 == 0
+    flow_left
+else
+    flow_right
+flow_ternary_value = flow_ternary.get(0)
+flow_if_value = flow_if.get(0)
+flow_switch_value = flow_switch.get(0)
+flow_for_value = flow_for.get(0)
+flow_for_in_value = flow_for_in.get(0)
+flow_while_value = flow_while.get(0)
+flow_typed_value = flow_typed.get(0)
+flow_history_value = array.get(flow_ternary[1], 0)
+flow_total = (na(flow_ternary_value) ? na : na(flow_ternary_value.nested) ? na : flow_ternary_value.nested.x) + (na(flow_if_value) ? na : na(flow_if_value.nested) ? na : flow_if_value.nested.x) + (na(flow_switch_value) ? na : na(flow_switch_value.nested) ? na : flow_switch_value.nested.x) + (na(flow_for_value) ? na : na(flow_for_value.nested) ? na : flow_for_value.nested.x) + (na(flow_for_in_value) ? na : na(flow_for_in_value.nested) ? na : flow_for_in_value.nested.x) + (na(flow_while_value) ? na : na(flow_while_value.nested) ? na : flow_while_value.nested.x) + (na(flow_typed_value) ? na : na(flow_typed_value.nested) ? na : flow_typed_value.nested.x)
+
+plot((na(first) ? na : na(first.nested) ? na : first.nested.x))
+plot((na(second) ? na : na(second.nested) ? na : second.nested.x))
+plot((na(copied_last) ? na : na(copied_last.nested) ? na : copied_last.nested.x))
+plot(includes_found + index_found + last_index_found + missing_found)
+plot((na(filled_first) ? na : na(filled_first.nested) ? na : filled_first.nested.x) * 10 + (na(filled_third) ? na : na(filled_third.nested) ? na : filled_third.nested.x))
+plot(join_ok + method_join_ok)
+plot(for_sum + index_sum + index_value_sum)
+plot(persistent.size())
+plot((na(persistent_last) ? na : na(persistent_last.nested) ? na : persistent_last.nested.x))
+plot(mutation_total)
+plot(returned_total)
+plot(window_total)
+plot(flow_total)
+plot((na(flow_history_value) ? na : na(flow_history_value.nested) ? na : flow_history_value.nested.x))

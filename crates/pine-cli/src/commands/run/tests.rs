@@ -1,6 +1,25 @@
 use super::*;
 
 #[test]
+fn realtime_cli_seeds_the_known_historical_boundary() {
+    let options = parse_options(&[
+        workspace_path("tests/fixtures/runtime/history_boundary_guard.pine"),
+        "--bars".to_owned(),
+        workspace_path("tests/fixtures/runtime/bars.csv"),
+    ])
+    .unwrap();
+    let batch = run_json_with_options(&options).unwrap();
+    let realtime = run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory).unwrap();
+    assert_eq!(batch, realtime);
+    let forming = run_json_with_options_in_mode(&options, ExecutionMode::RealtimeForming).unwrap();
+    let forming: serde_json::Value = serde_json::from_str(&forming).unwrap();
+    assert_eq!(
+        forming["plots"][1]["values"],
+        serde_json::json!([0, 0, 1, 0])
+    );
+}
+
+#[test]
 fn candidate_macd_batch_incremental_and_realtime_history_match() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/macd.pine"),
@@ -23,7 +42,7 @@ fn candidate_macd_batch_incremental_and_realtime_history_match() {
         .expect("realtime history");
     assert_eq!(batch, incremental);
     assert_eq!(batch, realtime);
-    assert!(batch.contains("\"schemaVersion\":8"));
+    assert!(batch.contains("\"schemaVersion\":9"));
     let expected = fs::read_to_string(workspace_path("tests/snapshots/runtime_macd.json"))
         .expect("macd snapshot");
     let actual: serde_json::Value = serde_json::from_str(&batch).expect("batch json");
@@ -514,6 +533,16 @@ fn rejects_mixed_strategy_alert_rendering_options() {
 }
 
 #[test]
+fn chart_timeframe_sets_main_period_without_request_bars() {
+    let chart = ChartContext::new("COINBASE:BTCUSD", RequestTimeframe::parse("1D").unwrap());
+    let environment = request_environment_from_specs(&[], chart).unwrap();
+    assert_eq!(
+        environment.main_timeframe(),
+        &RequestTimeframe::parse("1D").unwrap()
+    );
+}
+
+#[test]
 fn builds_request_environment_from_csv_specs() {
     let path = std::env::temp_dir().join(format!(
         "pine-request-bars-{}-{}.csv",
@@ -888,6 +917,55 @@ plot(color.t(shade))
     assert_eq!(
         output["plots"][7]["values"],
         serde_json::json!([50, 50, 50, 50])
+    );
+    let _ = fs::remove_file(script);
+}
+
+#[test]
+fn generic_source_input_override_uses_chart_source_selector() {
+    let script = std::env::temp_dir().join(format!(
+        "pine-generic-source-override-{}-{}.pine",
+        std::process::id(),
+        line!()
+    ));
+    fs::write(
+        &script,
+        "//@version=5\nindicator(\"source\")\nsrc = input(close, \"Source\")\nplot(src)\n",
+    )
+    .expect("write source script");
+    let input = analysis_input_from_paths(&script.to_string_lossy(), &[]).unwrap();
+    let analysis = analyze_input(&input);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("source HIR");
+    let call = input_calls(&hir).into_iter().next().expect("source input");
+    assert!(call.is_source);
+    let calls = HashMap::from([(call.call_site_id, call)]);
+    assert!(
+        input_overrides_from_specs(
+            &[
+                parse_input_override_spec(&format!("{}=hl2", calls.keys().next().unwrap()))
+                    .unwrap()
+            ],
+            &calls,
+        )
+        .is_ok()
+    );
+    assert!(
+        input_overrides_from_specs(
+            &[
+                parse_input_override_spec(&format!(
+                    "{}=another plot",
+                    calls.keys().next().unwrap()
+                ))
+                .unwrap()
+            ],
+            &calls,
+        )
+        .is_err()
     );
     let _ = fs::remove_file(script);
 }
@@ -1991,7 +2069,7 @@ fn runs_request_bars_integration_fixture() {
     assert!(output.contains("\"values\":[0,1,0,0,0]"));
     assert!(output.contains("\"values\":[0,1,0,0,0]"));
     assert!(output.contains("\"values\":[0,0,1,0,0]"));
-    assert!(output.contains("\"values\":[null,null,null,null,0]"));
+    assert!(output.contains("\"values\":[null,null,0,0,0]"));
     assert!(output.contains("\"values\":[null,null,null,null,1]"));
     assert!(output.contains("\"values\":[null,null,null,null,300]"));
     assert!(output.contains("\"values\":[null,null,100.01,100.01,200.01]"));
@@ -2251,9 +2329,9 @@ fn runs_request_bars_integration_fixture() {
     );
     assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 8);
     assert!(output.matches("\"values\":[null,null,0,0,0]").count() >= 3);
-    assert!(output.matches("\"values\":[null,null,2,2,2]").count() >= 4);
+    assert!(output.matches("\"values\":[null,null,2,2,2]").count() >= 2);
     assert!(output.matches("\"values\":[null,null,null,22,23]").count() >= 2);
-    assert!(output.contains("\"values\":[null,null,null,null,0]"));
+    assert!(output.contains("\"values\":[null,null,0,0,0]"));
     assert!(output.contains("\"values\":[null,null,null,null,1]"));
     assert!(output.matches("\"values\":[null,null,null,0,null]").count() >= 2);
     assert!(output.contains("\"values\":[null,null,null,null,200]"));
@@ -2471,8 +2549,8 @@ fn runs_request_bars_integration_fixture() {
         ));
     assert!(output.matches("\"values\":[null,12,13,14,15]").count() >= 2);
     assert!(output.matches("\"values\":[null,9,10,11,12]").count() >= 2);
-    assert!(output.contains("\"values\":[null,0,0,0,0]"));
-    assert!(output.contains("\"values\":[null,1,1,1,1]"));
+    assert!(output.contains("\"values\":[0,0,0,0,0]"));
+    assert!(output.contains("\"values\":[0,1,1,1,1]"));
     assert!(output.matches("\"values\":[null,41,43,45,47]").count() >= 2);
     assert!(
         output

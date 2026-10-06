@@ -1,0 +1,18 @@
+//@version=6
+indicator("UDT drawing array control")
+type Graphic
+    line pivotLine
+    label pivotLabel
+graphic = Graphic.new(line.new(bar_index, close, bar_index + 1, close), label.new(bar_index, close, "original"))
+array<Graphic> graphics = array.new<Graphic>()
+array.push(graphics, graphic)
+read = array.last(graphics)
+read.pivotLine.set_x2(bar_index + 10)
+plot(graphic.pivotLine.get_x2(), "UDA line alias")
+copied = array.copy(graphics)
+copiedGraphic = array.get(copied, 0)
+copiedGraphic.pivotLabel.set_text("shared")
+plot(label.get_text(graphic.pivotLabel) == "shared" ? 1 : 0, "UDA label alias")
+copiedGraphic.pivotLine := line.new(bar_index, close, bar_index + 20, close)
+plot(graphic.pivotLine.get_x2(), "UDA field replacement")
+plot(array.size(graphics), "UDA size")

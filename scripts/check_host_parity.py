@@ -63,9 +63,9 @@ def parse_runtime_snapshot_fixtures(
 def runtime_snapshot_fixtures() -> list[RuntimeSnapshotFixture]:
     fixtures: list[RuntimeSnapshotFixture] = []
     for path in sorted(FIXTURE_DIR.glob("*.rs")):
-        fixtures.extend(parse_runtime_snapshot_fixtures(path.read_text(), path))
+        fixtures.extend(parse_runtime_snapshot_fixtures(path.read_text(encoding="utf-8"), path))
     fixtures.extend(parse_library_snapshot_fixtures(
-        LIBRARY_FIXTURE_FILE.read_text(), LIBRARY_FIXTURE_FILE
+        LIBRARY_FIXTURE_FILE.read_text(encoding="utf-8"), LIBRARY_FIXTURE_FILE
     ))
     return fixtures
 
@@ -104,7 +104,7 @@ def parse_library_snapshot_fixtures(
 
 def analysis_snapshot_fixtures() -> list[RuntimeSnapshotFixture]:
     return parse_runtime_snapshot_fixtures(
-        ANALYSIS_FIXTURE_FILE.read_text(), ANALYSIS_FIXTURE_FILE
+        ANALYSIS_FIXTURE_FILE.read_text(encoding="utf-8"), ANALYSIS_FIXTURE_FILE
     )
 
 
@@ -393,16 +393,16 @@ def main() -> int:
     fixtures = runtime_snapshot_fixtures()
     registered_names = [fixture.snapshot for fixture in fixtures]
     registered_names.extend(
-        sorted(wasm_snapshot_assertions(CLI_DIRECT_RUNTIME_TESTS.read_text()))
+        sorted(wasm_snapshot_assertions(CLI_DIRECT_RUNTIME_TESTS.read_text(encoding="utf-8")))
     )
     registered = set(registered_names)
-    required_names, errors = parse_required_manifest(REQUIRED_MANIFEST.read_text())
+    required_names, errors = parse_required_manifest(REQUIRED_MANIFEST.read_text(encoding="utf-8"))
     required = set(required_names)
     analysis_fixtures = analysis_snapshot_fixtures()
     analysis_registered_names = [fixture.snapshot for fixture in analysis_fixtures]
     analysis_registered = set(analysis_registered_names)
     analysis_required_names, analysis_manifest_errors = parse_required_manifest(
-        ANALYSIS_REQUIRED_MANIFEST.read_text()
+        ANALYSIS_REQUIRED_MANIFEST.read_text(encoding="utf-8")
     )
     errors.extend(analysis_manifest_errors)
     analysis_required = set(analysis_required_names)
@@ -432,8 +432,8 @@ def main() -> int:
             "runtime and analysis snapshot registries overlap: " + ", ".join(collisions)
         )
 
-    wasm_assertions = wasm_snapshot_assertions(WASM_TESTS.read_text())
-    python_assertions = python_snapshot_assertions(PYTHON_TESTS.read_text())
+    wasm_assertions = wasm_snapshot_assertions(WASM_TESTS.read_text(encoding="utf-8"))
+    python_assertions = python_snapshot_assertions(PYTHON_TESTS.read_text(encoding="utf-8"))
 
     errors.extend(
         parity_errors(

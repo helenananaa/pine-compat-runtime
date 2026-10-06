@@ -15,7 +15,7 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "qty",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -73,7 +73,7 @@ const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "qty",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -149,6 +149,11 @@ const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SimpleBool,
         optional: true,
     },
+    BuiltinParam {
+        name: "when",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
 ];
 
 const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[
@@ -170,6 +175,11 @@ const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "immediately",
         accepts: Accepts::SimpleBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "when",
+        accepts: Accepts::BoolCompatible,
         optional: true,
     },
 ];

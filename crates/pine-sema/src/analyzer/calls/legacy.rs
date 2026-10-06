@@ -57,6 +57,8 @@ impl Analyzer {
         let is_symbol_shadowed = self.lexical_symbol_shadows_legacy_call(name, callee_span);
         let is_annotation = !is_symbol_shadowed
             && (name == "alertcondition"
+                || name == "strategy"
+                || name.starts_with("strategy.")
                 || matches!(
                     resolution,
                     Some(
@@ -207,7 +209,9 @@ impl Analyzer {
             return true;
         }
         match &expr.kind {
-            ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => {
+            ExprKind::Unary { expr, .. }
+            | ExprKind::Group(expr)
+            | ExprKind::Member { receiver: expr, .. } => {
                 self.legacy_input_constant_in_expr_inner(expr, trace)
             }
             ExprKind::Binary { left, right, .. } => {
@@ -560,6 +564,12 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> FocusedLegacyCallAnalysis {
+        if self.legacy.dialect() == crate::PineDialect::V5
+            && name == "plot"
+            && !args.iter().any(|arg| arg.name.as_deref() == Some("transp"))
+        {
+            return FocusedLegacyCallAnalysis::NotApplicable;
+        }
         let Some(resolution) = self.legacy.resolve_call(name) else {
             return FocusedLegacyCallAnalysis::NotApplicable;
         };

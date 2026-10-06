@@ -1717,7 +1717,7 @@ plot(w.inner.x)
 }
 
 #[test]
-fn rejects_nested_user_type_field_mutation() {
+fn accepts_nested_user_type_field_mutation() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -1731,23 +1731,11 @@ plot(w.inner.x)
     );
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_UNSUPPORTED_FEATURE"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "nested field mutation"),
-        "{:?}",
-        analysis.compatibility.unsupported
-    );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -2511,7 +2499,7 @@ plot(p.x + p.y)
 }
 
 #[test]
-fn rejects_user_type_field_mutation_inside_function() {
+fn accepts_global_user_type_field_mutation_inside_function() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -2524,15 +2512,11 @@ plot(touch())
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| { feature.feature == "function_side_effect" }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -2566,7 +2550,7 @@ plot(p.x)
 }
 
 #[test]
-fn rejects_user_type_parameter_field_mutation_inside_function() {
+fn accepts_user_type_parameter_field_mutation_inside_function() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -2580,13 +2564,9 @@ plot(mutated.x)
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| { feature.feature == "function_side_effect" }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }

@@ -112,4 +112,10 @@ jobs:
             prerelease) flags+=(--prerelease --latest=false) ;;
             *) echo "Unsupported release channel: $channel" >&2; exit 1 ;;
           esac
-          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --title "Pine Compat Runtime $GITHUB_REF_NAME" "${flags[@]}"
+          notes="docs/releases/$GITHUB_REF_NAME.md"
+          if [[ -f "$notes" ]]; then
+            flags+=(--notes-file "$notes")
+          else
+            flags+=(--generate-notes)
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "Pine Compat Runtime $GITHUB_REF_NAME" "${flags[@]}"

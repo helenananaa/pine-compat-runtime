@@ -14,6 +14,10 @@ impl<T> Default for SharedHistory<T> {
 }
 
 impl<T> SharedHistory<T> {
+    pub(super) fn history(&self) -> &AppendHistory<T> {
+        &self.0
+    }
+
     pub(super) fn len(&self) -> usize {
         self.0.len()
     }

@@ -17,6 +17,23 @@ fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
 }
 
 #[test]
+fn inverse_trigonometric_aliases_end_at_v4() {
+    for version in [3, 4] {
+        let source = format!(
+            "//@version={version}\nstudy(\"inverse trig\")\nplot(acos(-1) + asin(1) + atan(1))\n"
+        );
+        let analysis = analyze(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+    }
+    let v5 = analyze("//@version=5\nindicator(\"inverse trig\")\nplot(asin(1))\n");
+    assert!(diagnostic_codes(&v5).contains(&"E_UNKNOWN_FUNCTION"));
+}
+
+#[test]
 fn missing_directive_selects_executable_implicit_v1_profile() {
     let analysis = analyze("study(\"Legacy\")\nplot(close)\n");
 
@@ -152,37 +169,33 @@ fn invalid_versions_stop_before_ordinary_semantic_analysis() {
 }
 
 #[test]
-fn legacy_strategy_declaration_is_one_hard_stop() {
+fn v1_to_v4_strategy_declaration_and_orders_are_executable() {
     for version in 1..=4 {
         let analysis = analyze(&format!(
-            "//@version={version}\nstrategy(\"excluded\")\nstrategy.entry(\"L\", strategy.long)\n"
+            "//@version={version}\nstrategy(\"legacy\", initial_capital=100000)\nstrategy.entry(\"L\", strategy.long)\n"
         ));
 
-        assert_eq!(
-            diagnostic_codes(&analysis),
-            vec!["E_LEGACY_STRATEGY_OUT_OF_SCOPE"]
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
         );
         assert_eq!(
             analysis.compatibility.script_mode,
             ScriptModeClassification::Strategy
         );
-        assert_eq!(analysis.compatibility.unsupported.len(), 1);
-        assert_eq!(
-            analysis.compatibility.unsupported[0].feature,
-            "legacy strategy"
-        );
-        assert!(analysis.hir.is_none());
+        assert!(analysis.hir.is_some());
     }
 }
 
 #[test]
-fn legacy_strategy_reference_overrides_indicator_declaration_failure() {
-    let analysis = analyze("//@version=4\nstudy(\"excluded use\")\nplot(strategy.position_size)\n");
-
-    assert_eq!(
-        diagnostic_codes(&analysis),
-        vec!["E_LEGACY_STRATEGY_OUT_OF_SCOPE"]
-    );
+fn v1_to_v4_strategy_reference_in_indicator_is_rejected_by_strategy_mode_check() {
+    for version in 1..=4 {
+        let analysis = analyze(&format!(
+            "//@version={version}\nstudy(\"excluded use\")\nplot(strategy.position_size)\n"
+        ));
+        assert_eq!(diagnostic_codes(&analysis), vec!["E_STRATEGY_MODE"]);
+    }
 }
 
 #[test]
@@ -271,7 +284,7 @@ fn modern_v5_v6_modes_keep_existing_paths_and_reject_study_alias() {
 }
 
 #[test]
-fn root_and_library_language_versions_must_match() {
+fn newer_root_can_import_older_library_version() {
     let root = SourceFile::new(
         "root.pine",
         "//@version=6\nindicator(\"root\")\nimport user/lib/1 as lib\nplot(lib.value)\n",
@@ -285,6 +298,28 @@ fn root_and_library_language_versions_must_match() {
 
     let analysis = analyze_input(&input);
 
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn older_root_cannot_import_newer_library_version() {
+    let root = SourceFile::new(
+        "root.pine",
+        "//@version=5\nindicator(\"root\")\nimport user/lib/1 as lib\nplot(lib.value)\n",
+    );
+    let library = SourceFile::new(
+        "lib.pine",
+        "//@version=6\nlibrary(\"lib\")\nexport value = 1\n",
+    );
+    let input = AnalysisInput::with_library_sources(root, vec![("user/lib/1".to_owned(), library)])
+        .expect("analysis input");
+
+    let analysis = analyze_input(&input);
     assert_eq!(
         diagnostic_codes(&analysis),
         vec!["E_LANGUAGE_VERSION_CONFLICT"]

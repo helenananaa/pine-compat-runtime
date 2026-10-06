@@ -267,6 +267,17 @@ impl Analyzer {
             }
             "plot" if self.legacy.dialect().version() >= 5 => {
                 self.validate_drawing_enum_string_arg(signature, args, 4, "style", PLOT_STYLES);
+                self.validate_drawing_enum_string_arg(
+                    signature,
+                    args,
+                    15,
+                    "linestyle",
+                    &[
+                        "plot.linestyle_solid",
+                        "plot.linestyle_dotted",
+                        "plot.linestyle_dashed",
+                    ],
+                );
             }
             "plotshape" => {
                 self.validate_drawing_enum_string_arg(

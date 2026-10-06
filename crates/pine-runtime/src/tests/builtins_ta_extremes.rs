@@ -275,6 +275,38 @@ plot(held)
 }
 
 #[test]
+fn window_extremes_skip_na_without_extending_the_bar_window() {
+    for version in [3, 4, 5, 6] {
+        let declaration = if version < 5 { "study" } else { "indicator" };
+        let namespace = if version < 5 { "" } else { "ta." };
+        let source = SourceFile::new(
+            "na-extremes.pine",
+            format!(
+                "//@version={version}\n{declaration}(\"na extremes\")\nsource = bar_index == 2 or bar_index == 4 ? close : na\nplot({namespace}highest(source, 3))\nplot({namespace}lowest(source, 3))\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let bars = [1.0, 2.0, 3.0, 4.0, 7.0, 6.0, 5.0, 4.0]
+            .into_iter()
+            .map(bar)
+            .collect::<Vec<_>>();
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+        for plot in &result.plots {
+            assert_eq!(plot.values[0], PineValue::Na);
+            assert_eq!(plot.values[1], PineValue::Na);
+            assert_eq!(plot.values[7], PineValue::Na);
+        }
+        assert_values_close(&result.plots[0].values[2..7], &[3.0, 3.0, 7.0, 7.0, 7.0]);
+        assert_values_close(&result.plots[1].values[2..7], &[3.0, 3.0, 3.0, 7.0, 7.0]);
+    }
+}
+
+#[test]
 fn runs_highestbars_lowestbars_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",
@@ -295,12 +327,123 @@ plot(lo)
     let bars = vec![bar(1.0), bar(3.0), bar(2.0), bar(5.0), bar(5.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(&result.plots[0].values[2..], &[1.0, 0.0, 0.0, 1.0]);
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(&result.plots[1].values[2..], &[2.0, 1.0, 2.0, 0.0]);
+    assert_values_close(&result.plots[0].values[..2], &[0.0, 0.0]);
+    assert_values_close(&result.plots[0].values[2..], &[-1.0, 0.0, 0.0, -1.0]);
+    assert_values_close(&result.plots[1].values[..2], &[0.0, -1.0]);
+    assert_values_close(&result.plots[1].values[2..], &[-2.0, -1.0, -2.0, 0.0]);
+}
+
+#[test]
+fn deep_conditional_extreme_windows_use_source_bar_history_and_recent_ties() {
+    let source = SourceFile::new(
+        "deep-extremes.pine",
+        r#"indicator("deep conditional extrema")
+source = bar_index % 13 == 0 ? na : close
+float hi = na
+float lo = na
+float hibars = na
+float lobars = na
+if bar_index % 3 != 0
+    hi := ta.highest(source, 257)
+    lo := ta.lowest(source, 257)
+    hibars := ta.highestbars(source, 257)
+    lobars := ta.lowestbars(source, 257)
+plot(hi)
+plot(lo)
+plot(hibars)
+plot(lobars)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.unwrap();
+    let bars: Vec<_> = (0..700)
+        .map(|index| {
+            let mut bar = bar(match index % 7 {
+                0 => -0.0,
+                1 => 0.0,
+                _ => (index * 137 % 17) as f64,
+            });
+            bar.time = index as i64 * 60_000;
+            bar
+        })
+        .collect();
+    let result = run_historical(&hir, &bars).unwrap();
+    for index in 0..bars.len() {
+        for (plot_index, highest) in [(0, true), (1, false)] {
+            let mut best = None;
+            let mut offset = 0;
+            for candidate in (index.saturating_sub(256)..=index).rev() {
+                if candidate % 13 == 0 {
+                    continue;
+                }
+                let value = bars[candidate].close;
+                if best.is_none_or(|current| {
+                    if highest {
+                        value > current
+                    } else {
+                        value < current
+                    }
+                }) {
+                    best = Some(value);
+                    offset = index - candidate;
+                }
+            }
+            let values = &result.plots[plot_index].values;
+            let offsets = &result.plots[plot_index + 2].values;
+            if index % 3 == 0 {
+                assert_eq!(values[index], PineValue::Na);
+                assert_eq!(offsets[index], PineValue::Na);
+                continue;
+            }
+            if index < 256 {
+                assert_eq!(values[index], PineValue::Na);
+            } else {
+                assert_eq!(values[index].as_f64().unwrap(), best.unwrap());
+            }
+            if index % 13 == 0 {
+                assert_eq!(offsets[index], PineValue::Na);
+            } else {
+                assert_eq!(offsets[index].as_f64().unwrap(), -(offset as f64));
+            }
+        }
+    }
+
+    let mut live = RealtimeRuntime::new(&hir);
+    live.seed_historical(&bars[..698]).unwrap();
+    for close in [31.0, -5.0, 12.0] {
+        let update = Bar { close, ..bars[698] };
+        let observed = live.update(BarUpdate::forming(update)).unwrap();
+        let mut input = bars[..698].to_vec();
+        input.push(update);
+        assert_eq!(observed, run_historical(&hir, &input).unwrap());
+    }
+}
+
+#[test]
+fn extreme_bar_offsets_address_history_in_v5_and_v6() {
+    let bars = vec![bar(1.0), bar(3.0), bar(2.0), bar(5.0)];
+    for version in [5, 6] {
+        let source = SourceFile::new(
+            "extreme-history.pine",
+            format!(
+                "//@version={version}\nindicator(\"extreme history\")\nplot(close[-ta.highestbars(close, 3)])\nplot(close[-ta.lowestbars(close, 3)])\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+        assert_values_close(&result.plots[0].values, &[1.0, 3.0, 3.0, 5.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 2.0]);
+    }
 }
 
 #[test]
@@ -364,10 +507,10 @@ plot(lo_offset)
     assert_values_close(&result.plots[0].values[1..], &[5.0, 4.0, 4.0]);
     assert_eq!(result.plots[1].values[0], PineValue::Na);
     assert_values_close(&result.plots[1].values[1..], &[0.0, 0.0, -1.0]);
-    assert_eq!(result.plots[2].values[0], PineValue::Na);
-    assert_values_close(&result.plots[2].values[1..], &[1.0, 0.0, 0.0]);
-    assert_eq!(result.plots[3].values[0], PineValue::Na);
-    assert_values_close(&result.plots[3].values[1..], &[0.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[2].values[..1], &[0.0]);
+    assert_values_close(&result.plots[2].values[1..], &[-1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[3].values[..1], &[0.0]);
+    assert_values_close(&result.plots[3].values[1..], &[0.0, -1.0, 0.0]);
 }
 
 #[test]
@@ -799,7 +942,7 @@ plot(invalid)
     assert_eq!(result.plots[5].values[0], PineValue::Na);
     assert_eq!(result.plots[5].values[1], PineValue::Na);
     assert_values_close(&result.plots[5].values[2..3], &[2.0]);
-    assert_eq!(result.plots[5].values[3], PineValue::Na);
+    assert_values_close(&result.plots[5].values[3..4], &[3.5]);
     assert_eq!(result.plots[6].values[0], PineValue::Na);
     assert_eq!(result.plots[6].values[1], PineValue::Na);
     assert_eq!(result.plots[6].values[2], PineValue::Na);

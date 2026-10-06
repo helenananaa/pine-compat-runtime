@@ -25,8 +25,8 @@ pine-compat requirements script.pine --library-source Author/Library/1=library.p
 ```
 
 An unsupported script returns a nonzero status with the existing analysis JSON
-diagnostics on stderr. A valid report on stdout uses its own schema version 1;
-it does not change analysis schema 5 or runtime result schema 8.
+diagnostics on stderr. A valid report on stdout uses its own schema version 2;
+it is separate from analysis schema 5 and the current runtime result schema 9.
 
 Python uses the compiled program, including libraries supplied to compilation:
 
@@ -44,6 +44,18 @@ program.free();
 ```
 
 ## Contract and interpretation
+
+Version 2 corrects modern request merge discovery: explicit on/off arguments and
+resolvable constant aliases are reported as gapsOn/gapsOff or
+lookaheadOn/lookaheadOff. An unresolved expression is reported as
+`runtimeExpression`, never silently as the default. Legacy encoded merge policies
+retain their existing interpretation. The corrected timeframe relation is
+`sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths`: lower and equal
+timeframes are admitted; higher fixed timeframes must be integer multiples of
+the chart timeframe, while calendar months align by actual opens and closes.
+Earlier version-2 reports omitted the supported lower-timeframe relation, so
+consumers must accept this corrected relation string. The report remains schema
+2; runtime result schema 9 and streaming changes schema 4 are unchanged.
 
 The discovery mode is `conservativeExecutableHirInventory`. It visits all
 lowered executable expressions, including inlined library bodies, loop bounds,
@@ -65,7 +77,7 @@ external-input obligations merely because their text appears in a library.
 | `execution.calcOnEveryTick`, `calcOnOrderFills`, `processOrdersOnClose` | The compiled strategy switches. Indicator reports set these strategy-only flags to false. |
 | `execution.magnifier` | `historicalIntrabarsOrReportedStandardOhlcFallback` means enabled historical Magnifier accepts supplied intrabars and retains the established diagnostic/fallback behavior for absence or gaps. `notEnabled` does not require intrabars. |
 | `execution.sessionWindows` | Window-scoped risk rules can consume host window/trading-day IDs or retain the existing UTC fallback. `notUsedByWindowRiskRules` means no such rule was found. |
-| `requests` | Potential provider-backed contexts, identified by compiled call-site IDs. A same-context request evaluates its expression without a provider. External requests need a same-or-higher timeframe that is an integer multiple of the current context timeframe. |
+| `requests` | Potential provider-backed contexts, identified by compiled call-site IDs. A same-context request evaluates its expression without a provider. `request.security` admits lower/equal timeframes; higher fixed timeframes must be integer multiples of the current context timeframe, with a calendar-month exception. `request.security_lower_tf` admits only lower/equal timeframes. Forming lower-timeframe results require explicitly received intrabars for the current chart period. |
 | `inputCallSiteIds` | Input calls available to override. Obtain titles, value types, defaults and constraints from existing analysis `inputs` or Rust `input_calls`. |
 | `callSites` | Source locations for discovered request/input call IDs; null source means unavailable. See provenance coverage below. |
 

@@ -1,0 +1,401 @@
+//@version=5
+indicator("User type functions")
+type Point
+    float x
+    float y
+type Wrapper
+    Point point
+
+identity(p) => p
+wrap(p) =>
+    copy = p
+    copy
+outer(p) => identity(p)
+choose(delta, p) => p
+cloneFrom(p) => Point.new((na(p) ? na : p.x), (na(p) ? na : p.y))
+cloneFromNamed(p) => Point.new(y=(na(p) ? na : p.y), x=(na(p) ? na : p.x))
+cloneFromAlias(p) =>
+    ax = (na(p) ? na : p.x)
+    ay = (na(p) ? na : p.y)
+    Point.new(ax, ay)
+cloneFromNamedAlias(p) =>
+    ax = (na(p) ? na : p.x)
+    ay = (na(p) ? na : p.y)
+    Point.new(y=ay, x=ax)
+cloneFromObjectAlias(p) =>
+    copy = p
+    Point.new((na(copy) ? na : copy.x), (na(copy) ? na : copy.y))
+cloneFromNamedObjectAlias(p) =>
+    copy = p
+    Point.new(y=(na(copy) ? na : copy.y), x=(na(copy) ? na : copy.x))
+make(x, y) => Point.new(x, y)
+readPoint(p) => (na(p) ? na : p.x)
+makeAlias(x, y) =>
+    ax = x
+    ay = y
+    Point.new(ax, ay)
+makeNamed(x, y) => Point.new(y=y, x=x)
+makeNamedAlias(x, y) =>
+    ax = x
+    ay = y
+    Point.new(y=ay, x=ax)
+makeTyped(x, y) =>
+    Point typed = na
+    typed := Point.new(x, y)
+    typed
+makeTypedFrom(p) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    Point typed = na
+    typed := Point.new(y=ay, x=ax + 25)
+    typed
+makeTypedConstructed(x, y) =>
+    Point typed = Point.new(x + 30, y)
+    typed := Point.new((na(typed) ? na : typed.x) + 5, (na(typed) ? na : typed.y))
+    typed
+makeTypedConstructedFrom(p) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    Point typed = Point.new(y=ay, x=ax + 35)
+    typed := Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + 5)
+    typed
+makeTypedTernary(x, y, flip) =>
+    Point typed = flip ? Point.new(x + 40, y) : Point.new(x + 45, y)
+    typed := flip ? Point.new((na(typed) ? na : typed.x) + 5, (na(typed) ? na : typed.y)) : Point.new((na(typed) ? na : typed.x) + 10, (na(typed) ? na : typed.y))
+    typed
+makeTypedTernaryFrom(p, flip) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    Point typed = flip ? Point.new(y=ay, x=ax + 70) : Point.new(y=(na(copy) ? na : copy.y), x=(na(copy) ? na : copy.x) + 75)
+    typed := flip ? Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + 5) : Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + 10)
+    typed
+makeTypedSwitch(x, y, mode) =>
+    Point typed = switch mode
+        0 => Point.new(x + 55, y)
+        1 => Point.new(x + 60, y)
+        => Point.new(x + 65, y)
+    typed := switch mode
+        3 => Point.new((na(typed) ? na : typed.x) + 5, (na(typed) ? na : typed.y))
+        => Point.new((na(typed) ? na : typed.x) + 10, (na(typed) ? na : typed.y))
+    typed
+makeTypedSwitchFrom(p, mode) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    Point typed = switch mode
+        0 => Point.new(y=ay, x=ax + 90)
+        1 => Point.new(y=(na(copy) ? na : copy.y), x=(na(copy) ? na : copy.x) + 95)
+        => Point.new(y=(na(p) ? na : p.y), x=(na(p) ? na : p.x) + 100)
+    typed := switch mode
+        3 => Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + 5)
+        => Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + 10)
+    typed
+makeTypedIfFrom(p, flip) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    Point typed = if flip
+        branch = Point.new(y=ay, x=ax + 120)
+        branch
+    else
+        branch = Point.new(y=(na(copy) ? na : copy.y), x=(na(copy) ? na : copy.x) + 125)
+        branch
+    typed := if flip
+        Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + 5)
+    else
+        Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + 10)
+    typed
+makeTypedForFrom(p, count) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    Point typed = for i = 0 to count
+        Point.new(y=ay, x=ax + i + 110)
+    typed := for i = 0 to count
+        Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + i + 5)
+    typed
+makeTypedForInFrom(p, values) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    Point typed = for value in values
+        Point.new(y=ay, x=ax + value + 140)
+    typed := for value in values
+        Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + value + 5)
+    typed
+makeTypedWhileFrom(p, count) =>
+    copy = p
+    ax = (na(copy) ? na : copy.x)
+    ay = (na(copy) ? na : copy.y)
+    i = 0
+    Point typed = while i < count
+        i := i + 1
+        Point.new(y=ay, x=ax + i + 150)
+    j = 0
+    typed := while j < count
+        j := j + 1
+        Point.new(y=(na(typed) ? na : typed.y), x=(na(typed) ? na : typed.x) + j + 5)
+    typed
+makeWrapper(p) => Wrapper.new(p)
+passWrapper(w) =>
+    copy = w
+    copy
+outerWrapper(w) => passWrapper(w)
+makeWrapperSwitch(p, mode) =>
+    switch mode
+        0 => Wrapper.new(Point.new((na(p) ? na : p.x) + 170, (na(p) ? na : p.y)))
+        1 => Wrapper.new(Point.new((na(p) ? na : p.x) + 175, (na(p) ? na : p.y)))
+        => Wrapper.new(Point.new((na(p) ? na : p.x) + 180, (na(p) ? na : p.y)))
+makeLocalMutated(x, y) =>
+    local = Point.new(x + 130, y)
+    local.x := (na(local) ? na : local.x) + 5
+    local
+cloneViaMake(p) => make((na(p) ? na : p.x), (na(p) ? na : p.y))
+cloneViaMakeNamed(p) => makeNamed((na(p) ? na : p.x), (na(p) ? na : p.y))
+makeWrapperViaMake(p) => makeWrapper(make((na(p) ? na : p.x), (na(p) ? na : p.y)))
+cloneTernary(p, flip) => flip ? Point.new((na(p) ? na : p.x), (na(p) ? na : p.y)) : Point.new((na(p) ? na : p.x) + 10, (na(p) ? na : p.y))
+cloneSwitch(p, mode) =>
+    switch mode
+        0 => Point.new((na(p) ? na : p.x), (na(p) ? na : p.y))
+        1 => Point.new((na(p) ? na : p.x) + 5, (na(p) ? na : p.y))
+        => Point.new((na(p) ? na : p.x) + 10, (na(p) ? na : p.y))
+cloneIf(p, flip) =>
+    if flip
+        Point.new((na(p) ? na : p.x), (na(p) ? na : p.y))
+    else
+        Point.new((na(p) ? na : p.x) + 10, (na(p) ? na : p.y))
+aliasIf(p, flip) =>
+    if flip
+        q = p
+        q
+    else
+        q = p
+        q
+aliasTernary(p, flip) =>
+    q = p
+    flip ? q : p
+aliasWhile(p, keepGoing) =>
+    active = keepGoing
+    while active
+        q = p
+        active := false
+        q
+aliasSwitch(p, mode) =>
+    switch mode
+        0 =>
+            q = p
+            q
+        =>
+            q = p
+            q
+cloneFor(p, count) =>
+    for i = 0 to count
+        Point.new((na(p) ? na : p.x) + i, (na(p) ? na : p.y))
+cloneForAlias(p, count) =>
+    for i = 0 to count
+        q = p
+        q
+cloneForInAlias(p, values) =>
+    for value in values
+        q = p
+        q
+outerForIn(p, values) => cloneForInAlias(p, values)
+outerTernary(p) => aliasTernary(p, bar_index % 2 == 0)
+outerWhile(p) => aliasWhile(p, close > 0)
+outerSwitch(p) => aliasSwitch(p, bar_index % 2)
+
+p = Point.new(close, open)
+steps = array.from(1, 2)
+same = identity(p)
+wrapped = wrap(p)
+wrappedSource = Wrapper.new(p)
+wrappedPassed = passWrapper(wrappedSource)
+nested = outer(p)
+nestedWrapped = outerWrapper(wrappedSource)
+chosen = choose(p=p, delta=bar_index)
+cloned = cloneFrom(p)
+clonedNamed = cloneFromNamed(p)
+clonedAlias = cloneFromAlias(p)
+clonedNamedAlias = cloneFromNamedAlias(p)
+clonedObjectAlias = cloneFromObjectAlias(p)
+clonedNamedObjectAlias = cloneFromNamedObjectAlias(p)
+clonedViaMake = cloneViaMake(p)
+clonedViaMakeNamed = cloneViaMakeNamed(p)
+clonedTernary = cloneTernary(p, bar_index < 2)
+clonedSwitch = cloneSwitch(p, bar_index)
+clonedIf = cloneIf(p, bar_index < 2)
+aliasedIf = aliasIf(p, bar_index < 2)
+aliasedTernary = aliasTernary(p, bar_index % 2 == 0)
+aliasedWhile = aliasWhile(p, close > 0)
+aliasedSwitch = aliasSwitch(p, bar_index % 2)
+clonedFor = cloneFor(p, 2)
+clonedForAlias = cloneForAlias(p, 2)
+clonedForInAlias = cloneForInAlias(p, steps)
+nestedForIn = outerForIn(p, steps)
+nestedTernary = outerTernary(p)
+nestedWhile = outerWhile(p)
+nestedSwitch = outerSwitch(p)
+made = make(close, open)
+udfResultScalarPrior = readPoint(make(close, open))[1]
+madeAlias = makeAlias(close, open)
+madeNamed = makeNamed(close, open)
+madeNamedAlias = makeNamedAlias(close, open)
+madeTyped = makeTyped(close, open)
+madeTypedFrom = makeTypedFrom(p)
+madeTypedConstructed = makeTypedConstructed(close, open)
+madeTypedConstructedFrom = makeTypedConstructedFrom(p)
+madeTypedTernary = makeTypedTernary(close, open, bar_index < 2)
+madeTypedTernaryFrom = makeTypedTernaryFrom(p, bar_index < 2)
+madeTypedSwitch = makeTypedSwitch(close, open, bar_index)
+madeTypedSwitchFrom = makeTypedSwitchFrom(p, bar_index)
+madeTypedIfFrom = makeTypedIfFrom(p, bar_index < 2)
+madeTypedForFrom = makeTypedForFrom(p, 2)
+madeTypedForInFrom = makeTypedForInFrom(p, steps)
+madeTypedWhileFrom = makeTypedWhileFrom(p, 2)
+wrappedMade = makeWrapper(p)
+wrappedViaMake = makeWrapperViaMake(p)
+wrappedSwitch = makeWrapperSwitch(p, bar_index)
+madeLocalMutated = makeLocalMutated(close, open)
+samePrior = same[1]
+aliasedSwitchPrior = aliasedSwitch[1]
+clonedSwitchPrior = clonedSwitch[1]
+clonedForInAliasPrior = clonedForInAlias[1]
+madeTypedSwitchFromPrior = madeTypedSwitchFrom[1]
+madeTypedForInFromPrior = madeTypedForInFrom[1]
+madeTypedWhileFromPrior = madeTypedWhileFrom[1]
+wrappedMadePrior = wrappedMade[1]
+wrappedSwitchPrior = wrappedSwitch[1]
+dyn = bar_index == 0 ? na : 1
+sameDynamic = same[dyn]
+sameDynamicSibling = same[dyn]
+float sameDynamicX = na
+float sameDynamicSiblingXAfterMutation = na
+wrappedPassedDynamic = wrappedPassed[dyn]
+wrappedPassedDynamicSibling = wrappedPassed[dyn]
+float wrappedPassedDynamicX = na
+float wrappedPassedDynamicSiblingXAfterMutation = na
+nestedDynamic = nested[dyn]
+nestedDynamicSibling = nested[dyn]
+float nestedDynamicX = na
+float nestedDynamicSiblingXAfterMutation = na
+nestedWrappedDynamic = nestedWrapped[dyn]
+nestedWrappedDynamicSibling = nestedWrapped[dyn]
+float nestedWrappedDynamicX = na
+float nestedWrappedDynamicSiblingXAfterMutation = na
+clonedViaMakeDynamic = clonedViaMake[dyn]
+clonedViaMakeDynamicSibling = clonedViaMake[dyn]
+float clonedViaMakeDynamicX = na
+float clonedViaMakeDynamicSiblingXAfterMutation = na
+wrappedViaMakeDynamic = wrappedViaMake[dyn]
+wrappedViaMakeDynamicSibling = wrappedViaMake[dyn]
+float wrappedViaMakeDynamicX = na
+float wrappedViaMakeDynamicSiblingXAfterMutation = na
+madeDynamic = made[dyn]
+madeDynamicSibling = made[dyn]
+float madeDynamicX = na
+float madeDynamicSiblingXAfterMutation = na
+wrappedMadeDynamic = wrappedMade[dyn]
+wrappedMadeDynamicSibling = wrappedMade[dyn]
+float wrappedMadeDynamicX = na
+float wrappedMadeDynamicSiblingXAfterMutation = na
+if bar_index > 0
+    sameDynamicX := (na(sameDynamic) ? na : sameDynamic.x)
+    sameDynamic.x := close + 900
+    sameDynamicSiblingXAfterMutation := (na(sameDynamicSibling) ? na : sameDynamicSibling.x)
+    wrappedPassedDynamicX := (na(wrappedPassedDynamic) ? na : na(wrappedPassedDynamic.point) ? na : wrappedPassedDynamic.point.x)
+    wrappedPassedDynamic.point := Point.new(close + 1000, open)
+    wrappedPassedDynamicSiblingXAfterMutation := (na(wrappedPassedDynamicSibling) ? na : na(wrappedPassedDynamicSibling.point) ? na : wrappedPassedDynamicSibling.point.x)
+    nestedDynamicX := (na(nestedDynamic) ? na : nestedDynamic.x)
+    nestedDynamic.x := close + 1100
+    nestedDynamicSiblingXAfterMutation := (na(nestedDynamicSibling) ? na : nestedDynamicSibling.x)
+    nestedWrappedDynamicX := (na(nestedWrappedDynamic) ? na : na(nestedWrappedDynamic.point) ? na : nestedWrappedDynamic.point.x)
+    nestedWrappedDynamic.point := Point.new(close + 1200, open)
+    nestedWrappedDynamicSiblingXAfterMutation := (na(nestedWrappedDynamicSibling) ? na : na(nestedWrappedDynamicSibling.point) ? na : nestedWrappedDynamicSibling.point.x)
+    clonedViaMakeDynamicX := (na(clonedViaMakeDynamic) ? na : clonedViaMakeDynamic.x)
+    clonedViaMakeDynamic.x := close + 1300
+    clonedViaMakeDynamicSiblingXAfterMutation := (na(clonedViaMakeDynamicSibling) ? na : clonedViaMakeDynamicSibling.x)
+    wrappedViaMakeDynamicX := (na(wrappedViaMakeDynamic) ? na : na(wrappedViaMakeDynamic.point) ? na : wrappedViaMakeDynamic.point.x)
+    wrappedViaMakeDynamic.point := Point.new(close + 1400, open)
+    wrappedViaMakeDynamicSiblingXAfterMutation := (na(wrappedViaMakeDynamicSibling) ? na : na(wrappedViaMakeDynamicSibling.point) ? na : wrappedViaMakeDynamicSibling.point.x)
+    madeDynamicX := (na(madeDynamic) ? na : madeDynamic.x)
+    madeDynamic.x := close + 700
+    madeDynamicSiblingXAfterMutation := (na(madeDynamicSibling) ? na : madeDynamicSibling.x)
+    wrappedMadeDynamicX := (na(wrappedMadeDynamic) ? na : na(wrappedMadeDynamic.point) ? na : wrappedMadeDynamic.point.x)
+    wrappedMadeDynamic.point := Point.new(close + 800, open)
+    wrappedMadeDynamicSiblingXAfterMutation := (na(wrappedMadeDynamicSibling) ? na : na(wrappedMadeDynamicSibling.point) ? na : wrappedMadeDynamicSibling.point.x)
+plot((na(same) ? na : same.x) - (na(same) ? na : same.y))
+plot((na(same) ? na : same.x) + (na(same) ? na : same.y))
+plot((na(wrapped) ? na : wrapped.x) + (na(wrapped) ? na : wrapped.y) + bar_index)
+plot((na(nested) ? na : nested.x) + (na(nested) ? na : nested.y) + (na(wrapped) ? na : wrapped.x))
+plot((na(chosen) ? na : chosen.x) + (na(chosen) ? na : chosen.y) + bar_index)
+plot((na(cloned) ? na : cloned.x) + (na(cloned) ? na : cloned.y) + bar_index)
+plot((na(clonedNamed) ? na : clonedNamed.x) + (na(clonedNamed) ? na : clonedNamed.y) + bar_index)
+plot((na(clonedAlias) ? na : clonedAlias.x) + (na(clonedAlias) ? na : clonedAlias.y) + bar_index)
+plot((na(clonedNamedAlias) ? na : clonedNamedAlias.x) + (na(clonedNamedAlias) ? na : clonedNamedAlias.y) + bar_index)
+plot((na(clonedObjectAlias) ? na : clonedObjectAlias.x) + (na(clonedObjectAlias) ? na : clonedObjectAlias.y) + bar_index)
+plot((na(clonedNamedObjectAlias) ? na : clonedNamedObjectAlias.x) + (na(clonedNamedObjectAlias) ? na : clonedNamedObjectAlias.y) + bar_index)
+plot((na(clonedViaMake) ? na : clonedViaMake.x) + (na(clonedViaMake) ? na : clonedViaMake.y) + bar_index)
+plot((na(clonedViaMakeNamed) ? na : clonedViaMakeNamed.x) + (na(clonedViaMakeNamed) ? na : clonedViaMakeNamed.y) + bar_index)
+plot((na(clonedTernary) ? na : clonedTernary.x) + (na(clonedTernary) ? na : clonedTernary.y) + bar_index)
+plot((na(clonedSwitch) ? na : clonedSwitch.x) + (na(clonedSwitch) ? na : clonedSwitch.y) + bar_index)
+plot((na(clonedIf) ? na : clonedIf.x) + (na(clonedIf) ? na : clonedIf.y) + bar_index)
+plot((na(aliasedIf) ? na : aliasedIf.x) + (na(aliasedIf) ? na : aliasedIf.y) + bar_index + 20)
+plot((na(aliasedTernary) ? na : aliasedTernary.x) + (na(aliasedTernary) ? na : aliasedTernary.y) + bar_index + 25)
+plot((na(aliasedWhile) ? na : aliasedWhile.x) + (na(aliasedWhile) ? na : aliasedWhile.y) + bar_index + 30)
+plot((na(aliasedSwitch) ? na : aliasedSwitch.x) + (na(aliasedSwitch) ? na : aliasedSwitch.y) + bar_index + 40)
+plot((na(clonedFor) ? na : clonedFor.x) + (na(clonedFor) ? na : clonedFor.y) + bar_index)
+plot((na(clonedForAlias) ? na : clonedForAlias.x) + (na(clonedForAlias) ? na : clonedForAlias.y) + bar_index)
+plot((na(clonedForInAlias) ? na : clonedForInAlias.x) + (na(clonedForInAlias) ? na : clonedForInAlias.y) + bar_index + 70)
+plot((na(nestedForIn) ? na : nestedForIn.x) + (na(nestedForIn) ? na : nestedForIn.y) + bar_index + 80)
+plot((na(nestedTernary) ? na : nestedTernary.x) + (na(nestedTernary) ? na : nestedTernary.y) + bar_index + 85)
+plot((na(nestedWhile) ? na : nestedWhile.x) + (na(nestedWhile) ? na : nestedWhile.y) + bar_index + 50)
+plot((na(nestedSwitch) ? na : nestedSwitch.x) + (na(nestedSwitch) ? na : nestedSwitch.y) + bar_index + 60)
+plot((na(made) ? na : made.x) + (na(made) ? na : made.y) + bar_index)
+plot(udfResultScalarPrior)
+plot((na(madeAlias) ? na : madeAlias.x) + (na(madeAlias) ? na : madeAlias.y) + bar_index)
+plot((na(madeNamed) ? na : madeNamed.x) + (na(madeNamed) ? na : madeNamed.y) + bar_index)
+plot((na(madeNamedAlias) ? na : madeNamedAlias.x) + (na(madeNamedAlias) ? na : madeNamedAlias.y) + bar_index)
+plot((na(madeTyped) ? na : madeTyped.x) + (na(madeTyped) ? na : madeTyped.y) + bar_index)
+plot((na(madeTypedFrom) ? na : madeTypedFrom.x) + (na(madeTypedFrom) ? na : madeTypedFrom.y) + bar_index)
+plot((na(madeTypedConstructed) ? na : madeTypedConstructed.x) + (na(madeTypedConstructed) ? na : madeTypedConstructed.y) + bar_index)
+plot((na(madeTypedConstructedFrom) ? na : madeTypedConstructedFrom.x) + (na(madeTypedConstructedFrom) ? na : madeTypedConstructedFrom.y) + bar_index)
+plot((na(madeTypedTernary) ? na : madeTypedTernary.x) + (na(madeTypedTernary) ? na : madeTypedTernary.y) + bar_index)
+plot((na(madeTypedTernaryFrom) ? na : madeTypedTernaryFrom.x) + (na(madeTypedTernaryFrom) ? na : madeTypedTernaryFrom.y) + bar_index)
+plot((na(madeTypedSwitch) ? na : madeTypedSwitch.x) + (na(madeTypedSwitch) ? na : madeTypedSwitch.y) + bar_index)
+plot((na(madeTypedSwitchFrom) ? na : madeTypedSwitchFrom.x) + (na(madeTypedSwitchFrom) ? na : madeTypedSwitchFrom.y) + bar_index)
+plot((na(madeTypedIfFrom) ? na : madeTypedIfFrom.x) + (na(madeTypedIfFrom) ? na : madeTypedIfFrom.y) + bar_index)
+plot((na(madeTypedForFrom) ? na : madeTypedForFrom.x) + (na(madeTypedForFrom) ? na : madeTypedForFrom.y) + bar_index)
+plot((na(madeTypedForInFrom) ? na : madeTypedForInFrom.x) + (na(madeTypedForInFrom) ? na : madeTypedForInFrom.y) + bar_index)
+plot((na(madeTypedWhileFrom) ? na : madeTypedWhileFrom.x) + (na(madeTypedWhileFrom) ? na : madeTypedWhileFrom.y) + bar_index)
+plot((na(wrappedMade) ? na : na(wrappedMade.point) ? na : wrappedMade.point.x) + (na(wrappedMade) ? na : na(wrappedMade.point) ? na : wrappedMade.point.y) + bar_index)
+plot((na(wrappedViaMake) ? na : na(wrappedViaMake.point) ? na : wrappedViaMake.point.x) + (na(wrappedViaMake) ? na : na(wrappedViaMake.point) ? na : wrappedViaMake.point.y) + bar_index)
+plot((na(wrappedSwitch) ? na : na(wrappedSwitch.point) ? na : wrappedSwitch.point.x) + (na(wrappedSwitch) ? na : na(wrappedSwitch.point) ? na : wrappedSwitch.point.y) + bar_index)
+plot((na(madeLocalMutated) ? na : madeLocalMutated.x) + (na(madeLocalMutated) ? na : madeLocalMutated.y) + bar_index)
+plot((na(samePrior) ? na : samePrior.x) + (na(samePrior) ? na : samePrior.y))
+plot((na(aliasedSwitchPrior) ? na : aliasedSwitchPrior.x) + (na(aliasedSwitchPrior) ? na : aliasedSwitchPrior.y) + bar_index)
+plot((na(clonedSwitchPrior) ? na : clonedSwitchPrior.x) + (na(clonedSwitchPrior) ? na : clonedSwitchPrior.y) + bar_index)
+plot((na(clonedForInAliasPrior) ? na : clonedForInAliasPrior.x) + (na(clonedForInAliasPrior) ? na : clonedForInAliasPrior.y) + bar_index)
+plot((na(madeTypedSwitchFromPrior) ? na : madeTypedSwitchFromPrior.x) + (na(madeTypedSwitchFromPrior) ? na : madeTypedSwitchFromPrior.y) + bar_index)
+plot((na(madeTypedForInFromPrior) ? na : madeTypedForInFromPrior.x) + (na(madeTypedForInFromPrior) ? na : madeTypedForInFromPrior.y) + bar_index)
+plot((na(madeTypedWhileFromPrior) ? na : madeTypedWhileFromPrior.x) + (na(madeTypedWhileFromPrior) ? na : madeTypedWhileFromPrior.y) + bar_index)
+plot((na(wrappedMadePrior) ? na : na(wrappedMadePrior.point) ? na : wrappedMadePrior.point.x) + (na(wrappedMadePrior) ? na : na(wrappedMadePrior.point) ? na : wrappedMadePrior.point.y) + bar_index)
+plot((na(wrappedSwitchPrior) ? na : na(wrappedSwitchPrior.point) ? na : wrappedSwitchPrior.point.x) + (na(wrappedSwitchPrior) ? na : na(wrappedSwitchPrior.point) ? na : wrappedSwitchPrior.point.y) + bar_index)
+plot(sameDynamicX)
+plot(sameDynamicSiblingXAfterMutation)
+plot(wrappedPassedDynamicX)
+plot(wrappedPassedDynamicSiblingXAfterMutation)
+plot(nestedDynamicX)
+plot(nestedDynamicSiblingXAfterMutation)
+plot(nestedWrappedDynamicX)
+plot(nestedWrappedDynamicSiblingXAfterMutation)
+plot(clonedViaMakeDynamicX)
+plot(clonedViaMakeDynamicSiblingXAfterMutation)
+plot(wrappedViaMakeDynamicX)
+plot(wrappedViaMakeDynamicSiblingXAfterMutation)
+plot(madeDynamicX)
+plot(madeDynamicSiblingXAfterMutation)
+plot(wrappedMadeDynamicX)
+plot(wrappedMadeDynamicSiblingXAfterMutation)

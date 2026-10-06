@@ -8,8 +8,13 @@ fn normalize_zero(value: f64) -> f64 {
     if value == 0.0 { 0.0 } else { value }
 }
 
-fn closed_trade_profit_percent(entry_price: f64, qty: f64, profit: f64) -> f64 {
-    let denominator = entry_price * qty.abs();
+fn closed_trade_profit_percent(
+    entry_price: f64,
+    qty: f64,
+    entry_commission: f64,
+    profit: f64,
+) -> f64 {
+    let denominator = entry_price * qty.abs() + entry_commission;
     if !profit.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
         return 0.0;
     }
@@ -92,6 +97,7 @@ impl BrokerState {
             profit_percent: closed_trade_profit_percent(
                 fill.entry_fill.entry_price,
                 fill.qty,
+                fill.entry_fill.entry_commission,
                 fill.profit,
             ),
             max_runup: self.current_open_trade_max_runup_for_quantity(fill.qty.abs()),

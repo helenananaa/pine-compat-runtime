@@ -1,3 +1,8 @@
+use super::append_history::AppendHistory;
+use super::drawing_history::{
+    DrawingStore, RuntimeBox, RuntimeLabel, RuntimeLine, RuntimeLineFill, RuntimePolyline,
+    RuntimeTable,
+};
 use super::historical::HistoricalRuntime;
 use crate::output::changes::{
     DrawingAction, DrawingChange, DrawingFamily, DrawingObject, EventAction, EventChange,
@@ -18,13 +23,13 @@ pub(crate) struct OutputCursor {
     bar_colors: Vec<(u32, usize)>,
     hlines: Vec<crate::HLineOutput>,
     fills: Vec<(u32, usize)>,
-    labels: Vec<(u32, usize)>,
-    lines: Vec<(u32, usize)>,
-    line_fills: Vec<(u32, usize)>,
-    polylines: Vec<(u32, usize)>,
-    boxes: Vec<(u32, usize)>,
-    tables: Vec<(u32, usize)>,
-    alerts: Vec<crate::AlertEvent>,
+    labels: DrawingStore<RuntimeLabel>,
+    lines: DrawingStore<RuntimeLine>,
+    line_fills: DrawingStore<RuntimeLineFill>,
+    polylines: DrawingStore<RuntimePolyline>,
+    boxes: DrawingStore<RuntimeBox>,
+    tables: DrawingStore<RuntimeTable>,
+    alerts: Option<AppendHistory<crate::AlertEvent>>,
     alert_bar: usize,
     drawing_bar: usize,
     orders: usize,
@@ -40,6 +45,13 @@ impl OutputCursor {
         let alert_start = runtime
             .alerts
             .partition_point(|event| event.bar_index < runtime.bars.saturating_sub(1));
+        // Retain only the current bar's logical events. Prefix pruning shares
+        // leaves and copies branch paths, without cloning alert string payloads.
+        let alerts = (alert_start < runtime.alerts.len()).then(|| {
+            let mut alerts = runtime.alerts.clone();
+            alerts.drop_prefix(alert_start);
+            alerts
+        });
         Self {
             plots: runtime
                 .plots
@@ -87,73 +99,13 @@ impl OutputCursor {
                 .iter()
                 .map(|item| (item.id, abs_len(runtime, item.colors.len())))
                 .collect(),
-            labels: runtime
-                .labels
-                .iter()
-                .map(|item| {
-                    (
-                        item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
-                    )
-                })
-                .collect(),
-            lines: runtime
-                .lines
-                .iter()
-                .map(|item| {
-                    (
-                        item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
-                    )
-                })
-                .collect(),
-            line_fills: runtime
-                .line_fills
-                .iter()
-                .map(|item| {
-                    (
-                        item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
-                    )
-                })
-                .collect(),
-            polylines: runtime
-                .polylines
-                .iter()
-                .map(|item| {
-                    (
-                        item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
-                    )
-                })
-                .collect(),
-            boxes: runtime
-                .boxes
-                .iter()
-                .map(|item| {
-                    (
-                        item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
-                    )
-                })
-                .collect(),
-            tables: runtime
-                .tables
-                .iter()
-                .map(|item| {
-                    (
-                        item.id,
-                        item.snapshots
-                            .partition_point(|s| s.bar_index < runtime.bars.saturating_sub(1)),
-                    )
-                })
-                .collect(),
-            alerts: runtime.alerts.tail(alert_start),
+            labels: runtime.labels.clone(),
+            lines: runtime.lines.clone(),
+            line_fills: runtime.line_fills.clone(),
+            polylines: runtime.polylines.clone(),
+            boxes: runtime.boxes.clone(),
+            tables: runtime.tables.clone(),
+            alerts,
             alert_bar: runtime.bars.saturating_sub(1),
             drawing_bar: runtime.bars.saturating_sub(1),
             orders: runtime.strategy_broker.order_len(),
@@ -199,31 +151,49 @@ impl OutputCursor {
             &self.labels,
             &runtime.labels,
             self.drawing_bar,
+            runtime.display_origin,
         );
-        diff_line_drawings(&mut changes, &self.lines, &runtime.lines, self.drawing_bar);
+        diff_line_drawings(
+            &mut changes,
+            &self.lines,
+            &runtime.lines,
+            self.drawing_bar,
+            runtime.display_origin,
+        );
         diff_line_fill_drawings(
             &mut changes,
             &self.line_fills,
             &runtime.line_fills,
             self.drawing_bar,
+            runtime.display_origin,
         );
         diff_polyline_drawings(
             &mut changes,
             &self.polylines,
             &runtime.polylines,
             self.drawing_bar,
+            runtime.display_origin,
         );
-        diff_box_drawings(&mut changes, &self.boxes, &runtime.boxes, self.drawing_bar);
+        diff_box_drawings(
+            &mut changes,
+            &self.boxes,
+            &runtime.boxes,
+            self.drawing_bar,
+            runtime.display_origin,
+        );
         diff_table_drawings(
             &mut changes,
             &self.tables,
             &runtime.tables,
             self.drawing_bar,
+            runtime.display_origin,
         );
         diff_alerts(
             &mut changes,
-            &self.alerts,
-            &runtime.alerts.tail(
+            self.alerts.as_ref().map_or(0, AppendHistory::len),
+            self.alerts.iter().flat_map(AppendHistory::iter),
+            self.alerts.iter().flat_map(AppendHistory::iter_rev),
+            runtime.alerts.iter().skip(
                 runtime
                     .alerts
                     .partition_point(|event| event.bar_index < self.alert_bar),
@@ -267,6 +237,7 @@ fn plot_header(plot: &super::plot_history::RuntimePlot) -> SeriesHeader {
         join: plot.join.clone(),
         format: plot.format.clone(),
         precision: plot.precision.clone(),
+        linestyle: plot.linestyle.clone(),
     }
 }
 
@@ -298,7 +269,7 @@ fn diff_plots(
                     .tail(start.saturating_sub(runtime.stored_origin)),
                 ..SeriesFields::default()
             },
-            Some(plot_header(plot)),
+            || Some(plot_header(plot)),
         ) {
             changes.series.push(change);
         }
@@ -327,7 +298,7 @@ fn diff_plot_chars(
                 sizes: slice_from(&item.sizes, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -356,7 +327,7 @@ fn diff_plot_shapes(
                 sizes: slice_from(&item.sizes, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -383,7 +354,7 @@ fn diff_plot_arrows(
                 max_heights: slice_from(&item.max_heights, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -410,7 +381,7 @@ fn diff_plot_bars(
                 colors: slice_from(&item.colors, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -439,7 +410,7 @@ fn diff_plot_candles(
                 border_colors: slice_from(&item.border_colors, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -464,7 +435,7 @@ fn diff_color_series(
                 values: slice_from(&item.values, start, runtime.stored_origin),
                 ..SeriesFields::default()
             },
-            Some(metadata_header(&item.metadata)),
+            || Some(metadata_header(&item.metadata)),
         ) {
             changes.series.push(change);
         }
@@ -520,6 +491,15 @@ fn diff_fills(
                         action: FillAction::SetColors { start, values },
                     });
                 }
+                if let Some(samples) = &item.gradient {
+                    changes.fills.push(FillChange {
+                        id: item.id,
+                        action: FillAction::SetGradient {
+                            start,
+                            values: samples.tail(start.saturating_sub(runtime.stored_origin)),
+                        },
+                    });
+                }
             }
         }
     }
@@ -543,232 +523,298 @@ fn delta_start(old_len: usize, new_len: usize) -> usize {
     }
 }
 
-fn push_drawing(
-    changes: &mut RuntimeChanges,
-    family: DrawingFamily,
-    cursor: &[(u32, usize)],
-    id: u32,
-    stable_len: usize,
-    tail: impl FnOnce(usize) -> DrawingObject,
-) {
-    let action = match lens_get(cursor, id) {
-        None => DrawingAction::Add(tail(0)),
-        Some(_) => {
-            let start = stable_len;
-            DrawingAction::SetTail {
-                start,
-                object: tail(start),
-            }
-        }
-    };
-    changes.drawings.push(DrawingChange { family, id, action });
+// Snapshot indices are chronological. If the last snapshot is already
+// stable, every snapshot is stable and there is no boundary to search.
+fn stable_drawing_len<S>(
+    history: &super::append_history::AppendHistory<S>,
+    bar: usize,
+    index: impl Fn(&S) -> usize,
+) -> usize {
+    if history.last().is_none_or(|last| index(last) < bar) {
+        history.len()
+    } else {
+        history.partition_point(|snapshot| index(snapshot) < bar)
+    }
 }
 
-fn delete_missing(
-    changes: &mut RuntimeChanges,
-    family: DrawingFamily,
-    cursor: &[(u32, usize)],
-    present: impl Fn(u32) -> bool,
-) {
-    for (id, _) in cursor {
-        if !present(*id) {
-            changes.drawings.push(DrawingChange {
-                family,
-                id: *id,
-                action: DrawingAction::Delete,
-            });
-        }
+// Retention projects a live object without recent changes to its last old
+// snapshot. Once it changes, that fallback disappears; rollback can restore
+// it. Raw history indices therefore are not splice indices for this view.
+// Replace only the changed object's retained projection in that mode.
+fn drawing_tail_range<S: Clone + super::display_retention::HasBar>(
+    snapshots: &super::append_history::AppendHistory<S>,
+    bar: usize,
+    origin: usize,
+    previous: bool,
+) -> (usize, usize) {
+    if origin > 0 {
+        (
+            0,
+            super::display_retention::dropped_snapshot_count(snapshots, origin),
+        )
+    } else {
+        let start = if previous {
+            stable_drawing_len(snapshots, bar, |s| s.bar_index())
+        } else {
+            0
+        };
+        (start, start)
     }
 }
 
 fn diff_label_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
-    items: &[super::drawing_history::RuntimeLabel],
+    cursor: &DrawingStore<RuntimeLabel>,
+    items: &DrawingStore<RuntimeLabel>,
     bar: usize,
+    origin: usize,
 ) {
-    for item in items {
-        push_drawing(
-            changes,
-            DrawingFamily::Label,
-            cursor,
-            item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
-            |start| {
-                DrawingObject::Label(crate::LabelOutput {
-                    id: item.id,
-                    snapshots: item.snapshots.tail(start),
-                })
-            },
-        );
-    }
-    delete_missing(changes, DrawingFamily::Label, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    diff_drawings(
+        changes,
+        DrawingFamily::Label,
+        cursor,
+        items,
+        |id, previous, item| {
+            let (start, offset) =
+                drawing_tail_range(&item.snapshots, bar, origin, previous.is_some());
+            if offset == item.snapshots.len() && origin > 0 {
+                return DrawingAction::Delete;
+            }
+            let object = DrawingObject::Label(crate::LabelOutput {
+                id,
+                snapshots: item.snapshots.tail(offset),
+            });
+            if previous.is_none() {
+                DrawingAction::Add(object)
+            } else {
+                DrawingAction::SetTail { start, object }
+            }
+        },
+    );
 }
 
 fn diff_line_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
-    items: &[super::drawing_history::RuntimeLine],
+    cursor: &DrawingStore<RuntimeLine>,
+    items: &DrawingStore<RuntimeLine>,
     bar: usize,
+    origin: usize,
 ) {
-    for item in items {
-        push_drawing(
-            changes,
-            DrawingFamily::Line,
-            cursor,
-            item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
-            |start| {
-                DrawingObject::Line(crate::LineOutput {
-                    id: item.id,
-                    snapshots: item.snapshots.tail(start),
-                })
-            },
-        );
-    }
-    delete_missing(changes, DrawingFamily::Line, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    diff_drawings(
+        changes,
+        DrawingFamily::Line,
+        cursor,
+        items,
+        |id, previous, item| {
+            let (start, offset) =
+                drawing_tail_range(&item.snapshots, bar, origin, previous.is_some());
+            if offset == item.snapshots.len() && origin > 0 {
+                return DrawingAction::Delete;
+            }
+            let object = DrawingObject::Line(crate::LineOutput {
+                id,
+                snapshots: item.snapshots.tail(offset),
+            });
+            if previous.is_none() {
+                DrawingAction::Add(object)
+            } else {
+                DrawingAction::SetTail { start, object }
+            }
+        },
+    );
 }
 
 fn diff_line_fill_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
-    items: &[super::drawing_history::RuntimeLineFill],
+    cursor: &DrawingStore<RuntimeLineFill>,
+    items: &DrawingStore<RuntimeLineFill>,
     bar: usize,
+    origin: usize,
 ) {
-    for item in items {
-        push_drawing(
-            changes,
-            DrawingFamily::LineFill,
-            cursor,
-            item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
-            |start| {
-                DrawingObject::LineFill(crate::LineFillOutput {
-                    id: item.id,
-                    snapshots: item.snapshots.tail(start),
-                })
-            },
-        );
-    }
-    delete_missing(changes, DrawingFamily::LineFill, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    diff_drawings(
+        changes,
+        DrawingFamily::LineFill,
+        cursor,
+        items,
+        |id, previous, item| {
+            let (start, offset) =
+                drawing_tail_range(&item.snapshots, bar, origin, previous.is_some());
+            if offset == item.snapshots.len() && origin > 0 {
+                return DrawingAction::Delete;
+            }
+            let object = DrawingObject::LineFill(crate::LineFillOutput {
+                id,
+                snapshots: item.snapshots.tail(offset),
+            });
+            if previous.is_none() {
+                DrawingAction::Add(object)
+            } else {
+                DrawingAction::SetTail { start, object }
+            }
+        },
+    );
 }
 
 fn diff_polyline_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
-    items: &[super::drawing_history::RuntimePolyline],
+    cursor: &DrawingStore<RuntimePolyline>,
+    items: &DrawingStore<RuntimePolyline>,
     bar: usize,
+    origin: usize,
 ) {
-    for item in items {
-        push_drawing(
-            changes,
-            DrawingFamily::Polyline,
-            cursor,
-            item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
-            |start| {
-                DrawingObject::Polyline(crate::PolylineOutput {
-                    id: item.id,
-                    snapshots: item.snapshots.tail(start),
-                })
-            },
-        );
-    }
-    delete_missing(changes, DrawingFamily::Polyline, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    diff_drawings(
+        changes,
+        DrawingFamily::Polyline,
+        cursor,
+        items,
+        |id, previous, item| {
+            let (start, offset) =
+                drawing_tail_range(&item.snapshots, bar, origin, previous.is_some());
+            if offset == item.snapshots.len() && origin > 0 {
+                return DrawingAction::Delete;
+            }
+            let object = DrawingObject::Polyline(crate::PolylineOutput {
+                id,
+                snapshots: item.snapshots.tail(offset),
+            });
+            if previous.is_none() {
+                DrawingAction::Add(object)
+            } else {
+                DrawingAction::SetTail { start, object }
+            }
+        },
+    );
 }
 
 fn diff_box_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
-    items: &[super::drawing_history::RuntimeBox],
+    cursor: &DrawingStore<RuntimeBox>,
+    items: &DrawingStore<RuntimeBox>,
     bar: usize,
+    origin: usize,
 ) {
-    for item in items {
-        push_drawing(
-            changes,
-            DrawingFamily::Box,
-            cursor,
-            item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
-            |start| {
-                DrawingObject::Box(crate::BoxOutput {
-                    id: item.id,
-                    snapshots: item.snapshots.tail(start),
-                })
-            },
-        );
-    }
-    delete_missing(changes, DrawingFamily::Box, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    diff_drawings(
+        changes,
+        DrawingFamily::Box,
+        cursor,
+        items,
+        |id, previous, item| {
+            let (start, offset) =
+                drawing_tail_range(&item.snapshots, bar, origin, previous.is_some());
+            if offset == item.snapshots.len() && origin > 0 {
+                return DrawingAction::Delete;
+            }
+            let object = DrawingObject::Box(crate::BoxOutput {
+                id,
+                snapshots: item.snapshots.tail(offset),
+            });
+            if previous.is_none() {
+                DrawingAction::Add(object)
+            } else {
+                DrawingAction::SetTail { start, object }
+            }
+        },
+    );
 }
 
 fn diff_table_drawings(
     changes: &mut RuntimeChanges,
-    cursor: &[(u32, usize)],
-    items: &[super::drawing_history::RuntimeTable],
+    cursor: &DrawingStore<RuntimeTable>,
+    items: &DrawingStore<RuntimeTable>,
     bar: usize,
+    origin: usize,
 ) {
-    for item in items {
-        push_drawing(
-            changes,
-            DrawingFamily::Table,
-            cursor,
-            item.id,
-            item.snapshots
-                .partition_point(|snapshot| snapshot.bar_index < bar),
-            |start| {
-                DrawingObject::Table(Box::new(crate::TableOutput {
-                    id: item.id,
-                    snapshots: item.snapshots.tail(start),
-                    position: item.position.clone(),
-                    bg_color: item.bg_color.clone(),
-                    frame_color: item.frame_color.clone(),
-                    frame_width: item.frame_width.clone(),
-                    border_color: item.border_color.clone(),
-                    border_width: item.border_width.clone(),
-                    columns: item.columns,
-                    rows: item.rows,
-                }))
-            },
-        );
-    }
-    delete_missing(changes, DrawingFamily::Table, cursor, |id| {
-        items.iter().any(|item| item.id == id)
-    });
+    diff_drawings(
+        changes,
+        DrawingFamily::Table,
+        cursor,
+        items,
+        |id, previous, item| {
+            let (start, offset) =
+                drawing_tail_range(&item.snapshots, bar, origin, previous.is_some());
+            if offset == item.snapshots.len() && origin > 0 {
+                return DrawingAction::Delete;
+            }
+            let object = DrawingObject::Table(Box::new(crate::TableOutput {
+                id,
+                snapshots: item.snapshots.tail(offset),
+                position: item.position.clone(),
+                bg_color: item.bg_color.clone(),
+                frame_color: item.frame_color.clone(),
+                frame_width: item.frame_width.clone(),
+                border_color: item.border_color.clone(),
+                border_width: item.border_width.clone(),
+                columns: item.columns,
+                rows: item.rows,
+            }));
+            if previous.is_none() {
+                DrawingAction::Add(object)
+            } else {
+                DrawingAction::SetTail { start, object }
+            }
+        },
+    );
 }
 
-fn diff_alerts(
+// Cursors retain the prior persistent root. A forming replacement can
+// diverge from that root in either direction, so visit both trees: this also
+// retracts preview-only identities and tails after rollback. Shared identity
+// is the only skip criterion; equal lengths and NaN values are not shortcuts.
+fn diff_drawings<V: Clone + super::drawing_history::DrawingIdentity>(
     changes: &mut RuntimeChanges,
-    previous: &[crate::AlertEvent],
-    current: &[crate::AlertEvent],
+    family: DrawingFamily,
+    previous: &DrawingStore<V>,
+    current: &DrawingStore<V>,
+    mut action: impl FnMut(u32, Option<&V>, &V) -> DrawingAction,
 ) {
-    let prefix = previous
-        .iter()
-        .zip(current)
-        .take_while(|(a, b)| a == b)
-        .count();
+    let mut removed = Vec::new();
+    current.visit_differences(previous, |id, old, new| {
+        if let Some(item) = new {
+            changes.drawings.push(DrawingChange {
+                family,
+                id,
+                action: action(id, old, item),
+            });
+        } else {
+            removed.push(id);
+        }
+    });
+    // Preserve the existing order: additions/updates first, removals last.
+    changes
+        .drawings
+        .extend(removed.into_iter().map(|id| DrawingChange {
+            family,
+            id,
+            action: DrawingAction::Delete,
+        }));
+}
+
+fn diff_alerts<'a>(
+    changes: &mut RuntimeChanges,
+    previous_len: usize,
+    previous: impl Iterator<Item = &'a crate::AlertEvent>,
+    previous_rev: impl Iterator<Item = &'a crate::AlertEvent>,
+    current: impl Iterator<Item = &'a crate::AlertEvent>,
+) {
+    let mut previous = previous.peekable();
+    let mut current = current.peekable();
+    let mut prefix = 0;
+    while let (Some(a), Some(b)) = (previous.peek(), current.peek()) {
+        if a != b {
+            break;
+        }
+        previous.next();
+        current.next();
+        prefix += 1;
+    }
     // Preserve occurrence counts for alert.freq_all calls with identical payloads.
-    for event in previous[prefix..].iter().rev() {
+    for event in previous_rev.take(previous_len - prefix) {
         changes.alerts.push(EventChange {
             action: EventAction::Remove,
             event: event.clone(),
         });
     }
-    for event in &current[prefix..] {
+    for event in current {
         changes.alerts.push(EventChange {
             action: EventAction::Add,
             event: event.clone(),
@@ -841,4 +887,70 @@ fn fill_alert_splice(
         start,
         items: broker.fill_alerts_from(start),
     })
+}
+
+#[cfg(test)]
+mod alert_cursor_tests {
+    use super::{HistoricalRuntime, OutputCursor};
+
+    #[test]
+    fn empty_cursors_have_no_alert_root_and_nonempty_cursors_share_only_a_bounded_tail() {
+        assert!(OutputCursor::default().alerts.is_none());
+        let program = pine_sema::analyze_source(&pine_syntax::SourceFile::new(
+            "cursor.pine",
+            "//@version=6\nindicator(\"cursor\")\n",
+        ))
+        .hir
+        .unwrap();
+        let mut runtime = HistoricalRuntime::new(&program);
+        assert!(OutputCursor::capture(&runtime).alerts.is_none());
+        for index in 0..4099 {
+            runtime.alerts.push(crate::AlertEvent {
+                id: 1,
+                bar_index: index / 257,
+                time: (index / 257) as i64 * 60_000,
+                message: "共享汉🙂".repeat(32),
+                source: "alert".to_owned(),
+            });
+        }
+        runtime.bars = 16;
+        let cursor = OutputCursor::capture(&runtime);
+        let tail = cursor.alerts.as_ref().unwrap();
+        assert_eq!(tail.len(), 244);
+        assert!(tail.capacity() <= tail.len() + 254);
+        for (saved, original) in tail.iter().zip(runtime.alerts.iter().skip(3855)) {
+            assert_eq!(saved, original);
+            assert_eq!(saved.message.as_ptr(), original.message.as_ptr());
+            assert_eq!(saved.source.as_ptr(), original.source.as_ptr());
+        }
+        // All alerts are now closed; capture must not allocate an empty root
+        // or retain the expired historical prefix for the new quiet bar.
+        runtime.bars = 17;
+        assert!(OutputCursor::capture(&runtime).alerts.is_none());
+        assert_eq!(runtime.alerts.len(), 4099);
+    }
+}
+
+#[cfg(test)]
+mod drawing_cursor_tests {
+
+    #[test]
+    fn stable_boundary_matches_chronological_reference_after_trim() {
+        use crate::runtime::append_history::AppendHistory;
+        let mut history = AppendHistory::<usize>::default();
+        assert_eq!(super::stable_drawing_len(&history, 0, |value| *value), 0);
+        for index in 0..1400 {
+            history.push(index / 3);
+        }
+        for trim in [0, 500] {
+            history.drop_prefix(trim);
+            for bar in [0, 1, 127, 128, 255, 400, 466, 467, 2000] {
+                let expected = history.iter().take_while(|value| **value < bar).count();
+                assert_eq!(
+                    super::stable_drawing_len(&history, bar, |value| *value),
+                    expected
+                );
+            }
+        }
+    }
 }

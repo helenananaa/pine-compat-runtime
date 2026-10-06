@@ -69,7 +69,7 @@ fn characterization_market_entry_reversal_flattens_then_opens_opposite() {
     assert_eq!(broker.orders[0].direction, "strategy.long");
     assert_eq!(broker.orders[1].id, "S");
     assert_eq!(broker.orders[1].direction, "strategy.short");
-    assert_eq!(broker.orders[1].qty, 1.0);
+    assert_eq!(broker.orders[1].qty, 3.0);
     assert_eq!(broker.cash, 100_130.0);
     assert_eq!(broker.max_contracts_held_long(), 2.0);
     assert_eq!(broker.max_contracts_held_short(), 1.0);

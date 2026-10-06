@@ -4,6 +4,8 @@
 pub struct ProcessMemory {
     pub peak_resident_kib: Option<u64>,
     pub peak_commit_kib: Option<u64>,
+    pub resident_kib: Option<u64>,
+    pub commit_kib: Option<u64>,
 }
 
 pub fn read() -> ProcessMemory {
@@ -20,17 +22,19 @@ pub const SOURCE: &str = if cfg!(windows) {
 
 #[cfg(target_os = "linux")]
 fn platform_memory() -> ProcessMemory {
-    let peak_resident_kib = std::fs::read_to_string("/proc/self/status")
-        .ok()
-        .and_then(|s| {
-            s.lines()
-                .find(|line| line.starts_with("VmHWM:"))
-                .and_then(|line| line.split_whitespace().nth(1))
-                .and_then(|value| value.parse().ok())
-        });
+    let status = std::fs::read_to_string("/proc/self/status").unwrap_or_default();
+    let field = |name: &str| {
+        status
+            .lines()
+            .find(|line| line.starts_with(name))
+            .and_then(|line| line.split_whitespace().nth(1))
+            .and_then(|value| value.parse().ok())
+    };
     ProcessMemory {
-        peak_resident_kib,
+        peak_resident_kib: field("VmHWM:"),
         peak_commit_kib: None,
+        resident_kib: field("VmRSS:"),
+        commit_kib: None,
     }
 }
 
@@ -84,6 +88,8 @@ fn platform_memory() -> ProcessMemory {
     ProcessMemory {
         peak_resident_kib: Some(counters.peak_working_set_size as u64 / 1024),
         peak_commit_kib: Some(counters.peak_pagefile_usage as u64 / 1024),
+        resident_kib: Some(counters.working_set_size as u64 / 1024),
+        commit_kib: Some(counters.pagefile_usage as u64 / 1024),
     }
 }
 

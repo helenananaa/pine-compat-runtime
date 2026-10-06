@@ -3,147 +3,40 @@ mod owned_fields;
 
 pub(super) fn function_body_has_side_effect(body: &FunctionBody, declarations: &[Stmt]) -> bool {
     match body {
-        FunctionBody::Expr(expr) => contains_output_or_declaration_call(expr),
+        FunctionBody::Expr(expr) => {
+            let mut has_side_effect = false;
+            visit_expr(expr, &mut |expr| {
+                if let ExprKind::Call { callee, .. } = &expr.kind
+                    && crate::analyzer::functions::call_has_side_effect(callee)
+                    && !is_export_table_call(callee)
+                {
+                    has_side_effect = true;
+                }
+            });
+            has_side_effect
+        }
         FunctionBody::Block(statements) => {
             let mut allowed = crate::analyzer::functions::local_array_mutation_spans(body);
             allowed.extend(owned_fields::local_field_mutation_spans(body, declarations));
-            let mut checked = statements.clone();
-            for statement in &mut checked {
-                if let StmtKind::Expr(expr) = &mut statement.kind
-                    && let ExprKind::Call { callee, args } = &expr.kind
-                    && allowed.contains(&callee.span)
-                {
-                    // Ignore only the proven local mutation itself, never its arguments.
-                    expr.kind = ExprKind::Tuple(args.iter().map(|arg| arg.value.clone()).collect());
-                }
+            let mut has_side_effect = false;
+            for statement in statements {
+                visit_statement_exprs(statement, &mut |expr| {
+                    if let ExprKind::Call { callee, .. } = &expr.kind
+                        && crate::analyzer::functions::call_has_side_effect(callee)
+                        && !allowed.contains(&callee.span)
+                        && !is_export_table_call(callee)
+                    {
+                        has_side_effect = true;
+                    }
+                });
             }
-            block_return_contains_output_or_declaration_call(&checked)
+            has_side_effect
         }
     }
 }
 
-fn block_return_contains_output_or_declaration_call(statements: &[Stmt]) -> bool {
-    let Some((last, prefix)) = statements.split_last() else {
-        return false;
-    };
-    prefix
-        .iter()
-        .any(statement_contains_output_or_declaration_call)
-        || return_statement_contains_output_or_declaration_call(last)
-}
-
-fn return_statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
-    match &statement.kind {
-        StmtKind::Expr(expr) => return_expr_contains_output_or_declaration_call(expr),
-        StmtKind::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => {
-            contains_output_or_declaration_call(condition)
-                || block_return_contains_output_or_declaration_call(then_branch)
-                || block_return_contains_output_or_declaration_call(else_branch)
-        }
-        StmtKind::For {
-            from,
-            to,
-            step,
-            body,
-            ..
-        } => {
-            contains_output_or_declaration_call(from)
-                || contains_output_or_declaration_call(to)
-                || step
-                    .as_ref()
-                    .is_some_and(contains_output_or_declaration_call)
-                || block_return_contains_output_or_declaration_call(body)
-        }
-        StmtKind::ForIn { iterable, body, .. } => {
-            contains_output_or_declaration_call(iterable)
-                || block_return_contains_output_or_declaration_call(body)
-        }
-        StmtKind::While { condition, body } => {
-            contains_output_or_declaration_call(condition)
-                || block_return_contains_output_or_declaration_call(body)
-        }
-        _ => statement_contains_output_or_declaration_call(statement),
-    }
-}
-
-fn return_expr_contains_output_or_declaration_call(expr: &Expr) -> bool {
-    match &expr.kind {
-        ExprKind::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => {
-            contains_output_or_declaration_call(condition)
-                || block_return_contains_output_or_declaration_call(then_branch)
-                || block_return_contains_output_or_declaration_call(else_branch)
-        }
-        ExprKind::For {
-            from,
-            to,
-            step,
-            body,
-            ..
-        } => {
-            contains_output_or_declaration_call(from)
-                || contains_output_or_declaration_call(to)
-                || step
-                    .as_deref()
-                    .is_some_and(contains_output_or_declaration_call)
-                || block_return_contains_output_or_declaration_call(body)
-        }
-        ExprKind::ForIn { iterable, body, .. } => {
-            contains_output_or_declaration_call(iterable)
-                || block_return_contains_output_or_declaration_call(body)
-        }
-        ExprKind::While { condition, body } => {
-            contains_output_or_declaration_call(condition)
-                || block_return_contains_output_or_declaration_call(body)
-        }
-        ExprKind::Switch { selector, arms } => {
-            selector
-                .as_deref()
-                .is_some_and(contains_output_or_declaration_call)
-                || arms.iter().any(|arm| {
-                    arm.condition
-                        .as_ref()
-                        .is_some_and(contains_output_or_declaration_call)
-                        || switch_arm_return_contains_output_or_declaration_call(&arm.result)
-                })
-        }
-        ExprKind::Ternary {
-            condition,
-            then_expr,
-            else_expr,
-        } => {
-            contains_output_or_declaration_call(condition)
-                || return_expr_contains_output_or_declaration_call(then_expr)
-                || return_expr_contains_output_or_declaration_call(else_expr)
-        }
-        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
-            return_expr_contains_output_or_declaration_call(expr)
-        }
-        ExprKind::Binary { left, right, .. } => {
-            return_expr_contains_output_or_declaration_call(left)
-                || return_expr_contains_output_or_declaration_call(right)
-        }
-        ExprKind::Tuple(items) => items
-            .iter()
-            .any(return_expr_contains_output_or_declaration_call),
-        _ => contains_output_or_declaration_call(expr),
-    }
-}
-
-fn switch_arm_return_contains_output_or_declaration_call(result: &SwitchArmResult) -> bool {
-    match result {
-        SwitchArmResult::Expr(expr) => return_expr_contains_output_or_declaration_call(expr),
-        SwitchArmResult::Block(statements) => {
-            block_return_contains_output_or_declaration_call(statements)
-        }
-    }
+fn is_export_table_call(callee: &Expr) -> bool {
+    crate::analyzer::calls::expr_name(callee).is_some_and(|name| name.starts_with("table."))
 }
 
 pub(super) fn first_statement_span(program: &Program) -> Option<Span> {
@@ -233,12 +126,13 @@ fn visit_function_body(body: &FunctionBody, visitor: &mut impl FnMut(&Expr)) {
     }
 }
 
-fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
+pub(super) fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
     visitor(expr);
     match &expr.kind {
-        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } | ExprKind::Group(expr) => {
-            visit_expr(expr, visitor)
-        }
+        ExprKind::Unary { expr, .. }
+        | ExprKind::History { expr, .. }
+        | ExprKind::Group(expr)
+        | ExprKind::Member { receiver: expr, .. } => visit_expr(expr, visitor),
         ExprKind::Binary { left, right, .. } => {
             visit_expr(left, visitor);
             visit_expr(right, visitor);

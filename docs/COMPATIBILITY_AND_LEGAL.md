@@ -84,10 +84,12 @@ Runs all Pine scripts exactly like TradingView.
 Unsupported features should be reported explicitly:
 
 ```text
-`request.security` currently supports only same-context identity requests and
-same-or-higher-timeframe host-provided scalar requested expressions over
-injected bars; lower-timeframe requests and general multi-timeframe data loading
-are outside the current execution model.
+`request.security` supports the admitted same-context and host-provided
+expression subset over injected bars. Lower and equal timeframes are accepted;
+higher fixed timeframes must be integer multiples of the chart timeframe,
+while calendar months use calendar boundaries. Forming lower-timeframe
+requests require explicitly received current-period intrabars. General
+multi-timeframe data loading remains a host responsibility.
 ```
 
 This is both better UX and a better compatibility boundary.

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Lower timeframe security samples")
+plot(request.security("NYSE:IBM", "30S", close))
+plot(request.security("NYSE:IBM", "30S", close, lookahead=barmerge.lookahead_on))
+plot(request.security("NYSE:IBM", "30S", close, gaps=barmerge.gaps_on))

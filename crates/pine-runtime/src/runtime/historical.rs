@@ -1,24 +1,30 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{BTreeSet, HashMap, HashSet},
     ops::Deref,
     sync::Arc,
 };
 
 use pine_ir::{HirProgram, ScriptMode};
 
+use super::array_values::ArrayValues;
 use super::drawing_history::{
-    RuntimeBox, RuntimeLabel, RuntimeLine, RuntimeLineFill, RuntimePolyline, RuntimeTable,
+    DrawingStore, RuntimeBox, RuntimeLabel, RuntimeLine, RuntimeLineFill, RuntimePolyline,
+    RuntimeTable,
 };
+use super::id_store::IdStore;
 use super::plot_history::{
     RuntimeColorSeries, RuntimeFill, RuntimePlotArrow, RuntimePlotBar, RuntimePlotCandle,
     RuntimePlotChar, RuntimePlotShape,
 };
 use crate::*;
 
+mod ta_state;
+pub(crate) use ta_state::{CrossCallState, TaRollbackState};
+
 #[derive(Clone)]
 pub(crate) enum RuntimeProgram<'a> {
     Borrowed(&'a HirProgram),
-    Owned(Arc<HirProgram>),
+    Owned(crate::PreparedProgram),
 }
 
 impl Deref for RuntimeProgram<'_> {
@@ -62,31 +68,35 @@ impl InputOverrides {
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
+
+    pub(crate) fn values(&self) -> impl Iterator<Item = &PineValue> {
+        self.values.values()
+    }
 }
 
 #[derive(Clone)]
 struct StrategyEvalCheckpoint {
-    rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
-    rsi_state: HashMap<CallSiteId, RsiState>,
-    macd_state: HashMap<CallSiteId, MacdState>,
-    call_state: HashMap<CallSiteId, PineValue>,
-    valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
-    vwap_call_state: HashMap<CallSiteId, VwapState>,
-    pivot_point_state: HashMap<CallSiteId, PivotPointState>,
-    random_state: HashMap<CallSiteId, u64>,
+    ta_state: TaRollbackState,
+    valuewhen_local_values: usize,
     current_symbols: HashMap<SymbolId, PineValue>,
     current_series: HashMap<SeriesId, PineValue>,
     active_series: HashSet<SeriesId>,
+    var_store: HashMap<VarSlotId, PineValue>,
 }
 
 #[derive(Clone)]
+/// Historical execution commits successful bars incrementally. An error reached
+/// during bar execution disables further execution on this instance; rebuild it
+/// to retry. Host-input validation errors before execution remain retryable.
 pub struct HistoricalRuntime<'a> {
     pub(crate) program: RuntimeProgram<'a>,
+    pub(crate) metadata: Arc<super::metadata::RuntimeMetadata>,
     pub(crate) input_overrides: InputOverrides,
     pub(crate) magnifier_input: MagnifierInput,
     pub(crate) magnifier_chart_bar_count: Option<usize>,
     pub(crate) session_windows: crate::SessionWindowInput,
     pub(crate) bars: usize,
+    pub(crate) execution_failed: bool,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
@@ -99,14 +109,31 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) first_bar_close: Option<f64>,
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) request_feed: crate::request::RequestFeed,
-    pub(crate) request_cache:
-        HashMap<RequestCacheKey, super::append_history::AppendHistory<(i64, PineValue)>>,
+    pub(crate) historical_dynamic_request_contexts: HashSet<RequestCacheKey>,
+    pub(crate) request_cache: HashMap<
+        RequestCacheKey,
+        super::append_history::AppendHistory<(
+            i64,
+            crate::builtins::request_values::RequestedValue,
+        )>,
+    >,
     pub(crate) request_evaluations:
         HashMap<RequestCacheKey, Arc<crate::builtins::request_incremental::RequestEvaluation<'a>>>,
+    pub(crate) bounded_same_context_evaluations:
+        HashMap<RequestCacheKey, Box<HistoricalRuntime<'a>>>,
+    // Captures belong to this runtime's handle namespace, unlike child state.
+    pub(crate) bounded_same_context_captures:
+        HashMap<RequestCacheKey, HashMap<SymbolId, PineValue>>,
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
+    pub(crate) execution_limits: ExecutionLimits,
+    pub(crate) resource_budget: super::resource_limits::ResourceBudget,
+    pub(crate) valuewhen_budget: super::valuewhen_limits::ValueWhenBudget,
+    pub(crate) execution_steps_remaining: u64,
+    pub(crate) loop_iterations_remaining: u64,
+    pub(crate) pending_loop_control: Option<crate::error::RuntimeLoopControl>,
     pub(crate) series_store: SeriesStore,
-    pub(crate) series_retention: SeriesRetention,
+    pub(crate) series_retention: Arc<SeriesRetention>,
     pub(crate) history_dynamic_retention_misses: usize,
     pub(crate) history_dynamic_retention_max_bars_back: Option<usize>,
     pub(crate) history_dynamic_retention_max_missed_offset: Option<usize>,
@@ -114,25 +141,28 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) current_series: HashMap<SeriesId, PineValue>,
     pub(crate) active_series: HashSet<SeriesId>,
     pub(crate) var_store: HashMap<VarSlotId, PineValue>,
-    pub(crate) array_store: HashMap<u32, Vec<PineValue>>,
-    pub(crate) array_kinds: HashMap<u32, ArrayElementKind>,
-    pub(crate) array_user_types: HashMap<u32, String>,
-    pub(crate) array_slices: HashMap<u32, ArraySlice>,
+    pub(crate) array_store: IdStore<ArrayValues>,
+    pub(crate) array_kinds: IdStore<ArrayElementKind>,
+    pub(crate) array_user_types: IdStore<String>,
+    pub(crate) array_slices: IdStore<ArraySlice>,
     pub(crate) next_array_id: u32,
+    pub(crate) collection_gc_next_id: u64,
+    pub(crate) collection_gc_allocated_bytes: usize,
+    pub(crate) collection_gc_next_bytes: usize,
+    pub(crate) object_store: IdStore<Vec<PineValue>>,
+    pub(crate) object_varip_fields: IdStore<Vec<bool>>,
+    pub(crate) object_varip_ids: IdStore<u32>,
+    pub(crate) next_object_id: u64,
     #[allow(dead_code)]
-    pub(crate) matrix_store: HashMap<u32, MatrixStorage>,
+    pub(crate) matrix_store: IdStore<MatrixStorage>,
     #[allow(dead_code)]
     pub(crate) next_matrix_id: u32,
-    pub(crate) map_store: HashMap<u32, MapStorage>,
+    pub(crate) map_store: IdStore<MapStorage>,
     pub(crate) next_map_id: u32,
-    pub(crate) call_state: HashMap<CallSiteId, PineValue>,
-    pub(crate) valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
-    pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
-    pub(crate) rsi_state: HashMap<CallSiteId, RsiState>,
-    pub(crate) macd_state: HashMap<CallSiteId, MacdState>,
-    pub(crate) vwap_call_state: HashMap<CallSiteId, VwapState>,
-    pub(crate) pivot_point_state: HashMap<CallSiteId, PivotPointState>,
-    pub(crate) random_state: HashMap<CallSiteId, u64>,
+    pub(crate) ta_state: TaRollbackState,
+    pub(crate) selection_scratch: crate::algorithms::order_statistics::SelectionScratch,
+    pub(crate) alma_weights: crate::algorithms::alma_weights::AlmaWeightCache,
+    pub(crate) regex_cache: HashMap<CallSiteId, Arc<crate::builtins::strings::CachedPineRegex>>,
     pub(crate) previous_bar_time: Option<i64>,
     pub(crate) price_flow_previous_close: Option<f64>,
     pub(crate) price_flow_previous_volume: Option<f64>,
@@ -163,20 +193,33 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) bar_colors: Vec<RuntimeColorSeries>,
     pub(crate) hlines: Vec<HLineOutput>,
     pub(crate) fills: Vec<RuntimeFill>,
-    pub(crate) labels: Vec<RuntimeLabel>,
-    pub(crate) lines: Vec<RuntimeLine>,
-    pub(crate) line_fills: Vec<RuntimeLineFill>,
-    pub(crate) polylines: Vec<RuntimePolyline>,
-    pub(crate) boxes: Vec<RuntimeBox>,
-    pub(crate) tables: Vec<RuntimeTable>,
+    pub(crate) labels: DrawingStore<RuntimeLabel>,
+    pub(crate) active_labels: Arc<BTreeSet<u32>>,
+    pub(crate) lines: DrawingStore<RuntimeLine>,
+    pub(crate) active_lines: Arc<BTreeSet<u32>>,
+    pub(crate) line_fills: DrawingStore<RuntimeLineFill>,
+    pub(crate) polylines: DrawingStore<RuntimePolyline>,
+    pub(crate) active_polylines: Arc<BTreeSet<u32>>,
+    pub(crate) boxes: DrawingStore<RuntimeBox>,
+    pub(crate) active_boxes: Arc<BTreeSet<u32>>,
+    pub(crate) tables: DrawingStore<RuntimeTable>,
     pub(crate) display_origin: usize,
     pub(crate) stored_origin: usize,
     pub(crate) alerts: super::append_history::AppendHistory<AlertEvent>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
+    // Historical OHLC remains visible during fill callbacks, but account values
+    // and immediate closes are marked at the current broker execution tick.
+    pub(crate) strategy_fill_mark: Option<f64>,
+    // Strategy built-ins exist on every script pass even when a guarded
+    // history expression is not evaluated on an earlier bar.
+    pub(crate) strategy_position_size_at_script_pass: super::append_history::AppendHistory<f64>,
+    pub(crate) strategy_position_size_history_depth: Option<usize>,
+    pub(crate) strategy_position_size_history_origin: usize,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
     magnifier_diagnostics: Vec<RuntimeDiagnostic>,
+    alert_diagnostics: Vec<RuntimeDiagnostic>,
     #[cfg(test)]
     pub(crate) strategy_phase_trace: Vec<crate::runtime::strategy_scheduler::StrategyBarPhase>,
     #[cfg(test)]
@@ -322,7 +365,25 @@ impl<'a> HistoricalRuntime<'a> {
         program: RuntimeProgram<'a>,
         request_environment: RequestEnvironment,
     ) -> Self {
-        let series_retention = SeriesRetention::from_program(&program);
+        let (series_retention, metadata) = match &program {
+            RuntimeProgram::Borrowed(program) => {
+                let retention = Arc::new(SeriesRetention::from_program(program));
+                let metadata = Arc::new(super::metadata::RuntimeMetadata::from_program(
+                    program, &retention,
+                ));
+                (retention, metadata)
+            }
+            RuntimeProgram::Owned(program) => (
+                Arc::clone(&program.retention),
+                Arc::clone(&program.metadata),
+            ),
+        };
+        let strategy_position_size_history_depth = match &program {
+            RuntimeProgram::Borrowed(program) => {
+                super::strategy_history::position_history_depth(program)
+            }
+            RuntimeProgram::Owned(program) => program.position_history_depth,
+        };
         let strategy_settings = if program.script_mode == ScriptMode::Strategy {
             program
                 .strategy_settings
@@ -341,15 +402,19 @@ impl<'a> HistoricalRuntime<'a> {
             program.strategy_settings.pyramiding_limit,
         )
         .with_quantity_scale(request_environment.chart().quantity_scale())
+        .with_configured_quantity_scale(request_environment.chart().configured_quantity_scale())
+        .with_price_tick(request_environment.chart().min_tick())
         .with_close_entries_rule(program.strategy_settings.close_entries_rule)
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
         Self {
             program,
+            metadata,
             input_overrides: InputOverrides::new(),
             magnifier_input: MagnifierInput::new(),
             magnifier_chart_bar_count: None,
             session_windows: crate::SessionWindowInput::new(),
             bars: 0,
+            execution_failed: false,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
@@ -362,10 +427,19 @@ impl<'a> HistoricalRuntime<'a> {
             first_bar_close: None,
             request_environment,
             request_feed: crate::request::RequestFeed::default(),
+            historical_dynamic_request_contexts: HashSet::new(),
             request_cache: HashMap::new(),
             request_evaluations: HashMap::new(),
+            bounded_same_context_evaluations: HashMap::new(),
+            bounded_same_context_captures: HashMap::new(),
             legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
+            execution_limits: ExecutionLimits::default(),
+            resource_budget: super::resource_limits::ResourceBudget::default(),
+            valuewhen_budget: super::valuewhen_limits::ValueWhenBudget::default(),
+            execution_steps_remaining: ExecutionLimits::default().max_steps_per_bar,
+            loop_iterations_remaining: ExecutionLimits::default().max_loop_iterations_per_bar,
+            pending_loop_control: None,
             series_store: SeriesStore::new(),
             series_retention,
             history_dynamic_retention_misses: 0,
@@ -375,23 +449,26 @@ impl<'a> HistoricalRuntime<'a> {
             current_series: HashMap::new(),
             active_series: HashSet::new(),
             var_store: HashMap::new(),
-            array_store: HashMap::new(),
-            array_kinds: HashMap::new(),
-            array_user_types: HashMap::new(),
-            array_slices: HashMap::new(),
+            array_store: IdStore::new(),
+            array_kinds: IdStore::new(),
+            array_user_types: IdStore::new(),
+            array_slices: IdStore::new(),
             next_array_id: 0,
-            matrix_store: HashMap::new(),
+            collection_gc_next_id: 1024,
+            collection_gc_allocated_bytes: 0,
+            collection_gc_next_bytes: 2 * 1024 * 1024,
+            object_store: IdStore::new(),
+            object_varip_fields: IdStore::new(),
+            object_varip_ids: IdStore::new(),
+            next_object_id: 0,
+            matrix_store: IdStore::new(),
             next_matrix_id: 0,
-            map_store: HashMap::new(),
+            map_store: IdStore::new(),
             next_map_id: 0,
-            call_state: HashMap::new(),
-            valuewhen_state: HashMap::new(),
-            rolling_windows: HashMap::new(),
-            rsi_state: HashMap::new(),
-            macd_state: HashMap::new(),
-            vwap_call_state: HashMap::new(),
-            pivot_point_state: HashMap::new(),
-            random_state: HashMap::new(),
+            ta_state: TaRollbackState::default(),
+            selection_scratch: crate::algorithms::order_statistics::SelectionScratch::default(),
+            alma_weights: crate::algorithms::alma_weights::AlmaWeightCache::default(),
+            regex_cache: HashMap::new(),
             previous_bar_time: None,
             price_flow_previous_close: None,
             price_flow_previous_volume: None,
@@ -422,20 +499,29 @@ impl<'a> HistoricalRuntime<'a> {
             bar_colors: Vec::new(),
             hlines: Vec::new(),
             fills: Vec::new(),
-            labels: Vec::new(),
-            lines: Vec::new(),
-            line_fills: Vec::new(),
-            polylines: Vec::new(),
-            boxes: Vec::new(),
-            tables: Vec::new(),
+            labels: DrawingStore::default(),
+            active_labels: Arc::new(BTreeSet::new()),
+            lines: DrawingStore::default(),
+            active_lines: Arc::new(BTreeSet::new()),
+            line_fills: DrawingStore::default(),
+            polylines: DrawingStore::default(),
+            active_polylines: Arc::new(BTreeSet::new()),
+            boxes: DrawingStore::default(),
+            active_boxes: Arc::new(BTreeSet::new()),
+            tables: DrawingStore::default(),
             display_origin: 0,
             stored_origin: 0,
             alerts: Default::default(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
+            strategy_position_size_at_script_pass: Default::default(),
+            strategy_position_size_history_depth,
+            strategy_position_size_history_origin: 0,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
+            strategy_fill_mark: None,
             magnifier_diagnostics: Vec::new(),
+            alert_diagnostics: Vec::new(),
             #[cfg(test)]
             strategy_phase_trace: Vec::new(),
             #[cfg(test)]
@@ -570,11 +656,19 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
+    pub(crate) fn push_alert_diagnostic(&mut self, diagnostic: RuntimeDiagnostic) {
+        if !self.alert_diagnostics.contains(&diagnostic) {
+            self.alert_diagnostics.push(diagnostic);
+        }
+    }
+
     pub(crate) fn fork_with_request_environment(
         &self,
         request_environment: RequestEnvironment,
     ) -> Self {
-        Self::with_runtime_program(self.program.clone(), request_environment)
+        let mut runtime = Self::with_runtime_program(self.program.clone(), request_environment);
+        runtime.inherit_execution_budget(self);
+        runtime
     }
 
     /// Empty runtime with the same program, host inputs and request feed.
@@ -586,6 +680,10 @@ impl<'a> HistoricalRuntime<'a> {
         runtime.magnifier_input = self.magnifier_input.clone();
         runtime.session_windows = self.session_windows.clone();
         runtime.request_feed = self.request_feed.clone();
+        runtime.execution_limits = self.execution_limits;
+        runtime.resource_budget = self.resource_budget.clone();
+        runtime.valuewhen_budget.limits = self.valuewhen_limits();
+        runtime.reset_execution_budget();
         runtime
     }
 
@@ -630,6 +728,10 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    /// Appends a batch. For `calc_bars_count`, the first batch must contain
+    /// the complete initially available chart dataset so the runtime can
+    /// select its latest N bars. Streaming hosts should select that initial
+    /// window before sending bars individually.
     pub fn append_bars(&mut self, bars: &[Bar]) -> Result<(), RuntimeError> {
         self.append_bars_inner(bars, None)
     }
@@ -639,6 +741,7 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<(), RuntimeError> {
+        self.ensure_execution_ready()?;
         if bars.len() != execution_times.len() {
             return Err(RuntimeError {
                 message: format!(
@@ -656,6 +759,45 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        for result in self.historical_dataset_inner(bars, execution_times)? {
+            result?;
+        }
+        Ok(())
+    }
+
+    /// Execute a known historical dataset one bar at a time, with the same
+    /// dataset endpoint and initial-window selection as `append_bars`.
+    ///
+    /// Each iterator step executes one bar. Dropping the iterator stops execution
+    /// and releases the dataset context; bars already executed remain committed.
+    /// This differs from appending newly discovered bars via `append_bar`, where
+    /// each new bar is the latest known bar. No data acquisition is performed.
+    pub fn historical_dataset<'runtime, 'bars>(
+        &'runtime mut self,
+        bars: &'bars [Bar],
+    ) -> Result<HistoricalDataset<'runtime, 'bars, 'a>, RuntimeError> {
+        self.historical_dataset_inner(bars, None)
+    }
+
+    fn historical_dataset_inner<'runtime, 'bars>(
+        &'runtime mut self,
+        bars: &'bars [Bar],
+        execution_times: Option<&'bars [i64]>,
+    ) -> Result<HistoricalDataset<'runtime, 'bars, 'a>, RuntimeError> {
+        self.ensure_execution_ready()?;
+        // A batch supplies the complete initial dataset. Restrict its first
+        // execution window before any series, bar indices or strategy state
+        // are created. Later incremental appends extend that window normally.
+        let skip = if self.bars == 0 {
+            self.program
+                .calc_bars_count
+                .filter(|count| *count > 0)
+                .map_or(0, |count| bars.len().saturating_sub(count as usize))
+        } else {
+            0
+        };
+        let bars = &bars[skip..];
+        let execution_times = execution_times.map(|times| &times[skip..]);
         if self.program.script_mode == ScriptMode::Strategy {
             self.session_windows
                 .validate_range(self.bars, self.bars + bars.len())
@@ -678,21 +820,17 @@ impl<'a> HistoricalRuntime<'a> {
             self.last_bar_time = Some(last.time);
             self.chart_visible_right_time = Some(last.time);
         }
-        let result = (|| {
-            for (index, bar) in bars.iter().enumerate() {
-                self.append_bar_with_context(
-                    *bar,
-                    BarUpdateKind::Historical,
-                    true,
-                    execution_times.map(|times| times[index]),
-                )?;
-            }
-            Ok(())
-        })();
-        self.historical_end = previous_historical_end;
-        result
+        Ok(HistoricalDataset {
+            runtime: self,
+            bars,
+            execution_times,
+            index: 0,
+            previous_historical_end,
+        })
     }
 
+    /// Execute one newly discovered historical bar. If execution fails, this
+    /// instance cannot execute again; already returned owned results stay valid.
     pub fn append_bar(&mut self, bar: Bar) -> Result<(), RuntimeError> {
         self.append_bar_with_kind(bar, BarUpdateKind::Historical)
     }
@@ -720,6 +858,40 @@ impl<'a> HistoricalRuntime<'a> {
         is_new_bar: bool,
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
+        self.append_bar_with_budget(bar, update_kind, is_new_bar, execution_time, true)
+    }
+
+    /// Realtime candidates open their allowance before restoring intrabar state.
+    /// The preparation and script must consume that same allowance.
+    pub(crate) fn append_bar_with_prepared_budget(
+        &mut self,
+        bar: Bar,
+        update_kind: BarUpdateKind,
+        is_new_bar: bool,
+        execution_time: Option<i64>,
+    ) -> Result<(), RuntimeError> {
+        self.append_bar_with_budget(bar, update_kind, is_new_bar, execution_time, false)
+    }
+
+    fn append_bar_with_budget(
+        &mut self,
+        bar: Bar,
+        update_kind: BarUpdateKind,
+        is_new_bar: bool,
+        execution_time: Option<i64>,
+        fresh_budget: bool,
+    ) -> Result<(), RuntimeError> {
+        self.ensure_execution_ready()?;
+        if let Some(account) = self.program.strategy_settings.account_currency {
+            let chart = self.request_environment.chart().currency();
+            if account != chart {
+                return Err(RuntimeError {
+                    message: format!(
+                        "strategy account currency {account} differs from chart currency {chart}; foreign currency conversion is not supported"
+                    ),
+                });
+            }
+        }
         let bar_index = self.bars;
         if self.program.script_mode == ScriptMode::Strategy {
             self.session_windows
@@ -741,6 +913,36 @@ impl<'a> HistoricalRuntime<'a> {
             }
             .runtime_error());
         }
+        if fresh_budget {
+            self.reset_execution_budget();
+        }
+        let result = self.resource_budget.check().and_then(|()| {
+            self.execute_bar_with_context(bar, update_kind, is_new_bar, execution_time)
+        });
+        if result.is_err() {
+            self.execution_failed = true;
+        }
+        result
+    }
+
+    fn ensure_execution_ready(&self) -> Result<(), RuntimeError> {
+        if self.execution_failed {
+            Err(RuntimeError {
+                message: "E_RUNTIME_POISONED: historical runtime cannot execute after a previous execution error; create a new runtime".to_owned(),
+            })
+        } else {
+            Ok(())
+        }
+    }
+
+    fn execute_bar_with_context(
+        &mut self,
+        bar: Bar,
+        update_kind: BarUpdateKind,
+        is_new_bar: bool,
+        execution_time: Option<i64>,
+    ) -> Result<(), RuntimeError> {
+        let bar_index = self.bars;
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);
@@ -799,7 +1001,13 @@ impl<'a> HistoricalRuntime<'a> {
             );
             if !skip_normal_strategy_pass {
                 let filled = self.run_strategy_script_pass()?;
-                self.recalculate_after_fill(filled)?;
+                // An immediate close placed by the regular historical closing
+                // pass fills now, but does not introduce another script pass.
+                // Intrabar fill callbacks and realtime observations keep their
+                // own recalculation paths.
+                if update_kind != BarUpdateKind::Historical {
+                    self.recalculate_after_fill(filled, bar.close)?;
+                }
             }
         } else {
             let program = self.program.clone();
@@ -809,7 +1017,7 @@ impl<'a> HistoricalRuntime<'a> {
                     Ok(StmtControl::Break | StmtControl::Continue) => {
                         return Err(RuntimeError::escaped_loop_control());
                     }
-                    Err(error) if error.loop_control().is_some() => {
+                    Err(_) if self.pending_loop_control.take().is_some() => {
                         return Err(RuntimeError::escaped_loop_control());
                     }
                     Err(error) => return Err(error),
@@ -828,6 +1036,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;
+        self.collect_temporary_collections();
         self.current_bar_update_kind = BarUpdateKind::Historical;
         self.current_bar_is_new = true;
         self.current_bar = None;
@@ -900,6 +1109,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
         let mut diagnostics = self.magnifier_diagnostics.clone();
+        diagnostics.extend(self.alert_diagnostics.iter().cloned());
         let mut lookahead = self
             .legacy_security_repaint_warnings
             .iter()
@@ -945,17 +1155,12 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn snapshot_strategy_eval_checkpoint(&mut self) {
         self.strategy_eval_checkpoint = Some(StrategyEvalCheckpoint {
-            rolling_windows: self.rolling_windows.clone(),
-            rsi_state: self.rsi_state.clone(),
-            macd_state: self.macd_state.clone(),
-            call_state: self.call_state.clone(),
-            valuewhen_state: self.valuewhen_state.clone(),
-            vwap_call_state: self.vwap_call_state.clone(),
-            pivot_point_state: self.pivot_point_state.clone(),
-            random_state: self.random_state.clone(),
+            ta_state: self.ta_state.clone(),
+            valuewhen_local_values: self.valuewhen_budget.local_values,
             current_symbols: self.current_symbols.clone(),
             current_series: self.current_series.clone(),
             active_series: self.active_series.clone(),
+            var_store: self.var_store.clone(),
         });
     }
 
@@ -963,24 +1168,56 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(checkpoint) = self.strategy_eval_checkpoint.as_ref() else {
             return;
         };
-        self.rolling_windows.clone_from(&checkpoint.rolling_windows);
-        self.rsi_state.clone_from(&checkpoint.rsi_state);
-        self.macd_state.clone_from(&checkpoint.macd_state);
-        self.call_state.clone_from(&checkpoint.call_state);
-        self.valuewhen_state.clone_from(&checkpoint.valuewhen_state);
-        self.vwap_call_state.clone_from(&checkpoint.vwap_call_state);
-        self.pivot_point_state
-            .clone_from(&checkpoint.pivot_point_state);
-        self.random_state.clone_from(&checkpoint.random_state);
+        self.ta_state.restore_from(&checkpoint.ta_state);
+        self.valuewhen_budget.local_values = checkpoint.valuewhen_local_values;
         self.current_symbols.clone_from(&checkpoint.current_symbols);
         self.current_series.clone_from(&checkpoint.current_series);
         self.active_series.clone_from(&checkpoint.active_series);
+        // Historical fill recalculations rerun the script from the previous
+        // committed bar. Ordinary `var` assignments from an earlier pass of
+        // this bar must be discarded; `varip` deliberately survives passes.
+        for slot in self
+            .program
+            .symbols
+            .iter()
+            .filter(|symbol| symbol.persistence == PersistenceKind::Var)
+            .filter_map(|symbol| symbol.var_slot_id)
+        {
+            if let Some(value) = checkpoint.var_store.get(&slot) {
+                self.var_store.insert(slot, value.clone());
+            } else {
+                self.var_store.remove(&slot);
+            }
+        }
     }
 
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {
-        let before = self.strategy_broker.public_order_event_count();
+        let before = self.strategy_broker.public_fill_event_count();
         self.restore_strategy_eval_checkpoint();
         self.strategy_scheduler.begin_script_pass()?;
+        let position_size = self.strategy_broker.position_size();
+        if self.strategy_position_size_history_depth != Some(0) {
+            let position_history_end = self.strategy_position_size_history_origin
+                + self.strategy_position_size_at_script_pass.len();
+            if position_history_end == self.bars {
+                self.strategy_position_size_at_script_pass
+                    .push(position_size);
+            } else if position_history_end == self.bars + 1 {
+                *self
+                    .strategy_position_size_at_script_pass
+                    .last_mut()
+                    .expect("current strategy pass") = position_size;
+            }
+            if let Some(depth) = self.strategy_position_size_history_depth {
+                let expired = self
+                    .strategy_position_size_at_script_pass
+                    .len()
+                    .saturating_sub(depth.saturating_add(1));
+                self.strategy_position_size_at_script_pass
+                    .drop_prefix(expired);
+                self.strategy_position_size_history_origin += expired;
+            }
+        }
         self.trace_strategy_phase(
             crate::runtime::strategy_scheduler::StrategyBarPhase::ScriptStatements,
         );
@@ -991,23 +1228,40 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(StmtControl::Break | StmtControl::Continue) => {
                     return Err(RuntimeError::escaped_loop_control());
                 }
-                Err(error) if error.loop_control().is_some() => {
+                Err(_) if self.pending_loop_control.take().is_some() => {
                     return Err(RuntimeError::escaped_loop_control());
                 }
                 Err(error) => return Err(error),
             }
         }
-        Ok(self.strategy_broker.public_order_event_count() > before)
+        // Even immediate orders fill after the script pass. Statements following
+        // strategy.close still observe the account that entered this pass.
+        self.fill_current_tick_market_closes();
+        Ok(self.strategy_broker.public_fill_event_count() > before)
     }
 
-    pub(crate) fn recalculate_after_fill(&mut self, mut filled: bool) -> Result<(), RuntimeError> {
+    pub(crate) fn strategy_mark_price(&self) -> Option<f64> {
+        self.strategy_fill_mark
+            .or_else(|| self.current_bar.map(|bar| bar.close))
+    }
+
+    pub(crate) fn recalculate_after_fill(
+        &mut self,
+        mut filled: bool,
+        mark: f64,
+    ) -> Result<(), RuntimeError> {
         if !self.program.strategy_settings.calc_on_order_fills {
             return Ok(());
         }
-        while filled {
-            filled = self.run_strategy_script_pass()?;
-        }
-        Ok(())
+        let previous = self.strategy_fill_mark.replace(mark);
+        let result = (|| {
+            while filled {
+                filled = self.run_strategy_script_pass()?;
+            }
+            Ok(())
+        })();
+        self.strategy_fill_mark = previous;
+        result
     }
 
     #[cfg(test)]
@@ -1031,6 +1285,11 @@ impl<'a> HistoricalRuntime<'a> {
         finalize_series_values(&mut self.bg_colors, self.bars - self.stored_origin);
         finalize_series_values(&mut self.bar_colors, self.bars - self.stored_origin);
         for fill in &mut self.fills {
+            if let Some(samples) = &mut fill.gradient {
+                while samples.len() <= self.bars - self.stored_origin {
+                    samples.push(crate::FillGradientSample::default());
+                }
+            }
             while fill.colors.len() < self.bars - self.stored_origin {
                 fill.colors.push(PineValue::Na);
             }
@@ -1124,6 +1383,7 @@ impl<'a> HistoricalRuntime<'a> {
             first_is_hline,
             second_is_hline,
             colors,
+            gradient: None,
             title,
             editable,
             show_last,
@@ -1134,15 +1394,23 @@ impl<'a> HistoricalRuntime<'a> {
 }
 
 impl HistoricalRuntime<'static> {
-    pub(crate) fn with_owned_program_and_request_environment_and_input_overrides(
-        program: HirProgram,
+    #[must_use]
+    pub fn from_prepared(program: &crate::PreparedProgram) -> Self {
+        Self::from_prepared_with_request_environment_and_input_overrides(
+            program,
+            RequestEnvironment::default(),
+            InputOverrides::new(),
+        )
+    }
+
+    #[must_use]
+    pub fn from_prepared_with_request_environment_and_input_overrides(
+        program: &crate::PreparedProgram,
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
     ) -> Self {
-        let mut runtime = Self::with_runtime_program(
-            RuntimeProgram::Owned(Arc::new(program)),
-            request_environment,
-        );
+        let mut runtime =
+            Self::with_runtime_program(RuntimeProgram::Owned(program.clone()), request_environment);
         runtime.input_overrides = input_overrides;
         runtime
     }

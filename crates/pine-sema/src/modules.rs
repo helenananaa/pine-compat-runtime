@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
@@ -8,8 +9,7 @@ use pine_syntax::{
 
 use crate::analyzer::context::{FunctionInfo, MethodInfo, MethodParamInfo};
 use crate::analyzer::functions::{
-    contains_output_or_declaration_call, function_default_values, function_param_names,
-    record_default_shadowing, statement_contains_output_or_declaration_call,
+    function_default_values, function_param_names, record_default_shadowing,
 };
 use crate::legacy::SourcePolicy;
 use crate::source_graph::{AnalysisInput, SourceContextId, SourceId};
@@ -45,6 +45,9 @@ pub(crate) use model::{
 };
 use modules_rewrite::{RewriteContext, rewrite_expr, rewrite_function_body, rewrite_program};
 use side_effects::{first_statement_span, function_body_has_side_effect, visit_statement_exprs};
+pub(crate) fn visit_expression(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
+    side_effects::visit_expr(expr, visitor);
+}
 use version_policy::validate_language_versions;
 
 pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
@@ -72,6 +75,7 @@ fn validate_modules_inner(
     let root_program = root_parse.program;
     modules.push(ModuleInfo {
         id: graph.root().id(),
+        source: Arc::new(graph.root().source().clone()),
         key: None,
         program: root_program.clone(),
         exports: HashMap::new(),
@@ -84,10 +88,12 @@ fn validate_modules_inner(
 
     let mut library_index = HashMap::new();
     for library in graph.libraries() {
+        let diagnostic_start = diagnostics.len();
         let parsed = parse_source(library.source());
         diagnostics.extend(parsed.diagnostics.clone());
         let mut module = ModuleInfo {
             id: library.id(),
+            source: Arc::new(library.source().clone()),
             key: library.import_key().map(str::to_owned),
             program: parsed.program,
             exports: HashMap::new(),
@@ -98,6 +104,7 @@ fn validate_modules_inner(
             constants: HashMap::new(),
         };
         collect_library_declarations(&mut module, &mut diagnostics);
+        module.attach_diagnostics(&mut diagnostics[diagnostic_start..]);
         if let Some(key) = &module.key {
             library_index.insert(key.clone(), modules.len());
         }
@@ -124,6 +131,10 @@ fn validate_modules_inner(
     let root_program = rewrite_program(&root_program, &import_plan.root_rewrites);
 
     ModuleValidation {
+        source_texts: modules
+            .iter()
+            .map(|module| (module.id, Arc::clone(&module.source)))
+            .collect(),
         source_context_origins: import_plan.source_context_origins,
         diagnostics,
         root_program,
@@ -226,8 +237,13 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     module.constants.insert(name.clone(), value.clone());
                 }
                 ExportItem::UserType { decl, span } => {
-                    let user_type =
-                        module_user_type_info(module.id, &decl.name, &decl.fields, *span);
+                    let user_type = module_user_type_info(
+                        module.id,
+                        &decl.name,
+                        &decl.fields,
+                        *span,
+                        diagnostics,
+                    );
                     register_export(
                         module,
                         &decl.name,
@@ -281,6 +297,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                         &user_type.name,
                         &user_type.fields,
                         statement.span,
+                        diagnostics,
                     ),
                 );
             }
@@ -350,7 +367,26 @@ fn module_user_type_info(
     name: &str,
     fields: &[UserTypeField],
     span: Span,
+    diagnostics: &mut Vec<Diagnostic>,
 ) -> ModuleUserTypeInfo {
+    for field in fields {
+        if let Some(value) = &field.default_value {
+            let default_type = crate::analyzer::user_types::field_default_type(value);
+            let target_type = imported_user_type_field_type(&field.type_name);
+            let valid = default_type.is_some_and(|actual| {
+                target_type.map_or(actual.kind == ValueKind::Na, |target| {
+                    crate::types::can_assign(PineType::new(Qualifier::Series, target.kind), actual)
+                })
+            });
+            if !valid {
+                diagnostics.push(Diagnostic::error(
+                    "E_UDT_FIELD_DEFAULT",
+                    "UDT field defaults must be compatible literals or built-in variables",
+                    value.span,
+                ));
+            }
+        }
+    }
     let identity = ModuleUserTypeIdentity {
         source_id,
         name: name.to_owned(),
@@ -358,6 +394,8 @@ fn module_user_type_info(
     let fields = fields
         .iter()
         .map(|field| ModuleUserTypeFieldInfo {
+            default_value: field.default_value.clone(),
+            varip: field.varip,
             name: field.name.clone(),
             type_name: field.type_name.clone(),
             pine_type: imported_user_type_field_type(&field.type_name),
@@ -441,6 +479,7 @@ fn build_import_plan(
     );
     for (alias, module_index, source_context_id, is_root_import) in contexts {
         let module = &modules[module_index];
+        let diagnostic_start = diagnostics.len();
         plan.source_context_origins
             .insert(source_context_id, (module.id, module.key.clone()));
         let mut module_context = rewrite_context_for_module(&alias, module);
@@ -558,6 +597,7 @@ fn build_import_plan(
                 method_info,
             );
         }
+        module.attach_diagnostics(&mut diagnostics[diagnostic_start..]);
     }
     debug_assert!(plan.imported_functions.values().all(|function| {
         function.source_id != SourceId::root()
@@ -689,6 +729,8 @@ fn insert_imported_user_type_metadata(
                 .fields
                 .iter()
                 .map(|field| ImportedUserTypeFieldInfo {
+                    default_value: field.default_value.clone(),
+                    varip: field.varip,
                     name: field.name.clone(),
                     type_name: field.type_name.clone(),
                     pine_type: field.pine_type,
@@ -809,6 +851,7 @@ fn name_is_exported_function(module: &ModuleInfo, name: &str) -> bool {
 
 fn is_const_import_expr(expr: &Expr) -> bool {
     match &expr.kind {
+        ExprKind::Member { .. } => false,
         ExprKind::Literal(_) => true,
         ExprKind::QualifiedName(parts) => const_qualified_type(&parts.join(".")).is_some(),
         ExprKind::Unary { op, expr } => {

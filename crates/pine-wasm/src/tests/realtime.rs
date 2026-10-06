@@ -174,6 +174,50 @@ fn wasm_realtime_session_matches_rust_event_sequence() {
 }
 
 #[test]
+fn wasm_session_uses_core_time_protocol_and_preserves_state_after_rejection() {
+    let program =
+        compile_script("//@version=6\nindicator(\"time protocol\")\nplot(close)\n").unwrap();
+    let mut session = program.realtime_session().unwrap();
+    session
+        .seed_internal(&bars_csv(&[bar(0, 1.0)]), None)
+        .unwrap();
+    session
+        .apply_chart_update(&bar_json(60_000, 2.0), "{}", true, true)
+        .unwrap();
+    let before = session.stream_snapshot();
+    let changes = session.last_changes();
+    for forming in [true, false] {
+        for delta in [true, false] {
+            assert!(
+                session
+                    .apply_chart_update(&bar_json(120_000, 3.0), "{}", forming, delta)
+                    .unwrap_err()
+                    .contains("does not match forming time")
+            );
+            assert_eq!(session.stream_snapshot(), before);
+            assert_eq!(session.last_changes(), changes);
+            assert_eq!(session.forming_time(), Some(60_000.0));
+            assert_eq!(session.last_confirmed_time(), Some(0.0));
+            assert_eq!(session.confirmed_bars(), 1);
+        }
+    }
+    session
+        .apply_chart_update(&bar_json(60_000, 2.0), "{}", false, true)
+        .unwrap();
+    assert_eq!(session.forming_time(), None);
+    assert_eq!(session.last_confirmed_time(), Some(60_000.0));
+    assert_eq!(session.confirmed_bars(), 2);
+    let confirmed = session.stream_snapshot();
+    assert!(
+        session
+            .apply_chart_update(&bar_json(0, 3.0), "{}", false, true)
+            .unwrap_err()
+            .contains("must be later than confirmed time")
+    );
+    assert_eq!(session.stream_snapshot(), confirmed);
+}
+
+#[test]
 fn wasm_replica_gap_recovery_matches_session_snapshot() {
     let source = "//@version=6\nindicator(\"cursor\")\nplot(close)\n";
     let program = compile_script(source).expect("program");
@@ -221,7 +265,7 @@ fn wasm_replica_gap_recovery_matches_session_snapshot() {
 }
 
 #[test]
-fn wasm_request_forming_does_not_leak_into_confirmed_chart() {
+fn wasm_request_developing_values_are_realtime_only() {
     let source = r#"//@version=6
 indicator("request stream")
 plot(request.security("NYSE:IBM", timeframe.period, close))
@@ -264,7 +308,17 @@ plot(request.security("NYSE:IBM", timeframe.period, close))
     );
     session
         .apply_confirmed(&bar_json(120_000, 7.0))
-        .expect("chart confirm ignores unconfirmed request bar");
+        .expect("realtime chart confirmation retains the available developing request value");
+    assert_eq!(
+        plot_values(&session.result()),
+        serde_json::json!([20, 99, 50])
+    );
+    session
+        .replay_internal(
+            &bars_csv(&[bar(0, 5.0), bar(60_000, 6.0), bar(120_000, 7.0)]),
+            None,
+        )
+        .expect("historical replay excludes unconfirmed requested bars");
     assert_eq!(
         plot_values(&session.result()),
         serde_json::json!([20, 99, 99])
@@ -354,4 +408,68 @@ fn wasm_correct_from_keeps_prefix_and_matches_rust() {
         .correct_historical(60_000, &[bar(60_000, 21.0), bar(120_000, 31.0)])
         .expect("rust correct");
     assert_eq!(corrected, public_runtime_result_json(&rust_corrected));
+}
+
+#[test]
+fn wasm_state_seed_and_unicode_snapshot_match_core_bytes_and_replicas() {
+    let text = "图🚀 café \"quoted\"\\path\nnext";
+    let literal = serde_json::to_string(text).unwrap();
+    let source = format!(
+        "//@version=6\nindicator(\"state-only snapshot\")\nvar total = 0.0\ntotal += close\nplot(total, title={literal})\nlabel.new(bar_index, close, text={literal})\nalert({literal}, alert.freq_all)\n"
+    );
+    let seed = [bar(0, 1.0), bar(60_000, 2.0), bar(120_000, 3.0)];
+    let mut rust = RealtimeRuntime::from_program(hir(&source));
+    rust.seed_historical_without_output(&seed).unwrap();
+    let core_json = public_runtime_result_json(&rust.result());
+    let program = compile_script(&source).unwrap();
+    let mut session = program.realtime_session().unwrap();
+    session.seed_state_internal(&bars_csv(&seed), None).unwrap();
+    assert_eq!(session.result(), core_json);
+    assert_eq!(session.confirmed_result(), core_json);
+    let encoded = session.stream_snapshot();
+    assert_eq!(
+        encoded,
+        format!(
+            "{{\"revision\":{},\"retainedFrom\":0,\"result\":{core_json}}}",
+            rust.revision()
+        )
+    );
+    let parsed: Value = serde_json::from_str(&encoded).unwrap();
+    assert_eq!(parsed["result"]["plots"][0]["title"], text);
+    assert_eq!(parsed["result"]["alerts"][2]["message"], text);
+    let mut replica = session.replica();
+    let changes = session.apply_forming(&bar_json(180_000, 4.0)).unwrap();
+    assert!(replica.apply_internal(&changes).unwrap());
+    assert_eq!(replica.result(), session.result());
+}
+
+#[test]
+fn wasm_state_seed_execution_times_match_snapshot_seed_and_reject_bad_clocks() {
+    let source = "//@version=6\nindicator(\"state seed clock\")\nplot(timenow)\n";
+    let program = compile_script(source).unwrap();
+    let mut state = program.realtime_session().unwrap();
+    let mut ordinary = program.realtime_session().unwrap();
+    let csv = bars_csv(&[bar(0, 1.0), bar(60_000, 2.0)]);
+    assert!(
+        state
+            .seed_state_internal(&csv, None)
+            .unwrap_err()
+            .contains("explicit execution timestamp")
+    );
+    assert!(!state.is_seeded());
+    assert_eq!(state.confirmed_bars(), 0);
+    assert!(
+        state
+            .seed_state_internal(&csv, Some(&[101]))
+            .unwrap_err()
+            .contains("timestamp count")
+    );
+    assert!(!state.is_seeded());
+    state
+        .seed_state_internal(&csv, Some(&[101, 60_202]))
+        .unwrap();
+    let snapshot = ordinary.seed_internal(&csv, Some(&[101, 60_202])).unwrap();
+    assert_eq!(state.result(), snapshot);
+    assert_eq!(plot_values(&snapshot), serde_json::json!([101, 60202]));
+    assert_eq!(state.revision(), ordinary.revision());
 }

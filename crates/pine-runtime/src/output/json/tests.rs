@@ -1,10 +1,10 @@
 use super::*;
 use crate::{
     RuntimeChanges, RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent,
-    StrategyOrderFillAlertOutput, StrategyPositionSnapshot, StrategyTrade,
+    StrategyOrderFillAlertOutput, StrategyPositionSnapshot, StrategyResult, StrategyTrade,
 };
 
-fn empty_result() -> RuntimeResult {
+pub(super) fn empty_result() -> RuntimeResult {
     RuntimeResult {
         plots: Vec::new(),
         plot_chars: Vec::new(),

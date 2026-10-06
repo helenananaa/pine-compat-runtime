@@ -76,8 +76,8 @@ impl<'a> HistoricalRuntime<'a> {
         right_id: u32,
     ) -> Result<PineValue, RuntimeError> {
         let (Some(left), Some(right)) = (
-            self.matrix_store.get(&left_id).cloned(),
-            self.matrix_store.get(&right_id).cloned(),
+            self.matrix_store.get(&left_id),
+            self.matrix_store.get(&right_id),
         ) else {
             return Ok(PineValue::Na);
         };
@@ -102,6 +102,11 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
+        if !self.record_collection_allocation(cells) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let left = self.matrix_store.get(&left_id).expect("validated matrix");
+        let right = self.matrix_store.get(&right_id).expect("validated matrix");
         let mut values = Vec::with_capacity(cells);
         for left_row in 0..left.rows {
             for right_row in 0..right.rows {
@@ -120,7 +125,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        Ok(self.insert_matrix_storage(MatrixElementKind::Float, rows, columns, values))
+        Ok(self.insert_matrix_payload(MatrixElementKind::Float, rows, columns, values.into()))
     }
 
     pub(crate) fn matrix_mult(
@@ -129,13 +134,18 @@ impl<'a> HistoricalRuntime<'a> {
         right_id: u32,
     ) -> Result<PineValue, RuntimeError> {
         let (Some(left), Some(right)) = (
-            self.matrix_store.get(&left_id).cloned(),
-            self.matrix_store.get(&right_id).cloned(),
+            self.matrix_store.get(&left_id),
+            self.matrix_store.get(&right_id),
         ) else {
             return Ok(PineValue::Na);
         };
-        let result = matrix_multiply_storage(&left, &right)?;
-        Ok(self.insert_matrix_storage(
+        let result = matrix_multiply_storage(
+            left,
+            right,
+            &mut self.resource_budget,
+            &mut self.collection_gc_allocated_bytes,
+        )?;
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             result.rows,
             result.columns,
@@ -156,10 +166,10 @@ impl<'a> HistoricalRuntime<'a> {
         left_id: u32,
         right_id: u32,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(left) = self.matrix_store.get(&left_id).cloned() else {
+        let Some(left) = self.matrix_store.get(&left_id) else {
             return Ok(PineValue::Na);
         };
-        let Some(right) = self.array_values_clone(right_id)? else {
+        let Some(right) = self.array_values(right_id)? else {
             return Ok(PineValue::Na);
         };
         if left.columns != right.len() {
@@ -169,8 +179,14 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let mut values = Vec::with_capacity(left.rows);
-        for row in 0..left.rows {
+        let rows = left.rows;
+        if !self.record_collection_allocation(rows) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let left = self.matrix_store.get(&left_id).expect("validated matrix");
+        let right = self.array_values(right_id)?.expect("validated array");
+        let mut values = Vec::with_capacity(rows);
+        for row in 0..rows {
             let mut sum = 0.0;
             let mut valid = true;
             for (column, right_value) in right.iter().enumerate() {
@@ -194,7 +210,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        Ok(self.new_array_from_values(ArrayElementKind::Float, values))
+        Ok(self.insert_precharged_array_values(ArrayElementKind::Float, values))
     }
 
     pub(crate) fn array_mult_matrix(
@@ -202,10 +218,10 @@ impl<'a> HistoricalRuntime<'a> {
         left_id: u32,
         right_id: u32,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(left) = self.array_values_clone(left_id)? else {
+        let Some(left) = self.array_values(left_id)? else {
             return Ok(PineValue::Na);
         };
-        let Some(right) = self.matrix_store.get(&right_id).cloned() else {
+        let Some(right) = self.matrix_store.get(&right_id) else {
             return Ok(PineValue::Na);
         };
         if left.len() != right.rows {
@@ -215,8 +231,14 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let mut values = Vec::with_capacity(right.columns);
-        for column in 0..right.columns {
+        let columns = right.columns;
+        if !self.record_collection_allocation(columns) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let left = self.array_values(left_id)?.expect("validated array");
+        let right = self.matrix_store.get(&right_id).expect("validated matrix");
+        let mut values = Vec::with_capacity(columns);
+        for column in 0..columns {
             let mut sum = 0.0;
             let mut valid = true;
             for (row, left_value) in left.iter().enumerate() {
@@ -240,7 +262,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        Ok(self.new_array_from_values(ArrayElementKind::Float, values))
+        Ok(self.insert_precharged_array_values(ArrayElementKind::Float, values))
     }
 
     pub(crate) fn array_mult_array(
@@ -248,10 +270,10 @@ impl<'a> HistoricalRuntime<'a> {
         left_id: u32,
         right_id: u32,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(left) = self.array_values_clone(left_id)? else {
+        let Some(left) = self.array_values(left_id)? else {
             return Ok(PineValue::Na);
         };
-        let Some(right) = self.array_values_clone(right_id)? else {
+        let Some(right) = self.array_values(right_id)? else {
             return Ok(PineValue::Na);
         };
         if left.len() != right.len() {
@@ -261,6 +283,11 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
+        if !self.record_collection_allocation(1) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let left = self.array_values(left_id)?.expect("validated array");
+        let right = self.array_values(right_id)?.expect("validated array");
         let mut sum = 0.0;
         let mut valid = true;
         for (left_value, right_value) in left.iter().zip(right.iter()) {
@@ -282,7 +309,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             PineValue::Na
         };
-        Ok(self.new_array_from_values(ArrayElementKind::Float, vec![value]))
+        Ok(self.insert_precharged_array_values(ArrayElementKind::Float, vec![value]))
     }
 
     pub(crate) fn matrix_diff(
@@ -291,8 +318,8 @@ impl<'a> HistoricalRuntime<'a> {
         right_id: u32,
     ) -> Result<PineValue, RuntimeError> {
         let (Some(left), Some(right)) = (
-            self.matrix_store.get(&left_id).cloned(),
-            self.matrix_store.get(&right_id).cloned(),
+            self.matrix_store.get(&left_id),
+            self.matrix_store.get(&right_id),
         ) else {
             return Ok(PineValue::Na);
         };
@@ -302,6 +329,12 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
+        let (rows, columns) = (left.rows, left.columns);
+        if !self.record_collection_allocation(left.values.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let left = self.matrix_store.get(&left_id).expect("validated matrix");
+        let right = self.matrix_store.get(&right_id).expect("validated matrix");
         let values = left
             .values
             .iter()
@@ -318,9 +351,9 @@ impl<'a> HistoricalRuntime<'a> {
                     PineValue::Na
                 }
             })
-            .collect();
+            .collect::<Vec<_>>();
 
-        Ok(self.insert_matrix_storage(MatrixElementKind::Float, left.rows, left.columns, values))
+        Ok(self.insert_matrix_payload(MatrixElementKind::Float, rows, columns, values.into()))
     }
 
     pub(crate) fn matrix_diff_scalar(
@@ -337,10 +370,15 @@ impl<'a> HistoricalRuntime<'a> {
         scalar: PineValue,
         operation: impl Fn(f64, f64) -> f64,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(source) = self.matrix_store.get(&id).cloned() else {
+        let Some(source) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         let scalar = scalar.as_f64().filter(|value| value.is_finite());
+        let (rows, columns) = (source.rows, source.columns);
+        if !self.record_collection_allocation(source.values.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let source = self.matrix_store.get(&id).expect("validated matrix");
         let values = source
             .values
             .iter()
@@ -354,18 +392,13 @@ impl<'a> HistoricalRuntime<'a> {
                     PineValue::Na
                 }
             })
-            .collect();
+            .collect::<Vec<_>>();
 
-        Ok(self.insert_matrix_storage(
-            MatrixElementKind::Float,
-            source.rows,
-            source.columns,
-            values,
-        ))
+        Ok(self.insert_matrix_payload(MatrixElementKind::Float, rows, columns, values.into()))
     }
 
     pub(crate) fn matrix_pow(&mut self, id: u32, power: usize) -> Result<PineValue, RuntimeError> {
-        let Some(source) = self.matrix_store.get(&id).cloned() else {
+        let Some(source) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
         if source.rows != source.columns {
@@ -373,16 +406,34 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "matrix power requires a square matrix".to_owned(),
             });
         }
+        let size = source.rows;
         if power == 0 {
-            return Ok(self.insert_matrix_storage(
+            if !self.record_collection_allocation(size * size) {
+                return Err(self.resource_budget.collection_error());
+            }
+            return Ok(self.insert_matrix_payload(
                 MatrixElementKind::Float,
-                source.rows,
-                source.columns,
-                identity_matrix_values(source.rows),
+                size,
+                size,
+                identity_matrix_values(size).into(),
             ));
         }
+        let cloned = collection_values_allocation_bytes(source.values.clone_allocation_values());
+        let identity = if power > 1 {
+            (size * size).saturating_mul(std::mem::size_of::<PineValue>())
+        } else {
+            0
+        };
+        if !self.record_collection_bytes(cloned.saturating_add(identity)) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let source = self
+            .matrix_store
+            .get(&id)
+            .expect("validated matrix")
+            .clone();
         if power == 1 {
-            return Ok(self.insert_matrix_storage(
+            return Ok(self.insert_matrix_payload(
                 MatrixElementKind::Float,
                 source.rows,
                 source.columns,
@@ -394,21 +445,31 @@ impl<'a> HistoricalRuntime<'a> {
             kind: MatrixElementKind::Float,
             rows: source.rows,
             columns: source.columns,
-            values: identity_matrix_values(source.rows),
+            values: identity_matrix_values(source.rows).into(),
         };
         let mut base = source;
         let mut exponent = power;
         while exponent > 0 {
             if exponent % 2 == 1 {
-                result = matrix_multiply_storage(&result, &base)?;
+                result = matrix_multiply_storage(
+                    &result,
+                    &base,
+                    &mut self.resource_budget,
+                    &mut self.collection_gc_allocated_bytes,
+                )?;
             }
             exponent /= 2;
             if exponent > 0 {
-                base = matrix_multiply_storage(&base, &base)?;
+                base = matrix_multiply_storage(
+                    &base,
+                    &base,
+                    &mut self.resource_budget,
+                    &mut self.collection_gc_allocated_bytes,
+                )?;
             }
         }
 
-        Ok(self.insert_matrix_storage(
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             result.rows,
             result.columns,
@@ -442,6 +503,8 @@ fn identity_matrix_values(size: usize) -> Vec<PineValue> {
 fn matrix_multiply_storage(
     left: &MatrixStorage,
     right: &MatrixStorage,
+    budget: &mut crate::runtime::resource_limits::ResourceBudget,
+    collection_gc_allocated_bytes: &mut usize,
 ) -> Result<MatrixStorage, RuntimeError> {
     if left.columns != right.rows {
         return Err(RuntimeError {
@@ -461,6 +524,18 @@ fn matrix_multiply_storage(
         });
     }
 
+    if !budget.matrix.spend(
+        (left.rows as u64)
+            .saturating_mul(right.columns as u64)
+            .saturating_mul(left.columns as u64),
+    ) {
+        return Err(budget.check().expect_err("matrix work was rejected"));
+    }
+    let bytes = cells.saturating_mul(std::mem::size_of::<PineValue>());
+    if !budget.reserve_collection(bytes) {
+        return Err(budget.collection_error());
+    }
+    *collection_gc_allocated_bytes = collection_gc_allocated_bytes.saturating_add(bytes);
     let mut values = Vec::with_capacity(cells);
     for row in 0..left.rows {
         for column in 0..right.columns {
@@ -493,6 +568,6 @@ fn matrix_multiply_storage(
         kind: MatrixElementKind::Float,
         rows: left.rows,
         columns: right.columns,
-        values,
+        values: values.into(),
     })
 }

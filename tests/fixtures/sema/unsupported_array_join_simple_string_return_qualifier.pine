@@ -1,4 +1,4 @@
-//@version=6
+//@version=5
 indicator("Unsupported array.join simple string return qualifier")
 
 words = array.from("alpha", "beta")

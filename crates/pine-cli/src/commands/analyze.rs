@@ -169,15 +169,7 @@ fn print_text_report(source: &SourceFile, analysis: &Analysis) {
         analysis.compatibility.legacy_emulations.len()
     );
     for diagnostic in &analysis.diagnostics {
-        let line_col = source.line_col(diagnostic.span.start);
-        println!(
-            "{}:{:?}:{}:{}: {}",
-            diagnostic.code,
-            diagnostic.severity,
-            line_col.line,
-            line_col.column,
-            diagnostic.message
-        );
+        println!("{}", diagnostic.format(source));
     }
 }
 
@@ -231,10 +223,30 @@ fn diagnostics_json(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
             json_escape(&diagnostic.code),
             severity_name(diagnostic.severity),
             json_escape(&diagnostic.message),
-            span_json(source, diagnostic.span)
+            diagnostic_span_json(source, diagnostic)
         ));
     }
     output.push(']');
+    output
+}
+
+fn diagnostic_span_json(root: &SourceFile, diagnostic: &Diagnostic) -> String {
+    let location = diagnostic.line_col(root);
+    let mut output = format!(
+        "{{\"start\":{},\"end\":{},\"line\":{},\"column\":{}",
+        diagnostic.span.start, diagnostic.span.end, location.line, location.column
+    );
+    if let Some(source) = &diagnostic.source {
+        output.push_str(&format!(
+            ",\"sourceId\":{},\"sourceName\":\"{}\"",
+            source.source_id,
+            json_escape(&source.source_name)
+        ));
+        if let Some(key) = &source.library_key {
+            output.push_str(&format!(",\"libraryKey\":\"{}\"", json_escape(key)));
+        }
+    }
+    output.push('}');
     output
 }
 
@@ -252,9 +264,10 @@ fn inputs_json(analysis: &Analysis) -> String {
             |title| format!("\"{}\"", json_escape(title)),
         );
         output.push_str(&format!(
-            "{{\"callSiteId\":{},\"name\":\"{}\",\"title\":{},\"default\":{}",
+            "{{\"callSiteId\":{},\"name\":\"{}\",\"isSource\":{},\"title\":{},\"default\":{}",
             input.call_site_id,
             json_escape(&input.name),
+            input.is_source,
             title,
             input
                 .default_value
@@ -633,6 +646,7 @@ mod tests {
         assert_eq!(parsed["inputs"].as_array().map(Vec::len), Some(11));
         assert_eq!(parsed["inputs"][0]["callSiteId"], serde_json::json!(1));
         assert_eq!(parsed["inputs"][0]["name"], serde_json::json!("input.int"));
+        assert_eq!(parsed["inputs"][0]["isSource"], serde_json::json!(false));
         assert_eq!(parsed["inputs"][0]["title"], serde_json::json!("Length"));
         assert_eq!(parsed["inputs"][0]["default"], serde_json::json!(3));
         assert_eq!(parsed["inputs"][0]["min"], serde_json::json!(1));
@@ -653,7 +667,22 @@ mod tests {
     }
 
     #[test]
-    fn analysis_json_exposes_one_legacy_strategy_hard_stop() {
+    fn analysis_json_marks_generic_and_explicit_source_inputs() {
+        let source = SourceFile::new(
+            "source-inputs.pine",
+            "//@version=5\nindicator(\"sources\")\na = input(close, \"Generic source\")\nb = input.source(close, \"Source\")\nc = input(1.5, \"Scale\")\nplot(a + b + c)\n",
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).unwrap();
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+        assert_eq!(parsed["inputs"][0]["isSource"], serde_json::json!(true));
+        assert_eq!(parsed["inputs"][1]["isSource"], serde_json::json!(true));
+        assert_eq!(parsed["inputs"][2]["isSource"], serde_json::json!(false));
+    }
+
+    #[test]
+    fn analysis_json_exposes_executable_v4_strategy() {
         let source = SourceFile::new(
             "legacy-strategy.pine",
             "//@version=4\nstrategy(\"legacy\")\nstrategy.entry(\"L\", strategy.long)\n",
@@ -664,15 +693,8 @@ mod tests {
 
         assert_eq!(parsed["languageVersion"], serde_json::json!(4));
         assert_eq!(parsed["scriptMode"], serde_json::json!("strategy"));
-        assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(1));
-        assert_eq!(
-            parsed["diagnostics"][0]["code"],
-            serde_json::json!("E_LEGACY_STRATEGY_OUT_OF_SCOPE")
-        );
-        assert_eq!(
-            parsed["compatibility"]["unsupported"][0]["feature"],
-            serde_json::json!("legacy strategy")
-        );
+        assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(0));
+        assert_eq!(parsed["executable"], serde_json::json!(true));
     }
 
     #[test]

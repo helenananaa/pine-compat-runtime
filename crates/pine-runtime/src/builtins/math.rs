@@ -6,46 +6,48 @@ use crate::builtins::args::RuntimeArgs;
 use crate::runtime::call_context::RuntimeCallContext;
 use crate::{PineValue, RuntimeError};
 
+#[path = "math_opcode.rs"]
+mod opcode;
+
+pub(crate) use opcode::MathOpcode;
+
 pub(crate) fn eval_math_call(
     context: &mut RuntimeCallContext<'_, '_>,
-    callee: &str,
+    opcode: Option<MathOpcode>,
     call_site_id: CallSiteId,
     raw_args: &[HirCallArg],
+    positional_args: bool,
 ) -> Option<Result<PineValue, RuntimeError>> {
-    if !callee.starts_with("math.") {
-        return None;
-    }
-
-    let args = RuntimeArgs::new(raw_args);
-    Some(match callee {
-        "math.abs" => eval_math_abs(context, args),
-        "math.max" => eval_math_extreme(context, args, NumericExtreme::Max),
-        "math.min" => eval_math_extreme(context, args, NumericExtreme::Min),
-        "math.avg" => eval_math_avg(context, args),
-        "math.floor" => eval_math_floor(context, args),
-        "math.ceil" => eval_math_ceil(context, args),
-        "math.trunc" => eval_math_trunc(context, args),
-        "math.sqrt" => eval_math_unary_float(context, args, f64::sqrt),
-        "math.cbrt" => eval_math_unary_float(context, args, f64::cbrt),
-        "math.log" => eval_math_unary_float(context, args, f64::ln),
-        "math.log10" => eval_math_unary_float(context, args, f64::log10),
-        "math.exp" => eval_math_unary_float(context, args, f64::exp),
-        "math.acos" => eval_math_unary_float(context, args, f64::acos),
-        "math.asin" => eval_math_unary_float(context, args, f64::asin),
-        "math.atan" => eval_math_unary_float(context, args, f64::atan),
-        "math.sign" => eval_math_sign(context, args),
-        "math.todegrees" => eval_math_unary_float(context, args, f64::to_degrees),
-        "math.toradians" => eval_math_unary_float(context, args, f64::to_radians),
-        "math.sin" => eval_math_unary_float(context, args, f64::sin),
-        "math.cos" => eval_math_unary_float(context, args, f64::cos),
-        "math.tan" => eval_math_unary_float(context, args, f64::tan),
-        "math.pow" => eval_math_pow(context, args),
-        "math.hypot" => eval_math_hypot(context, args),
-        "math.round" => eval_math_round(context, args),
-        "math.round_to_mintick" => eval_math_round_to_mintick(context, args),
-        "math.random" => eval_math_random(context, call_site_id, args),
-        "math.sum" => eval_math_sum(context, call_site_id, args),
-        _ => return None,
+    let opcode = opcode?;
+    let args = RuntimeArgs::new(raw_args, positional_args);
+    Some(match opcode {
+        MathOpcode::Abs => eval_math_abs(context, args),
+        MathOpcode::Max => eval_math_extreme(context, args, NumericExtreme::Max),
+        MathOpcode::Min => eval_math_extreme(context, args, NumericExtreme::Min),
+        MathOpcode::Avg => eval_math_avg(context, args),
+        MathOpcode::Floor => eval_math_floor(context, args),
+        MathOpcode::Ceil => eval_math_ceil(context, args),
+        MathOpcode::Trunc => eval_math_trunc(context, args),
+        MathOpcode::Sqrt => eval_math_unary_float(context, args, f64::sqrt),
+        MathOpcode::Cbrt => eval_math_unary_float(context, args, f64::cbrt),
+        MathOpcode::Log => eval_math_unary_float(context, args, f64::ln),
+        MathOpcode::Log10 => eval_math_unary_float(context, args, f64::log10),
+        MathOpcode::Exp => eval_math_unary_float(context, args, f64::exp),
+        MathOpcode::Acos => eval_math_unary_float(context, args, f64::acos),
+        MathOpcode::Asin => eval_math_unary_float(context, args, f64::asin),
+        MathOpcode::Atan => eval_math_unary_float(context, args, f64::atan),
+        MathOpcode::Sign => eval_math_sign(context, args),
+        MathOpcode::ToDegrees => eval_math_unary_float(context, args, f64::to_degrees),
+        MathOpcode::ToRadians => eval_math_unary_float(context, args, f64::to_radians),
+        MathOpcode::Sin => eval_math_unary_float(context, args, f64::sin),
+        MathOpcode::Cos => eval_math_unary_float(context, args, f64::cos),
+        MathOpcode::Tan => eval_math_unary_float(context, args, f64::tan),
+        MathOpcode::Pow => eval_math_pow(context, args),
+        MathOpcode::Hypot => eval_math_hypot(context, args),
+        MathOpcode::Round => eval_math_round(context, args),
+        MathOpcode::RoundToMintick => eval_math_round_to_mintick(context, args),
+        MathOpcode::Random => eval_math_random(context, call_site_id, args),
+        MathOpcode::Sum => eval_math_sum(context, call_site_id, args),
     })
 }
 
@@ -169,8 +171,10 @@ fn eval_math_sum(
         return Ok(PineValue::Na);
     }
 
-    let length = length as usize;
-    let window = context.update_rolling_window(call_site_id, source, length);
+    let Ok(length) = usize::try_from(length) else {
+        return Ok(PineValue::Na);
+    };
+    let window = context.update_sum_window(call_site_id, source, length);
     if !window.is_ready(length) {
         return Ok(PineValue::Na);
     }
@@ -273,16 +277,19 @@ fn eval_math_avg(
 ) -> Result<PineValue, RuntimeError> {
     let mut total = 0.0;
     let mut count = 0.0;
+    let mut has_na = false;
 
     for expr in args.exprs() {
-        let Some(value) = context.eval_expr(expr)?.as_f64() else {
-            return Ok(PineValue::Na);
-        };
-        total += value;
-        count += 1.0;
+        match context.eval_expr(expr)?.as_f64() {
+            Some(value) => {
+                total += value;
+                count += 1.0;
+            }
+            None => has_na = true,
+        }
     }
 
-    if count == 0.0 {
+    if has_na || count == 0.0 {
         return Ok(PineValue::Na);
     }
     Ok(finite_float_or_na(total / count))
@@ -295,6 +302,7 @@ fn eval_math_extreme(
 ) -> Result<PineValue, RuntimeError> {
     let mut current_int: Option<i64> = None;
     let mut current_float: Option<f64> = None;
+    let mut has_na = false;
 
     for expr in args.exprs() {
         match context.eval_expr(expr)? {
@@ -320,9 +328,12 @@ fn eval_math_extreme(
                     value
                 });
             }
-            PineValue::Na => return Ok(PineValue::Na),
-            _ => return Ok(PineValue::Na),
+            _ => has_na = true,
         }
+    }
+
+    if has_na {
+        return Ok(PineValue::Na);
     }
 
     match (current_float, current_int) {

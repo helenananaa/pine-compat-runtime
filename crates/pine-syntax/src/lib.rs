@@ -14,7 +14,7 @@ pub use ast::{
     MethodParam, Program, Stmt, StmtKind, SwitchArm, SwitchArmResult, UnaryOp, UserTypeDecl,
     UserTypeField, VersionDecl,
 };
-pub use diagnostic::{Diagnostic, Severity};
+pub use diagnostic::{Diagnostic, DiagnosticSource, Severity};
 pub use lexer::{Lexed, Token, TokenKind, lex};
 pub use parser::{Parse, parse_source};
 pub use source::{LineCol, SourceFile, Span};

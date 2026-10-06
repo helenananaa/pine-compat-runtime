@@ -15,7 +15,24 @@ fn trade_value_percent(amount: f64, entry_price: f64, quantity: f64) -> Option<f
 }
 
 impl BrokerState {
+    fn mark_price(&self, price: f64) -> f64 {
+        let Some(tick) = self.price_tick else {
+            return price;
+        };
+        if !price.is_finite() {
+            return price;
+        }
+        let ticks = price / tick;
+        if (ticks - ticks.round()).abs() <= 1e-8 {
+            return price;
+        }
+        // Native half-tick marks round the quotient. Adding 0.5 first can
+        // move a quotient just below the midpoint onto the opposite tick.
+        ticks.round() * tick
+    }
+
     pub(crate) fn record_equity(&mut self, bar_index: usize, close: f64) {
+        let close = self.mark_price(close);
         let market_value = self.position_size * close;
         let equity = self.cash + market_value;
         let net_profit = normalize_zero(equity - self.initial_capital);
@@ -63,6 +80,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn open_profit(&self, close: f64) -> f64 {
+        let close = self.mark_price(close);
         if self.position_size != 0.0 {
             normalize_zero((close - self.avg_price) * self.position_size)
         } else {
@@ -73,7 +91,7 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn open_profit_percent(&self, close: f64) -> Option<f64> {
         let open_profit = self.open_profit(close);
-        let realized_equity = self.initial_capital + self.realized_profit();
+        let realized_equity = self.initial_capital + self.net_profit();
         if !open_profit.is_finite() || !realized_equity.is_finite() || realized_equity <= 0.0 {
             return None;
         }
@@ -366,6 +384,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
+        let close = self.mark_price(close);
         normalize_zero(self.cash + self.position_size * close)
     }
 
@@ -409,8 +428,10 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn closed_trade_profit_percent(&self, trade_num: i64) -> Option<f64> {
-        let trade = self.closed_trade(trade_num)?;
-        trade_value_percent(trade.profit, trade.entry_price, trade.qty)
+        let index = usize::try_from(trade_num).ok()?;
+        self.closed_trade_metrics
+            .get(index)
+            .map(|metrics| metrics.profit_percent)
     }
 
     #[must_use]
@@ -537,9 +558,12 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn open_trade_profit(&self, trade_num: i64, close: f64) -> Option<f64> {
+        let close = self.mark_price(close);
         self.open_trade_at(trade_num).map(|trade| {
             normalize_zero(
-                (close - trade.entry_price) * trade.direction.signed_quantity(trade.quantity),
+                (close - trade.entry_price) * trade.direction.signed_quantity(trade.quantity)
+                    - trade.entry_commission
+                    - self.exit_commission_for_fill(trade.quantity, close),
             )
         })
     }
@@ -547,8 +571,12 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn open_trade_profit_percent(&self, trade_num: i64, close: f64) -> Option<f64> {
         let trade = self.open_trade_at(trade_num)?;
-        let amount = normalize_zero((close - trade.entry_price) * trade.quantity);
-        trade_value_percent(amount, trade.entry_price, trade.quantity)
+        let amount = self.open_trade_profit(trade_num, close)?;
+        let capital = trade.entry_price * trade.quantity + trade.entry_commission;
+        if !amount.is_finite() || !capital.is_finite() || capital <= 0.0 {
+            return None;
+        }
+        Some(normalize_zero(amount / capital * 100.0))
     }
 
     #[must_use]

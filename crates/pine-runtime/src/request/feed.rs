@@ -38,6 +38,15 @@ impl RequestFeed {
             .is_some_and(|stream| stream.forming.is_some())
     }
 
+    pub(crate) fn last_update_time(&self, key: &RequestKey) -> Option<i64> {
+        self.streams.get(key).and_then(|stream| {
+            stream
+                .forming
+                .or_else(|| stream.confirmed.last().copied())
+                .map(|bar| bar.time)
+        })
+    }
+
     pub(crate) fn resolved_len(
         &self,
         key: &RequestKey,
@@ -70,23 +79,48 @@ impl RequestFeed {
         bars
     }
 
-    /// Drop confirmed extras that close after `last_time`. Forming extras at or
-    /// before `last_time` are stale; later forming extras stay for the next
-    /// chart forming bar.
-    pub(crate) fn trim_after(&mut self, last_time: Option<i64>) {
-        let Some(last_time) = last_time else {
+    /// Keep request bars closed within the retained chart boundary. The last
+    /// retained bar must close nominally; earlier bars may close at a retained
+    /// successor's open. Unclosed forming requests remain for the next observation.
+    pub(crate) fn trim_after(&mut self, chart_close: Option<i64>) {
+        let Some(chart_close) = chart_close else {
             self.streams.clear();
             return;
         };
-        self.streams.retain(|_, stream| {
-            stream.confirmed = AppendHistory::from_values(
+        self.streams.retain(|key, stream| {
+            let timeframe = key.timeframe();
+            let close_at = |index: usize| {
+                let nominal = timeframe.nominal_close(stream.confirmed[index].time);
                 stream
                     .confirmed
-                    .iter()
-                    .copied()
-                    .take_while(|bar| bar.time <= last_time),
-            );
-            if stream.forming.is_some_and(|bar| bar.time <= last_time) {
+                    .get(index + 1)
+                    .map_or(nominal, |next| nominal.min(next.time))
+            };
+            let len = stream.confirmed.len();
+            if len > 0 && close_at(len - 1) > chart_close {
+                let (mut lo, mut hi) = (0, len);
+                while lo < hi {
+                    let mid = lo + (hi - lo) / 2;
+                    if close_at(mid) <= chart_close {
+                        lo = mid + 1;
+                    } else {
+                        hi = mid;
+                    }
+                }
+                // Removing a successor can extend the last retained close.
+                // Prune that now-unclosed suffix before mutating the history.
+                // Only successor-based closes are searched: calendar fallback
+                // at extreme timestamps need not have monotone nominal closes.
+                while lo > 0 && timeframe.nominal_close(stream.confirmed[lo - 1].time) > chart_close
+                {
+                    lo -= 1;
+                }
+                stream.confirmed.truncate(lo);
+            }
+            if stream
+                .forming
+                .is_some_and(|bar| timeframe.nominal_close(bar.time) <= chart_close)
+            {
                 stream.forming = None;
             }
             !stream.confirmed.is_empty() || stream.forming.is_some()
@@ -216,5 +250,77 @@ impl fmt::Display for RequestFeedError {
                 "E_REQUEST_FEED_TIME: requested bar `{time}` must be later than confirmed time `{last_confirmed}`"
             ),
         }
+    }
+}
+
+#[cfg(test)]
+mod trim_tests {
+    use super::*;
+    use crate::RequestTimeframe;
+
+    fn bar(time: i64) -> Bar {
+        Bar {
+            time,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        }
+    }
+
+    #[test]
+    fn trimming_preserves_unclosed_forming_requests_and_removes_closed_ones() {
+        let ltf = RequestKey::new("L", RequestTimeframe::parse("1").unwrap());
+        let htf = RequestKey::new("H", RequestTimeframe::parse("5").unwrap());
+        let mut feed = RequestFeed::default();
+        feed.apply(ltf.clone(), BarUpdate::forming(bar(240_000)), None)
+            .unwrap();
+        feed.apply(htf.clone(), BarUpdate::forming(bar(300_000)), None)
+            .unwrap();
+        let checkpoint = feed.clone();
+        feed.trim_after(Some(420_000));
+        assert!(!feed.contains(&ltf));
+        assert!(feed.has_forming(&htf));
+        assert!(checkpoint.has_forming(&ltf));
+        assert!(checkpoint.has_forming(&htf));
+        feed.trim_after(None);
+        assert!(feed.streams.is_empty());
+    }
+
+    #[test]
+    fn discarded_early_successor_cannot_shorten_a_retained_request_close() {
+        let key = RequestKey::new("H", RequestTimeframe::parse("5").unwrap());
+        let mut feed = RequestFeed::default();
+        for time in [-300_000, 0, 60_000, 120_000] {
+            feed.apply(key.clone(), BarUpdate::confirmed(bar(time)), None)
+                .unwrap();
+        }
+        let checkpoint = feed.clone();
+        feed.trim_after(Some(180_000));
+        let retained = feed.resolved_from(&key, &[], false, 0);
+        assert_eq!(retained, vec![bar(-300_000)]);
+        feed.trim_after(Some(180_000));
+        assert_eq!(feed.resolved_from(&key, &[], false, 0), retained);
+        assert_eq!(checkpoint.resolved_len(&key, 0, false), 4);
+    }
+
+    #[test]
+    fn extreme_calendar_fallback_keeps_closes_bounded_by_retained_successors() {
+        let timeframe = RequestTimeframe::parse("2M").unwrap();
+        let key = RequestKey::new("H", timeframe.clone());
+        let earliest_calendar = chrono::DateTime::<chrono::Utc>::MIN_UTC.timestamp_millis();
+        let chart_close = timeframe.nominal_close(earliest_calendar);
+        assert!(timeframe.nominal_close(earliest_calendar - 1) > chart_close);
+        let mut feed = RequestFeed::default();
+        for time in [earliest_calendar - 1, earliest_calendar, chart_close] {
+            feed.apply(key.clone(), BarUpdate::confirmed(bar(time)), None)
+                .unwrap();
+        }
+        feed.trim_after(Some(chart_close));
+        let retained = vec![bar(earliest_calendar - 1), bar(earliest_calendar)];
+        assert_eq!(feed.resolved_from(&key, &[], false, 0), retained);
+        feed.trim_after(Some(chart_close));
+        assert_eq!(feed.resolved_from(&key, &[], false, 0), retained);
     }
 }

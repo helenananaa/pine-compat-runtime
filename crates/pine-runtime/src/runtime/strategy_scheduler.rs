@@ -170,6 +170,8 @@ impl StrategySchedulerState {
             step,
             HistoricalFillStep::SameBarMarketClosesAtClose
                 | HistoricalFillStep::SameBarMarketEntriesAtClose
+                | HistoricalFillStep::SameBarLimitEntriesAtClose
+                | HistoricalFillStep::SameBarPriceExitsAtClose
         ) {
             StrategyBarPhase::BarCloseMarketFills
         } else {
@@ -249,6 +251,8 @@ pub(crate) enum HistoricalFillStep {
     StopLimitShort,
     SameBarMarketClosesAtClose,
     SameBarMarketEntriesAtClose,
+    SameBarLimitEntriesAtClose,
+    SameBarPriceExitsAtClose,
 }
 
 impl HistoricalFillStep {
@@ -260,6 +264,8 @@ impl HistoricalFillStep {
         &[
             Self::SameBarMarketClosesAtClose,
             Self::SameBarMarketEntriesAtClose,
+            Self::SameBarLimitEntriesAtClose,
+            Self::SameBarPriceExitsAtClose,
         ]
     }
 
@@ -278,7 +284,10 @@ impl HistoricalFillStep {
             | Self::LimitShort
             | Self::StopShort
             | Self::StopLimitShort => 0,
-            Self::SameBarMarketClosesAtClose | Self::SameBarMarketEntriesAtClose => 1,
+            Self::SameBarMarketClosesAtClose
+            | Self::SameBarMarketEntriesAtClose
+            | Self::SameBarLimitEntriesAtClose
+            | Self::SameBarPriceExitsAtClose => 1,
         }
     }
 }
@@ -334,7 +343,7 @@ impl HistoricalRuntime<'_> {
             low: bar.close,
             ..bar
         });
-        self.recalculate_after_fill(filled)
+        self.recalculate_after_fill(filled, bar.close)
     }
 
     pub(crate) fn run_pre_script_strategy_phases(
@@ -387,7 +396,22 @@ impl HistoricalRuntime<'_> {
                 self.strategy_broker
                     .flatten_if_risk_blocked(bar_index, bar.time, open_price);
             }
-            self.recalculate_after_fill(filled)?;
+            self.recalculate_after_fill(filled, open_price)?;
+            if step == HistoricalFillStep::MarketEntriesAtOpen
+                && filled
+                && self.program.strategy_settings.calc_on_order_fills
+            {
+                // An entry fill at the open can make a close condition true
+                // during its recalculation. The broker processes that market
+                // close at the current open before the OHLC path advances.
+                let before = self.strategy_broker.public_fill_event_count();
+                self.strategy_broker
+                    .fill_same_bar_market_closes(bar_index, bar.time, open_price);
+                self.recalculate_after_fill(
+                    self.strategy_broker.public_fill_event_count() > before,
+                    open_price,
+                )?;
+            }
         }
         self.walk_host_sequence(bar_index, bar.time, &sequence.bars)?;
         self.trace_strategy_phase(StrategyBarPhase::TradeExtremes);
@@ -401,7 +425,7 @@ impl HistoricalRuntime<'_> {
         bar_index: usize,
         bar: Bar,
     ) -> bool {
-        let before = self.strategy_broker.public_order_event_count();
+        let before = self.strategy_broker.public_fill_event_count();
         match step {
             HistoricalFillStep::MarketClosesAtOpen => {
                 self.strategy_broker
@@ -410,6 +434,13 @@ impl HistoricalRuntime<'_> {
             HistoricalFillStep::MarketEntriesAtOpen => {
                 self.strategy_broker
                     .fill_pending_market_entries(bar_index, bar.time, bar.open);
+                if self.program.strategy_settings.calc_on_order_fills {
+                    // A market close filled at this open can trigger a script
+                    // pass that places a replacement entry before the entry
+                    // fill phase reaches the same open.
+                    self.strategy_broker
+                        .fill_same_bar_market_entries(bar_index, bar.time, bar.open);
+                }
             }
             HistoricalFillStep::LimitLong => {
                 self.strategy_broker
@@ -444,8 +475,16 @@ impl HistoricalRuntime<'_> {
                 self.strategy_broker
                     .fill_same_bar_market_entries(bar_index, bar.time, bar.close);
             }
+            HistoricalFillStep::SameBarLimitEntriesAtClose => {
+                self.strategy_broker
+                    .fill_same_bar_limit_entries(bar_index, bar.time, bar.close);
+            }
+            HistoricalFillStep::SameBarPriceExitsAtClose => {
+                self.strategy_broker
+                    .fill_same_bar_close_exits(bar_index, bar.time, bar.close);
+            }
         }
-        self.strategy_broker.public_order_event_count() > before
+        self.strategy_broker.public_fill_event_count() > before
     }
 
     fn walk_host_sequence(
@@ -454,16 +493,23 @@ impl HistoricalRuntime<'_> {
         chart_time: i64,
         hosts: &[MagnifierHostBar],
     ) -> Result<(), RuntimeError> {
+        // Every host open is a new order observation, including an open equal to
+        // the previous close. Orders placed at that close can fill at the open.
         if let (Some(previous), Some(first)) =
             (self.strategy_scheduler.last_host_bar, hosts.first())
-            && let Some(gap) = MagnifierHostGap::between(&previous, &first.bar)
         {
+            let gap = MagnifierHostGap {
+                previous_close: previous.close,
+                next_open: first.bar.open,
+            };
             self.observe_host_open_gap(chart_bar_index, chart_time, first, gap)?;
         }
         for (index, host) in hosts.iter().enumerate() {
-            if index > 0
-                && let Some(gap) = MagnifierHostGap::between(&hosts[index - 1].bar, &host.bar)
-            {
+            if index > 0 {
+                let gap = MagnifierHostGap {
+                    previous_close: hosts[index - 1].bar.close,
+                    next_open: host.bar.open,
+                };
                 self.observe_host_open_gap(chart_bar_index, chart_time, host, gap)?;
             }
             self.walk_one_host_bar(chart_bar_index, chart_time, host)?;
@@ -527,7 +573,7 @@ impl HistoricalRuntime<'_> {
                     chart_time,
                     fill_price,
                 );
-                self.recalculate_after_fill(true)?;
+                self.recalculate_after_fill(true, gap.next_open)?;
             }
         }
         Ok(())
@@ -566,6 +612,27 @@ impl HistoricalRuntime<'_> {
         let short_blocked = self.strategy_broker.same_side_short_entry_blocked();
         for leg in path.legs() {
             let mut mark = leg.from.price;
+            if self.program.strategy_settings.calc_on_order_fills && leg.index > 0 {
+                // The v4 historical broker has a fill opportunity at the
+                // high and low after the open. Orders created by a fill at
+                // the low wait for the next bar's open; the close is the
+                // regular script execution point, not another opportunity
+                // for those market orders.
+                let before = self.strategy_broker.public_fill_event_count();
+                self.strategy_broker
+                    .fill_same_bar_market_closes(chart_bar_index, chart_time, mark);
+                self.strategy_broker.fill_same_bar_market_entries(
+                    chart_bar_index,
+                    chart_time,
+                    mark,
+                );
+                let filled = self.strategy_broker.public_fill_event_count() > before;
+                if filled {
+                    self.strategy_broker
+                        .flatten_if_risk_blocked(chart_bar_index, chart_time, mark);
+                }
+                self.recalculate_after_fill(filled, mark)?;
+            }
             self.strategy_scheduler.set_host_path_cursor(
                 host.host_bar_index,
                 StrategyPathPhase::PathLeg,
@@ -641,7 +708,7 @@ impl HistoricalRuntime<'_> {
                         chart_time,
                         fill_price,
                     );
-                    self.recalculate_after_fill(true)?;
+                    self.recalculate_after_fill(true, mark)?;
                 }
             }
         }
@@ -680,9 +747,13 @@ impl HistoricalRuntime<'_> {
         if self.program.script_mode != ScriptMode::Strategy {
             return;
         }
-        self.trace_strategy_phase(StrategyBarPhase::CurrentTickMarketFills);
+        let before = self.strategy_broker.public_fill_event_count();
+        let mark = self.strategy_mark_price().unwrap_or(bar.close);
         self.strategy_broker
-            .fill_immediate_market_closes(self.bars, bar.time, bar.close);
+            .fill_immediate_market_closes(self.bars, bar.time, mark);
+        if self.strategy_broker.public_fill_event_count() > before {
+            self.trace_strategy_phase(StrategyBarPhase::CurrentTickMarketFills);
+        }
     }
 
     pub(crate) fn run_post_script_strategy_phases(
@@ -706,7 +777,7 @@ impl HistoricalRuntime<'_> {
                     self.strategy_broker
                         .flatten_if_risk_blocked(bar_index, bar.time, bar.close);
                 }
-                self.recalculate_after_fill(filled)?;
+                self.recalculate_after_fill(filled, bar.close)?;
             }
         }
         self.trace_strategy_phase(StrategyBarPhase::ExitFills);

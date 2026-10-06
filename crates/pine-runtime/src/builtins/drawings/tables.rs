@@ -35,11 +35,6 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("table cell count cannot exceed {MAX_TABLE_CELLS}"),
             });
         }
-        if self.tables.len() >= MAX_TABLES {
-            return Err(RuntimeError {
-                message: format!("table count cannot exceed {MAX_TABLES}"),
-            });
-        }
         let id = self.next_table_id;
         self.next_table_id = self
             .next_table_id
@@ -77,7 +72,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -188,7 +186,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -213,7 +214,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -238,7 +242,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -263,7 +270,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -288,7 +298,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -313,7 +326,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -643,7 +659,10 @@ impl<'a> HistoricalRuntime<'a> {
         end_column: i64,
         end_row: i64,
     ) -> Result<(), RuntimeError> {
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(());
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -709,7 +728,10 @@ impl<'a> HistoricalRuntime<'a> {
         end_column: i64,
         end_row: i64,
     ) -> Result<(), RuntimeError> {
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(());
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });
@@ -784,7 +806,10 @@ impl<'a> HistoricalRuntime<'a> {
     where
         F: FnOnce(&mut TableCellSnapshot),
     {
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+        let Some(table) = self.tables.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_table_id) {
+                return Ok(());
+            }
             return Err(RuntimeError {
                 message: format!("invalid table id `{id}`"),
             });

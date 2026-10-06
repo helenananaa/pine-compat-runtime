@@ -5,7 +5,7 @@ use super::super::types::*;
 const TABLE_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "position",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -73,7 +73,7 @@ const TABLE_MERGE_CELLS_PARAMS: &[BuiltinParam] = TABLE_CLEAR_PARAMS;
 
 const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
-        name: "id",
+        name: "table_id",
         accepts: Accepts::TableCompatible,
         optional: false,
     },
@@ -134,7 +134,7 @@ const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "text_font_family",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -152,7 +152,7 @@ const TABLE_SET_POSITION_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "position",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];
@@ -470,7 +470,7 @@ const TABLE_CELL_SET_TEXT_FONT_FAMILY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "text_font_family",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];

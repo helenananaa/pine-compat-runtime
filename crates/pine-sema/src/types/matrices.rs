@@ -14,6 +14,7 @@ pub(crate) fn matrix_element_return_type(
         ValueKind::BoolMatrix => ValueKind::Bool,
         ValueKind::StringMatrix => ValueKind::String,
         ValueKind::ColorMatrix => ValueKind::Color,
+        ValueKind::UserTypeMatrix => ValueKind::UserType,
         _ => return None,
     };
     Some(PineType::new(Qualifier::Series, kind))
@@ -30,6 +31,7 @@ pub(crate) fn matrix_array_return_type(
         ValueKind::BoolMatrix => ValueKind::BoolArray,
         ValueKind::StringMatrix => ValueKind::StringArray,
         ValueKind::ColorMatrix => ValueKind::ColorArray,
+        ValueKind::UserTypeMatrix => ValueKind::UserTypeArray,
         _ => return None,
     };
     Some(PineType::new(Qualifier::Simple, kind))
@@ -58,6 +60,9 @@ pub(crate) fn accepts_matrix_element_arg(
         ValueKind::BoolMatrix => Some(accepts_type(Accepts::BoolCompatible, arg_type)),
         ValueKind::StringMatrix => Some(accepts_type(Accepts::StringCompatible, arg_type)),
         ValueKind::ColorMatrix => Some(accepts_type(Accepts::ColorCompatible, arg_type)),
+        ValueKind::UserTypeMatrix => {
+            Some(matches!(arg_type.kind, ValueKind::UserType | ValueKind::Na))
+        }
         _ => None,
     }
 }
@@ -87,6 +92,10 @@ pub(crate) fn accepts_matrix_element_array_arg(
             Accepts::Exact(PineType::new(Qualifier::Simple, ValueKind::ColorArray)),
             arg_type,
         )),
+        ValueKind::UserTypeMatrix => Some(matches!(
+            arg_type.kind,
+            ValueKind::UserTypeArray | ValueKind::Na
+        )),
         _ => None,
     }
 }
@@ -99,6 +108,7 @@ pub(crate) fn is_matrix_kind(kind: ValueKind) -> bool {
             | ValueKind::BoolMatrix
             | ValueKind::StringMatrix
             | ValueKind::ColorMatrix
+            | ValueKind::UserTypeMatrix
     )
 }
 
@@ -212,7 +222,7 @@ pub(crate) fn matrix_method_builtin_name(kind: ValueKind, method: &str) -> Optio
             _ => None,
         };
     }
-    if kind == ValueKind::ColorMatrix {
+    if matches!(kind, ValueKind::ColorMatrix | ValueKind::UserTypeMatrix) {
         return match method {
             "add_col" => Some("matrix.add_col"),
             "add_row" => Some("matrix.add_row"),

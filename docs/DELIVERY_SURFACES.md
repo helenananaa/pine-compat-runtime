@@ -1,38 +1,58 @@
-# Delivery surfaces for the local 0.3.0-rc.1 candidate
+# Delivery surfaces for 0.3.0-rc.2
 
-Latest local worktree qualification: [streaming expansion](STREAMING_EXPANSION_AUDIT.md)
-and [artifact identity](STREAMING_EXPANSION_ARTIFACTS.json). This includes actual
-WASM streaming tests and a Windows optimized wheel; the earlier platform matrix
-below is retained evidence, not a newly qualified Linux build.
+The current opt-in GitHub prerelease has unique version `0.3.0-rc.2`
+(Python wheel `0.3.0rc2`). See [RC2 acceptance](RC2_ACCEPTANCE_20261006.md)
+for the current implementation and artifact pins, and
+[migration and limits](RC2_MIGRATION.md) for input and resource behavior.
+Official downloads contain the Windows/Linux Python wheels, manifest and
+checksums. Rust, CLI and WASM are independently usable from source.
 
-This is a locally qualified prerelease for the named scope, not a stable release
-or a claim of full Pine compatibility. [Current status](DELIVERY_ROADMAP.md) and
-[artifact hashes](DELIVERY_ARTIFACTS.json) identify the repaired build; version
-0.3.0rc1 alone does not distinguish it from older retained candidates. Consume the local artifacts built from the
-matching commit; do not install the published `v0.2.0` GitHub wheels and treat
-them as this checkout.
+Earlier [streaming artifacts](STREAMING_EXPANSION_ARTIFACTS.json) and
+[platform artifacts](DELIVERY_ARTIFACTS.json) retain their historical pins.
+They do not qualify the rc.2 implementation and must not be substituted for
+its release assets.
 
 | Surface | Consumable entry | Version identity | Historical | Incremental | Realtime lifecycle | Host requirements | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Rust | path dependency on `crates/pine-runtime` plus `pine-syntax` / `pine-sema` | `CARGO_PKG_VERSION` = `0.3.0-rc.1` | `HistoricalRuntime` | per-bar `append_bar` | `RealtimeRuntime` seed/forming/confirm | `host_requirements` | Example: `crates/pine-runtime/examples/embed_runtime.rs` |
-| CLI | `cargo run -p pine-cli --locked --release` → `pine-compat` | `pine-compat --version` | `run` | `run-incremental` | `run-realtime-history`, `run-realtime-forming` | `requirements` | JSON schema 8 results; analysis schema 5 |
-| Python | maturin wheel `pine-compat-runtime==0.3.0rc1` (`pine_compat`) | `pine_compat.__version__` = `0.3.0-rc.1` | `compile_script` / `run_script` / `Program.run` | not a separate API; re-run batch or confirm bars on a session | `create_realtime_session` / `Program.realtime_session` | `Program.host_requirements` | Wheel version is PEP 440 `0.3.0rc1` |
-| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.0-rc.1` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 3; runtime snapshots schema 8 |
+| Rust | path dependency on `crates/pine-runtime` plus `pine-syntax` / `pine-sema` | `CARGO_PKG_VERSION` = `0.3.0-rc.2` | `HistoricalRuntime` | per-bar `append_bar` | `RealtimeRuntime` seed/forming/confirm | `host_requirements` | Example: `crates/pine-runtime/examples/embed_runtime.rs` |
+| CLI | `cargo run -p pine-cli --locked --release` → `pine-compat` | `pine-compat --version` | `run` | `run-incremental` | `run-realtime-history`, `run-realtime-forming` | `requirements` | JSON schema 9 results; analysis schema 6 |
+| Python | maturin wheel `pine-compat-runtime==0.3.0rc2` (`pine_compat`) | `pine_compat.__version__` = `0.3.0-rc.2` | `compile_script` / `run_script` / `Program.run` | not a separate API; re-run batch or confirm bars on a session | `create_realtime_session` / `Program.realtime_session` | `Program.host_requirements` | Wheel version is PEP 440 `0.3.0rc2` |
+| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.0-rc.2` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 4; runtime snapshots schema 9 |
 
-## Streaming worktree API
+## Integrated streaming API
 
 Rust now exposes `RealtimeRuntime::apply_update`, `replay_historical`,
 `correct_historical` and `RuntimeReplica`; Python exposes `apply_forming`,
 `apply_confirmed`, `session.replay()`, `session.correct()`, `session.replica()`,
 and `session.stream_snapshot()`; WASM exposes `Program.realtimeSession()`,
 `applyForming` / `applyConfirmed`, `replay()`, `correct()`, `replica()`, and
-`streamSnapshot()`. Changes use schema 3 with
-`baseRevision`, `revision` and `retainedFrom`; runtime snapshots remain schema
-8. A replica applies deltas in place and materializes a full result only on
+`streamSnapshot()`. Changes use schema 4 with
+`baseRevision`, `revision` and `retainedFrom`; runtime snapshots use schema
+9. Gradient fills carry per-bar vertical stops and changes schema 4 adds
+`setGradient`. Older non-gradient snapshots and changes remain readable;
+gradient data labeled with old schemas is rejected. A replica applies deltas
+in place and materializes a full result only on
 request. Historical replay is a snapshot discontinuity, not a linear delta. See
-[streaming acceptance](STREAMING_INCREMENTAL_AUDIT.md) for current validation.
-These interfaces require a build of this worktree; the retained a2a1ba5fb wheels
-above do not include them.
+[streaming expansion](STREAMING_EXPANSION_AUDIT.md) for the latest retained
+validation. These interfaces are integrated through `f368ab96e` and included
+in main by `7b70095f6`; the retained a2a1ba5fb wheels do not include them.
+The streaming artifact inventory preserves its original pre-commit source
+digest and does not claim a fresh build of the merged main revision.
+
+The rc.2 implementation includes `RuntimeReplica::into_result()`
+in Rust and `replica.intoResult()` in WASM. They finalize a completed replica
+and transfer its full output; the WASM handle is consumed and must not receive
+updates or another `free()` call. Read revision/origin beforehand if needed.
+Use `result()` when the replica will continue receiving updates. Rust also
+exposes `write_public_runtime_result_json` for a caller-owned sink and
+`into_public_runtime_result_json` for an owned complete String. These additions
+are covered by the [performance candidate record](PERFORMANCE_RESOURCE_CLOSURE_20261002.md);
+older retained artifacts keep their own interface and source pins.
+
+For known historical slices, `HistoricalRuntime::historical_dataset(&bars)`
+executes one borrowed iterator step per bar while retaining the complete
+dataset endpoint used by `append_bars`. Ordinary `append_bar` discovers a new
+latest bar, which can differ for scripts that inspect the dataset endpoint.
 
 ## Minimal examples
 
@@ -43,15 +63,15 @@ above do not include them.
 
 ## Schema and platform matrix
 
-- Analysis JSON schema 5, runtime JSON schema 8, host-requirements schema 1,
+- Analysis JSON schema 6, runtime JSON schema 9, host-requirements schema 2,
   render metadata 1.
 - Qualified desktop targets (retained optimized wheels): Windows x86-64 (`win_amd64`) and native
   Ubuntu 22.04 (`manylinux_2_35_x86_64`), implementation a2a1ba5fb. Each passes
   717 installed tests and the named final native references. The older
   manylinux2014 (`manylinux_2_17_x86_64`) candidate at 2792a0950 passed auditwheel and 715 tests but
-  does not contain the latest fixes. No current manylinux2014 qualification,
-  Linux long-session budget, macOS, musllinux, ARM or free-threaded CPython
-  support is established by these artifacts.
+  does not contain the latest fixes. These older artifacts do not establish rc.2 manylinux2014 qualification;
+  see the current RC2 acceptance record. Linux long-session budgets, macOS,
+  musllinux, ARM and free-threaded CPython remain outside the qualified scope.
 - Default chart context: synthetic `NASDAQ:AAPL`, timeframe `1`, minMove 1,
   priceScale 100, quantityPrecision 0, currency USD, unit point value, timezone
   `Etc/UTC`. These are defaults, not inferred instrument metadata.

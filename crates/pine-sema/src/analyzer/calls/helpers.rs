@@ -32,18 +32,58 @@ impl Analyzer {
         )
     }
 
-    pub(super) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
+    pub(crate) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
+        if (name == "input" || name.starts_with("input."))
+            && self.legacy.dialect() <= crate::PineDialect::V2
+        {
+            return true;
+        }
+        if matches!(
+            name,
+            "strategy.entry"
+                | "strategy.order"
+                | "strategy.exit"
+                | "strategy.close"
+                | "strategy.close_all"
+                | "strategy.cancel"
+                | "strategy.cancel_all"
+        ) {
+            return true;
+        }
         if self.allows_legacy_v4_udf_reference_side_effect(name) {
             return true;
         }
-        self.legacy.dialect() >= crate::PineDialect::V5 && name == "box.new"
+        self.legacy.dialect() >= crate::PineDialect::V5
+            && name.split_once('.').is_some_and(|(namespace, _)| {
+                matches!(
+                    namespace,
+                    "line" | "label" | "linefill" | "box" | "table" | "polyline"
+                )
+            })
+    }
+
+    pub(super) fn udf_output_is_forbidden(&self, name: &str) -> bool {
+        self.function_depth > 0
+            && is_output_or_declaration_builtin(name)
+            && !self.allows_udf_output_or_declaration_side_effect(name)
     }
 
     pub(super) fn allows_udf_collection_mutation_side_effect(&self, name: &str) -> bool {
         if self.allows_legacy_v4_udf_reference_side_effect(name) {
             return true;
         }
-        self.legacy.dialect() >= crate::PineDialect::V5 && name == "array.unshift"
+        self.legacy.dialect() >= crate::PineDialect::V5
+            && (matches!(
+                name,
+                "array.unshift"
+                    | "array.push"
+                    | "array.set"
+                    | "array.fill"
+                    | "array.clear"
+                    | "array.pop"
+                    | "array.remove"
+                    | "array.shift"
+            ) || name.starts_with("matrix."))
     }
 
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {
@@ -577,6 +617,7 @@ pub(crate) fn drawing_method_builtin_name(
     method_name: &str,
 ) -> Option<String> {
     let namespace = match receiver_kind {
+        ValueKind::ChartPoint => "chart.point",
         ValueKind::Label => "label",
         ValueKind::Line => "line",
         ValueKind::LineFill => "linefill",
@@ -589,6 +630,7 @@ pub(crate) fn drawing_method_builtin_name(
     let signature = pine_builtins::get_phase_1_builtin(&builtin_name)?;
     let first_param = signature.params.first()?;
     let accepts_receiver = match receiver_kind {
+        ValueKind::ChartPoint => first_param.accepts == Accepts::ChartPointCompatible,
         ValueKind::Label => first_param.accepts == Accepts::LabelCompatible,
         ValueKind::Line => first_param.accepts == Accepts::LineCompatible,
         ValueKind::LineFill => first_param.accepts == Accepts::LineFillCompatible,

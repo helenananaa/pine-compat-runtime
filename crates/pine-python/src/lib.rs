@@ -4,8 +4,8 @@ use pine_ir::{HirProgram, ValueKind};
 use pine_runtime::{
     Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, InputCall, InputOverrides,
     MagnifierInput, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue,
-    RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal, input_calls,
-    is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
+    PreparedProgram, RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal,
+    input_calls, is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -16,6 +16,7 @@ mod alerts;
 mod changes;
 mod chart_metadata;
 mod diagnostics;
+mod gradient;
 mod outputs;
 mod realtime;
 mod replica;
@@ -25,13 +26,13 @@ mod tables;
 mod tests;
 use alerts::{render_strategy_order_fill_alert_template, render_strategy_order_fill_running_alert};
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
-use outputs::{runtime_result_to_py, value_to_py};
+use outputs::{runtime_result_view_to_py, value_to_py};
 use realtime::PyRealtimeSession;
 
 #[pyclass(name = "Program", skip_from_py_object)]
 #[derive(Clone)]
 struct PyProgram {
-    hir: HirProgram,
+    hir: PreparedProgram,
 }
 
 #[pymethods]
@@ -73,11 +74,12 @@ impl PyProgram {
         let execution_times = parse_execution_times(execution_times)?;
         let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
         let session_windows = parse_session_windows(py, session_windows)?;
-        let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
-            &self.hir,
-            request_environment,
-            input_overrides,
-        );
+        let mut runtime =
+            HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
+                &self.hir,
+                request_environment,
+                input_overrides,
+            );
         if let Some(magnifier) = magnifier {
             runtime = runtime.with_magnifier_input(magnifier);
         }
@@ -86,14 +88,14 @@ impl PyProgram {
                 .with_session_windows(session_windows)
                 .map_err(|err| PyValueError::new_err(err.message))?;
         }
-        match execution_times.as_deref() {
+        py.detach(|| match execution_times.as_deref() {
             Some(execution_times) => {
                 runtime.append_bars_with_execution_times(&bars, execution_times)
             }
             None => runtime.append_bars(&bars),
-        }
+        })
         .map_err(|err| PyValueError::new_err(err.message))?;
-        runtime_result_to_py(py, &runtime.result())
+        runtime_result_view_to_py(py, &runtime.result_view())
     }
 
     #[pyo3(signature = (
@@ -145,7 +147,9 @@ fn compile_script(source: &str, library_sources: Option<&Bound<'_, PyAny>>) -> P
     let hir = analysis
         .hir
         .ok_or_else(|| PyValueError::new_err("analysis did not produce executable HIR"))?;
-    Ok(PyProgram { hir })
+    Ok(PyProgram {
+        hir: PreparedProgram::new(hir),
+    })
 }
 #[pyfunction(signature = (source, library_sources=None))]
 fn analyze_script(
@@ -461,6 +465,14 @@ fn parse_input_override_key(key: &Bound<'_, PyAny>) -> PyResult<u32> {
 }
 
 fn parse_input_override_value(input: &InputCall, value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
+    if input.is_source {
+        return pine_runtime::chart_source_input_override(
+            &value
+                .extract::<String>()
+                .map_err(|_| PyValueError::new_err("source input override must be a string"))?,
+        )
+        .map_err(PyValueError::new_err);
+    }
     match input.name.as_str() {
         "input" => parse_generic_input_override(input.value_kind, value),
         "input.int" | "input.time" => Ok(PineValue::Int(parse_int_override(&input.name, value)?)),
@@ -475,9 +487,6 @@ fn parse_input_override_value(input: &InputCall, value: &Bound<'_, PyAny>) -> Py
         | "input.text_area" => Ok(PineValue::String(value.extract().map_err(|_| {
             PyValueError::new_err(format!("{} override must be a string", input.name))
         })?)),
-        "input.source" => Err(PyValueError::new_err(
-            "input.source overrides are not supported",
-        )),
         _ => Err(PyValueError::new_err(format!(
             "input_overrides cannot override unsupported input call {}",
             input.name
@@ -690,6 +699,7 @@ fn inputs_to_py(py: Python<'_>, analysis: &Analysis) -> PyResult<Py<PyAny>> {
             let item = PyDict::new(py);
             item.set_item("callSiteId", input.call_site_id)?;
             item.set_item("name", input.name)?;
+            item.set_item("isSource", input.is_source)?;
             item.set_item("title", input.title)?;
             match &input.default_value {
                 Some(value) => item.set_item("default", value_to_py(py, value)?)?,
@@ -777,7 +787,20 @@ fn diagnostics_to_py(
         item.set_item("code", &diagnostic.code)?;
         item.set_item("severity", severity_name(diagnostic.severity))?;
         item.set_item("message", &diagnostic.message)?;
-        item.set_item("span", span_to_py(py, source, diagnostic.span)?)?;
+        let location = diagnostic.line_col(source);
+        let span = PyDict::new(py);
+        span.set_item("start", diagnostic.span.start)?;
+        span.set_item("end", diagnostic.span.end)?;
+        span.set_item("line", location.line)?;
+        span.set_item("column", location.column)?;
+        if let Some(origin) = &diagnostic.source {
+            span.set_item("sourceId", origin.source_id)?;
+            span.set_item("sourceName", &origin.source_name)?;
+            if let Some(key) = &origin.library_key {
+                span.set_item("libraryKey", key)?;
+            }
+        }
+        item.set_item("span", span)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

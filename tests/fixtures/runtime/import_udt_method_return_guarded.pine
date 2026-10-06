@@ -1,0 +1,42 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT method return")
+
+p = lib.Point.new(close)
+q = p.same()
+q_prior = q[1]
+steps = array.from(1, 2)
+for_in = p.sameForIn(steps)
+for_in_prior = for_in[1]
+other = lib.Point.new(open)
+chosen_for_in = p.chooseForIn(other, steps)
+chosen_for_in_prior = chosen_for_in[1]
+wrapped = lib.Wrapper.new(p)
+wrapped_copy = wrapped.sameWrapper()
+wrapped_prior = wrapped_copy[1]
+dyn = bar_index == 0 ? na : 1
+q_dynamic = q[dyn]
+q_dynamic_sibling = q[dyn]
+float q_dynamic_x = na
+float q_dynamic_sibling_x_after_mutation = na
+wrapped_dynamic = wrapped_copy[dyn]
+wrapped_dynamic_sibling = wrapped_copy[dyn]
+float wrapped_dynamic_x = na
+float wrapped_dynamic_sibling_x_after_mutation = na
+if bar_index > 0
+    q_dynamic_x := (na(q_dynamic) ? na : q_dynamic.x)
+    q_dynamic.x := close + 700
+    q_dynamic_sibling_x_after_mutation := (na(q_dynamic_sibling) ? na : q_dynamic_sibling.x)
+    wrapped_dynamic_x := (na(wrapped_dynamic) ? na : na(wrapped_dynamic.nested) ? na : wrapped_dynamic.nested.x)
+    wrapped_dynamic.nested := lib.Point.new(close + 800)
+    wrapped_dynamic_sibling_x_after_mutation := (na(wrapped_dynamic_sibling) ? na : na(wrapped_dynamic_sibling.nested) ? na : wrapped_dynamic_sibling.nested.x)
+plot((na(q) ? na : q.x))
+plot((na(for_in) ? na : for_in.x) + (na(chosen_for_in) ? na : chosen_for_in.x))
+plot((na(wrapped_copy) ? na : na(wrapped_copy.nested) ? na : wrapped_copy.nested.x))
+plot((na(q_prior) ? na : q_prior.x))
+plot((na(for_in_prior) ? na : for_in_prior.x) + (na(chosen_for_in_prior) ? na : chosen_for_in_prior.x))
+plot((na(wrapped_prior) ? na : na(wrapped_prior.nested) ? na : wrapped_prior.nested.x))
+plot(q_dynamic_x)
+plot(q_dynamic_sibling_x_after_mutation)
+plot(wrapped_dynamic_x)
+plot(wrapped_dynamic_sibling_x_after_mutation)

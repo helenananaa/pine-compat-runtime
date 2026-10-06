@@ -58,9 +58,11 @@ pub(super) fn validate_library_imports(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     for module in modules.iter().skip(1) {
+        let diagnostic_start = diagnostics.len();
         let imports = imports_in_program(&module.program);
         validate_import_declarations(&imports, library_index, diagnostics);
         validate_alias_access(module, &imports, modules, library_index, diagnostics);
+        module.attach_diagnostics(&mut diagnostics[diagnostic_start..]);
     }
 }
 
@@ -117,11 +119,13 @@ fn visit_module(
         };
         let next = &modules[*next_index];
         if visiting.contains(&next.id) {
-            diagnostics.push(Diagnostic::error(
+            let mut diagnostic = Diagnostic::error(
                 "E_IMPORT_CYCLE",
                 format!("import cycle includes `{}`", import.key),
                 import.span,
-            ));
+            );
+            module.attach_diagnostics(std::slice::from_mut(&mut diagnostic));
+            diagnostics.push(diagnostic);
             continue;
         }
         visit_module(next, modules, library_index, visiting, visited, diagnostics);

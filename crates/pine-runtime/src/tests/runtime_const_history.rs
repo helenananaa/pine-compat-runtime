@@ -3,6 +3,93 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn history_offsets_are_bound_to_each_function_call() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("history call bindings")
+read(int offset) => close[offset]
+alias(int offset) =>
+    n = offset
+    close[n]
+window(int newest, int oldest) =>
+    result = close[newest]
+    for i = newest to oldest
+        result := math.max(result, close[i])
+    result
+plot(read(2))
+plot(read(0))
+plot(alias(2))
+plot(alias(0))
+plot(window(2, 4))
+plot(window(0, 4))
+length = input.int(2)
+pivot() =>
+    int newest = length
+    window(newest, 4)
+draw() =>
+    window(0, 4)
+plot(pivot())
+plot(barstate.islast ? draw() : na)
+alias_pivot() => alias(length)
+alias_draw() => alias(0)
+plot(alias_pivot())
+plot(alias_draw())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars: Vec<_> = (1..=8).map(|n| bar(n as f64)).collect();
+    let hir = analysis.hir.expect("HIR");
+    let result = run_historical(&hir, &bars).unwrap();
+    for index in [0, 2, 4, 6, 8] {
+        assert_eq!(
+            result.plots[index].values[7],
+            PineValue::Float(6.0),
+            "plot {index}"
+        );
+        assert_eq!(
+            result.plots[index + 1].values[7],
+            PineValue::Float(8.0),
+            "plot {}",
+            index + 1
+        );
+    }
+}
+
+#[test]
+fn legacy_offset_call_preserves_nested_parameter_bindings() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=4
+study("legacy history call bindings")
+read(n) => offset(close, n)
+length = input(2)
+pivot() =>
+    newest = length
+    read(newest)
+draw() => read(0)
+plot(pivot())
+plot(draw())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars: Vec<_> = (1..=8).map(|n| bar(n as f64)).collect();
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).unwrap();
+    assert_eq!(result.plots[0].values[7], PineValue::Float(6.0));
+    assert_eq!(result.plots[1].values[7], PineValue::Float(8.0));
+}
+
+#[test]
 fn pure_const_call_drawing_limit_is_applied_at_runtime() {
     let source = SourceFile::new(
         "test.pine",
@@ -308,11 +395,11 @@ plot(close)
     );
     let hir = analysis.hir.expect("HIR");
     let bars = vec![
-        bar_ohlc(1.0, 2.0, 1.0, 2.0),
-        bar_ohlc(3.0, 3.0, 2.0, 2.0),
-        bar_ohlc(2.0, 4.0, 2.0, 4.0),
-        bar_ohlc(5.0, 5.0, 3.0, 3.0),
-        bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        at_time(0, bar_ohlc(1.0, 2.0, 1.0, 2.0)),
+        at_time(60_000, bar_ohlc(3.0, 3.0, 2.0, 2.0)),
+        at_time(120_000, bar_ohlc(2.0, 4.0, 2.0, 4.0)),
+        at_time(180_000, bar_ohlc(5.0, 5.0, 3.0, 3.0)),
+        at_time(240_000, bar_ohlc(4.0, 6.0, 4.0, 6.0)),
     ];
 
     let profiled = run_historical_profiled(&hir, &bars).expect("historical result");
@@ -379,7 +466,10 @@ plot(close)
         assert!(result.diagnostics.is_empty(), "{result:?}");
     }
     let first_forming = realtime
-        .update(BarUpdate::forming(bar_ohlc(10.0, 12.0, 9.0, 11.0)))
+        .update(BarUpdate::forming(at_time(
+            180_000,
+            bar_ohlc(10.0, 12.0, 9.0, 11.0),
+        )))
         .expect("first forming update");
     assert!(first_forming.diagnostics.is_empty(), "{first_forming:?}");
     assert_eq!(
@@ -392,7 +482,10 @@ plot(close)
     );
 
     let replacement_forming = realtime
-        .update(BarUpdate::forming(bar_ohlc(20.0, 22.0, 19.0, 21.0)))
+        .update(BarUpdate::forming(at_time(
+            180_000,
+            bar_ohlc(20.0, 22.0, 19.0, 21.0),
+        )))
         .expect("replacement forming update");
     assert!(
         replacement_forming.diagnostics.is_empty(),
@@ -424,4 +517,9 @@ plot(close)
         .update(BarUpdate::confirmed(bars[4]))
         .expect("final confirmed update");
     assert_eq!(realtime_result, historical);
+}
+
+fn at_time(time: i64, mut bar: Bar) -> Bar {
+    bar.time = time;
+    bar
 }

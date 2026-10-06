@@ -49,9 +49,7 @@ impl Analyzer {
             return Some(UserTypeArrayElementInference::MixedLocal);
         }
         if self.imported_user_type_array_is_supported(first) {
-            return Some(UserTypeArrayElementInference::SameScalarImported(
-                first.clone(),
-            ));
+            return Some(UserTypeArrayElementInference::SameImported(first.clone()));
         }
         Some(UserTypeArrayElementInference::UnknownUserTypeName)
     }
@@ -73,7 +71,7 @@ impl Analyzer {
         }
 
         match classify_user_type_array_element_names(&self.user_types, &[type_name.to_owned()]) {
-            Some(UserTypeArrayElementInference::SameScalarLocal(_)) => {}
+            Some(UserTypeArrayElementInference::SameLocal(_)) => {}
             Some(UserTypeArrayElementInference::UnsupportedFieldType(_)) => {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_TYPE",
@@ -151,6 +149,7 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) {
+        self.mark_udt_matrix_result(signature_name, span, args);
         if !matches!(
             signature_name,
             "array.get"

@@ -287,7 +287,10 @@ fn pure_prefix_statement_series_key_with_params(
             name,
             value,
         } => {
-            if *mode != pine_syntax::DeclMode::Normal {
+            if !matches!(
+                mode,
+                pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const
+            ) {
                 return None;
             }
             let field_aliases = alias_field_param_keys(name, value, local_keys);

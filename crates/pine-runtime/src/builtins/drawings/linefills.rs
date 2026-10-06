@@ -1,3 +1,4 @@
+use crate::runtime::drawing_history::drawing_by_id;
 use pine_ir::{HirCallArg, HirExpr};
 
 use crate::runtime::drawing_history::RuntimeLineFill;
@@ -17,26 +18,25 @@ impl<'a> HistoricalRuntime<'a> {
         if !self.line_exists(line1)? || !self.line_exists(line2)? {
             return Ok(PineValue::Na);
         }
-        if let Some(existing_index) = self
+        let existing_id = self
             .line_fills
             .iter()
-            .position(|line_fill| linefill_active_same_pair(line_fill, line1, line2))
-        {
-            let latest = self.line_fills[existing_index]
+            .find(|line_fill| linefill_active_same_pair(line_fill, line1, line2))
+            .map(|line_fill| line_fill.id);
+        if let Some(id) = existing_id {
+            let existing = self.line_fills.get_mut(id).expect("existing linefill");
+            let latest = existing
                 .snapshots
                 .last()
                 .cloned()
                 .ok_or_else(|| RuntimeError {
-                    message: format!(
-                        "linefill `{}` has no snapshots",
-                        self.line_fills[existing_index].id
-                    ),
+                    message: format!("linefill `{id}` has no snapshots"),
                 })?;
             if latest.exists {
                 let mut replacement = latest;
                 replacement.bar_index = self.bars;
                 replacement.exists = false;
-                self.line_fills[existing_index].snapshots.push(replacement);
+                existing.snapshots.push(replacement);
             }
         }
         if self.line_fills.len() >= MAX_LINEFILLS {
@@ -162,7 +162,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(line_fill) = self.line_fills.iter().find(|line_fill| line_fill.id == id) else {
+        let Some(line_fill) = self.line_fills.get(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_line_fill_id) {
+                return Ok(PineValue::Na);
+            }
             return Err(RuntimeError {
                 message: format!("invalid linefill id `{id}`"),
             });
@@ -198,7 +201,10 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn line_exists(&self, id: u32) -> Result<bool, RuntimeError> {
-        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+        let Some(line) = drawing_by_id(&self.lines, id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_line_id) {
+                return Ok(false);
+            }
             return Err(RuntimeError {
                 message: format!("invalid line id `{id}`"),
             });
@@ -219,11 +225,10 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(line_fill) = self
-            .line_fills
-            .iter_mut()
-            .find(|line_fill| line_fill.id == id)
-        else {
+        let Some(line_fill) = self.line_fills.get_mut(id) else {
+            if crate::runtime::drawing_history::was_allocated(id, self.next_line_fill_id) {
+                return Ok(PineValue::Void);
+            }
             return Err(RuntimeError {
                 message: format!("invalid linefill id `{id}`"),
             });

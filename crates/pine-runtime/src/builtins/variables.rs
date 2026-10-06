@@ -56,7 +56,7 @@ impl<'a> HistoricalRuntime<'a> {
             "input" | "input.int" | "input.float" | "input.bool" | "input.color"
             | "input.string" | "input.price" | "input.time" | "input.symbol"
             | "input.timeframe" | "input.session" | "input.text_area" | "input.source" => {
-                self.eval_input(call_site_id, args)
+                self.eval_input(callee, call_site_id, args)
             }
             "na" => self.eval_na(args),
             "nz" => self.eval_nz(args),
@@ -67,10 +67,31 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn eval_input(
         &mut self,
+        callee: &str,
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         if let Some(value) = self.input_overrides.get(call_site_id) {
+            let generic_source = callee == "input"
+                && call_arg_expr(args, 0, "defval").is_some_and(|expr| {
+                    expr.pine_type.kind == pine_ir::ValueKind::Float
+                        && expr.pine_type.qualifier == pine_ir::Qualifier::Series
+                });
+            if callee == "input.source" || generic_source {
+                return match value {
+                    PineValue::String(source) => self
+                        .current_bar
+                        .as_ref()
+                        .and_then(|bar| chart_source_value(bar, source))
+                        .map(PineValue::Float)
+                        .ok_or_else(|| RuntimeError {
+                            message: format!("unsupported input.source override `{source}`"),
+                        }),
+                    _ => Err(RuntimeError {
+                        message: "input.source override must be a chart source name".to_owned(),
+                    }),
+                };
+            }
             return Ok(value.clone());
         }
         let Some(defval) = call_arg_expr(args, 0, "defval") else {
@@ -183,7 +204,10 @@ impl<'a> HistoricalRuntime<'a> {
                 true,
             ));
         }
-        if matches!(name, "timeframe.period" | "timeframe.main_period") {
+        if name == "timeframe.main_period" {
+            return PineValue::String(self.request_environment.main_timeframe().value().to_owned());
+        }
+        if name == "timeframe.period" {
             return PineValue::String(
                 self.request_environment
                     .chart()
@@ -253,28 +277,17 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "label.all" {
             let labels = self
-                .labels
+                .active_labels
                 .iter()
-                .filter(|label| {
-                    label
-                        .snapshots
-                        .last()
-                        .is_some_and(|snapshot| snapshot.exists)
-                })
-                .map(|label| PineValue::Label(label.id))
+                .map(|id| PineValue::Label(*id))
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Label, labels);
         }
         if name == "line.all" {
             let lines = self
-                .lines
+                .active_lines
                 .iter()
-                .filter(|line| {
-                    line.snapshots
-                        .last()
-                        .is_some_and(|snapshot| snapshot.exists)
-                })
-                .map(|line| PineValue::Line(line.id))
+                .map(|id| PineValue::Line(*id))
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Line, lines);
         }
@@ -308,15 +321,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "box.all" {
             let boxes = self
-                .boxes
+                .active_boxes
                 .iter()
-                .filter(|drawing_box| {
-                    drawing_box
-                        .snapshots
-                        .last()
-                        .is_some_and(|snapshot| snapshot.exists)
-                })
-                .map(|drawing_box| PineValue::Box(drawing_box.id))
+                .map(|id| PineValue::Box(*id))
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Box, boxes);
         }
@@ -335,7 +342,13 @@ impl<'a> HistoricalRuntime<'a> {
             return self.new_array_from_values(ArrayElementKind::Table, tables);
         }
         if name == "strategy.account_currency" {
-            return eval_static_builtin_value("syminfo.currency");
+            return PineValue::String(
+                self.program
+                    .strategy_settings
+                    .account_currency
+                    .unwrap_or(self.request_environment.chart().currency())
+                    .to_owned(),
+            );
         }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());
@@ -393,14 +406,14 @@ impl<'a> HistoricalRuntime<'a> {
                 .map_or(PineValue::Na, PineValue::Float);
         }
         if name == "strategy.openprofit" {
-            return self.current_bar.map_or(PineValue::Na, |bar| {
-                PineValue::Float(self.strategy_broker.open_profit(bar.close))
+            return self.strategy_mark_price().map_or(PineValue::Na, |mark| {
+                PineValue::Float(self.strategy_broker.open_profit(mark))
             });
         }
         if name == "strategy.openprofit_percent" {
-            return self.current_bar.map_or(PineValue::Na, |bar| {
+            return self.strategy_mark_price().map_or(PineValue::Na, |mark| {
                 self.strategy_broker
-                    .open_profit_percent(bar.close)
+                    .open_profit_percent(mark)
                     .map_or(PineValue::Na, PineValue::Float)
             });
         }
@@ -483,8 +496,8 @@ impl<'a> HistoricalRuntime<'a> {
             return PineValue::Float(self.strategy_broker.max_contracts_held_short());
         }
         if name == "strategy.equity" {
-            return self.current_bar.map_or(PineValue::Na, |bar| {
-                PineValue::Float(self.strategy_broker.equity_value(bar.close))
+            return self.strategy_mark_price().map_or(PineValue::Na, |mark| {
+                PineValue::Float(self.strategy_broker.equity_value(mark))
             });
         }
         if name == "ta.accdist" {
@@ -516,6 +529,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "ta.wvad" {
             return self.wvad_current.clone();
+        }
+        if name == "syminfo.currency" {
+            return PineValue::String(self.request_environment.chart().currency().to_owned());
         }
         eval_static_builtin_value(name)
     }
@@ -550,6 +566,20 @@ impl<'a> HistoricalRuntime<'a> {
     }
 }
 
+fn chart_source_value(bar: &Bar, source: &str) -> Option<f64> {
+    Some(match source {
+        "open" => bar.open,
+        "high" => bar.high,
+        "low" => bar.low,
+        "close" => bar.close,
+        "hl2" => (bar.high + bar.low) / 2.0,
+        "hlc3" => (bar.high + bar.low + bar.close) / 3.0,
+        "ohlc4" => (bar.open + bar.high + bar.low + bar.close) / 4.0,
+        "hlcc4" => (bar.high + bar.low + bar.close + bar.close) / 4.0,
+        _ => return None,
+    })
+}
+
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_fixnan(
         &mut self,
@@ -559,12 +589,13 @@ impl<'a> HistoricalRuntime<'a> {
         let value = self.eval_expr(&args[0].value)?;
         if value.is_na() {
             Ok(self
+                .ta_state
                 .call_state
                 .get(&call_site_id)
                 .cloned()
                 .unwrap_or(PineValue::Na))
         } else {
-            self.call_state.insert(call_site_id, value.clone());
+            self.ta_state.call_state.insert(call_site_id, value.clone());
             Ok(value)
         }
     }

@@ -48,7 +48,14 @@ impl Analyzer {
                 feature: name.to_owned(),
                 span,
             });
-            return Some(PineType::new(Qualifier::Const, ValueKind::String));
+            return Some(PineType::new(
+                Qualifier::Const,
+                if name.starts_with("display.") {
+                    ValueKind::PlotDisplay
+                } else {
+                    ValueKind::String
+                },
+            ));
         }
         if let Some(resolution) = self.legacy.resolve_value(name) {
             return self.resolve_legacy_value(name, span, resolution);
@@ -67,6 +74,14 @@ impl Analyzer {
 
     pub(crate) fn resolve_symbol(&mut self, name: &str, span: Span) -> Option<PineType> {
         if let Some(symbol) = self.scope.resolve(name) {
+            if matches!(name, "ask" | "bid")
+                && self.legacy.dialect() < crate::PineDialect::V6
+                && crate::symbols::initial_symbol(name)
+                    .is_some_and(|builtin| builtin.id == symbol.id)
+            {
+                self.reject_unavailable_legacy_builtin(name, 6, span);
+                return None;
+            }
             self.bind_symbol(name, span, symbol);
             Some(symbol.pine_type)
         } else if let Some(resolution) = self.legacy.resolve_value(name) {

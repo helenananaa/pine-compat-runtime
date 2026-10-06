@@ -1,0 +1,13 @@
+//@version=6
+indicator("Table dynamic style probe", overlay=true)
+useMono = input.bool(true, "Monospace")
+selectedFont = useMono ? font.family_monospace : font.family_default
+selectedPos = input.bool(true, "Bottom") ? position.bottom_right : position.top_left
+var t = table.new(position.top_right, 1, 2)
+table.set_position(t, selectedPos)
+table.cell(t, 0, 0, "Input font", text_font_family=selectedFont)
+dynamicFont = bar_index % 2 == 0 ? font.family_default : font.family_monospace
+table.cell(t, 0, 1, "Series font", text_font_family=dynamicFont)
+table.cell_set_text_font_family(t, 0, 0, dynamicFont)
+table.set_position(t, bar_index % 2 == 0 ? position.top_left : position.bottom_right)
+plot(bar_index % 2, "parity", display=display.data_window)

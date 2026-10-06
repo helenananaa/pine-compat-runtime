@@ -1,0 +1,5 @@
+//@version=6
+indicator("Plot linestyle probe")
+useDotted = input.bool(true)
+plot(close, "Dotted input", linestyle=useDotted ? plot.linestyle_dotted : plot.linestyle_solid)
+plot(open, "Dashed", linestyle=plot.linestyle_dashed)

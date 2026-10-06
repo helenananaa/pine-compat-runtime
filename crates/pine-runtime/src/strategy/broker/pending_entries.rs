@@ -33,6 +33,7 @@ pub(super) struct PendingEntry {
     pub(super) direction: PendingEntryDirection,
     pub(super) kind: PendingEntryKind,
     pub(super) quantity: f64,
+    pub(super) same_bar_percent_of_equity: Option<f64>,
     pub(super) created_bar_index: usize,
     pub(super) metadata: StrategyOrderMetadata,
     pub(super) enforce_pyramiding: bool,
@@ -140,6 +141,14 @@ impl PendingEntryBook {
     pub(super) fn quantity_for_id(&self, id: &str) -> Option<f64> {
         self.find_by_id(id)
             .map(|pending_entry| pending_entry.quantity)
+    }
+
+    pub(super) fn set_same_bar_percent_of_equity(&mut self, id: &str, percent: f64) {
+        if let Some(entry) = self.entries.iter_mut().find(|entry| entry.id == id)
+            && entry.kind == PendingEntryKind::Market
+        {
+            entry.same_bar_percent_of_equity = Some(percent);
+        }
     }
 
     pub(super) fn has_limit_long_bypassing_pyramiding(&self) -> bool {
@@ -297,6 +306,34 @@ impl PendingEntryBook {
                 && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if high >= price + verification_offset)
                 && self.price_created_eligible(pending_entry.created_bar_index, bar_index);
             if is_eligible {
+                eligible.push(self.entries.remove(index));
+            } else {
+                index += 1;
+            }
+        }
+        eligible
+    }
+
+    pub(super) fn take_same_bar_eligible_limits(
+        &mut self,
+        bar_index: usize,
+        close: f64,
+        verification_offset: f64,
+    ) -> Vec<PendingEntry> {
+        let mut eligible = Vec::new();
+        let mut index = 0;
+        while index < self.entries.len() {
+            let entry = &self.entries[index];
+            let reached = match (entry.direction, entry.kind) {
+                (PendingEntryDirection::Long, PendingEntryKind::Limit { price }) => {
+                    close <= price - verification_offset
+                }
+                (PendingEntryDirection::Short, PendingEntryKind::Limit { price }) => {
+                    close >= price + verification_offset
+                }
+                _ => false,
+            };
+            if entry.created_bar_index == bar_index && reached {
                 eligible.push(self.entries.remove(index));
             } else {
                 index += 1;
@@ -994,7 +1031,10 @@ impl PendingEntryBook {
         diagnostics: &mut Vec<RuntimeDiagnostic>,
         allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
-        if !placement.quantity.is_finite() || placement.quantity <= 0.0 {
+        if !placement.quantity.is_finite()
+            || placement.quantity < 0.0
+            || (placement.quantity == 0.0 && placement.origin != StrategyCommandOrigin::Entry)
+        {
             diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_QTY".to_owned(),
                 message: "`strategy.entry` quantity must be positive".to_owned(),
@@ -1022,6 +1062,7 @@ impl PendingEntryBook {
             direction: placement.direction,
             kind: placement.kind,
             quantity: placement.quantity,
+            same_bar_percent_of_equity: None,
             created_bar_index: placement.created_bar_index,
             metadata: placement.metadata,
             enforce_pyramiding: matches!(placement.origin, StrategyCommandOrigin::Entry),

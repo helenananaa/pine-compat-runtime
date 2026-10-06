@@ -1,6 +1,6 @@
 [package]
 name = "pine-python"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 description.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
 [dependencies]
+pine-host-support = { path = "../pine-host-support" }
 pine-ir = { path = "../pine-ir" }
 pine-runtime = { path = "../pine-runtime" }
 pine-sema = { path = "../pine-sema" }

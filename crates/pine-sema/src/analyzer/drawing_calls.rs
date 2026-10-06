@@ -1,5 +1,6 @@
 use crate::analyzer::calls::call_arg_accepts_type_expected_diagnostic;
 use crate::prelude::*;
+use pine_builtins::{LABEL_STYLES, LINE_STYLES};
 
 const LINE_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
 const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
@@ -17,37 +18,8 @@ const TEXT_SIZES: &[&str] = &[
     "size.large",
     "size.huge",
 ];
-const LINE_STYLES: &[&str] = &[
-    "line.style_solid",
-    "line.style_dotted",
-    "line.style_dashed",
-    "line.style_arrow_left",
-    "line.style_arrow_right",
-    "line.style_arrow_both",
-];
-
 const LABEL_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
 const LABEL_YLOCS: &[&str] = &["yloc.price", "yloc.abovebar", "yloc.belowbar"];
-const LABEL_STYLES: &[&str] = &[
-    "label.style_label_down",
-    "label.style_label_up",
-    "label.style_label_left",
-    "label.style_label_right",
-    "label.style_label_lower_left",
-    "label.style_label_lower_right",
-    "label.style_label_upper_left",
-    "label.style_label_upper_right",
-    "label.style_label_center",
-    "label.style_square",
-    "label.style_diamond",
-    "label.style_circle",
-    "label.style_flag",
-    "label.style_arrowup",
-    "label.style_arrowdown",
-    "label.style_cross",
-    "label.style_xcross",
-    "label.style_none",
-];
 
 #[derive(Clone, Copy)]
 struct LabelNewParam {
@@ -538,11 +510,12 @@ impl Analyzer {
             }
             let supported_value = if allow_proven_series {
                 self.known_string_value_domain(&arg.value)
-                    .is_some_and(|values| {
+                    .map(|values| {
                         values
                             .iter()
                             .all(|value| supported.contains(&value.as_str()))
                     })
+                    .unwrap_or(name == "style")
             } else {
                 self.known_const_string_value(&arg.value)
                     .as_deref()
@@ -681,11 +654,12 @@ impl Analyzer {
             }
             let supported_value = if allow_proven_series {
                 self.known_string_value_domain(&arg.value)
-                    .is_some_and(|values| {
+                    .map(|values| {
                         values
                             .iter()
                             .all(|value| supported.contains(&value.as_str()))
                     })
+                    .unwrap_or(name == "style")
             } else {
                 self.known_const_string_value(&arg.value)
                     .as_deref()

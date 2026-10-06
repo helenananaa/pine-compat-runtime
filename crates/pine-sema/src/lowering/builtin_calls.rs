@@ -47,7 +47,31 @@ fn signature_accepts_lowered_args(signature: &BuiltinSignature, args: &[HirCallA
             }
         };
         parameter_index.is_some_and(|index| {
-            crate::types::accepts_type(signature.params[index].accepts, arg.value.pine_type)
+            let accepts = signature.params[index].accepts;
+            let matrix_type = |slot: usize| {
+                signature
+                    .params
+                    .get(slot)
+                    .and_then(|param| {
+                        args.iter()
+                            .find(|arg| arg.name.as_deref() == Some(param.name))
+                            .or_else(|| args.get(slot).filter(|arg| arg.name.is_none()))
+                    })
+                    .map(|arg| arg.value.pine_type)
+            };
+            match accepts {
+                pine_builtins::Accepts::MatrixElementCompatible(slot) => matrix_type(slot)
+                    .and_then(|ty| {
+                        crate::types::accepts_matrix_element_arg(ty, arg.value.pine_type)
+                    })
+                    .unwrap_or(false),
+                pine_builtins::Accepts::MatrixElementArray(slot) => matrix_type(slot)
+                    .and_then(|ty| {
+                        crate::types::accepts_matrix_element_array_arg(ty, arg.value.pine_type)
+                    })
+                    .unwrap_or(false),
+                _ => crate::types::accepts_type(accepts, arg.value.pine_type),
+            }
         })
     })
 }
@@ -87,7 +111,7 @@ impl Analyzer {
             ]);
         }
 
-        let lowered_args: Vec<_> = args
+        let mut lowered_args: Vec<_> = args
             .iter()
             .map(|arg| {
                 Some(HirCallArg {
@@ -97,7 +121,14 @@ impl Analyzer {
             })
             .collect::<Option<_>>()?;
 
-        if !args.iter().any(|arg| arg.name.is_some())
+        if builtin_name == "strategy.close"
+            && self.legacy.dialect() <= crate::PineDialect::V4
+            && lowered_args.get(1).is_some_and(|arg| arg.name.is_none())
+        {
+            lowered_args[1].name = Some("when".to_owned());
+        }
+
+        if !lowered_args.iter().any(|arg| arg.name.is_some())
             || matches!(builtin_name, "array.min" | "array.max")
         {
             return Some(lowered_args);

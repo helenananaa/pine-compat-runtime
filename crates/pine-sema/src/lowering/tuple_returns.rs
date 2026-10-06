@@ -395,7 +395,7 @@ impl Analyzer {
             }
         }
         match &last.kind {
-            StmtKind::Expr(expr) => expr_name(expr)
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => expr_name(expr)
                 .and_then(|alias| tuple_aliases.get(&alias).cloned())
                 .or_else(|| {
                     self.tuple_user_type_array_results_with_params_and_aliases(

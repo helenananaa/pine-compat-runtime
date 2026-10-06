@@ -1,0 +1,19 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT while expression")
+
+i = 0
+p = while i < 2
+    i := i + 1
+    made = lib.Point.new(close + i)
+    made
+
+j = 0
+lib.Point typed = while j < 1
+    j := j + 1
+    p
+
+p_prior = p[1]
+
+plot((na(p) ? na : p.x) + (na(typed) ? na : typed.x))
+plot((na(p_prior) ? na : p_prior.x))

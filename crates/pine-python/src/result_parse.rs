@@ -20,7 +20,7 @@ pub(crate) fn runtime_result_from_py(
     let dict = value
         .cast::<PyDict>()
         .map_err(|_| PyValueError::new_err("runtime result must be a dict"))?;
-    Ok(RuntimeResult {
+    let result = RuntimeResult {
         plots: plots_from_py(py, dict_list(dict, "plots")?)?,
         plot_chars: plot_chars_from_py(py, dict_list(dict, "plotChars")?)?,
         plot_shapes: plot_shapes_from_py(py, dict_list(dict, "plotShapes")?)?,
@@ -43,7 +43,24 @@ pub(crate) fn runtime_result_from_py(
             _ => None,
         },
         diagnostics: diagnostics_from_py(dict_list(dict, "diagnostics")?)?,
-    })
+    };
+    if result.fills.iter().any(|fill| fill.gradient.is_some())
+        && dict_u32(dict, "schemaVersion")? < 9
+    {
+        return Err(PyValueError::new_err(
+            "gradient fill requires runtime schema 9",
+        ));
+    }
+    if result.fills.iter().any(|fill| {
+        fill.gradient
+            .as_ref()
+            .is_some_and(|values| values.len() != fill.colors.len())
+    }) {
+        return Err(PyValueError::new_err(
+            "gradient sample count must match fill colors",
+        ));
+    }
+    Ok(result)
 }
 
 pub(crate) fn pine_value_from_py(py: Python<'_>, value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
@@ -203,6 +220,12 @@ pub(crate) fn series_header_from_py(
             PineValue::String("format.inherit".to_owned()),
         )?,
         precision: dict_opt_value(py, dict, "precision", PineValue::Na)?,
+        linestyle: dict_opt_value(
+            py,
+            dict,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?,
     })
 }
 
@@ -239,6 +262,12 @@ fn plots_from_py(py: Python<'_>, list: Bound<'_, PyList>) -> PyResult<Vec<PlotSe
             PineValue::String("format.inherit".to_owned()),
         )?;
         plot.precision = dict_opt_value(py, dict, "precision", PineValue::Na)?;
+        plot.linestyle = dict_opt_value(
+            py,
+            dict,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?;
         plot.metadata = metadata_from_py(py, dict)?;
         plots.push(plot);
     }
@@ -413,6 +442,10 @@ fn fills_from_py(py: Python<'_>, list: Bound<'_, PyList>) -> PyResult<Vec<FillOu
                 .and_then(|value| value.extract().ok())
                 .unwrap_or(false),
             colors: optional_values(py, dict, "colors")?,
+            gradient: dict
+                .get_item("gradient")?
+                .map(|value| crate::gradient::samples_from_py(&value))
+                .transpose()?,
             title: dict_opt_value(py, dict, "title", PineValue::String(String::new()))?,
             editable: dict_opt_value(py, dict, "editable", PineValue::Bool(true))?,
             show_last: dict_opt_value(py, dict, "showLast", PineValue::Na)?,

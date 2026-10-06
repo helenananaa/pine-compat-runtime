@@ -4,6 +4,61 @@ use std::sync::Arc;
 use super::*;
 
 #[test]
+fn native_optional_alert_fixture_emits_only_on_matching_bars() {
+    let result = run_alert_script(
+        include_str!("../../../../tests/fixtures/runtime/alertcondition_optional_arguments.pine"),
+        &[
+            Bar {
+                time: 0,
+                open: 2.0,
+                high: 2.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 1000,
+                open: 1.0,
+                high: 2.0,
+                low: 1.0,
+                close: 2.0,
+                volume: 1.0,
+            },
+        ],
+    );
+    assert_eq!(result.alerts.len(), 4);
+    assert!(result.alerts.iter().all(|event| event.bar_index == 1));
+    assert_eq!(result.alerts[2].source, "Alert");
+    assert_eq!(result.alerts[2].message, "Message only");
+}
+
+#[test]
+fn alertcondition_optional_strings_keep_defaults_and_named_binding() {
+    let result = run_alert_script(
+        r#"indicator("optional alert strings")
+alertcondition(close > 1)
+alertcondition(close > 1, "Named")
+alertcondition(condition=close > 1, message="Close {{close}}")
+alertcondition(close > 1, "", "")
+"#,
+        &timed_bars(&[1.0, 2.0]),
+    );
+    assert_eq!(result.alerts.len(), 4);
+    let actual: Vec<_> = result
+        .alerts
+        .iter()
+        .map(|event| {
+            assert_eq!(event.bar_index, 1);
+            (event.source.as_str(), event.message.as_str())
+        })
+        .collect();
+    assert_eq!(
+        actual,
+        vec![("Alert", ""), ("Named", ""), ("Alert", "Close 2"), ("", "")]
+    );
+}
+
+#[test]
 fn collects_alertcondition_events_when_condition_is_true() {
     let result = run_alert_script(
         r#"indicator("alerts")
@@ -81,6 +136,56 @@ alertcondition(true, "Chart", "{{exchange}} {{ticker}} {{interval}} {{time}} {{c
         result.alerts[0].message,
         "NASDAQ AAPL 1 2021-01-01T00:00:00+0000 12"
     );
+}
+
+#[test]
+fn alertcondition_message_renders_named_plot_on_same_bar() {
+    let result = run_alert_script(
+        r#"indicator("alerts")
+plot(close * 2, "Grade", display=display.data_window)
+alertcondition(close > 1, "Grade alert", 'Grade={{plot("Grade")}} close={{close}}')
+"#,
+        &timed_bars(&[1.0, 2.5, 3.0]),
+    );
+
+    assert_eq!(result.alerts.len(), 2);
+    assert_eq!(result.alerts[0].message, "Grade=5 close=2.5");
+    assert_eq!(result.alerts[1].message, "Grade=6 close=3");
+}
+
+#[test]
+fn alertcondition_missing_named_plot_skips_event_with_diagnostic() {
+    let source = SourceFile::new(
+        "alerts.pine",
+        r#"indicator("alerts")
+alertcondition(true, "Missing", 'Value={{plot("Missing")}}')
+plot(close, "Actual")
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical_with_request_environment(
+        &analysis.hir.expect("HIR"),
+        &timed_bars(&[1.0, 2.0]),
+        RequestEnvironment::default(),
+    )
+    .expect("unresolved alert template must not stop indicator plots");
+    assert!(result.alerts.is_empty());
+    assert_eq!(result.plots.len(), 1);
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(1.0), PineValue::Float(2.0)]
+    );
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(
+        result.diagnostics[0].code,
+        "E_UNSUPPORTED_ALERT_PLACEHOLDER"
+    );
+    assert!(result.diagnostics[0].message.contains("Missing"));
 }
 
 #[test]

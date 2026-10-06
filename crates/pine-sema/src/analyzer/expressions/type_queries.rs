@@ -1,3 +1,4 @@
+mod maps;
 use crate::analyzer::maps::map_kind_from_template_name;
 use crate::prelude::*;
 
@@ -22,6 +23,7 @@ impl Analyzer {
             return Some(*pine_type);
         }
         match &expr.kind {
+            ExprKind::Member { .. } => self.expr_types.get(&self.expr_key(expr.span)).copied(),
             ExprKind::Group(inner) => self.type_of_expr_with_params(inner, param_types),
             ExprKind::Literal(literal) => Some(literal_type(literal)),
             ExprKind::Identifier(name) => param_types
@@ -61,8 +63,16 @@ impl Analyzer {
                             .map(|_| PineType::new(Qualifier::Const, ValueKind::Int))
                     })
                     .or_else(|| {
-                        pine_builtins::named_string_constant(&name)
-                            .map(|_| PineType::new(Qualifier::Const, ValueKind::String))
+                        pine_builtins::named_string_constant(&name).map(|_| {
+                            PineType::new(
+                                Qualifier::Const,
+                                if name.starts_with("display.") {
+                                    ValueKind::PlotDisplay
+                                } else {
+                                    ValueKind::String
+                                },
+                            )
+                        })
                     })
             }
             ExprKind::Unary { op, expr } => {
@@ -82,6 +92,15 @@ impl Analyzer {
                 let left_type = self.type_of_expr_with_params(left, param_types)?;
                 let right_type = self.type_of_expr_with_params(right, param_types)?;
                 match op {
+                    BinaryOp::Add | BinaryOp::Sub
+                        if left_type.kind == ValueKind::PlotDisplay
+                            && right_type.kind == ValueKind::PlotDisplay =>
+                    {
+                        Some(PineType::new(
+                            strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                            ValueKind::PlotDisplay,
+                        ))
+                    }
                     BinaryOp::Add
                         if left_type.kind == ValueKind::String
                             && right_type.kind == ValueKind::String =>
@@ -395,7 +414,9 @@ impl Analyzer {
     ) -> Option<PineType> {
         let last = branch.last()?;
         match &last.kind {
-            StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.type_of_expr_with_params(expr, param_types)
+            }
             StmtKind::If {
                 condition,
                 then_branch,
@@ -531,7 +552,9 @@ impl Analyzer {
             FunctionBody::Block(statements) => {
                 let last = statements.last()?;
                 match &last.kind {
-                    StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+                    StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                        self.type_of_expr_with_params(expr, param_types)
+                    }
                     StmtKind::If {
                         condition,
                         then_branch,
@@ -618,9 +641,13 @@ impl Analyzer {
         branch: &[Stmt],
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
-        let last = branch.last()?;
+        let Some(last) = branch.last() else {
+            return Some(PineType::new(Qualifier::Const, ValueKind::Na));
+        };
         match &last.kind {
-            StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.type_of_expr_with_params(expr, param_types)
+            }
             StmtKind::For {
                 from,
                 to,
@@ -674,7 +701,33 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
         match &statement.kind {
-            StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            StmtKind::FieldReassign {
+                receiver,
+                path,
+                field,
+                ..
+            } => self.type_of_expr_with_params(
+                &crate::analyzer::functions::field_reassign_result_expr(
+                    receiver,
+                    path,
+                    field,
+                    statement.span,
+                ),
+                param_types,
+            ),
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => self.type_of_function_if_return_with_params(
+                condition,
+                then_branch,
+                else_branch,
+                param_types,
+            ),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.type_of_expr_with_params(expr, param_types)
+            }
             StmtKind::For {
                 from,
                 to,
@@ -796,8 +849,20 @@ impl Analyzer {
                     .legacy
                     .canonical_call_name(self.current_source_context_id(), callee.span)
                     .map_or(source_name, str::to_owned);
-                if name == "request.security" && args.len() == 3 {
+                if name == "request.security" && (3..=6).contains(&args.len()) {
                     return self.tuple_element_types_with_context(&args[2].value, context);
+                }
+                if name == "request.security_lower_tf" && (3..=4).contains(&args.len()) {
+                    return self
+                        .tuple_element_types_with_context(&args[2].value, context)?
+                        .into_iter()
+                        .map(|ty| {
+                            Some(PineType::new(
+                                Qualifier::Series,
+                                ty.kind.array_kind_from_element_kind()?,
+                            ))
+                        })
+                        .collect();
                 }
                 if is_ta_vwap_bands_call(&name, args) {
                     let series_float = PineType::new(Qualifier::Series, ValueKind::Float);
@@ -1354,7 +1419,9 @@ impl Analyzer {
         context: TupleTypeContext<'_>,
     ) -> Option<Vec<PineType>> {
         match &statement.kind {
-            StmtKind::Expr(expr) => self.tuple_element_types_with_context(expr, context),
+            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
+                self.tuple_element_types_with_context(expr, context)
+            }
             StmtKind::For {
                 counter,
                 from,
@@ -1431,49 +1498,6 @@ impl Analyzer {
             SwitchArmResult::Block(statements) => {
                 self.tuple_element_types_of_function_branch_return_with_params(statements, context)
             }
-        }
-    }
-
-    fn type_of_map_operation(
-        &self,
-        name: &str,
-        args: &[CallArg],
-        param_types: &HashMap<String, PineType>,
-    ) -> Option<PineType> {
-        match name {
-            "map.put" | "map.clear" | "map.remove" | "map.put_all" => {
-                Some(PineType::new(Qualifier::Series, ValueKind::Void))
-            }
-            "map.contains" => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
-            "map.copy" => Some(PineType::new(Qualifier::Simple, ValueKind::Map)),
-            "map.size" => Some(PineType::new(Qualifier::Simple, ValueKind::Int)),
-            "map.keys" | "map.values" => {
-                let first_arg = args.first()?;
-                let info = self.map_type_of_expr(&first_arg.value)?;
-                let element_kind = if name == "map.keys" {
-                    info.key_kind
-                } else {
-                    info.value_kind
-                };
-                Some(PineType::new(
-                    Qualifier::Simple,
-                    element_kind.array_kind_from_element_kind()?,
-                ))
-            }
-            "map.get" => {
-                let first_arg = args.first()?;
-                let info = self.map_type_of_expr(&first_arg.value).or_else(|| {
-                    let ExprKind::Identifier(name) = &first_arg.value.kind else {
-                        return None;
-                    };
-                    param_types
-                        .get(name)
-                        .filter(|pine_type| pine_type.kind == ValueKind::Map)?;
-                    None
-                })?;
-                Some(PineType::new(Qualifier::Series, info.value_kind))
-            }
-            _ => None,
         }
     }
 }

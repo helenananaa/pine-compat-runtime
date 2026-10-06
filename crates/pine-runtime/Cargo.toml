@@ -1,6 +1,6 @@
 [package]
 name = "pine-runtime"
-version = "0.3.0-rc.1"
+version = "0.3.0-rc.2"
 description.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -15,7 +15,8 @@ pine-ir = { path = "../pine-ir" }
 regex = "1"
 regex-syntax = "0.8"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# Runtime snapshots and streaming replicas must preserve f64 values across JSON.
+serde_json = { version = "1", features = ["float_roundtrip"] }
 unicode_names2 = "=2.0.0"
 
 [dev-dependencies]

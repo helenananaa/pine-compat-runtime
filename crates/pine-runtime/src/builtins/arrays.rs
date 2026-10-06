@@ -1,17 +1,20 @@
 use pine_ir::{HirCallArg, HirExpr};
 
-use crate::builtins::strings::{
-    stringify_array_join_element, stringify_user_type_array_join_element,
-};
+use crate::builtins::strings::BoundedJoin;
 use crate::*;
 
+mod allocation;
 mod calls;
 mod constructors;
+mod opcode;
 mod ordering;
+#[cfg(test)]
+mod paged_tests;
 mod statistics;
 mod store;
 mod support;
 
+pub(crate) use opcode::ArrayOpcode;
 pub(crate) use support::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -242,7 +245,7 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             }
             for index in index_from..index_to {
-                self.array_set_value(id, index as i64, value.clone())?;
+                self.array_set_borrowed_value(id, index as i64, &value)?;
             }
         }
         Ok(PineValue::Void)
@@ -295,10 +298,14 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(kind) = self.array_kinds.get(&id).copied() else {
             return Ok(PineValue::Na);
         };
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values_clone_with_budget(id)? else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values_with_user_type_metadata(id, kind, values))
+        let result = self.insert_precharged_array_values(kind, values);
+        if let PineValue::Array(target_id) = result {
+            self.copy_array_user_type_metadata(id, target_id);
+        }
+        Ok(result)
     }
 
     pub(crate) fn eval_array_slice(
@@ -349,7 +356,7 @@ impl<'a> HistoricalRuntime<'a> {
         if target_kind != source_kind {
             return Ok(PineValue::Na);
         }
-        let Some(source_values) = self.array_values_clone(source_id)? else {
+        let Some(source_len) = self.array_len(source_id)? else {
             return Ok(PineValue::Na);
         };
         let Some(target_len) = self.array_len(target_id)? else {
@@ -358,14 +365,15 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(parent_len) = self.array_parent_len_for_insert(target_id) else {
             return Ok(PineValue::Na);
         };
-        if parent_len + source_values.len() > MAX_ARRAY_ELEMENTS {
+        if parent_len + source_len > MAX_ARRAY_ELEMENTS {
             return Err(RuntimeError {
                 message: format!("array.concat cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
             });
         }
-        for (offset, value) in source_values.into_iter().enumerate() {
-            self.array_insert_value(target_id, (target_len + offset) as i64, value)?;
-        }
+        let Some(source_values) = self.array_values_clone_with_budget(source_id)? else {
+            return Ok(PineValue::Na);
+        };
+        self.array_insert_precharged_values(target_id, target_len as i64, source_values)?;
         Ok(PineValue::Array(target_id))
     }
 
@@ -377,9 +385,9 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Void);
         };
-        if let Some(mut values) = self.array_values_clone(id)? {
+        if let Some(mut values) = self.array_values_clone_with_budget(id)? {
             values.reverse();
-            self.array_replace_values(id, values)?;
+            self.array_replace_precharged_values(id, values)?;
         }
         Ok(PineValue::Void)
     }
@@ -404,26 +412,18 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             ",".to_owned()
         };
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
         let user_type_name = self.array_user_types.get(&id).map(String::as_str);
-        let mut result = String::new();
+        let mut result = BoundedJoin::default();
         for (index, value) in values.iter().enumerate() {
             if index > 0 {
-                result.push_str(&separator);
+                result.push_str(&separator)?;
             }
-            if let Some(type_name) = user_type_name {
-                result.push_str(&stringify_user_type_array_join_element(
-                    value,
-                    type_name,
-                    &self.program.user_types,
-                ));
-            } else {
-                result.push_str(&stringify_array_join_element(value));
-            }
+            result.push_element(value, user_type_name, self)?;
         }
-        self.string_value_or_error(result, "array.join")
+        Ok(result.finish())
     }
 
     pub(crate) fn eval_array_clear(
@@ -434,11 +434,7 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Void);
         };
-        if let Some(len) = self.array_len(id)? {
-            for _ in 0..len {
-                let _ = self.array_remove_value(id, 0)?;
-            }
-        }
+        self.array_clear_values(id)?;
         Ok(PineValue::Void)
     }
 
@@ -474,8 +470,10 @@ mod tests {
             next_series_id: 0,
             next_call_site_id: 0,
             call_site_sources: Vec::new(),
+            lower_tf_tuple_types: Vec::new(),
             next_var_slot_id: 0,
             max_bars_back: None,
+            calc_bars_count: None,
             series_max_bars_back: Vec::new(),
             history: HirHistoryRequirements::default(),
             series_history: Vec::new(),
@@ -529,8 +527,11 @@ mod tests {
         );
         assert_eq!(runtime.array_user_type_name(id), Some("Point"));
         assert_eq!(
-            runtime.array_store.get(&id),
-            Some(&vec![
+            runtime.array_store.get(&id).map(|values| values
+                .iter()
+                .map(|value| runtime.materialize_object(value).unwrap())
+                .collect::<Vec<_>>()),
+            Some(vec![
                 PineValue::UserType(vec![PineValue::Float(1.0)]),
                 PineValue::UserType(vec![PineValue::Float(2.0)]),
             ])

@@ -1,5 +1,6 @@
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 mod const_eval;
 mod history_offsets;
@@ -9,7 +10,7 @@ use pine_ir::{
     CallSiteId, DrawingSettings, PersistenceKind, PineType, Qualifier, ScriptMode, SeriesId,
     StrategySettings, SymbolId, VarSlotId,
 };
-use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Severity, Span};
+use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Severity, SourceFile, Span};
 
 use crate::analysis::Analysis;
 use crate::compatibility::CompatibilityReport;
@@ -46,6 +47,7 @@ impl Default for LoweringLimits {
 }
 
 pub(crate) struct Analyzer {
+    pub(crate) source_texts: HashMap<SourceId, Arc<SourceFile>>,
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) compatibility: CompatibilityReport,
     pub(crate) legacy: LegacyFrontEnd,
@@ -53,6 +55,7 @@ pub(crate) struct Analyzer {
     pub(crate) source_context_depth: Cell<usize>,
     pub(crate) source_context_origins: HashMap<SourceContextId, (SourceId, Option<String>)>,
     pub(crate) call_site_sources: Vec<pine_ir::HirCallSiteSource>,
+    pub(crate) lower_tf_tuple_types: Vec<(CallSiteId, Vec<pine_ir::ValueKind>)>,
     pub(crate) scope: ScopeResolver,
     pub(crate) bindings: HashMap<BindingKey, SymbolInfo>,
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
@@ -66,6 +69,7 @@ pub(crate) struct Analyzer {
     pub(crate) symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     pub(crate) symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
     pub(crate) typed_na_scalar_symbols: HashSet<SymbolId>,
+    pub(crate) const_declared_symbols: HashSet<SymbolId>,
     pub(crate) legacy_v3_untyped_na_symbols: HashMap<SymbolId, Span>,
     pub(crate) legacy_v3_pending_na_symbols: HashSet<SymbolId>,
     pub(crate) legacy_v2_declaration_plan: crate::legacy::LegacyV2DeclarationPlan,
@@ -76,6 +80,8 @@ pub(crate) struct Analyzer {
     pub(crate) v4_v5_series_output_offset_exprs: HashSet<ExprKey>,
     pub(crate) non_scalar_udt_varip_symbols: HashSet<SymbolId>,
     pub(crate) symbol_user_type_arrays: HashMap<SymbolId, String>,
+    pub(crate) symbol_user_type_matrices: HashMap<SymbolId, String>,
+    pub(crate) symbol_tuple_value_sources: HashMap<SymbolId, (SourcedExpr, usize)>,
     pub(crate) symbol_tuple_element_types: HashMap<SymbolId, Vec<PineType>>,
     pub(crate) symbol_tuple_user_type_arrays: HashMap<SymbolId, Vec<UserTypeArrayIdentityResult>>,
     pub(crate) symbol_maps: HashMap<SymbolId, MapTypeInfo>,
@@ -87,15 +93,18 @@ pub(crate) struct Analyzer {
     pub(crate) expr_user_types: HashMap<ExprKey, String>,
     pub(crate) expr_user_type_identities: HashMap<ExprKey, UserTypeIdentity>,
     pub(crate) expr_user_type_arrays: HashMap<ExprKey, String>,
+    pub(crate) expr_user_type_matrices: HashMap<ExprKey, String>,
     pub(crate) expr_maps: HashMap<ExprKey, MapTypeInfo>,
     pub(crate) user_method_call_results: HashSet<ExprKey>,
     pub(crate) expr_types: HashMap<ExprKey, PineType>,
     pub(crate) pure_expr_series_ids: HashMap<String, SeriesId>,
     pub(crate) execution_scoped_series_ids: HashSet<SeriesId>,
     pub(crate) script_declaration: Option<(ScriptMode, Span)>,
+    pub(crate) dynamic_requests: bool,
     pub(crate) timenow_symbol: Option<SymbolId>,
     pub(crate) strategy_settings: StrategySettings,
     pub(crate) drawing_settings: DrawingSettings,
+    pub(crate) calc_bars_count: Option<u32>,
     pub(crate) function_stack: Vec<String>,
     pub(crate) function_param_symbols: Vec<HashSet<SymbolId>>,
     pub(crate) function_param_const_switch_keys: Vec<HashMap<String, ConstSwitchKey>>,
@@ -235,34 +244,6 @@ impl Analyzer {
 
     pub(crate) fn binding_key(&self, name: &str, span: Span) -> BindingKey {
         crate::resolver::binding_key(self.current_source_context_id(), name, span)
-    }
-
-    pub(crate) fn with_source_context<R>(
-        &mut self,
-        source_context_id: SourceContextId,
-        operation: impl FnOnce(&mut Self) -> R,
-    ) -> R {
-        let previous_context = self.source_context_id.replace(source_context_id);
-        let previous_depth = self.source_context_depth.get();
-        self.source_context_depth.set(previous_depth + 1);
-        let result = operation(self);
-        self.source_context_id.set(previous_context);
-        self.source_context_depth.set(previous_depth);
-        result
-    }
-
-    pub(crate) fn with_source_context_ref<R>(
-        &self,
-        source_context_id: SourceContextId,
-        operation: impl FnOnce(&Self) -> R,
-    ) -> R {
-        let previous_context = self.source_context_id.replace(source_context_id);
-        let previous_depth = self.source_context_depth.get();
-        self.source_context_depth.set(previous_depth + 1);
-        let result = operation(self);
-        self.source_context_id.set(previous_context);
-        self.source_context_depth.set(previous_depth);
-        result
     }
 
     pub(crate) fn with_symbol_initializer<R>(

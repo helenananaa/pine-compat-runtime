@@ -1,3 +1,4 @@
+use crate::PineDialect;
 use crate::prelude::*;
 
 const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
@@ -6,11 +7,23 @@ const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.ca
 const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
 const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
 const STRATEGY_NONE_ACCOUNT_CURRENCY: &str = "NONE";
-// Matches the registered `syminfo.currency` value used by the no-conversion path.
-const STRATEGY_SYMBOL_ACCOUNT_CURRENCY: &str = "USD";
 
 impl Analyzer {
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
+        let signature =
+            pine_builtins::get_phase_1_builtin("strategy").expect("strategy declaration signature");
+        let scale_index = signature
+            .params
+            .iter()
+            .position(|param| param.name == "scale")
+            .expect("strategy scale parameter");
+        self.validate_label_string_arg(
+            signature,
+            args,
+            scale_index,
+            "scale",
+            &["scale.left", "scale.right", "scale.none"],
+        );
         let mut default_qty_type_arg = None;
         let mut default_qty_value_arg = None;
         let mut default_qty_constructor: Option<fn(f64) -> pine_ir::StrategyDefaultQuantity> = None;
@@ -47,6 +60,8 @@ impl Analyzer {
                     "use_bar_magnifier",
                     "format",
                     "precision",
+                    "scale",
+                    "calc_bars_count",
                 ]
                 .get(index)
                 .copied()
@@ -58,6 +73,7 @@ impl Analyzer {
                 "max_bars_back" => {
                     self.validate_max_bars_back_bound_value("strategy", "max_bars_back", arg);
                 }
+                "calc_bars_count" => self.validate_calc_bars_count_arg("strategy", arg),
                 "initial_capital" => {
                     let Some(initial_capital) = self.known_const_numeric_value(&arg.value) else {
                         continue;
@@ -76,12 +92,16 @@ impl Analyzer {
                     let Some(currency) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
-                    if currency != STRATEGY_NONE_ACCOUNT_CURRENCY
-                        && currency != STRATEGY_SYMBOL_ACCOUNT_CURRENCY
+                    if currency == STRATEGY_NONE_ACCOUNT_CURRENCY {
+                        self.strategy_settings.account_currency = None;
+                    } else if let Some(code) =
+                        pine_builtins::named_string_constant(&format!("currency.{currency}"))
                     {
+                        self.strategy_settings.account_currency = Some(code);
+                    } else {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy` argument `currency` only supports currency.NONE or the current symbol currency in the current no-conversion subset",
+                            "`strategy` argument `currency` must be a supported currency constant",
                             arg.span,
                         ));
                     }
@@ -153,6 +173,12 @@ impl Analyzer {
                             );
                         }
                         STRATEGY_PERCENT_COMMISSION_TYPE => {
+                            commission_constructor = Some(
+                                pine_ir::StrategyCommission::Percent
+                                    as fn(f64) -> pine_ir::StrategyCommission,
+                            );
+                        }
+                        "percent" if self.legacy.dialect() == PineDialect::V5 => {
                             commission_constructor = Some(
                                 pine_ir::StrategyCommission::Percent
                                     as fn(f64) -> pine_ir::StrategyCommission,

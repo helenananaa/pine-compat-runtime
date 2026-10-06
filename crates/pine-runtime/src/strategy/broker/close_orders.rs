@@ -149,6 +149,33 @@ impl BrokerState {
     }
 
     pub(crate) fn close_all_position(&mut self, bar_index: usize, time: i64, price: f64) {
+        self.close_all_position_with_slippage(bar_index, time, price, true);
+    }
+
+    pub(super) fn close_all_position_with_slippage(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        apply_slippage: bool,
+    ) {
+        self.close_all_position_with_slippage_preserving_exit(
+            bar_index,
+            time,
+            price,
+            apply_slippage,
+            None,
+        );
+    }
+
+    pub(super) fn close_all_position_with_slippage_preserving_exit(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        apply_slippage: bool,
+        filling_entry_id: Option<&str>,
+    ) {
         let Some(direction) = self.active_close_direction() else {
             return;
         };
@@ -160,7 +187,11 @@ impl BrokerState {
             return;
         }
 
-        let price = self.exit_fill_price(direction, price);
+        let price = if apply_slippage {
+            self.exit_fill_price(direction, price)
+        } else {
+            price
+        };
         if !price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
@@ -170,7 +201,7 @@ impl BrokerState {
         }
 
         let qty = self.position_size.abs();
-        let allocations = self.allocate_close_rule_exit_for_direction(direction, None, qty);
+        let allocations = self.trade_ledger.allocate_all_for_direction(direction);
         if allocations.is_empty() {
             return;
         }
@@ -216,7 +247,8 @@ impl BrokerState {
             );
         }
 
-        self.order_book.exits_mut().clear_all();
+        self.order_book
+            .retain_exits_for_pending_entries(filling_entry_id);
         self.apply_reduction_cash_and_position(
             direction.signed_quantity(qty) * price - exit_commission,
             &allocations,
@@ -428,6 +460,14 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let metadata = self.take_next_close_metadata();
         let mut closed_entry_commission = 0.0;
+        self.record_order_event(
+            format!("Close entry(s) order {id}"),
+            bar_index,
+            time,
+            "strategy.close",
+            qty,
+            price,
+        );
         for allocation in &allocations {
             let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
             let commission = allocation.entry_commission + allocated_exit_commission;
@@ -492,9 +532,12 @@ impl BrokerState {
             (pine_ir::StrategyCloseEntriesRule::Any, Some(entry_id)) => self
                 .trade_ledger
                 .allocate_exit_any_for_entry_direction(direction, entry_id, requested_quantity),
+            // `from_entry` sizes/reserves the exit order. With the default
+            // FIFO rule its fill closes the oldest open trade regardless of
+            // the entry ID named by that order.
             _ => self.trade_ledger.allocate_exit_fifo_for_direction(
                 direction,
-                from_entry,
+                None,
                 requested_quantity,
             ),
         }

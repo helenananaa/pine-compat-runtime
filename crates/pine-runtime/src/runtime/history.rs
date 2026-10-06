@@ -18,6 +18,22 @@ impl<'a> HistoricalRuntime<'a> {
             return self.eval_expr(expr);
         }
 
+        if let pine_ir::HirExprKind::Builtin(name) = &expr.kind
+            && name == "strategy.position_size"
+        {
+            return Ok(self
+                .bars
+                .checked_sub(offset)
+                .and_then(|bar| bar.checked_sub(self.strategy_position_size_history_origin))
+                .and_then(|index| {
+                    self.strategy_position_size_at_script_pass
+                        .get(index)
+                        .copied()
+                })
+                .map(PineValue::Float)
+                .unwrap_or(PineValue::Na));
+        }
+
         self.eval_expr(expr)?;
         if let Some(series_id) = expr.series_id {
             if is_dynamic_offset

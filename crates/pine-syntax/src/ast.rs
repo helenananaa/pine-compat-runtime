@@ -66,6 +66,7 @@ pub enum StmtKind {
         value: Expr,
     },
     FieldReassign {
+        path: Vec<String>,
         receiver: String,
         field: String,
         value: Expr,
@@ -207,6 +208,8 @@ pub struct UserTypeDecl {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserTypeField {
+    pub default_value: Option<Expr>,
+    pub varip: bool,
     pub type_name: String,
     pub name: String,
     pub span: Span,
@@ -244,6 +247,7 @@ pub enum FunctionBody {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeclMode {
     Normal,
+    Const,
     Var,
     Varip,
 }
@@ -259,6 +263,11 @@ pub enum ExprKind {
     Literal(Literal),
     Identifier(String),
     QualifiedName(Vec<String>),
+    /// A field or method selected from an evaluated receiver expression.
+    Member {
+        receiver: Box<Expr>,
+        name: String,
+    },
     Unary {
         op: UnaryOp,
         expr: Box<Expr>,

@@ -44,6 +44,13 @@ impl RuntimeReplica {
         &self.result
     }
 
+    /// Consume a completed replica, transferring its full snapshot without a
+    /// copy. Its stream cursor and retransmission state are discarded.
+    #[must_use]
+    pub fn into_result(self) -> RuntimeResult {
+        self.result
+    }
+
     /// Replace state with an authoritative snapshot after a gap or reconnect.
     pub fn reset(&mut self, result: RuntimeResult, revision: u64) {
         *self = Self::new(result, revision);
@@ -61,6 +68,29 @@ impl RuntimeReplica {
     /// Returns false for an identical retransmission. Rejected updates cannot
     /// mutate result or cursor. Payloads must belong to this replica's stream.
     pub fn apply(&mut self, changes: &RuntimeChanges) -> Result<bool, RuntimeError> {
+        if changes.fills.iter().any(|fill| match &fill.action {
+            crate::FillAction::Add(fill) => fill.gradient.as_ref().is_some_and(|samples| {
+                samples.len() != fill.colors.len()
+                    || samples.iter().any(|sample| !sample.is_valid())
+            }),
+            crate::FillAction::SetGradient { values, .. } => {
+                values.iter().any(|sample| !sample.is_valid())
+            }
+            _ => false,
+        }) {
+            return Err(error("E_STREAM_GRADIENT: invalid gradient samples"));
+        }
+        if changes.schema_version < 4
+            && changes.fills.iter().any(|fill| match &fill.action {
+                crate::FillAction::SetGradient { .. } => true,
+                crate::FillAction::Add(fill) => fill.gradient.is_some(),
+                _ => false,
+            })
+        {
+            return Err(error(
+                "E_STREAM_SCHEMA: gradient fill requires changes schema 4",
+            ));
+        }
         if changes.schema_version < MIN_RUNTIME_CHANGES_SCHEMA_VERSION
             || changes.schema_version > PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION
         {

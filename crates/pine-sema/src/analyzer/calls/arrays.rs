@@ -96,8 +96,8 @@ impl Analyzer {
         }
         match self.array_from_user_type_element_inference(args, arg_types) {
             Some(
-                UserTypeArrayElementInference::SameScalarLocal(_)
-                | UserTypeArrayElementInference::SameScalarImported(_),
+                UserTypeArrayElementInference::SameLocal(_)
+                | UserTypeArrayElementInference::SameImported(_),
             ) => return,
             Some(inference) => {
                 self.diagnostics.push(Diagnostic::error(
@@ -140,8 +140,8 @@ fn array_from_actual_arg_labels(arg_types: &[Option<PineType>]) -> Option<String
 
 fn array_from_user_type_inference_message(inference: &UserTypeArrayElementInference) -> String {
     match inference {
-        UserTypeArrayElementInference::SameScalarLocal(_)
-        | UserTypeArrayElementInference::SameScalarImported(_) => {
+        UserTypeArrayElementInference::SameLocal(_)
+        | UserTypeArrayElementInference::SameImported(_) => {
             unreachable!("supported UDT array inference returns before diagnostics")
         }
         UserTypeArrayElementInference::MixedLocal => {

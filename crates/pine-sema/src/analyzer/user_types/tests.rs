@@ -8,6 +8,8 @@ use std::collections::HashSet;
 
 fn field(name: &str, kind: ValueKind, user_type_name: Option<&str>) -> UserTypeFieldInfo {
     UserTypeFieldInfo {
+        default_value: None,
+        varip: false,
         name: name.to_owned(),
         pine_type: PineType::new(Qualifier::Series, kind),
         user_type_name: user_type_name.map(str::to_owned),
@@ -51,6 +53,8 @@ fn imported_field(
     pine_type: Option<PineType>,
 ) -> ImportedUserTypeFieldInfo {
     ImportedUserTypeFieldInfo {
+        default_value: None,
+        varip: false,
         name: name.to_owned(),
         type_name: type_name.to_owned(),
         pine_type,
@@ -66,6 +70,7 @@ fn analyzer() -> Analyzer {
     };
 
     Analyzer {
+        source_texts: HashMap::new(),
         diagnostics: Vec::new(),
         compatibility: CompatibilityReport::default(),
         legacy: crate::legacy::LegacyFrontEnd::new(crate::PineDialect::V5),
@@ -73,6 +78,7 @@ fn analyzer() -> Analyzer {
         source_context_depth: Cell::new(0),
         source_context_origins: HashMap::new(),
         call_site_sources: Vec::new(),
+        lower_tf_tuple_types: Vec::new(),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),
@@ -86,6 +92,7 @@ fn analyzer() -> Analyzer {
         symbol_user_type_identities: HashMap::new(),
         symbol_init_exprs: HashMap::new(),
         typed_na_scalar_symbols: HashSet::new(),
+        const_declared_symbols: HashSet::new(),
         legacy_v3_untyped_na_symbols: HashMap::new(),
         legacy_v3_pending_na_symbols: HashSet::new(),
         legacy_v2_declaration_plan: Default::default(),
@@ -96,7 +103,9 @@ fn analyzer() -> Analyzer {
         v4_v5_series_output_offset_exprs: HashSet::new(),
         non_scalar_udt_varip_symbols: HashSet::new(),
         symbol_user_type_arrays: HashMap::new(),
+        symbol_user_type_matrices: HashMap::new(),
         symbol_tuple_element_types: HashMap::new(),
+        symbol_tuple_value_sources: HashMap::new(),
         symbol_tuple_user_type_arrays: HashMap::new(),
         symbol_maps: HashMap::new(),
         const_int_symbols: HashMap::new(),
@@ -107,15 +116,18 @@ fn analyzer() -> Analyzer {
         expr_user_types: HashMap::new(),
         expr_user_type_identities: HashMap::new(),
         expr_user_type_arrays: HashMap::new(),
+        expr_user_type_matrices: HashMap::new(),
         expr_maps: HashMap::new(),
         user_method_call_results: HashSet::new(),
         expr_types: HashMap::new(),
         pure_expr_series_ids: HashMap::new(),
         execution_scoped_series_ids: HashSet::new(),
         script_declaration: None,
+        dynamic_requests: false,
         timenow_symbol: None,
         strategy_settings: Default::default(),
         drawing_settings: Default::default(),
+        calc_bars_count: None,
         function_stack: Vec::new(),
         function_param_symbols: Vec::new(),
         function_param_const_switch_keys: Vec::new(),
@@ -447,7 +459,7 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: true,
-            field_arg_indices: vec![0, 1],
+            field_arg_indices: vec![Some(0), Some(1)],
         }))
     );
     assert_eq!(
@@ -460,7 +472,7 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: true,
-            field_arg_indices: vec![1, 0],
+            field_arg_indices: vec![Some(1), Some(0)],
         }))
     );
     assert_eq!(
@@ -468,9 +480,10 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
             "lib.Point.new",
             &[call_arg(Some("label"), "name")]
         ),
-        Some(Err(ImportedUdtConstructorArgError::MissingField(
-            "x".to_owned()
-        )))
+        Some(Ok(ImportedUdtConstructorArgPlan {
+            supported_fields: true,
+            field_arg_indices: vec![None, Some(0)],
+        }))
     );
     assert_eq!(
         analyzer.imported_user_type_constructor_arg_plan(
@@ -541,7 +554,7 @@ fn detects_imported_user_type_constructor_with_deferred_field_family() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: false,
-            field_arg_indices: vec![0],
+            field_arg_indices: vec![Some(0)],
         }))
     );
 }
@@ -578,7 +591,7 @@ fn plans_imported_user_type_constructor_args_with_object_fields() {
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
             supported_fields: true,
-            field_arg_indices: vec![0],
+            field_arg_indices: vec![Some(0)],
         }))
     );
 }
@@ -934,9 +947,7 @@ fn classifies_same_scalar_local_user_type_array_elements() {
             &user_types,
             &["Point".to_owned(), "Point".to_owned()],
         ),
-        Some(UserTypeArrayElementInference::SameScalarLocal(
-            "Point".to_owned()
-        ))
+        Some(UserTypeArrayElementInference::SameLocal("Point".to_owned()))
     );
 }
 
@@ -978,7 +989,7 @@ fn classifies_same_scalar_tree_local_user_type_array_elements() {
             &user_types,
             &["Wrapper".to_owned(), "Wrapper".to_owned()],
         ),
-        Some(UserTypeArrayElementInference::SameScalarLocal(
+        Some(UserTypeArrayElementInference::SameLocal(
             "Wrapper".to_owned()
         ))
     );

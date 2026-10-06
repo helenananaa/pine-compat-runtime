@@ -22,17 +22,18 @@ struct ForInItem {
     value: PineValue,
 }
 
-impl StmtControl {
-    fn from_runtime_error(error: &RuntimeError) -> Option<Self> {
-        match error.loop_control()? {
-            RuntimeLoopControl::Break => Some(Self::Break),
-            RuntimeLoopControl::Continue => Some(Self::Continue),
+impl HistoricalRuntime<'_> {
+    fn take_loop_control(&mut self) -> Option<StmtControl> {
+        match self.pending_loop_control.take()? {
+            RuntimeLoopControl::Break => Some(StmtControl::Break),
+            RuntimeLoopControl::Continue => Some(StmtControl::Continue),
         }
     }
 }
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_stmt(&mut self, statement: &HirStmt) -> Result<StmtControl, RuntimeError> {
+        self.charge_execution_steps(1)?;
         match &statement.kind {
             HirStmtKind::Expr(expr) => {
                 self.eval_expr(expr)?;
@@ -90,11 +91,38 @@ impl<'a> HistoricalRuntime<'a> {
             }
             HirStmtKind::FieldReassign {
                 symbol,
+                path,
                 field_index,
                 value,
             } => {
                 let value = self.eval_expr(value)?;
+                if !path.is_empty() {
+                    let mut receiver = self
+                        .current_symbols
+                        .get(symbol)
+                        .cloned()
+                        .unwrap_or(PineValue::Na);
+                    for index in path {
+                        let PineValue::UserTypeRef(id) = receiver else {
+                            return Err(RuntimeError{message:"nested field mutation receiver is undefined or not a UDT object".to_owned()});
+                        };
+                        receiver = self.object_field(id, *index)?;
+                    }
+                    let PineValue::UserTypeRef(id) = receiver else {
+                        return Err(RuntimeError {
+                            message:
+                                "nested field mutation receiver is undefined or not a UDT object"
+                                    .to_owned(),
+                        });
+                    };
+                    self.set_object_field(id, *field_index, value)?;
+                    return Ok(StmtControl::None);
+                }
                 let updated = match self.current_symbols.get(symbol).cloned() {
+                    Some(PineValue::UserTypeRef(id)) => {
+                        self.set_object_field(id, *field_index, value)?;
+                        PineValue::UserTypeRef(id)
+                    }
                     Some(PineValue::UserType(mut fields)) => {
                         if *field_index < fields.len() {
                             fields[*field_index] = value;
@@ -221,6 +249,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(());
         };
         let updated = match slot {
+            PineValue::UserTypeRef(id) => {
+                self.set_object_field(id, field_index, value)?;
+                PineValue::UserTypeRef(id)
+            }
             PineValue::UserType(mut fields) => {
                 if field_index < fields.len() {
                     fields[field_index] = value;
@@ -274,11 +306,21 @@ impl<'a> HistoricalRuntime<'a> {
             -step_size
         };
         let mut value = from;
+        let mut iterations = 0_usize;
         let mut loop_result = PineValue::Na;
         loop {
             if (step > 0 && value > to_boundary) || (step < 0 && value < to_boundary) {
                 break;
             }
+            if iterations >= MAX_WHILE_ITERATIONS {
+                return Err(RuntimeError {
+                    message: format!(
+                        "for loop exceeded maximum iteration count of {MAX_WHILE_ITERATIONS}"
+                    ),
+                });
+            }
+            self.charge_loop_iteration()?;
+            iterations += 1;
             self.set_symbol_value(counter, PineValue::Int(value));
             let mut control = StmtControl::None;
             for statement in body {
@@ -288,7 +330,7 @@ impl<'a> HistoricalRuntime<'a> {
                         control = next_control;
                         break;
                     }
-                    Err(error) => match StmtControl::from_runtime_error(&error) {
+                    Err(error) => match self.take_loop_control() {
                         Some(next_control) => {
                             control = next_control;
                             break;
@@ -302,7 +344,7 @@ impl<'a> HistoricalRuntime<'a> {
                     if let Some(result) = result {
                         match self.eval_expr(result) {
                             Ok(value) => loop_result = value,
-                            Err(error) => match StmtControl::from_runtime_error(&error) {
+                            Err(error) => match self.take_loop_control() {
                                 Some(StmtControl::Break) => break,
                                 Some(StmtControl::Continue) => {}
                                 Some(StmtControl::None) => {}
@@ -352,6 +394,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             iterations += 1;
 
+            self.charge_loop_iteration()?;
             let mut control = StmtControl::None;
             for statement in body {
                 match self.eval_stmt(statement) {
@@ -360,7 +403,7 @@ impl<'a> HistoricalRuntime<'a> {
                         control = next_control;
                         break;
                     }
-                    Err(error) => match StmtControl::from_runtime_error(&error) {
+                    Err(error) => match self.take_loop_control() {
                         Some(next_control) => {
                             control = next_control;
                             break;
@@ -374,7 +417,7 @@ impl<'a> HistoricalRuntime<'a> {
                     if let Some(result) = result {
                         match self.eval_expr(result) {
                             Ok(value) => loop_result = value,
-                            Err(error) => match StmtControl::from_runtime_error(&error) {
+                            Err(error) => match self.take_loop_control() {
                                 Some(StmtControl::Break) => break,
                                 Some(StmtControl::Continue) => {}
                                 Some(StmtControl::None) => {}
@@ -401,11 +444,15 @@ impl<'a> HistoricalRuntime<'a> {
         let iterable = self.eval_expr(iterable)?;
         match iterable {
             PineValue::Array(array_id) => {
-                let Some(initial_len) = self.array_len(array_id)? else {
-                    return Ok(());
-                };
-
-                for index in 0..initial_len {
+                let mut index = 0;
+                while index < self.array_len(array_id)?.unwrap_or(0) {
+                    if index >= MAX_WHILE_ITERATIONS {
+                        return Err(RuntimeError {
+                            message: format!(
+                                "for...in array loop exceeded maximum iteration count of {MAX_WHILE_ITERATIONS}"
+                            ),
+                        });
+                    }
                     let value = self.array_get_cloned(array_id, index as i64)?;
                     let Some(value) = value else {
                         return Err(RuntimeError {
@@ -421,6 +468,7 @@ impl<'a> HistoricalRuntime<'a> {
                     )? {
                         return Ok(());
                     }
+                    index += 1;
                 }
             }
             PineValue::Matrix(matrix_id) => {
@@ -433,6 +481,7 @@ impl<'a> HistoricalRuntime<'a> {
                 };
                 let array_kind = matrix_array_element_kind(kind);
 
+                self.charge_execution_steps(initial_rows as u64)?;
                 let mut row_snapshots = Vec::with_capacity(initial_rows);
                 for index in 0..initial_rows {
                     let Some(values) = self.matrix_row_values(matrix_id, index as i64)? else {
@@ -509,11 +558,15 @@ impl<'a> HistoricalRuntime<'a> {
 
         match iterable {
             PineValue::Array(array_id) => {
-                let Some(initial_len) = self.array_len(array_id)? else {
-                    return Ok(PineValue::Na);
-                };
-
-                for index in 0..initial_len {
+                let mut index = 0;
+                while index < self.array_len(array_id)?.unwrap_or(0) {
+                    if index >= MAX_WHILE_ITERATIONS {
+                        return Err(RuntimeError {
+                            message: format!(
+                                "for...in array loop exceeded maximum iteration count of {MAX_WHILE_ITERATIONS}"
+                            ),
+                        });
+                    }
                     let value = self.array_get_cloned(array_id, index as i64)?;
                     let Some(value) = value else {
                         return Err(RuntimeError {
@@ -532,6 +585,7 @@ impl<'a> HistoricalRuntime<'a> {
                     )? {
                         break;
                     }
+                    index += 1;
                 }
             }
             PineValue::Matrix(matrix_id) => {
@@ -544,6 +598,7 @@ impl<'a> HistoricalRuntime<'a> {
                 };
                 let array_kind = matrix_array_element_kind(kind);
 
+                self.charge_execution_steps(initial_rows as u64)?;
                 let mut row_snapshots = Vec::with_capacity(initial_rows);
                 for index in 0..initial_rows {
                     let Some(values) = self.matrix_row_values(matrix_id, index as i64)? else {
@@ -619,6 +674,7 @@ impl<'a> HistoricalRuntime<'a> {
         result: &HirExpr,
         loop_result: &mut PineValue,
     ) -> Result<bool, RuntimeError> {
+        self.charge_loop_iteration()?;
         if let Some(index_symbol) = symbols.index {
             self.set_symbol_value(index_symbol, item.index);
         }
@@ -632,7 +688,7 @@ impl<'a> HistoricalRuntime<'a> {
                     control = next_control;
                     break;
                 }
-                Err(error) => match StmtControl::from_runtime_error(&error) {
+                Err(error) => match self.take_loop_control() {
                     Some(next_control) => {
                         control = next_control;
                         break;
@@ -644,7 +700,7 @@ impl<'a> HistoricalRuntime<'a> {
         match control {
             StmtControl::None => match self.eval_expr(result) {
                 Ok(value) => *loop_result = value,
-                Err(error) => match StmtControl::from_runtime_error(&error) {
+                Err(error) => match self.take_loop_control() {
                     Some(StmtControl::Break) => return Ok(true),
                     Some(StmtControl::Continue) => {}
                     Some(StmtControl::None) => {}
@@ -665,6 +721,7 @@ impl<'a> HistoricalRuntime<'a> {
         value: PineValue,
         body: &[HirStmt],
     ) -> Result<bool, RuntimeError> {
+        self.charge_loop_iteration()?;
         if let Some(index_symbol) = index_symbol {
             self.set_symbol_value(index_symbol, index);
         }
@@ -674,7 +731,7 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(StmtControl::None) => {}
                 Ok(StmtControl::Break) => return Ok(true),
                 Ok(StmtControl::Continue) => break,
-                Err(error) => match StmtControl::from_runtime_error(&error) {
+                Err(error) => match self.take_loop_control() {
                     Some(StmtControl::Break) => return Ok(true),
                     Some(StmtControl::Continue) => break,
                     Some(StmtControl::None) => {}

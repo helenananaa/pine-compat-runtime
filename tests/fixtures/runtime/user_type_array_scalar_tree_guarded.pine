@@ -1,0 +1,817 @@
+//@version=5
+indicator("User type array scalar tree")
+type Point
+    float x
+    float y
+
+type Wrapper
+    Point inner
+    float weight
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type ReturnAnchor
+    int tag
+
+return_identity(values) => values
+
+array(values) => values
+
+size(values) => array.size(values) + 9000
+
+get(values, int index) => array.size(values) + index + 9100
+
+first(values) => array.size(values) + 9200
+
+last(values) => array.size(values) + 9300
+
+copy(values) => array.from(First.new(9400.0, 94000.0))
+
+return_block_alias(values) =>
+    made = values
+    made
+
+return_copy(values) => values.copy()
+
+return_fresh(value) => array.from(value)
+
+return_rebuild(values) =>
+    nested = return_identity(values)
+    item = nested.get(0)
+    array.from(item)
+
+return_new_first() => array.new<First>(1, First.new(110.0, 1100.0))
+
+return_empty_first() => array.new<First>()
+
+return_none_first() =>
+    array<First> values = na
+    values
+
+return_nested(values) => return_block_alias(return_identity(values))
+
+return_named(values, bool use_copy, int tag) => use_copy ? values.copy() : values
+
+return_final_if(values) =>
+    if bar_index >= 0
+        made = values.copy()
+        made
+    else
+        values
+
+method returnFirst(ReturnAnchor self, array<First> values) => return_nested(values)
+
+method returnSecond(ReturnAnchor self, Second[] values) =>
+    made = values.copy()
+    made
+
+method returnInts(ReturnAnchor self, array<int> values) => return_identity(values)
+
+method first(ReturnAnchor self, array<First> values) => array.size(values) + 700
+
+method copy(ReturnAnchor self, array<First> values) => array.from(First.new(999.0, 9990.0))
+
+method size(ReturnAnchor self, array<First> values) => array.size(values) + 900
+
+method get(ReturnAnchor self, array<First> values, int index) => array.size(values) + index + 901
+
+method last(ReturnAnchor self, array<First> values) => array.size(values) + 902
+
+method retain(First self, array<First> values) => values
+
+method retain(Second self, array<Second> values) => values
+
+method size(First self) => (na(self) ? na : self.shared) + 1000.0
+
+method get(First self, int index) => (na(self) ? na : self.shared) + index + 2000.0
+
+method last(First self) => (na(self) ? na : self.shared) + 3000.0
+
+method first(First self) => (na(self) ? na : self.shared) + 4000.0
+
+method copy(First self) => (na(self) ? na : self.shared) + 5000.0
+
+method size(Second self) => (na(self) ? na : self.shared) + 10000.0
+
+method get(Second self, int index) => (na(self) ? na : self.shared) + index + 20000.0
+
+method first(Second self) => (na(self) ? na : self.shared) + 30000.0
+
+method last(Second self) => (na(self) ? na : self.shared) + 40000.0
+
+method copy(Second self) => (na(self) ? na : self.shared) + 50000.0
+
+method returnEmptyFirst(ReturnAnchor self) => array.new<First>()
+
+method returnNoneFirst(ReturnAnchor self) =>
+    array<First> values = na
+    values
+
+method returnStatic(First self, array<First> values) => return_nested(values)
+
+readPostfix(receiver, values) =>
+    item = receiver.retain(values).copy().first()
+    (na(item) ? na : item.shared)
+
+readAccessors(receiver, values) =>
+    head = receiver.retain(values).get(index=0)
+    tail = receiver.retain(values).last()
+    receiver.retain(values).size() + (na(head) ? na : head.shared) + (na(tail) ? na : tail.shared)
+
+readUnqualifiedArray(values) =>
+    head = return_nested(values).get(index=0)
+    first_item = return_nested(values).first()
+    tail = return_nested(values).copy().last()
+    return_nested(values).size() + (na(head) ? na : head.shared) + (na(first_item) ? na : first_item.shared) + (na(tail) ? na : tail.shared) + return_nested(values).copy().size()
+
+readUnqualifiedScalarArray(values) =>
+    head = return_identity(values).get(index=0)
+    first_item = return_identity(values).first()
+    tail = return_identity(values).copy().last()
+    return_identity(values).size() + head + first_item + tail + return_identity(values).copy().size()
+
+readUnqualifiedScalar(value) =>
+    return_identity(value).size() + return_identity(value).get(index=1) + return_identity(value).first() + return_identity(value).last() + return_identity(value).copy()
+
+sum_udt_values(values) =>
+    float total = 0.0
+    for item in values
+        total := total + (na(item) ? na : item.shared)
+    total
+
+sum_indexed_udt_values(values) =>
+    float total = 0.0
+    for index, item in values
+        total := total + index + (na(item) ? na : item.shared)
+    total
+
+sum_aliased_udt_values(values) =>
+    source = values
+    float total = 0.0
+    for item in source
+        total := total + (na(item) ? na : item.shared)
+    total
+
+sum_nested_udt_values(values) =>
+    float total = 0.0
+    for item in return_identity(values)
+        total := total + (na(item) ? na : item.shared)
+    total
+
+last_indexed_udt_value(values) =>
+    for index, item in values
+        (na(item) ? na : item.shared) + index
+
+last_udt_value(values) =>
+    for item in values
+        item
+
+rebuild_last_udt_array(values) =>
+    for item in values
+        array.from(item)
+
+method sumFirstIndexed(ReturnAnchor self, array<First> values) =>
+    float total = 0.0
+    for index, item in values
+        total := total + index + (na(item) ? na : item.shared)
+    total
+
+method sumSecondValues(ReturnAnchor self, Second[] values) =>
+    float total = 0.0
+    for item in values
+        total := total + (na(item) ? na : item.shared)
+    total
+
+method lastFirstIndexed(ReturnAnchor self, array<First> values) =>
+    for index, item in values
+        (na(item) ? na : item.shared) + index
+
+method lastSecondValue(ReturnAnchor self, Second[] values) =>
+    for item in values
+        item
+
+read_flow_shared(values) =>
+    selected = bar_index >= 0 ? array.copy(values) : na
+    item = array.first(selected)
+    (na(item) ? na : item.shared)
+
+read_flow_shared_method(values) =>
+    selected = if bar_index >= 0
+        made = values.copy()
+        made
+    else
+        na
+    item = selected.last()
+    (na(item) ? na : item.shared)
+
+rebuild_flow_shared(value) =>
+    alias = value
+    rebuilt = array.from(bar_index >= 0 ? alias : na, bar_index < 0 ? na : na)
+    item = array.get(rebuilt, 0)
+    (na(item) ? na : item.shared)
+
+array<Wrapper> declared = na
+declared := array.new<Wrapper>()
+declared.push(Wrapper.new(Point.new(close, open), high))
+
+Wrapper[] inferred = array.from(Wrapper.new(Point.new(high, low), close))
+seeded = array.new<Wrapper>(1, Wrapper.new(Point.new(open, close), low))
+
+declared_value = declared.get(0)
+inferred_value = array.get(inferred, 0)
+seeded_value = seeded.get(0)
+prior_inferred = inferred_value[1]
+
+plot((na(declared_value) ? na : na(declared_value.inner) ? na : declared_value.inner.x))
+plot((na(inferred_value) ? na : na(inferred_value.inner) ? na : inferred_value.inner.x))
+plot((na(inferred_value) ? na : na(inferred_value.inner) ? na : inferred_value.inner.y))
+plot((na(seeded_value) ? na : na(seeded_value.inner) ? na : seeded_value.inner.y))
+plot((na(prior_inferred) ? na : na(prior_inferred.inner) ? na : prior_inferred.inner.x))
+plot(declared.size() + inferred.size() + seeded.size())
+
+flow_left = array.new<Wrapper>(1, Wrapper.new(Point.new(close + 10, open + 20), 100.0))
+flow_right = array.from(Wrapper.new(Point.new(high + 30, low + 40), 200.0))
+
+flow_ternary = bar_index % 2 == 0 ? flow_left : flow_right
+flow_nullable = bar_index % 2 == 0 ? flow_left : na
+
+flow_if = if bar_index % 2 == 0
+    made = flow_left.copy()
+    made
+else
+    made = flow_right.copy()
+    made
+
+flow_switch = switch bar_index % 2
+    0 =>
+        made = flow_left.copy()
+        made
+    =>
+        made = flow_right.copy()
+        made
+
+flow_for = for i = 0 to 0
+    made = flow_left.copy()
+    made
+
+flow_for_in = for item in array.from(0)
+    made = flow_right.copy()
+    made
+
+int flow_iterations = 0
+flow_while = while flow_iterations < 1
+    flow_iterations := flow_iterations + 1
+    made = flow_right.copy()
+    made
+
+array<Wrapper> flow_typed = if bar_index % 2 == 0
+    flow_left
+else
+    flow_right
+
+flow_ternary_value = flow_ternary.get(0)
+flow_if_value = flow_if.get(0)
+flow_switch_value = flow_switch.get(0)
+flow_for_value = flow_for.get(0)
+flow_for_in_value = flow_for_in.get(0)
+flow_while_value = flow_while.get(0)
+flow_typed_value = flow_typed.get(0)
+flow_history_value = array.get(flow_ternary[1], 0)
+
+plot((na(flow_ternary_value) ? na : flow_ternary_value.weight))
+plot(nz(flow_nullable.size(), -1))
+plot((na(flow_if_value) ? na : na(flow_if_value.inner) ? na : flow_if_value.inner.x))
+plot((na(flow_switch_value) ? na : na(flow_switch_value.inner) ? na : flow_switch_value.inner.y))
+plot((na(flow_for_value) ? na : flow_for_value.weight))
+plot((na(flow_for_in_value) ? na : flow_for_in_value.weight))
+plot((na(flow_while_value) ? na : flow_while_value.weight))
+plot((na(flow_typed_value) ? na : flow_typed_value.weight))
+plot((na(flow_history_value) ? na : flow_history_value.weight))
+
+first_layout = array.from(First.new(10.0, 100.0))
+second_layout = array.from(Second.new(200.0, 20.0))
+plot(read_flow_shared(first_layout))
+plot(read_flow_shared(second_layout))
+plot(read_flow_shared_method(first_layout))
+plot(read_flow_shared_method(second_layout))
+plot(rebuild_flow_shared(First.new(30.0, 300.0)))
+plot(rebuild_flow_shared(Second.new(400.0, 40.0)))
+
+return_first_source = array.from(First.new(60.0, 600.0))
+return_second_source = array.from(Second.new(700.0, 70.0))
+return_first_once = return_nested(return_first_source)
+return_second_once = return_nested(return_second_source)
+return_first_again = return_nested(return_first_source)
+return_first_value = array.get(return_first_once, 0)
+return_second_value = array.get(return_second_once, 0)
+return_first_again_value = array.get(return_first_again, 0)
+plot((na(return_first_value) ? na : return_first_value.shared))
+plot((na(return_second_value) ? na : return_second_value.shared))
+plot((na(return_first_again_value) ? na : return_first_again_value.shared))
+
+return_named_first = return_named(tag=1, values=return_first_source, use_copy=true)
+return_if_second = return_final_if(return_second_source)
+return_anchor = ReturnAnchor.new(1)
+return_method_first = return_anchor.returnFirst(return_first_source)
+return_method_second = return_anchor.returnSecond(values=return_second_source)
+return_named_first_value = array.get(return_named_first, 0)
+return_if_second_value = array.get(return_if_second, 0)
+return_method_first_value = array.get(return_method_first, 0)
+return_method_second_value = array.get(return_method_second, 0)
+plot((na(return_named_first_value) ? na : return_named_first_value.shared) + (na(return_if_second_value) ? na : return_if_second_value.shared) + (na(return_method_first_value) ? na : return_method_first_value.shared) + (na(return_method_second_value) ? na : return_method_second_value.shared))
+
+return_identity_source = array.from(First.new(80.0, 800.0))
+return_identity_alias = return_identity(return_identity_source)
+return_identity_alias.push(First.new(81.0, 810.0))
+plot(return_identity_source.size() * 10 + return_identity_alias.size())
+
+return_copy_source = array.from(First.new(90.0, 900.0))
+return_copy_result = return_copy(return_copy_source)
+return_copy_result.push(First.new(91.0, 910.0))
+plot(return_copy_source.size() * 10 + return_copy_result.size())
+
+return_fresh_value = First.new(100.0, 1000.0)
+return_fresh_first = return_fresh(return_fresh_value)
+return_fresh_second = return_fresh(return_fresh_value)
+return_fresh_first.push(First.new(101.0, 1010.0))
+plot(return_fresh_first.size() * 10 + return_fresh_second.size())
+
+return_rebuilt_first_once = return_rebuild(return_first_source)
+return_rebuilt_second = return_rebuild(return_second_source)
+return_rebuilt_first_again = return_rebuild(return_first_source)
+plot(array.join(return_rebuilt_first_once, "|") == "First(60, 600)" ? 1 : 0)
+plot(array.join(return_rebuilt_second, "|") == "Second(700, 70)" ? 1 : 0)
+plot(array.join(return_rebuilt_first_again, "|") == "First(60, 600)" ? 1 : 0)
+
+return_new_first_result = return_new_first()
+plot(array.join(return_new_first_result, "|") == "First(110, 1100)" ? 1 : 0)
+
+return_method_copy_result = return_anchor.copy(return_first_source)
+plot(array.join(return_method_copy_result, "|") == "First(999, 9990)" ? 1 : 0)
+
+postfix_method_first = return_anchor.returnFirst(return_first_source).first()
+postfix_method_second = return_anchor.returnSecond(return_second_source).first()
+postfix_method_first_again = return_anchor.returnFirst(return_first_source).first()
+postfix_copy_first = return_anchor.returnFirst(return_first_source).copy().first()
+postfix_copy_second = return_anchor.returnSecond(return_second_source).copy().first()
+postfix_copy_first_again = return_anchor.returnFirst(return_first_source).copy().first()
+postfix_method_qualified = ReturnAnchor.returnFirst(return_anchor, return_first_source).copy().first()
+postfix_method_named = return_anchor.returnSecond(values=return_second_source).copy().first()
+plot((na(postfix_method_first) ? na : postfix_method_first.shared))
+plot((na(postfix_method_second) ? na : postfix_method_second.shared))
+plot((na(postfix_method_first_again) ? na : postfix_method_first_again.shared))
+plot((na(postfix_copy_first) ? na : postfix_copy_first.shared))
+plot((na(postfix_copy_second) ? na : postfix_copy_second.shared))
+plot((na(postfix_copy_first_again) ? na : postfix_copy_first_again.shared))
+plot((na(postfix_method_qualified) ? na : postfix_method_qualified.shared))
+plot((na(postfix_method_named) ? na : postfix_method_named.shared))
+
+wrapped_postfix_first = readPostfix(First.new(1.0, 10.0), return_first_source)
+wrapped_postfix_second = readPostfix(Second.new(20.0, 2.0), return_second_source)
+wrapped_postfix_first_again = readPostfix(First.new(3.0, 30.0), return_first_source)
+plot(wrapped_postfix_first)
+plot(wrapped_postfix_second)
+plot(wrapped_postfix_first_again)
+
+access_first_values = array.from(First.new(160.0, 1600.0), First.new(161.0, 1610.0))
+access_second_values = array.from(Second.new(1700.0, 170.0), Second.new(1710.0, 171.0))
+postfix_size_first = return_anchor.returnFirst(access_first_values).size()
+postfix_size_second = return_anchor.returnSecond(access_second_values).size()
+postfix_size_first_again = return_anchor.returnFirst(access_first_values).size()
+postfix_get_first = return_anchor.returnFirst(access_first_values).get(index=0)
+postfix_get_second = return_anchor.returnSecond(access_second_values).get(0)
+postfix_get_first_again = return_anchor.returnFirst(access_first_values).get(0)
+postfix_last_first = return_anchor.returnFirst(access_first_values).last()
+postfix_last_second = return_anchor.returnSecond(access_second_values).last()
+postfix_last_first_again = return_anchor.returnFirst(access_first_values).last()
+postfix_copy_get = return_anchor.returnFirst(access_first_values).copy().get(index=1)
+postfix_copy_last = return_anchor.returnSecond(access_second_values).copy().last()
+postfix_access_qualified = ReturnAnchor.returnFirst(return_anchor, access_first_values).get(index=1)
+postfix_access_named = return_anchor.returnSecond(values=access_second_values).last()
+postfix_includes_first = return_anchor.returnFirst(access_first_values).includes(First.new(160.0, 1600.0))
+postfix_includes_second = return_anchor.returnSecond(access_second_values).includes(Second.new(1710.0, 171.0))
+postfix_includes_first_again = return_anchor.returnFirst(access_first_values).copy().includes(First.new(161.0, 1610.0))
+postfix_indexof_first = return_anchor.returnFirst(access_first_values).indexof(First.new(160.0, 1600.0))
+postfix_indexof_second = return_anchor.returnSecond(access_second_values).indexof(Second.new(1710.0, 171.0))
+postfix_indexof_first_again = return_anchor.returnFirst(access_first_values).copy().indexof(First.new(161.0, 1610.0))
+postfix_lastindexof_first = return_anchor.returnFirst(access_first_values).lastindexof(First.new(160.0, 1600.0))
+postfix_lastindexof_second = return_anchor.returnSecond(access_second_values).lastindexof(Second.new(1710.0, 171.0))
+postfix_lastindexof_first_again = return_anchor.returnFirst(access_first_values).copy().lastindexof(First.new(161.0, 1610.0))
+postfix_lastindexof_duplicate = return_anchor.returnFirst(array.from(First.new(160.0, 1600.0), First.new(161.0, 1610.0), First.new(160.0, 1600.0))).lastindexof(First.new(160.0, 1600.0))
+plot(postfix_size_first)
+plot(postfix_size_second)
+plot(postfix_size_first_again)
+plot((na(postfix_get_first) ? na : postfix_get_first.shared))
+plot((na(postfix_get_second) ? na : postfix_get_second.shared))
+plot((na(postfix_get_first_again) ? na : postfix_get_first_again.shared))
+plot((na(postfix_last_first) ? na : postfix_last_first.shared))
+plot((na(postfix_last_second) ? na : postfix_last_second.shared))
+plot((na(postfix_last_first_again) ? na : postfix_last_first_again.shared))
+plot((na(postfix_copy_get) ? na : postfix_copy_get.shared))
+plot((na(postfix_copy_last) ? na : postfix_copy_last.shared))
+plot((na(postfix_access_qualified) ? na : postfix_access_qualified.shared))
+plot((na(postfix_access_named) ? na : postfix_access_named.shared))
+plot(postfix_includes_first and postfix_includes_second and postfix_includes_first_again ? 1 : 0)
+plot(postfix_indexof_first == 0 and postfix_indexof_second == 1 and postfix_indexof_first_again == 1 ? 1 : 0)
+plot(postfix_lastindexof_first == 0 and postfix_lastindexof_second == 1 and postfix_lastindexof_first_again == 1 and postfix_lastindexof_duplicate == 2 ? 1 : 0)
+
+wrapped_access_first = readAccessors(First.new(1.0, 10.0), access_first_values)
+wrapped_access_second = readAccessors(Second.new(20.0, 2.0), access_second_values)
+wrapped_access_first_again = readAccessors(First.new(3.0, 30.0), access_first_values)
+plot(wrapped_access_first)
+plot(wrapped_access_second)
+plot(wrapped_access_first_again)
+
+explicit_method_size = return_anchor.size(return_anchor.returnFirst(access_first_values))
+explicit_method_get = ReturnAnchor.get(return_anchor, return_anchor.returnFirst(access_first_values), 0)
+explicit_method_last = return_anchor.last(access_first_values)
+scalar_result_size = First.new(2.0, 20.0).size()
+scalar_result_get = First.new(3.0, 30.0).get(index=1)
+scalar_result_last = First.new(4.0, 40.0).last()
+plot(explicit_method_size)
+plot(explicit_method_get)
+plot(explicit_method_last)
+plot(scalar_result_size)
+plot(scalar_result_get)
+plot(scalar_result_last)
+
+empty_result_size = return_anchor.returnEmptyFirst().size()
+empty_result_last = return_anchor.returnEmptyFirst().last()
+none_result_size = return_anchor.returnNoneFirst().size()
+none_result_get = return_anchor.returnNoneFirst().get(0)
+none_result_last = return_anchor.returnNoneFirst().last()
+none_copy_last = return_anchor.returnNoneFirst().copy().last()
+empty_result_includes = return_anchor.returnEmptyFirst().includes(First.new(0.0, 0.0))
+none_result_includes = return_anchor.returnNoneFirst().copy().includes(First.new(0.0, 0.0))
+empty_result_indexof = return_anchor.returnEmptyFirst().indexof(First.new(0.0, 0.0))
+none_result_indexof = return_anchor.returnNoneFirst().copy().indexof(First.new(0.0, 0.0))
+empty_result_lastindexof = return_anchor.returnEmptyFirst().lastindexof(First.new(0.0, 0.0))
+none_result_lastindexof = return_anchor.returnNoneFirst().copy().lastindexof(First.new(0.0, 0.0))
+na_index_get = return_anchor.returnFirst(access_first_values).get(na)
+negative_index_get = return_anchor.returnFirst(access_first_values).get(-1)
+plot(empty_result_size)
+plot(na(empty_result_last) ? 1 : 0)
+plot(na(none_result_size) and na(none_result_get) and na(none_result_last) and na(none_copy_last) ? 1 : 0)
+plot(not empty_result_includes ? 1 : 0)
+plot(na(none_result_includes) ? 1 : 0)
+plot(empty_result_indexof == -1 ? 1 : 0)
+plot(none_result_indexof == -1 ? 1 : 0)
+plot(empty_result_lastindexof == -1 ? 1 : 0)
+plot(none_result_lastindexof == -1 ? 1 : 0)
+plot(na(na_index_get) ? 1 : 0)
+plot((na(negative_index_get) ? na : negative_index_get.shared))
+
+unqualified_size_first = return_nested(access_first_values).size()
+unqualified_size_second = return_nested(access_second_values).size()
+unqualified_size_first_again = return_nested(access_first_values).size()
+unqualified_get_first = return_nested(access_first_values).get(index=0)
+unqualified_get_second = return_nested(access_second_values).get(0)
+unqualified_get_first_again = return_nested(access_first_values).get(0)
+unqualified_first_item = return_nested(access_first_values).first()
+unqualified_last_item = return_nested(access_second_values).last()
+unqualified_copy_get = return_nested(access_first_values).copy().get(index=1)
+unqualified_named_get = return_named(tag=3, values=access_first_values, use_copy=true).get(index=1)
+unqualified_builtin_named_last = array(access_first_values).copy().last()
+unqualified_includes_first = return_nested(access_first_values).includes(First.new(160.0, 1600.0))
+unqualified_includes_second = return_nested(access_second_values).copy().includes(Second.new(1710.0, 171.0))
+unqualified_includes_first_again = return_nested(access_first_values).includes(First.new(161.0, 1610.0))
+unqualified_indexof_first = return_nested(access_first_values).indexof(First.new(160.0, 1600.0))
+unqualified_indexof_second = return_nested(access_second_values).copy().indexof(Second.new(1710.0, 171.0))
+unqualified_indexof_first_again = return_nested(access_first_values).indexof(First.new(161.0, 1610.0))
+unqualified_lastindexof_first = return_nested(access_first_values).lastindexof(First.new(160.0, 1600.0))
+unqualified_lastindexof_second = return_nested(access_second_values).copy().lastindexof(Second.new(1710.0, 171.0))
+unqualified_lastindexof_first_again = return_nested(access_first_values).lastindexof(First.new(161.0, 1610.0))
+plot(unqualified_size_first)
+plot(unqualified_size_second)
+plot(unqualified_size_first_again)
+plot((na(unqualified_get_first) ? na : unqualified_get_first.shared))
+plot((na(unqualified_get_second) ? na : unqualified_get_second.shared))
+plot((na(unqualified_get_first_again) ? na : unqualified_get_first_again.shared))
+plot((na(unqualified_first_item) ? na : unqualified_first_item.shared))
+plot((na(unqualified_last_item) ? na : unqualified_last_item.shared))
+plot((na(unqualified_copy_get) ? na : unqualified_copy_get.shared))
+plot((na(unqualified_named_get) ? na : unqualified_named_get.shared))
+plot((na(unqualified_builtin_named_last) ? na : unqualified_builtin_named_last.shared))
+plot(unqualified_includes_first and unqualified_includes_second and unqualified_includes_first_again ? 1 : 0)
+plot(unqualified_indexof_first == 0 and unqualified_indexof_second == 1 and unqualified_indexof_first_again == 1 ? 1 : 0)
+plot(unqualified_lastindexof_first == 0 and unqualified_lastindexof_second == 1 and unqualified_lastindexof_first_again == 1 ? 1 : 0)
+
+unqualified_wrapped_first = readUnqualifiedArray(access_first_values)
+unqualified_wrapped_second = readUnqualifiedArray(access_second_values)
+unqualified_wrapped_first_again = readUnqualifiedArray(access_first_values)
+plot(unqualified_wrapped_first)
+plot(unqualified_wrapped_second)
+plot(unqualified_wrapped_first_again)
+
+unqualified_empty_size = return_empty_first().size()
+unqualified_empty_last = return_empty_first().last()
+unqualified_none_size = return_none_first().size()
+unqualified_none_get = return_none_first().get(0)
+unqualified_none_last = return_none_first().last()
+unqualified_empty_includes = return_empty_first().includes(First.new(0.0, 0.0))
+unqualified_none_includes = return_none_first().includes(First.new(0.0, 0.0))
+unqualified_empty_indexof = return_empty_first().indexof(First.new(0.0, 0.0))
+unqualified_none_indexof = return_none_first().indexof(First.new(0.0, 0.0))
+unqualified_empty_lastindexof = return_empty_first().lastindexof(First.new(0.0, 0.0))
+unqualified_none_lastindexof = return_none_first().lastindexof(First.new(0.0, 0.0))
+plot(unqualified_empty_size)
+plot(na(unqualified_empty_last) ? 1 : 0)
+plot(na(unqualified_none_size) and na(unqualified_none_get) and na(unqualified_none_last) ? 1 : 0)
+plot(not unqualified_empty_includes ? 1 : 0)
+plot(na(unqualified_none_includes) ? 1 : 0)
+plot(unqualified_empty_indexof == -1 ? 1 : 0)
+plot(unqualified_none_indexof == -1 ? 1 : 0)
+plot(unqualified_empty_lastindexof == -1 ? 1 : 0)
+plot(unqualified_none_lastindexof == -1 ? 1 : 0)
+
+unqualified_int_values = array.from(10, 11)
+unqualified_float_values = array.from(20.0, 21.0)
+unqualified_scalar_array_first = readUnqualifiedScalarArray(unqualified_int_values)
+unqualified_scalar_array_second = readUnqualifiedScalarArray(unqualified_float_values)
+unqualified_scalar_array_first_again = readUnqualifiedScalarArray(unqualified_int_values)
+plot(unqualified_scalar_array_first)
+plot(unqualified_scalar_array_second)
+plot(unqualified_scalar_array_first_again)
+
+unqualified_scalar_copy_source = array.from(30, 31)
+unqualified_scalar_copy = return_identity(unqualified_scalar_copy_source).copy()
+unqualified_scalar_copy.push(32)
+plot(unqualified_scalar_copy_source.size())
+plot(unqualified_scalar_copy.size())
+
+qualified_scalar_values = array.from(40, 41)
+qualified_scalar_size = return_anchor.returnInts(qualified_scalar_values).size()
+qualified_scalar_get = return_anchor.returnInts(qualified_scalar_values).get(index=1)
+qualified_scalar_last = return_anchor.returnInts(qualified_scalar_values).copy().last()
+qualified_scalar_includes = return_anchor.returnInts(qualified_scalar_values).includes(41)
+qualified_scalar_indexof = return_anchor.returnInts(qualified_scalar_values).indexof(41)
+qualified_scalar_lastindexof = return_anchor.returnInts(array.from(40, 41, 40)).lastindexof(40)
+qualified_scalar_binary_search = return_anchor.returnInts(array.from(40, 41, 42)).binary_search(41)
+unqualified_int_binary_search = return_identity(array.from(10, 11, 12)).binary_search(11)
+unqualified_float_binary_search = return_identity(array.from(20.0, 21.0, 22.0)).copy().binary_search(21.0)
+qualified_scalar_binary_search_leftmost = return_anchor.returnInts(array.from(40, 42, 42, 50)).binary_search_leftmost(42)
+unqualified_int_binary_search_leftmost = return_identity(array.from(10, 12, 14)).binary_search_leftmost(13)
+unqualified_float_binary_search_leftmost = return_identity(array.from(20.0, 22.0, 24.0)).copy().binary_search_leftmost(99.0)
+qualified_scalar_binary_search_rightmost = return_anchor.returnInts(array.from(40, 42, 42, 50)).binary_search_rightmost(42)
+unqualified_int_binary_search_rightmost = return_identity(array.from(10, 12, 14)).binary_search_rightmost(13)
+unqualified_float_binary_search_rightmost = return_identity(array.from(20.0, 22.0, 24.0)).copy().binary_search_rightmost(99.0)
+qualified_scalar_abs = return_anchor.returnInts(array.from(-40, 41)).abs().first()
+unqualified_int_abs = return_identity(array.from(-10, 11)).abs().copy().last()
+unqualified_float_abs = return_identity(array.from(-20.5, na, 22.5)).copy().abs().first()
+qualified_scalar_min = return_anchor.returnInts(array.from(40, 41, 42)).min(nth=1)
+unqualified_int_min = return_identity(array.from(10, 11, 12)).min()
+unqualified_float_min = return_identity(array.from(20.0, na, 22.0)).copy().min(nth=1)
+qualified_scalar_max = return_anchor.returnInts(array.from(40, 41, 42)).max(nth=1)
+unqualified_int_max = return_identity(array.from(10, 11, 12)).max()
+unqualified_float_max = return_identity(array.from(20.0, na, 22.0)).copy().max(nth=1)
+qualified_scalar_sum = return_anchor.returnInts(array.from(40, 41, 42)).sum()
+unqualified_int_sum = return_identity(array.from(10, 11, 12)).sum()
+unqualified_float_sum = return_identity(array.from(20.0, na, 22.0)).copy().sum()
+qualified_scalar_avg = return_anchor.returnInts(array.from(40, 41, 42)).avg()
+unqualified_int_avg = return_identity(array.from(10, 11, 12)).avg()
+unqualified_float_avg = return_identity(array.from(20.0, na, 22.0)).copy().avg()
+qualified_scalar_range = return_anchor.returnInts(array.from(40, 41, 42)).range()
+unqualified_int_range = return_identity(array.from(10, 11, 12)).range()
+unqualified_float_range = return_identity(array.from(20.0, na, 22.0)).copy().range()
+qualified_scalar_median = return_anchor.returnInts(array.from(40, 41, 42)).median()
+unqualified_int_median = return_identity(array.from(10, 11, 12)).median()
+unqualified_float_median = return_identity(array.from(20.0, na, 22.0)).copy().median()
+qualified_scalar_mode = return_anchor.returnInts(array.from(40, 41, 41)).mode()
+unqualified_int_mode = return_identity(array.from(10, 11, 11)).mode()
+unqualified_float_mode = return_identity(array.from(20.0, na, 22.0, 22.0)).copy().mode()
+qualified_scalar_percentile_nearest = return_anchor.returnInts(array.from(40, 41, 42)).percentile_nearest_rank(50)
+unqualified_int_percentile_nearest = return_identity(array.from(10, 11, 12)).percentile_nearest_rank(percentage=50)
+unqualified_float_percentile_nearest = return_identity(array.from(20.0, na, 22.0)).copy().percentile_nearest_rank(100)
+qualified_scalar_percentile_linear = return_anchor.returnInts(array.from(40, 41, 42)).percentile_linear_interpolation(50)
+unqualified_int_percentile_linear = return_identity(array.from(10, 11, 12)).percentile_linear_interpolation(percentage=50)
+unqualified_float_percentile_linear = return_identity(array.from(20.0, na, 22.0)).copy().percentile_linear_interpolation(50)
+qualified_scalar_percentrank = return_anchor.returnInts(array.from(40, 41, 42)).percentrank(1)
+unqualified_int_percentrank = return_identity(array.from(10, 11, 12)).percentrank(index=1)
+unqualified_float_percentrank = return_identity(array.from(20.0, na, 22.0)).copy().percentrank(2)
+qualified_scalar_covariance = return_anchor.returnInts(array.from(40, 41, 42)).covariance(array.from(2, 4, 8))
+unqualified_int_covariance = return_identity(array.from(10, 11, 12)).covariance(id2=array.from(1, 2, 3), biased=false)
+unqualified_float_covariance = return_identity(array.from(20.0, na, 22.0)).copy().covariance(array.from(1.0, 2.0, 3.0))
+qualified_scalar_standardize = return_anchor.returnInts(array.from(40, 41, 42)).standardize()
+unqualified_int_standardize = return_identity(array.from(10, 11, 12)).standardize().copy()
+unqualified_float_standardize = return_identity(array.from(20.0, na, 22.0)).copy().standardize()
+qualified_scalar_variance = return_anchor.returnInts(array.from(40, 41, 42)).variance()
+unqualified_int_variance = return_identity(array.from(10, 11, 12)).variance(biased=false)
+unqualified_float_variance = return_identity(array.from(20.0, na, 22.0)).copy().variance()
+qualified_scalar_stdev = return_anchor.returnInts(array.from(40, 41, 42)).stdev()
+unqualified_int_stdev = return_identity(array.from(10, 11, 12)).stdev(biased=false)
+unqualified_float_stdev = return_identity(array.from(20.0, na, 22.0)).copy().stdev()
+qualified_scalar_sort_indices = return_anchor.returnInts(array.from(42, 40, 41)).sort_indices(order.descending)
+unqualified_int_sort_indices = return_identity(array.from(12, 10, 11)).sort_indices().copy()
+unqualified_float_sort_indices = return_identity(array.from(22.0, na, 20.0)).copy().sort_indices()
+unqualified_string_sort_indices = return_identity(array.from("gamma", "alpha", "beta")).sort_indices().sort_indices()
+qualified_scalar_every = return_anchor.returnInts(array.from(40, 41, 42)).every()
+unqualified_bool_every = return_identity(array.from(true, false)).every()
+unqualified_int_every = return_identity(array.from(10, 11, 12)).copy().every()
+unqualified_float_every = return_identity(array.from(20.0, na, 22.0)).every()
+qualified_scalar_some = return_anchor.returnInts(array.from(0, 41, 0)).some()
+unqualified_bool_some = return_identity(array.from(false, true)).some()
+unqualified_int_some = return_identity(array.from(0, 11, 0)).copy().some()
+unqualified_float_some = return_identity(array.from(0.0, na, 0.0)).some()
+qualified_scalar_join = return_anchor.returnInts(array.from(40, 41, 42)).join("|")
+unqualified_string_join = return_identity(array.from("a", "b")).copy().join()
+unqualified_udt_join = return_identity(access_first_values).join("|")
+qualified_udt_join = return_anchor.returnSecond(access_second_values).copy().join(na)
+call_result_slice_source = array.from(First.new(70.0, 700.0), First.new(71.0, 710.0), First.new(72.0, 720.0))
+call_result_slice_window = return_identity(call_result_slice_source).slice(0, 2)
+call_result_slice_source.set(0, First.new(73.0, 730.0))
+call_result_slice_window.set(1, First.new(74.0, 740.0))
+call_result_slice_item = call_result_slice_window.copy().last()
+call_result_slice_first_item = call_result_slice_window.first()
+call_result_slice_parent_item = call_result_slice_source.get(1)
+plot(qualified_scalar_size)
+plot(qualified_scalar_get)
+plot(qualified_scalar_last)
+plot(qualified_scalar_includes ? 1 : 0)
+plot(qualified_scalar_indexof == 1 ? 1 : 0)
+plot(qualified_scalar_lastindexof == 2 ? 1 : 0)
+plot(qualified_scalar_binary_search == 1 and unqualified_int_binary_search == 1 and unqualified_float_binary_search == 1 ? 1 : 0)
+plot(qualified_scalar_binary_search_leftmost == 1 and unqualified_int_binary_search_leftmost == 1 and unqualified_float_binary_search_leftmost == 2 ? 1 : 0)
+plot(qualified_scalar_binary_search_rightmost == 2 and unqualified_int_binary_search_rightmost == 2 and unqualified_float_binary_search_rightmost == 2 ? 1 : 0)
+plot(qualified_scalar_abs == 40 and unqualified_int_abs == 11 and unqualified_float_abs == 20.5 ? 1 : 0)
+plot(qualified_scalar_min == 41 and unqualified_int_min == 10 and unqualified_float_min == 22.0 ? 1 : 0)
+plot(qualified_scalar_max == 41 and unqualified_int_max == 12 and unqualified_float_max == 20.0 ? 1 : 0)
+plot(qualified_scalar_sum == 123 and unqualified_int_sum == 33 and unqualified_float_sum == 42.0 ? 1 : 0)
+plot(qualified_scalar_avg == 41.0 and unqualified_int_avg == 11.0 and unqualified_float_avg == 21.0 ? 1 : 0)
+plot(qualified_scalar_range == 2 and unqualified_int_range == 2 and unqualified_float_range == 2.0 ? 1 : 0)
+plot(qualified_scalar_median == 41 and unqualified_int_median == 11 and unqualified_float_median == 21.0 ? 1 : 0)
+plot(qualified_scalar_mode == 41 and unqualified_int_mode == 11 and unqualified_float_mode == 22.0 ? 1 : 0)
+plot(qualified_scalar_percentile_nearest == 41 and unqualified_int_percentile_nearest == 11 and unqualified_float_percentile_nearest == 22.0 ? 1 : 0)
+plot(qualified_scalar_percentile_linear == 41.0 and unqualified_int_percentile_linear == 11.0 and unqualified_float_percentile_linear == 21.0 ? 1 : 0)
+plot(qualified_scalar_percentrank == 2.0 / 3.0 * 100.0 and unqualified_int_percentrank == 2.0 / 3.0 * 100.0 and unqualified_float_percentrank == 100.0 ? 1 : 0)
+plot(qualified_scalar_covariance == 2.0 and unqualified_int_covariance == 1.0 and unqualified_float_covariance == 1.0 ? 1 : 0)
+plot(qualified_scalar_standardize.size() == 3 and qualified_scalar_standardize.get(1) == 0.0 and unqualified_int_standardize.first() + unqualified_int_standardize.last() == 0.0 and unqualified_float_standardize.size() == 3 and na(unqualified_float_standardize.get(1)) ? 1 : 0)
+plot(qualified_scalar_variance == 2.0 / 3.0 and unqualified_int_variance == 1.0 and unqualified_float_variance == 1.0 ? 1 : 0)
+plot(qualified_scalar_stdev == array.stdev(array.from(40, 41, 42)) and unqualified_int_stdev == 1.0 and unqualified_float_stdev == 1.0 ? 1 : 0)
+plot(qualified_scalar_sort_indices.get(0) == 0 and qualified_scalar_sort_indices.get(1) == 2 and qualified_scalar_sort_indices.get(2) == 1 and unqualified_int_sort_indices.get(0) == 1 and unqualified_int_sort_indices.get(1) == 2 and unqualified_int_sort_indices.get(2) == 0 and unqualified_float_sort_indices.get(0) == 2 and unqualified_float_sort_indices.get(1) == 0 and unqualified_float_sort_indices.get(2) == 1 and unqualified_string_sort_indices.get(0) == 2 and unqualified_string_sort_indices.get(1) == 0 and unqualified_string_sort_indices.get(2) == 1 ? 1 : 0)
+plot(qualified_scalar_every and not unqualified_bool_every and unqualified_int_every and not unqualified_float_every ? 1 : 0)
+plot(qualified_scalar_some and unqualified_bool_some and unqualified_int_some and not unqualified_float_some ? 1 : 0)
+plot(qualified_scalar_join == "40|41|42" and unqualified_string_join == "a,b" and unqualified_udt_join == array.join(access_first_values, "|") and qualified_udt_join == array.join(access_second_values) ? 1 : 0)
+plot((na(call_result_slice_first_item) ? na : call_result_slice_first_item.shared) == 73.0 and (na(call_result_slice_parent_item) ? na : call_result_slice_parent_item.shared) == 74.0 and (na(call_result_slice_item) ? na : call_result_slice_item.other) == 740.0 and return_identity(array.from(1, 2, 3)).slice(1, 3).join("|") == "2|3" ? 1 : 0)
+
+unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
+unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))
+unqualified_scalar_first_again = readUnqualifiedScalar(First.new(4.0, 40.0))
+plot(unqualified_scalar_first)
+plot(unqualified_scalar_second)
+plot(unqualified_scalar_first_again)
+
+scalar_udf_size = return_identity(First.new(5.0, 50.0)).size()
+scalar_udf_get = return_identity(First.new(6.0, 60.0)).get(index=1)
+scalar_udf_first = return_identity(First.new(7.0, 70.0)).first()
+scalar_udf_last = return_identity(First.new(8.0, 80.0)).last()
+scalar_udf_copy = return_identity(First.new(9.0, 90.0)).copy()
+plot(scalar_udf_size)
+plot(scalar_udf_get)
+plot(scalar_udf_first)
+plot(scalar_udf_last)
+plot(scalar_udf_copy)
+
+explicit_udf_size = size(return_nested(access_first_values))
+explicit_udf_get = get(return_nested(access_first_values), 0)
+explicit_udf_first = first(return_nested(access_first_values))
+explicit_udf_last = last(return_nested(access_first_values))
+explicit_udf_copy = copy(return_nested(access_first_values))
+explicit_udf_copy_item = array.first(explicit_udf_copy)
+plot(explicit_udf_size)
+plot(explicit_udf_get)
+plot(explicit_udf_first)
+plot(explicit_udf_last)
+plot((na(explicit_udf_copy_item) ? na : explicit_udf_copy_item.shared))
+
+postfix_copy_source = array.from(First.new(140.0, 1400.0))
+postfix_independent_copy = return_anchor.returnFirst(postfix_copy_source).copy()
+postfix_independent_copy.push(First.new(141.0, 1410.0))
+plot(postfix_copy_source.size())
+plot(postfix_independent_copy.size())
+
+explicit_method_first = return_anchor.first(return_first_source)
+explicit_method_copy = return_anchor.copy(return_anchor.returnFirst(return_first_source))
+explicit_static_copy = ReturnAnchor.copy(return_anchor, return_anchor.returnFirst(return_first_source))
+explicit_method_copy_item = array.first(explicit_method_copy)
+explicit_static_copy_item = array.first(explicit_static_copy)
+plot(explicit_method_first)
+plot((na(explicit_method_copy_item) ? na : explicit_method_copy_item.shared))
+plot((na(explicit_static_copy_item) ? na : explicit_static_copy_item.shared))
+
+return_static_receiver = First.new(120.0, 1200.0)
+First = Second.new(1300.0, 130.0)
+return_static_result = First.returnStatic(return_static_receiver, return_first_source)
+plot(array.join(return_static_result, "|") == "First(60, 600)" ? 1 : 0)
+
+for_in_first_values = array.from(First.new(10.0, 100.0), First.new(11.0, 110.0))
+for_in_second_values = array.from(Second.new(200.0, 20.0), Second.new(210.0, 21.0))
+plot(sum_udt_values(for_in_first_values))
+plot(sum_udt_values(for_in_second_values))
+plot(sum_udt_values(for_in_first_values))
+plot(sum_indexed_udt_values(for_in_first_values))
+plot(sum_indexed_udt_values(for_in_second_values))
+plot(sum_indexed_udt_values(for_in_first_values))
+plot(sum_aliased_udt_values(for_in_first_values))
+plot(sum_aliased_udt_values(for_in_second_values))
+plot(sum_aliased_udt_values(for_in_first_values))
+plot(sum_nested_udt_values(for_in_first_values))
+plot(sum_nested_udt_values(for_in_second_values))
+plot(sum_nested_udt_values(for_in_first_values))
+plot(last_indexed_udt_value(for_in_first_values))
+plot(last_indexed_udt_value(for_in_second_values))
+plot(last_indexed_udt_value(for_in_first_values))
+for_in_last_first = last_udt_value(for_in_first_values)
+for_in_last_second = last_udt_value(for_in_second_values)
+for_in_last_first_again = last_udt_value(for_in_first_values)
+plot((na(for_in_last_first) ? na : for_in_last_first.shared))
+plot((na(for_in_last_second) ? na : for_in_last_second.shared))
+plot((na(for_in_last_first_again) ? na : for_in_last_first_again.shared))
+for_in_rebuilt_first = rebuild_last_udt_array(for_in_first_values)
+for_in_rebuilt_second = rebuild_last_udt_array(for_in_second_values)
+for_in_rebuilt_first_again = rebuild_last_udt_array(for_in_first_values)
+plot(array.join(for_in_rebuilt_first, "|") == "First(11, 110)" ? 1 : 0)
+plot(array.join(for_in_rebuilt_second, "|") == "Second(210, 21)" ? 1 : 0)
+plot(array.join(for_in_rebuilt_first_again, "|") == "First(11, 110)" ? 1 : 0)
+plot(return_anchor.sumFirstIndexed(for_in_first_values))
+plot(return_anchor.sumSecondValues(values=for_in_second_values))
+plot(return_anchor.lastFirstIndexed(for_in_first_values))
+for_in_method_last_second = return_anchor.lastSecondValue(values=for_in_second_values)
+plot((na(for_in_method_last_second) ? na : for_in_method_last_second.shared))
+
+local_call_result_clear_source = array.from(First.new(180.0, 1800.0))
+return_identity(local_call_result_clear_source).clear()
+plot(local_call_result_clear_source.size() == 0 ? 1 : 0, "local_call_result_clear_alias")
+
+local_call_result_reverse_source = array.from(First.new(181.0, 1810.0), First.new(182.0, 1820.0))
+return_identity(local_call_result_reverse_source).reverse()
+local_call_result_reverse_first = local_call_result_reverse_source.first()
+local_call_result_reverse_last = local_call_result_reverse_source.last()
+plot((na(local_call_result_reverse_first) ? na : local_call_result_reverse_first.shared) == 182.0 and (na(local_call_result_reverse_last) ? na : local_call_result_reverse_last.other) == 1810.0 ? 1 : 0, "local_call_result_reverse_alias")
+
+local_call_result_pop_source = array.from(First.new(183.0, 1830.0), First.new(184.0, 1840.0))
+local_call_result_pop_value = return_identity(local_call_result_pop_source).pop()
+plot((na(local_call_result_pop_value) ? na : local_call_result_pop_value.shared) == 184.0 and (na(local_call_result_pop_value) ? na : local_call_result_pop_value.other) == 1840.0 and local_call_result_pop_source.size() == 1 ? 1 : 0, "local_call_result_pop_alias")
+
+local_call_result_shift_source = array.from(First.new(185.0, 1850.0), First.new(186.0, 1860.0))
+local_call_result_shift_value = return_identity(local_call_result_shift_source).shift()
+local_call_result_shift_remaining = local_call_result_shift_source.first()
+plot((na(local_call_result_shift_value) ? na : local_call_result_shift_value.shared) == 185.0 and (na(local_call_result_shift_value) ? na : local_call_result_shift_value.other) == 1850.0 and local_call_result_shift_source.size() == 1 and (na(local_call_result_shift_remaining) ? na : local_call_result_shift_remaining.shared) == 186.0 ? 1 : 0, "local_call_result_shift_alias")
+
+local_call_result_remove_source = array.from(First.new(187.0, 1870.0), First.new(188.0, 1880.0))
+local_call_result_remove_value = return_identity(local_call_result_remove_source).remove(0)
+local_call_result_remove_remaining = local_call_result_remove_source.first()
+plot((na(local_call_result_remove_value) ? na : local_call_result_remove_value.shared) == 187.0 and (na(local_call_result_remove_value) ? na : local_call_result_remove_value.other) == 1870.0 and local_call_result_remove_source.size() == 1 and (na(local_call_result_remove_remaining) ? na : local_call_result_remove_remaining.shared) == 188.0 ? 1 : 0, "local_call_result_remove_alias")
+
+local_call_result_push_source = array.from(First.new(189.0, 1890.0))
+return_identity(local_call_result_push_source).push(First.new(190.0, 1900.0))
+local_call_result_push_last = local_call_result_push_source.last()
+plot(local_call_result_push_source.size() == 2 and (na(local_call_result_push_last) ? na : local_call_result_push_last.shared) == 190.0 and (na(local_call_result_push_last) ? na : local_call_result_push_last.other) == 1900.0 ? 1 : 0, "local_call_result_push_alias")
+
+local_call_result_unshift_source = array.from(First.new(191.0, 1910.0))
+return_identity(local_call_result_unshift_source).unshift(First.new(192.0, 1920.0))
+local_call_result_unshift_first = local_call_result_unshift_source.first()
+plot(local_call_result_unshift_source.size() == 2 and (na(local_call_result_unshift_first) ? na : local_call_result_unshift_first.shared) == 192.0 and (na(local_call_result_unshift_first) ? na : local_call_result_unshift_first.other) == 1920.0 ? 1 : 0, "local_call_result_unshift_alias")
+
+local_call_result_insert_source = array.from(First.new(193.0, 1930.0))
+return_identity(local_call_result_insert_source).insert(0, First.new(194.0, 1940.0))
+local_call_result_insert_first = local_call_result_insert_source.first()
+plot(local_call_result_insert_source.size() == 2 and (na(local_call_result_insert_first) ? na : local_call_result_insert_first.shared) == 194.0 and (na(local_call_result_insert_first) ? na : local_call_result_insert_first.other) == 1940.0 ? 1 : 0, "local_call_result_insert_alias")
+
+local_call_result_set_source = array.from(First.new(195.0, 1950.0))
+return_identity(local_call_result_set_source).set(0, First.new(196.0, 1960.0))
+local_call_result_set_first = local_call_result_set_source.first()
+plot(local_call_result_set_source.size() == 1 and (na(local_call_result_set_first) ? na : local_call_result_set_first.shared) == 196.0 and (na(local_call_result_set_first) ? na : local_call_result_set_first.other) == 1960.0 ? 1 : 0, "local_call_result_set_alias")
+
+local_call_result_fill_source = array.from(First.new(197.0, 1970.0), First.new(198.0, 1980.0))
+return_identity(local_call_result_fill_source).fill(First.new(199.0, 1990.0))
+local_call_result_fill_first = local_call_result_fill_source.first()
+local_call_result_fill_last = local_call_result_fill_source.last()
+plot(local_call_result_fill_source.size() == 2 and (na(local_call_result_fill_first) ? na : local_call_result_fill_first.shared) == 199.0 and (na(local_call_result_fill_last) ? na : local_call_result_fill_last.shared) == 199.0 ? 1 : 0, "local_call_result_fill_alias")
+
+local_call_result_sort_source = array.from(First.new(202.0, 3.0), First.new(200.0, 1.0), First.new(201.0, 2.0))
+return_identity(local_call_result_sort_source).sort(order.ascending, "other")
+local_call_result_sort_first = local_call_result_sort_source.first()
+local_call_result_sort_last = local_call_result_sort_source.last()
+plot(local_call_result_sort_source.size() == 3 and (na(local_call_result_sort_first) ? na : local_call_result_sort_first.shared) == 200.0 and (na(local_call_result_sort_last) ? na : local_call_result_sort_last.shared) == 202.0 ? 1 : 0, "local_call_result_sort_alias_field")
+
+local_call_result_sort_indices_source = array.from(First.new(205.0, 3.0), First.new(203.0, 1.0), First.new(204.0, 2.0))
+local_call_result_sort_indices = return_identity(local_call_result_sort_indices_source).sort_indices(order.ascending, "other").copy()
+local_call_result_sort_indices_source_first = local_call_result_sort_indices_source.first()
+plot(local_call_result_sort_indices.size() == 3 and local_call_result_sort_indices.first() == 1 and local_call_result_sort_indices.last() == 0 and (na(local_call_result_sort_indices_source_first) ? na : local_call_result_sort_indices_source_first.shared) == 205.0 ? 1 : 0, "local_call_result_sort_indices_identity_non_mutating")
+
+local_call_result_concat_source = array.from(First.new(207.0, 2070.0))
+local_call_result_concat = return_identity(local_call_result_concat_source).concat(array.from(First.new(208.0, 2080.0))).copy()
+local_call_result_concat_last = local_call_result_concat.last()
+local_call_result_concat_source_last = local_call_result_concat_source.last()
+plot(local_call_result_concat_source.size() == 2 and (na(local_call_result_concat_source_last) ? na : local_call_result_concat_source_last.shared) == 208.0 and (na(local_call_result_concat_last) ? na : local_call_result_concat_last.shared) == 208.0 ? 1 : 0, "local_call_result_concat_alias_identity")
+
+local_method_concat_source = array.from(Second.new(2090.0, 209.0))
+local_method_concat = Second.new(0.0, 0.0).retain(local_method_concat_source).concat(array.from(Second.new(2100.0, 210.0))).copy()
+local_method_concat_last = local_method_concat.last()
+plot(local_method_concat_source.size() == 2 and (na(local_method_concat_last) ? na : local_method_concat_last.shared) == 210.0 ? 1 : 0, "local_method_call_result_concat_alias_identity")

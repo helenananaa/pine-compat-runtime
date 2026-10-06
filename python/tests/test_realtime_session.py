@@ -291,13 +291,25 @@ def test_realtime_session_rejects_ambiguous_or_regressive_lifecycle_updates() ->
     with pytest.raises(ValueError, match="already been seeded"):
         session.seed([])
 
-    session.update_forming(_bar(120_000, 2.0))
-    with pytest.raises(ValueError, match="does not match forming time"):
-        session.update_forming(_bar(180_000, 3.0))
-    with pytest.raises(ValueError, match="does not match forming time"):
-        session.update_confirmed(_bar(180_000, 3.0))
+    session.apply_forming(_bar(120_000, 2.0))
+    before = session.stream_snapshot()
+    changes = session.last_changes()
+    for method in (
+        session.update_forming, session.apply_forming,
+        session.update_confirmed, session.apply_confirmed,
+    ):
+        with pytest.raises(ValueError, match="does not match forming time"):
+            method(_bar(180_000, 3.0))
+        assert session.stream_snapshot() == before
+        assert session.last_changes() == changes
+        assert session.forming_time == 120_000
+        assert session.last_confirmed_time == 60_000
+        assert session.confirmed_bars == 1
 
     session.update_confirmed(_bar(120_000, 2.0))
+    assert session.forming_time is None
+    assert session.last_confirmed_time == 120_000
+    assert session.confirmed_bars == 2
     with pytest.raises(ValueError, match="must be later than confirmed time"):
         session.update_confirmed(_bar(120_000, 2.0))
 
@@ -316,7 +328,7 @@ def test_streaming_apply_returns_this_update_changes_not_full_history() -> None:
     )
     snapshot = session.seed([_bar(60_000, 10.0)])
     assert len(_plot_values(snapshot, 0)) == 1
-    assert pine_compat.RUNTIME_CHANGES_SCHEMA_VERSION == 3
+    assert pine_compat.RUNTIME_CHANGES_SCHEMA_VERSION == 4
 
     replica = session.replica()
     forming = session.apply_forming(_bar(120_000, 12.0))

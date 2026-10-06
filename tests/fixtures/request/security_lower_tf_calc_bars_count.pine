@@ -1,0 +1,7 @@
+//@version=6
+indicator("Bounded intrabars")
+[totals, indices] = request.security_lower_tf("NYSE:IBM", "1", [ta.cum(close), bar_index], calc_bars_count=2)
+plot(array.size(totals))
+plot(array.size(indices))
+plot(array.size(totals) > 0 ? array.last(totals) : na)
+plot(array.size(indices) > 0 ? array.last(indices) : na)

@@ -1,0 +1,22 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT switch statement block")
+
+p = switch
+    close > open =>
+        made = lib.Point.new(close)
+        made
+    =>
+        lib.Point.new(open)
+
+lib.Point typed = switch bar_index
+    2 =>
+        made = lib.Point.new(high)
+        made
+    =>
+        p
+
+p_prior = p[1]
+
+plot((na(p) ? na : p.x) + (na(typed) ? na : typed.x))
+plot((na(p_prior) ? na : p_prior.x))

@@ -1,0 +1,7 @@
+strategy("SMA reversal control", initial_capital=100000)
+fast = sma(close, 2)
+slow = sma(close, 3)
+plot(fast)
+plot(slow)
+strategy.entry("L", strategy.long, 2, when=crossover(fast, slow))
+strategy.entry("S", strategy.short, 2, when=crossunder(fast, slow))

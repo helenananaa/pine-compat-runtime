@@ -1,5 +1,5 @@
 use pine_ir::{PineType, Qualifier, ValueKind};
-use pine_syntax::{CallArg, Diagnostic, Span};
+use pine_syntax::{CallArg, Diagnostic, ExprKind, Span};
 
 use crate::types::qualifier_at_most;
 
@@ -550,6 +550,21 @@ pub(crate) fn bind_legacy_output_args(
         };
         let param = params[param_index];
         if bound[param_index] {
+            // TradingView still runs a published v4 plotshape call that repeats
+            // `transp=0`. Drop the second copy only when both values are the
+            // same literal, leaving ambiguous duplicates as diagnostics.
+            let identical_legacy_transparency = version == 4
+                && name == "plotshape"
+                && arg.name.as_deref() == Some("transp")
+                && matches!(arg.value.without_groups().kind, ExprKind::Literal(_))
+                && args[..arg_index].iter().any(|previous| {
+                    previous.name.as_deref() == Some("transp")
+                        && previous.value.without_groups().kind == arg.value.without_groups().kind
+                });
+            if identical_legacy_transparency {
+                requires_adaptation = true;
+                continue;
+            }
             diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_DUPLICATE",
                 format!(

@@ -383,9 +383,8 @@ Current evidence:
   scalar-tree imported UDT root-field replacement executable for UDF-local variables returned
   from pure functions,
   while
-  `tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine`
-  keeps imported UDT parameter field mutation inside pure functions rejected as
-  a side-effect boundary,
+  `tests/fixtures/sema/supported_imported_udt_parameter_field_mutation.pine`
+  covers imported UDT parameter field mutation inside user functions,
   and
   `tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine`
   keeps imported UDT global field mutation inside pure functions rejected as a

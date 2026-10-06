@@ -42,34 +42,30 @@ application to a charting service.
 
 ## Quick Start
 
-The downloads below are the published `v0.2.0` release from July 20, 2026.
-This checkout is the local `0.3.0-rc.1` candidate (Python wheel `0.3.0rc1`).
-It is a locally qualified prerelease for the named scope, not a stable tag or
-full Pine compatibility. Current status and exact artifact identities are in
-[the delivery ledger](docs/DELIVERY_ROADMAP.md); older rc1 wheels share the version
-number and must not be confused with the repaired artifacts.
-Build this tree for host-input discovery, source provenance, realtime clocks,
-and the four-surface candidate artifacts. Do not install the published `v0.2.0`
-wheels and treat them as this candidate. See
-[delivery surfaces](docs/DELIVERY_SURFACES.md) and
-[releasing](docs/RELEASING.md).
+The downloads below are the `v0.3.0-rc.2` GitHub prerelease (Python wheel
+`0.3.0rc2`). It is an opt-in candidate for the named compatibility scope.
+The latest stable release remains `v0.2.0`; `/releases/latest` follows stable
+releases. See [RC2 acceptance](docs/RC2_ACCEPTANCE_20261006.md),
+[migration and limits](docs/RC2_MIGRATION.md),
+[delivery surfaces](docs/DELIVERY_SURFACES.md), and
+[the delivery ledger](docs/DELIVERY_ROADMAP.md).
 
-Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
-glibc Linux x86-64 and Windows x86-64. See the
-[latest release](https://github.com/helenananaa/pine-compat-runtime/releases/latest)
-for checksums and machine-readable release metadata.
+Release assets contain optimized Python wheels for ordinary GIL-enabled
+CPython 3.10+ on glibc Linux x86-64 and Windows x86-64, a machine-readable
+manifest, and SHA-256 checksums. Rust, CLI and WASM can be built from the tag.
+The RC does not claim full Pine compatibility or stable resource qualification.
 
 Linux x86-64:
 
 ```bash
 python -m pip install \
-  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0-rc.2/pine_compat_runtime-0.3.0rc2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 ```
 
 Windows x86-64:
 
 ```powershell
-py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-win_amd64.whl"
+py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0-rc.2/pine_compat_runtime-0.3.0rc2-cp310-abi3-win_amd64.whl"
 ```
 
 Then run an indicator directly from Python:
@@ -99,8 +95,9 @@ partial strategy broker output — all without requiring a chart UI.
 
 ## What Works Today
 
-The current release focuses on a broad indicator runtime and a deliberately
-bounded strategy runtime.
+The current source tree provides a broad indicator runtime and a deliberately
+bounded strategy runtime. Features below describe this checkout; the `v0.2.0`
+downloads above do not include the later candidate and streaming additions.
 
 | Area | Current executable subset |
 | --- | --- |
@@ -145,7 +142,7 @@ and its referenced fixtures are the source of truth. See
 | Surface | Best for | Entry point |
 | --- | --- | --- |
 | Python | notebooks, research services, data pipelines, application plugins | `run_script(...)`, reusable `Program`, or persistent `RealtimeSession` |
-| CLI | shell workflows, fixtures, compatibility checks, JSON generation | `pine-compat run`, `analyze`, `fmt-ast`, and `matrix` |
+| CLI | shell workflows, fixtures, compatibility checks, JSON generation | `pine-compat run`, `run-incremental`, `run-realtime-history`, `run-realtime-forming`, `analyze`, `requirements`, `fmt-ast`, and `matrix` |
 | Rust | native applications and deeper runtime embedding | workspace crates under [`crates/`](crates), [embedding walkthrough](docs/RUST_EMBEDDING.md) |
 | WASM | browser, Node.js, and sandboxed JavaScript hosts | `compileScript`, `analyzeScript`, `runScriptCsv`, `Program.runCsv`, and `Program.realtimeSession` |
 
@@ -207,7 +204,37 @@ visible = replica.result()
 assert visible == session.result()
 ```
 
-`apply_forming` / `apply_confirmed` return series append or current-bar replace, drawing add/modify/delete, order/fill/alert identity, preview vs confirmed visibility, and base/current revisions. A replica ignores an identical retransmission and rejects stale or missing revisions. Call `session.result()` when a complete snapshot is required.
+`apply_forming` / `apply_confirmed` return changes schema 4: series append or
+current-bar replace, drawing add/modify/delete, order/fill/alert identity,
+preview vs confirmed visibility, base/current revisions, and `retainedFrom`.
+A replica ignores an identical retransmission and rejects stale or missing
+revisions. Complete results remain runtime schema 9.
+
+Native Rust callers can borrow the committed delta with `apply_update_ref`
+or `apply_request_update_ref` (and the context/execution-time variants) until
+their next mutable operation on the runtime. Existing owned APIs still return
+independent changes. Python and WASM encode the borrowed cache into independent
+public values without an intermediate owned Rust copy.
+
+Limit retained display output with `session.set_output_retention(256)`;
+`None` removes the limit for future updates. This does not prune input bars,
+compute history, script collections or script-readable broker records.
+Increasing the window cannot restore discarded output; replay and reset the
+replica to rebuild it. Full `result()` calls still materialize retained results.
+
+An optional `session.set_valuewhen_limit(100_000)` bounds logical `ta.valuewhen`
+events across call sites and requested evaluators. `None` restores the default
+unlimited aggregate allowance. This limit preserves script state and rejects
+updates that exceed the allowance; it does not prune events or bound heap bytes.
+See [execution limits](docs/EXECUTION_LIMITS.md) for the Rust/WASM APIs, counters,
+request accounting, and failure contract.
+
+For live requested contexts, supply bars through
+`session.apply_request_forming(symbol, timeframe, bar)` and
+`session.apply_request_confirmed(symbol, timeframe, bar)` before the chart
+update that consumes them. Data acquisition and feed ordering belong to the
+host. See [Realtime Model](docs/REALTIME_MODEL.md) for lifecycle and recovery,
+and [streaming expansion](docs/STREAMING_EXPANSION_AUDIT.md) for measured scope.
 
 To correct confirmed history from time `T`, call `session.correct(T, suffix)` (Rust `correct_historical`, WASM `correct`). The session keeps bars with `time < T` and replays that prefix plus the suffix. `session.replay(...)` still replaces the entire confirmed list. Forming state is discarded. Replicas must `reset` from `stream_snapshot()`; neither operation is a linear change.
 
@@ -318,7 +345,7 @@ behavior.
 
 ## Honest Compatibility
 
-The published `0.2.0` tag and this `0.3.0-rc.1` candidate are
+The published `0.2.0` tag and this `0.3.0-rc.2` candidate are
 compatibility-focused, not a full drop-in implementation of every Pine
 feature. Important current boundaries include:
 
@@ -332,9 +359,10 @@ feature. Important current boundaries include:
 - Pine v4/v3 legacy-indicator profiles are previews and Pine v2/v1 profiles are
   experimental because the authorized release corpus is small and has no
   external reference-output oracle;
-- legacy strategies, lower-timeframe legacy `security`, and non-empty or
-  dynamic whole-program `study(resolution=...)` execution remain out of scope;
-  the exact Pine v4 `resolution=""` form inherits the host chart context;
+- Pine v1-v4 strategies have measured partial compatibility slices;
+  lower-timeframe legacy `security`, and non-empty or dynamic
+  whole-program `study(resolution=...)` execution remain out of scope; the
+  exact Pine v4 `resolution=""` form inherits the host chart context;
 - unsupported syntax or semantics are rejected with diagnostics rather than
   guessed.
 
@@ -371,6 +399,14 @@ owns language semantics and normalized output.
   argument subsets
 - [Execution Semantics](docs/EXECUTION_SEMANTICS.md) — bar, history, state, and
   broker behavior
+- [Realtime Model](docs/REALTIME_MODEL.md) — streaming changes, replicas,
+  retention, requested contexts, and historical correction
+- [Delivery Surfaces](docs/DELIVERY_SURFACES.md) — Rust, CLI, Python and WASM
+  entry points, schemas, and platform qualification
+- [Host Support Migration](docs/HOST_SUPPORT_MIGRATION_20261003.md) — optional
+  running-alert and delivery helpers, with 0.3 prerelease Rust import changes
+- [Hotspot Performance Repairs](docs/HOTSPOT_PERFORMANCE_REPAIR_20261003.md) —
+  measured runtime improvements, costs, verification and remaining hotspots
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md) — stable diagnostic reference
 - [Release Notes](docs/RELEASE_NOTES.md) — changes in each release
 - [Releasing Binary Wheels](docs/RELEASING.md) — wheel matrix, checksums, and

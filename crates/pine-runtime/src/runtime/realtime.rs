@@ -1,5 +1,9 @@
 use pine_ir::HirProgram;
 
+mod resource_limits;
+mod time_protocol;
+mod without_output;
+
 use super::streaming::OutputCursor;
 use crate::*;
 
@@ -67,6 +71,56 @@ impl<'a> RealtimeRuntime<'a> {
             .as_ref()
             .unwrap_or(&self.confirmed)
             .request_environment()
+    }
+
+    #[must_use]
+    pub fn with_execution_limits(mut self, limits: ExecutionLimits) -> Self {
+        self.confirmed.execution_limits = limits;
+        if let Some(forming) = &mut self.forming {
+            forming.execution_limits = limits;
+        }
+        self
+    }
+
+    #[must_use]
+    pub fn execution_limits(&self) -> ExecutionLimits {
+        self.confirmed.execution_limits()
+    }
+
+    /// Apply one logical event limit to confirmed and forming states. Each
+    /// execution-state tree has its own allowance; rollback copies are excluded.
+    /// Rejecting a limit leaves both configuration and Pine state unchanged.
+    pub fn set_valuewhen_limits(&mut self, limits: ValueWhenLimits) -> Result<(), RuntimeError> {
+        self.confirmed.validate_valuewhen_limits(limits)?;
+        if let Some(forming) = &self.forming {
+            forming.validate_valuewhen_limits(limits)?;
+        }
+        self.confirmed.set_valuewhen_limits(limits)?;
+        if let Some(forming) = &mut self.forming {
+            forming.set_valuewhen_limits(limits)?;
+        }
+        Ok(())
+    }
+
+    pub fn with_valuewhen_limits(mut self, limits: ValueWhenLimits) -> Result<Self, RuntimeError> {
+        self.set_valuewhen_limits(limits)?;
+        Ok(self)
+    }
+
+    #[must_use]
+    pub fn valuewhen_limits(&self) -> ValueWhenLimits {
+        self.confirmed.valuewhen_limits()
+    }
+
+    /// Retained logical events in the currently visible execution state.
+    #[must_use]
+    pub fn valuewhen_retained_values(&self) -> usize {
+        self.live().valuewhen_retained_values()
+    }
+
+    #[must_use]
+    pub fn confirmed_valuewhen_retained_values(&self) -> usize {
+        self.confirmed.valuewhen_retained_values()
     }
 
     #[must_use]
@@ -191,41 +245,70 @@ impl<'a> RealtimeRuntime<'a> {
         key: RequestKey,
         update: BarUpdate,
     ) -> Result<Option<RuntimeChanges>, RuntimeError> {
+        self.apply_request_update_ref(key, update)
+            .map(|changes| changes.cloned())
+    }
+
+    /// Apply a provider update and borrow the resulting cached delta, if the
+    /// live chart was recalculated. A feed-only update preserves `last_changes`.
+    pub fn apply_request_update_ref(
+        &mut self,
+        key: RequestKey,
+        update: BarUpdate,
+    ) -> Result<Option<&RuntimeChanges>, RuntimeError> {
         let confirmed_feed = self.confirmed.request_feed.clone();
         let confirmed_cache = self.confirmed.request_cache.clone();
         let forming = self.forming.clone();
         let cursor = self.cursor.clone();
-        let last_changes = self.last_changes.clone();
         let revision = self.revision;
         let live_chart = self.live_chart;
         let result = self.apply_request_update_inner(key, update);
         if result.is_err() {
+            // Cloning a rollback checkpoint deliberately omits selection
+            // scratch. Keep the live workspace when restoring Pine state.
+            let scratch = self
+                .forming
+                .as_mut()
+                .map(|runtime| std::mem::take(&mut runtime.selection_scratch));
             self.confirmed.request_feed = confirmed_feed;
             self.confirmed.request_cache = confirmed_cache;
             self.forming = forming;
+            if let (Some(forming), Some(scratch)) = (&mut self.forming, scratch) {
+                forming.selection_scratch = scratch;
+            }
             self.cursor = cursor;
-            self.last_changes = last_changes;
             self.revision = revision;
             self.live_chart = live_chart;
         }
-        result
+        // The inner transaction commits last_changes only after all fallible
+        // work. Errors leave its owned payload untouched, without a rollback copy.
+        result.map(|recalculated| {
+            if recalculated {
+                self.last_changes.as_ref()
+            } else {
+                None
+            }
+        })
     }
 
     fn apply_request_update_inner(
         &mut self,
         key: RequestKey,
         update: BarUpdate,
-    ) -> Result<Option<RuntimeChanges>, RuntimeError> {
+    ) -> Result<bool, RuntimeError> {
         self.confirmed.apply_request_update(key.clone(), update)?;
         if let Some(forming) = &mut self.forming {
             forming.apply_request_update(key, update)?;
         }
         if self.forming.is_none() {
-            return Ok(None);
+            return Ok(false);
         }
-        let Some((bar, context)) = self.live_chart else {
-            return Ok(None);
+        let Some((bar, mut context)) = self.live_chart else {
+            return Ok(false);
         };
+        // Provider updates re-execute the existing forming bar; they are not a
+        // second opening observation. Keep its latest execution timestamp.
+        context.opening_update = Some(false);
         self.update_inner(BarUpdate::forming(bar), context)?;
         self.revision += 1;
         self.apply_output_retention();
@@ -234,8 +317,8 @@ impl<'a> RealtimeRuntime<'a> {
                 .diff(self.live(), self.revision, StreamingVisibility::Preview);
         changes.retained_from = self.display_origin();
         self.sync_cursor();
-        self.last_changes = Some(changes.clone());
-        Ok(Some(changes))
+        self.last_changes = Some(changes);
+        Ok(true)
     }
 
     pub fn apply_update(&mut self, update: BarUpdate) -> Result<RuntimeChanges, RuntimeError> {
@@ -261,6 +344,35 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         context: RealtimeUpdateContext,
     ) -> Result<RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context_ref(update, context).cloned()
+    }
+
+    /// Apply an update and borrow its delta from the runtime cache. The borrow
+    /// ends before the next mutable operation on this runtime; clone explicitly
+    /// when the caller needs to retain an independent owned delta.
+    pub fn apply_update_ref(&mut self, update: BarUpdate) -> Result<&RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context_ref(update, RealtimeUpdateContext::default())
+    }
+
+    pub fn apply_update_with_execution_time_ref(
+        &mut self,
+        update: BarUpdate,
+        execution_time: i64,
+    ) -> Result<&RuntimeChanges, RuntimeError> {
+        self.apply_update_with_context_ref(
+            update,
+            RealtimeUpdateContext {
+                execution_time: Some(execution_time),
+                opening_update: None,
+            },
+        )
+    }
+
+    pub fn apply_update_with_context_ref(
+        &mut self,
+        update: BarUpdate,
+        context: RealtimeUpdateContext,
+    ) -> Result<&RuntimeChanges, RuntimeError> {
         let kind = update.kind;
         self.update_inner(update, context)?;
         self.revision += 1;
@@ -273,8 +385,8 @@ impl<'a> RealtimeRuntime<'a> {
         let mut changes = self.cursor.diff(self.live(), self.revision, visibility);
         changes.retained_from = self.display_origin();
         self.sync_cursor();
-        self.last_changes = Some(changes.clone());
-        Ok(changes)
+        self.last_changes = Some(changes);
+        Ok(self.last_changes.as_ref().expect("delta committed"))
     }
 
     fn update_and_snapshot(
@@ -282,11 +394,7 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         context: RealtimeUpdateContext,
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.update_inner(update, context)?;
-        self.revision += 1;
-        self.apply_output_retention();
-        self.sync_cursor();
-        self.last_changes = None;
+        self.update_with_context_without_output(update, context)?;
         Ok(self.result())
     }
 
@@ -303,6 +411,7 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         context: RealtimeUpdateContext,
     ) -> Result<(), RuntimeError> {
+        self.validate_chart_update_time(update)?;
         if update.kind == BarUpdateKind::Historical && context.opening_update == Some(false) {
             return Err(RuntimeError {
                 message: "historical bars always have an opening update".to_owned(),
@@ -381,8 +490,19 @@ impl<'a> RealtimeRuntime<'a> {
         // User state rolls back, except varip. Orders and fills belong to the
         // live broker and survive successful updates of the same open bar.
         let mut runtime = self.confirmed.clone();
+        // Intrabar overlays can copy collection payloads. Start this update's
+        // allowance before preparation and retain its charges through execution.
+        runtime.reset_execution_budget();
         if let Some(previous_forming) = &self.forming {
-            runtime.seed_intrabar_persistence_from(previous_forming);
+            runtime.seed_intrabar_persistence_from(previous_forming)?;
+            // Compiled patterns are pure caches, independent of Pine rollback.
+            runtime
+                .regex_cache
+                .clone_from(&previous_forming.regex_cache);
+            // Gaussian weights depend only on their checked parameter key.
+            runtime
+                .alma_weights
+                .clone_from(&previous_forming.alma_weights);
             runtime
                 .strategy_broker
                 .clone_from(&previous_forming.strategy_broker);
@@ -390,13 +510,23 @@ impl<'a> RealtimeRuntime<'a> {
                 .strategy_scheduler
                 .clone_from(&previous_forming.strategy_scheduler);
         }
+        if let Some(previous_forming) = &mut self.forming {
+            // Selection scratch is not script state; reuse its allocation while
+            // evaluating repeated replacements of the same forming bar.
+            runtime.selection_scratch = std::mem::take(&mut previous_forming.selection_scratch);
+        }
         let script_passes = runtime.strategy_scheduler.script_passes();
-        runtime.append_bar_with_context(
+        if let Err(error) = runtime.append_bar_with_prepared_budget(
             update.bar,
             update.kind,
             is_new_bar,
             context.execution_time,
-        )?;
+        ) {
+            if let Some(previous_forming) = &mut self.forming {
+                previous_forming.selection_scratch = std::mem::take(&mut runtime.selection_scratch);
+            }
+            return Err(error);
+        }
         if update.kind == BarUpdateKind::Forming
             && runtime.program.script_mode == pine_ir::ScriptMode::Strategy
             && runtime.strategy_scheduler.script_passes() == script_passes
@@ -436,7 +566,8 @@ impl<'a> RealtimeRuntime<'a> {
         from_time: i64,
         bars: &[Bar],
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.correct_historical_inner(from_time, bars, None)
+        self.correct_historical_inner(from_time, bars, None)?;
+        Ok(self.confirmed.result())
     }
 
     pub fn correct_historical_with_execution_times(
@@ -445,7 +576,8 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.correct_historical_inner(from_time, bars, Some(execution_times))
+        self.correct_historical_inner(from_time, bars, Some(execution_times))?;
+        Ok(self.confirmed.result())
     }
 
     fn correct_historical_inner(
@@ -453,7 +585,7 @@ impl<'a> RealtimeRuntime<'a> {
         from_time: i64,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         let (combined, combined_times) =
             self.corrected_history(from_time, bars, execution_times)?;
         match combined_times {
@@ -468,6 +600,17 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(Vec<Bar>, Option<Vec<i64>>), RuntimeError> {
+        if let Some(times) = execution_times
+            && times.len() != bars.len()
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "execution timestamp count {} does not match bar count {}",
+                    times.len(),
+                    bars.len()
+                ),
+            });
+        }
         if let Some(last) = self.chart_bars.last()
             && from_time > last.time
         {
@@ -507,19 +650,8 @@ impl<'a> RealtimeRuntime<'a> {
                 ),
             });
         }
-        let mut combined = self.chart_bars[..cut].to_vec();
-        combined.extend_from_slice(bars);
         let combined_times = match (&self.chart_execution_times, execution_times) {
             (Some(stored), Some(suffix)) => {
-                if suffix.len() != bars.len() {
-                    return Err(RuntimeError {
-                        message: format!(
-                            "execution timestamp count {} does not match bar count {}",
-                            suffix.len(),
-                            bars.len()
-                        ),
-                    });
-                }
                 let mut times = stored[..cut].to_vec();
                 times.extend_from_slice(suffix);
                 Some(times)
@@ -539,6 +671,8 @@ impl<'a> RealtimeRuntime<'a> {
                 });
             }
         };
+        let mut combined = self.chart_bars[..cut].to_vec();
+        combined.extend_from_slice(bars);
         Ok((combined, combined_times))
     }
 
@@ -547,7 +681,8 @@ impl<'a> RealtimeRuntime<'a> {
     /// windows are kept. Replicas cannot apply this as a delta; reset them from
     /// the returned snapshot and `revision`.
     pub fn replay_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
-        self.replay_historical_inner(bars, None)
+        self.replay_historical_inner(bars, None)?;
+        Ok(self.confirmed.result())
     }
 
     pub fn replay_historical_with_execution_times(
@@ -555,45 +690,38 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<RuntimeResult, RuntimeError> {
-        self.replay_historical_inner(bars, Some(execution_times))
+        self.replay_historical_inner(bars, Some(execution_times))?;
+        Ok(self.confirmed.result())
     }
 
     fn replay_historical_inner(
         &mut self,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
-        let confirmed = self.confirmed.clone();
-        let forming = self.forming.clone();
-        let cursor = self.cursor.clone();
-        let last_changes = self.last_changes.clone();
-        let revision = self.revision;
-        let live_chart = self.live_chart;
-        let chart_bars = self.chart_bars.clone();
-        let chart_execution_times = self.chart_execution_times.clone();
-        let result = self.replay_historical_apply(bars, execution_times);
-        if result.is_err() {
-            self.confirmed = confirmed;
-            self.forming = forming;
-            self.cursor = cursor;
-            self.last_changes = last_changes;
-            self.revision = revision;
-            self.live_chart = live_chart;
-            self.chart_bars = chart_bars;
-            self.chart_execution_times = chart_execution_times;
+    ) -> Result<(), RuntimeError> {
+        Self::validate_history_times(bars, None)?;
+        if let Some(times) = execution_times
+            && times.len() != bars.len()
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "execution timestamp count {} does not match bar count {}",
+                    times.len(),
+                    bars.len()
+                ),
+            });
         }
-        result
-    }
-
-    fn replay_historical_apply(
-        &mut self,
-        bars: &[Bar],
-        execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
+        // All fallible execution happens on the candidate. The old session stays
+        // untouched until it is ready, so no second rollback copy is needed.
         let mut runtime = self.confirmed.blank_for_replay();
-        runtime
-            .request_feed
-            .trim_after(bars.last().map(|bar| bar.time));
+        let chart_close = bars.last().map(|bar| {
+            runtime
+                .request_environment
+                .chart()
+                .timeframe()
+                .nominal_close(bar.time)
+        });
+        runtime.request_feed.trim_after(chart_close);
         match execution_times {
             Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
             None => runtime.append_bars(bars)?,
@@ -607,11 +735,12 @@ impl<'a> RealtimeRuntime<'a> {
         self.apply_output_retention();
         self.sync_cursor();
         self.last_changes = None;
-        Ok(self.confirmed.result())
+        Ok(())
     }
 
     pub fn seed_historical(&mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
-        self.seed_historical_inner(bars, None)
+        self.seed_historical_without_output(bars)?;
+        Ok(self.confirmed.result())
     }
 
     pub fn seed_historical_with_execution_times(
@@ -619,6 +748,21 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: &[i64],
     ) -> Result<RuntimeResult, RuntimeError> {
+        self.seed_historical_with_execution_times_without_output(bars, execution_times)?;
+        Ok(self.confirmed.result())
+    }
+
+    /// Commit known historical bars without materializing an owned snapshot.
+    /// Revision, rollback, retention and subsequent replicas match `seed_historical`.
+    pub fn seed_historical_without_output(&mut self, bars: &[Bar]) -> Result<(), RuntimeError> {
+        self.seed_historical_inner(bars, None)
+    }
+
+    pub fn seed_historical_with_execution_times_without_output(
+        &mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<(), RuntimeError> {
         self.seed_historical_inner(bars, Some(execution_times))
     }
 
@@ -626,8 +770,9 @@ impl<'a> RealtimeRuntime<'a> {
         &mut self,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
-    ) -> Result<RuntimeResult, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         self.validate_seed_clocks(bars.len(), execution_times)?;
+        Self::validate_history_times(bars, self.last_confirmed_bar_time())?;
         let mut runtime = self.confirmed.clone();
         match execution_times {
             Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
@@ -635,6 +780,7 @@ impl<'a> RealtimeRuntime<'a> {
         }
         self.confirmed = runtime;
         self.forming = None;
+        self.live_chart = None;
         let prior_len = self.chart_bars.len();
         self.chart_bars.extend_from_slice(bars);
         match (&mut self.chart_execution_times, execution_times) {
@@ -648,7 +794,7 @@ impl<'a> RealtimeRuntime<'a> {
         self.apply_output_retention();
         self.sync_cursor();
         self.last_changes = None;
-        Ok(self.confirmed.result())
+        Ok(())
     }
 
     fn validate_seed_clocks(
@@ -683,6 +829,18 @@ impl<'a> RealtimeRuntime<'a> {
     #[must_use]
     pub fn last_confirmed_bar_time(&self) -> Option<i64> {
         self.chart_bars.last().map(|bar| bar.time)
+    }
+
+    /// Borrow visible output without copying historical values.
+    #[must_use]
+    pub fn result_view(&self) -> RuntimeResultView<'_> {
+        self.live().result_view()
+    }
+
+    /// Borrow confirmed output, excluding the forming bar.
+    #[must_use]
+    pub fn confirmed_result_view(&self) -> RuntimeResultView<'_> {
+        self.confirmed.result_view()
     }
 
     #[must_use]
@@ -732,9 +890,31 @@ impl RealtimeRuntime<'static> {
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
     ) -> Self {
+        Self::from_prepared_with_request_environment_and_input_overrides(
+            &PreparedProgram::new(program),
+            request_environment,
+            input_overrides,
+        )
+    }
+
+    #[must_use]
+    pub fn from_prepared(program: &PreparedProgram) -> Self {
+        Self::from_prepared_with_request_environment_and_input_overrides(
+            program,
+            RequestEnvironment::default(),
+            InputOverrides::new(),
+        )
+    }
+
+    #[must_use]
+    pub fn from_prepared_with_request_environment_and_input_overrides(
+        program: &PreparedProgram,
+        request_environment: RequestEnvironment,
+        input_overrides: InputOverrides,
+    ) -> Self {
         Self {
             confirmed:
-                HistoricalRuntime::with_owned_program_and_request_environment_and_input_overrides(
+                HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
                     program,
                     request_environment,
                     input_overrides,

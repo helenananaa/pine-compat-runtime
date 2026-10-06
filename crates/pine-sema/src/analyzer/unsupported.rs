@@ -151,6 +151,7 @@ impl Analyzer {
             severity: Severity::Error,
             message: format!("`{feature}` is not supported: {reason}"),
             span,
+            source: None,
         });
     }
 }

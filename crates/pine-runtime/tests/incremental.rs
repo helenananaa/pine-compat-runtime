@@ -17,6 +17,18 @@ fn workspace_fixture(path: &str) -> PathBuf {
 
 #[test]
 fn runtime_fixtures_match_incremental_append_execution() {
+    let undefined_cases = include_str!("../../../tests/fixtures/undefined_udt_access.tsv")
+        .lines()
+        .skip(1)
+        .map(|line| {
+            line.split_once('\t')
+                .expect("undefined-object case mapping")
+        })
+        .collect::<Vec<_>>();
+    for (original, guarded) in &undefined_cases {
+        assert!(workspace_fixture(&format!("tests/fixtures/runtime/{original}")).exists());
+        assert!(workspace_fixture(&format!("tests/fixtures/runtime/{guarded}")).exists());
+    }
     let fixtures_dir = workspace_fixture("tests/fixtures/runtime");
     let default_bars = load_bars(&workspace_fixture("tests/fixtures/runtime/bars.csv"));
     let strategy_exit_loss_bars = load_bars(&workspace_fixture(
@@ -94,6 +106,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
         ),
     );
     let mut checked = 0;
+    let mut failures = Vec::new();
 
     for entry in fs::read_dir(&fixtures_dir).expect("runtime fixture dir should be readable") {
         let path = entry.expect("fixture entry should be readable").path();
@@ -117,6 +130,35 @@ fn runtime_fixtures_match_incremental_append_execution() {
             analysis.diagnostics
         );
         let hir = analysis.hir.expect("runtime fixture should lower to HIR");
+        if undefined_cases
+            .iter()
+            .any(|(name, _)| Some(*name) == path.file_name().and_then(|name| name.to_str()))
+        {
+            // These original sources dereference a missing object.
+            // Retain and compare their native error semantics; guarded siblings
+            // below exercise successful historical/incremental history reads.
+            let full_error = run_historical(&hir, &default_bars).unwrap_err();
+            let mut incremental = HistoricalRuntime::new(&hir);
+            let (at, incremental_error) = default_bars
+                .iter()
+                .copied()
+                .enumerate()
+                .find_map(|(i, bar)| incremental.append_bar(bar).err().map(|error| (i, error)))
+                .expect("original fixture must fail incrementally");
+            let full_at = (0..default_bars.len())
+                .find(|i| run_historical(&hir, &default_bars[..=*i]).is_err())
+                .unwrap();
+            assert_eq!(at, full_at, "{} failure timing", path.display());
+            assert!(
+                full_error.message.contains("E_UDT_NA_FIELD"),
+                "{}: {}",
+                path.display(),
+                full_error.message
+            );
+            assert_eq!(full_error.message, incremental_error.message);
+            checked += 1;
+            continue;
+        }
         let bars = match path.file_name().and_then(|name| name.to_str()) {
             Some("strategy_exit_loss.pine") => &strategy_exit_loss_bars,
             Some("strategy_exit_profit_short.pine") => &strategy_exit_profit_short_bars,
@@ -217,12 +259,18 @@ fn runtime_fixtures_match_incremental_append_execution() {
             _ => &default_bars,
         };
 
-        let full = run_historical(&hir, bars).expect("full execution should succeed");
+        let full = match run_historical(&hir, bars) {
+            Ok(result) => result,
+            Err(error) => {
+                failures.push(format!("{}: {}", path.display(), error.message));
+                continue;
+            }
+        };
         let mut runtime = HistoricalRuntime::new(&hir);
         if has_latest_known_bar_state {
-            runtime
-                .append_bars(bars)
-                .expect("append execution should succeed");
+            for result in runtime.historical_dataset(bars).unwrap() {
+                result.expect("known-dataset step execution should succeed");
+            }
         } else {
             for bar in bars.iter().copied() {
                 runtime
@@ -241,6 +289,11 @@ fn runtime_fixtures_match_incremental_append_execution() {
         checked += 1;
     }
 
+    assert!(
+        failures.is_empty(),
+        "unexpected runtime failures:\n{}",
+        failures.join("\n")
+    );
     assert!(checked >= 7, "expected runtime fixtures to be checked");
 }
 

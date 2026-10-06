@@ -1,0 +1,19 @@
+# SSL Hybrid Strategy v5 native comparison (2026-09-25)
+
+The complete public [SSL Hybrid Strategy](https://www.tradingview.com/script/2it69GUx-SSL-Hybrid-Strategy/) by kevinmck100 was inspected in TradingView's source tab. Its 557-line Pine v5 source is retained in ignored `.local/community-coverage-20260923/kevinmck100-ssl-hybrid-strategy-v5-20260925.pine` (SHA-256 `1b90bead338682dcc17b8c1063637e7b8354c91b35d9d2a741ae41b5274c658c`; only nonbreaking spaces were normalized). The publication was also compiled and inserted into the current TradingView Pine editor. The independent v5 probe `ta.lowest(input.int(60) / input.int(2))` was accepted by TradingView.
+
+The original first produced 17 local semantic diagnostics: one for `commission_type='percent'`, and 16 for integer input division used as a `ta.lowest`/`ta.highest` length. The runtime now accepts the v5 commission spelling and applies integer truncation to that verified length-call shape while ordinary v5 division remains fractional. The original now analyzes and runs with zero diagnostics. The broker also retains separate full brackets for separate entry IDs, and keeps the new direction's attached brackets when a pending entry reverses a position. Focused semantic, runtime, and broker regression tests cover these cases.
+
+The native `COINBASE:BTCUSD` 1D chart export `I:\sys\下载\COINBASE_BTCUSD, 1D (34).csv` was retained as ignored `ssl-hybrid-native-full-v5-20260925.csv` (SHA-256 `a05c7665f9320b70a956c98dd049dfc2c1b83dcd81c647a50fc11f4eceb7ea33`). It has 4,283 rows; the final September 25 row was forming and was excluded. The other 4,282 confirmed bars match the local OHLC input. The ignored `compare_ssl_hybrid.py` reports zero mismatches for all eight exported indicator series at `1e-8` absolute tolerance. The conditional `Candle Size > 1xATR` column encodes false and `na` as zero in TradingView's CSV; the comparison uses that exported meaning. The optional second moving average is entirely blank at default settings.
+
+The native trade export `I:\sys\下载\SSL_Hybrid_Strategy_COINBASE_BTCUSD_2026-09-25.csv` was retained as ignored `ssl-hybrid-native-trades-v5-20260925.csv` (SHA-256 `c9c9db59b737826f125f266e08821964ccc5942fa56712a9ddf83ad061bbe2a9`). Both executions have 475 closed trades and five open entries. All 475 closed trades agree in entry ID, UTC entry date, UTC exit date, entry price, and exit price. The original one-cent exit-price differences came from snapping brackets attached to pending reversal entries using the previous position's direction; this has been fixed. All five open entries agree in ID, UTC date, and price. Native CSV quantity display has limited precision: maximum closed-trade quantity difference is `0.000001103`. Maximum closed-trade net PnL difference is `$0.01981`; the comparison does not establish exact cent parity for every PnL.
+
+The five-package `cargo test -p pine-builtins -p pine-syntax -p pine-sema -p pine-runtime -p pine-cli --locked --quiet` passed after the fixes. The comparison covers default inputs and confirmed daily bars on one symbol. It does not qualify other settings, symbols, intrabar path behavior, or forming updates. The temporary TradingView strategy, probes, and date-range change were removed, the research layout was saved, and research tabs were closed.
+
+Reproduce from the repository root:
+
+```powershell
+cargo run -p pine-cli --locked -- run .local/community-coverage-20260923/kevinmck100-ssl-hybrid-strategy-v5-20260925.pine --bars .local/community-coverage-20260923/lazybear-volume-flow-chart-bars-v1-20260925.csv --chart-symbol COINBASE:BTCUSD --chart-timeframe 1D --chart-price-grid 1/100 > .local/community-coverage-20260923/ssl-hybrid-local-v5-20260925.json
+python .local/community-coverage-20260923/compare_ssl_hybrid.py
+python .local/community-coverage-20260923/compare_ssl_hybrid_trades.py
+```

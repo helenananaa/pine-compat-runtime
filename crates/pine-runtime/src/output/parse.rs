@@ -56,6 +56,15 @@ pub fn runtime_changes_from_json(json: &str) -> Result<RuntimeChanges, String> {
     if let Some(fills) = optional_array(&value, "fills")? {
         changes.fills = fill_changes_from_values(fills)?;
     }
+    if changes.schema_version < 4
+        && changes.fills.iter().any(|fill| match &fill.action {
+            FillAction::SetGradient { .. } => true,
+            FillAction::Add(fill) => fill.gradient.is_some(),
+            _ => false,
+        })
+    {
+        return Err("gradient fill requires changes schema 4".to_owned());
+    }
     if let Some(drawings) = optional_array(&value, "drawings")? {
         changes.drawings = drawing_changes_from_values(drawings)?;
     }
@@ -78,6 +87,12 @@ pub fn runtime_changes_from_json(json: &str) -> Result<RuntimeChanges, String> {
 }
 
 fn runtime_result_from_value(value: &Map<String, Value>) -> Result<RuntimeResult, String> {
+    if optional_array(value, "fills")?
+        .is_some_and(|fills| fills.iter().any(|fill| fill.get("gradient").is_some()))
+        && required_u32(value, "schemaVersion")? < 9
+    {
+        return Err("gradient fill requires runtime schema 9".to_owned());
+    }
     Ok(RuntimeResult {
         plots: plots_from_values(optional_array(value, "plots")?.unwrap_or(&[]))?,
         plot_chars: plot_chars_from_values(optional_array(value, "plotChars")?.unwrap_or(&[]))?,
@@ -130,6 +145,11 @@ fn plots_from_values(values: &[Value]) -> Result<Vec<PlotSeries>, String> {
             PineValue::String("format.inherit".to_owned()),
         )?;
         plot.precision = optional_pine(object, "precision", PineValue::Na)?;
+        plot.linestyle = optional_pine(
+            object,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?;
         plot.metadata = metadata_from_object(object)?;
         plots.push(plot);
     }
@@ -282,13 +302,16 @@ fn fills_from_values(values: &[Value]) -> Result<Vec<FillOutput>, String> {
 }
 
 fn fill_from_object(object: &Map<String, Value>) -> Result<FillOutput, String> {
-    Ok(FillOutput {
+    let fill = FillOutput {
         id: required_u32(object, "id")?,
         first_id: required_u32(object, "firstId")?,
         second_id: required_u32(object, "secondId")?,
         first_is_hline: optional_bool(object, "firstIsHLine")?.unwrap_or(false),
         second_is_hline: optional_bool(object, "secondIsHLine")?.unwrap_or(false),
         colors: optional_pine_values(object, "colors")?.unwrap_or_default(),
+        gradient: optional_array(object, "gradient")?
+            .map(gradient_samples_from_values)
+            .transpose()?,
         title: optional_pine(object, "title", PineValue::String(String::new()))?,
         editable: optional_pine(object, "editable", PineValue::Bool(true))?,
         show_last: optional_pine(object, "showLast", PineValue::Na)?,
@@ -298,7 +321,41 @@ fn fill_from_object(object: &Map<String, Value>) -> Result<FillOutput, String> {
             "display",
             PineValue::String("display.all".to_owned()),
         )?,
-    })
+    };
+    if fill
+        .gradient
+        .as_ref()
+        .is_some_and(|values| values.len() != fill.colors.len())
+    {
+        return Err("gradient sample count must match fill colors".to_owned());
+    }
+    Ok(fill)
+}
+
+fn gradient_samples_from_values(
+    values: &[Value],
+) -> Result<Vec<crate::FillGradientSample>, String> {
+    values
+        .iter()
+        .map(|value| {
+            let object = as_object(value, "gradient sample")?;
+            for name in ["topValue", "bottomValue", "topColor", "bottomColor"] {
+                if !object.contains_key(name) {
+                    return Err(format!("gradient sample requires {name}"));
+                }
+            }
+            let sample: crate::FillGradientSample = serde::Deserialize::deserialize(value)
+                .map_err(|e| format!("invalid gradient sample: {e}"))?;
+            if [sample.top_color, sample.bottom_color]
+                .into_iter()
+                .flatten()
+                .any(|color| !crate::value::is_valid_public_color(color))
+            {
+                return Err("invalid gradient color encoding".to_owned());
+            }
+            Ok(sample)
+        })
+        .collect()
 }
 
 fn labels_from_values(values: &[Value]) -> Result<Vec<LabelOutput>, String> {
@@ -795,6 +852,11 @@ fn series_header_from_object(object: &Map<String, Value>) -> Result<SeriesHeader
             PineValue::String("format.inherit".to_owned()),
         )?,
         precision: optional_pine(object, "precision", PineValue::Na)?,
+        linestyle: optional_pine(
+            object,
+            "linestyle",
+            PineValue::String("plot.linestyle_solid".to_owned()),
+        )?,
     })
 }
 
@@ -843,6 +905,12 @@ fn fill_changes_from_values(values: &[Value]) -> Result<Vec<FillChange>, String>
                 "setColors" => FillAction::SetColors {
                     start: required_usize(object, "start")?,
                     values: optional_pine_values(object, "values")?.unwrap_or_default(),
+                },
+                "setGradient" => FillAction::SetGradient {
+                    start: required_usize(object, "start")?,
+                    values: gradient_samples_from_values(
+                        optional_array(object, "values")?.ok_or("setGradient requires values")?,
+                    )?,
                 },
                 "add" => FillAction::Add(fill_from_object(required_object(object, "object")?)?),
                 other => return Err(format!("unsupported fill action `{other}`")),
@@ -1038,10 +1106,10 @@ fn pine_value_from_json(value: &Value) -> Result<PineValue, String> {
 fn parse_object(json: &str, what: &str) -> Result<Map<String, Value>, String> {
     let value: Value =
         serde_json::from_str(json).map_err(|err| format!("{what} must be JSON: {err}"))?;
-    value
-        .as_object()
-        .cloned()
-        .ok_or_else(|| format!("{what} must be a JSON object"))
+    match value {
+        Value::Object(object) => Ok(object),
+        _ => Err(format!("{what} must be a JSON object")),
+    }
 }
 
 fn as_object<'a>(value: &'a Value, what: &str) -> Result<&'a Map<String, Value>, String> {

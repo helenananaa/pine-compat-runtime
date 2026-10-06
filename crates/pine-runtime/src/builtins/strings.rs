@@ -1,10 +1,13 @@
+mod bounded_join;
 mod collection_format;
+mod regex_cache;
+pub(crate) use bounded_join::BoundedJoin;
 use collection_format::{stringify_array_with_mintick, stringify_matrix_with_mintick};
+pub(crate) use regex_cache::CachedPineRegex;
 
 use std::fmt::Write as _;
 
-use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
-use regex::Regex;
+use pine_ir::{HirCallArg, HirExpr};
 
 use super::{
     regex_character_classes::{
@@ -655,69 +658,6 @@ pub(crate) fn stringify_array_element(value: &PineValue, format: &str) -> String
     }
 }
 
-pub(crate) fn stringify_array_join_element(value: &PineValue) -> String {
-    match value {
-        PineValue::Int(value) => format_number(*value as f64, "#.########"),
-        PineValue::Float(value) => format_number(*value, "#.########"),
-        PineValue::Bool(value) => value.to_string(),
-        PineValue::String(value) => value.clone(),
-        PineValue::Color(value) => value.to_string(),
-        PineValue::Na => "NaN".to_owned(),
-        _ => "NaN".to_owned(),
-    }
-}
-
-pub(crate) fn stringify_user_type_array_join_element(
-    value: &PineValue,
-    type_name: &str,
-    user_types: &[HirUserTypeInfo],
-) -> String {
-    stringify_user_type_array_join_element_with_seen(value, type_name, user_types, &mut Vec::new())
-}
-
-fn stringify_user_type_array_join_element_with_seen(
-    value: &PineValue,
-    type_name: &str,
-    user_types: &[HirUserTypeInfo],
-    seen: &mut Vec<String>,
-) -> String {
-    let PineValue::UserType(fields) = value else {
-        return stringify_array_join_element(value);
-    };
-
-    if seen.iter().any(|seen_type| seen_type == type_name) {
-        return stringify_array_join_element(value);
-    }
-    seen.push(type_name.to_owned());
-    let shape = user_types
-        .iter()
-        .find(|user_type| user_type.identity.type_name == type_name);
-    let mut result = String::new();
-    result.push_str(type_name);
-    result.push('(');
-    for (index, field) in fields.iter().enumerate() {
-        if index > 0 {
-            result.push_str(", ");
-        }
-        if let Some(field_type_name) = shape
-            .and_then(|shape| shape.fields.get(index))
-            .and_then(|field| field.user_type_name.as_deref())
-        {
-            result.push_str(&stringify_user_type_array_join_element_with_seen(
-                field,
-                field_type_name,
-                user_types,
-                seen,
-            ));
-        } else {
-            result.push_str(&stringify_array_join_element(field));
-        }
-    }
-    result.push(')');
-    seen.pop();
-    result
-}
-
 pub(crate) fn format_string_placeholders(
     format_string: &str,
     values: &[PineValue],
@@ -889,8 +829,7 @@ fn format_number_with_mintick(value: f64, format: &str, mintick: f64) -> String 
             return "NaN".to_owned();
         }
         let ticks = value / mintick;
-        let tie_tolerance = f64::EPSILON * ticks.abs().max(1.0) * 4.0;
-        let rounded = (ticks + 0.5 + tie_tolerance).floor() * mintick;
+        let rounded = (ticks + 0.5).floor() * mintick;
         if !rounded.is_finite() {
             return "NaN".to_owned();
         }
@@ -918,6 +857,10 @@ fn format_number_with_mintick(value: f64, format: &str, mintick: f64) -> String 
     };
     let percent = format.ends_with('%');
     let pattern = format.strip_suffix('%').unwrap_or(format);
+    let suffix_start = pattern
+        .find(|ch: char| !matches!(ch, '#' | '0' | '.' | ','))
+        .unwrap_or(pattern.len());
+    let (pattern, literal_suffix) = pattern.split_at(suffix_start);
     let value = if percent { value * 100.0 } else { value };
 
     let (whole_pattern, fractional_pattern) = pattern.split_once('.').unwrap_or((pattern, ""));
@@ -963,6 +906,7 @@ fn format_number_with_mintick(value: f64, format: &str, mintick: f64) -> String 
     if percent {
         result.push('%');
     }
+    result.push_str(literal_suffix);
     result
 }
 
@@ -994,6 +938,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_string_call(
         &mut self,
         callee: &str,
+        call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         if !callee.starts_with("str.") {
@@ -1016,7 +961,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.tonumber" => self.eval_str_tonumber(args),
             "str.tostring" => self.eval_str_tostring(args),
             "str.format" => self.eval_str_format(args),
-            "str.match" => self.eval_str_match_regex(args),
+            "str.match" => self.eval_str_match_regex(call_site_id, args),
             "str.split" => self.eval_str_split(args),
             "str.format_time" => self.eval_str_format_time(args),
             _ => return None,
@@ -1159,20 +1104,27 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        let repeat = repeat as usize;
+        // Keep the Pine count wide until the character bound is established;
+        // casting to usize first can wrap a large count on wasm32.
+        let repeat = repeat as u64;
         let result_chars = repeat
-            .saturating_mul(source.chars().count())
+            .saturating_mul(source.chars().count() as u64)
             .saturating_add(
                 repeat
                     .saturating_sub(1)
-                    .saturating_mul(separator.chars().count()),
+                    .saturating_mul(separator.chars().count() as u64),
             );
-        if result_chars > MAX_STRING_CHARS {
+        if result_chars > MAX_STRING_CHARS as u64 {
             return Err(RuntimeError {
                 message: format!("str.repeat result cannot exceed {MAX_STRING_CHARS} characters"),
             });
         }
+        if result_chars == 0 {
+            return Ok(PineValue::String(String::new()));
+        }
 
+        // Nonempty output bounds count to at most MAX_STRING_CHARS + 1.
+        let repeat = usize::try_from(repeat).expect("bounded nonempty repeat count");
         let mut result = String::new();
         for index in 0..repeat {
             if index > 0 {
@@ -1271,35 +1223,6 @@ impl<'a> HistoricalRuntime<'a> {
 
         let result = format_string_placeholders(&format_string, &values, self)?;
         self.string_value_or_error(result, "str.format")
-    }
-
-    pub(crate) fn eval_str_match_regex(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
-            return Ok(PineValue::Na);
-        };
-        let PineValue::String(regex) = self.eval_expr(&args[1].value)? else {
-            return Ok(PineValue::Na);
-        };
-        let normalized = normalize_pine_regex_with_metadata(&regex);
-        let regex = Regex::new(&normalized.pattern).map_err(|err| RuntimeError {
-            message: format!("str.match invalid regex: {err}"),
-        })?;
-        let Some(captures) = regex.captures(&source) else {
-            return Ok(PineValue::String(String::new()));
-        };
-        let matched = captures
-            .get(0)
-            .expect("successful regex captures contain the complete match");
-        let consumed_final_newline = normalized
-            .final_newline_captures
-            .iter()
-            .any(|name| captures.name(name).is_some());
-        let end = matched.end() - usize::from(consumed_final_newline);
-
-        Ok(PineValue::String(source[matched.start()..end].to_owned()))
     }
 
     pub(crate) fn eval_str_split(
@@ -1403,12 +1326,12 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Bool(value) => value.to_string(),
             PineValue::String(value) => value.clone(),
             PineValue::Array(id) => self
-                .array_values_clone(*id)
+                .array_values(*id)
                 .ok()
                 .flatten()
                 .map(|values| {
                     stringify_array_with_mintick(
-                        &values,
+                        values.iter(),
                         format,
                         self.request_environment.chart().min_tick(),
                     )

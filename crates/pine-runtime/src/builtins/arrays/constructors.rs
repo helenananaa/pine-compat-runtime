@@ -119,9 +119,18 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
+        if !self.record_collection_allocation(args.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
         let mut values = Vec::with_capacity(args.len());
         for arg in args {
-            values.push(self.eval_expr(&arg.value)?);
+            let value = self.eval_expr(&arg.value)?;
+            let extra = crate::runtime::collection_gc::value_allocation_bytes(&value)
+                .saturating_sub(std::mem::size_of::<PineValue>());
+            if !self.record_collection_bytes(extra) {
+                return Err(self.resource_budget.collection_error());
+            }
+            values.push(value);
         }
 
         let Some(kind) = infer_array_from_kind(&values) else {
@@ -138,7 +147,7 @@ impl<'a> HistoricalRuntime<'a> {
                 }
             }
         }
-        Ok(self.new_array_from_values(kind, values))
+        Ok(self.insert_precharged_array_values(kind, values))
     }
 
     pub(crate) fn eval_array_new_size(
@@ -174,9 +183,32 @@ impl<'a> HistoricalRuntime<'a> {
         kind: ArrayElementKind,
         values: Vec<PineValue>,
     ) -> PineValue {
+        if !self.record_collection_values(&values) {
+            return PineValue::Na;
+        }
+        self.insert_precharged_array_values(kind, values)
+    }
+
+    pub(crate) fn new_array_from_borrowed_values(
+        &mut self,
+        kind: ArrayElementKind,
+        values: &[PineValue],
+    ) -> PineValue {
+        if !self.record_collection_values(values) {
+            return PineValue::Na;
+        }
+        self.insert_precharged_array_values(kind, values.to_vec())
+    }
+
+    // Caller must reserve the complete payload before constructing/inserting it.
+    pub(crate) fn insert_precharged_array_values(
+        &mut self,
+        kind: ArrayElementKind,
+        values: Vec<PineValue>,
+    ) -> PineValue {
         let id = self.next_array_id;
         self.next_array_id += 1;
-        self.array_store.insert(id, values);
+        self.array_store.insert(id, values.into());
         self.array_kinds.insert(id, kind);
         PineValue::Array(id)
     }
@@ -222,7 +254,11 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> PineValue {
         let id = self.next_array_id;
         self.next_array_id += 1;
-        self.array_store.insert(id, vec![initial_value; size]);
+        if !self.record_collection_repeated_value(&initial_value, size) {
+            return PineValue::Na;
+        }
+        self.array_store
+            .insert(id, vec![initial_value; size].into());
         self.array_kinds.insert(id, kind);
         PineValue::Array(id)
     }

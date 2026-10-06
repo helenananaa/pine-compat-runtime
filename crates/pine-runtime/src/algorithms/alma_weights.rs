@@ -7,16 +7,27 @@ use std::{collections::HashMap, sync::Arc};
 use pine_ir::CallSiteId;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct WeightKey {
+pub(crate) struct AlmaWeightKey {
     length: usize,
     offset_bits: u64,
     sigma_bits: u64,
     floor_center: bool,
 }
 
+impl AlmaWeightKey {
+    pub(crate) fn new(length: usize, offset: f64, sigma: f64, floor_center: bool) -> Self {
+        Self {
+            length,
+            offset_bits: offset.to_bits(),
+            sigma_bits: sigma.to_bits(),
+            floor_center,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct Entry {
-    key: WeightKey,
+    key: AlmaWeightKey,
     weights: Option<Arc<AlmaWeights>>,
 }
 
@@ -64,51 +75,50 @@ impl AlmaWeights {
 impl AlmaWeightCache {
     /// The caller evaluates all arguments and pushes the rolling window first.
     /// Parameters are valid, and `ready` also requires a finite, nonzero scale.
-    /// A missing result uses the original ALMA loop without caching its output.
-    pub(crate) fn prepare(
+    /// The callback runs once. Its missing weights use the original ALMA loop.
+    /// Consuming a borrowed hit here avoids a second lookup or kernel clone.
+    pub(crate) fn with_weights<R>(
         &mut self,
         site: CallSiteId,
-        length: usize,
-        offset: f64,
-        sigma: f64,
-        floor_center: bool,
+        key: AlmaWeightKey,
         ready: bool,
-    ) -> Option<&AlmaWeights> {
-        let key = WeightKey {
-            length,
-            offset_bits: offset.to_bits(),
-            sigma_bits: sigma.to_bits(),
-            floor_center,
-        };
-        let (matches, populated) = self
-            .entries
-            .as_ref()
-            .and_then(|entries| entries.get(&site))
-            .map_or((false, false), |entry| {
-                (entry.key == key, entry.weights.is_some())
-            });
+        consume: impl FnOnce(Option<&AlmaWeights>) -> R,
+    ) -> R {
+        let matches =
+            if let Some(entry) = self.entries.as_ref().and_then(|entries| entries.get(&site)) {
+                if entry.key == key {
+                    if ready && let Some(weights) = &entry.weights {
+                        return consume(Some(weights));
+                    }
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
         if !ready {
             if !matches {
                 self.remove_site(site);
             }
-            return None;
+            return consume(None);
         }
         if !matches {
             let entries = self.entries.get_or_insert_with(|| Arc::new(HashMap::new()));
             Arc::make_mut(entries).insert(site, Entry { key, weights: None });
-            return None;
+            return consume(None);
         }
-        if !populated {
-            let weights = Arc::new(AlmaWeights::new(length, offset, sigma, floor_center));
-            Arc::make_mut(self.entries.as_mut().expect("matching ALMA cache"))
-                .get_mut(&site)
-                .expect("matching ALMA site")
-                .weights = Some(weights);
-        }
-        self.entries
-            .as_ref()
-            .and_then(|entries| entries.get(&site))
-            .and_then(|entry| entry.weights.as_deref())
+        let weights = Arc::new(AlmaWeights::new(
+            key.length,
+            f64::from_bits(key.offset_bits),
+            f64::from_bits(key.sigma_bits),
+            key.floor_center,
+        ));
+        let entry = Arc::make_mut(self.entries.as_mut().expect("matching ALMA cache"))
+            .get_mut(&site)
+            .expect("matching ALMA site");
+        entry.weights = Some(weights);
+        consume(entry.weights.as_deref())
     }
 
     fn remove_site(&mut self, site: CallSiteId) {

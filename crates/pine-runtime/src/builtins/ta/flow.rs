@@ -2,6 +2,17 @@ use crate::runtime::historical::CrossCallState;
 
 use super::*;
 
+pub(super) fn push_rolling_window(
+    windows: &mut std::collections::HashMap<RollingWindowKey, RollingWindowState>,
+    key: RollingWindowKey,
+    source: Option<f64>,
+    length: usize,
+) -> &RollingWindowState {
+    let window = windows.entry(key).or_default();
+    window.push(source.filter(|value| value.is_finite()), length);
+    window
+}
+
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_cum(
         &mut self,
@@ -789,8 +800,6 @@ impl<'a> HistoricalRuntime<'a> {
         source: Option<f64>,
         length: usize,
     ) -> &RollingWindowState {
-        let window = self.rolling_windows.entry(key).or_default();
-        window.push(source.filter(|value| value.is_finite()), length);
-        window
+        push_rolling_window(&mut self.rolling_windows, key, source, length)
     }
 }

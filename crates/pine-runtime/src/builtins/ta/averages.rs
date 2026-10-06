@@ -356,55 +356,60 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(length) = usize::try_from(length).ok() else {
             return Ok(PineValue::Na);
         };
-        let ready = self
-            .update_rolling_window(call_site_id, source, length)
-            .is_ready(length);
-        if !ready {
+        let weight_key = crate::algorithms::alma_weights::AlmaWeightKey::new(
+            length,
+            offset,
+            sigma,
+            floor_center,
+        );
+        let window = super::flow::push_rolling_window(
+            &mut self.rolling_windows,
+            RollingWindowKey::Single(call_site_id),
+            source.as_f64(),
+            length,
+        );
+        if !window.is_ready(length) {
             self.alma_weights
-                .prepare(call_site_id, length, offset, sigma, floor_center, false);
+                .with_weights(call_site_id, weight_key, false, |_| ());
             return Ok(PineValue::Na);
         }
 
-        let mut center = offset * (length as f64 - 1.0);
-        if floor_center {
-            center = center.floor();
-        }
         let scale = length as f64 / sigma;
         if scale == 0.0 || !scale.is_finite() {
             self.alma_weights
-                .prepare(call_site_id, length, offset, sigma, floor_center, false);
+                .with_weights(call_site_id, weight_key, false, |_| ());
             return Ok(PineValue::Na);
         }
 
-        let weights =
-            self.alma_weights
-                .prepare(call_site_id, length, offset, sigma, floor_center, true);
-        let window = self
-            .rolling_windows
-            .get(&RollingWindowKey::Single(call_site_id))
-            .expect("updated ALMA window");
-        let (weighted_sum, weight_sum) = if let Some(weights) = weights {
-            let mut weighted_sum = 0.0;
-            for (value, weight) in window.values.iter().flatten().zip(weights.values()) {
-                weighted_sum += *value * *weight;
-            }
-            (weighted_sum, weights.weight_sum())
-        } else {
-            let mut weighted_sum = 0.0;
-            let mut weight_sum = 0.0;
-            for (index, value) in window.values.iter().flatten().copied().enumerate() {
-                let distance = index as f64 - center;
-                let weight = (-(distance * distance) / (2.0 * scale * scale)).exp();
-                weighted_sum += value * weight;
-                weight_sum += weight;
-            }
-            (weighted_sum, weight_sum)
-        };
-        if weight_sum == 0.0 || !weight_sum.is_finite() {
-            return Ok(PineValue::Na);
-        }
+        self.alma_weights
+            .with_weights(call_site_id, weight_key, true, |weights| {
+                let (weighted_sum, weight_sum) = if let Some(weights) = weights {
+                    let mut weighted_sum = 0.0;
+                    for (value, weight) in window.values.iter().flatten().zip(weights.values()) {
+                        weighted_sum += *value * *weight;
+                    }
+                    (weighted_sum, weights.weight_sum())
+                } else {
+                    let mut center = offset * (length as f64 - 1.0);
+                    if floor_center {
+                        center = center.floor();
+                    }
+                    let mut weighted_sum = 0.0;
+                    let mut weight_sum = 0.0;
+                    for (index, value) in window.values.iter().flatten().copied().enumerate() {
+                        let distance = index as f64 - center;
+                        let weight = (-(distance * distance) / (2.0 * scale * scale)).exp();
+                        weighted_sum += value * weight;
+                        weight_sum += weight;
+                    }
+                    (weighted_sum, weight_sum)
+                };
+                if weight_sum == 0.0 || !weight_sum.is_finite() {
+                    return Ok(PineValue::Na);
+                }
 
-        Ok(finite_float_or_na(weighted_sum / weight_sum))
+                Ok(finite_float_or_na(weighted_sum / weight_sum))
+            })
     }
 
     pub(crate) fn eval_linreg(

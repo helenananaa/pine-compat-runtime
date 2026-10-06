@@ -245,8 +245,13 @@ impl RollingWindowState {
     }
 
     pub(crate) fn range(&self) -> Option<f64> {
-        let highest = self.extreme(WindowExtreme::Highest)?;
-        let lowest = self.extreme(WindowExtreme::Lowest)?;
+        let mut values = self.values.iter().flatten().copied();
+        let first = values.next()?;
+        // Keep each original oldest-to-newest max/min chain, including its
+        // first-sample initialization and signed-zero/nonfinite behavior.
+        let (highest, lowest) = values.fold((first, first), |(highest, lowest), value| {
+            (highest.max(value), lowest.min(value))
+        });
         Some(highest - lowest)
     }
 
@@ -594,3 +599,7 @@ mod weighted_recovery_tests;
 #[cfg(test)]
 #[path = "rolling_window_length_tests.rs"]
 mod length_tests;
+
+#[cfg(test)]
+#[path = "rolling_range_tests.rs"]
+mod range_tests;

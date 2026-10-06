@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "candidate": "0.3.0-rc.2",
+  "implementationCommit": "83193323cdb1a763ee112183a7448bf839c06231",
+  "planSha256": "40f50b73cc5aeb3f8ce12c7846b14e3ddd4b755e574e145158fc19775eed7e87",
+  "referencePlan": {
+    "path": ".local/delivery-20261001-v2/plan.json",
+    "sha256": "a1ce810a67acd2ad47597bbfa92bd2e609ca55b79e6d9fbb6e9587796b9ea3f5",
+    "coreCommit": "e73206f0c839e42811ba1375832c6a514f49ae2a"
+  },
+  "nativeRecaptured": false,
+  "frozenReferenceFiles": 75,
+  "cases": 15,
+  "completeOutputs": 180,
+  "crossPlatformMismatches": 0,
+  "tolerance": {
+    "absolute": 1e-09,
+    "relative": 1e-12
+  },
+  "gates": [
+    {
+      "platform": "windows",
+      "rustPassed": 7569,
+      "installedPythonPassed": 798,
+      "toolingRun": 166,
+      "actualNodeWasm": true,
+      "logSha256": "dbb9453a686b2c997b6bbddad285f9c544de69a05245ae0e4409da1da10214a1"
+    },
+    {
+      "platform": "linux",
+      "rustPassed": 7569,
+      "installedPythonPassed": 798,
+      "toolingRun": 166,
+      "actualNodeWasm": true,
+      "logSha256": "1443b2c2c162cb7f1f3698eef48b36f4d54260e84faecf5326a0cdeade708bfc"
+    }
+  ],
+  "platformMatrices": [
+    {
+      "platform": "windows",
+      "nativeGroups": [
+        {
+          "id": "hull",
+          "status": "compared"
+        },
+        {
+          "id": "ut",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-vama",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-kijun",
+          "status": "compared"
+        },
+        {
+          "id": "fees",
+          "status": "compared"
+        },
+        {
+          "id": "qualify-rsi.py",
+          "status": "passed"
+        },
+        {
+          "id": "compare-rsi-alternate.py",
+          "status": "passed"
+        },
+        {
+          "id": "qualify-pivot.py",
+          "status": "passed"
+        }
+      ],
+      "matrixSha256": "473e6c2942589207f23bb33d40a9b273d4ea4c0903cd08adae98cd967cacf65f",
+      "provenanceSha256": "e7eee0bd0dc403d729236d3340dc9aeccd10b2452598460b1e67be4895c3ace2"
+    },
+    {
+      "platform": "linux",
+      "nativeGroups": [
+        {
+          "id": "hull",
+          "status": "compared"
+        },
+        {
+          "id": "ut",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-vama",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-kijun",
+          "status": "compared"
+        },
+        {
+          "id": "fees",
+          "status": "compared"
+        },
+        {
+          "id": "qualify-rsi.py",
+          "status": "passed"
+        },
+        {
+          "id": "compare-rsi-alternate.py",
+          "status": "passed"
+        },
+        {
+          "id": "qualify-pivot.py",
+          "status": "passed"
+        }
+      ],
+      "matrixSha256": "4712236ec580735a2630db4bbbbd6ac0169a49ca283d5031a7bf279939529547",
+      "provenanceSha256": "3952b241d52e765542df954c6d3281e90099e19ece793b1d53a35fdaee99ff68"
+    }
+  ],
+  "resourceAcceptance": "notRequalified; historical matrix notPassed",
+  "knownLimits": [
+    "Hull displayed PnL residual up to 0.006690 USD",
+    "native live Tick and exchange calendar fidelity outside named fixtures",
+    "no macOS, ARM, musllinux or free-threaded CPython qualification"
+  ],
+  "releaseTag": "v0.3.0-rc.2",
+  "ciCommit": "9f04a19d7ae6fd080ec23538443ed73cd5d05495",
+  "remoteCanonicalGate": "https://github.com/helenananaa/pine-compat-runtime/actions/runs/37461023410",
+  "preTagWheelWorkflow": "https://github.com/helenananaa/pine-compat-runtime/actions/runs/37460105095",
+  "rawEvidenceDirectory": ".local/release-0.3.0-rc.2-20261006",
+  "payloadHashIndexSha256": "48ce84dde4290f25ed33c0ef626e5e8c5257c1dc3ad5ba42d78ce97aa8f306f7",
+  "officialPreTagWheelChecks": [
+    {
+      "environment": "ci-windows",
+      "wheel": "pine_compat_runtime-0.3.0rc2-cp310-abi3-win_amd64.whl",
+      "sha256": "3297f92f95f4d0bff7d60fc8fca183940bd6fafe35dd9fb3deef45f276021984",
+      "libc": [
+        "",
+        ""
+      ],
+      "casesPassed": 15,
+      "cleanOfflineInstall": true,
+      "verificationReceiptSha256": "ead14f0ec33e81e1cbeaef97637128e2c059ead9ff97be9dae31d80a6a3bda0e"
+    },
+    {
+      "environment": "ci-floor",
+      "wheel": "pine_compat_runtime-0.3.0rc2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "sha256": "e49cdc684d97e56e65d53716cdb15365cc2c86d8f07f6f932f813321864f9d34",
+      "libc": [
+        "glibc",
+        "2.17"
+      ],
+      "casesPassed": 15,
+      "cleanOfflineInstall": true,
+      "verificationReceiptSha256": "75310654765ab21a9991f1e0a001714d0b37a6a37fcbc7eff450ba36c5cbd466"
+    }
+  ],
+  "localRustToolchains": {
+    "Windows": "1.97.1",
+    "Linux": "1.95.0"
+  },
+  "remoteGateRustToolchain": "1.95.0",
+  "officialReleaseAssets": "two Python wheels, manifest.json, SHA256SUMS; tag workflow rebuilds final release commit"
+}

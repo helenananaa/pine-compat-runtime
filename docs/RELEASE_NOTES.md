@@ -1,5 +1,25 @@
 # Release Notes
 
+## 0.3.0-rc.2 - scoped GitHub prerelease
+
+- Unique rc.2 package identity replaces reused local rc.1 identities.
+- Chart/request context now governs `time_close`, empty timeframe arguments
+  and `timeframe.change`; realtime updates reject duplicate, reversed or
+  mismatched bar timestamps before state changes.
+- Deterministic per-bar collection/copy and matrix-work budgets fail with
+  `E_RESOURCE_BUDGET`; defaults are 64 MiB and 100,000,000 work units.
+- Sparse paged collection rollback, map lookups, matrix scans and ALMA
+  coefficient reuse reduce measured work. Full-result output remains
+  proportional to retained output; ordinary window scans remain O(L).
+- Optimized Windows/Linux artifacts requalify the unchanged fifteen-case plan;
+  official release wheels target Windows x86-64 and manylinux2014 x86-64.
+- Read [acceptance](RC2_ACCEPTANCE_20261006.md) and
+  [migration/known gaps](RC2_MIGRATION.md) before upgrading. The historical
+  four-session resource growth failure remains open; this is not a stable
+  release or blanket native strategy/live-Tick compatibility.
+
+## Earlier evidence and local candidates
+
 - [Reversal order quantity fix](REVERSAL_ORDER_QUANTITY_FIX_20260930.md)
   repairs transaction quantities in order and entry fill-alert receipts.
   A fresh full gate passes; six native commission-probe and twelve full UT Bot

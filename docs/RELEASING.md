@@ -10,20 +10,14 @@ The `abi3-py310` PyO3 feature makes each platform wheel compatible with
 ordinary GIL-enabled CPython 3.10 and newer. macOS, musllinux, ARM, and
 free-threaded CPython remain outside the release matrix.
 
-The current checkout is local candidate `0.3.0-rc.1` (PEP 440 `0.3.0rc1`).
-Do not tag, push, or publish it as a GitHub Release. The tag commands below
-are the future publication recipe, not authorization for this candidate.
-The latest retained Windows streaming wheel is identified by source digest and
-SHA-256 in [STREAMING_EXPANSION_ARTIFACTS.json](STREAMING_EXPANSION_ARTIFACTS.json).
-[DELIVERY_ARTIFACTS.json](DELIVERY_ARTIFACTS.json) identifies the earlier
-Windows/Linux native-reference wheels, which do not include streaming.
-See the single current [delivery ledger](DELIVERY_ROADMAP.md).
-The retained pre-streaming Linux wheel is
-`manylinux_2_35_x86_64`. The separately qualified manylinux2014 wheel under
-`.local/candidate-0.3.0-rc.1/linux/manylinux2014/` has older semantics and must
-not be shipped as the latest repair. If retaining the CI manylinux_2_17 floor,
-rebuild and qualify the selected final revision on that floor before release.
-The local inventory is not the release manifest used by application updaters.
+The current candidate is `0.3.0-rc.2` (PEP 440 `0.3.0rc2`). Its scoped GitHub
+prerelease is opt-in; the latest stable release remains `v0.2.0`.
+See [RC2 acceptance](RC2_ACCEPTANCE_20261006.md),
+[migration and limits](RC2_MIGRATION.md), and the
+[delivery ledger](DELIVERY_ROADMAP.md).
+Earlier `.local/candidate-0.3.0-rc.1/`, streaming and delivery inventories
+preserve their own source pins. Never substitute an older wheel for a newer
+tag, or treat a native glibc 2.35 build as manylinux2014 qualification.
 
 ## Workflow Behavior
 
@@ -34,6 +28,8 @@ tags, and manual dispatches.
   wheels as 14-day workflow artifacts.
 - A `v*` tag performs the same build and then creates a durable GitHub Release.
 - The release contains both wheels, `manifest.json`, and `SHA256SUMS`.
+- PEP 440 prerelease versions publish with `--prerelease --latest=false`.
+  They do not change the release consumed through `/releases/latest`.
 
 Workflow artifacts are test evidence. Applications must consume only GitHub
 Release assets.
@@ -52,24 +48,39 @@ does not match the packaged version or if the two expected wheels are missing.
 
 ## Release Checklist
 
-1. Merge the release workflow and confirm both wheel jobs pass on `main`.
-2. Run the canonical local gate:
+1. Commit a unique, synchronized version. Freeze the selected implementation
+   and native-reference plan. Preserve prior receipts on their original pins.
+2. Run the canonical gates on Windows and Linux, build `--release` artifacts,
+   and rerun the frozen native/cross-surface acceptance matrix:
 
    ```text
    scripts/verify.sh
    ```
 
-3. Create and push the annotated tag:
+3. Push the candidate branch and manually dispatch `wheels.yml` at that branch.
+   Confirm the run's `headSha`, both installed-wheel test jobs, actual wheel
+   versions, and Linux manylinux2014 floor. Download and freshly install the
+   artifacts, checking the named reference cases before tagging.
+4. Complete release notes and migration/known-limit documentation. If the final
+   commit changes only documentation, verify every qualified core/build input
+   remains identical and record the implementation and release commits separately.
+5. Create and push the annotated tag at the selected release commit:
 
    ```text
-   git tag -a v0.3.0-rc.1 -m "Pine Compat Runtime v0.3.0-rc.1"
-   git push origin v0.3.0-rc.1
+   git tag -a v0.3.0-rc.2 -m "Pine Compat Runtime v0.3.0-rc.2"
+   git push origin v0.3.0-rc.2
    ```
 
-4. Confirm the GitHub Release contains exactly two wheels plus the manifest and
-   checksums.
-5. Install each wheel in a clean matching environment and run the binding smoke
-   test before making an application updater follow the release.
+6. Confirm the tag workflow succeeds and the GitHub prerelease contains exactly
+   two wheels plus manifest/checksums, with matching version and release commit.
+   Compare/download the actual assets and verify their SHA-256 digests.
+7. Freshly install each published wheel and run the binding examples and named
+   reference cases. Record the actual release bytes; workflow artifacts alone
+   are not final asset verification.
+
+A stable release additionally needs fresh qualification of the unchanged fixed
+resource matrix and explicit strategy/capability scope. The RC's deterministic
+per-bar allowances do not prove RSS or long-session resource bounds.
 
 ## Application Update Contract
 

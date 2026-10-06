@@ -42,36 +42,30 @@ application to a charting service.
 
 ## Quick Start
 
-The downloads below are the published `v0.2.0` release from July 20, 2026.
-This checkout is the local `0.3.0-rc.1` candidate (Python wheel `0.3.0rc1`).
-It is a locally qualified prerelease for the named scope, not a stable tag or
-full Pine compatibility. Current status and exact artifact identities are in
-[the delivery ledger](docs/DELIVERY_ROADMAP.md) and
-[latest streaming inventory](docs/STREAMING_EXPANSION_ARTIFACTS.json);
-older rc1 wheels share the version
-number and must not be confused with the repaired artifacts.
-Build this tree for host-input discovery, source provenance, realtime clocks,
-and the four-surface candidate artifacts. Do not install the published `v0.2.0`
-wheels and treat them as this candidate. See
-[delivery surfaces](docs/DELIVERY_SURFACES.md) and
-[releasing](docs/RELEASING.md).
+The downloads below are the `v0.3.0-rc.2` GitHub prerelease (Python wheel
+`0.3.0rc2`). It is an opt-in candidate for the named compatibility scope.
+The latest stable release remains `v0.2.0`; `/releases/latest` follows stable
+releases. See [RC2 acceptance](docs/RC2_ACCEPTANCE_20261006.md),
+[migration and limits](docs/RC2_MIGRATION.md),
+[delivery surfaces](docs/DELIVERY_SURFACES.md), and
+[the delivery ledger](docs/DELIVERY_ROADMAP.md).
 
-Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
-glibc Linux x86-64 and Windows x86-64. See the
-[latest release](https://github.com/helenananaa/pine-compat-runtime/releases/latest)
-for checksums and machine-readable release metadata.
+Release assets contain optimized Python wheels for ordinary GIL-enabled
+CPython 3.10+ on glibc Linux x86-64 and Windows x86-64, a machine-readable
+manifest, and SHA-256 checksums. Rust, CLI and WASM can be built from the tag.
+The RC does not claim full Pine compatibility or stable resource qualification.
 
 Linux x86-64:
 
 ```bash
 python -m pip install \
-  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0-rc.2/pine_compat_runtime-0.3.0rc2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 ```
 
 Windows x86-64:
 
 ```powershell
-py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-win_amd64.whl"
+py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.0-rc.2/pine_compat_runtime-0.3.0rc2-cp310-abi3-win_amd64.whl"
 ```
 
 Then run an indicator directly from Python:
@@ -351,7 +345,7 @@ behavior.
 
 ## Honest Compatibility
 
-The published `0.2.0` tag and this `0.3.0-rc.1` candidate are
+The published `0.2.0` tag and this `0.3.0-rc.2` candidate are
 compatibility-focused, not a full drop-in implementation of every Pine
 feature. Important current boundaries include:
 

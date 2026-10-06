@@ -1,9 +1,27 @@
 # Independent runtime delivery
 
-Updated 2026-10-02. This is the single current delivery-status entry point.
-Current classification: **compatibility/install-qualified local prerelease; resource acceptance notPassed**.
+Updated 2026-10-06. This is the current delivery-status entry point.
+Current candidate: **0.3.0-rc.2; scoped prerelease; stable resource acceptance unqualified**.
 
-## Current-core acceptance index
+## RC2 release scope
+
+[RC2 acceptance](RC2_ACCEPTANCE_20261006.md) records fresh Windows/Linux
+optimized builds, the unchanged fifteen-case native/cross-surface plan,
+canonical gates and official wheel checks. [Migration](RC2_MIGRATION.md)
+documents stricter realtime timestamps, chart-time fixes, per-bar collection
+and matrix budgets, and the binding configuration boundary.
+
+The official RC assets are two Python wheels plus manifest/checksums.
+Per-bar quota enforcement does not close the retained long-session growth
+failure. A stable release still requires the unchanged resource matrix on the
+selected final core, resolution of reproducible budget failures, and a deliberate
+strategy/capability scope. General refactoring and broader Pine features do not
+block this scoped RC.
+
+The sections below preserve earlier evidence on its original source/artifact
+pins. None automatically qualifies rc.2.
+
+## Earlier acceptance index (2026-10-01/02)
 
 [Optimized delivery acceptance](OPTIMIZED_DELIVERY_ACCEPTANCE_20261001.md) and its
 [machine-readable index](OPTIMIZED_DELIVERY_ACCEPTANCE_RESULTS.json) qualify

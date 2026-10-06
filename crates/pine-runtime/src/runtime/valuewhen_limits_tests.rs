@@ -44,6 +44,7 @@ fn limits(count: usize) -> ValueWhenLimits {
 // Traverse actual logical histories, independently of every production counter.
 fn events(runtime: &HistoricalRuntime<'_>) -> usize {
     let local: usize = runtime
+        .ta_state
         .valuewhen_state
         .values()
         .map(|history| history.len())

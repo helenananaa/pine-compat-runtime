@@ -1,6 +1,6 @@
 use pine_ir::HirCallArg;
 
-use super::linalg::{eigenvalues, eigenvectors, pseudo_inverse};
+use super::linalg::{eigenvalues_with_work, eigenvectors_with_work, pseudo_inverse_with_work};
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -64,7 +64,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.matrix_rank(id).unwrap_or(PineValue::Na))
     }
 
-    pub(crate) fn matrix_det(&self, id: u32) -> Result<Option<PineValue>, RuntimeError> {
+    pub(crate) fn matrix_det(&mut self, id: u32) -> Result<Option<PineValue>, RuntimeError> {
         let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(None);
         };
@@ -78,6 +78,14 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(Some(PineValue::Float(1.0)));
         }
 
+        if !self.resource_budget.matrix.spend(
+            (matrix.rows as u64)
+                .saturating_mul(matrix.columns as u64)
+                .saturating_mul(matrix.rows.min(matrix.columns) as u64)
+                .saturating_mul(3),
+        ) {
+            return Err(self.resource_budget.matrix_error());
+        }
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -136,6 +144,14 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let size = matrix.rows;
+        if !self.resource_budget.matrix.spend(
+            (matrix.rows as u64)
+                .saturating_mul(matrix.columns as u64)
+                .saturating_mul(matrix.rows.min(matrix.columns) as u64)
+                .saturating_mul(3),
+        ) {
+            return Err(self.resource_budget.matrix_error());
+        }
         let mut left = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {
@@ -197,11 +213,18 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        Ok(self.insert_matrix_storage(
+        if !self.record_collection_allocation(right.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             size,
             size,
-            right.into_iter().map(finite_float_or_na).collect(),
+            right
+                .into_iter()
+                .map(finite_float_or_na)
+                .collect::<Vec<_>>()
+                .into(),
         ))
     }
 
@@ -227,10 +250,15 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let Some(values) = eigenvalues(&values, size) else {
+        let result = eigenvalues_with_work(&values, size, &mut self.resource_budget.matrix);
+        self.resource_budget.check()?;
+        let Some(values) = result else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(
+        if !self.record_collection_allocation(values.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(self.insert_precharged_array_values(
             ArrayElementKind::Float,
             values.into_iter().map(finite_float_or_na).collect(),
         ))
@@ -258,14 +286,23 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let Some(vectors) = eigenvectors(&values, size) else {
+        let result = eigenvectors_with_work(&values, size, &mut self.resource_budget.matrix);
+        self.resource_budget.check()?;
+        let Some(vectors) = result else {
             return Ok(PineValue::Na);
         };
-        Ok(self.insert_matrix_storage(
+        if !self.record_collection_allocation(vectors.len()) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(self.insert_matrix_payload(
             MatrixElementKind::Float,
             size,
             size,
-            vectors.into_iter().map(finite_float_or_na).collect(),
+            vectors
+                .into_iter()
+                .map(finite_float_or_na)
+                .collect::<Vec<_>>()
+                .into(),
         ))
     }
 
@@ -287,21 +324,40 @@ impl<'a> HistoricalRuntime<'a> {
             values.push(number);
         }
 
-        let inverse_values = pseudo_inverse(&values, rows, columns);
-        self.insert_matrix_storage(
+        let inverse_values =
+            pseudo_inverse_with_work(&values, rows, columns, &mut self.resource_budget.matrix);
+        if self.resource_budget.check().is_err() {
+            return PineValue::Na;
+        }
+        if !self.record_collection_allocation(inverse_values.len()) {
+            return PineValue::Na;
+        }
+        self.insert_matrix_payload(
             MatrixElementKind::Float,
             columns,
             rows,
-            inverse_values.into_iter().map(finite_float_or_na).collect(),
+            inverse_values
+                .into_iter()
+                .map(finite_float_or_na)
+                .collect::<Vec<_>>()
+                .into(),
         )
     }
 
-    pub(crate) fn matrix_rank(&self, id: u32) -> Option<PineValue> {
+    pub(crate) fn matrix_rank(&mut self, id: u32) -> Option<PineValue> {
         let matrix = self.matrix_store.get(&id)?;
         if matrix.values.is_empty() {
             return Some(PineValue::Int(0));
         }
 
+        if !self.resource_budget.matrix.spend(
+            (matrix.rows as u64)
+                .saturating_mul(matrix.columns as u64)
+                .saturating_mul(matrix.rows.min(matrix.columns) as u64)
+                .saturating_mul(3),
+        ) {
+            return None;
+        }
         let mut values = Vec::with_capacity(matrix.values.len());
         for value in &matrix.values {
             let Some(number) = value.as_f64() else {

@@ -66,3 +66,15 @@ still applies. Seed/replay retain the configuration and recompute the count.
 This is an event-count limit. It does not bound payload bytes, shared physical
 leaves, rollback copies, request output caches, other collections, retained
 output, or process RSS. Hosts still own external resource and process policy.
+
+## Collection and Matrix Resource Limits
+
+`ResourceLimits` adds independently optional per-chart-bar logical collection
+allocation/copy bytes and matrix work units. Defaults are 64 MiB and 100,000,000
+units respectively; Rust historical and realtime callers use
+`with_resource_limits`, and `None` disables an allowance. Preparation of
+intrabar persistence, requested evaluators and strategy fill passes share the
+same execution allowance. Exhaustion returns `E_RESOURCE_BUDGET` without
+publishing a failed realtime candidate. This is not an allocator, process RSS
+or total retained-heap limit. See [Execution semantics](EXECUTION_SEMANTICS.md#deterministic-resource-allowances)
+for covered numerical kernels and state lifetimes.

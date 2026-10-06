@@ -187,3 +187,238 @@ fn paged_bulk_operations_preserve_checkpoints_and_cross_page_values() {
     let flat: ArrayValues<_> = (0..128).collect::<Vec<_>>().into();
     assert_eq!(paged, flat);
 }
+
+#[test]
+fn sparse_directory_pressure_matches_actual_payload_clones_across_shared_ancestors() {
+    let clones = Rc::new(Cell::new(0));
+    let original: ArrayValues<_> = (0..100_000)
+        .map(|value| Counted {
+            value,
+            clones: clones.clone(),
+        })
+        .collect::<Vec<_>>()
+        .into();
+    let mut branch = original.clone();
+    assert_eq!(branch.all_write_allocation_values(false).count(), 100_000);
+    for index in [0, 1, 4095, 4096, 8192, 99_999] {
+        let predicted = branch.write_allocation_values(index, false).len();
+        let before = clones.get();
+        branch.get_mut(index).unwrap().value = usize::MAX;
+        assert_eq!(clones.get() - before, predicted);
+        assert!(predicted == 0 || predicted <= PAGE_SIZE);
+        assert!(branch.write_allocation_values(index, false).is_empty());
+        assert_eq!(original[index].value, index);
+    }
+    let remaining = branch.all_write_allocation_values(false).count();
+    let before = clones.get();
+    for index in (0..branch.len()).step_by(PAGE_SIZE) {
+        branch.get_mut(index).unwrap().value = usize::MAX - 1;
+    }
+    assert_eq!(clones.get() - before, remaining);
+    assert_eq!(branch.all_write_allocation_values(false).count(), 0);
+    assert!(
+        original
+            .iter()
+            .enumerate()
+            .all(|(index, value)| value.value == index)
+    );
+}
+
+#[test]
+fn directory_boundary_append_remove_and_swap_preserve_payload_capacity_and_bits() {
+    for len in [4095, 4096, 4097, 131071, 131072, 131073] {
+        let expected = (0..len)
+            .map(|index| {
+                if index % 2 == 0 {
+                    -0.0
+                } else {
+                    f64::from_bits(0x7ff8_0000_0000_0000 | index as u64)
+                }
+            })
+            .collect::<Vec<_>>();
+        let original: ArrayValues<_> = expected.clone().into();
+        let capacity = original.capacity();
+        let mut branch = original.clone();
+        branch.insert(branch.len(), 42.0);
+        assert_eq!(branch.remove(branch.len() - 1), 42.0);
+        branch.swap(4095.min(len - 1), len - 1);
+        branch.swap(4095.min(len - 1), len - 1);
+        assert_eq!(original.capacity(), capacity);
+        for values in [&original, &branch] {
+            assert_eq!(
+                values
+                    .slices()
+                    .flatten()
+                    .map(|value| value.to_bits())
+                    .collect::<Vec<_>>(),
+                expected
+                    .iter()
+                    .map(|value| value.to_bits())
+                    .collect::<Vec<_>>()
+            );
+            assert_eq!(
+                values
+                    .iter()
+                    .rev()
+                    .map(|value| value.to_bits())
+                    .collect::<Vec<_>>(),
+                expected
+                    .iter()
+                    .rev()
+                    .map(|value| value.to_bits())
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+}
+
+#[test]
+fn cached_array_iterators_preserve_ranges_and_mixed_consumption() {
+    use std::collections::VecDeque;
+    let values: ArrayValues<_> = (0..10_000).collect::<Vec<_>>().into();
+    for start in [0, 31, 127, 128, 4095, 4096, 8191] {
+        for len in [0, 1, 127, 128, 129, 511] {
+            let view = values.view(start, len);
+            let mut iter = view.iter();
+            let mut expected = (start..start + len).collect::<VecDeque<_>>();
+            let mut step = 0;
+            while !expected.is_empty() {
+                assert_eq!(iter.len(), expected.len());
+                if step % 7 == 0 && expected.len() > 5 {
+                    for _ in 0..5 {
+                        expected.pop_front();
+                    }
+                    assert_eq!(iter.nth(5).copied(), expected.pop_front());
+                } else if step % 3 == 0 {
+                    assert_eq!(iter.next_back().copied(), expected.pop_back());
+                } else {
+                    assert_eq!(iter.next().copied(), expected.pop_front());
+                }
+                step += 1;
+            }
+            assert_eq!(iter.len(), 0);
+            assert_eq!(iter.next(), None);
+            assert_eq!(iter.next_back(), None);
+        }
+    }
+}
+
+#[test]
+fn chunked_reverse_matches_full_vec_bits_across_partial_pages_and_directory_branches() {
+    for len in [
+        0, 1, 2, 127, 128, 129, 255, 256, 257, 4095, 4096, 4097, 100_000, 131_072, 131_073,
+    ] {
+        let original = (0..len)
+            .map(|index| match index % 5 {
+                0 => -0.0,
+                1 => f64::from_bits(0x7ff8_0000_0000_0000 | index as u64),
+                2 => f64::INFINITY,
+                3 => f64::NEG_INFINITY,
+                _ => index as f64 / 8.0,
+            })
+            .collect::<Vec<_>>();
+        let mut expected = original.clone();
+        let source: ArrayValues<_> = original.clone().into();
+        let mut branch = source.clone();
+        expected.reverse();
+        branch.reverse();
+        assert_eq!(
+            branch
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>(),
+            expected
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>(),
+            "len {len}"
+        );
+        assert_eq!(
+            source
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>(),
+            original
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>(),
+            "source len {len}"
+        );
+        branch.reverse();
+        assert_eq!(
+            branch
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>(),
+            original
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>(),
+            "second reverse len {len}"
+        );
+        // A paged representation may remain paged after shrinking below 128.
+        let mut shrunk: ArrayValues<_> = original.into();
+        while shrunk.len() > 1 {
+            shrunk.remove(shrunk.len() - 1);
+        }
+        let checkpoint = shrunk.clone();
+        shrunk.reverse();
+        assert_eq!(
+            shrunk
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>(),
+            checkpoint
+                .iter()
+                .map(|value| value.to_bits())
+                .collect::<Vec<_>>()
+        );
+    }
+}
+
+#[test]
+fn chunked_reverse_clones_exactly_the_predicted_shared_cells_once() {
+    for len in [
+        129, 255, 256, 257, 4095, 4096, 4097, 100_000, 131_072, 131_073,
+    ] {
+        for prewrite in [false, true] {
+            let clones = Rc::new(Cell::new(0));
+            let source: ArrayValues<_> = (0..len)
+                .map(|value| Counted {
+                    value,
+                    clones: clones.clone(),
+                })
+                .collect::<Vec<_>>()
+                .into();
+            let mut branch = source.clone();
+            if prewrite {
+                branch.get_mut(len / 2).unwrap();
+            }
+            let predicted = branch.all_write_allocation_values(false).count();
+            clones.set(0);
+            branch.reverse();
+            assert_eq!(clones.get(), predicted, "len {len}, prewrite {prewrite}");
+            assert!(
+                branch
+                    .iter()
+                    .enumerate()
+                    .all(|(index, value)| value.value == len - 1 - index)
+            );
+            assert!(
+                source
+                    .iter()
+                    .enumerate()
+                    .all(|(index, value)| value.value == index)
+            );
+            assert_eq!(branch.all_write_allocation_values(false).count(), 0);
+            branch.reverse();
+            assert_eq!(clones.get(), predicted, "unique reverse len {len}");
+            assert!(
+                branch
+                    .iter()
+                    .enumerate()
+                    .all(|(index, value)| value.value == index)
+            );
+        }
+    }
+}

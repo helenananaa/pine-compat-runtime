@@ -42,6 +42,7 @@ impl HistoricalRuntime<'_> {
         self.execution_steps_remaining = self.execution_limits.max_steps_per_bar;
         self.loop_iterations_remaining = self.execution_limits.max_loop_iterations_per_bar;
         self.pending_loop_control = None;
+        self.resource_budget.reset();
     }
 
     #[inline]
@@ -74,12 +75,14 @@ impl HistoricalRuntime<'_> {
 
     pub(crate) fn inherit_execution_budget(&mut self, parent: &Self) {
         self.execution_limits = parent.execution_limits;
+        self.resource_budget = parent.resource_budget.clone();
         self.execution_steps_remaining = parent.execution_steps_remaining;
         self.loop_iterations_remaining = parent.loop_iterations_remaining;
         self.pending_loop_control = None;
     }
 
     pub(crate) fn accept_execution_budget(&mut self, child: &Self) {
+        self.resource_budget = child.resource_budget.clone();
         self.execution_steps_remaining = child.execution_steps_remaining;
         self.loop_iterations_remaining = child.loop_iterations_remaining;
         self.pending_loop_control = child.pending_loop_control;

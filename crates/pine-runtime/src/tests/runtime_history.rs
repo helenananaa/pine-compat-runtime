@@ -25,7 +25,9 @@ plot(bar_index % 7 == 0 ? previous(bar_index, 8) : na)
             "{:?}",
             analysis.diagnostics
         );
-        let bars = (0..29).map(|i| bar(f64::from(i))).collect::<Vec<_>>();
+        let bars = (0..29)
+            .map(|i| at_time(i64::from(i) * 60_000, bar(f64::from(i))))
+            .collect::<Vec<_>>();
         let hir = analysis.hir.expect("HIR");
         let result = run_historical(&hir, &bars).expect("gapped history");
         for (plot, offset) in result.plots.iter().zip([1, 2, 5, 8]) {
@@ -77,7 +79,9 @@ plot(b)
         analysis.diagnostics
     );
     let hir = analysis.hir.expect("HIR");
-    let bars = (0..12).map(|i| bar(f64::from(i + 1))).collect::<Vec<_>>();
+    let bars = (0..12)
+        .map(|i| at_time(i64::from(i) * 60_000, bar(f64::from(i + 1))))
+        .collect::<Vec<_>>();
     let result = run_historical(&hir, &bars).expect("gapped local history");
     for plot in &result.plots {
         for (i, value) in plot.values.iter().enumerate() {
@@ -96,10 +100,10 @@ plot(b)
             .expect("history");
     }
     realtime
-        .update(BarUpdate::forming(bar(100.0)))
+        .update(BarUpdate::forming(at_time(8 * 60_000, bar(100.0))))
         .expect("first provisional value");
     realtime
-        .update(BarUpdate::forming(bar(200.0)))
+        .update(BarUpdate::forming(at_time(8 * 60_000, bar(200.0))))
         .expect("rollback provisional value");
     for input in &bars[8..] {
         realtime
@@ -299,11 +303,11 @@ plot(str.pos(text, "p")[offset])
     );
     let hir = analysis.hir.expect("HIR");
     let bars = vec![
-        bar_ohlc(1.0, 2.0, 1.0, 2.0),
-        bar_ohlc(3.0, 3.0, 2.0, 2.0),
-        bar_ohlc(2.0, 4.0, 2.0, 4.0),
-        bar_ohlc(5.0, 5.0, 3.0, 3.0),
-        bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        at_time(0, bar_ohlc(1.0, 2.0, 1.0, 2.0)),
+        at_time(60_000, bar_ohlc(3.0, 3.0, 2.0, 2.0)),
+        at_time(120_000, bar_ohlc(2.0, 4.0, 2.0, 4.0)),
+        at_time(180_000, bar_ohlc(5.0, 5.0, 3.0, 3.0)),
+        at_time(240_000, bar_ohlc(4.0, 6.0, 4.0, 6.0)),
     ];
 
     let historical = run_historical(&hir, &bars).expect("historical result");
@@ -323,10 +327,16 @@ plot(str.pos(text, "p")[offset])
             .expect("historical realtime update");
     }
     realtime
-        .update(BarUpdate::forming(bar_ohlc(10.0, 12.0, 9.0, 11.0)))
+        .update(BarUpdate::forming(at_time(
+            180_000,
+            bar_ohlc(10.0, 12.0, 9.0, 11.0),
+        )))
         .expect("first forming update");
     realtime
-        .update(BarUpdate::forming(bar_ohlc(20.0, 22.0, 19.0, 21.0)))
+        .update(BarUpdate::forming(at_time(
+            180_000,
+            bar_ohlc(20.0, 22.0, 19.0, 21.0),
+        )))
         .expect("rolled-back forming update");
     realtime
         .update(BarUpdate::confirmed(bars[3]))
@@ -1145,4 +1155,9 @@ plot(na(previous_point) ? na : previous_point.index)
     assert_eq!(result.plots.len(), 1);
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_values_close(&result.plots[0].values[1..], &[0.0, 1.0, 2.0]);
+}
+
+fn at_time(time: i64, mut bar: Bar) -> Bar {
+    bar.time = time;
+    bar
 }

@@ -184,8 +184,18 @@ impl<'a> HistoricalRuntime<'a> {
         index: i64,
         value: PineValue,
     ) -> Result<(), RuntimeError> {
+        self.array_set_value_impl(id, index, value, false)
+    }
+
+    fn prepare_array_set(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: &PineValue,
+        incoming_precharged: bool,
+    ) -> Result<Option<(u32, usize)>, RuntimeError> {
         let Some((target_id, index)) = self.array_read_index(id, index)? else {
-            return Ok(());
+            return Ok(None);
         };
         let copied =
             self.array_store.get(&target_id).map_or(0, |values| {
@@ -194,14 +204,52 @@ impl<'a> HistoricalRuntime<'a> {
                     self.array_store.get_mut_clones_value(&target_id),
                 ))
             });
-        self.record_collection_bytes(copied);
-        self.record_collection_values(std::iter::once(&value));
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !incoming_precharged && !self.record_collection_values(std::iter::once(value)) {
+            return Err(self.resource_budget.collection_error());
+        }
+        Ok(Some((target_id, index)))
+    }
+
+    fn array_set_value_impl(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: PineValue,
+        incoming_precharged: bool,
+    ) -> Result<(), RuntimeError> {
+        let Some((target_id, index)) =
+            self.prepare_array_set(id, index, &value, incoming_precharged)?
+        else {
+            return Ok(());
+        };
         if let Some(slot) = self
             .array_store
             .get_mut(&target_id)
             .and_then(|values| values.get_mut(index))
         {
             *slot = value;
+        }
+        Ok(())
+    }
+
+    pub(super) fn array_set_borrowed_value(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: &PineValue,
+    ) -> Result<(), RuntimeError> {
+        let Some((target_id, index)) = self.prepare_array_set(id, index, value, false)? else {
+            return Ok(());
+        };
+        if let Some(slot) = self
+            .array_store
+            .get_mut(&target_id)
+            .and_then(|values| values.get_mut(index))
+        {
+            *slot = value.clone();
         }
         Ok(())
     }
@@ -238,8 +286,12 @@ impl<'a> HistoricalRuntime<'a> {
                 ))
             }
         });
-        self.record_collection_bytes(copied);
-        self.record_collection_values(std::iter::once(&value));
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !self.record_collection_values(std::iter::once(&value)) {
+            return Err(self.resource_budget.collection_error());
+        }
         if let Some(values) = self.array_store.get_mut(&target_id) {
             values.insert(index, value);
         }
@@ -249,11 +301,31 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(())
     }
 
+    #[cfg(test)]
     pub(super) fn array_insert_values(
         &mut self,
         id: u32,
         index: i64,
         incoming: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_insert_values_impl(id, index, incoming, false)
+    }
+
+    pub(super) fn array_insert_precharged_values(
+        &mut self,
+        id: u32,
+        index: i64,
+        incoming: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_insert_values_impl(id, index, incoming, true)
+    }
+
+    fn array_insert_values_impl(
+        &mut self,
+        id: u32,
+        index: i64,
+        incoming: Vec<PineValue>,
+        incoming_precharged: bool,
     ) -> Result<(), RuntimeError> {
         if incoming.is_empty() {
             return Ok(());
@@ -279,8 +351,12 @@ impl<'a> HistoricalRuntime<'a> {
                 parent.append_allocation_values(self.array_store.get_mut_clones_value(&target_id)),
             )
         };
-        self.record_collection_bytes(copied);
-        self.record_collection_values(&incoming);
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !incoming_precharged && !self.record_collection_values(&incoming) {
+            return Err(self.resource_budget.collection_error());
+        }
         if index < parent_len {
             let replacement = self
                 .array_store
@@ -321,7 +397,9 @@ impl<'a> HistoricalRuntime<'a> {
                 ))
             }
         });
-        self.record_collection_bytes(copied);
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
         let removed = self
             .array_store
             .get_mut(&target_id)
@@ -334,10 +412,28 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(removed)
     }
 
+    #[cfg(test)]
     pub(super) fn array_replace_values(
         &mut self,
         id: u32,
         replacement: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_replace_values_impl(id, replacement, false)
+    }
+
+    pub(super) fn array_replace_precharged_values(
+        &mut self,
+        id: u32,
+        replacement: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        self.array_replace_values_impl(id, replacement, true)
+    }
+
+    fn array_replace_values_impl(
+        &mut self,
+        id: u32,
+        replacement: Vec<PineValue>,
+        incoming_precharged: bool,
     ) -> Result<(), RuntimeError> {
         if let Some(slice) = self.array_slices.get(&id).copied() {
             self.validate_array_slice(slice)?;
@@ -345,14 +441,16 @@ impl<'a> HistoricalRuntime<'a> {
                 if offset >= slice.len {
                     break;
                 }
-                self.array_set_value(id, offset as i64, value)?;
+                self.array_set_value_impl(id, offset as i64, value, incoming_precharged)?;
             }
             return Ok(());
         }
 
         if self.array_store.contains_key(&id) {
             // Replacing a payload must not first clone its discarded contents.
-            self.record_collection_values(&replacement);
+            if !incoming_precharged && !self.record_collection_values(&replacement) {
+                return Err(self.resource_budget.collection_error());
+            }
             self.array_store.insert(id, replacement.into());
         }
         Ok(())
@@ -372,7 +470,9 @@ impl<'a> HistoricalRuntime<'a> {
                 self.array_kinds.get(&slice.parent_id),
                 parent.view(0, parent.len()),
             );
-            self.record_collection_bytes(copied);
+            if !self.record_collection_bytes(copied) {
+                return Err(self.resource_budget.collection_error());
+            }
             let mut values = self
                 .array_store
                 .get(&slice.parent_id)

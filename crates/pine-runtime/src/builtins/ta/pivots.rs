@@ -148,7 +148,11 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(self.new_array_from_values(ArrayElementKind::Float, pivot_na_levels()));
         }
 
-        let state = self.pivot_point_state.entry(call_site_id).or_default();
+        let state = self
+            .ta_state
+            .pivot_point_state
+            .entry(call_site_id)
+            .or_default();
         if anchor {
             if let Some(previous) = state.current {
                 state.active_levels = Some(pivot_point_levels(&type_name, previous, open));

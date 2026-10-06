@@ -1601,14 +1601,9 @@ fn validate_provider_timeframe(
     requested_timeframe: &RequestTimeframe,
     chart_timeframe: &RequestTimeframe,
 ) -> Result<(), RuntimeError> {
-    if requested_timeframe.seconds() < chart_timeframe.seconds() {
-        return Ok(());
-    }
     // Calendar months do not have a fixed number of seconds. Their merge
     // boundaries come from calendar opens/closes, not nominal-duration ratios.
-    let calendar_month =
-        requested_timeframe.value().ends_with('M') || chart_timeframe.value().ends_with('M');
-    if !calendar_month && requested_timeframe.seconds() % chart_timeframe.seconds() != 0 {
+    if !chart_timeframe.supports_security_timeframe(requested_timeframe) {
         return Err(RuntimeError {
             message: format!(
                 "request.security requested timeframe `{}` must be an integer multiple of chart timeframe `{}`",

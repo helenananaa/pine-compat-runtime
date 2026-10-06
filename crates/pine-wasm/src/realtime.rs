@@ -1,5 +1,5 @@
 use pine_runtime::{
-    Bar, BarUpdate, OutputRetention, RealtimeRuntime, RealtimeUpdateContext, RequestKey,
+    BarUpdate, OutputRetention, RealtimeRuntime, RealtimeUpdateContext, RequestKey,
     RequestTimeframe, RuntimeReplica, ValueWhenLimits, public_runtime_changes_json,
     runtime_changes_from_json, runtime_result_from_json, session_window_input_from_json,
 };
@@ -28,9 +28,6 @@ pub fn runtime_changes_schema_version() -> u32 {
 pub struct WasmRealtimeSession {
     runtime: RealtimeRuntime<'static>,
     seeded: bool,
-    confirmed_bars: usize,
-    last_confirmed_time: Option<i64>,
-    forming_time: Option<i64>,
 }
 
 #[wasm_bindgen(js_name = RuntimeReplica)]
@@ -79,9 +76,6 @@ impl WasmRealtimeSession {
         Ok(Self {
             runtime,
             seeded: false,
-            confirmed_bars: 0,
-            last_confirmed_time: None,
-            forming_time: None,
         })
     }
 
@@ -91,27 +85,6 @@ impl WasmRealtimeSession {
         } else {
             Err("realtime session must be seeded before updates".to_owned())
         }
-    }
-
-    fn validate_next_bar(&self, bar: &Bar, forming: bool) -> Result<(), String> {
-        if let Some(last_confirmed_time) = self.last_confirmed_time
-            && bar.time <= last_confirmed_time
-        {
-            return Err(format!(
-                "realtime bar time `{}` must be later than confirmed time `{last_confirmed_time}`",
-                bar.time
-            ));
-        }
-        if let Some(forming_time) = self.forming_time
-            && bar.time != forming_time
-        {
-            let action = if forming { "replace" } else { "confirm" };
-            return Err(format!(
-                "realtime {action} time `{}` does not match forming time `{forming_time}`",
-                bar.time
-            ));
-        }
-        Ok(())
     }
 
     pub(crate) fn seed_internal(
@@ -142,8 +115,6 @@ impl WasmRealtimeSession {
         }
         .map_err(|err| err.message)?;
         self.seeded = true;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         Ok(())
     }
 
@@ -161,9 +132,6 @@ impl WasmRealtimeSession {
             None => self.runtime.replay_historical_without_output(&bars),
         }
         .map_err(|err| err.message)?;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
         Ok(crate::snapshot::result_view_snapshot_json(
             &self.runtime.result_view(),
         ))
@@ -186,9 +154,6 @@ impl WasmRealtimeSession {
                 .correct_historical_without_output(from_time, &bars),
         }
         .map_err(|err| err.message)?;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
         Ok(crate::snapshot::result_view_snapshot_json(
             &self.runtime.result_view(),
         ))
@@ -210,7 +175,6 @@ impl WasmRealtimeSession {
     ) -> Result<String, String> {
         self.require_seeded()?;
         let bar = bar_from_json(bar_json)?;
-        self.validate_next_bar(&bar, forming)?;
         let context = context_from_json(context_json)?;
         let update = if forming {
             BarUpdate::forming(bar)
@@ -229,13 +193,6 @@ impl WasmRealtimeSession {
                 .map_err(|err| err.message)?;
             crate::snapshot::result_view_snapshot_json(&self.runtime.result_view())
         };
-        if forming {
-            self.forming_time = Some(bar.time);
-        } else {
-            self.confirmed_bars = self.runtime.confirmed_bar_count();
-            self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-            self.forming_time = None;
-        }
         Ok(output)
     }
 
@@ -542,17 +499,19 @@ impl WasmRealtimeSession {
 
     #[wasm_bindgen(getter, js_name = confirmedBars)]
     pub fn confirmed_bars(&self) -> usize {
-        self.confirmed_bars
+        self.runtime.confirmed_bar_count()
     }
 
     #[wasm_bindgen(getter, js_name = lastConfirmedTime)]
     pub fn last_confirmed_time(&self) -> Option<f64> {
-        self.last_confirmed_time.map(|value| value as f64)
+        self.runtime
+            .last_confirmed_bar_time()
+            .map(|value| value as f64)
     }
 
     #[wasm_bindgen(getter, js_name = formingTime)]
     pub fn forming_time(&self) -> Option<f64> {
-        self.forming_time.map(|value| value as f64)
+        self.runtime.forming_bar_time().map(|value| value as f64)
     }
 
     #[wasm_bindgen(getter)]

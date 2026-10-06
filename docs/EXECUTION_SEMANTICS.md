@@ -916,6 +916,41 @@ fixed and retried. `RealtimeRuntime` executes updates and history replacement on
 separate candidates, so a failed update, seed, correction or replay leaves its
 previous session usable.
 
+## Deterministic Resource Allowances
+
+`ResourceLimits` supplements `ExecutionLimits` with two independently optional
+per-chart-bar allowances. Rust callers configure either historical or realtime
+runtimes with `with_resource_limits` and inspect the settings with
+`resource_limits()`. `max_collection_bytes_per_bar` defaults to
+`Some(64 * 1024 * 1024)`; `max_matrix_work_per_bar` defaults to
+`Some(100_000_000)`. `None` disables the corresponding allowance.
+
+Collection bytes count logical Pine value payload allocations and recorded
+copies, including variable-sized payloads. They limit allocation work during an
+execution, rather than retained collection size, process RSS or the entire Rust
+heap. Matrix units account for deterministic estimates of numerical work. The
+guards cover `matrix.mult`, `matrix.pow`, `matrix.det`, `matrix.inv`,
+`matrix.rank`, `matrix.eigenvalues`, `matrix.eigenvectors` and `matrix.pinv`,
+including iterative QR and Jacobi phases. They do not measure wall-clock time.
+An exhausted allowance fails the reached execution with `E_RESOURCE_BUDGET`.
+
+A new chart-bar execution resets these allowances. Requested contexts spend the
+same remaining allowance as their parent chart execution; evaluating several
+requested bars or resuming a requested checkpoint does not replenish it.
+Repeated strategy fill passes also share the allowance. Strategy rollback
+restores calculation state and local retained `valuewhen` accounting, while
+leaving consumed execution steps, loop iterations and resource units consumed.
+TA and stateful scalar-helper maps are captured together in `TaRollbackState`;
+pure caches, scratch buffers, broker persistence and `varip` retain their
+separate lifetime rules.
+
+Each realtime update evaluates on a candidate with its own chart execution
+allowance. A failed update, historical seed, correction or replay discards that
+candidate and preserves the session state published before the attempt,
+including its revision and visible output. An error during historical execution
+instead poisons that historical instance as described above; its partially
+evaluated failed bar is not a committed result.
+
 ## Alert Events
 
 `alertcondition(condition, title, message)` is a supported runtime side effect
@@ -2138,6 +2173,17 @@ caches, callsite state, and history reads continue to roll back to the confirmed
 baseline. A confirmed update also seeds from the latest forming `varip` values
 before executing and then commits the resulting values into the confirmed
 runtime for the next bar.
+`RealtimeRuntime` enforces the chart timestamp protocol in the core: each newly
+confirmed or historical bar must be later than the last confirmed bar, and
+replacements and confirmation of an open forming bar must retain its timestamp.
+Python and WASM sessions use this same validation and read their bar counts and
+timestamps from the core. Historical seed batches must be strictly increasing
+and follow the existing confirmed prefix; replay and correction validate their
+complete replacement history before execution. Input or execution failures keep
+the previous realtime state, revision, cached delta and timestamps. Successful
+historical discovery, seed, replay or correction discard the speculative bar.
+Python/WASM sessions still require one initial seed before live updates; Rust
+hosts may start with a single historical or realtime observation.
 Committed and realtime forming history reads from supported UDT `varip` values
 use the same confirmed-history baseline, including representative same-local and
 same-imported nested scalar-tree Wrapper values initialized from ternary

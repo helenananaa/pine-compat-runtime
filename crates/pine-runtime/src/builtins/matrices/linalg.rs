@@ -1,3 +1,5 @@
+use crate::runtime::resource_limits::MatrixWorkBudget;
+
 const EIGEN_TOLERANCE: f64 = 1e-12;
 const EIGEN_VECTOR_TOLERANCE: f64 = 1e-8;
 const PSEUDO_INVERSE_TOLERANCE: f64 = 1e-12;
@@ -14,16 +16,32 @@ enum EigenFailure {
     Complex,
 }
 
-pub(super) fn eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
+pub(super) fn eigenvalues_with_work(
+    values: &[f64],
+    size: usize,
+    work: &mut MatrixWorkBudget,
+) -> Option<Vec<f64>> {
+    if !work.spend((size as u64).saturating_pow(2)) {
+        return None;
+    }
     if size > 1
         && let Some((normalized, scale)) = scale::extreme_eigen_normalization(values)
     {
         if let Some(result) = exact_triangular_eigenvalues(values, size) {
             return Some(result);
         }
-        return recovered_eigenvalues(&normalized, size, scale, is_exactly_symmetric(values, size));
+        return recovered_eigenvalues(
+            &normalized,
+            size,
+            scale,
+            is_exactly_symmetric(values, size),
+            work,
+        );
     }
-    let result = unscaled_eigenvalues(values, size, None);
+    let result = unscaled_eigenvalues(values, size, None, work);
+    if !work.spend(0) {
+        return None;
+    }
     if size <= 1
         || result
             .as_ref()
@@ -38,7 +56,13 @@ pub(super) fn eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
         return Some(result);
     }
     let (normalized, scale) = scale::reversible_eigen_normalization(values)?;
-    recovered_eigenvalues(&normalized, size, scale, is_exactly_symmetric(values, size))
+    recovered_eigenvalues(
+        &normalized,
+        size,
+        scale,
+        is_exactly_symmetric(values, size),
+        work,
+    )
 }
 
 fn recovered_eigenvalues(
@@ -46,8 +70,9 @@ fn recovered_eigenvalues(
     size: usize,
     scale: f64,
     symmetric: bool,
+    work: &mut MatrixWorkBudget,
 ) -> Option<Vec<f64>> {
-    let mut result = unscaled_eigenvalues(values, size, Some(symmetric)).ok()?;
+    let mut result = unscaled_eigenvalues(values, size, Some(symmetric), work).ok()?;
     if !result.iter().all(|value| value.is_finite()) {
         return None;
     }
@@ -61,6 +86,7 @@ fn unscaled_eigenvalues(
     values: &[f64],
     size: usize,
     symmetric: Option<bool>,
+    work: &mut MatrixWorkBudget,
 ) -> Result<Vec<f64>, EigenFailure> {
     if size == 0 {
         return Ok(Vec::new());
@@ -72,21 +98,31 @@ fn unscaled_eigenvalues(
         return Err(EigenFailure::Complex);
     }
     if symmetric.unwrap_or_else(|| is_symmetric(values, size)) {
-        return Ok(symmetric_eigenvalues(values, size));
+        return Ok(symmetric_eigenvalues(values, size, work));
     }
     if size == 2 {
         return two_by_two_eigenvalues(values, symmetric.is_some());
     }
-    qr_eigenvalues(values, size, symmetric.is_some())
+    qr_eigenvalues_with_work(values, size, symmetric.is_some(), work)
 }
 
-pub(super) fn eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
+pub(super) fn eigenvectors_with_work(
+    values: &[f64],
+    size: usize,
+    work: &mut MatrixWorkBudget,
+) -> Option<Vec<f64>> {
+    if !work.spend((size as u64).saturating_pow(2)) {
+        return None;
+    }
     if size > 1
         && let Some((normalized, _)) = scale::extreme_eigen_normalization(values)
     {
-        return recovered_eigenvectors(&normalized, size, is_exactly_symmetric(values, size));
+        return recovered_eigenvectors(&normalized, size, is_exactly_symmetric(values, size), work);
     }
-    let result = unscaled_eigenvectors(values, size, None);
+    let result = unscaled_eigenvectors(values, size, None, work);
+    if !work.spend(0) {
+        return None;
+    }
     if size <= 1
         || result
             .as_ref()
@@ -98,11 +134,16 @@ pub(super) fn eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
         return None;
     }
     let (normalized, _) = scale::reversible_eigen_normalization(values)?;
-    recovered_eigenvectors(&normalized, size, is_exactly_symmetric(values, size))
+    recovered_eigenvectors(&normalized, size, is_exactly_symmetric(values, size), work)
 }
 
-fn recovered_eigenvectors(values: &[f64], size: usize, symmetric: bool) -> Option<Vec<f64>> {
-    unscaled_eigenvectors(values, size, Some(symmetric))
+fn recovered_eigenvectors(
+    values: &[f64],
+    size: usize,
+    symmetric: bool,
+    work: &mut MatrixWorkBudget,
+) -> Option<Vec<f64>> {
+    unscaled_eigenvectors(values, size, Some(symmetric), work)
         .ok()
         .filter(|vectors| vectors.iter().all(|value| value.is_finite()))
 }
@@ -111,6 +152,7 @@ fn unscaled_eigenvectors(
     values: &[f64],
     size: usize,
     symmetric: Option<bool>,
+    work: &mut MatrixWorkBudget,
 ) -> Result<Vec<f64>, EigenFailure> {
     if size == 0 {
         return Ok(Vec::new());
@@ -122,14 +164,20 @@ fn unscaled_eigenvectors(
         return Err(EigenFailure::Complex);
     }
     if symmetric.unwrap_or_else(|| is_symmetric(values, size)) {
-        let (_, vectors) = jacobi_eigen_decomposition(values.to_vec(), size);
+        let (_, vectors) = jacobi_eigen_decomposition(values.to_vec(), size, work);
+        if !work.spend(0) {
+            return Err(EigenFailure::Numerical);
+        }
         return Ok(normalize_vector_columns(vectors, size));
     }
 
-    let eigenvalues = unscaled_eigenvalues(values, size, symmetric)?;
+    let eigenvalues = unscaled_eigenvalues(values, size, symmetric, work)?;
     let mut result = vec![0.0; size * size];
     let mut previous = Vec::new();
     for (column, eigenvalue) in eigenvalues.iter().copied().enumerate() {
+        if !work.spend((size as u64).saturating_pow(3).saturating_mul(3)) {
+            return Err(EigenFailure::Numerical);
+        }
         let matching_previous = previous
             .iter()
             .filter_map(|(value, vector): &(f64, Vec<f64>)| {
@@ -150,7 +198,15 @@ fn unscaled_eigenvectors(
     Ok(result)
 }
 
-pub(super) fn pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec<f64> {
+pub(super) fn pseudo_inverse_with_work(
+    values: &[f64],
+    rows: usize,
+    columns: usize,
+    work: &mut MatrixWorkBudget,
+) -> Vec<f64> {
+    if !work.spend((rows as u64).saturating_mul(columns as u64)) {
+        return Vec::new();
+    }
     if rows == 0 || columns == 0 {
         return Vec::new();
     }
@@ -167,17 +223,37 @@ pub(super) fn pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec
     // whose biased exponent is zero and whose scale would underflow via powi.
     let scale = scale::binary_scale(scale);
     let normalized: Vec<_> = values.iter().map(|value| value / scale).collect();
-    let mut result = normalized_pseudo_inverse(&normalized, rows, columns);
+    let mut result = normalized_pseudo_inverse(&normalized, rows, columns, work);
     for value in &mut result {
         *value /= scale;
     }
     result
 }
 
-fn normalized_pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec<f64> {
+fn normalized_pseudo_inverse(
+    values: &[f64],
+    rows: usize,
+    columns: usize,
+    work: &mut MatrixWorkBudget,
+) -> Vec<f64> {
+    if !work.spend(
+        (rows as u64)
+            .saturating_mul(columns as u64)
+            .saturating_mul(rows.min(columns) as u64),
+    ) {
+        return Vec::new();
+    }
     if columns <= rows {
         let gram = right_gram(values, rows, columns);
-        let (eigenvalues, eigenvectors) = jacobi_eigen_decomposition(gram, columns);
+        let (eigenvalues, eigenvectors) = jacobi_eigen_decomposition(gram, columns, work);
+        if !work.spend(
+            (rows as u64)
+                .saturating_mul(columns as u64)
+                .saturating_mul(columns as u64)
+                .saturating_mul(2),
+        ) {
+            return Vec::new();
+        }
         let cutoff = eigen_cutoff(&eigenvalues);
         let mut result = vec![0.0; columns * rows];
         let mut projected_rows = vec![0.0; rows];
@@ -205,7 +281,15 @@ fn normalized_pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec
         result
     } else {
         let gram = left_gram(values, rows, columns);
-        let (eigenvalues, eigenvectors) = jacobi_eigen_decomposition(gram, rows);
+        let (eigenvalues, eigenvectors) = jacobi_eigen_decomposition(gram, rows, work);
+        if !work.spend(
+            (rows as u64)
+                .saturating_mul(columns as u64)
+                .saturating_mul(rows as u64)
+                .saturating_mul(2),
+        ) {
+            return Vec::new();
+        }
         let cutoff = eigen_cutoff(&eigenvalues);
         let mut result = vec![0.0; columns * rows];
         let mut projected_columns = vec![0.0; columns];
@@ -330,8 +414,8 @@ fn exact_triangular_eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>>
     Some(result)
 }
 
-fn symmetric_eigenvalues(values: &[f64], size: usize) -> Vec<f64> {
-    let (eigenvalues, _) = jacobi_eigen_decomposition(values.to_vec(), size);
+fn symmetric_eigenvalues(values: &[f64], size: usize, work: &mut MatrixWorkBudget) -> Vec<f64> {
+    let (eigenvalues, _) = jacobi_eigen_decomposition(values.to_vec(), size, work);
     eigenvalues
 }
 
@@ -386,10 +470,18 @@ fn recovered_two_by_two_eigenvalues(values: &[f64]) -> Result<Vec<f64>, EigenFai
     Ok(vec![(trace + root) / 2.0, (trace - root) / 2.0])
 }
 
-fn qr_eigenvalues(values: &[f64], size: usize, recovery: bool) -> Result<Vec<f64>, EigenFailure> {
+fn qr_eigenvalues_with_work(
+    values: &[f64],
+    size: usize,
+    recovery: bool,
+    work: &mut MatrixWorkBudget,
+) -> Result<Vec<f64>, EigenFailure> {
     let mut matrix = values.to_vec();
     for _ in 0..(size * size * 128).max(1) {
-        let (q, r) = qr_decompose(&matrix, size).ok_or(EigenFailure::Numerical)?;
+        if !work.spend((size as u64).saturating_pow(3).saturating_mul(4)) {
+            return Err(EigenFailure::Numerical);
+        }
+        let (q, r) = qr_decompose_with_work(&matrix, size, work).ok_or(EigenFailure::Numerical)?;
         let next = multiply_square(&r, &q, size);
         // Keep the original convergence check first. A finite bit-identical
         // state will repeat every remaining deterministic QR step; it still
@@ -580,7 +672,11 @@ fn vectors_are_collinear(left: &[f64], right: &[f64]) -> bool {
         >= 1.0 - EIGEN_VECTOR_TOLERANCE
 }
 
-fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
+fn qr_decompose_with_work(
+    values: &[f64],
+    size: usize,
+    work: &mut MatrixWorkBudget,
+) -> Option<(Vec<f64>, Vec<f64>)> {
     let mut q = vec![0.0; size * size];
     let mut r = vec![0.0; size * size];
 
@@ -607,7 +703,7 @@ fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
             // Its numerically dependent residual is discarded at the existing
             // tolerance; only the fallback basis vector needs normalization.
             diagonal = 0.0;
-            vector = orthogonal_fallback(&q, size, column)?;
+            vector = orthogonal_fallback(&q, size, column, work)?;
             norm = vector_norm(&vector);
         }
         if !norm.is_finite() || norm <= EIGEN_TOLERANCE {
@@ -623,8 +719,21 @@ fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
     Some((q, r))
 }
 
-fn orthogonal_fallback(q: &[f64], size: usize, column: usize) -> Option<Vec<f64>> {
+fn orthogonal_fallback(
+    q: &[f64],
+    size: usize,
+    column: usize,
+    work: &mut MatrixWorkBudget,
+) -> Option<Vec<f64>> {
     for candidate in 0..size {
+        // The ordinary QR phase is cubic. Completing dependent columns can
+        // scan every basis candidate for every column, making this path
+        // quartic; charge each candidate before its projection and norm loops.
+        let candidate_work =
+            (size as u64).saturating_mul((column as u64).saturating_mul(2).saturating_add(1));
+        if !work.spend(candidate_work) {
+            return None;
+        }
         let mut vector = vec![0.0; size];
         vector[candidate] = 1.0;
         for previous in 0..column {
@@ -674,13 +783,24 @@ fn lower_off_diagonal_norm(values: &[f64], size: usize) -> f64 {
     total
 }
 
-fn jacobi_eigen_decomposition(mut matrix: Vec<f64>, size: usize) -> (Vec<f64>, Vec<f64>) {
+fn jacobi_eigen_decomposition(
+    mut matrix: Vec<f64>,
+    size: usize,
+    work: &mut MatrixWorkBudget,
+) -> (Vec<f64>, Vec<f64>) {
     let mut eigenvectors = vec![0.0; size * size];
     for index in 0..size {
         eigenvectors[index * size + index] = 1.0;
     }
 
     for _ in 0..(size * size * 16).max(1) {
+        if !work.spend(
+            (size as u64)
+                .saturating_pow(2)
+                .saturating_add((size as u64).saturating_mul(4)),
+        ) {
+            break;
+        }
         let Some((pivot, partner, off_diagonal)) = largest_off_diagonal(&matrix, size) else {
             break;
         };
@@ -758,4 +878,27 @@ fn rotate(matrix: &mut [f64], eigenvectors: &mut [f64], size: usize, pivot: usiz
         eigenvectors[row * size + pivot] = cosine * pivot_vector - sine * partner_vector;
         eigenvectors[row * size + partner] = sine * pivot_vector + cosine * partner_vector;
     }
+}
+
+#[cfg(test)]
+pub(super) fn eigenvalues(values: &[f64], size: usize) -> Option<Vec<f64>> {
+    eigenvalues_with_work(values, size, &mut MatrixWorkBudget::new(None))
+}
+#[cfg(test)]
+pub(super) fn eigenvectors(values: &[f64], size: usize) -> Option<Vec<f64>> {
+    eigenvectors_with_work(values, size, &mut MatrixWorkBudget::new(None))
+}
+#[cfg(test)]
+pub(super) fn pseudo_inverse(values: &[f64], rows: usize, columns: usize) -> Vec<f64> {
+    pseudo_inverse_with_work(values, rows, columns, &mut MatrixWorkBudget::new(None))
+}
+
+#[cfg(test)]
+fn qr_eigenvalues(values: &[f64], size: usize, recovery: bool) -> Result<Vec<f64>, EigenFailure> {
+    qr_eigenvalues_with_work(values, size, recovery, &mut MatrixWorkBudget::new(None))
+}
+
+#[cfg(test)]
+fn qr_decompose(values: &[f64], size: usize) -> Option<(Vec<f64>, Vec<f64>)> {
+    qr_decompose_with_work(values, size, &mut MatrixWorkBudget::new(None))
 }

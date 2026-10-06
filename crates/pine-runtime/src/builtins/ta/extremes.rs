@@ -15,7 +15,7 @@ impl HistoricalRuntime<'_> {
     ) -> Result<PineValue, RuntimeError> {
         let (source, series_id, length) = self.eval_extreme_source_length(args, mode)?;
         if length <= 0 {
-            self.extreme_windows.remove(&call_site_id);
+            self.ta_state.extreme_windows.remove(&call_site_id);
             return Ok(PineValue::Na);
         }
 
@@ -23,7 +23,7 @@ impl HistoricalRuntime<'_> {
             return Ok(PineValue::Na);
         };
         if length < CACHED_EXTREME_MIN_LENGTH {
-            self.extreme_windows.remove(&call_site_id);
+            self.ta_state.extreme_windows.remove(&call_site_id);
         } else if let Some(series_id) = series_id {
             if self.bars + 1 >= length {
                 let best = self.cached_window_extreme(
@@ -40,7 +40,7 @@ impl HistoricalRuntime<'_> {
                 }
             }
         } else {
-            self.extreme_windows.remove(&call_site_id);
+            self.ta_state.extreme_windows.remove(&call_site_id);
         }
         self.window_extreme_value(source, series_id, length, mode)
             .map_or(Ok(PineValue::Na), |value| Ok(finite_float_or_na(value)))
@@ -54,7 +54,7 @@ impl HistoricalRuntime<'_> {
     ) -> Result<PineValue, RuntimeError> {
         let (source, series_id, length) = self.eval_extreme_source_length(args, mode)?;
         if length <= 0 {
-            self.extreme_windows.remove(&call_site_id);
+            self.ta_state.extreme_windows.remove(&call_site_id);
             return Ok(PineValue::Na);
         }
 
@@ -62,7 +62,7 @@ impl HistoricalRuntime<'_> {
             return Ok(PineValue::Na);
         };
         if length < CACHED_EXTREME_MIN_LENGTH {
-            self.extreme_windows.remove(&call_site_id);
+            self.ta_state.extreme_windows.remove(&call_site_id);
         } else if let Some(series_id) = series_id {
             let Some(source) = finite_f64(source) else {
                 return Ok(PineValue::Na);
@@ -73,7 +73,7 @@ impl HistoricalRuntime<'_> {
                     PineValue::Int(-(offset as i64))
                 }));
         } else {
-            self.extreme_windows.remove(&call_site_id);
+            self.ta_state.extreme_windows.remove(&call_site_id);
         }
         Ok(self
             .window_extreme_offset(source, series_id, length, mode)
@@ -88,9 +88,15 @@ impl HistoricalRuntime<'_> {
         length: usize,
         mode: WindowExtreme,
     ) -> Option<(f64, usize)> {
-        let window = self.extreme_windows.entry(call_site_id).or_insert_with(|| {
-            crate::algorithms::rolling_extreme::RollingExtremeState::new(series_id, length, mode)
-        });
+        let window = self
+            .ta_state
+            .extreme_windows
+            .entry(call_site_id)
+            .or_insert_with(|| {
+                crate::algorithms::rolling_extreme::RollingExtremeState::new(
+                    series_id, length, mode,
+                )
+            });
         let missing = window.prepare(
             series_id,
             length,

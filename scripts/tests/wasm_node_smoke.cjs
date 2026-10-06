@@ -55,7 +55,7 @@ assert.equal(requirements.schemaVersion, 2);
   const report=JSON.parse(mergeProgram.hostRequirements());
   assert.equal(report.requests[0].gaps,'gapsOn');
   assert.equal(report.requests[0].lookahead,'lookaheadOn');
-  assert.equal(report.requests[0].timeframeRelation,'sameOrHigherIntegerMultipleExceptCalendarMonths');
+  assert.equal(report.requests[0].timeframeRelation,'sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths');
   mergeProgram.free();
 }
 assert.equal(requirements.chart.bars, 'hostSuppliedStandardOhlcv');

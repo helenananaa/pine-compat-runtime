@@ -202,9 +202,40 @@ pub(crate) fn calendar_timeframe_close(
     timeframe: &str,
     seconds: i64,
 ) -> Option<i64> {
-    calendar_timeframe_multiplier(timeframe, 'M')?;
+    calendar_timeframe_multiplier(timeframe, 'M')
+        .or_else(|| calendar_timeframe_multiplier(timeframe, 'W'))?;
     let bucket = timeframe_change_bucket(timestamp_ms, timeframe, seconds)?;
     timeframe_bucket_bounds(bucket, timeframe, seconds).map(|(_, close)| close)
+}
+
+pub(crate) fn chart_timeframe_close(
+    timestamp_ms: i64,
+    timeframe: &str,
+    seconds: i64,
+) -> Option<i64> {
+    if timeframe.ends_with(['M', 'W']) {
+        calendar_timeframe_close(timestamp_ms, timeframe, seconds)
+    } else {
+        timestamp_ms.checked_add(seconds.checked_mul(1000)?)
+    }
+}
+
+fn chart_timeframe_offset(
+    timestamp_ms: i64,
+    timeframe: &str,
+    seconds: i64,
+    bars_back: i64,
+) -> Option<i64> {
+    if bars_back == 0 {
+        return Some(timestamp_ms);
+    }
+    if timeframe.ends_with(['M', 'W']) {
+        let bucket =
+            timeframe_change_bucket(timestamp_ms, timeframe, seconds)?.checked_sub(bars_back)?;
+        timeframe_bucket_bounds(bucket, timeframe, seconds).map(|(open, _)| open)
+    } else {
+        timestamp_ms.checked_sub(bars_back.checked_mul(seconds.checked_mul(1000)?)?)
+    }
 }
 
 fn calendar_month_start(month: i64) -> Option<i64> {
@@ -526,8 +557,10 @@ impl<'a> HistoricalRuntime<'a> {
                 })?,
             ),
         };
+        let chart_timeframe = self.request_environment.chart().timeframe();
+        let chart_seconds = chart_timeframe.seconds();
         let timeframe = if args.timeframe.is_empty() {
-            DEFAULT_CHART_TIMEFRAME
+            chart_timeframe.value()
         } else {
             args.timeframe.trim()
         };
@@ -536,18 +569,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
         };
-        let Some(chart_seconds) = timeframe_seconds(DEFAULT_CHART_TIMEFRAME) else {
-            return Err(RuntimeError {
-                message: format!("unsupported default chart timeframe `{DEFAULT_CHART_TIMEFRAME}`"),
-            });
-        };
         if seconds < chart_seconds {
             return Err(RuntimeError {
                 message: format!("{name} unsupported lower timeframe `{timeframe}`"),
             });
         }
         if session.is_none()
-            && seconds == chart_seconds
+            && timeframe == chart_timeframe.value()
             && args.bars_back == 0
             && args.timeframe_bars_back == 0
         {
@@ -560,21 +588,34 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(current_time) = self.current_builtin_i64("time") else {
             return Ok(PineValue::Na);
         };
-        let Some(chart_duration_ms) = chart_seconds.checked_mul(1000) else {
-            return Err(RuntimeError {
-                message: format!("{name} unsupported timeframe `{timeframe}`"),
-            });
-        };
-        let Some(offset_ms) = args.bars_back.checked_mul(chart_duration_ms) else {
-            return Err(RuntimeError {
-                message: format!("{name} bars_back timestamp is out of range"),
-            });
-        };
-        let Some(base_time) = current_time.checked_sub(offset_ms) else {
+        let Some(base_time) = chart_timeframe_offset(
+            current_time,
+            chart_timeframe.value(),
+            chart_seconds,
+            args.bars_back,
+        ) else {
             return Err(RuntimeError {
                 message: format!("{name} bars_back timestamp is out of range"),
             });
         };
+        if session.is_none()
+            && timeframe == chart_timeframe.value()
+            && args.timeframe_bars_back == 0
+        {
+            // A chart-period offset preserves the supplied fixed-period open.
+            // Calendar chart offsets already use their calendar bucket opens.
+            // Other timeframe/session queries continue through bucket alignment.
+            let timestamp = if close_time {
+                chart_timeframe_close(base_time, timeframe, seconds).ok_or_else(|| {
+                    RuntimeError {
+                        message: format!("{name} bars_back timestamp is out of range"),
+                    }
+                })?
+            } else {
+                base_time
+            };
+            return Ok(PineValue::Int(timestamp));
+        }
         let Some(bucket) = timeframe_change_bucket(base_time, timeframe, seconds) else {
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
@@ -858,7 +899,7 @@ impl<'a> HistoricalRuntime<'a> {
             _ => return Ok(PineValue::Na),
         };
         let timeframe = if timeframe.is_empty() {
-            DEFAULT_CHART_TIMEFRAME
+            self.request_environment.chart().timeframe().value()
         } else {
             timeframe.trim()
         };

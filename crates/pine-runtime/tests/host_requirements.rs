@@ -13,7 +13,7 @@ fn modern_merge_options_and_calendar_relation_are_reported_without_execution() {
     assert_eq!(report.requests[0].lookahead, "lookaheadOn");
     assert_eq!(
         report.requests[0].timeframe_relation,
-        "sameOrHigherIntegerMultipleExceptCalendarMonths"
+        "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
     );
     assert_eq!(report.requests[1].gaps, "gapsOff");
     assert_eq!(report.requests[1].lookahead, "lookaheadOff");
@@ -184,6 +184,82 @@ fn lower_timeframe_request_is_reported_as_host_data_obligation() {
     assert_eq!(request.timeframe_relation, "sameOrLower");
     assert_eq!(request.gaps, "notApplicable");
     assert_eq!(request.lookahead, "notApplicable");
+}
+
+#[test]
+fn security_timeframe_inventory_matches_executable_modern_and_legacy_relations() {
+    use std::sync::Arc;
+
+    use pine_runtime::{
+        Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, RequestEnvironment,
+        RequestKey, RequestTimeframe,
+    };
+
+    for version in [4, 5, 6] {
+        let declaration = if version == 4 { "study" } else { "indicator" };
+        let function = if version == 4 {
+            "security"
+        } else {
+            "request.security"
+        };
+        // A three-minute request is lower than a five-minute chart without
+        // being an integer divisor. Six minutes is a forbidden higher ratio;
+        // calendar months retain their explicit boundary-based exception.
+        for (timeframe, accepted) in [
+            ("3", true),
+            ("5", true),
+            ("10", true),
+            ("6", false),
+            ("M", true),
+        ] {
+            let hir = program(&format!(
+                "//@version={version}\n{declaration}(\"relation\")\nplot({function}(\"REMOTE\", \"{timeframe}\", close))\n"
+            ));
+            let report = host_requirements(&hir);
+            assert_eq!(
+                report.requests[0].timeframe_relation,
+                "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
+            );
+            let mut provider = InMemoryRequestDataProvider::new();
+            provider
+                .insert(
+                    RequestKey::new("REMOTE", RequestTimeframe::parse(timeframe).unwrap()),
+                    vec![Bar {
+                        time: 0,
+                        open: 1.0,
+                        high: 1.0,
+                        low: 1.0,
+                        close: 1.0,
+                        volume: 1.0,
+                    }],
+                )
+                .unwrap();
+            let env = RequestEnvironment::new(
+                ChartContext::new("CHART", RequestTimeframe::parse("5").unwrap()),
+                Arc::new(provider),
+            );
+            let mut runtime = HistoricalRuntime::with_request_environment(&hir, env);
+            let outcome = runtime.append_bars(&[Bar {
+                time: 0,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            }]);
+            assert_eq!(
+                outcome.is_ok(),
+                accepted,
+                "v{version} {timeframe}: {outcome:?}"
+            );
+            if timeframe == "3" {
+                outcome.unwrap();
+                assert_eq!(runtime.result().plots[0].values[0].as_f64(), Some(1.0));
+            } else if !accepted {
+                assert!(outcome.unwrap_err().message.contains("integer multiple"));
+            }
+        }
+    }
 }
 
 #[test]

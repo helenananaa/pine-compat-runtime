@@ -131,7 +131,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         let momentum = source - previous_source;
-        let previous = tsi_state(self.call_state.get(&call_site_id));
+        let previous = tsi_state(self.ta_state.call_state.get(&call_site_id));
         let short_momentum = ema_next(previous.map(|state| state.0), momentum, short_length);
         let long_momentum = ema_next(previous.map(|state| state.1), short_momentum, long_length);
         let short_abs_momentum =
@@ -142,7 +142,7 @@ impl<'a> HistoricalRuntime<'a> {
             long_length,
         );
 
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(short_momentum),
@@ -197,9 +197,11 @@ impl<'a> HistoricalRuntime<'a> {
         self.update_cmo_windows(call_site_id, positive_change, negative_change, length);
 
         let positive_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CmoPositive(call_site_id));
         let negative_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CmoNegative(call_site_id));
         let (Some(positive_window), Some(negative_window)) = (positive_window, negative_window)

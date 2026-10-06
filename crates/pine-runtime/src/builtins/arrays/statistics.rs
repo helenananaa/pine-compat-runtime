@@ -316,6 +316,12 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
+        let Some(len) = self.array_len(id)? else {
+            return Ok(PineValue::Na);
+        };
+        if !self.record_collection_allocation(len) {
+            return Err(self.resource_budget.collection_error());
+        }
         let Some(values) = self.array_values(id)? else {
             return Ok(PineValue::Na);
         };
@@ -338,7 +344,7 @@ impl<'a> HistoricalRuntime<'a> {
             })
             .collect();
 
-        Ok(self.new_array_from_values(kind, values))
+        Ok(self.insert_precharged_array_values(kind, values))
     }
 
     pub(crate) fn eval_array_percentile(
@@ -453,6 +459,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
+        let output_len = values.len();
         let numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
         let count = numeric_values.len();
         if count == 0 {
@@ -470,6 +477,12 @@ impl<'a> HistoricalRuntime<'a> {
             / count as f64;
         let stdev = variance.sqrt();
 
+        if !self.record_collection_allocation(output_len) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let values = self
+            .array_values(id)?
+            .expect("validated standardization input");
         let values = values
             .iter()
             .map(|value| {
@@ -484,7 +497,7 @@ impl<'a> HistoricalRuntime<'a> {
             })
             .collect();
 
-        Ok(self.new_array_from_values(ArrayElementKind::Float, values))
+        Ok(self.insert_precharged_array_values(ArrayElementKind::Float, values))
     }
 
     pub(crate) fn eval_array_covariance(

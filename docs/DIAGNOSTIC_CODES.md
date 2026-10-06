@@ -319,6 +319,12 @@ revision. They do not change the existing runtime output schema.
 - `E_EXECUTION_BUDGET`: a chart-bar execution exhausted its configured evaluation
   steps or aggregate loop iterations. Requested evaluation and strategy fill
   recalculation share this allowance; see EXECUTION_LIMITS.md.
+- `E_RESOURCE_BUDGET`: a chart-bar execution exhausted its configured logical
+  collection allocation/copy allowance or numerical matrix work allowance.
+  Realtime preparation, requested evaluation and strategy fill recalculation
+  share the allowance. Realtime failure preserves the published state, delta
+  and revision; historical execution failure poisons that instance. See
+  EXECUTION_SEMANTICS.md for ResourceLimits and its payload/RSS boundary.
 - `E_VALUEWHEN_BUDGET`: retained or actively evaluated `ta.valuewhen` events
   exceed the optional logical event limit, or their aggregate count overflows.
   A rejected configuration keeps its prior limits and state; a rejected realtime

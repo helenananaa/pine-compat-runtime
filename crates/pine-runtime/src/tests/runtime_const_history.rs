@@ -395,11 +395,11 @@ plot(close)
     );
     let hir = analysis.hir.expect("HIR");
     let bars = vec![
-        bar_ohlc(1.0, 2.0, 1.0, 2.0),
-        bar_ohlc(3.0, 3.0, 2.0, 2.0),
-        bar_ohlc(2.0, 4.0, 2.0, 4.0),
-        bar_ohlc(5.0, 5.0, 3.0, 3.0),
-        bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        at_time(0, bar_ohlc(1.0, 2.0, 1.0, 2.0)),
+        at_time(60_000, bar_ohlc(3.0, 3.0, 2.0, 2.0)),
+        at_time(120_000, bar_ohlc(2.0, 4.0, 2.0, 4.0)),
+        at_time(180_000, bar_ohlc(5.0, 5.0, 3.0, 3.0)),
+        at_time(240_000, bar_ohlc(4.0, 6.0, 4.0, 6.0)),
     ];
 
     let profiled = run_historical_profiled(&hir, &bars).expect("historical result");
@@ -466,7 +466,10 @@ plot(close)
         assert!(result.diagnostics.is_empty(), "{result:?}");
     }
     let first_forming = realtime
-        .update(BarUpdate::forming(bar_ohlc(10.0, 12.0, 9.0, 11.0)))
+        .update(BarUpdate::forming(at_time(
+            180_000,
+            bar_ohlc(10.0, 12.0, 9.0, 11.0),
+        )))
         .expect("first forming update");
     assert!(first_forming.diagnostics.is_empty(), "{first_forming:?}");
     assert_eq!(
@@ -479,7 +482,10 @@ plot(close)
     );
 
     let replacement_forming = realtime
-        .update(BarUpdate::forming(bar_ohlc(20.0, 22.0, 19.0, 21.0)))
+        .update(BarUpdate::forming(at_time(
+            180_000,
+            bar_ohlc(20.0, 22.0, 19.0, 21.0),
+        )))
         .expect("replacement forming update");
     assert!(
         replacement_forming.diagnostics.is_empty(),
@@ -511,4 +517,9 @@ plot(close)
         .update(BarUpdate::confirmed(bars[4]))
         .expect("final confirmed update");
     assert_eq!(realtime_result, historical);
+}
+
+fn at_time(time: i64, mut bar: Bar) -> Bar {
+    bar.time = time;
+    bar
 }

@@ -13,7 +13,7 @@ pub(crate) enum RequestedValue {
 
 impl HistoricalRuntime<'_> {
     pub(crate) fn freeze_requested_value(
-        &self,
+        &mut self,
         value: &PineValue,
     ) -> Result<RequestedValue, RuntimeError> {
         match value {
@@ -34,6 +34,17 @@ impl HistoricalRuntime<'_> {
                         | ArrayElementKind::Color
                 ) {
                     return Err(RuntimeError{message:"requested arrays of reference elements require unsupported graph transfer".to_owned()});
+                }
+                let Some(source) = self.array_values(*id)? else {
+                    return Err(RuntimeError {
+                        message: "requested array storage is missing".to_owned(),
+                    });
+                };
+                let copied = crate::runtime::collection_gc::collection_values_allocation_bytes(
+                    source.iter(),
+                );
+                if !self.record_collection_bytes(copied) {
+                    return Err(self.resource_budget.collection_error());
                 }
                 let values = self.array_values_clone(*id)?.ok_or_else(|| RuntimeError {
                     message: "requested array storage is missing".to_owned(),
@@ -79,7 +90,7 @@ impl HistoricalRuntime<'_> {
         match value {
             RequestedValue::Scalar(value) => value.clone(),
             RequestedValue::Array { kind, values } => {
-                self.new_array_from_values(*kind, values.clone())
+                self.new_array_from_borrowed_values(*kind, values)
             }
             RequestedValue::Tuple(values) => PineValue::Tuple(
                 values
@@ -94,6 +105,45 @@ impl HistoricalRuntime<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn requested_array_slice_freezes_only_its_visible_contents() {
+        let analysis = pine_sema::analyze_source(&pine_syntax::SourceFile::new(
+            "slice.pine",
+            "//@version=6\nindicator(\"slice\")\nplot(close)\n",
+        ));
+        let program = analysis.hir.unwrap();
+        let mut runtime = HistoricalRuntime::new(&program);
+        let PineValue::Array(parent) = runtime.new_array_from_values(
+            ArrayElementKind::Float,
+            vec![
+                PineValue::Float(1.),
+                PineValue::Float(2.),
+                PineValue::Float(3.),
+            ],
+        ) else {
+            panic!("array")
+        };
+        let id = runtime.next_array_id;
+        runtime.next_array_id += 1;
+        runtime.array_kinds.insert(id, ArrayElementKind::Float);
+        runtime.array_slices.insert(
+            id,
+            crate::builtins::arrays::ArraySlice {
+                parent_id: parent,
+                start: 1,
+                len: 2,
+            },
+        );
+        let slice = PineValue::Array(id);
+        assert_eq!(
+            runtime.freeze_requested_value(&slice).unwrap(),
+            RequestedValue::Array {
+                kind: ArrayElementKind::Float,
+                values: vec![PineValue::Float(2.), PineValue::Float(3.)],
+            }
+        );
+    }
+
     #[test]
     fn request_array_samples_and_return_slots_are_independent() {
         let analysis = pine_sema::analyze_source(&pine_syntax::SourceFile::new(

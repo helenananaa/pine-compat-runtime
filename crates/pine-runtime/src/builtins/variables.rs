@@ -589,12 +589,13 @@ impl<'a> HistoricalRuntime<'a> {
         let value = self.eval_expr(&args[0].value)?;
         if value.is_na() {
             Ok(self
+                .ta_state
                 .call_state
                 .get(&call_site_id)
                 .cloned()
                 .unwrap_or(PineValue::Na))
         } else {
-            self.call_state.insert(call_site_id, value.clone());
+            self.ta_state.call_state.insert(call_site_id, value.clone());
             Ok(value)
         }
     }

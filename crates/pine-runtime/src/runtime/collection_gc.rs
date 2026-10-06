@@ -37,24 +37,32 @@ impl HistoricalRuntime<'_> {
     // Allocation pressure is conservative, not a retained-heap measurement.
     // Collection is deferred until the script-bar boundary so local handles
     // cannot disappear halfway through evaluating their enclosing expression.
-    pub(crate) fn record_collection_allocation(&mut self, elements: usize) {
-        self.record_collection_bytes(elements.saturating_mul(std::mem::size_of::<PineValue>()));
+    pub(crate) fn record_collection_allocation(&mut self, elements: usize) -> bool {
+        self.record_collection_bytes(elements.saturating_mul(std::mem::size_of::<PineValue>()))
     }
 
-    pub(crate) fn record_collection_bytes(&mut self, bytes: usize) {
+    pub(crate) fn record_collection_bytes(&mut self, bytes: usize) -> bool {
+        if !self.resource_budget.reserve_collection(bytes) {
+            return false;
+        }
         self.collection_gc_allocated_bytes =
             self.collection_gc_allocated_bytes.saturating_add(bytes);
+        true
     }
 
     pub(crate) fn record_collection_values<'v>(
         &mut self,
         values: impl IntoIterator<Item = &'v PineValue>,
-    ) {
-        self.record_collection_bytes(collection_values_allocation_bytes(values));
+    ) -> bool {
+        self.record_collection_bytes(collection_values_allocation_bytes(values))
     }
 
-    pub(crate) fn record_collection_repeated_value(&mut self, value: &PineValue, count: usize) {
-        self.record_collection_bytes(value_allocation_bytes(value).saturating_mul(count));
+    pub(crate) fn record_collection_repeated_value(
+        &mut self,
+        value: &PineValue,
+        count: usize,
+    ) -> bool {
+        self.record_collection_bytes(value_allocation_bytes(value).saturating_mul(count))
     }
 
     pub(crate) fn collect_temporary_collections(&mut self) {
@@ -74,17 +82,17 @@ impl HistoricalRuntime<'_> {
             .values()
             .chain(self.current_series.values())
             .chain(self.var_store.values())
-            .chain(self.call_state.values())
+            .chain(self.ta_state.call_state.values())
             .chain(self.input_overrides.values())
             .filter(can_reference_collection)
             .collect();
         for values in self.series_store.collection_root_buffers() {
             pending.extend(values.iter().filter(can_reference_collection));
         }
-        for values in self.valuewhen_state.values() {
+        for values in self.ta_state.valuewhen_state.values() {
             pending.extend(values.iter().filter(can_reference_collection));
         }
-        for cross in self.cross_state.values() {
+        for cross in self.ta_state.cross_state.values() {
             pending.extend([
                 &cross.current_left,
                 &cross.current_right,
@@ -261,7 +269,7 @@ mod tests {
             .commit(SeriesId(0), history.clone(), None);
         let nested =
             runtime.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(5.)]);
-        runtime.call_state.insert(
+        runtime.ta_state.call_state.insert(
             CallSiteId(0),
             PineValue::Tuple(vec![PineValue::UserType(vec![nested.clone()])]),
         );
@@ -299,6 +307,7 @@ mod tests {
             };
             ids.push(id);
             runtime
+                .ta_state
                 .valuewhen_state
                 .entry(CallSiteId(0))
                 .or_default()
@@ -315,6 +324,7 @@ mod tests {
             };
             ids.push(id);
             runtime
+                .ta_state
                 .valuewhen_state
                 .entry(CallSiteId(0))
                 .or_default()
@@ -390,6 +400,7 @@ mod tests {
             .array_kinds
             .insert(slice_id, ArrayElementKind::Float);
         runtime
+            .ta_state
             .call_state
             .insert(CallSiteId(0), PineValue::Array(slice_id));
         runtime
@@ -416,7 +427,7 @@ mod tests {
                 .into(),
             },
         );
-        runtime.call_state.insert(
+        runtime.ta_state.call_state.insert(
             CallSiteId(1),
             PineValue::Tuple(vec![
                 PineValue::UserTypeRef(0),
@@ -523,7 +534,10 @@ mod tests {
             ArrayElementKind::String,
             vec![PineValue::String("kept".into())],
         );
-        runtime.call_state.insert(CallSiteId(0), root.clone());
+        runtime
+            .ta_state
+            .call_state
+            .insert(CallSiteId(0), root.clone());
         for _ in 0..4 {
             runtime.new_array_from_values(
                 ArrayElementKind::String,
@@ -577,7 +591,10 @@ mod tests {
                 identity,
             )
             .unwrap();
-        runtime.call_state.insert(CallSiteId(0), root.clone());
+        runtime
+            .ta_state
+            .call_state
+            .insert(CallSiteId(0), root.clone());
         for _ in 0..4 {
             for _ in 0..64 {
                 let PineValue::UserTypeRef(id) = runtime
@@ -732,12 +749,12 @@ mod tests {
             .allocate_object(vec![first.clone()], identity)
             .unwrap();
         runtime.set_object_field(0, 0, second).unwrap();
-        runtime.call_state.insert(CallSiteId(0), first);
+        runtime.ta_state.call_state.insert(CallSiteId(0), first);
         let checkpoint = runtime.clone();
         runtime.collection_gc_next_id = 0;
         runtime.collect_temporary_collections();
         assert_eq!(runtime.object_store.len(), 2);
-        runtime.call_state.clear();
+        runtime.ta_state.call_state.clear();
         runtime.collection_gc_next_id = 0;
         runtime.collect_temporary_collections();
         assert_eq!(runtime.object_store.len(), 0);
@@ -764,7 +781,7 @@ mod tests {
         let owned =
             child.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(2.)]);
         assert_eq!(unused, owned); // Equal integers belong to different stores.
-        child.call_state.insert(CallSiteId(0), owned);
+        child.ta_state.call_state.insert(CallSiteId(0), owned);
         let captured =
             parent.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(3.)]);
         let key = crate::request::RequestCacheKey::new(CallSiteId(0), "TEST", "1");

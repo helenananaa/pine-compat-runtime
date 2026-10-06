@@ -33,6 +33,7 @@ impl<'runtime, 'program> RuntimeCallContext<'runtime, 'program> {
     pub(crate) fn next_random_unit(&mut self, call_site_id: CallSiteId, initial_state: u64) -> f64 {
         let state = self
             .runtime
+            .ta_state
             .random_state
             .entry(call_site_id)
             .or_insert(initial_state);

@@ -49,8 +49,9 @@ impl<'a> HistoricalRuntime<'a> {
         environment: RequestEnvironment,
         include_forming: bool,
     ) -> Result<AppendHistory<(i64, RequestedValue)>, RuntimeError> {
-        let initializers = request_dependency_initializers(&self.program);
-        let tuple_dependencies = request_tuple_dependency_statements(&self.program);
+        let program = self.program.clone();
+        let initializers = request_dependency_initializers(&program);
+        let tuple_dependencies = request_tuple_dependency_statements(&program);
         let captures = request_capture_values(
             &self.program,
             expression,
@@ -125,9 +126,7 @@ impl<'a> HistoricalRuntime<'a> {
                 &initializers,
                 &tuple_dependencies,
             );
-            self.execution_steps_remaining = runtime.execution_steps_remaining;
-            self.loop_iterations_remaining = runtime.loop_iterations_remaining;
-            self.pending_loop_control = runtime.pending_loop_control;
+            self.accept_execution_budget(&runtime);
             let value = result?;
             if terminal {
                 last = Some((bar.time, value));

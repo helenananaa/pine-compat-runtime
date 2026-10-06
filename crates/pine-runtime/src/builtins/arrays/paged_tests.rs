@@ -227,10 +227,38 @@ plot(array.get(sticky, 129))
     let mut runtime = RealtimeRuntime::new(&program);
     for (update, ordinary, sticky) in [
         (BarUpdate::historical(bar(1.0)), 1.0, 1.0),
-        (BarUpdate::forming(bar(2.0)), 3.0, 3.0),
-        (BarUpdate::forming(bar(3.0)), 4.0, 6.0),
-        (BarUpdate::confirmed(bar(4.0)), 5.0, 10.0),
-        (BarUpdate::forming(bar(5.0)), 10.0, 15.0),
+        (
+            BarUpdate::forming(Bar {
+                time: 60_000,
+                ..bar(2.0)
+            }),
+            3.0,
+            3.0,
+        ),
+        (
+            BarUpdate::forming(Bar {
+                time: 60_000,
+                ..bar(3.0)
+            }),
+            4.0,
+            6.0,
+        ),
+        (
+            BarUpdate::confirmed(Bar {
+                time: 60_000,
+                ..bar(4.0)
+            }),
+            5.0,
+            10.0,
+        ),
+        (
+            BarUpdate::forming(Bar {
+                time: 120_000,
+                ..bar(5.0)
+            }),
+            10.0,
+            15.0,
+        ),
     ] {
         let result = runtime.update(update).unwrap();
         assert_eq!(
@@ -260,6 +288,7 @@ fn string_page_writes_collect_orphans_and_preserve_slice_and_checkpoint_values()
         panic!("slice");
     };
     runtime
+        .ta_state
         .call_state
         .insert(pine_ir::CallSiteId(0), PineValue::Array(slice));
     runtime.collect_temporary_collections();
@@ -314,6 +343,7 @@ fn replacing_short_lived_array_with_strings_triggers_payload_collection() {
         vec![PineValue::String("kept".into())],
     );
     runtime
+        .ta_state
         .call_state
         .insert(pine_ir::CallSiteId(0), kept.clone());
     for _ in 0..4 {
@@ -336,4 +366,250 @@ fn replacing_short_lived_array_with_strings_triggers_payload_collection() {
         Some(PineValue::String("kept".into()))
     );
     assert!(runtime.next_array_id < 1024);
+}
+
+fn collection_limit(bytes: usize) -> ResourceLimits {
+    ResourceLimits {
+        max_collection_bytes_per_bar: Some(bytes),
+        ..ResourceLimits::default()
+    }
+}
+
+fn array_arg(runtime: &mut HistoricalRuntime<'_>, symbol: u32, id: u32) -> HirCallArg {
+    let symbol = pine_ir::SymbolId(symbol);
+    runtime.current_symbols.insert(symbol, PineValue::Array(id));
+    HirCallArg {
+        name: None,
+        value: HirExpr {
+            kind: pine_ir::HirExprKind::Symbol(symbol),
+            pine_type: pine_ir::PineType::new(
+                pine_ir::Qualifier::Series,
+                pine_ir::ValueKind::IntArray,
+            ),
+            series_id: None,
+        },
+    }
+}
+
+fn literal_arg(value: pine_ir::HirLiteral, kind: pine_ir::ValueKind) -> HirCallArg {
+    HirCallArg {
+        name: None,
+        value: HirExpr {
+            kind: pine_ir::HirExprKind::Literal(value),
+            pine_type: pine_ir::PineType::new(pine_ir::Qualifier::Const, kind),
+            series_id: None,
+        },
+    }
+}
+
+#[test]
+fn copy_sort_and_reverse_accept_exact_payload_budget_without_double_charging() {
+    let hir = program("//@version=6\nindicator(\"array quota\")\nplot(close)\n");
+    let mut base = HistoricalRuntime::new(&hir);
+    let input = ["ccc", "a", "bb"]
+        .map(|value| PineValue::String(value.into()))
+        .to_vec();
+    let PineValue::Array(id) = base.new_array_from_values(ArrayElementKind::String, input.clone())
+    else {
+        panic!()
+    };
+    let bytes = 3 * std::mem::size_of::<PineValue>() + 6;
+    for operation in ["copy", "sort", "reverse"] {
+        for limit in [bytes - 1, bytes] {
+            let mut runtime = base.clone().with_resource_limits(collection_limit(limit));
+            runtime.collection_gc_allocated_bytes = 0;
+            let args = [array_arg(&mut runtime, 0, id)];
+            let result = match operation {
+                "copy" => runtime.eval_array_copy(&args),
+                "sort" => runtime.eval_array_sort(&args),
+                _ => runtime.eval_array_reverse(&args),
+            };
+            if limit < bytes {
+                assert!(result.unwrap_err().message.contains("E_RESOURCE_BUDGET"));
+                assert_eq!(runtime.array_values_clone(id).unwrap().unwrap(), input);
+                assert_eq!(runtime.next_array_id, base.next_array_id);
+                assert_eq!(runtime.collection_gc_allocated_bytes, 0);
+            } else {
+                let result = result.unwrap();
+                let (target, expected) = match (operation, result) {
+                    ("copy", PineValue::Array(target)) => (target, input.clone()),
+                    ("sort", _) => (
+                        id,
+                        ["a", "bb", "ccc"]
+                            .map(|value| PineValue::String(value.into()))
+                            .to_vec(),
+                    ),
+                    _ => (
+                        id,
+                        ["bb", "a", "ccc"]
+                            .map(|value| PineValue::String(value.into()))
+                            .to_vec(),
+                    ),
+                };
+                assert_eq!(
+                    runtime.array_values_clone(target).unwrap().unwrap(),
+                    expected
+                );
+                assert_eq!(runtime.collection_gc_allocated_bytes, bytes);
+                assert_eq!(base.array_values_clone(id).unwrap().unwrap(), input);
+            }
+        }
+    }
+}
+
+#[test]
+fn concat_budget_includes_source_snapshot_and_one_middle_parent_copy() {
+    let hir = program("//@version=6\nindicator(\"concat quota\")\nplot(close)\n");
+    let mut base = HistoricalRuntime::new(&hir);
+    let PineValue::Array(parent) = base.new_array_from_values(
+        ArrayElementKind::Int,
+        (0..257).map(PineValue::Int).collect(),
+    ) else {
+        panic!()
+    };
+    let PineValue::Array(target) = base.new_array_slice(parent, 0, 1) else {
+        panic!()
+    };
+    let PineValue::Array(source) = base.new_array_from_values(
+        ArrayElementKind::Int,
+        vec![PineValue::Int(700), PineValue::Int(701)],
+    ) else {
+        panic!()
+    };
+    let bytes = 259 * std::mem::size_of::<PineValue>();
+    for limit in [bytes - 1, bytes] {
+        let mut runtime = base.clone().with_resource_limits(collection_limit(limit));
+        runtime.collection_gc_allocated_bytes = 0;
+        let args = [
+            array_arg(&mut runtime, 0, target),
+            array_arg(&mut runtime, 1, source),
+        ];
+        let result = runtime.eval_array_concat(&args);
+        if limit < bytes {
+            assert!(result.unwrap_err().message.contains("E_RESOURCE_BUDGET"));
+            assert_eq!(runtime.array_len(parent).unwrap(), Some(257));
+            assert_eq!(runtime.array_len(target).unwrap(), Some(1));
+            assert_eq!(
+                runtime.array_get_cloned(parent, 1).unwrap(),
+                Some(PineValue::Int(1))
+            );
+        } else {
+            assert_eq!(result.unwrap(), PineValue::Array(target));
+            assert_eq!(runtime.array_len(parent).unwrap(), Some(259));
+            assert_eq!(runtime.array_len(target).unwrap(), Some(3));
+            assert_eq!(
+                runtime.array_get_cloned(parent, 1).unwrap(),
+                Some(PineValue::Int(700))
+            );
+            assert_eq!(
+                runtime.array_get_cloned(parent, 2).unwrap(),
+                Some(PineValue::Int(701))
+            );
+            assert_eq!(runtime.collection_gc_allocated_bytes, bytes);
+        }
+        assert_eq!(base.array_len(parent).unwrap(), Some(257));
+        assert_eq!(
+            runtime.array_values_clone(source).unwrap(),
+            base.array_values_clone(source).unwrap()
+        );
+    }
+}
+
+#[test]
+fn udt_sort_materialization_is_budgeted_before_key_trees_are_built() {
+    let hir = program("//@version=6\nindicator(\"UDT sort quota\")\nplot(close)\n");
+    let mut base = HistoricalRuntime::new(&hir);
+    base.object_store
+        .insert(0, vec![PineValue::Int(2), PineValue::String("two".into())]);
+    base.object_store
+        .insert(1, vec![PineValue::Int(1), PineValue::String("one".into())]);
+    let PineValue::Array(id) = base.new_array_from_values(
+        ArrayElementKind::UserType,
+        vec![PineValue::UserTypeRef(0), PineValue::UserTypeRef(1)],
+    ) else {
+        panic!()
+    };
+    let cell = std::mem::size_of::<PineValue>();
+    for indices in [false, true] {
+        let exact = if indices { 10 * cell + 6 } else { 8 * cell + 6 };
+        for limit in [2 * cell, exact] {
+            let mut runtime = base.clone().with_resource_limits(collection_limit(limit));
+            runtime.collection_gc_allocated_bytes = 0;
+            let args = [
+                array_arg(&mut runtime, 0, id),
+                literal_arg(
+                    pine_ir::HirLiteral::String("order.ascending".into()),
+                    pine_ir::ValueKind::String,
+                ),
+                literal_arg(pine_ir::HirLiteral::Int(0), pine_ir::ValueKind::Int),
+            ];
+            let result = if indices {
+                runtime.eval_array_sort_indices(&args)
+            } else {
+                runtime.eval_array_sort(&args)
+            };
+            if limit < exact {
+                assert!(result.unwrap_err().message.contains("E_RESOURCE_BUDGET"));
+                assert_eq!(
+                    runtime.array_values_clone(id).unwrap(),
+                    base.array_values_clone(id).unwrap()
+                );
+            } else {
+                let result = result.unwrap();
+                let (target, expected) = if indices {
+                    let PineValue::Array(target) = result else {
+                        panic!()
+                    };
+                    (target, vec![PineValue::Int(1), PineValue::Int(0)])
+                } else {
+                    (
+                        id,
+                        vec![PineValue::UserTypeRef(1), PineValue::UserTypeRef(0)],
+                    )
+                };
+                assert_eq!(
+                    runtime.array_values_clone(target).unwrap().unwrap(),
+                    expected
+                );
+                assert_eq!(runtime.collection_gc_allocated_bytes, exact);
+            }
+        }
+    }
+}
+
+#[test]
+fn borrowed_fill_checks_incoming_and_shared_page_bytes_before_writing() {
+    let hir = program("//@version=6\nindicator(\"fill quota\")\nplot(close)\n");
+    let mut base = HistoricalRuntime::new(&hir);
+    let PineValue::Array(id) = base.new_array_from_values(
+        ArrayElementKind::String,
+        vec![PineValue::String("old".into()); 257],
+    ) else {
+        panic!()
+    };
+    let replacement = PineValue::String("new".repeat(4096));
+    let bytes = 129 * std::mem::size_of::<PineValue>() + 128 * 3 + 4096 * 3;
+    for limit in [bytes - 1, bytes] {
+        let mut runtime = base.clone().with_resource_limits(collection_limit(limit));
+        runtime.collection_gc_allocated_bytes = 0;
+        let result = runtime.array_set_borrowed_value(id, 0, &replacement);
+        if limit < bytes {
+            assert!(result.unwrap_err().message.contains("E_RESOURCE_BUDGET"));
+            assert_eq!(
+                runtime.array_get_cloned(id, 0).unwrap(),
+                Some(PineValue::String("old".into()))
+            );
+        } else {
+            result.unwrap();
+            assert_eq!(
+                runtime.array_get_cloned(id, 0).unwrap(),
+                Some(replacement.clone())
+            );
+            assert_eq!(runtime.collection_gc_allocated_bytes, bytes);
+        }
+        assert_eq!(
+            base.array_get_cloned(id, 0).unwrap(),
+            Some(PineValue::String("old".into()))
+        );
+    }
 }

@@ -16,8 +16,10 @@ use super::plot_history::{
     RuntimeColorSeries, RuntimeFill, RuntimePlotArrow, RuntimePlotBar, RuntimePlotCandle,
     RuntimePlotChar, RuntimePlotShape,
 };
-use super::valuewhen_history::ValueWhenHistory;
 use crate::*;
+
+mod ta_state;
+pub(crate) use ta_state::{CrossCallState, TaRollbackState};
 
 #[derive(Clone)]
 pub(crate) enum RuntimeProgram<'a> {
@@ -73,27 +75,9 @@ impl InputOverrides {
 }
 
 #[derive(Clone)]
-pub(crate) struct CrossCallState {
-    pub(crate) bar_index: usize,
-    pub(crate) current_left: PineValue,
-    pub(crate) current_right: PineValue,
-    pub(crate) previous_left: PineValue,
-    pub(crate) previous_right: PineValue,
-}
-
-#[derive(Clone)]
 struct StrategyEvalCheckpoint {
-    rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
-    extreme_windows: HashMap<CallSiteId, crate::algorithms::rolling_extreme::RollingExtremeState>,
-    rsi_state: HashMap<CallSiteId, RsiState>,
-    macd_state: HashMap<CallSiteId, MacdState>,
-    call_state: HashMap<CallSiteId, PineValue>,
-    cross_state: HashMap<CallSiteId, CrossCallState>,
-    valuewhen_state: HashMap<CallSiteId, ValueWhenHistory>,
+    ta_state: TaRollbackState,
     valuewhen_local_values: usize,
-    vwap_call_state: HashMap<CallSiteId, VwapState>,
-    pivot_point_state: HashMap<CallSiteId, PivotPointState>,
-    random_state: HashMap<CallSiteId, u64>,
     current_symbols: HashMap<SymbolId, PineValue>,
     current_series: HashMap<SeriesId, PineValue>,
     active_series: HashSet<SeriesId>,
@@ -143,6 +127,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) execution_limits: ExecutionLimits,
+    pub(crate) resource_budget: super::resource_limits::ResourceBudget,
     pub(crate) valuewhen_budget: super::valuewhen_limits::ValueWhenBudget,
     pub(crate) execution_steps_remaining: u64,
     pub(crate) loop_iterations_remaining: u64,
@@ -174,20 +159,10 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) next_matrix_id: u32,
     pub(crate) map_store: IdStore<MapStorage>,
     pub(crate) next_map_id: u32,
-    pub(crate) call_state: HashMap<CallSiteId, PineValue>,
-    pub(crate) cross_state: HashMap<CallSiteId, CrossCallState>,
-    pub(crate) valuewhen_state: HashMap<CallSiteId, ValueWhenHistory>,
-    pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
-    pub(crate) extreme_windows:
-        HashMap<CallSiteId, crate::algorithms::rolling_extreme::RollingExtremeState>,
+    pub(crate) ta_state: TaRollbackState,
     pub(crate) selection_scratch: crate::algorithms::order_statistics::SelectionScratch,
     pub(crate) alma_weights: crate::algorithms::alma_weights::AlmaWeightCache,
     pub(crate) regex_cache: HashMap<CallSiteId, Arc<crate::builtins::strings::CachedPineRegex>>,
-    pub(crate) rsi_state: HashMap<CallSiteId, RsiState>,
-    pub(crate) macd_state: HashMap<CallSiteId, MacdState>,
-    pub(crate) vwap_call_state: HashMap<CallSiteId, VwapState>,
-    pub(crate) pivot_point_state: HashMap<CallSiteId, PivotPointState>,
-    pub(crate) random_state: HashMap<CallSiteId, u64>,
     pub(crate) previous_bar_time: Option<i64>,
     pub(crate) price_flow_previous_close: Option<f64>,
     pub(crate) price_flow_previous_volume: Option<f64>,
@@ -460,6 +435,7 @@ impl<'a> HistoricalRuntime<'a> {
             legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
             execution_limits: ExecutionLimits::default(),
+            resource_budget: super::resource_limits::ResourceBudget::default(),
             valuewhen_budget: super::valuewhen_limits::ValueWhenBudget::default(),
             execution_steps_remaining: ExecutionLimits::default().max_steps_per_bar,
             loop_iterations_remaining: ExecutionLimits::default().max_loop_iterations_per_bar,
@@ -489,19 +465,10 @@ impl<'a> HistoricalRuntime<'a> {
             next_matrix_id: 0,
             map_store: IdStore::new(),
             next_map_id: 0,
-            call_state: HashMap::new(),
-            cross_state: HashMap::new(),
-            valuewhen_state: HashMap::new(),
-            rolling_windows: HashMap::new(),
-            extreme_windows: HashMap::new(),
+            ta_state: TaRollbackState::default(),
             selection_scratch: crate::algorithms::order_statistics::SelectionScratch::default(),
             alma_weights: crate::algorithms::alma_weights::AlmaWeightCache::default(),
             regex_cache: HashMap::new(),
-            rsi_state: HashMap::new(),
-            macd_state: HashMap::new(),
-            vwap_call_state: HashMap::new(),
-            pivot_point_state: HashMap::new(),
-            random_state: HashMap::new(),
             previous_bar_time: None,
             price_flow_previous_close: None,
             price_flow_previous_volume: None,
@@ -714,6 +681,7 @@ impl<'a> HistoricalRuntime<'a> {
         runtime.session_windows = self.session_windows.clone();
         runtime.request_feed = self.request_feed.clone();
         runtime.execution_limits = self.execution_limits;
+        runtime.resource_budget = self.resource_budget.clone();
         runtime.valuewhen_budget.limits = self.valuewhen_limits();
         runtime.reset_execution_budget();
         runtime
@@ -890,6 +858,29 @@ impl<'a> HistoricalRuntime<'a> {
         is_new_bar: bool,
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
+        self.append_bar_with_budget(bar, update_kind, is_new_bar, execution_time, true)
+    }
+
+    /// Realtime candidates open their allowance before restoring intrabar state.
+    /// The preparation and script must consume that same allowance.
+    pub(crate) fn append_bar_with_prepared_budget(
+        &mut self,
+        bar: Bar,
+        update_kind: BarUpdateKind,
+        is_new_bar: bool,
+        execution_time: Option<i64>,
+    ) -> Result<(), RuntimeError> {
+        self.append_bar_with_budget(bar, update_kind, is_new_bar, execution_time, false)
+    }
+
+    fn append_bar_with_budget(
+        &mut self,
+        bar: Bar,
+        update_kind: BarUpdateKind,
+        is_new_bar: bool,
+        execution_time: Option<i64>,
+        fresh_budget: bool,
+    ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
         if let Some(account) = self.program.strategy_settings.account_currency {
             let chart = self.request_environment.chart().currency();
@@ -922,7 +913,12 @@ impl<'a> HistoricalRuntime<'a> {
             }
             .runtime_error());
         }
-        let result = self.execute_bar_with_context(bar, update_kind, is_new_bar, execution_time);
+        if fresh_budget {
+            self.reset_execution_budget();
+        }
+        let result = self.resource_budget.check().and_then(|()| {
+            self.execute_bar_with_context(bar, update_kind, is_new_bar, execution_time)
+        });
         if result.is_err() {
             self.execution_failed = true;
         }
@@ -946,7 +942,6 @@ impl<'a> HistoricalRuntime<'a> {
         is_new_bar: bool,
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
-        self.reset_execution_budget();
         let bar_index = self.bars;
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
@@ -1160,17 +1155,8 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn snapshot_strategy_eval_checkpoint(&mut self) {
         self.strategy_eval_checkpoint = Some(StrategyEvalCheckpoint {
-            rolling_windows: self.rolling_windows.clone(),
-            extreme_windows: self.extreme_windows.clone(),
-            rsi_state: self.rsi_state.clone(),
-            macd_state: self.macd_state.clone(),
-            call_state: self.call_state.clone(),
-            cross_state: self.cross_state.clone(),
-            valuewhen_state: self.valuewhen_state.clone(),
+            ta_state: self.ta_state.clone(),
             valuewhen_local_values: self.valuewhen_budget.local_values,
-            vwap_call_state: self.vwap_call_state.clone(),
-            pivot_point_state: self.pivot_point_state.clone(),
-            random_state: self.random_state.clone(),
             current_symbols: self.current_symbols.clone(),
             current_series: self.current_series.clone(),
             active_series: self.active_series.clone(),
@@ -1182,18 +1168,8 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(checkpoint) = self.strategy_eval_checkpoint.as_ref() else {
             return;
         };
-        self.rolling_windows.clone_from(&checkpoint.rolling_windows);
-        self.extreme_windows.clone_from(&checkpoint.extreme_windows);
-        self.rsi_state.clone_from(&checkpoint.rsi_state);
-        self.macd_state.clone_from(&checkpoint.macd_state);
-        self.call_state.clone_from(&checkpoint.call_state);
-        self.cross_state.clone_from(&checkpoint.cross_state);
-        self.valuewhen_state.clone_from(&checkpoint.valuewhen_state);
+        self.ta_state.restore_from(&checkpoint.ta_state);
         self.valuewhen_budget.local_values = checkpoint.valuewhen_local_values;
-        self.vwap_call_state.clone_from(&checkpoint.vwap_call_state);
-        self.pivot_point_state
-            .clone_from(&checkpoint.pivot_point_state);
-        self.random_state.clone_from(&checkpoint.random_state);
         self.current_symbols.clone_from(&checkpoint.current_symbols);
         self.current_series.clone_from(&checkpoint.current_series);
         self.active_series.clone_from(&checkpoint.active_series);

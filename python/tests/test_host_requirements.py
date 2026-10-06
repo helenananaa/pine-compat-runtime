@@ -14,7 +14,42 @@ def test_modern_request_options_are_not_reported_as_implicit_defaults():
     assert report["schemaVersion"] == 2
     assert report["requests"][0]["gaps"] == "gapsOn"
     assert report["requests"][0]["lookahead"] == "lookaheadOn"
-    assert report["requests"][0]["timeframeRelation"] == "sameOrHigherIntegerMultipleExceptCalendarMonths"
+    assert report["requests"][0]["timeframeRelation"] == "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
+
+
+@pytest.mark.parametrize("version", [4, 5, 6])
+def test_lower_timeframe_inventory_matches_an_executable_provider_request(version):
+    declaration = "study" if version == 4 else "indicator"
+    function = "security" if version == 4 else "request.security"
+    program = pine_compat.compile_script(
+        f'//@version={version}\n{declaration}("lower")\n'
+        f'plot({function}("REMOTE", "3", close))\n'
+    )
+    relation = program.host_requirements()["requests"][0]["timeframeRelation"]
+    assert relation == "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
+
+    def bar(time, close):
+        return dict(time=time, open=close, high=close, low=close, close=close, volume=1)
+
+    result = program.run(
+        [bar(0, 10)],
+        chart_symbol="CHART",
+        chart_timeframe="5",
+        request_bars={"REMOTE:3": [bar(0, 1), bar(180_000, 2)]},
+    )
+    assert result["plots"][0]["values"] == [2]
+
+
+def test_chart_time_close_variables_and_functions_share_the_host_period():
+    program = pine_compat.compile_script(
+        '//@version=6\nindicator("close")\nplot(time_close)\n'
+        'plot(time_close(""))\nplot(time_close(timeframe.period))\n'
+    )
+    result = program.run(
+        [dict(time=0, open=1, high=1, low=1, close=1, volume=1)],
+        chart_timeframe="5",
+    )
+    assert [plot["values"] for plot in result["plots"]] == [[300_000]] * 3
 
 
 def test_compiled_host_requirements_match_shared_contract_without_data():

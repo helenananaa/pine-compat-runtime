@@ -16132,20 +16132,26 @@ plot(close)
     );
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
     let forming = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("forming skipped");
     assert!(forming.strategy.expect("strategy").orders.is_empty());
     assert_eq!(forming.plots[0].values.len(), 1);
 
     let confirmed = runtime
-        .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::confirmed(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("confirmed executes");
     assert!(confirmed.strategy.expect("strategy").orders.is_empty());
     let filled = runtime
-        .update(BarUpdate::forming(bar(89.0)))
+        .update(BarUpdate::forming(at_time(120000, bar(89.0))))
         .expect("observed limit price");
     assert_eq!(filled.strategy.expect("strategy").orders.len(), 1);
     assert_eq!(filled.plots[0].values.len(), 2);
@@ -16163,21 +16169,30 @@ plot(close)
     );
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
     let forming = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("forming fill");
     assert!(forming.strategy.expect("strategy").orders.is_empty());
     assert_eq!(forming.plots[0].values.len(), 2);
 
     let replaced = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 91.0, 95.0),
+        )))
         .expect("replacement forming");
     assert!(replaced.strategy.expect("strategy").orders.is_empty());
 
     let confirmed = runtime
-        .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
+        .update(BarUpdate::confirmed(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 91.0, 95.0),
+        )))
         .expect("confirmed no fill");
     assert!(confirmed.strategy.expect("strategy").orders.is_empty());
 }
@@ -16197,13 +16212,13 @@ plot(p)
     );
     let mut runtime = RealtimeRuntime::new(&hir);
     let historical = runtime
-        .update(BarUpdate::historical(bar(1.0)))
+        .update(BarUpdate::historical(at_time(0, bar(1.0))))
         .expect("historical bar");
     assert_eq!(historical.plots[0].values, vec![PineValue::Int(1)]);
     assert_eq!(historical.plots[1].values, vec![PineValue::Int(1)]);
 
     let forming = runtime
-        .update(BarUpdate::forming(bar(2.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(2.0))))
         .expect("forming");
     assert_eq!(
         forming.plots[0].values,
@@ -16215,7 +16230,7 @@ plot(p)
     );
 
     let replaced = runtime
-        .update(BarUpdate::forming(bar(3.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(3.0))))
         .expect("replacement forming");
     assert_eq!(
         replaced.plots[0].values,
@@ -16227,7 +16242,7 @@ plot(p)
     );
 
     let confirmed = runtime
-        .update(BarUpdate::confirmed(bar(4.0)))
+        .update(BarUpdate::confirmed(at_time(60000, bar(4.0))))
         .expect("confirmed");
     assert_eq!(
         confirmed.plots[0].values,
@@ -16535,21 +16550,30 @@ plot(close)
     let hir = analysis.hir.expect("HIR");
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
 
     let forming = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("forming fill");
     assert!(forming.strategy.expect("strategy").orders.is_empty());
 
     let replaced = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 91.0, 95.0),
+        )))
         .expect("replacement forming");
     assert!(replaced.strategy.expect("strategy").orders.is_empty());
 
     let confirmed = runtime
-        .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
+        .update(BarUpdate::confirmed(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 91.0, 95.0),
+        )))
         .expect("confirmed no fill");
     assert!(confirmed.strategy.expect("strategy").orders.is_empty());
     assert!(
@@ -16582,17 +16606,23 @@ plot(close)
     let hir = analysis.hir.expect("HIR");
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
     runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("forming fill");
     let confirmed = runtime
-        .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::confirmed(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("confirmed fill");
     assert!(confirmed.strategy.expect("strategy").orders.is_empty());
     runtime
-        .update(BarUpdate::confirmed(bar(89.0)))
+        .update(BarUpdate::confirmed(at_time(120000, bar(89.0))))
         .expect("observed limit fill");
     assert_eq!(
         runtime
@@ -16617,10 +16647,13 @@ fn strategy_fill_path_realtime_stop_limit_requires_observed_activation() {
     .expect("HIR");
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(10.0)))
+        .update(BarUpdate::historical(at_time(0, bar(10.0))))
         .expect("place");
     let forming_fill = runtime
-        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(10.0, 11.0, 8.0, 9.0),
+        )))
         .expect("forming fill");
     assert_eq!(
         forming_fill.strategy.expect("strategy").orders.len(),
@@ -16628,10 +16661,10 @@ fn strategy_fill_path_realtime_stop_limit_requires_observed_activation() {
         "cumulative extremes are not observed stop-limit ticks"
     );
     runtime
-        .update(BarUpdate::forming(bar(10.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(10.0))))
         .expect("replacement forming");
     runtime
-        .update(BarUpdate::confirmed(bar(10.0)))
+        .update(BarUpdate::confirmed(at_time(60000, bar(10.0))))
         .expect("confirmed abandons fill");
     assert!(
         runtime
@@ -16642,14 +16675,16 @@ fn strategy_fill_path_realtime_stop_limit_requires_observed_activation() {
             .is_empty()
     );
     runtime
-        .update(BarUpdate::forming(bar(11.0)))
+        .update(BarUpdate::forming(at_time(120000, bar(11.0))))
         .expect("observed stop activation");
     let filled = runtime
-        .update(BarUpdate::forming(bar(8.0)))
+        .update(BarUpdate::forming(at_time(120000, bar(8.0))))
         .expect("observed limit fill");
     assert_eq!(filled.strategy.as_ref().unwrap().orders.len(), 1);
     assert_eq!(filled.strategy.as_ref().unwrap().orders[0].price, 8.0);
-    let confirmed = runtime.update(BarUpdate::confirmed(bar(10.0))).unwrap();
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(at_time(120000, bar(10.0))))
+        .unwrap();
     assert_eq!(
         confirmed.strategy.unwrap().orders,
         filled.strategy.unwrap().orders
@@ -16668,10 +16703,13 @@ fn strategy_fill_path_realtime_trailing_rollback() {
     .expect("HIR");
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(10.0)))
+        .update(BarUpdate::historical(at_time(0, bar(10.0))))
         .expect("place");
     let forming = runtime
-        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(10.0, 11.0, 8.0, 9.0),
+        )))
         .expect("forming trail");
     assert!(
         forming
@@ -16682,10 +16720,10 @@ fn strategy_fill_path_realtime_trailing_rollback() {
             .any(|order| order.id == "EN")
     );
     runtime
-        .update(BarUpdate::forming(bar(10.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(10.0))))
         .expect("replacement forming");
     runtime
-        .update(BarUpdate::confirmed(bar(10.0)))
+        .update(BarUpdate::confirmed(at_time(60000, bar(10.0))))
         .expect("confirmed");
     let confirmed = runtime.confirmed_result().strategy.expect("strategy");
     assert_eq!(confirmed.orders.len(), 1);
@@ -16705,10 +16743,13 @@ fn strategy_fill_path_realtime_margin_requires_observed_adverse_price() {
     .expect("HIR");
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(10.0)))
+        .update(BarUpdate::historical(at_time(0, bar(10.0))))
         .expect("place");
     let forming = runtime
-        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(10.0, 11.0, 8.0, 9.0),
+        )))
         .expect("forming margin");
     assert!(
         !forming
@@ -16719,10 +16760,10 @@ fn strategy_fill_path_realtime_margin_requires_observed_adverse_price() {
             .any(|order| order.id == "Margin Call")
     );
     runtime
-        .update(BarUpdate::forming(bar(10.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(10.0))))
         .expect("replacement forming");
     runtime
-        .update(BarUpdate::confirmed(bar(10.0)))
+        .update(BarUpdate::confirmed(at_time(60000, bar(10.0))))
         .expect("confirmed");
     let confirmed = runtime.confirmed_result().strategy.expect("strategy");
     assert_eq!(confirmed.orders.len(), 1);
@@ -16734,11 +16775,13 @@ fn strategy_fill_path_realtime_margin_requires_observed_adverse_price() {
             .any(|order| order.id == "Margin Call")
     );
     let adverse = runtime
-        .update(BarUpdate::forming(bar(1.0)))
+        .update(BarUpdate::forming(at_time(120000, bar(1.0))))
         .expect("observed adverse price");
     let margin_orders = adverse.strategy.unwrap().orders;
     assert!(margin_orders.iter().any(|order| order.id == "Margin Call"));
-    let recovered = runtime.update(BarUpdate::confirmed(bar(10.0))).unwrap();
+    let recovered = runtime
+        .update(BarUpdate::confirmed(at_time(120000, bar(10.0))))
+        .unwrap();
     assert_eq!(recovered.strategy.unwrap().orders, margin_orders);
 }
 
@@ -16765,21 +16808,24 @@ plot(close)
     );
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
     let forming = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 160.0, 100.0, 100.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 160.0, 100.0, 100.0),
+        )))
         .expect("forming place");
     assert!(forming.strategy.expect("strategy").orders.is_empty());
 
     runtime
-        .update(BarUpdate::forming(bar(100.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(100.0))))
         .expect("replacement forming");
     runtime
-        .update(BarUpdate::confirmed(bar(100.0)))
+        .update(BarUpdate::confirmed(at_time(60000, bar(100.0))))
         .expect("confirmed no place");
     let later = runtime
-        .update(BarUpdate::historical(bar(110.0)))
+        .update(BarUpdate::historical(at_time(120000, bar(110.0))))
         .expect("next bar");
     let orders = later.strategy.expect("strategy").orders;
     assert_eq!(orders.len(), 1);
@@ -16809,23 +16855,35 @@ plot(close)
     );
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
     let cancelled = runtime
-        .update(BarUpdate::forming(bar_ohlc(96.0, 96.0, 96.0, 40.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(96.0, 96.0, 96.0, 40.0),
+        )))
         .expect("forming cancel");
     let orders = cancelled.strategy.expect("strategy").orders;
     assert_eq!(orders.len(), 1);
     assert_eq!(orders[0].price, 40.0);
 
     runtime
-        .update(BarUpdate::forming(bar_ohlc(96.0, 96.0, 96.0, 96.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(96.0, 96.0, 96.0, 96.0),
+        )))
         .expect("replacement forming");
     runtime
-        .update(BarUpdate::confirmed(bar_ohlc(96.0, 96.0, 96.0, 96.0)))
+        .update(BarUpdate::confirmed(at_time(
+            60000,
+            bar_ohlc(96.0, 96.0, 96.0, 96.0),
+        )))
         .expect("confirmed keeps pending");
     let filled = runtime
-        .update(BarUpdate::historical(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::historical(at_time(
+            120000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("later fill");
     assert_eq!(filled.strategy.expect("strategy").orders.len(), 1);
 }
@@ -16842,19 +16900,31 @@ plot(close)
     );
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
     runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 111.0, 105.0, 105.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 111.0, 105.0, 105.0),
+        )))
         .expect("forming activation");
     runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 105.0, 105.0, 105.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 105.0, 105.0, 105.0),
+        )))
         .expect("replacement forming");
     runtime
-        .update(BarUpdate::confirmed(bar_ohlc(100.0, 105.0, 105.0, 105.0)))
+        .update(BarUpdate::confirmed(at_time(
+            60000,
+            bar_ohlc(100.0, 105.0, 105.0, 105.0),
+        )))
         .expect("confirmed not activated");
     let later = runtime
-        .update(BarUpdate::historical(bar_ohlc(100.0, 100.0, 99.0, 100.0)))
+        .update(BarUpdate::historical(at_time(
+            120000,
+            bar_ohlc(100.0, 100.0, 99.0, 100.0),
+        )))
         .expect("later bar");
     assert!(later.strategy.expect("strategy").orders.is_empty());
 }
@@ -16873,10 +16943,13 @@ plot(close)
     );
     let mut runtime = RealtimeRuntime::new(&hir);
     runtime
-        .update(BarUpdate::historical(bar(100.0)))
+        .update(BarUpdate::historical(at_time(0, bar(100.0))))
         .expect("historical bar");
     let forming = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 89.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 89.0, 95.0),
+        )))
         .expect("forming fill");
     let forming_strategy = forming.strategy.expect("strategy");
     assert!(forming_strategy.orders.is_empty());
@@ -16884,7 +16957,10 @@ plot(close)
     assert_eq!(forming.alerts.len(), 1);
 
     let replaced = runtime
-        .update(BarUpdate::forming(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
+        .update(BarUpdate::forming(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 91.0, 95.0),
+        )))
         .expect("replacement forming");
     let replaced_strategy = replaced.strategy.as_ref().expect("strategy");
     assert!(replaced_strategy.orders.is_empty());
@@ -16892,7 +16968,10 @@ plot(close)
     assert!(replaced.alerts.is_empty());
 
     let confirmed = runtime
-        .update(BarUpdate::confirmed(bar_ohlc(100.0, 100.0, 91.0, 95.0)))
+        .update(BarUpdate::confirmed(at_time(
+            60000,
+            bar_ohlc(100.0, 100.0, 91.0, 95.0),
+        )))
         .expect("confirmed no fill");
     let confirmed_strategy = confirmed.strategy.as_ref().expect("strategy");
     assert!(confirmed_strategy.orders.is_empty());
@@ -16918,7 +16997,11 @@ if bar_index == 0
 plot(close)
 "#,
     );
-    let bars = [bar(100.0), bar_ohlc(100.0, 100.0, 89.0, 95.0), bar(110.0)];
+    let bars = [
+        at_time(0, bar(100.0)),
+        at_time(60000, bar_ohlc(100.0, 100.0, 89.0, 95.0)),
+        at_time(120000, bar(110.0)),
+    ];
     let historical = run_historical(&hir, &bars).expect("historical");
     let mut realtime = RealtimeRuntime::new(&hir);
     realtime
@@ -17455,4 +17538,9 @@ plot(strategy.closedtrades.profit_percent(1), title="Closed Percent 1")
         }
         assert_eq!(result.strategy.unwrap().trades.len(), 2);
     }
+}
+
+fn at_time(time: i64, mut bar: Bar) -> Bar {
+    bar.time = time;
+    bar
 }

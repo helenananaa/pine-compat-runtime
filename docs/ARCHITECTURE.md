@@ -279,6 +279,14 @@ reserved `$executionTimes` array in request-host JSON. Missing reached reads or
 batch/bar count mismatches fail closed. No core or host adapter reads the
 process wall clock or substitutes a chart-bar timestamp.
 
+The `time_close` variable and empty-timeframe `time`/`time_close` calls use the
+active `ChartContext`, including the isolated requested context. Fixed chart
+periods close one configured duration after the supplied bar open; weekly and
+monthly periods use the same calendar buckets as the time functions. Calendar
+chart `bars_back` offsets move between calendar periods rather than subtracting
+nominal month seconds. Same-chart fixed-period offsets without a session preserve
+the supplied bar-open alignment for both past and future `bars_back` values.
+
 Provider-backed `request.security` expressions are evaluated in a separate
 requested-context `HistoricalRuntime` over the immutable provider bars, then
 cached by callsite, requested symbol, requested timeframe, and HIR expression
@@ -318,6 +326,38 @@ closed request boundary and maintenance tails are recorded in
 
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).
+
+Callsite-local TA and scalar-helper calculation state is owned by
+`HistoricalRuntime::ta_state` (`TaRollbackState`). Strategy fill recalculation
+captures this group once and restores it through one allocation-reusing method;
+the method exhaustively destructures the group so adding a rollback field
+requires an explicit restoration rule. Logical local `valuewhen` event counts
+are restored alongside the values, while execution/resource allowances,
+requested-context allowances, pure caches and scratch, broker state, and `varip`
+storage retain their existing separate policies. This groups the existing
+calculation checkpoint; it does not change other runtime state ownership.
+
+Deterministic resource policy is exposed by `ResourceLimits`, configured through
+`HistoricalRuntime::with_resource_limits` or
+`RealtimeRuntime::with_resource_limits` and inspected with `resource_limits()`.
+The defaults allow 64 MiB of logical collection payload allocations and copies,
+and 100,000,000 matrix work units per chart-bar execution. Setting either field
+to `None` disables that allowance independently. Collection accounting includes
+recorded value payloads and copies; it is not a process RSS or total-heap quota.
+Matrix work guards cover multiplication and powers, determinant, inverse, rank,
+eigenvalue/eigenvector and pseudoinverse operations, including the iterative QR
+and Jacobi phases. Work units are deterministic kernel estimates, not elapsed
+time or hardware instruction counts.
+
+Requested evaluators inherit the chart execution's remaining resource allowance
+and return the consumed counters, including when replaying retained requested
+checkpoints. They do not obtain a new allowance for each requested bar. Strategy
+fill recalculation restores Pine calculation state without refunding resource or
+execution work already spent on that chart bar. Realtime updates execute on
+candidates: an exhausted allowance returns `E_RESOURCE_BUDGET` and leaves the
+previously published confirmed/forming session intact. Historical in-execution
+failure follows the poisoned-instance contract in
+[`EXECUTION_SEMANTICS.md`](EXECUTION_SEMANTICS.md#runtime-errors).
 
 Strategy execution is owned by `pine-runtime::strategy`. `BrokerState` remains
 the runtime facade used by historical execution, runtime built-ins, strategy

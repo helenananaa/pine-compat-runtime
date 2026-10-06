@@ -205,6 +205,10 @@ plot(array.get(a, 50000))
         volume: 1.0,
     };
     runtime.apply_update(BarUpdate::historical(bar)).unwrap();
+    let bar = Bar {
+        time: 60_000,
+        ..bar
+    };
     runtime.apply_update(BarUpdate::forming(bar)).unwrap();
     MAX_ALLOCATION.set(0);
     TRACK.set(true);

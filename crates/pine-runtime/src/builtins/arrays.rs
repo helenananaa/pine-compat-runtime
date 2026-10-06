@@ -3,6 +3,7 @@ use pine_ir::{HirCallArg, HirExpr};
 use crate::builtins::strings::BoundedJoin;
 use crate::*;
 
+mod allocation;
 mod calls;
 mod constructors;
 mod opcode;
@@ -244,7 +245,7 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             }
             for index in index_from..index_to {
-                self.array_set_value(id, index as i64, value.clone())?;
+                self.array_set_borrowed_value(id, index as i64, &value)?;
             }
         }
         Ok(PineValue::Void)
@@ -297,10 +298,14 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(kind) = self.array_kinds.get(&id).copied() else {
             return Ok(PineValue::Na);
         };
-        let Some(values) = self.array_values_clone(id)? else {
+        let Some(values) = self.array_values_clone_with_budget(id)? else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values_with_user_type_metadata(id, kind, values))
+        let result = self.insert_precharged_array_values(kind, values);
+        if let PineValue::Array(target_id) = result {
+            self.copy_array_user_type_metadata(id, target_id);
+        }
+        Ok(result)
     }
 
     pub(crate) fn eval_array_slice(
@@ -351,7 +356,7 @@ impl<'a> HistoricalRuntime<'a> {
         if target_kind != source_kind {
             return Ok(PineValue::Na);
         }
-        let Some(source_values) = self.array_values_clone(source_id)? else {
+        let Some(source_len) = self.array_len(source_id)? else {
             return Ok(PineValue::Na);
         };
         let Some(target_len) = self.array_len(target_id)? else {
@@ -360,12 +365,15 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(parent_len) = self.array_parent_len_for_insert(target_id) else {
             return Ok(PineValue::Na);
         };
-        if parent_len + source_values.len() > MAX_ARRAY_ELEMENTS {
+        if parent_len + source_len > MAX_ARRAY_ELEMENTS {
             return Err(RuntimeError {
                 message: format!("array.concat cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
             });
         }
-        self.array_insert_values(target_id, target_len as i64, source_values)?;
+        let Some(source_values) = self.array_values_clone_with_budget(source_id)? else {
+            return Ok(PineValue::Na);
+        };
+        self.array_insert_precharged_values(target_id, target_len as i64, source_values)?;
         Ok(PineValue::Array(target_id))
     }
 
@@ -377,9 +385,9 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Void);
         };
-        if let Some(mut values) = self.array_values_clone(id)? {
+        if let Some(mut values) = self.array_values_clone_with_budget(id)? {
             values.reverse();
-            self.array_replace_values(id, values)?;
+            self.array_replace_precharged_values(id, values)?;
         }
         Ok(PineValue::Void)
     }

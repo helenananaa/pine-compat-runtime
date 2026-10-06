@@ -21,18 +21,19 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let source = self.eval_flow_source(args)?;
         let Some(source) = source.as_f64() else {
-            self.call_state.insert(call_site_id, PineValue::Na);
+            self.ta_state.call_state.insert(call_site_id, PineValue::Na);
             return Ok(PineValue::Na);
         };
 
         let value = self
+            .ta_state
             .call_state
             .get(&call_site_id)
             .and_then(PineValue::as_f64)
             .unwrap_or(0.0)
             + source;
         let value = PineValue::Float(value);
-        self.call_state.insert(call_site_id, value.clone());
+        self.ta_state.call_state.insert(call_site_id, value.clone());
         Ok(value)
     }
 
@@ -45,6 +46,7 @@ impl<'a> HistoricalRuntime<'a> {
         let source = self.eval_flow_source(args)?;
         let Some(source) = source.as_f64() else {
             return Ok(self
+                .ta_state
                 .call_state
                 .get(&call_site_id)
                 .cloned()
@@ -52,6 +54,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         let value = match self
+            .ta_state
             .call_state
             .get(&call_site_id)
             .and_then(PineValue::as_f64)
@@ -63,7 +66,7 @@ impl<'a> HistoricalRuntime<'a> {
             None => source,
         };
         let value = finite_float_or_na(value);
-        self.call_state.insert(call_site_id, value.clone());
+        self.ta_state.call_state.insert(call_site_id, value.clone());
         Ok(value)
     }
 
@@ -173,9 +176,11 @@ impl<'a> HistoricalRuntime<'a> {
         );
 
         let weighted = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::VwmaWeighted(call_site_id));
         let volumes = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::VwmaVolume(call_site_id));
         let (Some(weighted), Some(volumes)) = (weighted, volumes) else {
@@ -256,9 +261,11 @@ impl<'a> HistoricalRuntime<'a> {
         self.update_mfi_windows(call_site_id, positive_flow, negative_flow, length);
 
         let positive_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::MfiPositive(call_site_id));
         let negative_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::MfiNegative(call_site_id));
         let (Some(positive_window), Some(negative_window)) = (positive_window, negative_window)
@@ -309,7 +316,11 @@ impl<'a> HistoricalRuntime<'a> {
         let source = source.as_f64();
         let volume = self.current_builtin_f64("volume");
 
-        let state = self.vwap_call_state.entry(call_site_id).or_default();
+        let state = self
+            .ta_state
+            .vwap_call_state
+            .entry(call_site_id)
+            .or_default();
         if let Some(bucket) = default_anchor_bucket {
             if state.default_anchor_bucket() != Some(bucket) {
                 state.start_default_anchor_bucket(bucket);
@@ -404,9 +415,11 @@ impl<'a> HistoricalRuntime<'a> {
         self.update_rolling_window_key(RollingWindowKey::StochLow(call_site_id), low, length);
 
         let high_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::StochHigh(call_site_id));
         let low_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::StochLow(call_site_id));
         let (Some(source), Some(high_window), Some(low_window)) = (source, high_window, low_window)
@@ -464,9 +477,11 @@ impl<'a> HistoricalRuntime<'a> {
         );
 
         let high_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::WprHigh(call_site_id));
         let low_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::WprLow(call_site_id));
         let (Some(close), Some(high_window), Some(low_window)) = (close, high_window, low_window)
@@ -504,9 +519,11 @@ impl<'a> HistoricalRuntime<'a> {
         self.update_rolling_window_key(RollingWindowKey::AoSlow(call_site_id), source, 34);
 
         let fast_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::AoFast(call_site_id));
         let slow_window = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::AoSlow(call_site_id));
         let (Some(fast_window), Some(slow_window)) = (fast_window, slow_window) else {
@@ -602,6 +619,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let bar_index = self.bars;
         let state = self
+            .ta_state
             .cross_state
             .entry(call_site_id)
             .or_insert_with(|| CrossCallState {
@@ -659,6 +677,7 @@ impl<'a> HistoricalRuntime<'a> {
         let value = if matches!(condition, PineValue::Bool(true)) {
             PineValue::Int(0)
         } else if let Some(previous) = self
+            .ta_state
             .call_state
             .get(&call_site_id)
             .and_then(PineValue::as_i64)
@@ -669,7 +688,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         if matches!(value, PineValue::Int(_)) {
-            self.call_state.insert(call_site_id, value.clone());
+            self.ta_state.call_state.insert(call_site_id, value.clone());
         }
         Ok(value)
     }
@@ -704,7 +723,7 @@ impl<'a> HistoricalRuntime<'a> {
                 occurrence.map_or(0, |value| value + 1)
             };
 
-            let entry = self.valuewhen_state.entry(call_site_id);
+            let entry = self.ta_state.valuewhen_state.entry(call_site_id);
             let previous = match &entry {
                 std::collections::hash_map::Entry::Occupied(values) => values.get().len(),
                 std::collections::hash_map::Entry::Vacant(_) => 0,
@@ -720,6 +739,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(self
+            .ta_state
             .valuewhen_state
             .get(&call_site_id)
             .and_then(|values| values.get(occurrence))
@@ -744,6 +764,7 @@ impl<'a> HistoricalRuntime<'a> {
         length: usize,
     ) -> &RollingWindowState {
         let window = self
+            .ta_state
             .rolling_windows
             .entry(RollingWindowKey::MathSum(call_site_id))
             .or_default();
@@ -764,6 +785,7 @@ impl<'a> HistoricalRuntime<'a> {
         length: usize,
     ) -> &RollingWindowState {
         let window = self
+            .ta_state
             .rolling_windows
             .entry(RollingWindowKey::Single(call_site_id))
             .or_default();
@@ -800,6 +822,6 @@ impl<'a> HistoricalRuntime<'a> {
         source: Option<f64>,
         length: usize,
     ) -> &RollingWindowState {
-        push_rolling_window(&mut self.rolling_windows, key, source, length)
+        push_rolling_window(&mut self.ta_state.rolling_windows, key, source, length)
     }
 }

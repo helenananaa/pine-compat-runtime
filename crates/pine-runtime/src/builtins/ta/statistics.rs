@@ -19,7 +19,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
+        let window = &self.ta_state.rolling_windows[&RollingWindowKey::Single(call_site_id)];
         let rci = self
             .selection_scratch
             .rci(window.values.iter().flatten().copied());
@@ -136,12 +136,15 @@ impl<'a> HistoricalRuntime<'a> {
         );
 
         let left = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CorrelationLeft(call_site_id));
         let right = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CorrelationRight(call_site_id));
         let product = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CorrelationProduct(call_site_id));
         let (Some(left), Some(right), Some(product)) = (left, right, product) else {
@@ -215,12 +218,15 @@ impl<'a> HistoricalRuntime<'a> {
         );
 
         let left = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CovarianceLeft(call_site_id));
         let right = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CovarianceRight(call_site_id));
         let product = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::CovarianceProduct(call_site_id));
         let (Some(left), Some(right), Some(product)) = (left, right, product) else {
@@ -308,7 +314,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             middle
         };
-        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
+        let window = &self.ta_state.rolling_windows[&RollingWindowKey::Single(call_site_id)];
         let (low, high) = self.selection_scratch.select_pair(
             window.values.iter().flatten().copied(),
             lower,
@@ -340,7 +346,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
+        let window = &self.ta_state.rolling_windows[&RollingWindowKey::Single(call_site_id)];
         let best_value = self
             .selection_scratch
             .mode(window.values.iter().flatten().copied());
@@ -382,7 +388,7 @@ impl<'a> HistoricalRuntime<'a> {
         if count == 0 {
             return Ok(PineValue::Na);
         }
-        let window = &self.rolling_windows[&RollingWindowKey::Single(call_site_id)];
+        let window = &self.ta_state.rolling_windows[&RollingWindowKey::Single(call_site_id)];
         match mode {
             ArrayPercentileMode::NearestRank => {
                 let rank = ((percentage / 100.0) * count as f64).ceil();

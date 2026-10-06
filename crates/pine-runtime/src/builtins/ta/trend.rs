@@ -29,7 +29,8 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(value) = self.wilder_rma(
             call_site_id,
             0,
-            self.call_state
+            self.ta_state
+                .call_state
                 .get(&call_site_id)
                 .and_then(PineValue::as_f64),
             true_range.as_f64(),
@@ -38,7 +39,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let value = PineValue::Float(value);
-        self.call_state.insert(call_site_id, value.clone());
+        self.ta_state.call_state.insert(call_site_id, value.clone());
         Ok(value)
     }
 
@@ -74,7 +75,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(two_na_tuple());
         };
 
-        let previous = supertrend_state(self.call_state.get(&call_site_id));
+        let previous = supertrend_state(self.ta_state.call_state.get(&call_site_id));
         let Some(atr) = self.wilder_rma(
             call_site_id,
             0,
@@ -123,7 +124,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let supertrend = if direction < 0.0 { lower } else { upper };
 
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(atr),
@@ -187,7 +188,7 @@ impl<'a> HistoricalRuntime<'a> {
             0.0
         };
 
-        let previous = match self.call_state.get(&call_site_id) {
+        let previous = match self.ta_state.call_state.get(&call_site_id) {
             Some(PineValue::Tuple(values)) if values.len() == 4 => Some((
                 values[0].as_f64(),
                 values[1].as_f64(),
@@ -245,7 +246,7 @@ impl<'a> HistoricalRuntime<'a> {
             Some(dx),
             adx_smoothing,
         );
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(smoothed_tr),
@@ -301,7 +302,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         let mut is_first_trend_bar = false;
         let (mut result, mut max_min, mut acceleration, mut is_below) =
-            if let Some(state) = sar_state(self.call_state.get(&call_site_id)) {
+            if let Some(state) = sar_state(self.ta_state.call_state.get(&call_site_id)) {
                 state
             } else {
                 let (Some(previous_close), Some(previous_high), Some(previous_low)) = (
@@ -364,7 +365,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(result),

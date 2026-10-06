@@ -377,25 +377,25 @@ plot(array.get(values, index))
     let mut runtime = RealtimeRuntime::new(&hir);
 
     let historical = runtime
-        .update(BarUpdate::historical(bar(1.0)))
+        .update(BarUpdate::historical(at_time(0, bar(1.0))))
         .expect("historical update");
     assert_values_close(&historical.plots[0].values, &[4.0]);
     assert_values_close(&historical.plots[1].values, &[1.0]);
 
     let forming = runtime
-        .update(BarUpdate::forming(bar(2.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(2.0))))
         .expect("forming update");
     assert_values_close(&forming.plots[0].values, &[4.0, 5.0]);
     assert_values_close(&forming.plots[1].values, &[1.0, 2.0]);
 
     let rolled_back = runtime
-        .update(BarUpdate::forming(bar(3.0)))
+        .update(BarUpdate::forming(at_time(60000, bar(3.0))))
         .expect("second forming update");
     assert_values_close(&rolled_back.plots[0].values, &[4.0, 5.0]);
     assert_values_close(&rolled_back.plots[1].values, &[1.0, 3.0]);
 
     let confirmed = runtime
-        .update(BarUpdate::confirmed(bar(4.0)))
+        .update(BarUpdate::confirmed(at_time(60000, bar(4.0))))
         .expect("confirmed update");
     assert_values_close(&confirmed.plots[0].values, &[4.0, 5.0]);
     assert_values_close(&confirmed.plots[1].values, &[1.0, 4.0]);
@@ -2633,4 +2633,9 @@ plot(first(values) == color.red ? array.size(values) : 0)
 
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+}
+
+fn at_time(time: i64, mut bar: Bar) -> Bar {
+    bar.time = time;
+    bar
 }

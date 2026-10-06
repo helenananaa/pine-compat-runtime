@@ -179,10 +179,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(None);
         };
 
-        let previous = kc_state(self.call_state.get(&call_site_id));
+        let previous = kc_state(self.ta_state.call_state.get(&call_site_id));
         let basis = ema_next(previous.map(|state| state.0), source, length);
         let range_ema = ema_next(previous.map(|state| state.1), span, length);
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![PineValue::Float(basis), PineValue::Float(range_ema)]),
         );
@@ -231,6 +231,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.update_rolling_window_key(RollingWindowKey::HmaFull(call_site_id), source, length);
 
         let full = self
+            .ta_state
             .rolling_windows
             .get(&RollingWindowKey::HmaFull(call_site_id));
         let diff = match full {
@@ -363,7 +364,7 @@ impl<'a> HistoricalRuntime<'a> {
             floor_center,
         );
         let window = super::flow::push_rolling_window(
-            &mut self.rolling_windows,
+            &mut self.ta_state.rolling_windows,
             RollingWindowKey::Single(call_site_id),
             source.as_f64(),
             length,
@@ -483,7 +484,7 @@ impl<'a> HistoricalRuntime<'a> {
         // State is [last evaluation bar, committed base, current candidate].
         // Repeated calls on one bar share the base; the final candidate becomes
         // the base only when execution advances to another bar.
-        let previous = match self.call_state.get(&call_site_id) {
+        let previous = match self.ta_state.call_state.get(&call_site_id) {
             Some(PineValue::Tuple(state)) if state.len() == 3 => {
                 let index = if state[0].as_i64() == Some(bar) { 1 } else { 2 };
                 state[index].as_f64()
@@ -514,6 +515,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             (None, _) => {
                 if let Some(window) = self
+                    .ta_state
                     .rolling_windows
                     .get_mut(&RollingWindowKey::Single(call_site_id))
                 {
@@ -528,7 +530,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             base.clone()
         };
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![PineValue::Int(bar), base, pending]),
         );
@@ -543,10 +545,11 @@ impl<'a> HistoricalRuntime<'a> {
         let Some((source, length)) = self.eval_ema_source_and_length(args)? else {
             return Ok(PineValue::Na);
         };
-        let (previous_ema1, previous_ema2, _) = ema_chain_state(self.call_state.get(&call_site_id));
+        let (previous_ema1, previous_ema2, _) =
+            ema_chain_state(self.ta_state.call_state.get(&call_site_id));
         let ema1 = ema_next(previous_ema1, source, length);
         let ema2 = ema_next(previous_ema2, ema1, length);
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![PineValue::Float(ema1), PineValue::Float(ema2)]),
         );
@@ -562,11 +565,11 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let (previous_ema1, previous_ema2, previous_ema3) =
-            ema_chain_state(self.call_state.get(&call_site_id));
+            ema_chain_state(self.ta_state.call_state.get(&call_site_id));
         let ema1 = ema_next(previous_ema1, source, length);
         let ema2 = ema_next(previous_ema2, ema1, length);
         let ema3 = ema_next(previous_ema3, ema2, length);
-        self.call_state.insert(
+        self.ta_state.call_state.insert(
             call_site_id,
             PineValue::Tuple(vec![
                 PineValue::Float(ema1),
@@ -607,7 +610,8 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(value) = self.wilder_rma(
             call_site_id,
             0,
-            self.call_state
+            self.ta_state
+                .call_state
                 .get(&call_site_id)
                 .and_then(PineValue::as_f64),
             Some(source),
@@ -616,7 +620,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let value = PineValue::Float(value);
-        self.call_state.insert(call_site_id, value.clone());
+        self.ta_state.call_state.insert(call_site_id, value.clone());
         Ok(value)
     }
 
@@ -633,8 +637,8 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let Some(mut state) = self.rsi_state.get(&call_site_id).copied() else {
-            self.rsi_state.insert(
+        let Some(mut state) = self.ta_state.rsi_state.get(&call_site_id).copied() else {
+            self.ta_state.rsi_state.insert(
                 call_site_id,
                 RsiState {
                     previous_source: source,
@@ -653,7 +657,7 @@ impl<'a> HistoricalRuntime<'a> {
         state.previous_source = source;
         state.average_gain = average_gain;
         state.average_loss = average_loss;
-        self.rsi_state.insert(call_site_id, state);
+        self.ta_state.rsi_state.insert(call_site_id, state);
         let (Some(average_gain), Some(average_loss)) = (average_gain, average_loss) else {
             return Ok(PineValue::Na);
         };
@@ -697,6 +701,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let mut state = self
+            .ta_state
             .macd_state
             .get(&call_site_id)
             .copied()
@@ -726,7 +731,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             state.base[2]
         };
-        self.macd_state.insert(call_site_id, state);
+        self.ta_state.macd_state.insert(call_site_id, state);
 
         Ok(PineValue::Tuple(vec![
             macd.map_or(PineValue::Na, PineValue::Float),
@@ -745,7 +750,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Option<f64> {
         let key = RollingWindowKey::Macd { call_site, channel };
         let Some(source) = source else {
-            if let Some(window) = self.rolling_windows.get_mut(&key) {
+            if let Some(window) = self.ta_state.rolling_windows.get_mut(&key) {
                 window.discard_for_bar(self.bars);
             }
             return None;
@@ -754,7 +759,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Some(ema_next(Some(previous), source, length));
         }
         let length = usize::try_from(length).ok()?;
-        let window = self.rolling_windows.entry(key).or_default();
+        let window = self.ta_state.rolling_windows.entry(key).or_default();
         window.push_for_bar(Some(source), length, self.bars);
         window.is_ready(length).then(|| window.mean(length))
     }

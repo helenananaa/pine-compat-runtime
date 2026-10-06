@@ -1,5 +1,5 @@
 use pine_runtime::{
-    Bar, BarUpdate, InputOverrides, PreparedProgram, RealtimeRuntime, RealtimeUpdateContext,
+    BarUpdate, InputOverrides, PreparedProgram, RealtimeRuntime, RealtimeUpdateContext,
     RequestEnvironment, RequestKey, RequestTimeframe, ValueWhenLimits,
 };
 use pyo3::exceptions::PyValueError;
@@ -40,9 +40,6 @@ fn opening_update_flag(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<bool
 pub(crate) struct PyRealtimeSession {
     runtime: RealtimeRuntime<'static>,
     seeded: bool,
-    confirmed_bars: usize,
-    last_confirmed_time: Option<i64>,
-    forming_time: Option<i64>,
 }
 
 impl PyRealtimeSession {
@@ -70,9 +67,6 @@ impl PyRealtimeSession {
         Ok(Self {
             runtime,
             seeded: false,
-            confirmed_bars: 0,
-            last_confirmed_time: None,
-            forming_time: None,
         })
     }
 
@@ -84,27 +78,6 @@ impl PyRealtimeSession {
                 "realtime session must be seeded before updates",
             ))
         }
-    }
-
-    fn validate_next_bar(&self, bar: &Bar, forming: bool) -> PyResult<()> {
-        if let Some(last_confirmed_time) = self.last_confirmed_time
-            && bar.time <= last_confirmed_time
-        {
-            return Err(PyValueError::new_err(format!(
-                "realtime bar time `{}` must be later than confirmed time `{last_confirmed_time}`",
-                bar.time
-            )));
-        }
-        if let Some(forming_time) = self.forming_time
-            && bar.time != forming_time
-        {
-            let action = if forming { "replace" } else { "confirm" };
-            return Err(PyValueError::new_err(format!(
-                "realtime {action} time `{}` does not match forming time `{forming_time}`",
-                bar.time
-            )));
-        }
-        Ok(())
     }
 
     fn apply_request_update(
@@ -210,8 +183,6 @@ impl PyRealtimeSession {
         })
         .map_err(|err| PyValueError::new_err(err.message))?;
         self.seeded = true;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
@@ -238,8 +209,6 @@ impl PyRealtimeSession {
         })
         .map_err(|err| PyValueError::new_err(err.message))?;
         self.seeded = true;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
         Ok(())
     }
 
@@ -260,9 +229,6 @@ impl PyRealtimeSession {
             None => self.runtime.replay_historical_without_output(&bars),
         })
         .map_err(|err| PyValueError::new_err(err.message))?;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
         runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
@@ -294,9 +260,6 @@ impl PyRealtimeSession {
                 .correct_historical_without_output(from_time, &bars),
         })
         .map_err(|err| PyValueError::new_err(err.message))?;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
         runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
@@ -310,7 +273,6 @@ impl PyRealtimeSession {
     ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
-        self.validate_next_bar(&bar, true)?;
         let context = RealtimeUpdateContext {
             execution_time: execution_timestamp(execution_time)?,
             opening_update: opening_update_flag(opening_update)?,
@@ -320,7 +282,6 @@ impl PyRealtimeSession {
                 .update_with_context_without_output(BarUpdate::forming(bar), context)
         })
         .map_err(|err| PyValueError::new_err(err.message))?;
-        self.forming_time = Some(bar.time);
         runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
@@ -334,7 +295,6 @@ impl PyRealtimeSession {
     ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
-        self.validate_next_bar(&bar, false)?;
         let context = RealtimeUpdateContext {
             execution_time: execution_timestamp(execution_time)?,
             opening_update: opening_update_flag(opening_update)?,
@@ -344,9 +304,6 @@ impl PyRealtimeSession {
                 .update_with_context_without_output(BarUpdate::confirmed(bar), context)
         })
         .map_err(|err| PyValueError::new_err(err.message))?;
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
         runtime_result_view_to_py(py, &self.runtime.result_view())
     }
 
@@ -360,7 +317,6 @@ impl PyRealtimeSession {
     ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
-        self.validate_next_bar(&bar, true)?;
         let context = RealtimeUpdateContext {
             execution_time: execution_timestamp(execution_time)?,
             opening_update: opening_update_flag(opening_update)?,
@@ -371,9 +327,7 @@ impl PyRealtimeSession {
                     .apply_update_with_context_ref(BarUpdate::forming(bar), context)
             })
             .map_err(|err| PyValueError::new_err(err.message))?;
-        let output = runtime_changes_to_py(py, changes);
-        self.forming_time = Some(bar.time);
-        output
+        runtime_changes_to_py(py, changes)
     }
 
     #[pyo3(signature = (bar, *, execution_time=None, opening_update=None))]
@@ -386,7 +340,6 @@ impl PyRealtimeSession {
     ) -> PyResult<Py<PyAny>> {
         self.require_seeded()?;
         let bar = parse_bar(bar)?;
-        self.validate_next_bar(&bar, false)?;
         let context = RealtimeUpdateContext {
             execution_time: execution_timestamp(execution_time)?,
             opening_update: opening_update_flag(opening_update)?,
@@ -397,11 +350,7 @@ impl PyRealtimeSession {
                     .apply_update_with_context_ref(BarUpdate::confirmed(bar), context)
             })
             .map_err(|err| PyValueError::new_err(err.message))?;
-        let output = runtime_changes_to_py(py, changes);
-        self.confirmed_bars = self.runtime.confirmed_bar_count();
-        self.last_confirmed_time = self.runtime.last_confirmed_bar_time();
-        self.forming_time = None;
-        output
+        runtime_changes_to_py(py, changes)
     }
 
     fn apply_request_forming(
@@ -474,17 +423,17 @@ impl PyRealtimeSession {
 
     #[getter]
     fn confirmed_bars(&self) -> usize {
-        self.confirmed_bars
+        self.runtime.confirmed_bar_count()
     }
 
     #[getter]
     fn last_confirmed_time(&self) -> Option<i64> {
-        self.last_confirmed_time
+        self.runtime.last_confirmed_bar_time()
     }
 
     #[getter]
     fn forming_time(&self) -> Option<i64> {
-        self.forming_time
+        self.runtime.forming_bar_time()
     }
 
     #[getter]

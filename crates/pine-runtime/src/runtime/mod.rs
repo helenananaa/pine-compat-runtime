@@ -24,6 +24,7 @@ pub(crate) mod persistence;
 pub(crate) mod plot_history;
 mod profile;
 pub(crate) mod realtime;
+pub(crate) mod resource_limits;
 mod result_view;
 pub(crate) mod statements;
 mod strategy_history;

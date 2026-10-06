@@ -4,7 +4,7 @@ use chrono::{Datelike, Timelike};
 use pine_ir::{SeriesId, SymbolId};
 
 use crate::builtins::time::{
-    dayofweek_value, timeframe_bucket, timeframe_seconds, utc_datetime_from_millis,
+    chart_timeframe_close, dayofweek_value, timeframe_bucket, utc_datetime_from_millis,
 };
 use crate::*;
 
@@ -28,17 +28,12 @@ impl<'a> HistoricalRuntime<'a> {
         bar_index: usize,
     ) -> Result<(), RuntimeError> {
         let datetime = utc_datetime_from_millis(bar.time)?;
-        let chart_duration_ms = timeframe_seconds(DEFAULT_CHART_TIMEFRAME)
-            .and_then(|seconds| seconds.checked_mul(1000))
-            .ok_or_else(|| RuntimeError {
-                message: "default chart timeframe duration is invalid".to_owned(),
-            })?;
-        let time_close = bar
-            .time
-            .checked_add(chart_duration_ms)
-            .ok_or_else(|| RuntimeError {
-                message: format!("time_close timestamp is out of range: {}", bar.time),
-            })?;
+        let chart_timeframe = self.request_environment.chart().timeframe();
+        let time_close =
+            chart_timeframe_close(bar.time, chart_timeframe.value(), chart_timeframe.seconds())
+                .ok_or_else(|| RuntimeError {
+                    message: format!("time_close timestamp is out of range: {}", bar.time),
+                })?;
         let millis_since_midnight = i64::from(datetime.num_seconds_from_midnight()) * 1000
             + i64::from(datetime.timestamp_subsec_millis());
         let time_tradingday =

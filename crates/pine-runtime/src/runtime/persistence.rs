@@ -25,7 +25,10 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    pub(crate) fn seed_intrabar_persistence_from(&mut self, previous: &Self) {
+    pub(crate) fn seed_intrabar_persistence_from(
+        &mut self,
+        previous: &Self,
+    ) -> Result<(), RuntimeError> {
         let mut object_roots = Vec::new();
         for var_slot_id in self.persistent_slots_for_kind(PersistenceKind::Varip) {
             if let Some(value) = previous.var_store.get(&var_slot_id).cloned() {
@@ -33,7 +36,7 @@ impl<'a> HistoricalRuntime<'a> {
                 self.var_store.insert(var_slot_id, value);
             }
         }
-        self.seed_intrabar_objects_from(previous, object_roots);
+        self.seed_intrabar_objects_from(previous, object_roots)
     }
 
     pub(crate) fn persistent_slot_for_symbol(

@@ -145,13 +145,29 @@ plot(box.get_top(array.get(box.all, 0)))
     );
     let hir = analysis.hir.unwrap();
     let mut runtime = RealtimeRuntime::new(&hir);
-    runtime.seed_historical(&[bar(1.0), bar(2.0)]).unwrap();
-    let preview = runtime.update(BarUpdate::forming(bar(10.0))).unwrap();
+    runtime
+        .seed_historical(&[at_time(0, bar(1.0)), at_time(60_000, bar(2.0))])
+        .unwrap();
+    let preview = runtime
+        .update(BarUpdate::forming(at_time(120_000, bar(10.0))))
+        .unwrap();
     assert_eq!(preview.labels.last().unwrap().id, 4);
-    let replacement = runtime.update(BarUpdate::forming(bar(3.0))).unwrap();
+    let replacement = runtime
+        .update(BarUpdate::forming(at_time(120_000, bar(3.0))))
+        .unwrap();
     assert_eq!(replacement.labels.last().unwrap().id, 3);
-    let confirmed = runtime.update(BarUpdate::confirmed(bar(4.0))).unwrap();
-    let expected = run_historical(&hir, &[bar(1.0), bar(2.0), bar(4.0)]).unwrap();
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(at_time(120_000, bar(4.0))))
+        .unwrap();
+    let expected = run_historical(
+        &hir,
+        &[
+            at_time(0, bar(1.0)),
+            at_time(60_000, bar(2.0)),
+            at_time(120_000, bar(4.0)),
+        ],
+    )
+    .unwrap();
     assert_eq!(confirmed.labels, expected.labels);
     assert_eq!(confirmed.lines, expected.lines);
     assert_eq!(confirmed.boxes, expected.boxes);
@@ -224,4 +240,9 @@ if bar_index != 1
         runtime.active_boxes.iter().copied().collect::<Vec<_>>(),
         [2]
     );
+}
+
+fn at_time(time: i64, mut bar: Bar) -> Bar {
+    bar.time = time;
+    bar
 }

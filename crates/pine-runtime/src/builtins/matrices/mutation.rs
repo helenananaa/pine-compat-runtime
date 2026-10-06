@@ -53,10 +53,15 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(array_id) = array_id else {
             return Ok(PineValue::Void);
         };
-        let Some(values) = self.array_values_clone(array_id)? else {
+        let Some(values) = self.array_values(array_id)? else {
             return Ok(PineValue::Void);
         };
-        self.matrix_add_row(id, row, values)?;
+        let bytes = collection_values_allocation_bytes(values);
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let values = self.array_values_clone(array_id)?.expect("validated array");
+        self.matrix_add_row_inner(id, row, values, true)?;
         Ok(PineValue::Void)
     }
 
@@ -78,14 +83,19 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(array_id) = array_id else {
             return Ok(PineValue::Void);
         };
-        let Some(values) = self.array_values_clone(array_id)? else {
+        let Some(values) = self.array_values(array_id)? else {
             return Ok(PineValue::Void);
         };
+        let bytes = collection_values_allocation_bytes(values);
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let values = self.array_values_clone(array_id)?.expect("validated array");
         let column = column.unwrap_or_else(|| {
             self.matrix_shape(id)
                 .map_or(0, |(_, columns)| columns as i64)
         });
-        self.matrix_add_col(id, column, values)?;
+        self.matrix_add_col_inner(id, column, values, true)?;
         Ok(PineValue::Void)
     }
 
@@ -98,14 +108,22 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Matrix(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
+        let kind = matrix.kind;
+        let index = matrix_index("row", row, matrix.rows)?;
+        let bytes = collection_values_allocation_bytes(
+            matrix.values.view(index * matrix.columns, matrix.columns),
+        );
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
         let Some(values) = self.matrix_row_values(id, row)? else {
             return Ok(PineValue::Na);
         };
         self.matrix_remove_row(id, row)?;
-        self.new_matrix_result_array(kind, values)
+        self.insert_precharged_matrix_result_array(kind, values)
     }
 
     pub(crate) fn eval_matrix_remove_col(
@@ -117,14 +135,22 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Matrix(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
+        let kind = matrix.kind;
+        let index = matrix_index("column", column, matrix.columns)?;
+        let bytes = collection_values_allocation_bytes(
+            (0..matrix.rows).map(|row| &matrix.values[row * matrix.columns + index]),
+        );
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
         let Some(values) = self.matrix_col_values(id, column)? else {
             return Ok(PineValue::Na);
         };
         self.matrix_remove_col(id, column)?;
-        self.new_matrix_result_array(kind, values)
+        self.insert_precharged_matrix_result_array(kind, values)
     }
 
     pub(crate) fn eval_matrix_swap_rows(
@@ -202,7 +228,7 @@ impl<'a> HistoricalRuntime<'a> {
             message: "matrix reshape dimensions must preserve element count".to_owned(),
         })?;
         let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         if cells != matrix.values.len() {
@@ -210,10 +236,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "matrix reshape dimensions must preserve element count".to_owned(),
             });
         }
+        let bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get_mut(&id).expect("validated matrix");
         matrix.rows = rows;
         matrix.columns = columns;
-        let bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
-        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -222,12 +251,11 @@ impl<'a> HistoricalRuntime<'a> {
         target_id: u32,
         source_id: u32,
     ) -> Result<Option<u32>, RuntimeError> {
-        let Some(source) = self.matrix_store.get(&source_id).cloned() else {
+        let Some(source) = self.matrix_store.get(&source_id) else {
             return Ok(None);
         };
-        self.record_collection_values(source.values.clone_allocation_values());
         let cloned_target = self.matrix_store.get_mut_clones_value(&target_id);
-        let Some(target) = self.matrix_store.get_mut(&target_id) else {
+        let Some(target) = self.matrix_store.get(&target_id) else {
             return Ok(None);
         };
         if target.kind != source.kind {
@@ -259,17 +287,31 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
             });
         }
-        let bytes = target
-            .cloned_entry_allocation_bytes(cloned_target)
+        let bytes = collection_values_allocation_bytes(source.values.clone_allocation_values())
             .saturating_add(collection_values_allocation_bytes(source.values.iter()))
             .saturating_add(if source.values.is_empty() {
-                0
+                target.cloned_entry_allocation_bytes(cloned_target)
             } else {
-                collection_values_allocation_bytes(target.values.append_allocation_values(false))
+                collection_values_allocation_bytes(target.values.append_allocation_values(
+                    cloned_target
+                        || (target_id == source_id
+                            && target.values.clone_allocation_values().is_empty()),
+                ))
             });
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let source = self
+            .matrix_store
+            .get(&source_id)
+            .expect("validated matrix")
+            .clone();
+        let target = self
+            .matrix_store
+            .get_mut(&target_id)
+            .expect("validated matrix");
         target.values.extend(source.values.iter().cloned());
         target.rows = new_rows;
-        self.record_collection_bytes(bytes);
         Ok(Some(target_id))
     }
 
@@ -279,8 +321,18 @@ impl<'a> HistoricalRuntime<'a> {
         row: i64,
         values: Vec<PineValue>,
     ) -> Result<(), RuntimeError> {
+        self.matrix_add_row_inner(id, row, values, false)
+    }
+
+    fn matrix_add_row_inner(
+        &mut self,
+        id: u32,
+        row: i64,
+        values: Vec<PineValue>,
+        incoming_precharged: bool,
+    ) -> Result<(), RuntimeError> {
         let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         let row = matrix_insert_index("row", row, matrix.rows)?;
@@ -310,25 +362,52 @@ impl<'a> HistoricalRuntime<'a> {
         }
         let offset = row * columns;
         let kind = matrix.kind;
+        let rows = matrix.rows + 1;
         let copied_values = if offset < matrix.values.len() {
             collection_values_allocation_bytes(matrix.values.iter())
         } else {
-            collection_values_allocation_bytes(matrix.values.append_allocation_values(false))
+            collection_values_allocation_bytes(
+                matrix.values.append_allocation_values(cloned_matrix),
+            )
         };
-        let bytes = matrix
-            .cloned_entry_allocation_bytes(cloned_matrix)
-            .saturating_add(copied_values)
-            .saturating_add(collection_values_allocation_bytes(&values));
-        matrix.values.replace_range(
-            offset,
-            offset,
-            values
-                .into_iter()
-                .map(|value| eval_matrix_value_for_kind(kind, value)),
-        );
-        matrix.rows += 1;
-        matrix.columns = columns;
-        self.record_collection_bytes(bytes);
+        let bytes = copied_values.saturating_add(if incoming_precharged {
+            0
+        } else {
+            collection_values_allocation_bytes(&values)
+        });
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let inserted = values
+            .into_iter()
+            .map(|value| eval_matrix_value_for_kind(kind, value));
+        let matrix = self.matrix_store.get(&id).expect("validated matrix");
+        if offset < matrix.values.len() {
+            let mut next = Vec::with_capacity(new_cells);
+            next.extend(matrix.values.view(0, offset).iter().cloned());
+            next.extend(inserted);
+            next.extend(
+                matrix
+                    .values
+                    .view(offset, matrix.values.len() - offset)
+                    .iter()
+                    .cloned(),
+            );
+            self.matrix_store.insert(
+                id,
+                MatrixStorage {
+                    kind,
+                    rows,
+                    columns,
+                    values: next.into(),
+                },
+            );
+        } else {
+            let matrix = self.matrix_store.get_mut(&id).expect("validated matrix");
+            matrix.values.extend(inserted);
+            matrix.rows = rows;
+            matrix.columns = columns;
+        }
         Ok(())
     }
 
@@ -338,8 +417,17 @@ impl<'a> HistoricalRuntime<'a> {
         column: i64,
         values: Vec<PineValue>,
     ) -> Result<(), RuntimeError> {
-        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        self.matrix_add_col_inner(id, column, values, false)
+    }
+
+    fn matrix_add_col_inner(
+        &mut self,
+        id: u32,
+        column: i64,
+        mut values: Vec<PineValue>,
+        incoming_precharged: bool,
+    ) -> Result<(), RuntimeError> {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         let column = matrix_insert_index("column", column, matrix.columns)?;
@@ -368,63 +456,104 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let kind = matrix.kind;
-        let copied_entry_bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
-        let mut inserted_values = values
-            .into_iter()
-            .map(|value| eval_matrix_value_for_kind(kind, value));
+        let old_columns = matrix.columns;
+        for value in &mut values {
+            *value = eval_matrix_value_for_kind(kind, std::mem::replace(value, PineValue::Na));
+        }
+        let bytes = collection_values_allocation_bytes(matrix.values.iter()).saturating_add(
+            if incoming_precharged {
+                0
+            } else {
+                collection_values_allocation_bytes(&values)
+            },
+        );
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get(&id).expect("validated matrix");
+        let mut inserted_values = values.into_iter();
         let mut next_values = Vec::with_capacity(new_cells);
         for row in 0..rows {
-            let start = row * matrix.columns;
+            let start = row * old_columns;
             let insert_offset = start + column;
             next_values.extend(matrix.values.view(start, column).iter().cloned());
             next_values.push(inserted_values.next().unwrap_or(PineValue::Na));
             next_values.extend(
                 matrix
                     .values
-                    .view(insert_offset, matrix.columns - column)
+                    .view(insert_offset, old_columns - column)
                     .iter()
                     .cloned(),
             );
         }
-        let bytes =
-            copied_entry_bytes.saturating_add(collection_values_allocation_bytes(&next_values));
-        matrix.columns = new_columns;
-        matrix.rows = rows;
-        matrix.values = next_values.into();
-        self.record_collection_bytes(bytes);
+        self.matrix_store.insert(
+            id,
+            MatrixStorage {
+                kind,
+                rows,
+                columns: new_columns,
+                values: next_values.into(),
+            },
+        );
         Ok(())
     }
 
     pub(crate) fn matrix_remove_row(&mut self, id: u32, row: i64) -> Result<(), RuntimeError> {
-        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         let row = matrix_index("row", row, matrix.rows)?;
         let start = row * matrix.columns;
         let end = start + matrix.columns;
-        let bytes = matrix
-            .cloned_entry_allocation_bytes(cloned_matrix)
-            .saturating_add(collection_values_allocation_bytes(
-                matrix.values.view(0, start),
-            ))
+        let bytes = collection_values_allocation_bytes(matrix.values.view(0, start))
             .saturating_add(collection_values_allocation_bytes(
                 matrix.values.view(end, matrix.values.len() - end),
             ));
-        matrix.values.replace_range(start, end, std::iter::empty());
-        matrix.rows -= 1;
-        self.record_collection_bytes(bytes);
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get(&id).expect("validated matrix");
+        let (kind, rows, columns) = (matrix.kind, matrix.rows - 1, matrix.columns);
+        let mut values = Vec::with_capacity(rows * columns);
+        values.extend(matrix.values.view(0, start).iter().cloned());
+        values.extend(
+            matrix
+                .values
+                .view(end, matrix.values.len() - end)
+                .iter()
+                .cloned(),
+        );
+        self.matrix_store.insert(
+            id,
+            MatrixStorage {
+                kind,
+                rows,
+                columns,
+                values: values.into(),
+            },
+        );
         Ok(())
     }
 
     pub(crate) fn matrix_remove_col(&mut self, id: u32, column: i64) -> Result<(), RuntimeError> {
-        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         let column = matrix_index("column", column, matrix.columns)?;
         let new_columns = matrix.columns - 1;
-        let copied_entry_bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
+        let (kind, rows) = (matrix.kind, matrix.rows);
+        let bytes = collection_values_allocation_bytes(
+            matrix
+                .values
+                .iter()
+                .enumerate()
+                .filter(|(index, _)| index % matrix.columns != column)
+                .map(|(_, value)| value),
+        );
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get(&id).expect("validated matrix");
         let mut next_values = Vec::with_capacity(matrix.rows * new_columns);
         for row in 0..matrix.rows {
             let start = row * matrix.columns;
@@ -438,11 +567,15 @@ impl<'a> HistoricalRuntime<'a> {
                     .cloned(),
             );
         }
-        let bytes =
-            copied_entry_bytes.saturating_add(collection_values_allocation_bytes(&next_values));
-        matrix.columns = new_columns;
-        matrix.values = next_values.into();
-        self.record_collection_bytes(bytes);
+        self.matrix_store.insert(
+            id,
+            MatrixStorage {
+                kind,
+                rows,
+                columns: new_columns,
+                values: next_values.into(),
+            },
+        );
         Ok(())
     }
 
@@ -453,23 +586,33 @@ impl<'a> HistoricalRuntime<'a> {
         row2: i64,
     ) -> Result<(), RuntimeError> {
         let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         let row1 = matrix_index("row", row1, matrix.rows)?;
         let row2 = matrix_index("row", row2, matrix.rows)?;
-        let mut bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
         if row1 == row2 || matrix.columns == 0 {
-            self.record_collection_bytes(bytes);
             return Ok(());
         }
+        let bytes = matrix.swap_allocation_bytes(
+            (0..matrix.columns).map(|column| {
+                (
+                    row1 * matrix.columns + column,
+                    row2 * matrix.columns + column,
+                )
+            }),
+            cloned_matrix,
+        );
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get_mut(&id).expect("validated matrix");
         for column in 0..matrix.columns {
-            bytes = bytes.saturating_add(matrix.swap_values_allocation_bytes(
+            matrix.values.swap(
                 row1 * matrix.columns + column,
                 row2 * matrix.columns + column,
-            ));
+            );
         }
-        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -480,23 +623,33 @@ impl<'a> HistoricalRuntime<'a> {
         column2: i64,
     ) -> Result<(), RuntimeError> {
         let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         let column1 = matrix_index("column", column1, matrix.columns)?;
         let column2 = matrix_index("column", column2, matrix.columns)?;
-        let mut bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
         if column1 == column2 || matrix.rows == 0 {
-            self.record_collection_bytes(bytes);
             return Ok(());
         }
+        let bytes = matrix.swap_allocation_bytes(
+            (0..matrix.rows).map(|row| {
+                (
+                    row * matrix.columns + column1,
+                    row * matrix.columns + column2,
+                )
+            }),
+            cloned_matrix,
+        );
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get_mut(&id).expect("validated matrix");
         for row in 0..matrix.rows {
-            bytes = bytes.saturating_add(matrix.swap_values_allocation_bytes(
+            matrix.values.swap(
                 row * matrix.columns + column1,
                 row * matrix.columns + column2,
-            ));
+            );
         }
-        self.record_collection_bytes(bytes);
         Ok(())
     }
 
@@ -506,17 +659,19 @@ impl<'a> HistoricalRuntime<'a> {
         column: i64,
         descending: bool,
     ) -> Result<(), RuntimeError> {
-        let cloned_matrix = self.matrix_store.get_mut_clones_value(&id);
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(());
         };
         let column = matrix_index("column", column, matrix.columns)?;
         if matrix.rows <= 1 || matrix.columns == 0 {
-            let bytes = matrix.cloned_entry_allocation_bytes(cloned_matrix);
-            self.record_collection_bytes(bytes);
             return Ok(());
         }
-
+        let (kind, rows, columns) = (matrix.kind, matrix.rows, matrix.columns);
+        let bytes = collection_values_allocation_bytes(matrix.values.iter());
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get(&id).expect("validated matrix");
         let mut row_indexes = (0..matrix.rows).collect::<Vec<_>>();
         row_indexes.sort_by(|left, right| {
             let left_value = &matrix.values[left * matrix.columns + column];
@@ -530,11 +685,15 @@ impl<'a> HistoricalRuntime<'a> {
             let start = row * matrix.columns;
             next_values.extend(matrix.values.view(start, matrix.columns).iter().cloned());
         }
-        let bytes = matrix
-            .cloned_entry_allocation_bytes(cloned_matrix)
-            .saturating_add(collection_values_allocation_bytes(&next_values));
-        matrix.values = next_values.into();
-        self.record_collection_bytes(bytes);
+        self.matrix_store.insert(
+            id,
+            MatrixStorage {
+                kind,
+                rows,
+                columns,
+                values: next_values.into(),
+            },
+        );
         Ok(())
     }
 
@@ -546,10 +705,9 @@ impl<'a> HistoricalRuntime<'a> {
         from_column: i64,
         to_column: i64,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(matrix) = self.matrix_store.get(&id).cloned() else {
+        let Some(matrix) = self.matrix_store.get(&id) else {
             return Ok(PineValue::Na);
         };
-        self.record_collection_values(matrix.values.clone_allocation_values());
         let from_row = matrix_slice_index("row", from_row, matrix.rows)?;
         let to_row = matrix_slice_index("row", to_row, matrix.rows)?;
         let from_column = matrix_slice_index("column", from_column, matrix.columns)?;
@@ -567,12 +725,50 @@ impl<'a> HistoricalRuntime<'a> {
 
         let rows = to_row - from_row;
         let columns = to_column - from_column;
+        let kind = matrix.kind;
+        let bytes = collection_values_allocation_bytes((from_row..to_row).flat_map(|row| {
+            matrix
+                .values
+                .view(row * matrix.columns + from_column, columns)
+                .iter()
+        }));
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let matrix = self.matrix_store.get(&id).expect("validated matrix");
         let mut values = Vec::with_capacity(rows * columns);
         for row in from_row..to_row {
             let start = row * matrix.columns + from_column;
             values.extend(matrix.values.view(start, columns).iter().cloned());
         }
-        Ok(self.insert_matrix_storage(matrix.kind, rows, columns, values))
+        Ok(self.insert_matrix_payload(kind, rows, columns, values.into()))
+    }
+
+    fn insert_precharged_matrix_result_array(
+        &mut self,
+        kind: MatrixElementKind,
+        values: Vec<PineValue>,
+    ) -> Result<PineValue, RuntimeError> {
+        let type_name = if let MatrixElementKind::UserType(index) = kind {
+            Some(
+                self.program
+                    .user_types
+                    .get(index)
+                    .ok_or_else(|| RuntimeError {
+                        message: "invalid matrix UDT element identity".to_owned(),
+                    })?
+                    .identity
+                    .type_name
+                    .clone(),
+            )
+        } else {
+            None
+        };
+        let value = self.insert_precharged_array_values(matrix_array_element_kind(kind), values);
+        if let (PineValue::Array(id), Some(type_name)) = (&value, type_name) {
+            self.array_user_types.insert(*id, type_name);
+        }
+        Ok(value)
     }
 
     fn eval_matrix_sort_descending(&mut self, args: &[HirCallArg]) -> Result<bool, RuntimeError> {

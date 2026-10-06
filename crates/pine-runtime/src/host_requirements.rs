@@ -181,7 +181,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
                 timeframe_relation: if callee == "request.security_lower_tf" {
                     "sameOrLower"
                 } else {
-                    "sameOrHigherIntegerMultipleExceptCalendarMonths"
+                    crate::RequestTimeframe::SECURITY_RELATION
                 },
                 gaps: if callee == "request.security_lower_tf" {
                     "notApplicable"

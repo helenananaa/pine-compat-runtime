@@ -1,11 +1,15 @@
 //! Array payloads keep small arrays flat and share pages in large checkpoints.
-//! A sparse write copies one page and the page directory, not every element.
+//! A sparse write copies one page and a bounded directory path.
 use std::{
     ops::{Index, IndexMut},
     sync::Arc,
 };
 
 const PAGE_SIZE: usize = 128;
+
+#[path = "array_values/page_directory.rs"]
+mod page_directory;
+use page_directory::PageDirectory;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ArrayValues<T = crate::PineValue> {
@@ -15,10 +19,7 @@ pub(crate) struct ArrayValues<T = crate::PineValue> {
 #[derive(Clone, Debug)]
 enum Storage<T> {
     Small(Vec<T>),
-    Paged {
-        pages: Arc<Vec<Arc<Vec<T>>>>,
-        len: usize,
-    },
+    Paged { pages: PageDirectory<T>, len: usize },
 }
 
 impl<T> From<Vec<T>> for ArrayValues<T> {
@@ -33,7 +34,7 @@ impl<T> From<Vec<T>> for ArrayValues<T> {
                 pages.push(Arc::new(values.by_ref().take(PAGE_SIZE).collect()));
             }
             Storage::Paged {
-                pages: Arc::new(pages),
+                pages: PageDirectory::from_pages(pages),
                 len,
             }
         };
@@ -64,7 +65,7 @@ impl<T> ArrayValues<T> {
         match &self.storage {
             Storage::Small(values) => values.get(index),
             Storage::Paged { pages, len } => {
-                (index < *len).then(|| &pages[index / PAGE_SIZE][index % PAGE_SIZE])
+                (index < *len).then(|| &pages.get(index / PAGE_SIZE)[index % PAGE_SIZE])
             }
         }
     }
@@ -122,21 +123,14 @@ impl<T> ArrayValues<T> {
             _ => None,
         };
         let pages = match &self.storage {
-            Storage::Paged { pages, .. } => Some((
-                pages.as_slice(),
-                cloned_self || Arc::strong_count(pages) > 1,
-            )),
+            Storage::Paged { pages, .. } => Some(pages),
             _ => None,
         };
-        small
-            .into_iter()
-            .flatten()
-            .chain(pages.into_iter().flat_map(|(pages, shared)| {
-                pages
-                    .iter()
-                    .filter(move |page| shared || Arc::strong_count(page) > 1)
-                    .flat_map(|page| page.iter())
-            }))
+        small.into_iter().flatten().chain(
+            pages
+                .into_iter()
+                .flat_map(move |pages| pages.copied_values(cloned_self)),
+        )
     }
 
     /// Values deep-cloned by a sparse write after an optional store-entry
@@ -147,12 +141,9 @@ impl<T> ArrayValues<T> {
             Storage::Paged { pages, len }
                 if index < *len || (index == *len && !len.is_multiple_of(PAGE_SIZE)) =>
             {
-                let page = &pages[index / PAGE_SIZE];
-                if cloned_self || Arc::strong_count(pages) > 1 || Arc::strong_count(page) > 1 {
-                    page
-                } else {
-                    &[]
-                }
+                pages
+                    .write_page(index / PAGE_SIZE, cloned_self)
+                    .unwrap_or(&[])
             }
             _ => &[],
         }
@@ -167,28 +158,29 @@ impl<T: Clone> ArrayValues<T> {
                 if index >= *len {
                     return None;
                 }
-                Arc::make_mut(&mut Arc::make_mut(pages)[index / PAGE_SIZE])
-                    .get_mut(index % PAGE_SIZE)
+                Arc::make_mut(pages.get_mut(index / PAGE_SIZE)).get_mut(index % PAGE_SIZE)
             }
         }
     }
 
     pub(crate) fn to_vec(&self) -> Vec<T> {
-        self.iter().cloned().collect()
+        let mut values = Vec::with_capacity(self.len());
+        values.extend(self.slices().flatten().cloned());
+        values
     }
 
     pub(crate) fn fill(&mut self, value: T) {
         match &mut self.storage {
             Storage::Small(values) => values.fill(value),
             Storage::Paged { pages, .. } => {
-                for page in Arc::make_mut(pages) {
+                pages.for_each_mut(|page| {
                     if let Some(values) = Arc::get_mut(page) {
                         values.fill(value.clone());
                     } else {
                         // A full overwrite does not need to clone old cells.
                         *page = Arc::new(vec![value.clone(); page.len()]);
                     }
-                }
+                });
             }
         }
     }
@@ -201,20 +193,20 @@ impl<T: Clone> ArrayValues<T> {
         match &mut self.storage {
             Storage::Small(values) => values.swap(left, right),
             Storage::Paged { pages, .. } => {
-                let pages = Arc::make_mut(pages);
                 let (left_page, right_page) = (left / PAGE_SIZE, right / PAGE_SIZE);
                 if left_page == right_page {
-                    Arc::make_mut(&mut pages[left_page]).swap(left % PAGE_SIZE, right % PAGE_SIZE);
+                    Arc::make_mut(pages.get_mut(left_page))
+                        .swap(left % PAGE_SIZE, right % PAGE_SIZE);
                 } else {
                     let (low, high, low_offset, high_offset) = if left_page < right_page {
                         (left_page, right_page, left % PAGE_SIZE, right % PAGE_SIZE)
                     } else {
                         (right_page, left_page, right % PAGE_SIZE, left % PAGE_SIZE)
                     };
-                    let (prefix, suffix) = pages.split_at_mut(high);
+                    let (low_page, high_page) = pages.two_mut(low, high);
                     std::mem::swap(
-                        &mut Arc::make_mut(&mut prefix[low])[low_offset],
-                        &mut Arc::make_mut(&mut suffix[0])[high_offset],
+                        &mut Arc::make_mut(low_page)[low_offset],
+                        &mut Arc::make_mut(high_page)[high_offset],
                     );
                 }
             }
@@ -222,8 +214,42 @@ impl<T: Clone> ArrayValues<T> {
     }
 
     pub(crate) fn reverse(&mut self) {
-        for left in 0..self.len() / 2 {
-            self.swap(left, self.len() - left - 1);
+        match &mut self.storage {
+            Storage::Small(values) => values.reverse(),
+            Storage::Paged { pages, len } => {
+                if *len < 2 {
+                    return;
+                }
+                // Resolve the directory once. Each pair of contiguous chunks
+                // then swaps cells through borrowed slices, including a partial
+                // final page, instead of walking the tree for every cell pair.
+                let mut pages = pages.mutable_pages();
+                let (mut left, mut right) = (0, *len);
+                while right - left > 1 {
+                    let left_page = left / PAGE_SIZE;
+                    let right_page = (right - 1) / PAGE_SIZE;
+                    let left_offset = left % PAGE_SIZE;
+                    let right_offset = (right - 1) % PAGE_SIZE + 1;
+                    if left_page == right_page {
+                        Arc::make_mut(&mut *pages[left_page])[left_offset..right_offset].reverse();
+                        break;
+                    }
+                    let count = (PAGE_SIZE - left_offset)
+                        .min(right_offset)
+                        .min((right - left) / 2);
+                    let (prefix, suffix) = pages.split_at_mut(right_page);
+                    let low = Arc::make_mut(&mut *prefix[left_page]);
+                    let high = Arc::make_mut(&mut *suffix[0]);
+                    for (low, high) in low[left_offset..left_offset + count]
+                        .iter_mut()
+                        .zip(high[right_offset - count..right_offset].iter_mut().rev())
+                    {
+                        std::mem::swap(low, high);
+                    }
+                    left += count;
+                    right -= count;
+                }
+            }
         }
     }
 
@@ -233,6 +259,7 @@ impl<T: Clone> ArrayValues<T> {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn replace_range(
         &mut self,
         start: usize,
@@ -287,16 +314,15 @@ impl<T: Clone> ArrayValues<T> {
             Storage::Small(values) => {
                 let first = Arc::new(std::mem::take(values));
                 self.storage = Storage::Paged {
-                    pages: Arc::new(vec![first, Arc::new(vec![value])]),
+                    pages: PageDirectory::from_pages(vec![first, Arc::new(vec![value])]),
                     len: len + 1,
                 };
             }
             Storage::Paged { pages, len } => {
-                let pages = Arc::make_mut(pages);
                 if *len % PAGE_SIZE == 0 {
                     pages.push(Arc::new(vec![value]));
                 } else {
-                    Arc::make_mut(pages.last_mut().expect("nonempty array")).push(value);
+                    Arc::make_mut(pages.get_mut((*len - 1) / PAGE_SIZE)).push(value);
                 }
                 *len += 1;
             }
@@ -318,8 +344,7 @@ impl<T: Clone> ArrayValues<T> {
         match &mut self.storage {
             Storage::Small(values) => values.pop().expect("nonempty array"),
             Storage::Paged { pages, len } => {
-                let pages = Arc::make_mut(pages);
-                let last = Arc::make_mut(pages.last_mut().expect("nonempty array"));
+                let last = Arc::make_mut(pages.get_mut((*len - 1) / PAGE_SIZE));
                 let removed = last.pop().expect("nonempty page");
                 if last.is_empty() {
                     pages.pop();
@@ -376,6 +401,8 @@ impl<'a, T> ArrayView<'a, T> {
             values: self.values,
             front: self.start,
             back: self.start + self.len,
+            current: [].iter(),
+            reverse_current: [].iter(),
         }
     }
 }
@@ -406,7 +433,7 @@ impl<'a, T> IntoIterator for &'a ArrayValues<T> {
 enum ArraySlices<'a, T> {
     Small(Option<&'a [T]>),
     Paged {
-        pages: std::slice::Iter<'a, Arc<Vec<T>>>,
+        pages: page_directory::Pages<'a, T>,
         remaining: usize,
     },
 }
@@ -434,6 +461,8 @@ pub(crate) struct ArrayIter<'a, T> {
     values: &'a ArrayValues<T>,
     front: usize,
     back: usize,
+    current: std::slice::Iter<'a, T>,
+    reverse_current: std::slice::Iter<'a, T>,
 }
 
 impl<'a, T> Iterator for ArrayIter<'a, T> {
@@ -442,9 +471,16 @@ impl<'a, T> Iterator for ArrayIter<'a, T> {
         if self.front == self.back {
             return None;
         }
-        let index = self.front;
+        if self.current.as_slice().is_empty() {
+            self.current = match &self.values.storage {
+                Storage::Small(values) => values[self.front..].iter(),
+                Storage::Paged { pages, .. } => {
+                    pages.get(self.front / PAGE_SIZE)[self.front % PAGE_SIZE..].iter()
+                }
+            };
+        }
         self.front += 1;
-        self.values.get(index)
+        self.current.next()
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         let len = self.back - self.front;
@@ -457,8 +493,17 @@ impl<T> DoubleEndedIterator for ArrayIter<'_, T> {
         if self.front == self.back {
             return None;
         }
+        if self.reverse_current.as_slice().is_empty() {
+            let index = self.back - 1;
+            self.reverse_current = match &self.values.storage {
+                Storage::Small(values) => values[..=index].iter(),
+                Storage::Paged { pages, .. } => {
+                    pages.get(index / PAGE_SIZE)[..=index % PAGE_SIZE].iter()
+                }
+            };
+        }
         self.back -= 1;
-        self.values.get(self.back)
+        self.reverse_current.next_back()
     }
 }
 impl<T> ExactSizeIterator for ArrayIter<'_, T> {}

@@ -185,7 +185,7 @@ fn representable_large_lengths_are_not_subject_to_an_arbitrary_cap() {
         runtime.eval_call("ta.sma", site, &args).unwrap(),
         PineValue::Na
     );
-    let window = runtime.rolling_windows.values().next().unwrap();
+    let window = runtime.ta_state.rolling_windows.values().next().unwrap();
     assert_eq!(window.values.len(), 1);
     assert_eq!(window.sum, 10.0);
 }
@@ -235,7 +235,7 @@ fn huge_lengths_still_evaluate_later_arguments_before_returning_na() {
             "{callee}"
         );
     }
-    assert!(runtime.rolling_windows.is_empty());
+    assert!(runtime.ta_state.rolling_windows.is_empty());
 }
 
 #[test]
@@ -264,7 +264,7 @@ fn pivot_zero_sides_remain_legal_and_huge_combined_lengths_do_not_wrap() {
             (i64::MAX, i64::MAX),
         ] {
             #[cfg(target_pointer_width = "32")]
-            let before = runtime.rolling_windows.clone();
+            let before = runtime.ta_state.rolling_windows.clone();
             let args = [arg(source.clone()), arg(int(left)), arg(int(right))];
             assert_eq!(
                 runtime.eval_call(callee, site, &args).unwrap(),
@@ -272,7 +272,7 @@ fn pivot_zero_sides_remain_legal_and_huge_combined_lengths_do_not_wrap() {
             );
             #[cfg(target_pointer_width = "32")]
             assert_eq!(
-                runtime.rolling_windows, before,
+                runtime.ta_state.rolling_windows, before,
                 "{callee}, left={left}, right={right}"
             );
         }
@@ -300,7 +300,7 @@ fn seeded_ema_and_macd_keep_huge_lengths_on_the_float_recurrence_path() {
             initial_expected
         );
         runtime.append_bar(bar(1, 20.0)).unwrap();
-        let before = runtime.rolling_windows.clone();
+        let before = runtime.ta_state.rolling_windows.clone();
         let alpha = 2.0 / (i64::MAX as f64 + 1.0);
         let fast = alpha * 20.0 + (1.0 - alpha) * 10.0;
         let mut huge = source_length(&float(20.0), i64::MAX);
@@ -316,7 +316,7 @@ fn seeded_ema_and_macd_keep_huge_lengths_on_the_float_recurrence_path() {
             PineValue::Float(fast)
         };
         assert_eq!(runtime.eval_call(callee, site, &huge).unwrap(), expected);
-        assert_eq!(runtime.rolling_windows, before);
+        assert_eq!(runtime.ta_state.rolling_windows, before);
     }
     for callee in ["ta.dema", "ta.tema"] {
         let mut runtime = HistoricalRuntime::new(&program);
@@ -330,7 +330,7 @@ fn seeded_ema_and_macd_keep_huge_lengths_on_the_float_recurrence_path() {
                 .unwrap(),
             PineValue::Float(10.0)
         );
-        assert!(runtime.rolling_windows.is_empty());
+        assert!(runtime.ta_state.rolling_windows.is_empty());
     }
 }
 
@@ -346,23 +346,23 @@ fn unrepresentable_lengths_leave_existing_windows_unchanged() {
         runtime.append_bars(&[bar(0, 10.0), bar(1, 12.0)]).unwrap();
         let site = CallSiteId(u32::MAX);
         runtime.eval_call(callee, site, &small).unwrap();
-        let before = runtime.rolling_windows.clone();
+        let before = runtime.ta_state.rolling_windows.clone();
         assert_eq!(
             runtime.eval_call(callee, site, &oversized).unwrap(),
             expected,
             "{callee}"
         );
-        assert_eq!(runtime.rolling_windows, before, "{callee}");
+        assert_eq!(runtime.ta_state.rolling_windows, before, "{callee}");
     }
     let mut runtime = HistoricalRuntime::new(&program);
     let site = CallSiteId(u32::MAX);
     assert_eq!(runtime.wilder_rma(site, 0, None, Some(10.0), 1), Some(10.0));
-    let before = runtime.rolling_windows.clone();
+    let before = runtime.ta_state.rolling_windows.clone();
     assert_eq!(
         runtime.wilder_rma(site, 0, Some(10.0), Some(20.0), 4_294_967_296),
         None
     );
-    assert_eq!(runtime.rolling_windows, before);
+    assert_eq!(runtime.ta_state.rolling_windows, before);
 }
 
 #[cfg(target_pointer_width = "32")]
@@ -378,14 +378,14 @@ fn small_windows_resume_from_preserved_history_after_unrepresentable_lengths() {
                 .eval_call(callee, site, &source_length(&float(source), 2))
                 .unwrap();
         }
-        let before = runtime.rolling_windows.clone();
+        let before = runtime.ta_state.rolling_windows.clone();
         assert_eq!(
             runtime
                 .eval_call(callee, site, &source_length(&float(999.0), 4_294_967_296))
                 .unwrap(),
             PineValue::Na
         );
-        assert_eq!(runtime.rolling_windows, before);
+        assert_eq!(runtime.ta_state.rolling_windows, before);
         runtime.append_bar(bar(2, 30.0)).unwrap();
         assert_eq!(
             runtime

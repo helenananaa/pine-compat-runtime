@@ -20,8 +20,9 @@ impl<'a> HistoricalRuntime<'a> {
             let Some(field_index) = self.eval_array_sort_field_index(args)? else {
                 return Ok(PineValue::Void);
             };
-            if let Some(values) = self.array_values_clone(id)? {
+            if let Some(values) = self.array_values_clone_with_budget(id)? {
                 validate_user_type_sort_values("array.sort", &values)?;
+                self.reserve_array_sort_keys(&values)?;
                 let mut values = values
                     .into_iter()
                     .map(|value| {
@@ -32,7 +33,7 @@ impl<'a> HistoricalRuntime<'a> {
                 values.sort_by(|left, right| {
                     compare_user_type_sort_field_values(&left.1, &right.1, field_index, descending)
                 });
-                self.array_replace_values(
+                self.array_replace_precharged_values(
                     id,
                     values.into_iter().map(|(value, _)| value).collect(),
                 )?;
@@ -45,9 +46,9 @@ impl<'a> HistoricalRuntime<'a> {
         ) {
             return Ok(PineValue::Void);
         }
-        if let Some(mut values) = self.array_values_clone(id)? {
+        if let Some(mut values) = self.array_values_clone_with_budget(id)? {
             values.sort_by(|left, right| compare_array_sort_values(kind, left, right, descending));
-            self.array_replace_values(id, values)?;
+            self.array_replace_precharged_values(id, values)?;
         }
         Ok(PineValue::Void)
     }
@@ -64,7 +65,16 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(kind) = self.array_kinds.get(&id).copied() else {
             return Ok(PineValue::Na);
         };
-        let Some(values) = self.array_values_clone(id)? else {
+        if !matches!(
+            kind,
+            ArrayElementKind::Float
+                | ArrayElementKind::Int
+                | ArrayElementKind::String
+                | ArrayElementKind::UserType
+        ) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_values_clone_with_budget(id)? else {
             return Ok(PineValue::Na);
         };
         if kind == ArrayElementKind::UserType {
@@ -72,6 +82,7 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Na);
             };
             validate_user_type_sort_values("array.sort_indices", &values)?;
+            self.reserve_array_sort_keys(&values)?;
             let values = values
                 .iter()
                 .map(|value| self.materialize_object(value))
@@ -85,13 +96,6 @@ impl<'a> HistoricalRuntime<'a> {
                 )
             }));
         }
-        if !matches!(
-            kind,
-            ArrayElementKind::Float | ArrayElementKind::Int | ArrayElementKind::String
-        ) {
-            return Ok(PineValue::Na);
-        }
-
         Ok(self.sorted_index_array(values.len(), |left, right| {
             compare_array_sort_values(kind, &values[*left], &values[*right], descending)
         }))
@@ -101,13 +105,16 @@ impl<'a> HistoricalRuntime<'a> {
     where
         F: FnMut(&usize, &usize) -> std::cmp::Ordering,
     {
+        if !self.record_collection_allocation(len) {
+            return PineValue::Na;
+        }
         let mut indices = (0..len).collect::<Vec<_>>();
         indices.sort_by(|left, right| compare(left, right).then_with(|| left.cmp(right)));
         let values = indices
             .into_iter()
             .map(|index| PineValue::Int(index as i64))
             .collect();
-        self.new_array_from_values(ArrayElementKind::Int, values)
+        self.insert_precharged_array_values(ArrayElementKind::Int, values)
     }
 
     pub(crate) fn eval_array_sort_descending(

@@ -5,6 +5,7 @@ use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_expr(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
+        self.resource_budget.check()?;
         self.charge_execution_steps(1)?;
         if self.eval_expr_depth >= MAX_RUNTIME_EVAL_DEPTH {
             return Err(RuntimeError {
@@ -16,6 +17,7 @@ impl<'a> HistoricalRuntime<'a> {
         let result = self.eval_expr_inner(expr);
         self.eval_expr_depth -= 1;
 
+        self.resource_budget.check()?;
         let value = result?;
         if let Some(series_id) = expr.series_id
             && self.activate_bar_aligned_series(series_id)

@@ -1,5 +1,7 @@
 use pine_ir::HirProgram;
 
+mod resource_limits;
+mod time_protocol;
 mod without_output;
 
 use super::streaming::OutputCursor;
@@ -409,6 +411,7 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         context: RealtimeUpdateContext,
     ) -> Result<(), RuntimeError> {
+        self.validate_chart_update_time(update)?;
         if update.kind == BarUpdateKind::Historical && context.opening_update == Some(false) {
             return Err(RuntimeError {
                 message: "historical bars always have an opening update".to_owned(),
@@ -487,8 +490,11 @@ impl<'a> RealtimeRuntime<'a> {
         // User state rolls back, except varip. Orders and fills belong to the
         // live broker and survive successful updates of the same open bar.
         let mut runtime = self.confirmed.clone();
+        // Intrabar overlays can copy collection payloads. Start this update's
+        // allowance before preparation and retain its charges through execution.
+        runtime.reset_execution_budget();
         if let Some(previous_forming) = &self.forming {
-            runtime.seed_intrabar_persistence_from(previous_forming);
+            runtime.seed_intrabar_persistence_from(previous_forming)?;
             // Compiled patterns are pure caches, independent of Pine rollback.
             runtime
                 .regex_cache
@@ -510,7 +516,7 @@ impl<'a> RealtimeRuntime<'a> {
             runtime.selection_scratch = std::mem::take(&mut previous_forming.selection_scratch);
         }
         let script_passes = runtime.strategy_scheduler.script_passes();
-        if let Err(error) = runtime.append_bar_with_context(
+        if let Err(error) = runtime.append_bar_with_prepared_budget(
             update.bar,
             update.kind,
             is_new_bar,
@@ -693,6 +699,7 @@ impl<'a> RealtimeRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        Self::validate_history_times(bars, None)?;
         if let Some(times) = execution_times
             && times.len() != bars.len()
         {
@@ -765,6 +772,7 @@ impl<'a> RealtimeRuntime<'a> {
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
         self.validate_seed_clocks(bars.len(), execution_times)?;
+        Self::validate_history_times(bars, self.last_confirmed_bar_time())?;
         let mut runtime = self.confirmed.clone();
         match execution_times {
             Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
@@ -772,6 +780,7 @@ impl<'a> RealtimeRuntime<'a> {
         }
         self.confirmed = runtime;
         self.forming = None;
+        self.live_chart = None;
         let prior_len = self.chart_bars.len();
         self.chart_bars.extend_from_slice(bars);
         match (&mut self.chart_execution_times, execution_times) {

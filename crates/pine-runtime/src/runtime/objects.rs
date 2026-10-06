@@ -50,7 +50,7 @@ impl HistoricalRuntime<'_> {
         &self,
         value: &PineValue,
     ) -> Result<(), RuntimeError> {
-        let mut pending = vec![value.clone()];
+        let mut pending = vec![value];
         let mut seen = std::collections::HashSet::new();
         while let Some(value) = pending.pop() {
             match value {
@@ -61,23 +61,19 @@ impl HistoricalRuntime<'_> {
                     });
                 }
                 PineValue::UserType(fields) | PineValue::Tuple(fields) => pending.extend(fields),
-                PineValue::Array(id) if seen.insert((0, id)) => {
-                    if let Some(values) = self.array_values_clone(id)? {
-                        pending.extend(values);
+                PineValue::Array(id) if seen.insert((0, *id)) => {
+                    if let Some(values) = self.array_values(*id)? {
+                        pending.extend(values.iter());
                     }
                 }
-                PineValue::Matrix(id) if seen.insert((1, id)) => {
-                    if let Some(matrix) = self.matrix_store.get(&id) {
-                        pending.extend(matrix.values.iter().cloned());
+                PineValue::Matrix(id) if seen.insert((1, *id)) => {
+                    if let Some(matrix) = self.matrix_store.get(id) {
+                        pending.extend(matrix.values.iter());
                     }
                 }
-                PineValue::Map(id) if seen.insert((2, id)) => {
-                    if let Some(map) = self.map_store.get(&id) {
-                        pending.extend(
-                            map.entries
-                                .iter()
-                                .flat_map(|(key, value)| [key.clone(), value.clone()]),
-                        );
+                PineValue::Map(id) if seen.insert((2, *id)) => {
+                    if let Some(map) = self.map_store.get(id) {
+                        pending.extend(map.entries.iter().flat_map(|(key, value)| [key, value]));
                     }
                 }
                 _ => {}
@@ -87,14 +83,20 @@ impl HistoricalRuntime<'_> {
     }
 
     pub(crate) fn materialize_object(&self, value: &PineValue) -> Result<PineValue, RuntimeError> {
-        self.materialize_object_inner(value, &mut std::collections::HashSet::new())
+        self.materialize_object_inner(value, &mut std::collections::HashSet::new(), 0)
     }
 
     fn materialize_object_inner(
         &self,
         value: &PineValue,
         seen: &mut std::collections::HashSet<u32>,
+        depth: u32,
     ) -> Result<PineValue, RuntimeError> {
+        if depth >= MAX_RUNTIME_EVAL_DEPTH {
+            return Err(RuntimeError {
+                message: "UDT materialization exceeded maximum depth".to_owned(),
+            });
+        }
         let PineValue::UserTypeRef(id) = value else {
             return Ok(value.clone());
         };
@@ -108,7 +110,7 @@ impl HistoricalRuntime<'_> {
         })?;
         let fields = fields
             .iter()
-            .map(|field| self.materialize_object_inner(field, seen))
+            .map(|field| self.materialize_object_inner(field, seen, depth + 1))
             .collect::<Result<_, _>>()?;
         seen.remove(id);
         Ok(PineValue::UserType(fields))
@@ -138,13 +140,19 @@ impl HistoricalRuntime<'_> {
             self.object_varip_ids.insert(id, id);
         }
         self.next_object_id += 1;
-        self.record_collection_values(&fields);
+        if !self.record_collection_values(&fields) {
+            return Err(self.resource_budget.collection_error());
+        }
         self.object_store.insert(id, fields);
         self.object_varip_fields.insert(id, flags);
         Ok(PineValue::UserTypeRef(id))
     }
 
-    pub(crate) fn seed_intrabar_objects_from(&mut self, previous: &Self, roots: Vec<PineValue>) {
+    pub(crate) fn seed_intrabar_objects_from(
+        &mut self,
+        previous: &Self,
+        roots: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
         self.next_object_id = self.next_object_id.max(previous.next_object_id);
         let mut pending = Vec::new();
         for value in &roots {
@@ -160,8 +168,9 @@ impl HistoricalRuntime<'_> {
             ) {
                 for (index, varip) in flags.iter().enumerate() {
                     if *varip && let Some(value) = fields.get(index) {
-                        self.set_object_field(id, index, value.clone())
-                            .expect("existing varip field");
+                        self.reserve_object_field_write(id, index, value)?;
+                        self.object_store.get_mut(&id).expect("validated object")[index] =
+                            value.clone();
                         enqueue_intrabar_references(&mut pending, value, true);
                     }
                 }
@@ -242,6 +251,7 @@ impl HistoricalRuntime<'_> {
                 _ => {}
             }
         }
+        Ok(())
     }
 
     pub(crate) fn object_field(&self, id: u32, index: usize) -> Result<PineValue, RuntimeError> {
@@ -260,6 +270,19 @@ impl HistoricalRuntime<'_> {
         index: usize,
         value: PineValue,
     ) -> Result<(), RuntimeError> {
+        self.reserve_object_field_write(id, index, &value)?;
+        self.object_store.get_mut(&id).expect("validated object")[index] = value;
+        Ok(())
+    }
+
+    // Reserve both the copy-on-write payload and incoming field before cloning
+    // a retained varip value or making a shared object mutable.
+    fn reserve_object_field_write(
+        &mut self,
+        id: u32,
+        index: usize,
+        value: &PineValue,
+    ) -> Result<(), RuntimeError> {
         let fields = self
             .object_store
             .get(&id)
@@ -272,9 +295,12 @@ impl HistoricalRuntime<'_> {
         } else {
             0
         };
-        self.record_collection_bytes(copied);
-        self.record_collection_values(std::iter::once(&value));
-        self.object_store.get_mut(&id).expect("validated object")[index] = value;
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !self.record_collection_values(std::iter::once(value)) {
+            return Err(self.resource_budget.collection_error());
+        }
         Ok(())
     }
 }
@@ -282,6 +308,82 @@ impl HistoricalRuntime<'_> {
 #[cfg(test)]
 #[path = "objects_transfer_tests.rs"]
 mod transfer_tests;
+
+#[cfg(test)]
+mod materialization_depth_tests {
+    use super::*;
+
+    fn program() -> pine_ir::HirProgram {
+        let analysis = pine_sema::analyze_source(&pine_syntax::SourceFile::new(
+            "object-depth.pine",
+            "//@version=6\nindicator(\"object depth\")\nplot(close)\n",
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        analysis.hir.unwrap()
+    }
+
+    #[test]
+    fn long_reference_chains_return_a_depth_error_before_exhausting_the_stack() {
+        let hir = program();
+        let mut runtime = HistoricalRuntime::new(&hir);
+        let length = MAX_RUNTIME_EVAL_DEPTH * 4;
+        for id in 0..length {
+            let field = if id + 1 == length {
+                PineValue::Int(7)
+            } else {
+                PineValue::UserTypeRef(id + 1)
+            };
+            runtime.object_store.insert(id, vec![field]);
+        }
+        assert_eq!(
+            runtime
+                .materialize_object(&PineValue::UserTypeRef(0))
+                .unwrap_err()
+                .message,
+            "UDT materialization exceeded maximum depth"
+        );
+    }
+
+    #[test]
+    fn shallow_values_cycles_and_invalid_references_keep_their_existing_contract() {
+        let hir = program();
+        let mut runtime = HistoricalRuntime::new(&hir);
+        runtime
+            .object_store
+            .insert(0, vec![PineValue::Int(1), PineValue::UserTypeRef(1)]);
+        runtime.object_store.insert(1, vec![PineValue::Int(2)]);
+        assert_eq!(
+            runtime
+                .materialize_object(&PineValue::UserTypeRef(0))
+                .unwrap(),
+            PineValue::UserType(vec![
+                PineValue::Int(1),
+                PineValue::UserType(vec![PineValue::Int(2)])
+            ])
+        );
+        runtime
+            .object_store
+            .insert(1, vec![PineValue::UserTypeRef(0)]);
+        assert_eq!(
+            runtime
+                .materialize_object(&PineValue::UserTypeRef(0))
+                .unwrap_err()
+                .message,
+            "cyclic UDT cannot be materialized as a value tree"
+        );
+        assert_eq!(
+            runtime
+                .materialize_object(&PineValue::UserTypeRef(2))
+                .unwrap_err()
+                .message,
+            "invalid UDT object reference"
+        );
+    }
+}
 
 #[cfg(test)]
 mod varip_index_tests {
@@ -332,7 +434,9 @@ mod varip_index_tests {
         let retained = forming
             .allocate_object(vec![PineValue::Int(99), PineValue::Int(40)], sticky)
             .unwrap();
-        committed.seed_intrabar_objects_from(&forming, vec![retained.clone(), retained]);
+        committed
+            .seed_intrabar_objects_from(&forming, vec![retained.clone(), retained])
+            .unwrap();
         assert_eq!(committed.object_field(first, 0).unwrap(), PineValue::Int(7));
         assert_eq!(
             committed.object_field(first, 1).unwrap(),
@@ -433,7 +537,9 @@ mod varip_index_tests {
             .unwrap()
             .entries
             .put(PineValue::String("nested".into()), nested);
-        committed.seed_intrabar_objects_from(&forming, vec![held]);
+        committed
+            .seed_intrabar_objects_from(&forming, vec![held])
+            .unwrap();
         assert_eq!(
             committed.matrix_store.get(&0).unwrap().values.to_vec(),
             [PineValue::Float(7.)]

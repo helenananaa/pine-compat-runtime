@@ -2321,10 +2321,10 @@ plot(ratio)
 "#,
     );
     let bars = [
-        bar_ohlc(1.0, 10.0, 1.0, 2.0),
-        bar_ohlc(2.0, 20.0, 2.0, 3.0),
-        bar_ohlc(3.0, 15.0, 5.0, 2.0),
-        bar_ohlc(4.0, 14.0, 6.0, 3.0),
+        at_time(0, bar_ohlc(1.0, 10.0, 1.0, 2.0)),
+        at_time(60_000, bar_ohlc(2.0, 20.0, 2.0, 3.0)),
+        at_time(120_000, bar_ohlc(3.0, 15.0, 5.0, 2.0)),
+        at_time(180_000, bar_ohlc(4.0, 14.0, 6.0, 3.0)),
     ];
     let historical = run_historical(&program, &bars).expect("phase 6 historical run");
 
@@ -2343,7 +2343,10 @@ plot(ratio)
             .expect("phase 6 realtime history");
     }
     realtime
-        .update(BarUpdate::forming(bar_ohlc(8.0, 30.0, 7.0, 9.0)))
+        .update(BarUpdate::forming(at_time(
+            180_000,
+            bar_ohlc(8.0, 30.0, 7.0, 9.0),
+        )))
         .expect("phase 6 forming update");
     realtime
         .update(BarUpdate::forming(bars[3]))
@@ -2375,4 +2378,9 @@ fn v5_numeric_typed_bool_declaration_casts_at_runtime() {
     );
     let v6 = analyze_source(&v6_source);
     assert!(v6.diagnostics.iter().any(|d| d.code == "E_ASSIGN_TYPE"));
+}
+
+fn at_time(time: i64, mut bar: Bar) -> Bar {
+    bar.time = time;
+    bar
 }

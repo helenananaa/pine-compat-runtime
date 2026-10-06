@@ -87,7 +87,9 @@ fn typed_scalar_slices_import_shared_payloads_without_changing_checkpoints() {
         },
     );
     forming.array_kinds.insert(slice, ArrayElementKind::Float);
-    committed.seed_intrabar_objects_from(&forming, vec![PineValue::Array(slice)]);
+    committed
+        .seed_intrabar_objects_from(&forming, vec![PineValue::Array(slice)])
+        .unwrap();
     assert!(std::ptr::eq(
         committed.array_store.get(&parent).unwrap(),
         forming.array_store.get(&parent).unwrap()
@@ -153,12 +155,14 @@ fn inline_nested_object_arrays_keep_varip_fields_and_roll_back_ordinary_fields()
             PineValue::UserTypeRef(held_id),
         ])])],
     );
-    committed.seed_intrabar_objects_from(
-        &forming,
-        vec![PineValue::Tuple(vec![PineValue::UserType(vec![
-            reference_array.clone(),
-        ])])],
-    );
+    committed
+        .seed_intrabar_objects_from(
+            &forming,
+            vec![PineValue::Tuple(vec![PineValue::UserType(vec![
+                reference_array.clone(),
+            ])])],
+        )
+        .unwrap();
     assert_eq!(
         committed.array_get_cloned(sticky_id, 0).unwrap(),
         Some(PineValue::Float(10.))

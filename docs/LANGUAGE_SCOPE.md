@@ -590,7 +590,9 @@ Request data:
   `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
-  same-or-higher-timeframe bars. The provider expression subset includes
+  lower, equal, or higher-timeframe bars. Higher fixed timeframes must be
+  integer multiples of the chart timeframe; calendar months instead align by
+  calendar boundaries. The provider expression subset includes
   requested-context `syminfo.tickerid`/`timeframe.period`, direct OHLCV/time
   sources, pure arithmetic and ternaries, history references, `na`,
   `nz`, `time(timeframe)` and `time_close(timeframe)` function calls including
@@ -667,16 +669,17 @@ The analyzer should reject these with clear diagnostics:
   `strategy.risk.max_intraday_loss`,
   `strategy.risk.max_intraday_filled_orders`, and
   `strategy.risk.max_cons_loss_days`
-- `request.*` variants outside the narrow same-context and same-or-higher-timeframe
+- `request.*` variants outside the narrow same-context and
   provider-backed `request.security` subsets
-- legacy lower-timeframe `security`, requested expressions outside the same
-  provider-backed subset, and non-empty or dynamic declaration-level
+- requested expressions outside the same provider-backed `security` subset,
+  and non-empty or dynamic declaration-level
   `study(resolution=...)`; the exact empty-string chart-inherited subset is
   supported, while all execution-timeframe-changing forms remain a precise
   unsupported program-context feature
-- `request.security_lower_tf` optional policies beyond named `calc_bars_count`,
-  collection expressions, and provider-backed forming updates; the historical
-  scalar and scalar-tuple subset returns typed intrabar arrays from host-provided bars
+- `request.security_lower_tf` optional policies beyond named `calc_bars_count`
+  and collection expressions; the scalar and scalar-tuple subset returns typed
+  intrabar arrays from host-provided bars, with forming arrays limited to
+  explicitly received current-period intrabars
 - unsupported alert frequency values outside the claimed const-string
   frequency subset and alert placeholder interpolation outside the
   supported `alertcondition` message subset

@@ -174,6 +174,50 @@ fn wasm_realtime_session_matches_rust_event_sequence() {
 }
 
 #[test]
+fn wasm_session_uses_core_time_protocol_and_preserves_state_after_rejection() {
+    let program =
+        compile_script("//@version=6\nindicator(\"time protocol\")\nplot(close)\n").unwrap();
+    let mut session = program.realtime_session().unwrap();
+    session
+        .seed_internal(&bars_csv(&[bar(0, 1.0)]), None)
+        .unwrap();
+    session
+        .apply_chart_update(&bar_json(60_000, 2.0), "{}", true, true)
+        .unwrap();
+    let before = session.stream_snapshot();
+    let changes = session.last_changes();
+    for forming in [true, false] {
+        for delta in [true, false] {
+            assert!(
+                session
+                    .apply_chart_update(&bar_json(120_000, 3.0), "{}", forming, delta)
+                    .unwrap_err()
+                    .contains("does not match forming time")
+            );
+            assert_eq!(session.stream_snapshot(), before);
+            assert_eq!(session.last_changes(), changes);
+            assert_eq!(session.forming_time(), Some(60_000.0));
+            assert_eq!(session.last_confirmed_time(), Some(0.0));
+            assert_eq!(session.confirmed_bars(), 1);
+        }
+    }
+    session
+        .apply_chart_update(&bar_json(60_000, 2.0), "{}", false, true)
+        .unwrap();
+    assert_eq!(session.forming_time(), None);
+    assert_eq!(session.last_confirmed_time(), Some(60_000.0));
+    assert_eq!(session.confirmed_bars(), 2);
+    let confirmed = session.stream_snapshot();
+    assert!(
+        session
+            .apply_chart_update(&bar_json(0, 3.0), "{}", false, true)
+            .unwrap_err()
+            .contains("must be later than confirmed time")
+    );
+    assert_eq!(session.stream_snapshot(), confirmed);
+}
+
+#[test]
 fn wasm_replica_gap_recovery_matches_session_snapshot() {
     let source = "//@version=6\nindicator(\"cursor\")\nplot(close)\n";
     let program = compile_script(source).expect("program");

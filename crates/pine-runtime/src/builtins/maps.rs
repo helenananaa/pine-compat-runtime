@@ -1,6 +1,7 @@
 use pine_ir::HirCallArg;
 
 use super::arrays::{ArrayElementKind, array_value_for_kind};
+use crate::runtime::collection_gc::collection_values_allocation_bytes;
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
 
 #[path = "maps/storage.rs"]
@@ -118,8 +119,12 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             (None, 0)
         };
-        self.record_collection_bytes(copied);
-        self.record_collection_values([&key, &value]);
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        if !self.record_collection_values([&key, &value]) {
+            return Err(self.resource_budget.collection_error());
+        }
         if let (Some(storage), Some(lookup)) = (self.map_store.get_mut(&id), lookup) {
             storage.entries.put_with_lookup(key, value, lookup);
         }
@@ -191,7 +196,9 @@ impl<'a> HistoricalRuntime<'a> {
                 0
             }
         });
-        self.record_collection_bytes(copied);
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
         if let Some(storage) = self.map_store.get_mut(&id) {
             storage.entries.clear();
         }
@@ -228,7 +235,9 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             (None, 0)
         };
-        self.record_collection_bytes(copied);
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
         if let (Some(storage), Some(lookup)) = (self.map_store.get_mut(&id), lookup) {
             storage.entries.remove_with_lookup(lookup);
         }
@@ -268,23 +277,34 @@ impl<'a> HistoricalRuntime<'a> {
         if target_id == source_id || !self.validate_map_merge(target_id, source_id)? {
             return Ok(PineValue::Void);
         }
-        let Some((source_entries, copied)) = self.map_store.get(&source_id).map(|storage| {
-            (
-                storage.entries.clone(),
-                storage.entries.clone_allocation_bytes(),
-            )
-        }) else {
+        let Some(copied) = self
+            .map_store
+            .get(&source_id)
+            .map(|storage| storage.entries.clone_allocation_bytes())
+        else {
             return Ok(PineValue::Void);
         };
-        self.record_collection_bytes(copied);
-        for (key, value) in source_entries {
-            self.record_map_put_pressure(target_id, &key);
-            self.record_collection_values([&key, &value]);
+        if !self.record_collection_bytes(copied) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let source_entries = self
+            .map_store
+            .get(&source_id)
+            .expect("validated map")
+            .entries
+            .clone();
+        for (key, value) in source_entries.iter() {
+            if !self.record_map_put_pressure(target_id, key) {
+                return Err(self.resource_budget.collection_error());
+            }
+            if !self.record_collection_values([key, value]) {
+                return Err(self.resource_budget.collection_error());
+            }
             self.map_store
                 .get_mut(&target_id)
                 .expect("target map")
                 .entries
-                .put(key, value);
+                .put(key.clone(), value.clone());
         }
         Ok(PineValue::Void)
     }
@@ -341,19 +361,23 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Map(id) = self.eval_expr(&arg.value)? else {
             return Ok(PineValue::Na);
         };
-        let Some((kind, values)) = self.map_store.get(&id).map(|storage| {
-            (
-                storage.key_kind,
-                storage
-                    .entries
-                    .iter()
-                    .map(|(key, _)| key.clone())
-                    .collect::<Vec<_>>(),
-            )
-        }) else {
+        let Some(storage) = self.map_store.get(&id) else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(kind, values))
+        let kind = storage.key_kind;
+        let bytes = collection_values_allocation_bytes(storage.entries.iter().map(|(key, _)| key));
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let values = self
+            .map_store
+            .get(&id)
+            .expect("validated map")
+            .entries
+            .iter()
+            .map(|(key, _)| key.clone())
+            .collect();
+        Ok(self.insert_precharged_array_values(kind, values))
     }
 
     fn eval_map_values(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -365,19 +389,24 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Map(id) = self.eval_expr(&arg.value)? else {
             return Ok(PineValue::Na);
         };
-        let Some((kind, values)) = self.map_store.get(&id).map(|storage| {
-            (
-                storage.value_kind,
-                storage
-                    .entries
-                    .iter()
-                    .map(|(_, value)| value.clone())
-                    .collect::<Vec<_>>(),
-            )
-        }) else {
+        let Some(storage) = self.map_store.get(&id) else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(kind, values))
+        let kind = storage.value_kind;
+        let bytes =
+            collection_values_allocation_bytes(storage.entries.iter().map(|(_, value)| value));
+        if !self.record_collection_bytes(bytes) {
+            return Err(self.resource_budget.collection_error());
+        }
+        let values = self
+            .map_store
+            .get(&id)
+            .expect("validated map")
+            .entries
+            .iter()
+            .map(|(_, value)| value.clone())
+            .collect();
+        Ok(self.insert_precharged_array_values(kind, values))
     }
 
     fn eval_map_key(
@@ -406,23 +435,31 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn copy_map(&mut self, source_id: u32) -> PineValue {
-        let Some(source) = self.map_store.get(&source_id).cloned() else {
+        let Some(source) = self.map_store.get(&source_id) else {
             return PineValue::Na;
         };
+        let bytes = source.entries.clone_allocation_bytes();
+        if !self.record_collection_bytes(bytes) {
+            return PineValue::Na;
+        }
+        let source = self
+            .map_store
+            .get(&source_id)
+            .expect("validated map")
+            .clone();
         let id = self.next_map_id;
         self.next_map_id += 1;
-        self.record_collection_bytes(source.entries.clone_allocation_bytes());
         self.map_store.insert(id, source);
         PineValue::Map(id)
     }
 
-    fn record_map_put_pressure(&mut self, id: u32, key: &PineValue) {
+    fn record_map_put_pressure(&mut self, id: u32, key: &PineValue) -> bool {
         let copied = self.map_store.get(&id).map_or(0, |storage| {
             storage
                 .entries
                 .put_allocation_bytes(key, self.map_store.get_mut_clones_value(&id))
         });
-        self.record_collection_bytes(copied);
+        self.record_collection_bytes(copied)
     }
 }
 
@@ -476,6 +513,57 @@ mod capacity_tests;
 mod tests {
     use super::*;
     use crate::{Bar, BarUpdate, RealtimeRuntime};
+
+    #[test]
+    fn rejected_copy_projection_and_merge_do_not_insert_payloads() {
+        for operation in [
+            "map.copy(source)",
+            "map.keys(source)",
+            "map.values(source)",
+            "map.put_all(target,source)",
+        ] {
+            let source = pine_syntax::SourceFile::new(
+                "map-budget.pine",
+                format!(
+                    "//@version=6\nindicator(\"budget\")\nvar source=map.new<int,string>()\nvar target=map.new<int,string>()\nif barstate.isfirst\n    map.put(source,1,str.repeat(\"x\",1024))\nif not barstate.isfirst\n    {operation}\nplot(map.size(source))\n"
+                ),
+            );
+            let analysis = pine_sema::analyze_source(&source);
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{operation}: {:?}",
+                analysis.diagnostics
+            );
+            let program = analysis.hir.unwrap();
+            let mut runtime = HistoricalRuntime::new(&program);
+            let bar = |time| Bar {
+                time,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            };
+            runtime.append_bar(bar(0)).unwrap();
+            let profile = runtime.profile();
+            let map_slots = runtime.map_store.len();
+            let source = runtime.map_store.get(&0).unwrap().clone();
+            let mut runtime = runtime.with_resource_limits(crate::ResourceLimits {
+                max_collection_bytes_per_bar: Some(0),
+                ..crate::ResourceLimits::default()
+            });
+            let error = runtime.append_bar(bar(60_000)).unwrap_err();
+            assert!(
+                error.message.contains("E_RESOURCE_BUDGET"),
+                "{operation}: {}",
+                error.message
+            );
+            assert_eq!(runtime.map_store.get(&0).unwrap(), &source);
+            assert!(runtime.map_store.get(&1).unwrap().entries.is_empty());
+            assert_eq!(runtime.map_store.len(), map_slots);
+            assert_eq!(runtime.profile().array_slots, profile.array_slots);
+        }
+    }
 
     #[test]
     fn short_lived_large_string_map_copies_collect_after_one_page_write() {
@@ -546,6 +634,7 @@ plot(str.length(map.get(temporary, 256)))
         );
         runtime.next_map_id = 1;
         runtime
+            .ta_state
             .call_state
             .insert(pine_ir::CallSiteId(0), PineValue::Map(0));
         runtime.collection_gc_allocated_bytes = 0;

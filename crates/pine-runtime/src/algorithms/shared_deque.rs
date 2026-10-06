@@ -222,6 +222,8 @@ impl<T> SharedDeque<T> {
                         back_index: end,
                         next_page: 0,
                         current: [].iter(),
+                        reverse_page: 0,
+                        reverse_current: None,
                         remaining: 0,
                     });
                 }
@@ -232,6 +234,8 @@ impl<T> SharedDeque<T> {
                     back_index: end,
                     next_page: page + 1,
                     current: pages.page(page)[offset..].iter(),
+                    reverse_page: 0,
+                    reverse_current: None,
                     remaining,
                 })
             }
@@ -484,6 +488,10 @@ pub(crate) struct PagedIter<'a, T> {
     back_index: usize,
     next_page: usize,
     current: std::slice::Iter<'a, T>,
+    // Initialized only by reverse consumption. The logical remaining count
+    // bounds both cursors even when their slices overlap or retain hidden cells.
+    reverse_page: usize,
+    reverse_current: Option<std::slice::Iter<'a, T>>,
     remaining: usize,
 }
 
@@ -584,10 +592,21 @@ impl<T> DoubleEndedIterator for Iter<'_, T> {
                 if iter.remaining == 0 {
                     return None;
                 }
-                iter.back_index -= 1;
-                iter.remaining -= 1;
-                let (page, offset) = iter.root.locate(iter.back_index);
-                Some(&iter.root.page(page)[offset])
+                loop {
+                    if let Some(current) = &mut iter.reverse_current {
+                        if let Some(value) = current.next_back() {
+                            iter.back_index -= 1;
+                            iter.remaining -= 1;
+                            return Some(value);
+                        }
+                        iter.reverse_page -= 1;
+                        iter.reverse_current = Some(iter.root.page(iter.reverse_page).iter());
+                    } else {
+                        let (page, offset) = iter.root.locate(iter.back_index - 1);
+                        iter.reverse_page = page;
+                        iter.reverse_current = Some(iter.root.page(page)[..=offset].iter());
+                    }
+                }
             }
         }
     }
@@ -603,6 +622,9 @@ impl<T> DoubleEndedIterator for Iter<'_, T> {
                 }
                 iter.back_index -= n;
                 iter.remaining -= n;
+                if n != 0 {
+                    iter.reverse_current = None;
+                }
                 self.next_back()
             }
         }
@@ -626,3 +648,7 @@ mod shared_deque_endpoint_tests;
 #[cfg(test)]
 #[path = "shared_deque_scan_tests.rs"]
 mod shared_deque_scan_tests;
+
+#[cfg(test)]
+#[path = "shared_deque_reverse_tests.rs"]
+mod shared_deque_reverse_tests;

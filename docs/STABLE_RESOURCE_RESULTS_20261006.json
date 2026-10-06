@@ -1,0 +1,5410 @@
+{
+  "schemaVersion": 2,
+  "status": "passed",
+  "sourceState": "workingTreeHashPinned",
+  "planSha256": "19c49d428b7e11185c18d7fc3d213b680aa0b538537e2b3dc5c45f90710994e3",
+  "budgetSha256": "c6d081130645cbffcd2af832a2e57beceda9a8a0f857ac78b788a037808190f6",
+  "reports": {
+    "Windows/rust": {
+      "receiptSha256": "aad2518b5c20da4ef3bcef531d2d74f32f0e2f3641b51239469a7160a05c5121",
+      "receiptPath": ".local/stable-release-0.3.0-20261006/matrix-r2/Windows/rust/results.json",
+      "sourcePlanSha256": "19c49d428b7e11185c18d7fc3d213b680aa0b538537e2b3dc5c45f90710994e3",
+      "retained": false,
+      "rows": 36,
+      "measured": 36,
+      "growth": [
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "append",
+          "ratio": 1.7745098039215683
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.9783037475345169
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 2.064803049555273
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 2.1716300940438873
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 1.441176470588235
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "append",
+          "ratio": 1.096244131455399
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.4136657433056325
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.4883346741753822
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.5551484060095275
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.1574468085106382
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "append",
+          "ratio": 1.060428849902534
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.20183908045977
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.2313224131042753
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.2907277428888062
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.9594594594594594
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "append",
+          "ratio": 1.1387755102040817
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.2504424778761063
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.327088212334114
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.3774263120057513
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.995433789954338
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "append",
+          "ratio": 0.94314381270903
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.2153032153032153
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.1846153846153844
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.1615120274914088
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "request",
+          "ratio": 1.6840236686390528
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.8333333333333334
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "append",
+          "ratio": 1.0107142857142857
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.283657917019475
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.2676609105180532
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.2411807055435566
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "request",
+          "ratio": 1.4228710462287104
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.2500000000000002
+        }
+      ],
+      "failures": [],
+      "host": {
+        "uname": [
+          "Windows",
+          "DESKTOP-K6P66JD",
+          "11",
+          "10.0.26200",
+          "AMD64",
+          "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel"
+        ],
+        "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+        "memoryCounters": "windowsSumOfProcessTreePeakWorkingSetUpperBound",
+        "samplingIntervalMs": 20,
+        "note": "process-wide peaks include input conversion and verification; not per-runtime retained allocation"
+      },
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "1b7562c72fe665634998c0d8f78c581b663b6774eda8bfc710def14e8661636d",
+        "wasm/pine_wasm_bg.wasm": "7a839c29e29d9bdaa9d633284fc43bbf4d356e7071bd65c6a4787f917053f34f",
+        "wheels/pine_compat_runtime-0.3.0-cp310-abi3-win_amd64.whl": "2ba8583da5224076f7f820cfdafb35b2944f375c69e83da55eaa7565a6887603",
+        "resource-probe.exe": "1711acafbeed667333edfbc886978f1c737e91c9d822dacf7b59e11b5ed0a12e"
+      }
+    },
+    "Windows/python": {
+      "receiptSha256": "900dbcf09cfebdf7bd0e2b7900cd3b5cd45cb00e350946a2d607b2c57b5bad6c",
+      "receiptPath": ".local/stable-release-0.3.0-20261006/matrix-r2/Windows/python/results.json",
+      "sourcePlanSha256": "19c49d428b7e11185c18d7fc3d213b680aa0b538537e2b3dc5c45f90710994e3",
+      "retained": false,
+      "rows": 36,
+      "measured": 36,
+      "growth": [
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.1716357775987107
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.1885274571528506
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.2416829745596871
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.9610215053763442
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.4362934362934363
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.4719251336898396
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.5627555835168294
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.2088058705803868
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.8227660363366702
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.9080955540809554
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.9466828233868527
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 1.5122282608695652
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.2532561505065123
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.305889803673211
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.3491686460807601
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.017426273458445
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.2817534657174972
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.2629721143663961
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.2345519249433838
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "request",
+          "ratio": 1.3840000000000001
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 1.0769230769230769
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 0.8797232570516231
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 0.8589743589743589
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 0.8545747868172389
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "request",
+          "ratio": 1.219284603421462
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.582089552238806
+        }
+      ],
+      "failures": [],
+      "host": {
+        "uname": [
+          "Windows",
+          "DESKTOP-K6P66JD",
+          "11",
+          "10.0.26200",
+          "AMD64",
+          "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel"
+        ],
+        "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+        "memoryCounters": "windowsSumOfProcessTreePeakWorkingSetUpperBound",
+        "samplingIntervalMs": 20,
+        "note": "process-wide peaks include input conversion and verification; not per-runtime retained allocation"
+      },
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "1b7562c72fe665634998c0d8f78c581b663b6774eda8bfc710def14e8661636d",
+        "wasm/pine_wasm_bg.wasm": "7a839c29e29d9bdaa9d633284fc43bbf4d356e7071bd65c6a4787f917053f34f",
+        "wheels/pine_compat_runtime-0.3.0-cp310-abi3-win_amd64.whl": "2ba8583da5224076f7f820cfdafb35b2944f375c69e83da55eaa7565a6887603",
+        "resource-probe.exe": "1711acafbeed667333edfbc886978f1c737e91c9d822dacf7b59e11b5ed0a12e"
+      }
+    },
+    "Windows/wasm": {
+      "receiptSha256": "612f93129b01535dfadda8f6173d29f2e682dbbb75f74e3248aecc280490b974",
+      "receiptPath": ".local/stable-release-0.3.0-20261006/matrix-r2/Windows/wasm/results.json",
+      "sourcePlanSha256": "19c49d428b7e11185c18d7fc3d213b680aa0b538537e2b3dc5c45f90710994e3",
+      "retained": false,
+      "rows": 36,
+      "measured": 36,
+      "growth": [
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 0.7612758534771427
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 0.8172191528535402
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 0.8732621398345765
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.7087183607885529
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 0.9949916527383884
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.0256556442161688
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.0487250694590404
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.9071274298332299
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 0.9576246757011656
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 0.9460692245742423
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 0.9267570900094868
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "request",
+          "ratio": 0.938315539740777
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.5327868852050374
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.230927835047059
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.202527646130991
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.1830737584524713
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "request",
+          "ratio": 1.164866810660851
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.797752809275457
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 0.6820486815467521
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 0.7134048869579791
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 0.7665268623918793
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.6243727598547508
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 0.9393491124290663
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 0.9817034700434877
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.0215175538002341
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.8826638477867645
+        }
+      ],
+      "failures": [],
+      "host": {
+        "uname": [
+          "Windows",
+          "DESKTOP-K6P66JD",
+          "11",
+          "10.0.26200",
+          "AMD64",
+          "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel"
+        ],
+        "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+        "memoryCounters": "windowsSumOfProcessTreePeakWorkingSetUpperBound",
+        "samplingIntervalMs": 20,
+        "note": "process-wide peaks include input conversion and verification; not per-runtime retained allocation"
+      },
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "1b7562c72fe665634998c0d8f78c581b663b6774eda8bfc710def14e8661636d",
+        "wasm/pine_wasm_bg.wasm": "7a839c29e29d9bdaa9d633284fc43bbf4d356e7071bd65c6a4787f917053f34f",
+        "wheels/pine_compat_runtime-0.3.0-cp310-abi3-win_amd64.whl": "2ba8583da5224076f7f820cfdafb35b2944f375c69e83da55eaa7565a6887603",
+        "resource-probe.exe": "1711acafbeed667333edfbc886978f1c737e91c9d822dacf7b59e11b5ed0a12e"
+      }
+    },
+    "Linux/rust": {
+      "receiptSha256": "8a6a22f346f6fba6d354c8af069f4e08f57ee0022728c28f7de7aad1c796b229",
+      "receiptPath": ".local/stable-release-0.3.0-20261006/matrix-r2/Linux/rust/results.json",
+      "sourcePlanSha256": "19c49d428b7e11185c18d7fc3d213b680aa0b538537e2b3dc5c45f90710994e3",
+      "retained": false,
+      "rows": 36,
+      "measured": 36,
+      "growth": [
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "append",
+          "ratio": 1.0975557690255098
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.1793379268584487
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.2312796870634257
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.3011364860110992
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.9434466946885747
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "append",
+          "ratio": 1.0149830320363689
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.0533119267651718
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.1011851612787547
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.150769732019223
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.896437054631829
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "append",
+          "ratio": 1.2118254797304064
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.2095354665734102
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.290555517244776
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.3707412685573914
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.9481430716010705
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "append",
+          "ratio": 1.140124694743448
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.262474961050523
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.3472040111544075
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.4167384600520132
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.042987795162678
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "append",
+          "ratio": 0.9747412907812625
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.2520395294980853
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.2421227124427288
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.2322285585229518
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "request",
+          "ratio": 1.7578507957875273
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.9873737373737376
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "append",
+          "ratio": 1.0600522193211486
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.4369201251084183
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.441699838533603
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.4014326518000466
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "request",
+          "ratio": 1.8556117949307873
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.099056603773585
+        }
+      ],
+      "failures": [],
+      "host": {
+        "uname": [
+          "Linux",
+          "DESKTOP-K6P66JD",
+          "6.18.33.2-microsoft-standard-WSL2-alas-redroid+",
+          "#1 SMP PREEMPT_DYNAMIC Sun Aug 30 14:00:41 CST 2026",
+          "x86_64",
+          "x86_64"
+        ],
+        "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+        "memoryCounters": "linuxVmHWM",
+        "samplingIntervalMs": 20,
+        "note": "process-wide peaks include input conversion and verification; not per-runtime retained allocation"
+      },
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "1b7562c72fe665634998c0d8f78c581b663b6774eda8bfc710def14e8661636d",
+        "wasm/pine_wasm_bg.wasm": "40383295d0b762e04c092708288c4b13ddc4d3d142b7d3b67d78a42fecf9c326",
+        "wheels/pine_compat_runtime-0.3.0-cp310-abi3-manylinux_2_35_x86_64.whl": "d404a4a3cf43939a9dbf114d2b9672b9ddd64734192c682ef8165022dc8f524f",
+        "resource-probe": "c1f9f12214b84ee14f4f038cbe6f0be1b4a6157b0aea727e13a61944b6e57b9d"
+      }
+    },
+    "Linux/python": {
+      "receiptSha256": "871bfd365781062ebfc11d83e19b3948d6c6fb58c410f4ebaed33b9ef900a1bc",
+      "receiptPath": ".local/stable-release-0.3.0-20261006/matrix-r2/Linux/python/results.json",
+      "sourcePlanSha256": "19c49d428b7e11185c18d7fc3d213b680aa0b538537e2b3dc5c45f90710994e3",
+      "retained": false,
+      "rows": 36,
+      "measured": 36,
+      "growth": [
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.139261307106392
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.201206886771046
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.2455889646621203
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.9751925042908995
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.2762167431281382
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.349127876500498
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.4079307560222611
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.0861889357969186
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.1863843046852487
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.2776690380027667
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.3559378113804565
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 1.0077582849896656
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.2665547779234159
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.356374522556003
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.4321685546658796
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.0173385851096695
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 1.3734644957408157
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 1.369335563571875
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 1.3577970104611647
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "request",
+          "ratio": 1.7587847581017102
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 1.1654840344652815
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.257820912080223
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.2722704063789607
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.2525366294767124
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "request",
+          "ratio": 1.110814183332045
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 1.030737027652308
+        }
+      ],
+      "failures": [],
+      "host": {
+        "uname": [
+          "Linux",
+          "DESKTOP-K6P66JD",
+          "6.18.33.2-microsoft-standard-WSL2-alas-redroid+",
+          "#1 SMP PREEMPT_DYNAMIC Sun Aug 30 14:00:41 CST 2026",
+          "x86_64",
+          "x86_64"
+        ],
+        "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+        "memoryCounters": "linuxVmHWM",
+        "samplingIntervalMs": 20,
+        "note": "process-wide peaks include input conversion and verification; not per-runtime retained allocation"
+      },
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "1b7562c72fe665634998c0d8f78c581b663b6774eda8bfc710def14e8661636d",
+        "wasm/pine_wasm_bg.wasm": "40383295d0b762e04c092708288c4b13ddc4d3d142b7d3b67d78a42fecf9c326",
+        "wheels/pine_compat_runtime-0.3.0-cp310-abi3-manylinux_2_35_x86_64.whl": "d404a4a3cf43939a9dbf114d2b9672b9ddd64734192c682ef8165022dc8f524f",
+        "resource-probe": "c1f9f12214b84ee14f4f038cbe6f0be1b4a6157b0aea727e13a61944b6e57b9d"
+      }
+    },
+    "Linux/wasm": {
+      "receiptSha256": "7b6899411fa5bdfd78ee8b2ad7a2fbaa9129b67a53664dc5f85a242b256622b6",
+      "receiptPath": ".local/stable-release-0.3.0-20261006/matrix-r2/Linux/wasm/results.json",
+      "sourcePlanSha256": "19c49d428b7e11185c18d7fc3d213b680aa0b538537e2b3dc5c45f90710994e3",
+      "retained": false,
+      "rows": 36,
+      "measured": 36,
+      "growth": [
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 0.889197572851872
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 0.8846694109825004
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 0.840752872761614
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "request",
+          "ratio": 0.8947107668510883
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.48092448951766753
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.0773366680927055
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.0839195821008294
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.0325005331750676
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "request",
+          "ratio": 1.0533113780609595
+        },
+        {
+          "script": "pivot-original",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.6393643629717605
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 0.8398369720033303
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 0.852963685432246
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 0.9351042611030952
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.771617780636716
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.0534931817157922
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.0592138935024555
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.079727817684525
+        },
+        {
+          "script": "rsi-default",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.9202269208406446
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "forming",
+          "ratio": 0.8806110519462116
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replacement",
+          "ratio": 0.9054752973307417
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "confirmation",
+          "ratio": 0.9317537528337648
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 1,
+          "phase": "replica",
+          "ratio": 0.7983609237930407
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "forming",
+          "ratio": 1.1137769532949702
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replacement",
+          "ratio": 1.1081574818071394
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "confirmation",
+          "ratio": 1.1480981408793698
+        },
+        {
+          "script": "rsi-alternate",
+          "sessions": 4,
+          "phase": "replica",
+          "ratio": 0.9539760053225462
+        }
+      ],
+      "failures": [],
+      "host": {
+        "uname": [
+          "Linux",
+          "DESKTOP-K6P66JD",
+          "6.18.33.2-microsoft-standard-WSL2-alas-redroid+",
+          "#1 SMP PREEMPT_DYNAMIC Sun Aug 30 14:00:41 CST 2026",
+          "x86_64",
+          "x86_64"
+        ],
+        "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+        "memoryCounters": "linuxVmHWM",
+        "samplingIntervalMs": 20,
+        "note": "process-wide peaks include input conversion and verification; not per-runtime retained allocation"
+      },
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "1b7562c72fe665634998c0d8f78c581b663b6774eda8bfc710def14e8661636d",
+        "wasm/pine_wasm_bg.wasm": "40383295d0b762e04c092708288c4b13ddc4d3d142b7d3b67d78a42fecf9c326",
+        "wheels/pine_compat_runtime-0.3.0-cp310-abi3-manylinux_2_35_x86_64.whl": "d404a4a3cf43939a9dbf114d2b9672b9ddd64734192c682ef8165022dc8f524f",
+        "resource-probe": "c1f9f12214b84ee14f4f038cbe6f0be1b4a6157b0aea727e13a61944b6e57b9d"
+      }
+    }
+  },
+  "receiptReuseProof": null,
+  "retainedTrials": 0,
+  "freshTrials": 216,
+  "budgetAndExecutionFailures": [],
+  "unverified": [],
+  "crossSurfaceComparisons": [
+    {
+      "case": "rsi-default-1024-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "86ac3de9d7c1df9389a45743ea9c88a295887b1bb6ae29062a5f314dda26aae6"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "8d7960b54fcdeba9727ff1504e1e25f2af26bdca2068c948d6c178b98b62c2ad"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "d23b91f74986ac335f8896ad0a0cc8f67578467e129992cc3ba43f84650a0b69"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "02b4f3c98df60eaaea7bbd2aa4842653bf54d0252aaa3d7b8a91a7558ecd8efc"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-default-16384-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "118bb23628e28fe8fb67b5e6f48f5f99c43936575d6dd3cdb73e1c5f92a0f535"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a81ac3a08fcee5d8110ad61a16656486ca12053276027b63a6f04b50d31d7cee"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3980386d8870c9f49ee0b6ad46ebc3d8013ac80c3b1f27f0dafa7d5b5006ac7e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f72605c8c388e394a5e0dcda89d0ce201081bc92f395c171c063a787b907e45"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-default-100000-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "f7878c075fb7e77fcfa70900b343a50cf93862c78059069e0a84ba8ce7924eea"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "71eb9e0313e1538c250b1cdb99c103cc25975b13b145760649f7648042dcd61d"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "3d1dbb3e8b16c124ceb12d2e2bf00ba387204969165da251b53f2916460d880c"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "8fd1281c0b84904d23344e6a91eb65a0824947d53a72aebff594420fd2587167"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-alternate-1024-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "8b437f4e9b96b847e95d21de5b819ee92feca1ab469addcce6d97b3707b0525e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "55d1092b0319303dd346d3934feed9c3f2970235cf1b5124d842d175834fbd74"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "519183a6a2a12363caf811f07ef39c58e8a1406572cf0eeac95666ef670d26fd"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "e0e54f2c85f6a0a12d1031b62d0d0dcad1fcfa88ca1aac4a0c3c66275db3989a"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-alternate-16384-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "ea0816c20716bce0c52ddaa6edbac423304ae5183d531bf8d65cb43e90eba4a0"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "907a1d36805b21ea94b40f10c12e5f3a24b62dcb63d8b986b0abe9e28db0740d"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "59f314397cd89be0617b4bc46fa77b250f90ef8cdbd9419df5564e2e14560593"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "cedd9bed20ff5e45f7eeb1985fd719f06b52f246f70f6a081487efa5e945bfe0"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-alternate-100000-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "acb3f587cd4f6cec7d9a84d6e8c8605a0041a7d75aa5d09dc110387508c5fd14"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "005ce4db70750d19fcdf4bd8cc1b71db2b1118d2bc1789e70ef458e12ac0d267"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "0ccd07ed42084af81fcf9ab114137c2138351b99cb7741f452f00ddaa8459e6f"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "b74ef5402c10704a27d142ed39698f2159b90cad8557b3dc05eae62bb8362d9a"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "pivot-original-1024-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "85be0f1b23279a09675cbd35c073324aca5acc5dd02a9b9074b4430da7badf67"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a633d99917a3bb1e8d42e8ef752d569191280c5af32ed23e0370b275f628dc4e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "e1f32919ea555095a9af8f9d67ac51ec17af80c45248a96b5e8649bedde43fad"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "277cac9cd8eddb8ffdcdc5205f53271190ec449fb3ede5d712143f491a5c8d0c"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "pivot-original-16384-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "9a4fb4b508f547eeb97a3ae2496e34aa4c69793fd654809629d5a7a1676a68ba"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "2357e16f8e451c78dc9515529927bbf0269a296da1c5c6fc7d911ce25d87ebe9"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "5232ab008e9fe6a3932e466f42038c57b1bf99e2bfff13b012e1b4d814546a72"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "4f68d977466b09d55a45ee63e18a7b89da1c375dd5dbbe4dad5b1a327b7a9d3e"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "pivot-original-100000-1",
+      "streams": 1,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "streams": 4,
+      "outputs": [
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 0,
+          "sha256": "a0da55c0f0181c33ebbfe8231aae2b1afc5568fcff1842be057dd639bfe47e7a"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 1,
+          "sha256": "a9341afa37d6cdc98bf2ae8078b3f88abbc89945c5fac2f2fe39999f0fda2392"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 2,
+          "sha256": "6123ca167d6dc8ac98137fc5dea264be70e29bdb0c65699fa421385484b632ba"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Windows/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Windows/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Windows/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Linux/rust",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Linux/python",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 0,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        },
+        {
+          "surface": "Linux/wasm",
+          "repeat": 1,
+          "stream": 3,
+          "sha256": "7d5e54cc34ca533c90e339ea2034617b6d3fcdc55d7c6683bf391d19d1aaa617"
+        }
+      ],
+      "mismatches": [],
+      "missing": []
+    }
+  ],
+  "crossSurfaceMismatchGroups": 0,
+  "sessionZeroIsolation": [
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-1024-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-16384-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-default-100000-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-1024-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-16384-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "rsi-alternate-100000-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-1024-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-16384-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Windows/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Windows/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Windows/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Windows/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Windows/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Windows/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Linux/rust",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Linux/rust",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Linux/python",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Linux/python",
+      "repeat": 1,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Linux/wasm",
+      "repeat": 0,
+      "mismatches": 0
+    },
+    {
+      "case": "pivot-original-100000-4",
+      "surface": "Linux/wasm",
+      "repeat": 1,
+      "mismatches": 0
+    }
+  ],
+  "historicalContext": "Known-dataset steps versus batch must match; seed-then-discovery controls remain separate and retained",
+  "auditTimingsMs": {
+    "integrity": 37406.99999999924,
+    "comparisons": 19014.999999999418
+  },
+  "qualificationBoundary": "Finite frozen synthetic offline workload; working-tree hash-pinned candidate; no release or indefinite-session claim",
+  "auditToolSha256": "37b782acb372060beb3d9a38eab9c67f7add582865d6688cb5eeadbc6072795b",
+  "implementationCommit": "ee9818c725e7726ec86f539fd2eafc0cc20912f6",
+  "rawEvidenceDirectory": ".local/stable-release-0.3.0-20261006/matrix-r2",
+  "rawSummarySha256": "c22c82ef6c8e1920c384543c4f53924a59eccbeb68c6ed868e83b9b587f87809",
+  "measurementHost": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "logicalCpus": 32,
+    "physicalCpus": 24,
+    "physicalMemoryBytes": 68441346048,
+    "cpuPercentBeforeMeasurements": 22.8,
+    "measurementGroupsSequential": true,
+    "buildsAndOwnVerificationCompleted": true,
+    "startedAtEpochSeconds": 1791293342.245874
+  },
+  "measurementHostSha256": "8f83dcd207b3195a15182b26b7fa6abd6955af71911e1ebd823a001f6a2ab609",
+  "perSurfaceWorstCases": {
+    "Windows/rust": {
+      "peakRssBytesSingleSession": 413937664,
+      "peakRssBytesFourSessions": 1074192384,
+      "maxP95Ms": {
+        "compile": 6.428999999999999,
+        "seed": 3776.3185,
+        "append": 0.0692,
+        "sameContextAppend": 0.0612,
+        "forming": 0.1774,
+        "replacement": 0.2156,
+        "confirmation": 0.2421,
+        "request": 0.13219999999999998,
+        "replica": 0.027,
+        "snapshot": 115.8716,
+        "serialization": 213.99609999999998
+      },
+      "maxPhaseSampleMs": {
+        "compile": 6.428999999999999,
+        "seed": 3776.3185,
+        "snapshot": 115.8716,
+        "serialization": 213.99609999999998
+      },
+      "maxSnapshotAndSerializationMsPerSession": 329.8677,
+      "maxMedianGrowthRatio": 2.1716300940438873
+    },
+    "Windows/python": {
+      "peakRssBytesSingleSession": 429842432,
+      "peakRssBytesFourSessions": 1144471552,
+      "maxP95Ms": {
+        "compile": 6.6968,
+        "seed": 4259.6703,
+        "forming": 0.1967,
+        "replacement": 0.2092,
+        "confirmation": 0.2341,
+        "request": 0.2011,
+        "replica": 0.0725,
+        "snapshot": 314.0441,
+        "serialization": 4574.6099
+      },
+      "maxPhaseSampleMs": {
+        "compile": 6.6968,
+        "seed": 4259.6703,
+        "snapshot": 314.0441,
+        "serialization": 4574.6099
+      },
+      "maxSnapshotAndSerializationMsPerSession": 4878.8459,
+      "maxMedianGrowthRatio": 1.9466828233868527
+    },
+    "Windows/wasm": {
+      "peakRssBytesSingleSession": 391598080,
+      "peakRssBytesFourSessions": 938799104,
+      "maxP95Ms": {
+        "compile": 60.00230000000002,
+        "seed": 11560.402999999998,
+        "forming": 0.2703999999999951,
+        "replacement": 0.33339999999998327,
+        "confirmation": 0.2849999999999966,
+        "request": 0.1880999999999915,
+        "replica": 0.13249999999999318,
+        "snapshot": 585.0192000000006,
+        "serialization": 49.871500000001106
+      },
+      "maxPhaseSampleMs": {
+        "compile": 60.00230000000002,
+        "seed": 11560.402999999998,
+        "snapshot": 585.0192000000006,
+        "serialization": 49.871500000001106
+      },
+      "maxSnapshotAndSerializationMsPerSession": 632.3359,
+      "maxMedianGrowthRatio": 1.230927835047059
+    },
+    "Linux/rust": {
+      "peakRssBytesSingleSession": 429846528,
+      "peakRssBytesFourSessions": 1296080896,
+      "maxP95Ms": {
+        "compile": 32.091272,
+        "seed": 3087.615434,
+        "append": 0.040821,
+        "sameContextAppend": 0.042594,
+        "forming": 0.16143000000000002,
+        "replacement": 0.16851100000000002,
+        "confirmation": 0.18181,
+        "request": 0.141273,
+        "replica": 0.016983,
+        "snapshot": 71.332197,
+        "serialization": 427.85272499999996
+      },
+      "maxPhaseSampleMs": {
+        "compile": 32.091272,
+        "seed": 3087.615434,
+        "snapshot": 71.332197,
+        "serialization": 427.85272499999996
+      },
+      "maxSnapshotAndSerializationMsPerSession": 496.49134,
+      "maxMedianGrowthRatio": 1.8556117949307873
+    },
+    "Linux/python": {
+      "peakRssBytesSingleSession": 476344320,
+      "peakRssBytesFourSessions": 1334996992,
+      "maxP95Ms": {
+        "compile": 37.208115,
+        "seed": 3299.781304,
+        "forming": 0.188031,
+        "replacement": 0.198231,
+        "confirmation": 0.225884,
+        "request": 0.139681,
+        "replica": 0.065403,
+        "snapshot": 207.732151,
+        "serialization": 5242.422109
+      },
+      "maxPhaseSampleMs": {
+        "compile": 37.208115,
+        "seed": 3299.781304,
+        "snapshot": 207.732151,
+        "serialization": 5242.422109
+      },
+      "maxSnapshotAndSerializationMsPerSession": 5416.541274,
+      "maxMedianGrowthRatio": 1.7587847581017102
+    },
+    "Linux/wasm": {
+      "peakRssBytesSingleSession": 517095424,
+      "peakRssBytesFourSessions": 1132773376,
+      "maxP95Ms": {
+        "compile": 57.181161,
+        "seed": 7815.680078999998,
+        "forming": 0.25429800000006253,
+        "replacement": 0.28997500000002674,
+        "confirmation": 0.40951400000005833,
+        "request": 0.236487000000011,
+        "replica": 0.11203199999999924,
+        "snapshot": 656.6868009999998,
+        "serialization": 2661.082653999998
+      },
+      "maxPhaseSampleMs": {
+        "compile": 57.181161,
+        "seed": 7815.680078999998,
+        "snapshot": 656.6868009999998,
+        "serialization": 2661.082653999998
+      },
+      "maxSnapshotAndSerializationMsPerSession": 3226.4747320000024,
+      "maxMedianGrowthRatio": 1.1480981408793698
+    }
+  }
+}

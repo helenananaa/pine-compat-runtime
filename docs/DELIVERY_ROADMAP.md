@@ -1,25 +1,33 @@
 # Independent runtime delivery
 
-Updated 2026-10-06. This is the current delivery-status entry point.
-Current candidate: **0.3.0-rc.2; scoped prerelease; stable resource acceptance unqualified**.
+Updated 2026-10-06. Current release: **0.3.0 stable for the named scope**.
 
-## RC2 release scope
+[Stable acceptance](STABLE_ACCEPTANCE_20261006.md) records fresh optimized
+compatibility builds, official wheel installation checks and the complete
+216-trial resource matrix at unchanged budgets. [Migration](STABLE_MIGRATION.md)
+defines timestamp/resource errors and the binding configuration boundary.
+The earlier resource-growth release blocker is closed by fresh current-core
+evidence. Historical failures remain on their original pins below.
 
-[RC2 acceptance](RC2_ACCEPTANCE_20261006.md) records fresh Windows/Linux
-optimized builds, the unchanged fifteen-case native/cross-surface plan,
-canonical gates and official wheel checks. [Migration](RC2_MIGRATION.md)
-documents stricter realtime timestamps, chart-time fixes, per-bar collection
-and matrix budgets, and the binding configuration boundary.
+## Development after 0.3.0
 
-The official RC assets are two Python wheels plus manifest/checksums.
-Per-bar quota enforcement does not close the retained long-session growth
-failure. A stable release still requires the unchanged resource matrix on the
-selected final core, resolution of reproducible budget failures, and a deliberate
-strategy/capability scope. General refactoring and broader Pine features do not
-block this scoped RC.
+1. Maintain this release: accept reproducible defects in supported scripts,
+   fix them with a retained regression fixture and publish focused patch releases.
+   Stop general release-blocking refactoring when the named gates pass.
+2. Expand compatibility from concrete user scripts. Select one missing Pine or
+   deterministic broker behavior, define a native reference/capability contract,
+   implement it in the core and add cross-surface evidence before claiming support.
+3. Optimize only a measured workload bottleneck, preserving full output and the
+   existing budget. Window scans and full-result materialization are known costs;
+   redesign them only when real usage justifies it.
+4. Split the large runtime module incrementally when a behavior change needs the
+   boundary. Keep market data, scheduling, persistence and CandleScope integration
+   in external host adapters. More platforms or binary download surfaces require
+   their own explicit build/install qualification.
 
-The sections below preserve earlier evidence on its original source/artifact
-pins. None automatically qualifies rc.2.
+These are independent follow-up choices, not unfinished prerequisites for this
+scoped release. Unlisted Pine/strategy behavior, native live-Tick, full calendars,
+visual geometry and Hull displayed-PnL residuals retain their documented limits.
 
 ## Earlier acceptance index (2026-10-01/02)
 

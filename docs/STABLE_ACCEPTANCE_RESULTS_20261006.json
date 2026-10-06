@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "candidate": "0.3.0",
+  "implementationCommit": "ee9818c725e7726ec86f539fd2eafc0cc20912f6",
+  "planSha256": "83fd8a18d941d9fde02138f899543863e3653f173bd1f176c9ba05ae66d55d13",
+  "referencePlan": {
+    "path": ".local/delivery-20261001-v2/plan.json",
+    "sha256": "a1ce810a67acd2ad47597bbfa92bd2e609ca55b79e6d9fbb6e9587796b9ea3f5",
+    "coreCommit": "e73206f0c839e42811ba1375832c6a514f49ae2a"
+  },
+  "nativeRecaptured": false,
+  "frozenReferenceFiles": 75,
+  "cases": 15,
+  "completeOutputs": 180,
+  "crossPlatformMismatches": 0,
+  "tolerance": {
+    "absolute": 1e-09,
+    "relative": 1e-12
+  },
+  "gates": [
+    {
+      "platform": "windows",
+      "rustPassed": 7569,
+      "installedPythonPassed": 798,
+      "toolingRun": 166,
+      "actualNodeWasm": true,
+      "logSha256": "9fbf5c5315d3fcd887dcbeb2c619dd9f5d5af97b645d9356637bf85315efdeab"
+    },
+    {
+      "platform": "linux",
+      "rustPassed": 7569,
+      "installedPythonPassed": 798,
+      "toolingRun": 166,
+      "actualNodeWasm": true,
+      "logSha256": "6c7085798c7816622c0b41aad83240b7227ab3579f077b7b042cb027d7db6d9d"
+    }
+  ],
+  "platformMatrices": [
+    {
+      "platform": "windows",
+      "nativeGroups": [
+        {
+          "id": "hull",
+          "status": "compared"
+        },
+        {
+          "id": "ut",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-vama",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-kijun",
+          "status": "compared"
+        },
+        {
+          "id": "fees",
+          "status": "compared"
+        },
+        {
+          "id": "qualify-rsi.py",
+          "status": "passed"
+        },
+        {
+          "id": "compare-rsi-alternate.py",
+          "status": "passed"
+        },
+        {
+          "id": "qualify-pivot.py",
+          "status": "passed"
+        }
+      ],
+      "matrixSha256": "c9571777daa5e002ea2ac886a4aeb25ee8cae5ab24f949fb29850542f74b417e",
+      "provenanceSha256": "289e96ccaabecb50dcea15105d06ff95a1f683a23b5bf62254d9b20b3f39860e"
+    },
+    {
+      "platform": "linux",
+      "nativeGroups": [
+        {
+          "id": "hull",
+          "status": "compared"
+        },
+        {
+          "id": "ut",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-vama",
+          "status": "compared"
+        },
+        {
+          "id": "ssl-kijun",
+          "status": "compared"
+        },
+        {
+          "id": "fees",
+          "status": "compared"
+        },
+        {
+          "id": "qualify-rsi.py",
+          "status": "passed"
+        },
+        {
+          "id": "compare-rsi-alternate.py",
+          "status": "passed"
+        },
+        {
+          "id": "qualify-pivot.py",
+          "status": "passed"
+        }
+      ],
+      "matrixSha256": "c9e7c7f9351aae370ebf3ad5ca8d3b9a486335316a541063d17ffc6cdf3c33e1",
+      "provenanceSha256": "529edcc5f1d23fadc429bae23cb0ed5535692096f0cd9a486639976e1091d97d"
+    }
+  ],
+  "resourceAcceptance": "passed",
+  "knownLimits": [
+    "Hull displayed PnL residual up to 0.006690 USD",
+    "native live Tick and exchange calendar fidelity outside named fixtures",
+    "no macOS, ARM, musllinux or free-threaded CPython qualification"
+  ],
+  "releaseTag": "v0.3.0",
+  "rawEvidenceDirectory": ".local/stable-release-0.3.0-20261006",
+  "payloadHashIndexSha256": "7e3dfcc9b5fb98fb29237a1dff397ab37fc4b47f3783603db3a3a64b10dc928e",
+  "resourceIndex": "STABLE_RESOURCE_RESULTS_20261006.json",
+  "officialPreTagWheelChecks": [
+    {
+      "environment": "ci-windows",
+      "wheel": "pine_compat_runtime-0.3.0-cp310-abi3-win_amd64.whl",
+      "sha256": "17f9ddc4bc39cd4d72670bd0213a21eb0063a909a32e568bad80ebda32f1e4f1",
+      "libc": [
+        "",
+        ""
+      ],
+      "casesPassed": 15,
+      "verificationReceiptSha256": "20c18b7c3973320a5a2da5ee4b27ba9007d7fd1128069f323323eb8ae8f90a22"
+    },
+    {
+      "environment": "ci-floor",
+      "wheel": "pine_compat_runtime-0.3.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "sha256": "2a9453cbfdc19a2265319cd8232f04b76ef116690b5fdb2c3fedd09e76b9f3ee",
+      "libc": [
+        "glibc",
+        "2.17"
+      ],
+      "casesPassed": 15,
+      "verificationReceiptSha256": "2f44ba64825ad41b1a66cd683962ca3ef0f8203aaaeb13f5f4ed2b953490121f"
+    }
+  ],
+  "remoteCanonicalGate": {
+    "conclusion": "success",
+    "headSha": "ee9818c725e7726ec86f539fd2eafc0cc20912f6",
+    "url": "https://github.com/helenananaa/pine-compat-runtime/actions/runs/37468014799"
+  },
+  "officialPreTagWheelWorkflow": {
+    "conclusion": "success",
+    "headSha": "ee9818c725e7726ec86f539fd2eafc0cc20912f6",
+    "url": "https://github.com/helenananaa/pine-compat-runtime/actions/runs/37468015077"
+  }
+}

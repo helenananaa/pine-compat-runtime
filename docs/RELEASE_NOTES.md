@@ -1,5 +1,20 @@
 # Release Notes
 
+## 0.3.0 - stable scoped release
+
+- Integrates incremental/realtime sessions, replica and public-result APIs.
+- Corrects chart/request time behavior and validates bar timestamps atomically.
+- Bounds logical per-bar collection/copy allocation and matrix work, with
+  explicit `E_RESOURCE_BUDGET` errors.
+- Reduces sparse rollback, collection/matrix scan and repeated lookup costs;
+  caches immutable ALMA coefficients.
+- Uses unique `0.3.0` identities across all package surfaces.
+
+- Fresh compatibility and fixed resource acceptance pass. See
+  [stable acceptance](STABLE_ACCEPTANCE_20261006.md) and
+  [migration/limits](STABLE_MIGRATION.md).
+
+
 ## 0.3.0-rc.2 - scoped GitHub prerelease
 
 - Unique rc.2 package identity replaces reused local rc.1 identities.

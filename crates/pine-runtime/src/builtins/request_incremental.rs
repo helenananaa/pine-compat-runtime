@@ -111,6 +111,10 @@ impl<'a> HistoricalRuntime<'a> {
         runtime.inherit_execution_budget(self);
         runtime.inherit_valuewhen_budget(self, replaced_values)?;
         let bars = self.resolved_request_bars_from(key, prefix.len())?;
+        if bars.is_empty() {
+            self.request_evaluations.remove(cache_key);
+            return Ok(prefix);
+        }
         runtime.historical_end = Some(count);
         let mut before_last = None;
         let mut last = None;

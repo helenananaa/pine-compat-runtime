@@ -216,6 +216,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) strategy_position_size_at_script_pass: super::append_history::AppendHistory<f64>,
     pub(crate) strategy_position_size_history_depth: Option<usize>,
     pub(crate) strategy_position_size_history_origin: usize,
+    pub(crate) external_execution: Option<crate::external::ExternalExecution>,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
     magnifier_diagnostics: Vec<RuntimeDiagnostic>,
@@ -517,6 +518,7 @@ impl<'a> HistoricalRuntime<'a> {
             strategy_position_size_at_script_pass: Default::default(),
             strategy_position_size_history_depth,
             strategy_position_size_history_origin: 0,
+            external_execution: None,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
             strategy_fill_mark: None,
@@ -806,6 +808,7 @@ impl<'a> HistoricalRuntime<'a> {
         if self.bars == 0 && self.magnifier_chart_bar_count.is_none() {
             self.prepare_magnifier_chart_bar_count(bars.len())?;
         }
+        self.prepare_external_window(skip)?;
         let previous_historical_end = self.historical_end;
         self.historical_end = Some(self.bars + bars.len());
         if let Some(first) = bars.first() {
@@ -827,6 +830,31 @@ impl<'a> HistoricalRuntime<'a> {
             index: 0,
             previous_historical_end,
         })
+    }
+
+    /// Freeze historical endpoint metadata without exposing future price values.
+    pub fn set_historical_horizon(
+        &mut self,
+        total: usize,
+        last_time: i64,
+    ) -> Result<(), RuntimeError> {
+        self.ensure_execution_ready()?;
+        if total == 0 || self.bars != 0 {
+            return Err(RuntimeError {
+                message: "invalid historical horizon".into(),
+            });
+        }
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.session_windows
+                .validate_range(0, total)
+                .map_err(crate::SessionWindowInputError::runtime_error)?;
+        }
+        self.prepare_magnifier_chart_bar_count(total)?;
+        self.historical_end = Some(total);
+        self.last_bar_index = Some(total - 1);
+        self.last_bar_time = Some(last_time);
+        self.chart_visible_right_time = Some(last_time);
+        Ok(())
     }
 
     /// Execute one newly discovered historical bar. If execution fails, this
@@ -893,6 +921,16 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
         let bar_index = self.bars;
+        if let Some(external) = &self.external_execution
+            && external
+                .frames
+                .get(bar_index)
+                .is_none_or(|frame| frame.time != bar.time)
+        {
+            return Err(crate::external::external_error(
+                "account feedback time differs from current bar",
+            ));
+        }
         if self.program.script_mode == ScriptMode::Strategy {
             self.session_windows
                 .validate_range(bar_index, bar_index + 1)
@@ -975,7 +1013,9 @@ impl<'a> HistoricalRuntime<'a> {
             self.snapshot_strategy_eval_checkpoint();
         }
         let passes_before_tick = self.strategy_scheduler.script_passes();
-        self.run_pre_script_strategy_phases(bar_index, bar)?;
+        if self.external_execution.is_none() {
+            self.run_pre_script_strategy_phases(bar_index, bar)?;
+        }
         let skip_normal_strategy_pass = self.program.script_mode == ScriptMode::Strategy
             && ((update_kind == BarUpdateKind::Forming
                 && !self.program.strategy_settings.calc_on_every_tick)
@@ -1000,13 +1040,27 @@ impl<'a> HistoricalRuntime<'a> {
                 crate::runtime::strategy_scheduler::StrategyBarPhase::BuiltinRefresh,
             );
             if !skip_normal_strategy_pass {
-                let filled = self.run_strategy_script_pass()?;
-                // An immediate close placed by the regular historical closing
-                // pass fills now, but does not introduce another script pass.
-                // Intrabar fill callbacks and realtime observations keep their
-                // own recalculation paths.
-                if update_kind != BarUpdateKind::Historical {
-                    self.recalculate_after_fill(filled, bar.close)?;
+                let passes = self
+                    .external_execution
+                    .as_ref()
+                    .and_then(|state| state.passes.as_ref())
+                    .map(|groups| groups[bar_index].clone());
+                if let Some(passes) = passes {
+                    for (index, pass) in passes.into_iter().enumerate() {
+                        self.current_bar = Some(pass.bar);
+                        self.current_execution_time = Some(pass.event_time_ms);
+                        self.external_execution.as_mut().unwrap().active_pass = Some((index, pass));
+                        self.run_strategy_script_pass()?;
+                    }
+                } else {
+                    let filled = self.run_strategy_script_pass()?;
+                    // An immediate close placed by the regular historical closing
+                    // pass fills now, but does not introduce another script pass.
+                    // Intrabar fill callbacks and realtime observations keep their
+                    // own recalculation paths.
+                    if update_kind != BarUpdateKind::Historical {
+                        self.recalculate_after_fill(filled, bar.close)?;
+                    }
                 }
             }
         } else {
@@ -1025,7 +1079,9 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        self.run_post_script_strategy_phases(bar_index, bar)?;
+        if self.external_execution.is_none() {
+            self.run_post_script_strategy_phases(bar_index, bar)?;
+        }
         if self.program.script_mode == ScriptMode::Strategy {
             self.trace_strategy_phase(
                 crate::runtime::strategy_scheduler::StrategyBarPhase::OutputCommit,
@@ -1034,6 +1090,9 @@ impl<'a> HistoricalRuntime<'a> {
         self.strategy_eval_checkpoint = None;
         self.finalize_series_outputs();
         self.commit_current_series()?;
+        if let Some(state) = &mut self.external_execution {
+            state.active_pass = None;
+        }
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;
         self.collect_temporary_collections();
@@ -1101,8 +1160,9 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: self.display_boxes(),
             tables: self.display_tables(),
             alerts: self.display_alerts(),
-            strategy: (self.program.script_mode == ScriptMode::Strategy)
-                .then(|| self.strategy_broker.result()),
+            strategy: (self.program.script_mode == ScriptMode::Strategy
+                && self.external_execution.is_none())
+            .then(|| self.strategy_broker.result()),
             diagnostics: self.runtime_diagnostics(),
         }
     }
@@ -1194,8 +1254,19 @@ impl<'a> HistoricalRuntime<'a> {
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {
         let before = self.strategy_broker.public_fill_event_count();
         self.restore_strategy_eval_checkpoint();
+        self.bind_external_request_data()?;
+        if self
+            .external_execution
+            .as_ref()
+            .is_some_and(|state| state.active_pass.is_some())
+        {
+            self.set_builtin_symbols(&self.current_bar.unwrap(), self.bars)?;
+        }
         self.strategy_scheduler.begin_script_pass()?;
-        let position_size = self.strategy_broker.position_size();
+        let position_size = self
+            .external_value("strategy.position_size")
+            .and_then(|value| value.as_f64())
+            .unwrap_or_else(|| self.strategy_broker.position_size());
         if self.strategy_position_size_history_depth != Some(0) {
             let position_history_end = self.strategy_position_size_history_origin
                 + self.strategy_position_size_at_script_pass.len();
@@ -1236,7 +1307,11 @@ impl<'a> HistoricalRuntime<'a> {
         }
         // Even immediate orders fill after the script pass. Statements following
         // strategy.close still observe the account that entered this pass.
-        self.fill_current_tick_market_closes();
+        if self.external_execution.is_none() {
+            self.fill_current_tick_market_closes();
+        } else {
+            self.external_intents()?;
+        }
         Ok(self.strategy_broker.public_fill_event_count() > before)
     }
 

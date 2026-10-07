@@ -1,4 +1,5 @@
-#[derive(Debug, Clone, Copy, PartialEq)]
+use serde::{Deserialize, Serialize};
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct Bar {
     pub time: i64,
     pub open: f64,

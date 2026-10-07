@@ -1,6 +1,6 @@
 [package]
 name = "pine-python"
-version = "0.3.0"
+version = "0.3.1"
 description.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -14,6 +14,7 @@ path = "src/lib.rs"
 
 [dependencies]
 pine-host-support = { path = "../pine-host-support" }
+serde_json = { version = "1", features = ["float_roundtrip"] }
 pine-ir = { path = "../pine-ir" }
 pine-runtime = { path = "../pine-runtime" }
 pine-sema = { path = "../pine-sema" }

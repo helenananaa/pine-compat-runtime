@@ -121,6 +121,9 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn eval_builtin_value(&mut self, name: &str) -> PineValue {
+        if let Some(value) = self.external_value(name) {
+            return value;
+        }
         match name {
             "syminfo.mintick" => {
                 return PineValue::Float(self.request_environment.chart().min_tick());

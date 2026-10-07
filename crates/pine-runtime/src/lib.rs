@@ -7,6 +7,8 @@ mod algorithms;
 mod bar;
 mod builtins;
 mod error;
+mod external;
+pub use external::{ExternalAccountFrame, ExternalOrderIntent, ExternalPass};
 mod host_requirements;
 mod input_metadata;
 mod magnifier;

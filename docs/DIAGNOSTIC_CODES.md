@@ -330,3 +330,12 @@ revision. They do not change the existing runtime output schema.
   A rejected configuration keeps its prior limits and state; a rejected realtime
   execution keeps its result, delta cache and revision. See EXECUTION_LIMITS.md
   for requested-checkpoint accounting and the event-count scope.
+
+## External execution
+
+- `E_EXTERNAL_FEEDBACK_COUNT`: account frames do not match the supplied bar count.
+- `E_EXTERNAL_UNSUPPORTED`: external mode rejects an unsupported strategy setting,
+  account field, order argument or malformed account/pass state. No native broker
+  fallback is performed.
+
+See [external account feedback](EXTERNAL_BROKER_V1.md).

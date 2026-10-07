@@ -14,6 +14,7 @@ mod builtins_ta_flow;
 mod builtins_time;
 mod drawing_indexes;
 mod execution_clock;
+mod external;
 mod imports;
 mod legacy_indicators;
 mod magnifier;

@@ -236,8 +236,9 @@ impl HistoricalRuntime<'_> {
                 self.alerts
                     .partition_point(|event| event.bar_index < self.display_origin),
             ),
-            strategy: (self.program.script_mode == ScriptMode::Strategy)
-                .then(|| self.strategy_broker.result_view()),
+            strategy: (self.program.script_mode == ScriptMode::Strategy
+                && self.external_execution.is_none())
+            .then(|| self.strategy_broker.result_view()),
             diagnostics: Cow::Owned(self.runtime_diagnostics()),
         }
     }

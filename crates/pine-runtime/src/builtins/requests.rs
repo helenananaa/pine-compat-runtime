@@ -758,7 +758,9 @@ impl<'a> HistoricalRuntime<'a> {
         let bars = self
             .request_feed
             .resolved_from(key, provider_bars, include_forming, start);
-        if bars.is_empty() {
+        // External execution can receive a known stream with no closed bars yet.
+        // Missing keys still fail above; empty visible history aligns to na.
+        if bars.is_empty() && self.external_execution.is_none() {
             return Err(RuntimeError {
                 message: RequestDataError::MissingData {
                     symbol: key.symbol().to_owned(),

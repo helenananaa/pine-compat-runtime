@@ -7,16 +7,19 @@ use pine_runtime::{
     PreparedProgram, RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal,
     input_calls, is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
 };
-use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
+use pine_sema::{Analysis, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBool, PyDict, PyList, PyModule, PySequence};
 mod alerts;
+mod analysis_input;
 mod changes;
 mod chart_metadata;
 mod diagnostics;
+mod external;
 mod gradient;
+mod history;
 mod outputs;
 mod realtime;
 mod replica;
@@ -25,7 +28,9 @@ mod tables;
 #[cfg(test)]
 mod tests;
 use alerts::{render_strategy_order_fill_alert_template, render_strategy_order_fill_running_alert};
+use analysis_input::analysis_input_from_python;
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
+use history::{parse_bars, parse_execution_times};
 use outputs::{runtime_result_view_to_py, value_to_py};
 use realtime::PyRealtimeSession;
 
@@ -37,6 +42,58 @@ struct PyProgram {
 
 #[pymethods]
 impl PyProgram {
+    #[pyo3(signature=(bars, input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None, magnifier_bars=None, execution_times=None, session_windows=None))]
+    #[allow(clippy::too_many_arguments)]
+    fn historical_session(
+        &self,
+        bars: &Bound<'_, PyAny>,
+        input_overrides: Option<&Bound<'_, PyAny>>,
+        chart_symbol: Option<&str>,
+        chart_timeframe: Option<&str>,
+        request_bars: Option<&Bound<'_, PyAny>>,
+        magnifier_bars: Option<&Bound<'_, PyAny>>,
+        execution_times: Option<&Bound<'_, PyAny>>,
+        session_windows: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<history::HistoricalSession> {
+        history::HistoricalSession::new(
+            self,
+            bars,
+            input_overrides,
+            chart_symbol,
+            chart_timeframe,
+            request_bars,
+            magnifier_bars,
+            execution_times,
+            session_windows,
+        )
+    }
+    /// Evaluate against host-owned account frames; never run the native broker.
+    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None))]
+    #[allow(clippy::too_many_arguments)]
+    fn run_external(
+        &self,
+        py: Python<'_>,
+        bars: &Bound<'_, PyAny>,
+        accounts: &Bound<'_, PyAny>,
+        input_overrides: Option<&Bound<'_, PyAny>>,
+        chart_symbol: Option<&str>,
+        chart_timeframe: Option<&str>,
+        execution_passes: Option<&Bound<'_, PyAny>>,
+        request_bars: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
+        external::run(
+            self,
+            py,
+            bars,
+            accounts,
+            input_overrides,
+            chart_symbol,
+            chart_timeframe,
+            execution_passes,
+            request_bars,
+        )
+    }
+
     /// Describe potential host inputs without executing the program.
     fn host_requirements(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         Ok(PyModule::import(py, "json")?
@@ -210,6 +267,7 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     module.add("RENDER_METADATA_VERSION", PUBLIC_RENDER_METADATA_VERSION)?;
     module.add_class::<PyProgram>()?;
+    module.add_class::<history::HistoricalSession>()?;
     realtime::register(module)?;
     changes::register(module)?;
     module.add_function(wrap_pyfunction!(compile_script, module)?)?;
@@ -224,42 +282,6 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
         module
     )?)?;
     Ok(())
-}
-
-fn parse_bars(bars: &Bound<'_, PyAny>) -> PyResult<Vec<Bar>> {
-    let mut parsed = Vec::new();
-    for item in bars.try_iter()? {
-        let item = item?;
-        parsed.push(parse_bar(&item)?);
-    }
-    validate_bar_times(&parsed)?;
-    Ok(parsed)
-}
-
-fn parse_execution_times(execution_times: Option<&Bound<'_, PyAny>>) -> PyResult<Option<Vec<i64>>> {
-    let Some(execution_times) = execution_times else {
-        return Ok(None);
-    };
-    let iterator = execution_times.try_iter().map_err(|_| {
-        PyValueError::new_err(
-            "execution_times must be a sequence of integer millisecond timestamps",
-        )
-    })?;
-    let mut parsed = Vec::new();
-    for (index, value) in iterator.enumerate() {
-        let value = value?;
-        if value.is_instance_of::<PyBool>() {
-            return Err(PyValueError::new_err(format!(
-                "execution_times[{index}] must be an integer millisecond timestamp"
-            )));
-        }
-        parsed.push(value.extract::<i64>().map_err(|_| {
-            PyValueError::new_err(format!(
-                "execution_times[{index}] must be an integer millisecond timestamp"
-            ))
-        })?);
-    }
-    Ok(Some(parsed))
 }
 
 fn parse_magnifier_bars(
@@ -298,54 +320,6 @@ fn parse_session_windows(
     session_window_input_from_json(&json)
         .map(Some)
         .map_err(PyValueError::new_err)
-}
-
-fn validate_bar_times(bars: &[Bar]) -> PyResult<()> {
-    let mut previous_time = None;
-    for bar in bars {
-        if let Some(previous) = previous_time {
-            if bar.time == previous {
-                return Err(PyValueError::new_err(format!(
-                    "duplicate bar time `{}`",
-                    bar.time
-                )));
-            }
-            if bar.time < previous {
-                return Err(PyValueError::new_err(format!(
-                    "bars are not sorted: `{}` follows `{previous}`",
-                    bar.time
-                )));
-            }
-        }
-        previous_time = Some(bar.time);
-    }
-    Ok(())
-}
-
-fn analysis_input_from_python(
-    source: &str,
-    library_sources: Option<&Bound<'_, PyAny>>,
-) -> PyResult<AnalysisInput> {
-    let root = SourceFile::new("<python>", source);
-    let Some(library_sources) = library_sources else {
-        return Ok(AnalysisInput::new(root));
-    };
-    let dict = library_sources.cast::<PyDict>().map_err(|_| {
-        PyValueError::new_err("library_sources must be a dict mapping import key to source text")
-    })?;
-    let mut sources = Vec::with_capacity(dict.len());
-    for (key, value) in dict {
-        let key: String = key.extract()?;
-        let text: String = value.extract().map_err(|_| {
-            PyValueError::new_err("library_sources values must be source text strings")
-        })?;
-        sources.push((
-            key.clone(),
-            SourceFile::new(format!("<python:{key}>"), text),
-        ));
-    }
-    AnalysisInput::with_library_sources(root, sources)
-        .map_err(|err| PyValueError::new_err(err.to_string()))
 }
 
 fn parse_request_environment(

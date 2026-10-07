@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-07",
+  "version": "0.3.1",
+  "upstream_extension_commit": "d9e2fe146609fd2d4fc860e014e227bc24c553ba",
+  "base_commit": "390e93afd87df6ac5a2aa64b940d612b9d49bab9",
+  "interfaces": [
+    "Program.run_external",
+    "Program.historical_session"
+  ],
+  "new_interface_cases": 31,
+  "optimized_windows_python": 829,
+  "production_host_activated": false,
+  "full_resource_matrix_rerun": false,
+  "artifacts": [
+    {
+      "path": "release-wheels/pine_compat_runtime-0.3.1-cp310-abi3-win_amd64.whl",
+      "sha256": "a8568d97c5658076eb8e69e717f959b8c8634d5088692be732ce7119c57f2f55"
+    },
+    {
+      "path": "host-wheels/candlescope_plugin_pine_compat-0.3.1-py3-none-any.whl",
+      "sha256": "b7c7c7ef2f3b33d7020a03ef48d77cdb54c8f82776ff36ea4582b1e5ca5a3ec2"
+    }
+  ],
+  "host_native_external_replay": {
+    "passed": 107,
+    "failed": 0,
+    "skipped": 0,
+    "adapter": "local candidate with only version and engine pin changed",
+    "adapter_source_unchanged": true,
+    "dependency_check": "passed"
+  },
+  "receipts": [
+    {
+      "path": "release-python.xml",
+      "sha256": "c8e80d303325ea03825721310b26d1524fb8b8a8842a231eda4c7cde6a3eb3c6"
+    },
+    {
+      "path": "host-107-final.xml",
+      "sha256": "da4fdee12cbd80eb1f9b1ee4d29be17d93658ca538b43c1649d2995631fac267"
+    },
+    {
+      "path": "host-107.xml",
+      "sha256": "2e2012059999643de58d6dfacc2f3b8bdf969365f91282b7905fda5095d38a1a"
+    },
+    {
+      "path": "host-initial-failure-audit.log",
+      "sha256": "ab9251e4045fe1760328346d5ebb0acbd7a350c3b6bf60b1cfdb4000a4ba5af5"
+    }
+  ],
+  "initial_host_failure": {
+    "cause": "tests started before dependency installation completed",
+    "failed": 15,
+    "passed": 92,
+    "retained": true,
+    "used_as_qualification": false
+  },
+  "windows_canonical": {
+    "rust": 7573,
+    "scripts": 166,
+    "installed_python": 829,
+    "wasm_node": "passed",
+    "host_parity": "passed",
+    "status": "passed",
+    "receipt_sha256": "efdade58297a3773bfa61ddcf6a9e623f0806c7b8b5d0443845036f53fb6b438"
+  },
+  "linux_canonical": {
+    "rust": 7573,
+    "scripts": 166,
+    "installed_python": 829,
+    "wasm_node": "passed",
+    "host_parity": "passed",
+    "status": "passed",
+    "receipt_sha256": "6724b51829b4007307b32b4df3414b5109379f08f07be0cc03af0cf597b5cc47"
+  },
+  "qualified_inputs": {
+    "normalization": "CRLF to LF",
+    "files": 742,
+    "digest": "f0111d9efa331f27776eec33a3f774d76f88f1cd6a888162a62cba3aa2168133"
+  }
+}

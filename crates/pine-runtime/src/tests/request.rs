@@ -8001,3 +8001,41 @@ fn modern_realtime_merge_uses_available_developing_htf_values() {
         }
     }
 }
+
+#[test]
+fn external_known_empty_request_has_na_without_relaxing_missing_data() {
+    let hir = compile_program(
+        "//@version=6\nstrategy(\"empty\")\nplot(request.security(\"B\", \"2\", close))",
+    );
+    let mut provider = InMemoryRequestDataProvider::new();
+    provider
+        .insert(
+            RequestKey::new("B", RequestTimeframe::parse("2").unwrap()),
+            vec![],
+        )
+        .unwrap();
+    let environment = RequestEnvironment::new(
+        ChartContext::new("A", RequestTimeframe::parse("1").unwrap()),
+        Arc::new(provider),
+    );
+    let frame = ExternalAccountFrame {
+        time: 0,
+        position_size: 0.0,
+        position_avg_price: None,
+        equity: 1000.0,
+        initial_capital: 1000.0,
+        netprofit: 0.0,
+        openprofit: 0.0,
+    };
+    let mut external = HistoricalRuntime::with_request_environment(&hir, environment.clone())
+        .with_external_accounts(vec![frame.clone()])
+        .unwrap();
+    external.append_bar(timed_bar(0, 10.0)).unwrap();
+    assert_eq!(external.result().plots[0].values, vec![PineValue::Na]);
+    let mut native = HistoricalRuntime::with_request_environment(&hir, environment);
+    assert!(native.append_bar(timed_bar(0, 10.0)).is_err());
+    let mut missing = HistoricalRuntime::new(&hir)
+        .with_external_accounts(vec![frame])
+        .unwrap();
+    assert!(missing.append_bar(timed_bar(0, 10.0)).is_err());
+}

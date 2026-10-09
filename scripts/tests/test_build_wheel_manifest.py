@@ -45,12 +45,14 @@ class BuildWheelManifestTests(unittest.TestCase):
             dist = Path(temp_dir)
             linux = write_wheel(dist, "manylinux_2_17_x86_64")
             windows = write_wheel(dist, "win_amd64")
+            macos_arm64 = write_wheel(dist, "macosx_11_0_arm64")
+            macos_intel = write_wheel(dist, "macosx_10_12_x86_64")
 
             manifest = build_wheel_manifest.build_manifest(
                 dist,
                 tag="v0.1.0",
                 commit="abc123",
-                expected_wheel_count=2,
+                expected_wheel_count=4,
             )
             manifest_path, checksums_path = build_wheel_manifest.write_release_files(
                 dist, manifest
@@ -62,13 +64,23 @@ class BuildWheelManifestTests(unittest.TestCase):
             self.assertEqual(rendered["python_requires"], ">=3.10")
             self.assertEqual(
                 [asset["platform_tag"] for asset in rendered["assets"]],
-                ["manylinux_2_17_x86_64", "win_amd64"],
+                [
+                    "macosx_10_12_x86_64",
+                    "macosx_11_0_arm64",
+                    "manylinux_2_17_x86_64",
+                    "win_amd64",
+                ],
+            )
+            linux_asset = next(
+                asset for asset in rendered["assets"] if asset["filename"] == linux.name
             )
             self.assertEqual(
-                rendered["assets"][0]["sha256"],
+                linux_asset["sha256"],
                 hashlib.sha256(linux.read_bytes()).hexdigest(),
             )
             self.assertIn(windows.name, checksums_path.read_text())
+            self.assertIn(macos_arm64.name, checksums_path.read_text())
+            self.assertIn(macos_intel.name, checksums_path.read_text())
             self.assertIn("manifest.json", checksums_path.read_text())
 
     def test_rejects_tag_version_mismatch(self) -> None:
@@ -89,15 +101,17 @@ class BuildWheelManifestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             dist = Path(temp_dir)
             write_wheel(dist, "win_amd64")
+            write_wheel(dist, "manylinux_2_17_x86_64")
+            write_wheel(dist, "macosx_11_0_arm64")
 
             with self.assertRaisesRegex(
-                build_wheel_manifest.ManifestError, "expected 2 wheels"
+                build_wheel_manifest.ManifestError, "expected 4 wheels"
             ):
                 build_wheel_manifest.build_manifest(
                     dist,
                     tag="v0.1.0",
                     commit="abc123",
-                    expected_wheel_count=2,
+                    expected_wheel_count=4,
                 )
 
     def test_candidate_and_development_versions_are_not_stable(self) -> None:

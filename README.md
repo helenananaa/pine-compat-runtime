@@ -42,31 +42,44 @@ application to a charting service.
 
 ## Quick Start
 
-The downloads below are the stable `v0.3.1` release. See
+The downloads below are the stable `v0.3.2` release. See
 [interface acceptance](docs/HOST_INTERFACES_ACCEPTANCE_20261007.md),
 [migration and limits](docs/STABLE_MIGRATION.md),
 [delivery surfaces](docs/DELIVERY_SURFACES.md), and
 [the delivery ledger](docs/DELIVERY_ROADMAP.md).
 
 Release assets contain optimized Python wheels for ordinary GIL-enabled
-CPython 3.10+ on glibc Linux x86-64 and Windows x86-64, a manifest, and SHA-256
+CPython 3.10+ on glibc Linux x86-64, Windows x86-64, and macOS arm64/x86-64,
+a manifest, and SHA-256
 checksums. Rust, CLI and WASM can be built from the tag. Compatibility is
 qualified for the named Pine subset. Version 0.3.1 adds fixed historical
 sessions and external account feedback; see the interface acceptance record.
 The earlier 216-trial resource matrix is evidence for 0.3.0, not a fresh
 qualification of these new interfaces.
 
+Version 0.3.2 adds native macOS Apple Silicon and Intel wheels with
+installed-wheel tests. Runtime semantics and schemas are unchanged from 0.3.1.
+See [Releasing Binary Wheels](docs/RELEASING.md) for the expanded matrix.
+
 Linux x86-64:
 
 ```bash
 python -m pip install \
-  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.1/pine_compat_runtime-0.3.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.2/pine_compat_runtime-0.3.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 ```
 
 Windows x86-64:
 
 ```powershell
-py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.1/pine_compat_runtime-0.3.1-cp310-abi3-win_amd64.whl"
+py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.3.2/pine_compat_runtime-0.3.2-cp310-abi3-win_amd64.whl"
+```
+
+macOS Apple Silicon or Intel (automatically selects the matching wheel):
+
+```bash
+# Requires GitHub CLI; download wheels into dist/ first.
+gh release download v0.3.2 --repo helenananaa/pine-compat-runtime --pattern '*.whl' --dir dist
+python3 -m pip install --no-index --find-links dist pine-compat-runtime==0.3.2
 ```
 
 Then run an indicator directly from Python:
@@ -97,7 +110,7 @@ partial strategy broker output — all without requiring a chart UI.
 ## What Works Today
 
 The current source tree provides a broad indicator runtime and a deliberately
-bounded strategy runtime. Features below describe the `v0.3.1` source and current release wheels.
+bounded strategy runtime. Features below describe the `v0.3.2` source and current release wheels.
 
 | Area | Current executable subset |
 | --- | --- |
@@ -345,7 +358,7 @@ behavior.
 
 ## Honest Compatibility
 
-The stable `0.3.1` release qualifies the documented executable Pine subset.
+The stable `0.3.2` release retains the documented executable Pine subset.
 Current boundaries include:
 
 - the strategy broker model is still a partial side-aware long/short subset;

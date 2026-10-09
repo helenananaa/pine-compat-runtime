@@ -21,7 +21,7 @@ BARS = [
 
 
 def test_package_identity_is_the_coordinated_prerelease():
-    assert pine_compat.__version__ == "0.3.1"
+    assert pine_compat.__version__ == "0.3.2"
     assert pine_compat.RUNTIME_SCHEMA_VERSION == 9
     assert pine_compat.ANALYSIS_SCHEMA_VERSION == 6
 

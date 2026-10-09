@@ -1,7 +1,7 @@
-# Delivery surfaces for 0.3.1
+# Delivery surfaces for 0.3.2
 
-The stable release uses version `0.3.1` across all surfaces. Official assets
-contain Windows/Linux Python wheels, manifest and checksums. Rust, CLI and
+The stable release uses version `0.3.2` across all surfaces. Official assets
+contain Windows/Linux/macOS Python wheels, manifest and checksums. Rust, CLI and
 WASM remain independently usable from source. See
 [interface acceptance](HOST_INTERFACES_ACCEPTANCE_20261007.md) and
 [migration/limits](STABLE_MIGRATION.md). Historical artifact inventories keep
@@ -9,15 +9,15 @@ their original source pins and do not substitute for current release assets.
 
 | Surface | Consumable entry | Version identity | Historical | Incremental | Realtime lifecycle | Host requirements | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Rust | path dependency on `crates/pine-runtime` plus `pine-syntax` / `pine-sema` | `CARGO_PKG_VERSION` = `0.3.1` | `HistoricalRuntime` | per-bar `append_bar` | `RealtimeRuntime` seed/forming/confirm | `host_requirements` | Example: `crates/pine-runtime/examples/embed_runtime.rs` |
+| Rust | path dependency on `crates/pine-runtime` plus `pine-syntax` / `pine-sema` | `CARGO_PKG_VERSION` = `0.3.2` | `HistoricalRuntime` | per-bar `append_bar` | `RealtimeRuntime` seed/forming/confirm | `host_requirements` | Example: `crates/pine-runtime/examples/embed_runtime.rs` |
 | CLI | `cargo run -p pine-cli --locked --release` → `pine-compat` | `pine-compat --version` | `run` | `run-incremental` | `run-realtime-history`, `run-realtime-forming` | `requirements` | JSON schema 9 results; analysis schema 6 |
-| Python | maturin wheel `pine-compat-runtime==0.3.1` (`pine_compat`) | `pine_compat.__version__` = `0.3.1` | `compile_script` / `run_script` / `Program.run` / `Program.historical_session` | historical `advance` / `fork`, or realtime confirmation | `create_realtime_session` / `Program.realtime_session` | `Program.host_requirements` | Wheel version is PEP 440 `0.3.1` |
-| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.1` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 4; runtime snapshots schema 9 |
+| Python | maturin wheel `pine-compat-runtime==0.3.2` (`pine_compat`) | `pine_compat.__version__` = `0.3.2` | `compile_script` / `run_script` / `Program.run` / `Program.historical_session` | historical `advance` / `fork`, or realtime confirmation | `create_realtime_session` / `Program.realtime_session` | `Program.host_requirements` | Wheel version is PEP 440 `0.3.2` |
+| WASM | `cargo build -p pine-wasm --target wasm32-unknown-unknown` plus `generate_node_bindings` | `packageVersion()` = `0.3.2` | `runScriptCsv` / `Program.runCsv` | `Program.realtimeSession` seed plus `applyForming` / `applyConfirmed` | `RealtimeSession` seed/forming/confirm/replay/correct, request feed, replica | `Program.hostRequirements` | JSON-string boundary; changes schema 4; runtime snapshots schema 9 |
 
 For host-owned accounts, Rust and Python also expose external intent evaluation;
 see [external feedback](EXTERNAL_BROKER_V1.md) and
 [fixed history](FIXED_HISTORY_SESSION.md). CLI and WASM do not expose these new
-host interfaces in 0.3.1.
+host interfaces in 0.3.2.
 
 ## Integrated streaming API
 

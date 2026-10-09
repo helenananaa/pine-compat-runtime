@@ -11815,9 +11815,9 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][258]["values"] == [
         None,
         None,
-        0.10033467208545055,
-        0.10033467208545055,
-        0.10033467208545055,
+        math.tan(0.1),
+        math.tan(0.1),
+        math.tan(0.1),
     ]
     assert result["plots"][259]["values"] == [None, None, 1.0, 1.0, 4.0]
     assert_json_close(
@@ -11921,11 +11921,11 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.9902159962126371,
     ]
     assert result["plots"][279]["values"] == [
-        0.10033467208545055,
-        0.10033467208545055,
-        0.10033467208545055,
-        0.10033467208545055,
-        0.10033467208545055,
+        math.tan(0.1),
+        math.tan(0.1),
+        math.tan(0.1),
+        math.tan(0.1),
+        math.tan(0.1),
     ]
     assert result["plots"][280]["values"] == [
         0.04000000000000001,

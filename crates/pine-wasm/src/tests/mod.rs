@@ -5,7 +5,7 @@ use std::{collections::HashMap, env, fs, path::PathBuf};
 
 #[test]
 fn package_version_is_the_coordinated_prerelease_identity() {
-    assert_eq!(package_version(), "0.3.1");
+    assert_eq!(package_version(), "0.3.2");
 }
 
 #[test]

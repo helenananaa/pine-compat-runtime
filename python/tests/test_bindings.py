@@ -4,6 +4,18 @@ import math
 from pathlib import Path
 
 
+def assert_libm_series_one_ulp(actual, expected):
+    # Native libm functions can round to neighboring doubles on macOS ARM.
+    # Preserve shape/na checks and allow at most one ULP for these math fixtures.
+    assert len(actual) == len(expected)
+    for value, reference in zip(actual, expected):
+        if reference is None:
+            assert value is None
+        else:
+            assert value is not None and math.isfinite(value)
+            assert abs(value - reference) <= math.ulp(reference)
+
+
 BARS = [
     {"time": 0, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0},
     {"time": 1, "open": 2.0, "high": 2.0, "low": 2.0, "close": 2.0, "volume": 1.0},
@@ -11783,42 +11795,42 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][250]["values"] == [None, None, 33.0, 33.0, 66.0]
     assert result["plots"][251]["values"] == [None, None, 2.0, 2.0, 3.0]
     assert result["plots"][252]["values"] == [None, None, 33.33, 33.33, 66.67]
-    assert result["plots"][253]["values"] == [
+    assert_libm_series_one_ulp(result["plots"][253]["values"], [
         None,
         None,
         10.0,
         10.0,
         14.142135623730951,
-    ]
-    assert result["plots"][254]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][254]["values"], [
         None,
         None,
         4.641588833612779,
         4.641588833612779,
         5.848035476425732,
-    ]
-    assert result["plots"][255]["values"] == [None, None, 2.0, 2.0, 2.3010299956639813]
-    assert result["plots"][256]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][255]["values"], [None, None, 2.0, 2.0, 2.3010299956639813])
+    assert_libm_series_one_ulp(result["plots"][256]["values"], [
         None,
         None,
         0.8414709848078965,
         0.8414709848078965,
         0.9092974268256817,
-    ]
-    assert result["plots"][257]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][257]["values"], [
         None,
         None,
         0.6216099682706644,
         0.6216099682706644,
         -0.32328956686350335,
-    ]
-    assert result["plots"][258]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][258]["values"], [
         None,
         None,
-        math.tan(0.1),
-        math.tan(0.1),
-        math.tan(0.1),
-    ]
+        0.10033467208545055,
+        0.10033467208545055,
+        0.10033467208545055,
+    ])
     assert result["plots"][259]["values"] == [None, None, 1.0, 1.0, 4.0]
     assert_json_close(
         result["plots"][260]["values"],
@@ -11830,41 +11842,41 @@ def test_run_script_request_fixture_matches_cli_contract():
             2.7586228448267445,
         ],
     )
-    assert result["plots"][261]["values"] == [
+    assert_libm_series_one_ulp(result["plots"][261]["values"], [
         None,
         None,
         4.605170185988092,
         4.605170185988092,
         5.298317366548036,
-    ]
-    assert result["plots"][262]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][262]["values"], [
         None,
         None,
         2.718281828459045,
         2.718281828459045,
         7.38905609893065,
-    ]
-    assert result["plots"][263]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][263]["values"], [
         None,
         None,
         1.0471975511965979,
         1.0471975511965979,
         0.0,
-    ]
-    assert result["plots"][264]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][264]["values"], [
         None,
         None,
         0.5235987755982989,
         0.5235987755982989,
         1.5707963267948966,
-    ]
-    assert result["plots"][265]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][265]["values"], [
         None,
         None,
         0.7853981633974483,
         0.7853981633974483,
         1.1071487177940904,
-    ]
+    ])
     assert result["plots"][266]["values"] == [None, None, 95.0, 95.0, 195.0]
     assert result["plots"][267]["values"] == [None, None, 33.0, 33.0, 66.0]
     assert result["plots"][268]["values"] == [None, None, 1.0, 1.0, 1.0]
@@ -11885,48 +11897,48 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][271]["values"] == [6.0, 7.0, 7.0, 7.0, 8.0]
     assert result["plots"][272]["values"] == [2.0, 2.0, 2.0, 3.0, 3.0]
     assert result["plots"][273]["values"] == [2.86, 3.0, 3.14, 3.29, 3.43]
-    assert result["plots"][274]["values"] == [
+    assert_libm_series_one_ulp(result["plots"][274]["values"], [
         4.47213595499958,
         4.58257569495584,
         4.69041575982343,
         4.795831523312719,
         4.898979485566356,
-    ]
-    assert result["plots"][275]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][275]["values"], [
         2.7144176165949068,
         2.7589241763811208,
         2.8020393306553872,
         2.8438669798515654,
         2.8844991406148166,
-    ]
-    assert result["plots"][276]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][276]["values"], [
         1.3010299956639813,
         1.3222192947339193,
         1.3424226808222062,
         1.3617278360175928,
         1.380211241711606,
-    ]
-    assert result["plots"][277]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][277]["values"], [
         0.19866933079506122,
         0.20845989984609956,
         0.21822962308086932,
         0.2279775235351884,
         0.23770262642713458,
-    ]
-    assert result["plots"][278]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][278]["values"], [
         0.9950041652780258,
         0.9939560979566968,
         0.9928086358538663,
         0.9915618937147881,
         0.9902159962126371,
-    ]
-    assert result["plots"][279]["values"] == [
-        math.tan(0.1),
-        math.tan(0.1),
-        math.tan(0.1),
-        math.tan(0.1),
-        math.tan(0.1),
-    ]
+    ])
+    assert_libm_series_one_ulp(result["plots"][279]["values"], [
+        0.10033467208545055,
+        0.10033467208545055,
+        0.10033467208545055,
+        0.10033467208545055,
+        0.10033467208545055,
+    ])
     assert result["plots"][280]["values"] == [
         0.04000000000000001,
         0.04409999999999999,
@@ -11943,34 +11955,34 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.2641968962724581,
         0.2778488797889961,
     ])
-    assert result["plots"][282]["values"] == [
+    assert_libm_series_one_ulp(result["plots"][282]["values"], [
         2.995732273553991,
         3.044522437723423,
         3.091042453358316,
         3.1354942159291497,
         3.1780538303479458,
-    ]
-    assert result["plots"][283]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][283]["values"], [
         1.2214027581601699,
         1.2336780599567432,
         1.2460767305873808,
         1.2586000099294778,
         1.2712491503214047,
-    ]
-    assert result["plots"][284]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][284]["values"], [
         1.4706289056333368,
         1.4656024257545082,
         1.46057327680715,
         1.455541327127319,
         1.4505064444001086,
-    ]
-    assert result["plots"][285]["values"] == [
+    ])
+    assert_libm_series_one_ulp(result["plots"][285]["values"], [
         0.1001674211615598,
         0.10519390104038849,
         0.11022304998774664,
         0.1152549996675776,
         0.12028988239478806,
-    ]
+    ])
     assert_json_close(
         result["plots"][286]["values"],
         [

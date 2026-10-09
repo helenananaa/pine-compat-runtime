@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: wheels-${{ github.ref }}
+  group: wheels-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
             interpreter: python
             rust-toolchain: "1.95.0"
           - label: macos-x86_64
-            os: macos-15-intel
+            os: macos-26-intel
             target: x86_64-apple-darwin
             manylinux: "off"
             interpreter: python

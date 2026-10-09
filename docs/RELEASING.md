@@ -6,7 +6,7 @@ desktop platforms:
 - glibc Linux x86-64: `cp310-abi3-manylinux_2_17_x86_64`
 - Windows x86-64: `cp310-abi3-win_amd64`
 - macOS Apple Silicon: `cp310-abi3-macosx_*_arm64` on `macos-15`
-- macOS Intel: `cp310-abi3-macosx_*_x86_64` on `macos-15-intel`
+- macOS Intel: `cp310-abi3-macosx_*_x86_64` on `macos-26-intel`
 
 The `abi3-py310` PyO3 feature makes each platform wheel compatible with
 ordinary GIL-enabled CPython 3.10 and newer. Linux/Windows ARM, musllinux, and

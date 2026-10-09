@@ -11812,13 +11812,16 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.6216099682706644,
         -0.32328956686350335,
     ]
-    assert result["plots"][258]["values"] == [
-        None,
-        None,
-        0.10033467208545055,
-        0.10033467208545055,
-        0.10033467208545055,
-    ]
+    # libc tan(0.1) differs by one representable f64 step on macOS arm64.
+    # Keep shape/NA checks exact and permit only that measured rounding step.
+    tan_values = result["plots"][258]["values"]
+    tan_expected = 0.10033467208545055
+    assert len(tan_values) == 5
+    assert tan_values[:2] == [None, None]
+    for value in tan_values[2:]:
+        assert math.isclose(
+            value, tan_expected, rel_tol=0.0, abs_tol=math.ulp(tan_expected)
+        ), (value, tan_expected)
     assert result["plots"][259]["values"] == [None, None, 1.0, 1.0, 4.0]
     assert_json_close(
         result["plots"][260]["values"],

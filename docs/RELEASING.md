@@ -5,12 +5,18 @@ desktop platforms:
 
 - glibc Linux x86-64: `cp310-abi3-manylinux_2_17_x86_64`
 - Windows x86-64: `cp310-abi3-win_amd64`
+- macOS Apple Silicon: `cp310-abi3-macosx_*_arm64` on `macos-15`
+- macOS Intel: `cp310-abi3-macosx_*_x86_64` on `macos-15-intel`
 
 The `abi3-py310` PyO3 feature makes each platform wheel compatible with
-ordinary GIL-enabled CPython 3.10 and newer. macOS, musllinux, ARM, and
+ordinary GIL-enabled CPython 3.10 and newer. Linux/Windows ARM, musllinux, and
 free-threaded CPython remain outside the release matrix.
 
-The current stable release is `0.3.0`. See
+Version `0.3.2` adds native macOS wheels without changing runtime implementation.
+Each platform installs and tests its generated wheel before publication.
+The deployment floor is encoded in the wheel filename.
+
+The previous stable release is `0.3.1`. See
 [stable acceptance](STABLE_ACCEPTANCE_20261006.md),
 [migration and limits](STABLE_MIGRATION.md), and the
 [delivery ledger](DELIVERY_ROADMAP.md).
@@ -26,7 +32,7 @@ tags, and manual dispatches.
 - Pull requests and ordinary `main` pushes build, install, test, and retain the
   wheels as 14-day workflow artifacts.
 - A `v*` tag performs the same build and then creates a durable GitHub Release.
-- The release contains both wheels, `manifest.json`, and `SHA256SUMS`.
+- The release contains all four wheels, `manifest.json`, and `SHA256SUMS`.
 - PEP 440 prerelease versions publish with `--prerelease --latest=false`.
   They do not change the release consumed through `/releases/latest`.
 
@@ -43,7 +49,7 @@ Before tagging, keep these versions synchronized:
 - Git tag without its leading `v`
 
 The manifest builder reads the wheel metadata and fails the release if the tag
-does not match the packaged version or if the two expected wheels are missing.
+does not match the packaged version or if the four expected wheels are missing.
 
 ## Release Checklist
 
@@ -59,7 +65,7 @@ does not match the packaged version or if the two expected wheels are missing.
 3. For a stable release, rerun the unchanged fixed resource matrix on the
    selected implementation; all trials, output audits and budgets must pass.
    Push the candidate branch and manually dispatch `wheels.yml` at that branch.
-   Confirm the run's `headSha`, both installed-wheel test jobs, actual wheel
+   Confirm the run's `headSha`, all four installed-wheel test jobs, actual wheel
    versions, and Linux manylinux2014 floor. Download and freshly install the
    artifacts, checking the named reference cases before tagging.
 4. Complete release notes and migration/known-limit documentation. If the final
@@ -73,7 +79,7 @@ does not match the packaged version or if the two expected wheels are missing.
    ```
 
 6. Confirm the tag workflow succeeds and the GitHub Release contains exactly
-   two wheels plus manifest/checksums, with matching version and release commit.
+   four wheels plus manifest/checksums, with matching version and release commit.
    Compare/download the actual assets and verify their SHA-256 digests.
 7. Freshly install each published wheel and run the binding examples and named
    reference cases. Record the actual release bytes; workflow artifacts alone
@@ -94,3 +100,12 @@ native extension only on process restart.
 Do not install release wheels into a global Python environment, replace a
 loaded `.pyd` or `.so` in place, consume pull-request artifacts, or silently
 fall back to building from source on an end-user machine.
+
+## Packaging-only patch releases
+
+When runtime sources and release compiler settings are unchanged from a stable
+release, a patch may add platform wheels and synchronize package versions. Run
+the canonical Windows/Linux gates and all target installed-wheel suites. Record
+source equality to the earlier release; do not relabel its historical resource
+receipts as fresh measurements. Platform support is established by the native
+runner installation tests, not by cross-compilation alone.

@@ -457,3 +457,11 @@ for the supported release platforms and artifact contract.
 
 [MIT](LICENSE). Pine Script is a trademark of its respective owner. This
 independent clean-room project is not affiliated with TradingView.
+
+### macOS binary wheels (0.3.2)
+
+The wheel workflow builds and tests native Apple Silicon and Intel packages.
+After the v0.3.2 release workflow succeeds, install the matching release wheel
+from the [GitHub Release](https://github.com/helenananaa/pine-compat-runtime/releases/tag/v0.3.2).
+Use the compatibility tag for the minimum macOS version. Runtime behavior and
+schemas remain unchanged from 0.3.1.

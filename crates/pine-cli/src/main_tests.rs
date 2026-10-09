@@ -18,8 +18,8 @@ use std::{
 
 #[test]
 fn package_version_is_the_coordinated_prerelease_identity() {
-    assert_eq!(crate::package_version(), "0.3.1");
-    assert_eq!(crate::package_version_line(), "pine-compat 0.3.1");
+    assert_eq!(crate::package_version(), "0.3.2");
+    assert_eq!(crate::package_version_line(), "pine-compat 0.3.2");
     assert!(crate::usage().contains("pine-compat --version"));
 }
 

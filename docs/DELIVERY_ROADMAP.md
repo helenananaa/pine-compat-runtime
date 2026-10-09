@@ -1,12 +1,17 @@
 # Independent runtime delivery
 
-Updated 2026-10-06. Current release: **0.3.0 stable for the named scope**.
+Updated 2026-10-09. Current release: **0.3.2 for the named scope**.
+
+Version 0.3.2 adds native macOS arm64 and x86-64 Python wheels to the existing
+Windows/Linux release matrix. Runtime semantics and schemas are unchanged from
+0.3.1. See [release notes](releases/v0.3.2.md) and
+[host-interface acceptance](HOST_INTERFACES_ACCEPTANCE_20261007.md).
 
 [Stable acceptance](STABLE_ACCEPTANCE_20261006.md) records fresh optimized
 compatibility builds, official wheel installation checks and the complete
 216-trial resource matrix at unchanged budgets. [Migration](STABLE_MIGRATION.md)
 defines timestamp/resource errors and the binding configuration boundary.
-The earlier resource-growth release blocker is closed by fresh current-core
+The earlier resource-growth release blocker is closed by fresh 0.3.0
 evidence. Historical failures remain on their original pins below.
 
 ## Development after 0.3.0

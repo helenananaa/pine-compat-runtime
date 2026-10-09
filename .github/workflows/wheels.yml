@@ -34,6 +34,18 @@ jobs:
             target: x86_64-pc-windows-msvc
             manylinux: "off"
             interpreter: python
+          - label: macos-arm64
+            os: macos-15
+            target: aarch64-apple-darwin
+            manylinux: "off"
+            interpreter: python
+            rust-toolchain: "1.95.0"
+          - label: macos-x86_64
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            manylinux: "off"
+            interpreter: python
+            rust-toolchain: "1.95.0"
 
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +62,7 @@ jobs:
         with:
           command: build
           maturin-version: v1.13.3
+          rust-toolchain: ${{ matrix.rust-toolchain }}
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
           args: >-
@@ -99,7 +112,7 @@ jobs:
         # Candidate tags must not become stable releases merely by matching v*.
         run: |
           python3 -m pip install -r scripts/requirements-release.txt
-          python3 scripts/build_wheel_manifest.py --dist dist --tag "$GITHUB_REF_NAME" --commit "$GITHUB_SHA" --expected-wheel-count 2
+          python3 scripts/build_wheel_manifest.py --dist dist --tag "$GITHUB_REF_NAME" --commit "$GITHUB_SHA" --expected-wheel-count 4
 
       - name: Publish release assets
         env:

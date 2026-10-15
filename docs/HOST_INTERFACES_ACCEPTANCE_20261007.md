@@ -56,6 +56,11 @@ manylinux2014/ABI3 assets from the release commit.
 
 ## Limits and host migration
 
+Subsequent [host-interface resource measurements](HOST_INTERFACE_RESOURCES_20261007.md)
+audit 32 installed-wheel trials and 80 complete outputs across Windows/Linux.
+They add finite advance/fork and external feedback measurements at 100k+10k,
+but retain `notEvaluated` resource qualification without API-specific budgets.
+
 The earlier complete 216-trial resource matrix belongs to 0.3.0. This change
 reruns canonical budgets/atomicity checks and host isolation/replay cases, but
 does not claim a fresh full resource matrix or long-session qualification of

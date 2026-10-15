@@ -104,8 +104,16 @@ impl<'a> HistoricalRuntime<'a> {
         let id = self.eval_table_id_arg(args)?;
         let start_column = self.eval_required_table_int_arg(args, 1, "start_column")?;
         let start_row = self.eval_required_table_int_arg(args, 2, "start_row")?;
-        let end_column = self.eval_required_table_int_arg(args, 3, "end_column")?;
-        let end_row = self.eval_required_table_int_arg(args, 4, "end_row")?;
+        let end_column = if optional_table_arg_expr(args, 3, "end_column").is_some() {
+            self.eval_required_table_int_arg(args, 3, "end_column")?
+        } else {
+            start_column
+        };
+        let end_row = if optional_table_arg_expr(args, 4, "end_row").is_some() {
+            self.eval_required_table_int_arg(args, 4, "end_row")?
+        } else {
+            start_row
+        };
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
@@ -173,7 +181,7 @@ impl<'a> HistoricalRuntime<'a> {
             text_font_family,
             text_formatting,
         };
-        self.mutate_table_cell(id, column, row, true, |cell| *cell = next_cell)?;
+        self.mutate_table_cell(id, column, row, |cell| *cell = next_cell)?;
         Ok(PineValue::Void)
     }
 
@@ -356,7 +364,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text = text;
         })?;
         Ok(PineValue::Void)
@@ -373,7 +381,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.bg_color = bg_color;
         })?;
         Ok(PineValue::Void)
@@ -390,7 +398,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text_color = text_color;
         })?;
         Ok(PineValue::Void)
@@ -407,7 +415,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.width = width;
         })?;
         Ok(PineValue::Void)
@@ -424,7 +432,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.height = height;
         })?;
         Ok(PineValue::Void)
@@ -441,7 +449,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text_size = text_size;
         })?;
         Ok(PineValue::Void)
@@ -458,7 +466,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text_halign = text_halign;
         })?;
         Ok(PineValue::Void)
@@ -475,7 +483,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text_valign = text_valign;
         })?;
         Ok(PineValue::Void)
@@ -492,7 +500,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text_wrap = text_wrap;
         })?;
         Ok(PineValue::Void)
@@ -509,7 +517,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.tooltip = tooltip;
         })?;
         Ok(PineValue::Void)
@@ -526,7 +534,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text_font_family = text_font_family;
         })?;
         Ok(PineValue::Void)
@@ -543,7 +551,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, false, |cell| {
+        self.mutate_table_cell(id, column, row, |cell| {
             cell.text_formatting = text_formatting;
         })?;
         Ok(PineValue::Void)
@@ -800,7 +808,6 @@ impl<'a> HistoricalRuntime<'a> {
         id: u32,
         column: i64,
         row: i64,
-        create_missing: bool,
         mutate: F,
     ) -> Result<(), RuntimeError>
     where
@@ -834,7 +841,7 @@ impl<'a> HistoricalRuntime<'a> {
             .find(|cell| cell.column == column && cell.row == row)
         {
             Some(cell) => mutate(cell),
-            None if create_missing => {
+            None => {
                 let mut cell = TableCellSnapshot {
                     column,
                     row,
@@ -853,11 +860,6 @@ impl<'a> HistoricalRuntime<'a> {
                 };
                 mutate(&mut cell);
                 next.cells.push(cell);
-            }
-            None => {
-                return Err(RuntimeError {
-                    message: format!("table cell `{column},{row}` has not been populated"),
-                });
             }
         }
         next.cells.sort_by_key(|cell| (cell.row, cell.column));

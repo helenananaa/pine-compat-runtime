@@ -1,0 +1,5 @@
+//@version=4
+study("Low Scanner boundary oracle")
+n=input(2.8)
+plot(ema(close,n),title="ema float")
+plot(ema(close,int(n)),title="ema int")

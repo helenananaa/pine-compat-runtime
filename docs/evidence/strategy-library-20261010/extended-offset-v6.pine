@@ -1,0 +1,3 @@
+//@version=6
+indicator("Codex date syntax oracle",overlay=true)
+plot(timestamp("01 Jan 2023 00:00 -3000"),"minus 30 hour offset")

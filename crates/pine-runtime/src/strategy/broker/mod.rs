@@ -3,6 +3,9 @@ mod all_entry_relative_exits;
 mod candidates;
 mod close_orders;
 mod closed_trades;
+#[cfg(test)]
+mod combined_exit_reservation_tests;
+mod combined_exits;
 mod deferred_relative_exits;
 mod entries;
 mod exit_orders;
@@ -36,6 +39,7 @@ mod oca_storage_tests;
 
 use pine_ir::{StrategyCloseEntriesRule, StrategyCommission, StrategyMarginSetting};
 
+pub(crate) use combined_exits::CombinedExitSpec;
 #[cfg(test)]
 use ledger::NetPosition;
 #[cfg(test)]
@@ -47,6 +51,7 @@ use order_book::OrderBook;
 pub(crate) use pending_closes::PendingCloseQuantity;
 use pending_entries::StopLimitEntryPlacement;
 pub(crate) use pending_entry_fills::{EntryPathTick, PathEventOutcome};
+pub(crate) use pending_exits::ExitQuantityRequest;
 use pending_exits::{
     PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };

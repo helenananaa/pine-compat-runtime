@@ -333,6 +333,8 @@ fn trailing_activation_is_not_a_fill() {
         target_trade_key: None,
         trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(10.5),
                 offset_price_distance: 0.5,
             },
@@ -365,6 +367,8 @@ fn gap_open_activates_trailing_without_filling_it() {
         target_trade_key: None,
         trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(10.5),
                 offset_price_distance: 0.5,
             },

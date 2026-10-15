@@ -26,6 +26,9 @@ pub(crate) struct RequestEvaluation<'a> {
 }
 
 impl RequestEvaluation<'_> {
+    pub(crate) fn cached_values_profile(&self) -> (usize, usize) {
+        (self.prefix.len(), self.prefix.capacity())
+    }
     pub(crate) fn capture_values(&self) -> impl Iterator<Item = &PineValue> {
         self.captures.values()
     }
@@ -74,18 +77,34 @@ impl<'a> HistoricalRuntime<'a> {
                 .evaluate_requested_values(&bars, expression, environment)
                 .map(AppendHistory::from_values);
         }
-        let provider_len = match environment.provider().bars(key) {
-            Ok(bars) => bars.len(),
-            Err(RequestDataError::MissingData { .. }) => 0,
+        let provider_bars = match environment.provider().bars(key) {
+            Ok(bars) => bars,
+            Err(RequestDataError::MissingData { .. }) => &[],
             Err(error) => {
                 return Err(RuntimeError {
                     message: error.to_string(),
                 });
             }
         };
-        let count = self
+        let provider_len = provider_bars.len();
+        let total = self
             .request_feed
             .resolved_len(key, provider_len, include_forming);
+        let current_time = self
+            .current_bar
+            .ok_or_else(|| RuntimeError {
+                message: "request has no current chart bar".to_owned(),
+            })?
+            .time;
+        let horizon = self.request_environment.chart_close(current_time)?;
+        // Endpoint-independent expressions only need the chart's visible
+        // prefix. Retain one successor to establish shortened/irregular closes
+        // during alignment; its value cannot cross the merge time boundary.
+        let count = self
+            .request_feed
+            .resolved_before(key, provider_bars, include_forming, horizon)
+            .saturating_add(1)
+            .min(total);
         let previous = self
             .request_evaluations
             .get(cache_key)
@@ -110,7 +129,7 @@ impl<'a> HistoricalRuntime<'a> {
         // execution. All newly evaluated requested bars spend today's budget.
         runtime.inherit_execution_budget(self);
         runtime.inherit_valuewhen_budget(self, replaced_values)?;
-        let bars = self.resolved_request_bars_from(key, prefix.len())?;
+        let bars = self.resolved_request_bars_range(key, prefix.len(), count)?;
         if bars.is_empty() {
             self.request_evaluations.remove(cache_key);
             return Ok(prefix);
@@ -226,10 +245,28 @@ fn incremental_scoped_expression(
                 }
         }
         HirExprKind::Call { callee, args, .. } => {
-            (callee.starts_with("ta.")
+            (callee == "input"
+                || callee.starts_with("input.")
+                || callee.starts_with("ta.")
                 || (callee.starts_with("math.") && callee != "math.random")
                 || pine_builtins::is_pure_scalar_string_builtin(callee)
-                || matches!(callee.as_str(), "timeframe.change" | "year"))
+                || matches!(
+                    callee.as_str(),
+                    "timeframe.change"
+                        | "year"
+                        | "nz"
+                        | "na"
+                        | "fixnan"
+                        | "int"
+                        | "float"
+                        | "bool"
+                        | "color.new"
+                        | "color.rgb"
+                        | "color.r"
+                        | "color.g"
+                        | "color.b"
+                        | "color.t"
+                ))
                 && args.iter().all(|arg| visit(&arg.value))
         }
         HirExprKind::Block { statements, result } => {
@@ -311,7 +348,7 @@ fn incremental_statement(
 fn stable_builtin(name: &str) -> bool {
     matches!(
         name,
-        "open"
+        "na" | "open"
             | "high"
             | "low"
             | "close"
@@ -349,19 +386,130 @@ mod tests {
     }
 
     #[test]
+    fn historical_prefix_matches_complete_provider_replay_with_irregular_closes() {
+        for timeframe in ["1", "11"] {
+            for gaps in ["gaps_on", "gaps_off"] {
+                for lookahead in ["lookahead_on", "lookahead_off"] {
+                    let script = |expression: &str| {
+                        format!(
+                            "//@version=6\nindicator(\"prefix\")\nplot(request.security(\"B\",\"{timeframe}\",{expression},gaps=barmerge.{gaps},lookahead=barmerge.{lookahead}))\n"
+                        )
+                    };
+                    let fast_hir =
+                        analyze_source(&SourceFile::new("prefix.pine", script("ta.cum(close)")))
+                            .hir
+                            .unwrap();
+                    let full_hir = analyze_source(&SourceFile::new(
+                        "complete.pine",
+                        script("ta.cum(close)+(barstate.islast?0.0:0.0)"),
+                    ))
+                    .hir
+                    .unwrap();
+                    let key = RequestKey::new("B", RequestTimeframe::parse(timeframe).unwrap());
+                    let mut time = 0;
+                    let provider = InMemoryRequestDataProvider::from_streams(vec![(
+                        key,
+                        (0..120)
+                            .map(|i| {
+                                let result = bar(time, i as f64 + 1.0);
+                                time += [120_000, 180_000, 900_000][i % 3];
+                                result
+                            })
+                            .collect(),
+                    )])
+                    .unwrap();
+                    let environment = RequestEnvironment::new(
+                        ChartContext::new("A", RequestTimeframe::parse("10").unwrap()),
+                        Arc::new(provider),
+                    );
+                    let mut fast =
+                        HistoricalRuntime::with_request_environment(&fast_hir, environment.clone());
+                    let mut full =
+                        HistoricalRuntime::with_request_environment(&full_hir, environment);
+                    for index in 0..60 {
+                        fast.append_bar(bar(index * 600_000, 1.0)).unwrap();
+                        full.append_bar(bar(index * 600_000, 1.0)).unwrap();
+                        assert_eq!(
+                            fast.result().plots,
+                            full.result().plots,
+                            "{timeframe}/{gaps}/{lookahead}/{index}"
+                        );
+                    }
+                    assert!(fast.request_cache.is_empty());
+                    assert!(!fast.request_evaluations.is_empty());
+                    assert!(full.request_evaluations.is_empty());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn twelve_long_providers_bootstrap_only_visible_prefix_under_default_budget() {
+        let source = format!(
+            "//@version=6\nindicator(\"budget\")\n{}",
+            (0..12)
+                .map(|i| format!("plot(request.security(\"B{i}\",\"1\",ta.cum(close)))\n"))
+                .collect::<String>()
+        );
+        let hir = analyze_source(&SourceFile::new("budget.pine", source))
+            .hir
+            .unwrap();
+        let provider = InMemoryRequestDataProvider::from_streams(
+            (0..12)
+                .map(|i| {
+                    (
+                        RequestKey::new(format!("B{i}"), RequestTimeframe::parse("1").unwrap()),
+                        (0..5120).map(|n| bar(n * 60_000, n as f64 + 1.0)).collect(),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
+        let environment = RequestEnvironment::new(
+            ChartContext::new("A", RequestTimeframe::parse("1").unwrap()),
+            Arc::new(provider),
+        );
+        let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment);
+        for index in 0..5120 {
+            runtime.append_bar(bar(index * 60_000, 1.0)).unwrap();
+            assert_eq!(runtime.request_evaluations.len(), 12);
+            assert!(
+                runtime
+                    .request_evaluations
+                    .values()
+                    .all(|saved| saved.replayed_bars <= 2)
+            );
+        }
+        for plot in runtime.result().plots {
+            for (index, value) in plot.values.iter().enumerate() {
+                assert_eq!(
+                    *value,
+                    PineValue::Float(((index + 1) * (index + 2) / 2) as f64)
+                );
+            }
+        }
+    }
+
+    #[test]
     fn live_ta_checkpoint_matches_forced_full_evaluation_with_bounded_replay() {
         for expression in [
             "ta.sma(close, 3)",
             "ta.ema(close, 5)",
             "ta.rsi(close, 7)",
             "ta.cum(close)",
+            "nz(close[1], close)",
+            "ta.sma(close, input.int(3))",
+            "f()",
+            "fixnan(close > 135 ? na : close)",
+            "float(int(close))",
+            "color.r(color.new(color.rgb(int(close), 20, 30), 25))",
             "str.tonumber(str.tostring(close))",
             "str.length(str.upper(str.format(\"value={0}\", close)))",
             r#"str.length(str.match(str.tostring(close), close % 2 == 0 ? "[0-9]+" : "[0-9]+\\.[0-9]+"))"#,
             "str.tonumber(str.replace_all(str.tostring(close), \".\", \"\"))",
         ] {
             let source = format!(
-                "//@version=6\nindicator(\"cache\")\nplot(request.security(\"B\", \"5\", {expression}))"
+                "//@version=6\nindicator(\"cache\")\nf()=>\n    value=0.0\n    value:=nz(value[1])+nz(close[1],close)\n    value\nplot(request.security(\"B\", \"5\", {expression}))"
             );
             let analysis = analyze_source(&SourceFile::new("cache.pine", source));
             assert!(
@@ -386,8 +534,8 @@ mod tests {
             );
             let mut fast = HistoricalRuntime::with_request_environment(&hir, environment.clone());
             let mut full = HistoricalRuntime::with_request_environment(&hir, environment);
-            fast.append_bar(bar(0, 1.0)).unwrap();
-            full.append_bar(bar(0, 1.0)).unwrap();
+            fast.append_bar(bar(127 * 300_000 + 240_000, 1.0)).unwrap();
+            full.append_bar(bar(127 * 300_000 + 240_000, 1.0)).unwrap();
             for index in 128..144 {
                 for bump in [0.0, 0.5, 1.0] {
                     let requested = bar(index * 300_000, index as f64 + bump);
@@ -481,8 +629,8 @@ mod tests {
         );
         let mut fast = HistoricalRuntime::with_request_environment(&hir, environment.clone());
         let mut full = HistoricalRuntime::with_request_environment(&hir, environment);
-        fast.append_bar(bar(0, 1.0)).unwrap();
-        full.append_bar(bar(0, 1.0)).unwrap();
+        fast.append_bar(bar(127 * 300_000 + 240_000, 1.0)).unwrap();
+        full.append_bar(bar(127 * 300_000 + 240_000, 1.0)).unwrap();
         for index in 128..144 {
             for bump in [0.0, 0.5, 1.0] {
                 let requested = bar(index * 300_000, index as f64 + bump);

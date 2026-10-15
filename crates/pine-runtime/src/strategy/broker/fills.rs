@@ -30,11 +30,34 @@ fn exit_comment(
 fn pending_exit_alert_kind(
     trigger: &PendingExitTrigger,
     raw_exit_price: f64,
+    direction: TradeDirection,
 ) -> StrategyExitFillAlertKind {
     match trigger {
         PendingExitTrigger::Limit(_) => StrategyExitFillAlertKind::Profit,
         PendingExitTrigger::Stop(_) => StrategyExitFillAlertKind::Loss,
-        PendingExitTrigger::Trailing(_) => StrategyExitFillAlertKind::Trailing,
+        PendingExitTrigger::Trailing(trailing) => {
+            if trailing
+                .spec
+                .fixed_limit
+                .is_some_and(|price| match direction {
+                    TradeDirection::Long => raw_exit_price >= price,
+                    TradeDirection::Short => raw_exit_price <= price,
+                })
+            {
+                StrategyExitFillAlertKind::Profit
+            } else if trailing
+                .spec
+                .fixed_stop
+                .is_some_and(|price| match direction {
+                    TradeDirection::Long => raw_exit_price <= price && !matches!(trailing.state, super::pending_exits::PendingTrailingState::Active { stop_price } if stop_price > price && raw_exit_price <= stop_price),
+                    TradeDirection::Short => raw_exit_price >= price && !matches!(trailing.state, super::pending_exits::PendingTrailingState::Active { stop_price } if stop_price < price && raw_exit_price >= stop_price),
+                })
+            {
+                StrategyExitFillAlertKind::Loss
+            } else {
+                StrategyExitFillAlertKind::Trailing
+            }
+        }
         PendingExitTrigger::Bracket { downside, upside } if raw_exit_price == *downside => {
             StrategyExitFillAlertKind::Loss
         }
@@ -57,7 +80,16 @@ fn pending_exit_is_limit_fill(
             TradeDirection::Long => raw_exit_price >= *upside,
             TradeDirection::Short => raw_exit_price <= *upside,
         },
-        PendingExitTrigger::Stop(_) | PendingExitTrigger::Trailing(_) => false,
+        PendingExitTrigger::Trailing(trailing) => {
+            trailing
+                .spec
+                .fixed_limit
+                .is_some_and(|price| match direction {
+                    TradeDirection::Long => raw_exit_price >= price,
+                    TradeDirection::Short => raw_exit_price <= price,
+                })
+        }
+        PendingExitTrigger::Stop(_) => false,
     }
 }
 
@@ -294,7 +326,7 @@ impl BrokerState {
             });
             return;
         }
-        let alert_kind = pending_exit_alert_kind(&pending_exit.trigger, raw_exit_price);
+        let alert_kind = pending_exit_alert_kind(&pending_exit.trigger, raw_exit_price, direction);
         let alert_metadata = pending_exit.metadata.clone();
         let allocations = if let Some(target_trade_key) = pending_exit.target_trade_key {
             self.trade_ledger

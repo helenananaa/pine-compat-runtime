@@ -1,0 +1,4 @@
+//@version=5
+indicator("V5 duplicate transparency negative 23")
+plotshape(true,transp=0,transp=0)
+plot(1)

@@ -57,6 +57,18 @@ impl Analyzer {
         }
     }
 
+    // Inputs belong to the source declaration, rather than to each inlined UDF
+    // invocation. Keep ordinary stateful built-in call sites independent.
+    pub(crate) fn input_call_site_at(&mut self, span: Span) -> CallSiteId {
+        let key = (self.current_source_context_id(), span.start, span.end);
+        if let Some(id) = self.input_declaration_call_sites.get(&key) {
+            return *id;
+        }
+        let id = self.alloc_call_site_at(span);
+        self.input_declaration_call_sites.insert(key, id);
+        id
+    }
+
     pub(crate) fn alloc_call_site_at(&mut self, span: Span) -> CallSiteId {
         let id = self.alloc_call_site();
         if let Some((source_id, library_key)) = self

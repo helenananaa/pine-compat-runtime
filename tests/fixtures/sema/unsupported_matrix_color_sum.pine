@@ -2,4 +2,4 @@
 indicator("Unsupported matrix<color> sum")
 
 values = matrix.new<color>(1, 1, color.red)
-plot(matrix.sum(values))
+plot(matrix.sum(values, 1))

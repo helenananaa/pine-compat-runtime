@@ -769,15 +769,15 @@ plot(close + sum)
 }
 
 #[test]
-fn runs_for_loop_signed_step_by_range_direction() {
+fn runs_for_loop_positive_step_by_range_direction() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("for signed step")
+        r#"indicator("for positive step")
 sum = 0
-for i = 0 to 4 by -2
+for i = 0 to 4 by 2
     sum := sum + i
 down = 0
-for j = 4 to 0 by -2
+for j = 4 to 0 by 2
     down := down + j
 plot(close + sum + down)
 "#,

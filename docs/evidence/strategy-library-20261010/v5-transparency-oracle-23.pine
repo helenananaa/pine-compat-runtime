@@ -1,0 +1,5 @@
+//@version=5
+indicator("V5 transparency oracle 23",precision=0)
+bgcolor(color.green,transp=90)
+plotshape(true,color=color.blue,transp=30,title="shape")
+plot(1,title="marker")

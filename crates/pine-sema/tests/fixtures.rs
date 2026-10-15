@@ -43,11 +43,8 @@ fn reports_unsupported_request_fixture() {
 }
 
 #[test]
-fn reports_nested_if_expression_branch_without_a_value() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_nested_if_branch_return.pine",
-        &["if expression branches must end with a value-producing expression"],
-    );
+fn accepts_formerly_nested_if_expression_branch_without_a_value() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_nested_if_branch_return.pine");
 }
 
 #[test]
@@ -4767,34 +4764,6 @@ fn reports_unsupported_strategy_order_named_const_direction_fixture() {
 fn reports_unsupported_strategy_exit_variant_fixtures() {
     for (path, code) in [
         (
-            "tests/fixtures/sema/unsupported_strategy_exit_stop_loss.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_limit_profit.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_three_triggers.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_four_triggers.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_qty_percent_same_side.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_qty_same_side.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_trailing.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
             "tests/fixtures/sema/unsupported_strategy_exit_profit_trailing.pine",
             "E_CALL_ARG_NAME",
         ),
@@ -4808,14 +4777,6 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
         ),
         (
             "tests/fixtures/sema/unsupported_strategy_exit_trail_offset_only.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_trail_price_points.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_trailing_bracket.pine",
             "E_CALL_ARG_NAME",
         ),
         (
@@ -4870,14 +4831,6 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
 #[test]
 fn reports_strategy_exit_quantity_guardrail_messages() {
     assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_strategy_exit_qty_percent_same_side.pine",
-        &["`strategy.exit` combined trigger families are not supported"],
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_strategy_exit_qty_same_side.pine",
-        &["`strategy.exit` combined trigger families are not supported"],
-    );
-    assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
         &["`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`"],
     );
@@ -4895,6 +4848,15 @@ fn reports_strategy_exit_quantity_guardrail_messages() {
 #[test]
 fn accepts_supported_strategy_exit_fixtures() {
     for fixture in [
+        "tests/fixtures/sema/supported_strategy_exit_trailing_bracket.pine",
+        "tests/fixtures/sema/supported_strategy_exit_trail_price_points.pine",
+        "tests/fixtures/sema/supported_strategy_exit_trailing.pine",
+        "tests/fixtures/sema/supported_strategy_exit_qty_same_side.pine",
+        "tests/fixtures/sema/supported_strategy_exit_qty_percent_same_side.pine",
+        "tests/fixtures/sema/supported_strategy_exit_four_triggers.pine",
+        "tests/fixtures/sema/supported_strategy_exit_three_triggers.pine",
+        "tests/fixtures/sema/supported_strategy_exit_limit_profit.pine",
+        "tests/fixtures/sema/supported_strategy_exit_stop_loss.pine",
         "tests/fixtures/sema/supported_strategy_exit_stop.pine",
         "tests/fixtures/sema/supported_strategy_exit_limit.pine",
         "tests/fixtures/sema/supported_strategy_exit_profit.pine",
@@ -5039,18 +5001,21 @@ fn accepts_supported_strategy_order_fixture() {
 }
 
 #[test]
-fn reports_unsupported_strategy_order_series_simple_string_ids_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_strategy_order_series_simple_string_ids.pine",
-        &[
-            "`strategy.entry` argument `id` expects simple string, got series string",
-            "`strategy.order` argument `id` expects simple string, got series string",
-            "`strategy.close` argument `id` expects simple string, got series string",
-            "`strategy.cancel` argument `id` expects simple string, got series string",
-            "`strategy.exit` argument `id` expects simple string, got series string",
-            "`strategy.exit` argument `from_entry` expects simple string, got series string",
-        ],
+fn accepts_strategy_order_series_string_ids_fixture() {
+    let path = workspace_fixture(
+        "tests/fixtures/sema/supported_strategy_order_series_simple_string_ids.pine",
     );
+    let source = SourceFile::new(
+        path.display().to_string(),
+        fs::read_to_string(path).expect("fixture"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -5106,13 +5071,12 @@ fn reports_unsupported_strategy_close_partial_quantity_fixture() {
     let analysis = analyze_source(&source);
 
     assert!(
-        analysis.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_CALL_ARG_NAME"
-                && diagnostic
-                    .message
-                    .contains("partial quantity arguments must be named")
+        !analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic
+                .message
+                .contains("partial quantity arguments must be named")
         }),
-        "{} diagnostics should reject positional strategy.close quantity: {:?}",
+        "{} v5 second source position is the legal numeric when argument: {:?}",
         path.display(),
         analysis.diagnostics
     );
@@ -6297,27 +6261,13 @@ fn reports_unsupported_if_expression_alert_result_fixture() {
 }
 
 #[test]
-fn reports_unsupported_if_expression_no_final_result_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_if_expression_no_final_result.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_if_expression_no_final_result.pine",
-        &["if expression branches must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_if_expression_no_final_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_if_expression_no_final_result.pine");
 }
 
 #[test]
-fn reports_unsupported_if_expression_reassignment_result_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_if_expression_reassignment_result.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_if_expression_reassignment_result.pine",
-        &["if expression branches must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_if_expression_reassignment_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_if_expression_reassignment_result.pine");
 }
 
 #[test]
@@ -6667,14 +6617,9 @@ fn reports_unsupported_for_in_expression_non_array_fixture() {
 }
 
 #[test]
-fn reports_unsupported_for_in_expression_reassignment_result_fixture() {
-    assert_diagnostic_fixture(
+fn accepts_formerly_unsupported_for_in_expression_reassignment_result_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_for_in_expression_reassignment_result.pine",
-        "E_LOOP_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_for_in_expression_reassignment_result.pine",
-        &["for...in expression body must end with a value-producing expression"],
     );
 }
 
@@ -6727,63 +6672,28 @@ fn reports_unsupported_for_expression_continue_result_fixture() {
 }
 
 #[test]
-fn reports_unsupported_for_expression_no_final_result_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_for_expression_no_final_result.pine",
-        "E_LOOP_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_for_expression_no_final_result.pine",
-        &["for expression body must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_for_expression_no_final_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_for_expression_no_final_result.pine");
 }
 
 #[test]
-fn reports_unsupported_for_expression_reassignment_result_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_for_expression_reassignment_result.pine",
-        "E_LOOP_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_for_expression_reassignment_result.pine",
-        &["for expression body must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_for_expression_reassignment_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_for_expression_reassignment_result.pine");
 }
 
 #[test]
-fn reports_unsupported_switch_statement_block_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_switch_statement_block.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_switch_statement_block.pine",
-        &["switch expression branches must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_switch_statement_block_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_switch_statement_block.pine");
 }
 
 #[test]
-fn reports_unsupported_switch_statement_block_selector_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_switch_statement_block_selector.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_switch_statement_block_selector.pine",
-        &["switch expression branches must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_switch_statement_block_selector_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_switch_statement_block_selector.pine");
 }
 
 #[test]
-fn reports_unsupported_switch_statement_block_default_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_switch_statement_block_default.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_switch_statement_block_default.pine",
-        &["switch expression branches must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_switch_statement_block_default_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_switch_statement_block_default.pine");
 }
 
 #[test]
@@ -6799,14 +6709,9 @@ fn reports_unsupported_switch_statement_block_alert_result_fixture() {
 }
 
 #[test]
-fn reports_unsupported_switch_statement_block_reassignment_result_fixture() {
-    assert_diagnostic_fixture(
+fn accepts_formerly_unsupported_switch_statement_block_reassignment_result_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_switch_statement_block_reassignment_result.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_switch_statement_block_reassignment_result.pine",
-        &["switch expression branches must end with a value-producing expression"],
     );
 }
 
@@ -6869,26 +6774,14 @@ fn accepts_supported_while_expression_matrix_kinds_fixture() {
 }
 
 #[test]
-fn reports_unsupported_while_expression_no_final_result_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_while_expression_no_final_result.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_while_expression_no_final_result.pine",
-        &["while expression branches must end with a value-producing expression"],
-    );
+fn accepts_formerly_unsupported_while_expression_no_final_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_while_expression_no_final_result.pine");
 }
 
 #[test]
-fn reports_unsupported_while_expression_reassignment_result_fixture() {
-    assert_diagnostic_fixture(
+fn accepts_formerly_unsupported_while_expression_reassignment_result_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_while_expression_reassignment_result.pine",
-        "E_BRANCH_RETURN",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_while_expression_reassignment_result.pine",
-        &["while expression branches must end with a value-producing expression"],
     );
 }
 
@@ -7614,9 +7507,7 @@ fn recovers_tuple_bindings_from_typed_unsupported_producers() {
     assert_eq!(analysis.diagnostics[0].code, "E_UNSUPPORTED_FEATURE");
     assert!(
         analysis.diagnostics[0].message.contains("security")
-            && analysis.diagnostics[0]
-                .message
-                .contains("control-flow-local requests"),
+            && analysis.diagnostics[0].message.contains("mutable captures"),
         "{} diagnostics: {:?}",
         path.display(),
         analysis.diagnostics
@@ -8694,8 +8585,8 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`matrix.is_antisymmetric` expects at most 1 argument(s), got 2",
             "`matrix.is_stochastic` argument `id` expects numeric matrix, got simple matrix<bool>",
             "`matrix.is_stochastic` expects at most 1 argument(s), got 2",
-            "`matrix.sum` argument `id` expects numeric matrix, got simple matrix<bool>",
-            "`matrix.sum` expects at most 1 argument(s), got 2",
+            "`matrix.sum` argument `id1` expects numeric matrix, got simple matrix<bool>",
+            "`matrix.sum` expects at most 2 argument(s), got 3",
             "`matrix.avg` argument `id` expects numeric matrix, got simple matrix<bool>",
             "`matrix.avg` expects at most 1 argument(s), got 2",
             "`matrix.min` argument `id` expects numeric matrix, got simple matrix<bool>",
@@ -8953,14 +8844,10 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.join` argument `id` expects scalar array, got simple array<chart.point>",
             "`array.join` argument `separator` expects string-compatible, got series float",
             "`array.join` expects at most 2 argument(s), got 3",
-            "`function_side_effect` is not supported: collection mutation via `array.concat` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.reverse` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.insert` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `array.sort` is not supported inside user-defined functions",
         ],
     );
-    // Call-result push and drawing-bearing UDT array construction are admitted.
-    assert_diagnostic_count(path, 245);
+    // Call-result push, UDF concat and drawing-bearing UDT arrays are admitted.
+    assert_diagnostic_count(path, 240);
 }
 
 #[test]
@@ -16644,39 +16531,21 @@ fn accepts_supported_alert_named_const_frequency_fixture() {
 }
 
 #[test]
-fn reports_unsupported_alert_placeholder_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alert_placeholder.pine",
-        "alert_placeholders",
-        "alert placeholder `{{close}}`",
-    );
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alert_named_const_placeholder.pine",
-        "alert_placeholders",
-        "alert placeholder `{{close}}`",
-    );
+fn accepts_literal_alert_placeholder_fixtures() {
+    assert_valid_fixture("tests/fixtures/sema/supported_alert_placeholder.pine");
+    assert_valid_fixture("tests/fixtures/sema/supported_alert_named_const_placeholder.pine");
 }
 
 #[test]
-fn reports_unsupported_alertcondition_placeholder_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alertcondition_placeholder.pine",
-        "alert_placeholders",
-        "alert placeholder `{{timenow}}`",
-    );
+fn accepts_alertcondition_placeholder_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_alertcondition_timenow_placeholder.pine");
 }
 
 #[test]
-fn reports_unsupported_alertcondition_title_placeholder_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alertcondition_title_placeholder.pine",
-        "alert_placeholders",
-        "alert placeholder `{{close}}`",
-    );
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alertcondition_named_const_title_placeholder.pine",
-        "alert_placeholders",
-        "alert placeholder `{{close}}`",
+fn accepts_literal_alertcondition_title_placeholder_fixtures() {
+    assert_valid_fixture("tests/fixtures/sema/supported_alertcondition_title_placeholder.pine");
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_alertcondition_named_const_title_placeholder.pine",
     );
 }
 
@@ -16709,11 +16578,9 @@ fn reports_unsupported_alertcondition_unknown_placeholder_fixture() {
 }
 
 #[test]
-fn reports_unsupported_alertcondition_plot_placeholder_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alertcondition_plot_placeholder.pine",
-        "alert_placeholders",
-        "alert placeholder `{{plot_0}}`",
+fn accepts_alertcondition_plot_placeholder_fixture() {
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_alertcondition_numbered_plot_placeholder.pine",
     );
 }
 
@@ -20686,12 +20553,8 @@ fn accepts_formerly_unsupported_udf_box_call_result_set_right_fixture() {
 }
 
 #[test]
-fn reports_unsupported_input_function_side_effect_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_input_function_side_effect.pine",
-        "function_side_effect",
-        "input",
-    );
+fn accepts_formerly_unsupported_input_function_side_effect_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_input_function_side_effect.pine");
 }
 
 #[test]
@@ -20789,13 +20652,8 @@ fn accepts_supported_dynamic_history_input_float_offset_fixture() {
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history.pine");
 }
 
 #[test]
@@ -20803,29 +20661,19 @@ fn reports_unsupported_dynamic_history_bool_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history_bool.pine",
         &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series bool",
+            "`dynamic_history_offset` is not supported: dynamic history offsets require a numeric expression in the current supported subset; got series bool",
         ],
     );
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_udf_return_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_udf_return.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_udf_return_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_udf_return.pine");
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_builtin_result_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_builtin_result.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_builtin_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_builtin_result.pine");
 }
 
 #[test]
@@ -20833,28 +20681,20 @@ fn reports_unsupported_dynamic_history_udt_field_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history_udt_field.pine",
         &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series bool",
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series string",
+            "`dynamic_history_offset` is not supported: dynamic history offsets require a numeric expression in the current supported subset; got series bool",
+            "`dynamic_history_offset` is not supported: dynamic history offsets require a numeric expression in the current supported subset; got series string",
         ],
     );
     assert_diagnostic_count(
         "tests/fixtures/sema/unsupported_dynamic_history_udt_field.pine",
-        11,
+        2,
     );
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_import_udt_field_fixture() {
-    assert_import_diagnostic_messages(
+fn accepts_numeric_dynamic_history_import_udt_field_fixture() {
+    assert_import_valid_fixture(
         "tests/fixtures/sema/unsupported_dynamic_history_import_udt_field.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
-    assert_import_diagnostic_count(
-        "tests/fixtures/sema/unsupported_dynamic_history_import_udt_field.pine",
-        12,
     );
 }
 
@@ -20863,7 +20703,7 @@ fn reports_unsupported_dynamic_history_import_udt_bool_field_fixture() {
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history_import_udt_bool_field.pine",
         &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series bool",
+            "`dynamic_history_offset` is not supported: dynamic history offsets require a numeric expression in the current supported subset; got series bool",
         ],
     );
     assert_import_diagnostic_count(
@@ -20877,7 +20717,7 @@ fn reports_unsupported_dynamic_history_import_udt_nested_bool_field_fixture() {
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history_import_udt_nested_bool_field.pine",
         &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series bool",
+            "`dynamic_history_offset` is not supported: dynamic history offsets require a numeric expression in the current supported subset; got series bool",
         ],
     );
     assert_import_diagnostic_count(
@@ -20891,7 +20731,7 @@ fn reports_unsupported_dynamic_history_import_udt_string_field_fixture() {
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history_import_udt_string_field.pine",
         &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series string",
+            "`dynamic_history_offset` is not supported: dynamic history offsets require a numeric expression in the current supported subset; got series string",
         ],
     );
     assert_import_diagnostic_count(
@@ -20905,7 +20745,7 @@ fn reports_unsupported_dynamic_history_import_udt_nested_string_field_fixture() 
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_dynamic_history_import_udt_nested_string_field.pine",
         &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series string",
+            "`dynamic_history_offset` is not supported: dynamic history offsets require a numeric expression in the current supported subset; got series string",
         ],
     );
     assert_import_diagnostic_count(
@@ -20915,63 +20755,33 @@ fn reports_unsupported_dynamic_history_import_udt_nested_string_field_fixture() 
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_ternary_result_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_ternary_result.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_ternary_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_ternary_result.pine");
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_if_result_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_if_result.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_if_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_if_result.pine");
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_switch_result_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_switch_result.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_switch_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_switch_result.pine");
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_for_result_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_for_result.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_for_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_for_result.pine");
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_for_in_result_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_for_in_result.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_for_in_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_for_in_result.pine");
 }
 
 #[test]
-fn reports_unsupported_dynamic_history_while_result_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_dynamic_history_while_result.pine",
-        &[
-            "`dynamic_history_offset` is not supported: dynamic history offsets require an integer expression in the current supported subset; got series float",
-        ],
-    );
+fn accepts_numeric_dynamic_history_while_result_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_dynamic_history_while_result.pine");
 }
 
 #[test]
@@ -24244,8 +24054,14 @@ fn assert_matrix_id_message(path: &str, function_name: &str, actual_type: &str) 
 }
 
 fn assert_numeric_matrix_id_message(path: &str, function_name: &str, actual_type: &str) {
-    let message =
-        format!("`{function_name}` argument `id` expects numeric matrix, got {actual_type}");
+    let parameter = if function_name == "matrix.sum" {
+        "id1"
+    } else {
+        "id"
+    };
+    let message = format!(
+        "`{function_name}` argument `{parameter}` expects numeric matrix, got {actual_type}"
+    );
     assert_diagnostic_messages(path, &[&message]);
 }
 

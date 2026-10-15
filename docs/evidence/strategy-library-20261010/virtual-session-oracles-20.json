@@ -1,0 +1,237 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-session-oracle-20.pine",
+    "source_sha256": "0596b30126ffc503ae824db1b3c0d74476fe47f2e174e29eebd95b4baa0b7991",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-session-oracle-20.png",
+    "screenshot_sha256": "23abdad823b7fd7755c46679cdf4dda04397bb216cd5cc9fc1aaecc7309242ac",
+    "native_version": 6,
+    "native_values": [
+      9,
+      999,
+      999,
+      0,
+      900000,
+      -172800000,
+      86400000,
+      19800000,
+      23400000,
+      -34200000,
+      52200000,
+      259200000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-intraday-oracle-20.pine",
+    "source_sha256": "87913a07fac5d3393c065c6bc2eb50978007685e1ca81ab6e2f5d609daf2cebe",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-intraday-oracle-20.png",
+    "screenshot_sha256": "7d91f5d21345b080840494404365869992de45cced0e76facaee546c0cef10ae",
+    "native_version": 6,
+    "native_values": [
+      1530,
+      -1800000,
+      1800000,
+      -900000,
+      900000,
+      -88200000,
+      -1800000,
+      86400000,
+      -23400000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-calendar-periods-oracle-20.pine",
+    "source_sha256": "39fd546066d64766a36a8ca486692f240e986a42b64778f81660aae939f36d22",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-calendar-periods-oracle-20.png",
+    "screenshot_sha256": "f4cb3586108ed4c59abb828ba69d3b8113489479484bc680a9a5d8034c2b3354",
+    "native_version": 6,
+    "native_values": [
+      -86400000,
+      -85500000,
+      -1800000,
+      23400000,
+      -345600000,
+      900000,
+      -691200000,
+      1815300000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-overnight-oracle-20.pine",
+    "source_sha256": "7fb3396bbf3fc6a067781d327006f6b41e69b9f166a8dc32a0a0e220c3b632c1",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-overnight-oracle-20.png",
+    "screenshot_sha256": "313a7c96b6af79c907f50c64d2cb506a69a8a170c5642e65a03c546a4fc3ffe7",
+    "native_version": 6,
+    "native_values": [
+      -1800000,
+      1800000,
+      -66600000,
+      -63000000,
+      -55800000,
+      1800000,
+      -59400000,
+      27000000,
+      -172800000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-gap-oracle-20.pine",
+    "source_sha256": "351d0f90011cc44486058c62a7f5bd7ed1f05944ca597fea87689d618e2ef672",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-gap-oracle-20.png",
+    "screenshot_sha256": "0318145e41a1ea56e88545cb6d10bd72a60906a6050727c8e9bfe7431103b728",
+    "native_version": 6,
+    "native_values": [
+      -20820000,
+      64860000,
+      -108000000,
+      151200000,
+      -171000000,
+      88200000,
+      1860000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-aggregate-gap-oracle-20.pine",
+    "source_sha256": "7b4d1c177a493468e02b3c090d7a1247aa25a4fd002dbc71fd401574fcd17ff7",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-aggregate-gap-oracle-20.png",
+    "screenshot_sha256": "09f9839d302dbecdce300995f6d4f69abb7666425cbc79ef86afe6dc5b529ec7",
+    "native_version": 6,
+    "native_values": [
+      -12600000,
+      12600000,
+      -81000000,
+      5400000,
+      -426600000,
+      178200000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-dst-oracle-20.pine",
+    "source_sha256": "4e3a0dc7a668cbadf5357793f472f5a68e333c4bcf27fa6fa45efab2f1d5beb5",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-dst-oracle-20.png",
+    "screenshot_sha256": "19655c4aa40a6e523f26f385341774c12364b328799a13571d06ab32f50b6757",
+    "native_version": 6,
+    "native_values": [
+      -7200000,
+      75600000,
+      -10800000,
+      79200000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-full-week-oracle-20.pine",
+    "source_sha256": "31fa96e7bfd282ff0aefa2f010023e42ccca06455bc1c5aa24b1a10d15f14714",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-full-week-oracle-20.png",
+    "screenshot_sha256": "618d06575928ed100cf876630111e6aac8f6c8f4211e30a7172bdb7322e9b363",
+    "native_version": 6,
+    "native_values": [
+      -401400000,
+      1800000,
+      -379800000,
+      52200000,
+      -750600000,
+      1841400000,
+      -347400000,
+      23400000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-week-chart-oracle-20.pine",
+    "source_sha256": "cee0216c93014641252e6bf0dd0d3a42cef40f10e982ea0b5ce9863b08b2c498",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-week-chart-oracle-20.png",
+    "screenshot_sha256": "d8daeac2c1ec0068435081df1f71de6bfc30388ee891f02a3ce77412651e0857",
+    "native_version": 6,
+    "native_values": [
+      -405000000,
+      27000000,
+      -345600000,
+      900000,
+      -426600000,
+      178200000,
+      -367200000,
+      237600000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-month-chart-oracle-20.pine",
+    "source_sha256": "cce3d596d6e2a7629baac8e53eab0c178f3f7a4bead546365de64ee7e3194566",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-month-chart-oracle-20.png",
+    "screenshot_sha256": "dbef9dd489b42ece0194b7980b319c9861e5eeba8d2e4f3677c4dfaaf8a9a609",
+    "native_version": 6,
+    "native_values": [
+      -691200000,
+      1815300000,
+      -950400000,
+      605700000,
+      -712800000,
+      2055600000,
+      -367200000,
+      1447200000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-weekly-offsets-oracle-20.pine",
+    "source_sha256": "2da939fe5e7e1a8c532156635784d4ee356244c56c8aff74f7565d550eb99600",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-weekly-offsets-oracle-20.png",
+    "screenshot_sha256": "ec18bf41bcffef38b0b8511da995ba432aa33850c2b89916fbfe8928d79746a1",
+    "native_version": 6,
+    "native_values": [
+      -972000000,
+      842400000,
+      -972000000,
+      2055600000,
+      -1006200000,
+      808200000,
+      -3304800000,
+      4561200000
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-default-days-v5-oracle-20.pine",
+    "source_sha256": "e90704d97ad4121c4ab16e6e26941231bd7328a6a7b0f7bc43614f5144b86a97",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-default-days-v5-oracle-20.png",
+    "screenshot_sha256": "9eeef51f5d4de0b21d2703c3ba35f3dac6047e06e24be0888a5450e39c7fdccc",
+    "native_version": 5,
+    "native_values": [
+      0
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-default-days-v4-oracle-20.pine",
+    "source_sha256": "013c8fdaeebd65bd91e9b0248630b9352074a368a61fb1bc0cf03b2bc3875e62",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\virtual-default-days-v4-oracle-20.png",
+    "screenshot_sha256": "72bb6eadecf041027766bcbaf8a8a3a1d7f9895733158cbf3557973a58232243",
+    "native_version": 4,
+    "native_values": [
+      999
+    ],
+    "scope": "Official minimal clock/language observations on a BTC monthly chart requesting AAPL D/60 or BTC D, sampled before AAPL opened on 2026-10-12; historical DST/default-day probes latch explicit dates. No full market/trade parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-session-oracle-19.pine",
+    "source_sha256": "75490feb73cbf6cae963bad8eca21d8588a42d23f11d2820c8a9c9a942574f24",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-session-oracle-19.png",
+    "screenshot_sha256": "8000407d5a4a5b56b8b4a2dcd73f7fd63ad8df719f0777288b11e261ecf702f0",
+    "native_version": 6,
+    "native_chart": "BINANCE:BTCUSDT M with requested NASDAQ:AAPL D, except UTC probe requests BTCUSDT D",
+    "native_values": [
+      -86400000,
+      -85500000,
+      -66600000,
+      -63000000
+    ],
+    "status": "repaired_virtual_session_control",
+    "scope": "Minimal official clock/language observations only; no full market/trade parity"
+  }
+]

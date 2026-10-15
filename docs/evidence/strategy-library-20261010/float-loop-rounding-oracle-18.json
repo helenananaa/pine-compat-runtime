@@ -1,0 +1,11 @@
+{
+  "version": 5,
+  "symbol": "BINANCE:BTCUSDT",
+  "timeframe": "M",
+  "expectedCounts": [
+    3,
+    3,
+    4
+  ],
+  "scope": "Official scalar loop comparison boundary, not arithmetic quantization"
+}

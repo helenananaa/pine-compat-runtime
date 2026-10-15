@@ -68,7 +68,7 @@ impl Analyzer {
     pub(crate) fn argument_has_disallowed_udf_side_effect(&self, expr: &Expr) -> bool {
         let mut effect = false;
         crate::modules::visit_expression(expr, &mut |node| {
-            let ExprKind::Call { callee, .. } = &node.kind else {
+            let ExprKind::Call { callee, args } = &node.kind else {
                 return;
             };
             let normalized = self.qualified_member_callee(callee);
@@ -87,6 +87,12 @@ impl Analyzer {
                     || is_map_mutation_method_call_name(name))
                     && !(name.ends_with(".new")
                         && self.allows_udf_output_or_declaration_side_effect(name))
+                    // From v4, static inputs may appear anywhere in a UDF
+                    // argument expression, while effects in their parameters
+                    // remain forbidden. Lowering retains source identities.
+                    && !((name == "input" || name.starts_with("input."))
+                        && self.legacy.dialect().version() >= 4
+                        && args.iter().all(|arg| !self.argument_has_side_effect(&arg.value)))
             });
         });
         effect

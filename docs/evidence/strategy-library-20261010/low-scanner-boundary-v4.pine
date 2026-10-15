@@ -1,0 +1,7 @@
+//@version=4
+study("Low Scanner boundary oracle")
+min1=input(1)
+len=timeframe.isintraday and timeframe.multiplier>=1?min1/timeframe.multiplier*7:7
+plot(ema(close,len))
+tf=input("60",title="Timeframe",type=input.resolution,options=["1","60","D"])
+plot(security(syminfo.tickerid,tf,close))

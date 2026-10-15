@@ -1,0 +1,12 @@
+//@version=4
+study("Codex legacy table UDF oracle",overlay=true)
+make()=>
+    var local=table.new(position.top_right,2,1,bgcolor=color.black)
+    local
+t=make()
+put(column,text)=>table.cell(t,column,0,text,bgcolor=color.new(color.blue,70),text_color=color.white,width=6)
+set(tbl,text)=>table.cell_set_text(tbl,1,0,text)
+if barstate.islast
+    put(0,"v4 UDF")
+    put(1,"before")
+    set(t,"setter")

@@ -543,7 +543,7 @@ impl Analyzer {
 
     fn user_type_array_branch_result_name(&self, branch: &[Stmt]) -> UserTypeArrayResultName {
         let Some(last) = branch.last() else {
-            return UserTypeArrayResultName::Unknown;
+            return UserTypeArrayResultName::Na;
         };
         match &last.kind {
             StmtKind::Expr(expr) => self.user_type_array_result_name(expr),

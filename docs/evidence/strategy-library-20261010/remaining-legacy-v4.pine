@@ -1,0 +1,7 @@
+//@version=4
+study("Codex remaining legacy v4 oracle",overlay=true)
+f(x)=>x+1
+g()=>f(input(2,"Nested input"))
+plot(g(),"nested input")
+plot(random(0,1,7),"random")
+plot(input(1,defval=1,minval=1,maxval=100,title="leverage"),"duplicate default")

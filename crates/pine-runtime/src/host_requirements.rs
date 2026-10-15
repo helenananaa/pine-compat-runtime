@@ -49,6 +49,7 @@ pub struct HostSourceLocation {
 pub struct ChartInputContract {
     pub bars: &'static str,
     pub price_grid: &'static str,
+    pub bar_calendars: &'static str,
     pub quantity_precision: &'static str,
     pub symbol_metadata: Vec<String>,
     pub defaults: ChartInputDefaults,
@@ -151,6 +152,12 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         if callee == "input" || callee.starts_with("input.") {
             input_ids.insert(call_site_id.0);
         }
+        if callee == "alertcondition"
+            && let Some(message) = crate::builtins::args::call_arg_expr(args, 2, "message")
+        {
+            clock |= crate::input_metadata::constant_string(program, message)
+                .is_none_or(|message| message.contains("{{timenow}}"));
+        }
         session_windows |= matches!(
             callee.as_str(),
             "strategy.risk.max_intraday_loss"
@@ -245,6 +252,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         chart: ChartInputContract {
             bars: "hostSuppliedStandardOhlcv",
             price_grid: "positiveIntegerMinMoveAndPriceScale",
+            bar_calendars: "continuousUtcDefaultOrHostSuppliedTradingIntervalsV1",
             quantity_precision: "decimalPowerZeroThroughNine",
             symbol_metadata: metadata.into_iter().collect(),
             defaults: ChartInputDefaults {

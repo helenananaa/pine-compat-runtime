@@ -1,0 +1,6 @@
+//@version=5
+indicator("Virtual default days v5 oracle 20",overlay=false)
+f() =>
+    x=time("1","0000-0015","UTC")
+    ta.valuewhen(time==timestamp("UTC",2026,10,10,0,0),na(x)?999:x-time,0)
+plot(request.security("BINANCE:BTCUSDT","D",f()),title="SaturdayDefault")

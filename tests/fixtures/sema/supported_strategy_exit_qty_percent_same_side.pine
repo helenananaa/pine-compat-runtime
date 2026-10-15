@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy exit qty percent same side")
+strategy.entry("L", strategy.long, qty=2)
+strategy.exit("XL", "L", stop=low, loss=5, qty_percent=50)

@@ -1,0 +1,13 @@
+//@version=6
+indicator("Lower calendar close oracle 21",precision=0)
+plot(time("D")-time,title="dailyOpen")
+plot(time_close("D")-time,title="dailyClose")
+plot(time("W")-time,title="weeklyOpen")
+plot(time_close("W")-time,title="weeklyClose")
+plot(time_close("D",timeframe_bars_back=1)-time,title="previousDailyClose")
+plot(time_close("D",timeframe_bars_back=-1)-time,title="nextDailyClose")
+plot(time_close("W",timeframe_bars_back=1)-time,title="previousWeeklyClose")
+plot(time_close("W",timeframe_bars_back=-1)-time,title="nextWeeklyClose")
+plot(time_close("D","0930-0945","UTC")-time,title="shortDailyClose")
+plot(time_close("W","0930-0945","UTC")-time,title="shortWeeklyClose")
+plot(time_close("D",bars_back=1)-time,title="chartPreviousDailyClose")

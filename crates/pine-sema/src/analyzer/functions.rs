@@ -535,16 +535,7 @@ impl Analyzer {
             return None;
         }
         for arg in args {
-            // A direct input at global callsite is evaluated in the caller
-            // before inlining, just like an input assigned to a global variable.
-            // Keep effects inside its arguments and inside function bodies gated.
-            let direct_global_input = self.legacy.dialect().version() >= 5
-                && self.function_depth == 0
-                && self.block_depth == 0
-                && matches!(&arg.value.kind, ExprKind::Call { callee, args }
-                    if expr_name(callee).is_some_and(|name| name.starts_with("input."))
-                        && args.iter().all(|arg| !self.argument_has_side_effect(&arg.value)));
-            if !direct_global_input && self.argument_has_disallowed_udf_side_effect(&arg.value) {
+            if self.argument_has_disallowed_udf_side_effect(&arg.value) {
                 self.unsupported(
                     "function_side_effect",
                     "side-effecting calls cannot be passed as user-defined function arguments",
@@ -636,24 +627,48 @@ impl Analyzer {
         let mut param_symbols = std::collections::HashSet::new();
         let mut param_const_switch_keys = std::collections::HashMap::new();
         for (
-            (param, expected_type),
+            param_index,
             (
-                (((arg_type, arg_user_type), arg_user_type_array), arg_map_info),
-                arg_const_switch_key,
+                (param, expected_type),
+                (
+                    (((arg_type, arg_user_type), arg_user_type_array), arg_map_info),
+                    arg_const_switch_key,
+                ),
             ),
-        ) in function.params.iter().zip(function.param_types.iter()).zip(
-            resolved_arg_types
-                .into_iter()
-                .zip(resolved_arg_user_types)
-                .zip(resolved_arg_user_type_arrays)
-                .zip(resolved_arg_map_infos)
-                .zip(resolved_arg_const_switch_keys),
-        ) {
+        ) in function
+            .params
+            .iter()
+            .zip(function.param_types.iter())
+            .zip(
+                resolved_arg_types
+                    .into_iter()
+                    .zip(resolved_arg_user_types)
+                    .zip(resolved_arg_user_type_arrays)
+                    .zip(resolved_arg_map_infos)
+                    .zip(resolved_arg_const_switch_keys),
+            )
+            .enumerate()
+        {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
             let bound_type = expected_type
                 .as_ref()
                 .map_or(arg_type, |expected| expected.bound_type(arg_type));
             let symbol = self.define_local_symbol(param, bound_type, None, false);
+            // Preserve the caller expression, including its binding context. A
+            // request inside this UDF can reconstruct immutable parameters and
+            // aliases without admitting a caller's external mutable state.
+            if self.legacy.dialect().version() >= 5
+                && super::requests::is_request_scalar_type(bound_type)
+                && let Some(arg_index) = arg_indices.iter().position(|index| *index == param_index)
+            {
+                self.request_param_sources.insert(
+                    symbol.id,
+                    SourcedExpr {
+                        expr: args[arg_index].value.clone(),
+                        source_context_id: self.current_source_context_id(),
+                    },
+                );
+            }
             param_symbols.insert(symbol.id);
             if let Some(key) = arg_const_switch_key.as_ref() {
                 self.record_symbol_const_switch_key(symbol, key);
@@ -1046,7 +1061,14 @@ impl Analyzer {
         self.block_depth -= 1;
 
         let then_type = then_type?;
-        let else_type = else_type?;
+        let else_type = if else_branch.is_empty()
+            && self.legacy.dialect().version() >= 6
+            && then_type.kind == ValueKind::Bool
+        {
+            PineType::new(Qualifier::Const, ValueKind::Bool)
+        } else {
+            else_type?
+        };
         let pine_type =
             self.merge_branch_types(condition_type, then_type, else_type, condition_value, span)?;
         if pine_type.kind == ValueKind::UserType

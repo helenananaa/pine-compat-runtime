@@ -1,0 +1,6 @@
+//@version=6
+indicator("Codex dynamic request oracle")
+inner = request.security("", "", timeframe.multiplier)
+outer = request.security("BINANCE:BTCUSDT", "12M", inner)
+plot(inner,"inner")
+plot(outer,"outer")

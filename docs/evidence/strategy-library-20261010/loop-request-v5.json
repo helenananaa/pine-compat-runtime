@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-11",
+  "version": 5,
+  "symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "requested_timeframe": "12M",
+  "table_values": [
+    245282.9,
+    245282.9,
+    245282.9,
+    264302.23,
+    264302.23,
+    264302.23
+  ],
+  "asserted_relation": "UDF for and while sums match close+close[1]+close[2] in both root and requested contexts.",
+  "source_sha256": "3e1267efef602bfed1b761d3f967f4632b3c5b527e21cabd7d3191c1848d4c6c",
+  "screenshot_sha256": "74db39bf2b873a2e753ba188bfee78e2ac586a7a918602b9c886e43524c73e57",
+  "scope": "Current native values only; bounded loop/state/history/incremental/runtime budget qualification remains separate.",
+  "cleanup": "Own indicator removed; original CA strategy and monthly chart preserved."
+}

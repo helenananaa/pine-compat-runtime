@@ -1,0 +1,14 @@
+//@version=6
+indicator("Virtual overnight oracle 20",overlay=false)
+f() =>
+    [time("1","0900-1000,1500-1600","America/New_York")-time,time_close("1","0900-1000,1500-1600","America/New_York")-time,time("1","0900-1000,1500-1600","America/New_York",timeframe_bars_back=31)-time,time_close("1","0900-1000,1500-1600","America/New_York",timeframe_bars_back=31)-time,time("1","1800-1000:23456","America/New_York")-time,time_close("1","1800-1000:23456","America/New_York")-time,time("1","1700-1700:23456","America/New_York")-time,time_close("1","1700-1700:23456","America/New_York")-time,time("1","0930-0945","America/New_York",bars_back=1,timeframe_bars_back=1)-time]
+[a,b,c,d,e,f1,g,h,i]=request.security("NASDAQ:AAPL","D",f())
+plot(a,title="splitLowerOpen")
+plot(b,title="splitLowerClose")
+plot(c,title="splitPreviousOpen")
+plot(d,title="splitPreviousClose")
+plot(e,title="overnightOpen")
+plot(f1,title="overnightClose")
+plot(g,title="fullDayOpen")
+plot(h,title="fullDayClose")
+plot(i,title="combinedOffsets")

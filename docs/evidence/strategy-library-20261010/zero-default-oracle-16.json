@@ -1,0 +1,9 @@
+{
+  "version": 4,
+  "defaultQtyType": "percent_of_equity",
+  "defaultQtyValue": 0,
+  "observedFinalPosition": 1,
+  "onlyReportedSignal": "Explicit",
+  "nativeCompileAndRun": "passed",
+  "scope": "Declaration zero is accepted; explicit qty still trades; no claim of all-market equity path parity"
+}

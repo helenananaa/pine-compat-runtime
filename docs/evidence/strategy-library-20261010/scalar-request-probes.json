@@ -1,0 +1,53 @@
+{
+  "url": "https://www.tradingview.com/chart/wf5lRGkJ/",
+  "chart_symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "requested_timeframe": "12M",
+  "probes": [
+    {
+      "source": "legacy-scalar-request-v4.pine",
+      "screenshot": "legacy-scalar-request-v4.png",
+      "version": 4,
+      "observed_status": "accepted",
+      "observed_table_rows": [
+        [
+          82085.7951040184,
+          82085.7951040184
+        ],
+        [
+          85331.265,
+          79579.6633333333
+        ]
+      ],
+      "source_sha256": "e11484dc36ed72118f3b6de03777e6a58c0f6cf8e4d96b464c90c66fb379a1c9",
+      "screenshot_sha256": "36b0fdb872eb9243d8ea8e10b699d5755dc75a84bfcfe833f4a8fba1a42f71a6"
+    },
+    {
+      "source": "legacy-mutable-request-v4.pine",
+      "screenshot": "legacy-mutable-request-v4.png",
+      "version": 4,
+      "observed_status": "rejected_mutable_capture",
+      "observed_table_rows": null,
+      "source_sha256": "7fd7a11fdb95514adab955976bce3302a7ec4a29f9c42038483296fe13b0f1f0",
+      "screenshot_sha256": "c6fa4446e806922756cbdaa3ca5ad09459020b6c8eda9ead42107435c3111db3"
+    },
+    {
+      "source": "fixnan-request-v5.pine",
+      "screenshot": "fixnan-request-v5.png",
+      "version": 5,
+      "observed_status": "accepted",
+      "observed_table_rows": [
+        [
+          87648.22,
+          87648.22,
+          85336.625
+        ]
+      ],
+      "source_sha256": "9a020d333b5a6d30efc4a5a2b7390894868cef94a08f89e34bc67daaa18dc7fa",
+      "screenshot_sha256": "e092b4d19cf956480c966cb09f3dd608dc860dd6f731ff9d3b75c6d9c3bb8092"
+    }
+  ],
+  "mutable_error": "Cannot use a mutable variable as an argument of the security function.",
+  "scope": "Unsaved controlled compile/value probes. Current values are live snapshots, not historical parity or trade qualification. Temporary added indicators were removed by UI action and test tab closed; final removal action was not separately refreshed before closing.",
+  "cleanup": "Agent indicators removed; a fresh subsequently opened chart tab contains only the original CA strategy and monthly timeframe."
+}

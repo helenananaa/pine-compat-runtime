@@ -1,0 +1,6 @@
+//@version=4
+study("Codex legacy static request oracle")
+inner = security(syminfo.tickerid, timeframe.period, timeframe.multiplier)
+outer = security(syminfo.tickerid, "12M", inner)
+plot(inner,"inner")
+plot(outer,"outer")

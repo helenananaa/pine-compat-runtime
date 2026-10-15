@@ -1277,11 +1277,11 @@ impl<'a> HistoricalRuntime<'a> {
         let timezone = if let Some(arg) = crate::builtins::args::positional_arg(args, 2) {
             match self.eval_expr(&arg.value)? {
                 PineValue::String(timezone) => timezone,
-                PineValue::Na => "UTC".to_owned(),
+                PineValue::Na => self.request_environment.chart_timezone().to_owned(),
                 _ => return Ok(PineValue::Na),
             }
         } else {
-            "UTC".to_owned()
+            self.request_environment.chart_timezone().to_owned()
         };
         let datetime = utc_datetime_from_millis(timestamp).map_err(|_| RuntimeError {
             message: format!("str.format_time timestamp is out of range: {timestamp}"),

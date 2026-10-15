@@ -1,0 +1,8 @@
+//@version=6
+indicator("Lower close boundary oracle 16",precision=0)
+plot(time_close("30S","0000-0001")-time,title="minute session")
+plot(time_close("30S","0000-2359")-time,title="day session")
+plot(time_close("30S",timeframe_bars_back=-1)-time,title="next requested bar")
+plot(time_close("30S",timeframe_bars_back=1)-time,title="prior requested bar")
+plot(time_close("30S",bars_back=1)-time[1],title="prior chart bar")
+plot(time_close("30S","0001-0002")-time,title="outside session")

@@ -1,0 +1,4 @@
+//@version=4
+study("Indicator strategy order guard 26")
+strategy.entry("L",strategy.long)
+plot(1)

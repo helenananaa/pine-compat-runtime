@@ -1,0 +1,20 @@
+//@version=5
+indicator("Expression return oracle 16", precision=0)
+f(n) =>
+    float s=0
+    if n>0
+        for i=1 to n
+            s := s+i
+    else
+        s := 0
+x=0
+y=if true
+    x := 7
+z=if false
+    x := 99
+q=for i=0 to 2
+    x += i
+plot(f(3), title="Function loop return")
+plot(y, title="If assignment return")
+plot(z, title="Missing else return")
+plot(q, title="Loop assignment return")

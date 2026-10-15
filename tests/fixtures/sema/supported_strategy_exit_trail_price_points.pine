@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy exit trail price points")
+strategy.entry("L", strategy.long, qty=1)
+strategy.exit("XL", "L", trail_price=high, trail_points=10, trail_offset=2)

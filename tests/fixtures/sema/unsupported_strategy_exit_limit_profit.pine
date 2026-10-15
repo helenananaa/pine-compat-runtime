@@ -1,4 +1,0 @@
-//@version=5
-strategy("Unsupported strategy exit limit profit")
-strategy.entry("L", strategy.long, qty=1)
-strategy.exit("XL", "L", limit=high, profit=10)

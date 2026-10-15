@@ -7,6 +7,7 @@ use crate::strategy::{
 };
 use crate::*;
 
+mod combined_exits;
 mod exit_placements;
 mod fields;
 mod metadata;
@@ -90,6 +91,24 @@ impl<'a> HistoricalRuntime<'a> {
         _call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
+        if matches!(
+            callee,
+            "strategy.order" | "strategy.exit" | "strategy.cancel" | "strategy.cancel_all"
+        ) {
+            let signature = pine_builtins::get_phase_1_builtin(callee).expect("order signature");
+            let index = signature
+                .params
+                .iter()
+                .position(|param| param.name == "when")
+                .expect("conditional order parameter");
+            if let Some(condition) = call_arg_expr(args, index, "when") {
+                match self.eval_expr(condition) {
+                    Ok(PineValue::Bool(true)) => {}
+                    Ok(_) => return Some(Ok(PineValue::Void)),
+                    Err(error) => return Some(Err(error)),
+                }
+            }
+        }
         if self.external_execution.is_some() && callee.starts_with("strategy.") {
             return Some(self.eval_external_call(callee, args));
         }
@@ -539,7 +558,19 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) => value,
             _ => return Ok(PineValue::Void),
         };
-        let direction = self.eval_expr(direction_expr)?;
+        let direction = match self.eval_expr(direction_expr)? {
+            PineValue::Bool(is_long) if self.program.language_version.is_some_and(|v| v <= 4) => {
+                PineValue::String(
+                    if is_long {
+                        "strategy.long"
+                    } else {
+                        "strategy.short"
+                    }
+                    .to_owned(),
+                )
+            }
+            direction => direction,
+        };
         let explicit_qty = match qty_expr {
             Some(expr) => self.eval_expr(expr)?.as_f64(),
             None => None,
@@ -689,9 +720,21 @@ impl<'a> HistoricalRuntime<'a> {
         let qty_expr = call_arg_expr(args, 1, "qty");
         let qty_percent_expr = call_arg_expr(args, 2, "qty_percent");
         let metadata = self.eval_strategy_close_metadata(args, 3)?;
-
-        let quantity = if let Some(qty_expr) = qty_expr {
-            let qty = self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN);
+        let qty = match qty_expr {
+            Some(expr) => self
+                .eval_expr(expr)?
+                .as_f64()
+                .filter(|value| !value.is_nan()),
+            None => None,
+        };
+        let qty_percent = match qty_percent_expr {
+            Some(expr) => self
+                .eval_expr(expr)?
+                .as_f64()
+                .filter(|value| !value.is_nan()),
+            None => None,
+        };
+        let quantity = if let Some(qty) = qty {
             if !qty.is_finite() || qty <= 0.0 {
                 self.strategy_broker
                     .with_next_close_metadata(metadata, |broker| {
@@ -700,11 +743,7 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             }
             crate::strategy::PendingCloseQuantity::Qty(qty)
-        } else if let Some(qty_percent_expr) = qty_percent_expr {
-            let qty_percent = self
-                .eval_expr(qty_percent_expr)?
-                .as_f64()
-                .unwrap_or(f64::NAN);
+        } else if let Some(qty_percent) = qty_percent {
             if !qty_percent.is_finite() || qty_percent <= 0.0 {
                 self.strategy_broker
                     .with_next_close_metadata(metadata, |broker| {
@@ -861,16 +900,16 @@ impl<'a> HistoricalRuntime<'a> {
             None => String::new(),
         };
         let qty = if let Some(qty_expr) = qty_expr {
-            Some(self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN))
+            self.eval_expr(qty_expr)?
+                .as_f64()
+                .filter(|value| !value.is_nan())
         } else {
             None
         };
         let qty_percent = if let Some(qty_percent_expr) = qty_percent_expr {
-            Some(
-                self.eval_expr(qty_percent_expr)?
-                    .as_f64()
-                    .unwrap_or(f64::NAN),
-            )
+            self.eval_expr(qty_percent_expr)?
+                .as_f64()
+                .filter(|value| !value.is_nan())
         } else {
             None
         };
@@ -884,6 +923,15 @@ impl<'a> HistoricalRuntime<'a> {
         let has_upside = limit_expr.is_some() || profit_expr.is_some();
         let has_fixed_exit = has_downside || has_upside;
         let has_trailing_activation = trail_price_expr.is_some() || trail_points_expr.is_some();
+        if (trail_offset_expr.is_some() && has_trailing_activation && has_fixed_exit)
+            || (stop_expr.is_some() && loss_expr.is_some())
+            || (limit_expr.is_some() && profit_expr.is_some())
+            || (trail_price_expr.is_some()
+                && trail_points_expr.is_some()
+                && trail_offset_expr.is_some())
+        {
+            return self.eval_combined_exit(args, id, from_entry, quantity, metadata);
+        }
         // A lone activation argument has no effect when a fixed exit exists.
         let has_trailing = legacy_trail_profit_expr.is_none()
             && (trail_offset_expr.is_some() || (has_trailing_activation && !has_fixed_exit));

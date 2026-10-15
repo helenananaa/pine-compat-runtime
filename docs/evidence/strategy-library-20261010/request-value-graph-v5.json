@@ -1,0 +1,26 @@
+{
+  "version": 5,
+  "url": "https://www.tradingview.com/chart/wf5lRGkJ/",
+  "source": "request-value-graph-v5.pine",
+  "screenshot": "request-value-graph-v5.png",
+  "chart_symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "requested_timeframe": "12M",
+  "status": "compiled_and_executed",
+  "table_rows": [
+    [
+      422858.59,
+      3.1415926536,
+      2029
+    ],
+    [
+      87648.22,
+      93576,
+      "color.new red text"
+    ]
+  ],
+  "source_sha256": "7b6cad6e41d24b465709f9efdc9cd5c6aff3da55f68b206291eb6bf8cbedd666",
+  "screenshot_sha256": "4f3a1c6571abb1798d3413566dddcf412b6dd7b868dda01fc85b72d29142ce31",
+  "cleanup": "Own indicator removed; fresh DOM confirmed absent, original CA strategy/monthly timeframe present; test tab closed.",
+  "scope": "Controlled unsaved current-value/legality proof. No full historical parity, realtime sequence or trade qualification."
+}

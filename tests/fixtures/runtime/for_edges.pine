@@ -2,7 +2,7 @@
 indicator("For edges")
 limit = close > 1 ? 3 : na
 sum = close > 0 ? 0 : 0
-for i = 0 to limit by -2
+for i = 0 to limit by 2
     if close < 3 and i == 2
         continue
     sum := sum + i

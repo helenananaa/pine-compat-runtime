@@ -1,6 +1,8 @@
 use super::BrokerState;
+use super::ledger::TradeLedger;
 use super::pending_exits::PendingExit;
 use super::types::{OcaGroupKey, OcaMember, OcaType};
+use std::collections::{HashMap, HashSet};
 
 impl BrokerState {
     pub(crate) fn assign_pending_order_oca_named(
@@ -118,11 +120,15 @@ impl BrokerState {
         entry_id: &str,
         released_identity: Option<(&str, &str)>,
         oca_group: Option<&OcaGroupKey>,
+        target_trade_key: Option<u64>,
     ) -> f64 {
-        self.order_book
+        let peers = self
+            .order_book
             .exits()
             .iter()
-            .filter(|pending_exit| pending_exit.from_entry == entry_id)
+            .filter(|pending_exit| {
+                target_trade_key.is_some() || pending_exit.from_entry == entry_id
+            })
             .filter(|pending_exit| {
                 released_identity.is_none_or(|(id, from_entry)| {
                     pending_exit.id != id || pending_exit.from_entry != from_entry
@@ -139,9 +145,82 @@ impl BrokerState {
                     _ => true,
                 }
             })
-            .map(|pending_exit| pending_exit.reserved_quantity)
-            .filter(|reserved_quantity| reserved_quantity.is_finite() && *reserved_quantity > 0.0)
-            .sum()
+            .filter(|pending_exit| {
+                pending_exit.reserved_quantity.is_finite() && pending_exit.reserved_quantity > 0.0
+            });
+        let Some(target) = target_trade_key else {
+            return peers
+                .map(|pending_exit| pending_exit.reserved_quantity)
+                .sum();
+        };
+        let Some(direction) = self.active_close_direction() else {
+            return 0.0;
+        };
+        // Simulate each peer's reservation once in placement order. A generic
+        // exit owns one aggregate quantity, not that quantity on every trade.
+        // Use the fill allocator so FIFO and ANY select the same trade keys.
+        let peers = peers.collect::<Vec<_>>();
+        let mut ledger = self.trade_ledger.clone();
+        let mut shared = HashSet::new();
+        let mut reserved = 0.0;
+        let group_for = |pending: &PendingExit| {
+            let member = OcaMember::Exit {
+                id: pending.id.clone(),
+                from_entry: pending.from_entry.clone(),
+                target_trade_key: pending.target_trade_key,
+            };
+            self.order_book
+                .oca_group(&member)
+                .filter(|group| group.oca_type != OcaType::None)
+        };
+        let allocate = |ledger: &TradeLedger, pending: &PendingExit| {
+            if let Some(key) = pending.target_trade_key {
+                ledger.allocate_exit_for_key(key, pending.reserved_quantity)
+            } else {
+                ledger.allocate_exit_for_close_rule(
+                    direction,
+                    (!pending.from_entry.is_empty()).then_some(pending.from_entry.as_str()),
+                    pending.reserved_quantity,
+                    self.close_entries_rule,
+                )
+            }
+        };
+        for pending in &peers {
+            if let Some(group) = group_for(pending) {
+                if !shared.insert(group.clone()) {
+                    continue;
+                }
+                // Reserve the group's union at its first placement. Each peer
+                // sees the same remaining ledger, including when other groups
+                // are interleaved. Distinct target keys remain independent.
+                let mut covered: HashMap<u64, f64> = HashMap::new();
+                for peer in peers.iter().filter(|peer| group_for(peer) == Some(group)) {
+                    for allocation in allocate(&ledger, peer) {
+                        let quantity = covered.entry(allocation.trade_key).or_default();
+                        *quantity = quantity.max(allocation.quantity);
+                    }
+                }
+                for (key, quantity) in covered {
+                    let allocations = ledger.allocate_exit_for_key(key, quantity);
+                    if key == target {
+                        reserved += allocations
+                            .iter()
+                            .map(|allocation| allocation.quantity)
+                            .sum::<f64>();
+                    }
+                    ledger.apply_allocations(&allocations);
+                }
+                continue;
+            }
+            let allocations = allocate(&ledger, pending);
+            reserved += allocations
+                .iter()
+                .filter(|allocation| allocation.trade_key == target)
+                .map(|allocation| allocation.quantity)
+                .sum::<f64>();
+            ledger.apply_allocations(&allocations);
+        }
+        reserved
     }
 
     pub(super) fn has_same_exit_oca_group_peer(

@@ -1,6 +1,63 @@
 use crate::prelude::*;
 
 impl Analyzer {
+    pub(super) fn normalize_strategy_source_args(
+        &mut self,
+        name: &str,
+        args: &[CallArg],
+    ) -> Option<Vec<CallArg>> {
+        let legacy = self.legacy.dialect() <= crate::PineDialect::V4;
+        if !matches!(name, "strategy.exit" | "strategy.close")
+            && !(legacy && matches!(name, "strategy.entry" | "strategy.order"))
+        {
+            return None;
+        }
+        let mut normalized = args.to_vec();
+        let mut seen_named = false;
+        for (index, arg) in normalized.iter_mut().enumerate() {
+            if arg.name.is_some() {
+                seen_named = true;
+            } else if seen_named {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_ORDER",
+                    "positional arguments cannot follow named arguments in built-in calls",
+                    arg.span,
+                ));
+            }
+            if name == "strategy.exit" && arg.name.is_none() {
+                arg.name = pine_builtins::strategy_exit_source_parameter(
+                    index,
+                    self.legacy.dialect().version(),
+                )
+                .map(str::to_owned);
+                if arg.name.is_none() {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARITY",
+                        "`strategy.exit` has no source parameter at this position",
+                        arg.span,
+                    ));
+                }
+            } else if name == "strategy.close" && arg.name.is_none() {
+                arg.name = pine_builtins::strategy_close_source_parameter(
+                    index,
+                    self.legacy.dialect().version(),
+                )
+                .map(str::to_owned);
+                if arg.name.is_none() {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARITY",
+                        "`strategy.close` has no source parameter at this position",
+                        arg.span,
+                    ));
+                }
+            } else if matches!(name, "strategy.entry" | "strategy.order")
+                && arg.name.as_deref() == Some("long")
+            {
+                arg.name = Some("direction".to_owned());
+            }
+        }
+        Some(normalized)
+    }
     pub(crate) fn local_udf_call_result_method_name<'a>(
         &self,
         callee: &'a Expr,
@@ -17,25 +74,32 @@ impl Analyzer {
             return false;
         }
 
-        matches!(
-            name,
-            "array.set"
-                | "array.pop"
-                | "array.unshift"
-                | "array.clear"
-                | "label.new"
-                | "label.delete"
-                | "line.new"
-                | "line.set_x2"
-                | "line.set_extend"
-                | "line.delete"
-        )
+        name.starts_with("table.")
+            || matches!(
+                name,
+                "array.set"
+                    | "array.push"
+                    | "array.shift"
+                    | "array.remove"
+                    | "array.insert"
+                    | "array.fill"
+                    | "array.reverse"
+                    | "array.sort"
+                    | "array.pop"
+                    | "array.unshift"
+                    | "array.clear"
+                    | "array.concat"
+                    | "label.new"
+                    | "label.delete"
+                    | "line.new"
+                    | "line.set_x2"
+                    | "line.set_extend"
+                    | "line.delete"
+            )
     }
 
     pub(crate) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
-        if (name == "input" || name.starts_with("input."))
-            && self.legacy.dialect() <= crate::PineDialect::V2
-        {
+        if name == "input" || name.starts_with("input.") {
             return true;
         }
         if matches!(
@@ -76,6 +140,9 @@ impl Analyzer {
             && (matches!(
                 name,
                 "array.unshift"
+                    | "array.insert"
+                    | "array.reverse"
+                    | "array.sort"
                     | "array.push"
                     | "array.set"
                     | "array.fill"
@@ -83,10 +150,21 @@ impl Analyzer {
                     | "array.pop"
                     | "array.remove"
                     | "array.shift"
+                    | "array.concat"
             ) || name.starts_with("matrix."))
     }
 
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {
+        // From v3, ordinary built-in functions and scalar variables occupy
+        // distinct namespaces. User functions are resolved by the caller.
+        if self.legacy.dialect() >= crate::PineDialect::V3
+            && matches!(
+                self.legacy.resolve_call(name),
+                Some(crate::legacy::LegacyResolution::ExactAlias(_))
+            )
+        {
+            return false;
+        }
         let current_symbol = self.scope.resolve(name);
         let symbol = self
             .bound_symbol(name, span)
@@ -195,6 +273,7 @@ pub(crate) fn local_udf_call_result_method_parts<'a>(
             matches!(
                 producer_method,
                 "copy"
+                    | "sum"
                     | "diff"
                     | "eigenvectors"
                     | "inv"
@@ -250,6 +329,7 @@ pub(crate) fn bound_matrix_call_result_method_parts<'a>(
                 && matches!(
                     producer_method.as_str(),
                     "copy"
+                        | "sum"
                         | "diff"
                         | "eigenvectors"
                         | "inv"

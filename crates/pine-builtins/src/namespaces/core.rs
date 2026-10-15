@@ -80,6 +80,11 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstBool,
         optional: true,
     },
+    BuiltinParam {
+        name: "behind_chart",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const STRATEGY_PARAMS: &[BuiltinParam] = &[
@@ -230,6 +235,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "dynamic_requests",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "behind_chart",
         accepts: Accepts::ConstBool,
         optional: true,
     },

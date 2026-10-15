@@ -1,0 +1,5 @@
+//@version=3
+study("Codex later aliases v3 boundary",overlay=true)
+plot(random(0,1,7),"random")
+[s,d]=supertrend(3,10)
+plot(s,"supertrend")

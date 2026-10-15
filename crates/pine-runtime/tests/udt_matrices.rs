@@ -69,7 +69,7 @@ fn incompatible_matrix_elements_and_numeric_operations_are_rejected() {
         "values.add_row(array_id=array.from(Other.new(2)))",
         "values.concat(matrix.new<Other>())",
         "matrix<Item> wrong=matrix.new<Other>()",
-        "plot(matrix.sum(values))",
+        "plot(matrix.avg(values))",
     ] {
         let source = format!(
             "//@version=6\nindicator(\"negative\")\ntype Item\n    int value\ntype Other\n    int value\nvalues=matrix.new<Item>(1,1,Item.new(1))\n{statement}\nplot(close)\n"

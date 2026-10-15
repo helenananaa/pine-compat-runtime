@@ -1,5 +1,24 @@
 use crate::prelude::*;
 
+impl Analyzer {
+    pub(crate) fn type_of_expr_with_params(
+        &self,
+        expr: &Expr,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
+        let cached = self.expr_types.get(&self.expr_key(expr.span)).copied();
+        // Scalar expressions must follow this call's arguments. Reference
+        // identities and legacy call translations still require analyzed types.
+        if param_types.is_empty()
+            || cached.is_some_and(|ty| !crate::analyzer::requests::is_request_scalar_type(ty))
+        {
+            return cached.or_else(|| self.type_of_expr_in_param_context(expr, param_types));
+        }
+        self.type_of_expr_in_param_context(expr, param_types)
+            .or(cached)
+    }
+}
+
 pub(super) fn map_new_template_types(name: &str) -> Option<(&str, &str)> {
     let inner = name.strip_prefix("map.new<")?.strip_suffix('>')?;
     inner.split_once(',')

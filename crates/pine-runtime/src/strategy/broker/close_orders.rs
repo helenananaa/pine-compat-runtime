@@ -528,19 +528,12 @@ impl BrokerState {
         from_entry: Option<&str>,
         requested_quantity: f64,
     ) -> Vec<TradeAllocation> {
-        match (self.close_entries_rule, from_entry) {
-            (pine_ir::StrategyCloseEntriesRule::Any, Some(entry_id)) => self
-                .trade_ledger
-                .allocate_exit_any_for_entry_direction(direction, entry_id, requested_quantity),
-            // `from_entry` sizes/reserves the exit order. With the default
-            // FIFO rule its fill closes the oldest open trade regardless of
-            // the entry ID named by that order.
-            _ => self.trade_ledger.allocate_exit_fifo_for_direction(
-                direction,
-                None,
-                requested_quantity,
-            ),
-        }
+        self.trade_ledger.allocate_exit_for_close_rule(
+            direction,
+            from_entry,
+            requested_quantity,
+            self.close_entries_rule,
+        )
     }
 
     pub(super) fn allocate_generic_order_close(

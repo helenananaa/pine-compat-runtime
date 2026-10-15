@@ -14,7 +14,7 @@ def test_modern_request_options_are_not_reported_as_implicit_defaults():
     assert report["schemaVersion"] == 2
     assert report["requests"][0]["gaps"] == "gapsOn"
     assert report["requests"][0]["lookahead"] == "lookaheadOn"
-    assert report["requests"][0]["timeframeRelation"] == "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
+    assert report["requests"][0]["timeframeRelation"] == "sameOrLowerOrHigher"
 
 
 @pytest.mark.parametrize("version", [4, 5, 6])
@@ -26,7 +26,7 @@ def test_lower_timeframe_inventory_matches_an_executable_provider_request(versio
         f'plot({function}("REMOTE", "3", close))\n'
     )
     relation = program.host_requirements()["requests"][0]["timeframeRelation"]
-    assert relation == "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
+    assert relation == "sameOrLowerOrHigher"
 
     def bar(time, close):
         return dict(time=time, open=close, high=close, low=close, close=close, volume=1)

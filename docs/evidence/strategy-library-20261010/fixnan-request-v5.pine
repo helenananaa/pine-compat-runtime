@@ -1,0 +1,11 @@
+//@version=5
+indicator("Codex fixnan request oracle",overlay=true)
+f(src)=>fixnan(src[1])
+a=request.security(syminfo.tickerid,"12M",f(close))
+b=request.security(syminfo.tickerid,"12M",close[1])
+c=request.security(syminfo.tickerid,"12M",ta.sma(close,input.int(2,title="Length")))
+var t=table.new(position.top_right,3,1,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,str.tostring(a),text_color=color.white)
+    table.cell(t,1,0,str.tostring(b),text_color=color.white)
+    table.cell(t,2,0,str.tostring(c),text_color=color.white)

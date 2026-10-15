@@ -17,23 +17,13 @@ impl Analyzer {
         let Some(offset_type) = offset_type else {
             self.unsupported(
                 "dynamic_history_offset",
-                "dynamic history offsets require an integer expression in the current supported subset",
+                "dynamic history offsets require a numeric expression in the current supported subset",
                 offset.span,
             );
             return;
         };
 
-        if offset_type.kind == ValueKind::Int {
-            return;
-        }
-
-        // Input/simple float offsets are admitted here; runtime still requires a
-        // whole non-negative number (`value.fract() == 0.0`). Series float, bool,
-        // string, and const float stay rejected so `close[close]` and non-whole
-        // const offsets keep static diagnostics.
-        if offset_type.kind == ValueKind::Float
-            && matches!(offset_type.qualifier, Qualifier::Input | Qualifier::Simple)
-        {
+        if matches!(offset_type.kind, ValueKind::Int | ValueKind::Float) {
             return;
         }
 
@@ -41,7 +31,7 @@ impl Analyzer {
         self.unsupported(
             "dynamic_history_offset",
             &format!(
-                "dynamic history offsets require an integer expression in the current supported subset; got {actual}"
+                "dynamic history offsets require a numeric expression in the current supported subset; got {actual}"
             ),
             offset.span,
         );
@@ -139,12 +129,13 @@ impl Analyzer {
                 }
             }
             BinaryOp::Eq | BinaryOp::NotEq => {
-                let legacy_numeric_bool = self.legacy.dialect() == PineDialect::V5
-                    && matches!(
-                        (left_type.kind, right_type.kind),
-                        (ValueKind::Bool, ValueKind::Int | ValueKind::Float)
-                            | (ValueKind::Int | ValueKind::Float, ValueKind::Bool)
-                    );
+                let legacy_numeric_bool =
+                    matches!(self.legacy.dialect(), PineDialect::V4 | PineDialect::V5)
+                        && matches!(
+                            (left_type.kind, right_type.kind),
+                            (ValueKind::Bool, ValueKind::Int | ValueKind::Float)
+                                | (ValueKind::Int | ValueKind::Float, ValueKind::Bool)
+                        );
                 if common_kind(left_type.kind, right_type.kind).is_some() || legacy_numeric_bool {
                     Some(PineType::new(
                         strongest_qualifier(left_type.qualifier, right_type.qualifier),
@@ -240,12 +231,12 @@ impl Analyzer {
         }
     }
 
-    pub(crate) fn expect_int(&mut self, pine_type: PineType, span: Span) {
-        if pine_type.kind != ValueKind::Int {
+    pub(crate) fn expect_numeric_loop_bound(&mut self, pine_type: PineType, span: Span) {
+        if !matches!(pine_type.kind, ValueKind::Int | ValueKind::Float) {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_RANGE_TYPE",
                 format!(
-                    "for loop range must be int, got {}",
+                    "for loop range must be int or float, got {}",
                     pine_type_name(pine_type)
                 ),
                 span,
@@ -253,8 +244,26 @@ impl Analyzer {
         }
     }
 
+    pub(crate) fn expect_loop_step_type(
+        &mut self,
+        from_type: Option<PineType>,
+        step_type: PineType,
+        span: Span,
+    ) {
+        self.expect_numeric_loop_bound(step_type, span);
+        if from_type.is_some_and(|value| value.kind == ValueKind::Int)
+            && step_type.kind == ValueKind::Float
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RANGE_TYPE",
+                "for loop with an int counter requires an int step",
+                span,
+            ));
+        }
+    }
+
     pub(crate) fn expect_non_zero_loop_step(&mut self, step: &Expr) {
-        if self.known_const_int_value(step) == Some(0) {
+        if self.known_const_numeric_value(step) == Some(0.0) {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_STEP",
                 "for loop step cannot be zero",

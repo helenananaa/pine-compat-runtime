@@ -1,5 +1,5 @@
 //@version=6
 indicator("Unsupported matrix.sum method receiver")
 
-total = close.sum()
+total = close.sum(1)
 plot(total)

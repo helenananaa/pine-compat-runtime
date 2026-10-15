@@ -41,7 +41,7 @@ fn dynamic_request_selectors_obey_versioned_declaration_gate() {
 }
 
 #[test]
-fn nested_request_context_inheritance_obeys_dynamic_requests_gate() {
+fn nested_request_context_modes_are_admitted_and_lowered() {
     for (version, declaration, accepted) in [
         (6, "indicator(\"nested\")", true),
         (6, "indicator(\"static\", dynamic_requests=false)", false),
@@ -58,8 +58,8 @@ fn nested_request_context_inheritance_obeys_dynamic_requests_gate() {
         );
         let analysis = analyze(&source);
         assert_eq!(
-            analysis.hir.is_some(),
-            accepted,
+            analysis.hir.as_ref().map(|hir| hir.dynamic_requests),
+            Some(accepted),
             "{source}: {:?}",
             analysis.diagnostics
         );
@@ -333,7 +333,7 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
                     Accepts::FloatMatrix | Accepts::NumericMatrix | Accepts::Matrix
                 )
             }),
-            ReturnSpec::MatrixMult => true,
+            ReturnSpec::MatrixMult | ReturnSpec::MatrixSum => true,
             _ => false,
         })
         .map(|signature| signature.name)
@@ -353,6 +353,7 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         "matrix.pinv",
         "matrix.pow",
         "matrix.submatrix",
+        "matrix.sum",
         "matrix.transpose",
     ]);
     assert!(
@@ -525,22 +526,16 @@ fn accepts_input_float_history_offset() {
 }
 
 #[test]
-fn reports_dynamic_history_offset_actual_float_type() {
+fn accepts_dynamic_history_offset_actual_float_type() {
     let analysis = analyze("plot(close[close])\n");
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "dynamic_history_offset"
-    );
+    assert!(analysis.compatibility.unsupported.is_empty());
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("got series float")),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

@@ -146,8 +146,14 @@ fn normalize_default(
             let name = parts.join(".");
             if let Some(pine_type) = pine_builtins::builtin_series_value_type(&name)
                 && pine_type.qualifier != Qualifier::Const
-                && (pine_builtins::named_float_constant(&name).is_some()
-                    || pine_builtins::named_int_constant(&name).is_some())
+                && matches!(
+                    pine_type.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                )
             {
                 return Some((value.clone(), pine_type));
             }

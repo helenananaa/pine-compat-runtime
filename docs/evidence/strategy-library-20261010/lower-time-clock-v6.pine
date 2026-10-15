@@ -1,0 +1,7 @@
+//@version=6
+indicator("Codex lower timeframe clock oracle",overlay=true)
+plot(time,"chart open")
+plot(time("30S"),"30S open")
+plot(time_close("30S"),"30S close")
+plot(time("S"),"S open")
+plot(time_close("S"),"S close")

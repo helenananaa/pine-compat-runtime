@@ -117,6 +117,19 @@ const MATRIX_TWO_NUMERIC_ID_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATRIX_SUM_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id1",
+        accepts: Accepts::NumericMatrix,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "id2",
+        accepts: Accepts::MatrixOrNumericCompatibleWithMatrixCounterpart(0),
+        optional: false,
+    },
+];
+
 const MATRIX_MATRIX_OR_NUMERIC_PAIR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id1",
@@ -681,8 +694,8 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "matrix.sum",
         phase: BuiltinPhase::Phase1Core,
-        params: MATRIX_NUMERIC_ID_PARAMS,
-        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        params: MATRIX_SUM_PARAMS,
+        returns: ReturnSpec::MatrixSum,
         variadic: false,
     },
     BuiltinSignature {

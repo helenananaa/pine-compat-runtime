@@ -1,0 +1,18 @@
+{
+  "initial_probe": {
+    "source": "//@version=5\nindicator(\"Codex history type oracle\",overlay=true)\nn=input.int(19,\"Period\")\noffset=n/2+1\nplot(close[offset])\n",
+    "status": "compiled_and_executed",
+    "observed_plot": 87648.22
+  },
+  "extended_probe": {
+    "status": "failed_to_fetch_twice",
+    "source_file": "history-input-division-v5.pine",
+    "screenshot": "history-input-division-v5-editor.png"
+  },
+  "qualification": "Initial probe establishes legality of input-int derived history indices in v5; quotient numeric value and exact implicit conversion still pending. No conclusion that integer division truncates.",
+  "cleanup": {
+    "own_indicator_absent": true,
+    "original_strategy_present": true,
+    "monthly_chart_preserved": true
+  }
+}

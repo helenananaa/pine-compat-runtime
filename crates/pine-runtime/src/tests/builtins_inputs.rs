@@ -401,6 +401,123 @@ fn source_override_selects_each_bars_builtin_series_and_rejects_external_sources
 }
 
 #[test]
+fn requested_source_inputs_replay_defaults_and_overrides_in_provider_context() {
+    for version in [5, 6] {
+        for callee in ["input", "input.source"] {
+            let source = SourceFile::new(
+                "requested-source.pine",
+                format!(
+                    "//@version={version}\nindicator(\"requested source input\")\nsrc={callee}(title=\"Source\",defval=hl2)\nplot(src)\nplot(request.security(\"B\",\"2\",src))\n"
+                ),
+            );
+            let analysis = analyze_source(&source);
+            let program = analysis
+                .hir
+                .unwrap_or_else(|| panic!("{:?}", analysis.diagnostics));
+            let id = first_call_site_id(&program, callee);
+            let chart = (0..4)
+                .map(|i| {
+                    let mut bar = bar_ohlc(4.0, 5.0, 3.0, 4.0);
+                    bar.time = i * 60_000;
+                    bar
+                })
+                .collect::<Vec<_>>();
+            let mut later = bar_ohlc(70.0, 80.0, 60.0, 70.0);
+            later.time = 120_000;
+            let provider = InMemoryRequestDataProvider::from_streams([(
+                RequestKey::new("B", RequestTimeframe::parse("2").unwrap()),
+                vec![bar_ohlc(30.0, 40.0, 20.0, 30.0), later],
+            )])
+            .unwrap();
+            for (overrides, root, requested) in [
+                (InputOverrides::new(), 4.0, [30.0, 30.0, 70.0]),
+                (
+                    InputOverrides::new().with_value(id, PineValue::String("high".into())),
+                    5.0,
+                    [40.0, 40.0, 80.0],
+                ),
+            ] {
+                let environment = RequestEnvironment::new(
+                    ChartContext::new("A", RequestTimeframe::parse("1").unwrap()),
+                    std::sync::Arc::new(provider.clone()),
+                );
+                let result = HistoricalRuntime::with_request_environment_and_input_overrides(
+                    &program,
+                    environment,
+                    overrides,
+                )
+                .run(&chart)
+                .expect("source input is evaluated on the requested data");
+                assert_values_close(&result.plots[0].values, &[root; 4]);
+                assert!(result.plots[1].values[0].is_na());
+                assert_values_close(&result.plots[1].values[1..], &requested);
+            }
+        }
+    }
+}
+
+#[test]
+fn inline_requested_scalar_input_preserves_call_site_overrides() {
+    for version in [5, 6] {
+        let source = SourceFile::new(
+            "requested-length.pine",
+            format!(
+                "//@version={version}\nindicator(\"inline length\")\nplot(request.security(\"B\",\"2\",ta.sma(close,input.int(title=\"Length\",defval=2))))\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        let program = analysis
+            .hir
+            .unwrap_or_else(|| panic!("{:?}", analysis.diagnostics));
+        let id = first_call_site_id(&program, "input.int");
+        let bar = |time, close| Bar {
+            time,
+            open: close,
+            high: close,
+            low: close,
+            close,
+            volume: 1.,
+        };
+        let provider = InMemoryRequestDataProvider::from_streams([(
+            RequestKey::new("B", RequestTimeframe::parse("2").unwrap()),
+            vec![bar(0, 10.), bar(120_000, 20.), bar(240_000, 30.)],
+        )])
+        .unwrap();
+        let chart = (0..6).map(|i| bar(i * 60_000, 1.)).collect::<Vec<_>>();
+        for (overrides, expected) in [
+            (
+                InputOverrides::new(),
+                vec![None, None, None, Some(15.), Some(15.), Some(25.)],
+            ),
+            (
+                InputOverrides::new().with_value(id, PineValue::Int(1)),
+                vec![None, Some(10.), Some(10.), Some(20.), Some(20.), Some(30.)],
+            ),
+        ] {
+            let environment = RequestEnvironment::new(
+                ChartContext::new("A", RequestTimeframe::parse("1").unwrap()),
+                std::sync::Arc::new(provider.clone()),
+            );
+            let result = HistoricalRuntime::with_request_environment_and_input_overrides(
+                &program,
+                environment,
+                overrides,
+            )
+            .run(&chart)
+            .unwrap();
+            assert_eq!(
+                result.plots[0]
+                    .values
+                    .iter()
+                    .map(PineValue::as_f64)
+                    .collect::<Vec<_>>(),
+                expected
+            );
+        }
+    }
+}
+
+#[test]
 fn runs_generic_input_series_float_source_defval() {
     let source = SourceFile::new(
         "test.pine",
@@ -694,4 +811,87 @@ fn input_metadata_depth_failure_does_not_poison_shorter_aliases() {
     let calls = input_calls(&program);
     assert_eq!(calls[0].default_value, None);
     assert_eq!(calls[1].default_value, Some(PineValue::Int(1)));
+}
+
+#[test]
+fn udf_inputs_share_declaration_identity_and_overrides() {
+    for version in [3, 4, 5, 6] {
+        let (declaration, number, source) = if version == 3 {
+            (
+                "study",
+                "input(2, \"Length\", type=integer)",
+                "input(close, \"Source\", type=source)",
+            )
+        } else if version == 4 {
+            (
+                "study",
+                "input(2, \"Length\", type=input.integer)",
+                "input(close, \"Source\", type=input.source)",
+            )
+        } else {
+            (
+                "indicator",
+                "input.int(2, \"Length\")",
+                "input.source(close, \"Source\")",
+            )
+        };
+        let script = format!(
+            "//@version={version}\n{declaration}(\"shared UDF inputs\")\nf()=>\n    n={number}\n    s={source}\n    n+s\na=f()\nb=f()\nplot(a)\nplot(b)\n"
+        );
+        let analysis = analyze_source(&SourceFile::new("udf-inputs.pine", script));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let program = analysis.hir.expect("HIR");
+        let inputs = input_calls(&program);
+        assert_eq!(inputs.len(), 2, "v{version}: {inputs:?}");
+        let length = inputs
+            .iter()
+            .find(|x| x.title.as_deref() == Some("Length"))
+            .unwrap()
+            .call_site_id;
+        let source = inputs.iter().find(|x| x.is_source).unwrap().call_site_id;
+        let bars = vec![bar(1.), bar(2.), bar(3.)];
+        let defaults = run_historical(&program, &bars).unwrap();
+        for plot in &defaults.plots {
+            assert_values_close(&plot.values, &[3., 4., 5.]);
+        }
+        let overrides = InputOverrides::new()
+            .with_value(length, PineValue::Int(7))
+            .with_value(source, PineValue::String("high".into()));
+        let result = run_historical_with_input_overrides(&program, &bars, overrides).unwrap();
+        for plot in &result.plots {
+            assert_values_close(
+                &plot.values,
+                &[bars[0].high + 7., bars[1].high + 7., bars[2].high + 7.],
+            );
+        }
+    }
+}
+
+#[test]
+fn distinct_udf_input_declarations_keep_independent_overrides() {
+    let script = "//@version=5\nindicator(\"separate declarations\")\nf()=>input.int(2,\"First\")\ng()=>input.int(2,\"Second\")\nplot(f()+f())\nplot(g()+g())\n";
+    let analysis = analyze_source(&SourceFile::new("separate.pine", script));
+    let program = analysis
+        .hir
+        .unwrap_or_else(|| panic!("{:?}", analysis.diagnostics));
+    let inputs = input_calls(&program);
+    assert_eq!(inputs.len(), 2);
+    assert_ne!(inputs[0].call_site_id, inputs[1].call_site_id);
+    let first = inputs
+        .iter()
+        .find(|x| x.title.as_deref() == Some("First"))
+        .unwrap()
+        .call_site_id;
+    let result = run_historical_with_input_overrides(
+        &program,
+        &[bar(1.)],
+        InputOverrides::new().with_value(first, PineValue::Int(9)),
+    )
+    .unwrap();
+    assert_values_close(&result.plots[0].values, &[18.]);
+    assert_values_close(&result.plots[1].values, &[4.]);
 }

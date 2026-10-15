@@ -714,14 +714,13 @@ impl<'a> RealtimeRuntime<'a> {
         // All fallible execution happens on the candidate. The old session stays
         // untouched until it is ready, so no second rollback copy is needed.
         let mut runtime = self.confirmed.blank_for_replay();
-        let chart_close = bars.last().map(|bar| {
-            runtime
-                .request_environment
-                .chart()
-                .timeframe()
-                .nominal_close(bar.time)
-        });
-        runtime.request_feed.trim_after(chart_close);
+        let chart_close = bars
+            .last()
+            .map(|bar| runtime.request_environment.chart_close(bar.time))
+            .transpose()?;
+        runtime
+            .request_feed
+            .trim_after(chart_close, &runtime.request_environment)?;
         match execution_times {
             Some(times) => runtime.append_bars_with_execution_times(bars, times)?,
             None => runtime.append_bars(bars)?,

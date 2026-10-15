@@ -28,6 +28,16 @@ impl BrokerState {
                 metadata,
             } = deferred_exit;
             match trigger {
+                DeferredRelativeExitTrigger::Combined(spec) => {
+                    self.place_combined_exit(
+                        id,
+                        from_entry,
+                        spec,
+                        quantity,
+                        last_update_bar_index,
+                        metadata,
+                    );
+                }
                 DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } => {
                     let Some(limit_price) =
                         self.exit_profit_price_from_ticks_for_entry(&from_entry, ticks, mintick)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Codex session boundary oracle",overlay=true)
+plot(time("", "0000-2400:1234567", "UTC"),"full day with days")
+plot(time("", "0000-2400", "UTC"),"full day")
+plot(time("", "2400-1600", "UTC"),"start at 2400")

@@ -256,7 +256,8 @@ impl<'a> HistoricalRuntime<'a> {
         let text_color_value = self.eval_output_arg(args, 7, "textcolor", PineValue::Na)?;
         let size_value =
             self.eval_output_arg(args, 9, "size", PineValue::String("size.auto".to_owned()))?;
-        let metadata = self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11), None)?;
+        let metadata =
+            self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11), Some(12))?;
         push_bar_aligned_output(
             &mut self.plot_chars,
             self.bars - self.stored_origin,
@@ -523,7 +524,7 @@ impl<'a> HistoricalRuntime<'a> {
         let value = self.eval_expr(color_arg)?;
         let transp = self.eval_legacy_transparency(args, Some(90))?;
         let value = Self::apply_legacy_transparency(value, transp);
-        let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5), None)?;
+        let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5), Some(6))?;
         push_series_value(
             &mut self.bg_colors,
             self.bars - self.stored_origin,

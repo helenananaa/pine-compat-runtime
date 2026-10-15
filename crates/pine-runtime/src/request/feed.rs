@@ -59,6 +59,7 @@ impl RequestFeed {
             })
     }
 
+    #[cfg(test)]
     pub(crate) fn resolved_from(
         &self,
         key: &RequestKey,
@@ -66,11 +67,46 @@ impl RequestFeed {
         include_forming: bool,
         start: usize,
     ) -> Vec<Bar> {
-        let mut bars = provider.get(start..).unwrap_or(&[]).to_vec();
+        self.resolved_range(key, provider, include_forming, start, usize::MAX)
+    }
+
+    pub(crate) fn resolved_before(
+        &self,
+        key: &RequestKey,
+        provider: &[Bar],
+        include_forming: bool,
+        time: i64,
+    ) -> usize {
+        provider.partition_point(|bar| bar.time < time)
+            + self.streams.get(key).map_or(0, |stream| {
+                stream.confirmed.partition_point(|bar| bar.time < time)
+                    + usize::from(
+                        include_forming && stream.forming.is_some_and(|bar| bar.time < time),
+                    )
+            })
+    }
+
+    pub(crate) fn resolved_range(
+        &self,
+        key: &RequestKey,
+        provider: &[Bar],
+        include_forming: bool,
+        start: usize,
+        end: usize,
+    ) -> Vec<Bar> {
+        let mut bars = provider
+            .get(start..end.min(provider.len()))
+            .unwrap_or(&[])
+            .to_vec();
         if let Some(stream) = self.streams.get(key) {
-            bars.extend(stream.confirmed.tail(start.saturating_sub(provider.len())));
+            let from = start.saturating_sub(provider.len());
+            let to = end
+                .saturating_sub(provider.len())
+                .min(stream.confirmed.len());
+            bars.extend((from..to).filter_map(|index| stream.confirmed.get(index).copied()));
             if include_forming
                 && start <= provider.len() + stream.confirmed.len()
+                && end > provider.len() + stream.confirmed.len()
                 && let Some(forming) = stream.forming
             {
                 bars.push(forming);
@@ -82,49 +118,70 @@ impl RequestFeed {
     /// Keep request bars closed within the retained chart boundary. The last
     /// retained bar must close nominally; earlier bars may close at a retained
     /// successor's open. Unclosed forming requests remain for the next observation.
-    pub(crate) fn trim_after(&mut self, chart_close: Option<i64>) {
+    pub(crate) fn trim_after(
+        &mut self,
+        chart_close: Option<i64>,
+        environment: &super::RequestEnvironment,
+    ) -> Result<(), crate::RuntimeError> {
         let Some(chart_close) = chart_close else {
             self.streams.clear();
-            return;
+            return Ok(());
         };
-        self.streams.retain(|key, stream| {
-            let timeframe = key.timeframe();
-            let close_at = |index: usize| {
-                let nominal = timeframe.nominal_close(stream.confirmed[index].time);
-                stream
+        // Compute every fallible decision before mutating any request stream.
+        let mut decisions = Vec::with_capacity(self.streams.len());
+        for (key, stream) in &self.streams {
+            let close_at = |index: usize| -> Result<i64, crate::RuntimeError> {
+                let nominal = environment.nominal_close(
+                    key.symbol(),
+                    key.timeframe(),
+                    stream.confirmed[index].time,
+                )?;
+                Ok(stream
                     .confirmed
                     .get(index + 1)
-                    .map_or(nominal, |next| nominal.min(next.time))
+                    .map_or(nominal, |next| nominal.min(next.time)))
             };
-            let len = stream.confirmed.len();
-            if len > 0 && close_at(len - 1) > chart_close {
-                let (mut lo, mut hi) = (0, len);
+            let mut keep = stream.confirmed.len();
+            if keep > 0 && close_at(keep - 1)? > chart_close {
+                let (mut lo, mut hi) = (0, keep);
                 while lo < hi {
                     let mid = lo + (hi - lo) / 2;
-                    if close_at(mid) <= chart_close {
+                    if close_at(mid)? <= chart_close {
                         lo = mid + 1;
                     } else {
                         hi = mid;
                     }
                 }
-                // Removing a successor can extend the last retained close.
-                // Prune that now-unclosed suffix before mutating the history.
-                // Only successor-based closes are searched: calendar fallback
-                // at extreme timestamps need not have monotone nominal closes.
-                while lo > 0 && timeframe.nominal_close(stream.confirmed[lo - 1].time) > chart_close
+                while lo > 0
+                    && environment.nominal_close(
+                        key.symbol(),
+                        key.timeframe(),
+                        stream.confirmed[lo - 1].time,
+                    )? > chart_close
                 {
                     lo -= 1;
                 }
-                stream.confirmed.truncate(lo);
+                keep = lo;
             }
-            if stream
-                .forming
-                .is_some_and(|bar| timeframe.nominal_close(bar.time) <= chart_close)
-            {
+            let remove_forming = match stream.forming {
+                Some(bar) => {
+                    environment.nominal_close(key.symbol(), key.timeframe(), bar.time)?
+                        <= chart_close
+                }
+                None => false,
+            };
+            decisions.push((key.clone(), keep, remove_forming));
+        }
+        for (key, keep, remove_forming) in decisions {
+            let stream = self.streams.get_mut(&key).expect("prevalidated stream");
+            stream.confirmed.truncate(keep);
+            if remove_forming {
                 stream.forming = None;
             }
-            !stream.confirmed.is_empty() || stream.forming.is_some()
-        });
+        }
+        self.streams
+            .retain(|_, stream| !stream.confirmed.is_empty() || stream.forming.is_some());
+        Ok(())
     }
 
     pub(crate) fn apply(
@@ -279,12 +336,14 @@ mod trim_tests {
         feed.apply(htf.clone(), BarUpdate::forming(bar(300_000)), None)
             .unwrap();
         let checkpoint = feed.clone();
-        feed.trim_after(Some(420_000));
+        feed.trim_after(Some(420_000), &super::super::RequestEnvironment::default())
+            .unwrap();
         assert!(!feed.contains(&ltf));
         assert!(feed.has_forming(&htf));
         assert!(checkpoint.has_forming(&ltf));
         assert!(checkpoint.has_forming(&htf));
-        feed.trim_after(None);
+        feed.trim_after(None, &super::super::RequestEnvironment::default())
+            .unwrap();
         assert!(feed.streams.is_empty());
     }
 
@@ -297,10 +356,12 @@ mod trim_tests {
                 .unwrap();
         }
         let checkpoint = feed.clone();
-        feed.trim_after(Some(180_000));
+        feed.trim_after(Some(180_000), &super::super::RequestEnvironment::default())
+            .unwrap();
         let retained = feed.resolved_from(&key, &[], false, 0);
         assert_eq!(retained, vec![bar(-300_000)]);
-        feed.trim_after(Some(180_000));
+        feed.trim_after(Some(180_000), &super::super::RequestEnvironment::default())
+            .unwrap();
         assert_eq!(feed.resolved_from(&key, &[], false, 0), retained);
         assert_eq!(checkpoint.resolved_len(&key, 0, false), 4);
     }
@@ -317,10 +378,60 @@ mod trim_tests {
             feed.apply(key.clone(), BarUpdate::confirmed(bar(time)), None)
                 .unwrap();
         }
-        feed.trim_after(Some(chart_close));
+        feed.trim_after(
+            Some(chart_close),
+            &super::super::RequestEnvironment::default(),
+        )
+        .unwrap();
         let retained = vec![bar(earliest_calendar - 1), bar(earliest_calendar)];
         assert_eq!(feed.resolved_from(&key, &[], false, 0), retained);
-        feed.trim_after(Some(chart_close));
+        feed.trim_after(
+            Some(chart_close),
+            &super::super::RequestEnvironment::default(),
+        )
+        .unwrap();
         assert_eq!(feed.resolved_from(&key, &[], false, 0), retained);
+    }
+    #[test]
+    fn calendar_trim_uses_supplied_partial_close_and_errors_atomically() {
+        use crate::{BarCalendar, BarCalendarRegistry, BarTimeInterval, RequestEnvironment};
+        use std::sync::Arc;
+        let timeframe = RequestTimeframe::parse("5").unwrap();
+        let key = RequestKey::new("H", timeframe.clone());
+        let registry = BarCalendarRegistry::new([BarCalendar::new(
+            "H",
+            "UTC",
+            [(
+                timeframe,
+                vec![
+                    BarTimeInterval::new(0, 60_000, 0),
+                    BarTimeInterval::new(120_000, 180_000, 0),
+                ],
+            )],
+        )
+        .unwrap()])
+        .unwrap();
+        let environment = RequestEnvironment::default().with_bar_calendars(Arc::new(registry));
+        let mut feed = RequestFeed::default();
+        feed.apply(key.clone(), BarUpdate::confirmed(bar(0)), None)
+            .unwrap();
+        feed.apply(key.clone(), BarUpdate::forming(bar(120_000)), None)
+            .unwrap();
+        feed.trim_after(Some(60_000), &environment).unwrap();
+        assert_eq!(feed.resolved_from(&key, &[], false, 0), [bar(0)]);
+        assert!(feed.has_forming(&key));
+        feed.apply(
+            RequestKey::new("H", RequestTimeframe::parse("1").unwrap()),
+            BarUpdate::confirmed(bar(0)),
+            None,
+        )
+        .unwrap();
+        let previous = feed.clone();
+        assert!(feed.trim_after(Some(180_000), &environment).is_err());
+        assert_eq!(
+            feed.resolved_from(&key, &[], true, 0),
+            previous.resolved_from(&key, &[], true, 0)
+        );
+        assert_eq!(feed.streams.len(), previous.streams.len());
     }
 }

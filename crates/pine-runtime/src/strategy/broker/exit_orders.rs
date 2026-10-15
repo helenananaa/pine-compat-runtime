@@ -495,6 +495,8 @@ impl BrokerState {
                 target_trade_key: Some(open_trade.key),
                 trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
                     spec: PendingTrailingSpec {
+                        fixed_stop: None,
+                        fixed_limit: None,
                         activation: PendingTrailingActivation::Points {
                             ticks: activation_ticks,
                             price: open_trade.entry_price + activation_price_offset,

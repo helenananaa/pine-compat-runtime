@@ -10,7 +10,41 @@ if (process.argv.length !== 3) {
 // Requiring wasm-bindgen's Node target synchronously instantiates the real
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
+require('./wasm_closeout_regressions.cjs')(path.resolve(process.argv[2]));
+
+// Namespace resolution is shared by direct and prepared WASM executions.
+for (const version of [3,4]) {
+  const source=`//@version=${version}\nstudy("namespaces")\nmacd=7.0\natr=11.0\nsma=19.0\nf(sma)=>\n    ema=13.0\n    sma(close,2)+ema(close,2)+sma+ema\n[m,s,h]=macd(close,2,3,2)\nplot(m+s+h)\nplot(atr(2))\nplot(f(17))\nplot(macd+atr+sma)\n`;
+  let canonical=source.replace(`version=${version}`,'version=5').replace('study(','indicator(');
+  for(const name of ['sma','ema','macd','atr']) canonical=canonical.replaceAll(`${name}(`,`ta.${name}(`);
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,20,20,20,20,1\n120000,30,30,30,30,1\n';
+  const expected=JSON.parse(pine.runScriptCsv(canonical,csv)).plots;
+  const prepared=pine.compileScript(source);
+  assert.deepEqual(JSON.parse(pine.runScriptCsv(source,csv)).plots,expected);
+  assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,'{}')).plots,expected);
+}
+{
+  const source='//@version=4\nstudy("pvt")\nplot(pvt)\nplot(pvt[1])\n';
+  const canonical=source.replace('version=4','version=5').replace('study(','indicator(').replaceAll('pvt','ta.pvt');
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,20,20,20,20,1\n120000,30,30,30,30,1\n';
+  const expected=JSON.parse(pine.runScriptCsv(canonical,csv)).plots;
+  assert.deepEqual(JSON.parse(pine.runScriptCsv(source,csv)).plots,expected);
+  assert.deepEqual(JSON.parse(pine.compileScript(source).runCsvWithRequestBars(csv,'{}')).plots,expected);
+}
+for (const timeframe of ['D','W','M','5']) {
+  const source='//@version=6\nindicator("lower close")\nplot(time_close("1S")-time)\nplot(time_close("30S","0000-0001","UTC")-time)\nplot(time_close("30S",timeframe_bars_back=-1)-time)\nplot(time_close("30S",timeframe_bars_back=1)-time)\n';
+  const csv='time,open,high,low,close,volume\n1704067200000,10,10,10,10,1\n';
+  const requests=JSON.stringify({$chart:{symbol:'UTC:TEST',timeframe}});
+  const expected=timeframe==='5'?[[1000],[30000],[60000],[0]]:[[86400000],[60000],[86400000],[0]];
+  assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,requests)).plots.map(p=>p.values),expected);
+  assert.deepEqual(JSON.parse(pine.compileScript(source).runCsvWithRequestBars(csv,requests)).plots.map(p=>p.values),expected);
+}
 require('./wasm_window_lengths.cjs')(process.argv[2]);
+require('./wasm_bar_calendars.cjs')(process.argv[2]);
+require('./wasm_output_transparency.cjs')(process.argv[2]);
+require('./wasm_legacy_ternary_bool.cjs')(process.argv[2]);
+require('./wasm_literal_alert_braces.cjs')(process.argv[2]);
+require('./wasm_alert_templates.cjs')(process.argv[2]);
 
 for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript', 'packageVersion']) {
   assert.equal(typeof pine[name], 'function', `missing Wasm export ${name}`);
@@ -55,7 +89,7 @@ assert.equal(requirements.schemaVersion, 2);
   const report=JSON.parse(mergeProgram.hostRequirements());
   assert.equal(report.requests[0].gaps,'gapsOn');
   assert.equal(report.requests[0].lookahead,'lookaheadOn');
-  assert.equal(report.requests[0].timeframeRelation,'sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths');
+  assert.equal(report.requests[0].timeframeRelation,'sameOrLowerOrHigher');
   mergeProgram.free();
 }
 assert.equal(requirements.chart.bars, 'hostSuppliedStandardOhlcv');
@@ -578,6 +612,158 @@ udtVaripReplica.free(); udtVaripSession.free(); udtVaripProgram.free();
 
 
 // Frontend resource rejection and library origins cross the real Wasm ABI.
+{
+  const makeBar = (time, close) => ({time, open:close, high:close, low:close, close, volume:1});
+  const chart = Array.from({length:8}, (_,i) => makeBar(i*60000,10+i));
+  const csv = 'time,open,high,low,close,volume\n' + chart.map(b=>Object.values(b).join(',')).join('\n')+'\n';
+  const supplied = JSON.stringify({$chart:{symbol:'A',timeframe:'1'},'B:4':[makeBar(0,100),makeBar(240000,200)]});
+  for (const version of [5,6]) {
+    for (const [dynamic,tail] of [[false,[13,13,13,13,17]],[true,[100,100,100,100,200]]]) {
+      const source = `//@version=${version}\nindicator("nested",dynamic_requests=${dynamic})\ninner=request.security("","",close)\nplot(request.security("B","4",inner))\n`;
+      assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots[0].values,[null,null,null,...tail]);
+      const prepared = pine.compileScript(source);
+      assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots[0].values,[null,null,null,...tail]);
+      prepared.free();
+    }
+  }
+}
+
+// Named nested requests retain static/dynamic context through direct/prepared APIs.
+{
+  const bar = time => ({time,open:100,high:100,low:100,close:100,volume:1});
+  const csv = 'time,open,high,low,close,volume\n' + Array.from({length:4},(_,i)=>Object.values(bar(i*60000)).join(',')).join('\n')+'\n';
+  const supplied = JSON.stringify({$chart:{symbol:'A',timeframe:'1'},'B:4':[bar(0)]});
+  for (const version of [5,6]) {
+    for (const dynamic of [false,true]) {
+      const source = `//@version=${version}\nindicator("named nested",dynamic_requests=${dynamic})\ninner=request.security(expression=timeframe.multiplier,timeframe="",symbol=syminfo.tickerid)\nmerged=request.security(gaps=barmerge.gaps_on,symbol=syminfo.tickerid,timeframe="",expression=timeframe.multiplier,lookahead=barmerge.lookahead_off)\nplot(inner)\nplot(request.security(expression=inner,timeframe="4",symbol="B"))\nplot(merged)\nplot(request.security(expression=merged,timeframe="4",symbol="B"))\n`;
+      const outer = [null,null,null,dynamic?4:1];
+      const expected = [[1,1,1,1],outer,[1,1,1,1],outer];
+      assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots.map(p=>p.values),expected);
+      const prepared = pine.compileScript(source);
+      assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots.map(p=>p.values),expected);
+      prepared.free();
+    }
+  }
+}
+
+// Non-integral higher periods preserve merge events and static series at the ABI.
+{
+  const bar = time => ({time,open:100,high:100,low:100,close:100,volume:1});
+  const csv = 'time,open,high,low,close,volume\n' + Array.from({length:4},(_,i)=>Object.values(bar(i*300000)).join(',')).join('\n')+'\n';
+  const supplied = JSON.stringify({$chart:{symbol:'A',timeframe:'5'},'A:6':Array.from({length:4},(_,i)=>bar(i*360000))});
+  for (const version of [5,6]) {
+    const source = `//@version=${version}\nindicator("uneven",dynamic_requests=false)\ninner=request.security("","",time)\nplot(request.security("A","6",time))\nplot(request.security("A","6",time,gaps=barmerge.gaps_on))\nplot(request.security("A","6",time,gaps=barmerge.gaps_on,lookahead=barmerge.lookahead_on))\nplot(request.security("A","6",inner))\n`;
+    const expected = [[null,0,360000,720000],[null,0,360000,720000],[0,null,360000,720000],[null,0,300000,600000]];
+    assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots.map(p=>p.values),expected);
+    const prepared = pine.compileScript(source);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots.map(p=>p.values),expected);
+    prepared.free();
+  }
+}
+
+// Source input selections are evaluated against requested OHLC through both APIs.
+{
+  const chart = Array.from({length:4},(_,i)=>({time:i*60000,open:4,high:5,low:3,close:4,volume:1}));
+  const csv = 'time,open,high,low,close,volume\n' + chart.map(b=>Object.values(b).join(',')).join('\n')+'\n';
+  const supplied = JSON.stringify({$chart:{symbol:'A',timeframe:'1'},'B:2':[
+    {time:0,open:30,high:40,low:20,close:30,volume:1},
+    {time:120000,open:70,high:80,low:60,close:70,volume:1},
+  ]});
+  for (const version of [5,6]) {
+    for (const callee of ['input','input.source']) {
+      const source = `//@version=${version}\nindicator("requested source")\nsrc=${callee}(title="Source",defval=hl2)\nplot(src)\nplot(request.security("B","2",src))\n`;
+      const id = JSON.parse(pine.analyzeScript(source)).inputs[0].callSiteId;
+      const prepared = pine.compileScript(source);
+      for (const [overrides,expected] of [[{},[[4,4,4,4],[null,30,30,70]]],[{[id]:'high'},[[5,5,5,5],[null,40,40,80]]]]) {
+        const input = JSON.stringify(overrides);
+        const direct = JSON.parse(pine.runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides(source,csv,'{}',supplied,input));
+        assert.deepEqual(direct.plots.map(p=>p.values),expected);
+        assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBarsAndInputOverrides(csv,supplied,input)).plots.map(p=>p.values),expected);
+      }
+      prepared.free();
+    }
+  }
+}
+
+// Parameter specialization and legacy tuple UDFs cross direct/prepared Wasm APIs.
+{
+  const bar = (time,close) => ({time,open:close,high:close,low:close,close,volume:1});
+  const csv = 'time,open,high,low,close,volume\n' + Array.from({length:4},(_,i)=>Object.values(bar(i*60000,1+i)).join(',')).join('\n')+'\n';
+  const supplied = JSON.stringify({$chart:{symbol:'A',timeframe:'1'},'B:2':[bar(0,10),bar(120000,20)]});
+  for (const version of [4,5,6]) {
+    const body = version === 4
+      ? 'study("tuple")\nf(src)=>\n    alias=src+timeframe.multiplier\n    [alias,time]\n[a,b]=security("B","2",f(close))\nplot(a)\nplot(b)\n'
+      : 'indicator("parameters")\nf(src)=>\n    alias=src+timeframe.multiplier\n    request.security("B","2",alias)\ng(src)=>f(src)\nplot(g(close))\nplot(f(src=10))\n';
+    const source = `//@version=${version}\n${body}`;
+    const expected = [[null,12,12,22],version===4?[null,0,0,120000]:[null,12,12,12]];
+    assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots.map(p=>p.values),expected);
+    const prepared = pine.compileScript(source);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots.map(p=>p.values),expected);
+    prepared.free();
+  }
+}
+
+// Requested local state and loop history stay isolated across direct/prepared APIs.
+{
+  const bar = (time,close) => ({time,open:close,high:close,low:close,close,volume:1});
+  const csv = 'time,open,high,low,close,volume\n' + Array.from({length:8},(_,i)=>Object.values(bar(i*60000,1+i)).join(',')).join('\n')+'\n';
+  const supplied = JSON.stringify({$chart:{symbol:'A',timeframe:'1'},'B:2':Array.from({length:4},(_,i)=>bar(i*120000,10*(i+1)))});
+  for (const version of [4,5,6]) {
+    const body = version===4
+      ? 'study("iff history")\nf()=>\n    pos=0.0\n    pos:=iff(close>0,nz(pos[1])+1,0)\n    pos\na=f()\nplot(security("B","2",a[1]))\n'
+      : 'indicator("requested loops")\nf(src)=>\n    total=0.0\n    for i=0 to 2\n        total+=src[i]\n    total\ng(src)=>\n    total=0.0\n    i=0\n    while i<3\n        total+=src[i]\n        i+=1\n    total\nplot(request.security("B","2",f(close)))\nplot(request.security("B","2",g(close)))\n';
+    const source = `//@version=${version}\n${body}`;
+    const expected = version===4 ? [[null,null,null,1,1,2,2,3]] : Array.from({length:2},()=>[null,null,null,null,null,60,60,90]);
+    assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots.map(p=>p.values),expected);
+    const prepared = pine.compileScript(source);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots.map(p=>p.values),expected);
+    prepared.free();
+  }
+}
+
+// Scalar inputs and fill-NA state replay with provider values, including legacy aliases.
+{
+  const bar=(time,close)=>({time,open:close,high:close,low:close,close,volume:1});
+  const csv='time,open,high,low,close,volume\n'+Array.from({length:6},(_,i)=>Object.values(bar(i*60000,i+1)).join(',')).join('\n')+'\n';
+  const supplied=JSON.stringify({$chart:{symbol:'A',timeframe:'1'},'B:2':Array.from({length:3},(_,i)=>bar(i*120000,10*(i+1)))});
+  for (const version of [4,5,6]) {
+    const request=version===4?'security':'request.security';
+    const sma=version===4?'sma':'ta.sma';
+    const vwap=version===4?'vwap':'ta.vwap';
+    const input=version===4?'input':'input.int';
+    const source=`//@version=${version}\n${version===4?'study':'indicator'}("scalar inputs")\nf(src)=>fixnan(src>15 ? na : src)\nplot(${request}("B","2",${sma}(close,${input}(title="Length",defval=2))))\nplot(${request}("B","2",f(close)))\nplot(${request}("B","2",${vwap}))\n`;
+    const expected=[[null,null,null,15,15,25],[null,10,10,10,10,10],[null,10,10,15,15,20]];
+    assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots.map(p=>p.values),expected);
+    const prepared=pine.compileScript(source);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots.map(p=>p.values),expected);
+    prepared.free();
+  }
+}
+
+// Distinct bindings and static wrappers preserve requested value graphs.
+{
+  const bar=(time,close)=>({time,open:close,high:close,low:close,close,volume:1});
+  const csv='time,open,high,low,close,volume\n'+Array.from({length:6},(_,i)=>Object.values(bar(i*60000,i+1)).join(',')).join('\n')+'\n';
+  const supplied=JSON.stringify({$chart:{symbol:'A',timeframe:'1'},'B:2':Array.from({length:3},(_,i)=>bar(i*120000,10*(i+1)))});
+  for (const version of [4,5,6]) {
+    const request=version===4?'security':'request.security';
+    const source=`//@version=${version}\n${version===4?'study':'indicator'}("shadow graph")\nf(src)=>\n    value=0.0\n    value:=nz(value[1])+src\n    value\nvalue=f(close)\nplot(value)\nplot(${request}("B","2",value))\n`;
+    const expected=[[1,3,6,10,15,21],[null,10,10,30,30,60]];
+    assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots.map(p=>p.values),expected);
+    const prepared=pine.compileScript(source);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots.map(p=>p.values),expected);
+    prepared.free();
+  }
+  for (const version of [5,6]) {
+    const source=`//@version=${version}\nindicator("value graph",dynamic_requests=false)\nf(src)=>request.security("B","2",src)\na=f(close)\nb=f(a)\nplot(a)\nplot(b)\n[x,y,z]=request.security("B","2",[math.pi,color.r(color.new(color.rgb(12,34,56),25)),minute(time)+second(time_close)])\nplot(x)\nplot(y)\nplot(z)\n`;
+    const expected=[[null,10,10,20,20,30],[null,10,10,20,20,30],[null,...Array(5).fill(Math.PI)],[null,12,12,12,12,12],[null,0,0,2,2,4]];
+    assert.deepEqual(JSON.parse(pine.runScriptCsvWithRequestBars(source,csv,supplied)).plots.map(p=>p.values),expected);
+    const prepared=pine.compileScript(source);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBars(csv,supplied)).plots.map(p=>p.values),expected);
+    prepared.free();
+  }
+}
+
 const deepStatementSource = '//@version=6\nindicator("depth")\nif true\n    x = 1\n'
   + 'else if false\n    x = 2\n'.repeat(256);
 const deepStatementReport = JSON.parse(pine.analyzeScript(deepStatementSource));
@@ -622,6 +808,112 @@ assert.equal(metadataReport.inputs[1].default, Math.PI);
 assert.equal(metadataReport.inputs[2].default, 3);
 const metadataResult = JSON.parse(pine.runScriptCsv(metadataSource, bars));
 assert.deepEqual(metadataResult.plots[0].values, [8 + Math.PI, 8 + Math.PI, 8 + Math.PI]);
+
+
+// UDF inputs retain source declaration identities through direct/prepared APIs.
+{
+  for (const version of [3,4,5,6]) {
+    const declaration=version<=4?'study':'indicator';
+    const number=version===3?'input(2,"Length",type=integer)':version===4?'input(2,"Length",type=input.integer)':'input.int(2,"Length")';
+    const sourceInput=version===3?'input(close,"Source",type=source)':version===4?'input(close,"Source",type=input.source)':'input.source(close,"Source")';
+    const source=`//@version=${version}\n${declaration}("shared input")\nf()=>\n    n=${number}\n    s=${sourceInput}\n    n+s\na=f()\nb=f()\nplot(a)\nplot(b)\n`;
+    const report=JSON.parse(pine.analyzeScript(source));
+    assert.deepEqual(report.diagnostics,[]);
+    assert.equal(report.inputs.length,2);
+    const length=report.inputs.find(x=>x.title==='Length').callSiteId;
+    const selected=report.inputs.find(x=>x.title==='Source').callSiteId;
+    const csv='time,open,high,low,close,volume\n0,1,3,0,1,1\n60000,2,4,1,2,1\n120000,3,5,2,3,1\n';
+    const input=JSON.stringify({[length]:7,[selected]:'high'});
+    const direct=JSON.parse(pine.runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides(source,csv,'{}','{}',input));
+    assert.deepEqual(direct.plots.map(p=>p.values),[[10,11,12],[10,11,12]]);
+    const prepared=pine.compileScript(source);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}',input)).plots.map(p=>p.values),[[10,11,12],[10,11,12]]);
+    prepared.free();
+  }
+}
+
+// Numeric history indices and date/session compatibility cross the real ABI.
+{
+  const source='//@version=6\nindicator("history and dates")\nplot(close[2.8])\nplot(close[-0.8])\nplot(close[close%3+0.8])\nplot(timestamp(999999,12,31,23,59))\nplot(timestamp("Jan 19 2024 00:00:01"))\nplot(time("", "0000-2400:1234567", "UTC"))\nplot(time("", "2400-1600:1234567", "UTC"))\nplot(time("30S"))\nplot(time("S"))\nplot(timestamp("2021-01-13:05:00"))\nplot(timestamp("01 Jan 2023 00:00 -3000"))\n';
+  const csv='time,open,high,low,close,volume\n0,1,1,1,1,1\n60000,2,2,2,2,1\n120000,3,3,3,3,1\n';
+  const expected=[[null,null,1],[1,2,3],[null,null,3],Array(3).fill(31494784780740000),Array(3).fill(1705622401000),[0,60000,120000],[0,60000,120000],[0,60000,120000],[0,60000,120000],Array(3).fill(1610514000000),Array(3).fill(1672639200000)];
+  const direct=JSON.parse(pine.runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides(source,csv,'{}','{}','{}'));
+  assert.deepEqual(direct.plots.map(p=>p.values),expected);
+  const prepared=pine.compileScript(source);
+  assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')).plots.map(p=>p.values),expected);
+  prepared.free();
+}
+
+// Legacy source binding crosses both direct and prepared real Wasm APIs.
+{
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,11,11,11,11,1\n120000,12,12,12,12,1\n180000,13,13,13,13,1\n';
+  const source='//@version=4\nstudy("legacy input and alias")\na=input(2,defval=1,title="A")\nc=input(1,title="First",title="Last",group="First group",group="Last group")\nf(x)=>x+1\ng()=>f(input(2,"Nested")+1)\nplot(a)\nplot(c)\nplot(g())\nplot(g()+g())\nplot(swma(close))\nplot(tonumber("2.5"))\n';
+  const report=JSON.parse(pine.analyzeScript(source));
+  assert.deepEqual(report.diagnostics,[]);
+  assert.equal(report.inputs.length,3);
+  assert.ok(report.inputs.some(x=>x.title==='Last'));
+  const expected=[[2,2,2,2],[1,1,1,1],[4,4,4,4],[8,8,8,8],[null,null,null,11.5],[2.5,2.5,2.5,2.5]];
+  const cases=[[source,expected]];
+  for (const version of [4,5,6]) {
+    const prefix=version<=5?'true,':'';
+    const tail=version>=5?',false,false':'';
+    cases.push([`//@version=${version}\nstrategy("close source positions")\nif bar_index==0\n    strategy.entry("E",strategy.long,qty=2)\nif bar_index==2\n    strategy.close("E",${prefix}"half",1,na,"half alert"${tail})\nplot(strategy.position_size)\n`,[[0,2,2,1]]]);
+  }
+  cases.push(['//@version=4\nstrategy("numeric direction")\nif bar_index==0\n    strategy.entry("L",1,qty=2)\nif bar_index==2\n    strategy.entry("S",0,qty=1)\nplot(strategy.position_size)\n',[[0,2,2,-1]]]);
+  for (const [text,values] of cases) {
+    const direct=JSON.parse(pine.runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides(text,csv,'{}','{}','{}'));
+    assert.deepEqual(direct.plots.map(p=>p.values),values);
+    const prepared=pine.compileScript(text);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')).plots.map(p=>p.values),values);
+    prepared.free();
+  }
+}
+
+// Represented integer EMA aliases retain fractions outside the length slot.
+{
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,11,11,11,11,1\n120000,12,12,12,12,1\n180000,13,13,13,13,1\n';
+  for (const version of [2,3,4]) {
+    const source=`//@version=${version}\nstrategy("legacy order",default_qty_value=2)\nif bar_index==0\n    strategy.order("L",long=true)\nif bar_index==2\n    strategy.order("S",0,qty=3)\nplot(strategy.position_size)\n`;
+    const prepared=pine.compileScript(source);
+    for (const wire of [pine.runScriptCsv(source,csv),prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')]) {
+      assert.deepEqual(JSON.parse(wire).plots[0].values,[0,2,2,-1]);
+    }
+    prepared.free();
+    for (const modern of [5,6]) assert.equal(JSON.parse(pine.analyzeScript(source.replace(`version=${version}`,`version=${modern}`))).executable,false);
+  }
+  for (const version of [4,5,6]) {
+    const declaration=version===4?'study':'indicator';
+    const source=`//@version=${version}\n${declaration}("table defaults")\nvar t=table.new(position.top_right,3,3)\nif bar_index==0\n    for c=0 to 2\n        for r=0 to 2\n            table.cell(t,c,r,"keep")\n    table.clear(t,0,0)\n    table.clear(t,1,1,2)\n    table.clear(t,0,1,end_row=2)\nplot(close)\n`;
+    const prepared=pine.compileScript(source);
+    for (const wire of [pine.runScriptCsv(source,csv),prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')]) {
+      assert.deepEqual(JSON.parse(wire).tables[0].snapshots.at(-1).cells.map(c=>[c.column,c.row]),[[1,0],[2,0],[1,2],[2,2]]);
+    }
+    prepared.free();
+  }
+}
+
+// Represented integer EMA aliases retain fractions outside the length slot.
+{
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,11,11,11,11,1\n120000,12,12,12,12,1\n180000,13,13,13,13,1\n';
+  for (const version of [4,5,6]) {
+    const declaration=version===4?'study':'indicator';
+    const ema=version===4?'ema':'ta.ema';
+    const source=`//@version=${version}\n${declaration}("represented EMA")\nn=input(3)\na=n/2\nb=a*2\nplot(a)\nplot(${ema}(close,a))\nplot(${ema}(close,1))\nplot(${ema}(close,b))\nplot(${ema}(close,3))\n`;
+    const prepared=pine.compileScript(source);
+    for (const wire of [pine.runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides(source,csv,'{}','{}','{}'),prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')]) {
+      const values=JSON.parse(wire).plots.map(p=>p.values);
+      assert.deepEqual(values[0],[1.5,1.5,1.5,1.5]);
+      assert.deepEqual(values[1],values[2]);
+      assert.deepEqual(values[3],values[4]);
+      assert.notEqual(values[3].at(-1),null);
+    }
+    prepared.free();
+    assert.equal(JSON.parse(pine.analyzeScript(`//@version=${version}\n${declaration}("bad length")\nn=input(3)\na=n/2.0\nplot(${ema}(close,a))\n`)).executable,false);
+  }
+  const source='//@version=4\nstudy("resolution")\ntf=input("60",title="Timeframe",type=input.resolution,options=["1","60","D"])\nplot(tf=="60"?1:0)\n';
+  assert.deepEqual(JSON.parse(pine.analyzeScript(source)).inputs[0].options,['1','60','D']);
+  assert.deepEqual(JSON.parse(pine.runScriptCsv(source,csv)).plots[0].values,[1,1,1,1]);
+}
 
 // Compact extreme floats preserve their IEEE-754 values through the real Wasm
 // ABI, including borrowed realtime snapshots and parsed change replicas.
@@ -824,6 +1116,56 @@ plot(close)
   replica.free();
   session.free();
   program.free();
+}
+
+// Implicit assignment returns and optional else survive both WASM entrypoints.
+{
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,11,11,11,11,1\n120000,12,12,12,12,1\n180000,13,13,13,13,1\n';
+  for (const version of [4,5,6]) {
+    const declaration=version===4?'study':'indicator';
+    const boolProbe=version===6?'b==false?1:0':'na(b)?1:0';
+    const source=`//@version=${version}\n${declaration}("block returns")\nf(n)=>\n    float s=0\n    if n>0\n        for i=1 to n\n            s:=s+i\n    else\n        s:=0\nx=0\ny=if bar_index%2==0\n    x+=7\nq=for i=0 to 2\n    x+=i\nb=if bar_index<0\n    true\nplot(f(3))\nplot(y)\nplot(q)\nplot(x)\nplot(${boolProbe})\n`;
+    const prepared=pine.compileScript(source);
+    for (const wire of [pine.runScriptCsv(source,csv),prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')]) {
+      assert.deepEqual(JSON.parse(wire).plots.map(p=>p.values),[[6,6,6,6],[7,null,7,null],[10,3,10,3],[10,3,10,3],[1,1,1,1]]);
+    }
+    prepared.free();
+    const zero=`//@version=${version}\nstrategy("zero default",default_qty_type=strategy.percent_of_equity,default_qty_value=0)\nif bar_index==0\n    strategy.entry("Zero",strategy.long)\nif bar_index==2\n    strategy.entry("Explicit",strategy.long,qty=1)\nplot(strategy.position_size)\n`;
+    const zeroPrepared=pine.compileScript(zero);
+    for (const wire of [pine.runScriptCsv(zero,csv),zeroPrepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')]) {
+      assert.deepEqual(JSON.parse(wire).plots[0].values,[0,0,0,1]);
+    }
+    zeroPrepared.free();
+    assert.equal(JSON.parse(pine.analyzeScript(zero.replace('default_qty_value=0','default_qty_value=-1'))).executable,false);
+  }
+}
+
+// Numeric for bounds and current strategy defaults share direct/prepared semantics.
+{
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,11,11,11,11,1\n120000,12,12,12,12,1\n';
+  for (const version of [4,5,6]) {
+    const source=`//@version=${version}\n${version===4?'study':'indicator'}("float loops")\na=0.0\nb=0\nfor i=0.8 to 3.8 by 0.5\n    a+=i\nfor j=-3 to -0.8\n    b+=1\nplot(a)\nplot(b)\n`;
+    const prepared=pine.compileScript(source);
+    for (const wire of [pine.runScriptCsv(source,csv),prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')]) {
+      const plots=JSON.parse(wire).plots;
+      assert.ok(plots[0].values.every(v=>Math.abs(v-16.1)<1e-12));
+      assert.deepEqual(plots[1].values,[3,3,3]);
+    }
+    prepared.free();
+    assert.equal(JSON.parse(pine.analyzeScript(source.replace('0.8 to 3.8 by 0.5','0 to 3.8 by 0.5'))).executable,false);
+    assert.throws(()=>pine.runScriptCsv(source.replace('by 0.5','by -0.5'),csv),/step must be greater than zero/);
+    const precision=`//@version=${version}\n${version===4?'study':'indicator'}("precision")\nn=0\nfor i=0.1 to 0.3 by 0.1\n    n+=1\nplot(n)\n`;
+    assert.deepEqual(JSON.parse(pine.runScriptCsv(precision,csv)).plots[0].values,[3,3,3]);
+  }
+  for (const version of [5,6]) {
+    const source=`//@version=${version}\nstrategy("state defaults",default_qty_value=2)\nf(a=strategy.position_avg_price,p=strategy.position_size)=>nz(a)+p\nif bar_index==0\n    strategy.entry("L",strategy.long)\nplot(f())\nplot(f(p=7))\n`;
+    const prepared=pine.compileScript(source);
+    for (const wire of [pine.runScriptCsv(source,csv),prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')]) {
+      assert.deepEqual(JSON.parse(wire).plots.map(p=>p.values),[[0,13,13],[7,18,18]]);
+    }
+    prepared.free();
+    assert.equal(JSON.parse(pine.analyzeScript(source.replace(`version=${version}`,'version=4'))).executable,false);
+  }
 }
 
 console.log(

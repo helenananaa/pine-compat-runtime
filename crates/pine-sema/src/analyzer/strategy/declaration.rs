@@ -78,10 +78,10 @@ impl Analyzer {
                     let Some(initial_capital) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
-                    if !initial_capital.is_finite() || initial_capital <= 0.0 {
+                    if !initial_capital.is_finite() || initial_capital < 0.0 {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy` argument `initial_capital` must be positive",
+                            "`strategy` argument `initial_capital` must be non-negative",
                             arg.span,
                         ));
                         continue;
@@ -145,10 +145,10 @@ impl Analyzer {
                     let Some(qty) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
-                    if !qty.is_finite() || qty <= 0.0 {
+                    if !qty.is_finite() || qty < 0.0 {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy` argument `default_qty_value` must be positive",
+                            "`strategy` argument `default_qty_value` must be non-negative",
                             arg.span,
                         ));
                         continue;

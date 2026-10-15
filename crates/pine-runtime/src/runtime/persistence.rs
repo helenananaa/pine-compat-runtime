@@ -102,6 +102,7 @@ mod tests {
     fn runtime() -> HistoricalRuntime<'static> {
         let program = Box::leak(Box::new(HirProgram {
             language_version: None,
+            dynamic_requests: false,
             script_mode: ScriptMode::Indicator,
             timenow_symbol: None,
             strategy_settings: StrategySettings::default(),

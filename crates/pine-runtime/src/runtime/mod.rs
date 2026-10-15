@@ -23,6 +23,7 @@ mod objects;
 pub(crate) mod persistence;
 pub(crate) mod plot_history;
 mod profile;
+mod program_pass;
 pub(crate) mod realtime;
 pub(crate) mod resource_limits;
 mod result_view;

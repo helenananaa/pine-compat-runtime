@@ -1,0 +1,8 @@
+//@version=4
+study("Low Scanner boundary oracle")
+n=input(19)
+a=n/2*2
+plot(a,title="alias")
+plot(ema(close,a),title="ema alias")
+plot(ema(close,19),title="ema nineteen")
+plot(ema(close,18),title="ema eighteen")

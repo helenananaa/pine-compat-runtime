@@ -118,6 +118,20 @@ const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const BG_COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
+    COLOR_OUTPUT_PARAMS[0],
+    COLOR_OUTPUT_PARAMS[1],
+    COLOR_OUTPUT_PARAMS[2],
+    COLOR_OUTPUT_PARAMS[3],
+    COLOR_OUTPUT_PARAMS[4],
+    COLOR_OUTPUT_PARAMS[5],
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+];
+
 const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "series",
@@ -177,6 +191,11 @@ const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "display",
         accepts: Accepts::ConstPlotDisplay,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
         optional: true,
     },
 ];
@@ -569,7 +588,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "bgcolor",
         phase: BuiltinPhase::Phase1Core,
-        params: COLOR_OUTPUT_PARAMS,
+        params: BG_COLOR_OUTPUT_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

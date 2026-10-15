@@ -1,0 +1,38 @@
+{
+  "symbol": "BINANCE:BTCUSDT",
+  "version": 6,
+  "noSession": {
+    "D": {
+      "S": 86400000,
+      "seconds30": 86400000,
+      "minute1": 86400000,
+      "minute60": 86400000,
+      "previousS": 86400000,
+      "openS": 0
+    },
+    "W": {
+      "sameAsDaily": true
+    },
+    "M": {
+      "sameAsDaily": true
+    },
+    "chart5m": {
+      "S": 1000,
+      "seconds30": 30000,
+      "minute1": 60000,
+      "minute60": 900000,
+      "previousS": 1000,
+      "openS": 0,
+      "chartOpen": "20:45 UTC+8"
+    }
+  },
+  "monthlyBoundaries": {
+    "minuteSession": 60000,
+    "daySession": 86340000,
+    "timeframeBarsBackMinus1": 86400000,
+    "timeframeBarsBack1": 0,
+    "chartBarsBack1": 86400000,
+    "outsideSession": null
+  },
+  "scope": "Native UTC crypto probes show daily close granularity for daily/weekly/monthly charts, but requested-bar offsets still use the requested timeframe. Implementation pending; do not replace requested timeframe by D or claim exchange-session parity."
+}

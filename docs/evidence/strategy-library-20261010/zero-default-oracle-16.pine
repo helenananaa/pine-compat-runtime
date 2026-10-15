@@ -1,0 +1,7 @@
+//@version=4
+strategy("Zero default oracle 16",default_qty_type=strategy.percent_of_equity,default_qty_value=0)
+if bar_index==0
+    strategy.entry("Zero",strategy.long)
+if bar_index==2
+    strategy.entry("Explicit",strategy.long,qty=1)
+plot(strategy.position_size,title="Position")

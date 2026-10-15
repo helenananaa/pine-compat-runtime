@@ -1,0 +1,6 @@
+//@version=4
+study("Low Scanner boundary oracle")
+n=input(19)
+plot(n/2,title="quotient")
+plot(ema(close,n/2),title="ema quotient")
+plot(ema(close,int(n/2)),title="ema int")

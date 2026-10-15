@@ -65,11 +65,23 @@ const TABLE_CLEAR_PARAMS: &[BuiltinParam] = &[
     TABLE_ID_PARAM,
     table_param("start_column", Accepts::IntCompatible),
     table_param("start_row", Accepts::IntCompatible),
+    BuiltinParam {
+        optional: true,
+        ..table_param("end_column", Accepts::IntCompatible)
+    },
+    BuiltinParam {
+        optional: true,
+        ..table_param("end_row", Accepts::IntCompatible)
+    },
+];
+
+const TABLE_MERGE_CELLS_PARAMS: &[BuiltinParam] = &[
+    TABLE_ID_PARAM,
+    table_param("start_column", Accepts::IntCompatible),
+    table_param("start_row", Accepts::IntCompatible),
     table_param("end_column", Accepts::IntCompatible),
     table_param("end_row", Accepts::IntCompatible),
 ];
-
-const TABLE_MERGE_CELLS_PARAMS: &[BuiltinParam] = TABLE_CLEAR_PARAMS;
 
 const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {

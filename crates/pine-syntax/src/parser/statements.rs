@@ -555,21 +555,36 @@ impl Parser {
 
         self.expect(TokenKind::RParen, "expected `)` after function parameters")?;
         self.expect(TokenKind::Arrow, "expected `=>` in function declaration")?;
-        let (body, span) = if self.at(TokenKind::Newline) {
-            self.bump();
-            let block = self.parse_indented_block()?;
-            let span = block.last().map_or(start, |statement| statement.span);
-            (FunctionBody::Block(block), span)
-        } else {
-            let body = self.parse_expr(0)?;
-            let span = body.span;
-            (FunctionBody::Expr(body), span)
-        };
+        let (body, span) = self.parse_function_body(start)?;
 
         Some(Stmt {
             span: start.merge(span),
             kind: StmtKind::Function { name, params, body },
         })
+    }
+
+    pub(super) fn parse_function_body(&mut self, start: Span) -> Option<(FunctionBody, Span)> {
+        if self.at(TokenKind::Newline) {
+            self.bump();
+            let block = self.parse_indented_block()?;
+            let span = block.last().map_or(start, |statement| statement.span);
+            Some((FunctionBody::Block(block), span))
+        } else {
+            let mut block = vec![self.parse_stmt()?];
+            while self.at(TokenKind::Comma) {
+                self.bump();
+                block.push(self.parse_stmt()?);
+            }
+            let span = block.last()?.span;
+            if block.len() == 1 && matches!(block[0].kind, StmtKind::Expr(_)) {
+                let StmtKind::Expr(expr) = block.pop()?.kind else {
+                    unreachable!()
+                };
+                Some((FunctionBody::Expr(expr), span))
+            } else {
+                Some((FunctionBody::Block(block), span))
+            }
+        }
     }
 
     pub(super) fn parse_function_param(&mut self) -> Option<FunctionParam> {

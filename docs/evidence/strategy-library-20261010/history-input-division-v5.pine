@@ -1,0 +1,7 @@
+//@version=5
+indicator("Codex history type oracle",overlay=true)
+n=input.int(19,"Period")
+offset=n/2+1
+plot(close[offset])
+plot(offset,"offset")
+plot(close[int(n/2+1)],"cast control")

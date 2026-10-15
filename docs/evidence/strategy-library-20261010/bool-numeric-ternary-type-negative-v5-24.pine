@@ -1,0 +1,4 @@
+//@version=5
+indicator("Bool numeric ternary type negative 24")
+x=time>0?true:2
+plot(x+1)

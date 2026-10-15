@@ -73,6 +73,18 @@ impl<'a> HistoricalRuntime<'a> {
                 }
                 let left = self.eval_expr(left)?;
                 let right = self.eval_expr(right)?;
+                if self.program.language_version == Some(4)
+                    && matches!(op, HirBinaryOp::Eq | HirBinaryOp::NotEq)
+                    && matches!(
+                        (&left, &right),
+                        (PineValue::Bool(_), PineValue::Int(_) | PineValue::Float(_))
+                            | (PineValue::Int(_) | PineValue::Float(_), PineValue::Bool(_))
+                    )
+                {
+                    // v4 permits this comparison but keeps the operand types:
+                    // true == 1 and false == 0 are both false on TradingView.
+                    return Ok(PineValue::Bool(matches!(op, HirBinaryOp::NotEq)));
+                }
                 eval_binary_with_semantics(*op, left, right, self.uses_v6_semantics())?
             }
             HirExprKind::Ternary {

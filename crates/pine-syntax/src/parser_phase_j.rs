@@ -1,6 +1,6 @@
 use crate::{
-    Diagnostic, ExportDecl, ExportItem, FunctionBody, ImportAlias, ImportDecl, LibraryDecl,
-    MethodDecl, MethodParam, Span, Stmt, StmtKind, TokenKind, UserTypeDecl, UserTypeField,
+    Diagnostic, ExportDecl, ExportItem, ImportAlias, ImportDecl, LibraryDecl, MethodDecl,
+    MethodParam, Span, Stmt, StmtKind, TokenKind, UserTypeDecl, UserTypeField,
 };
 
 use super::Parser;
@@ -256,16 +256,7 @@ impl Parser {
         let params = self.parse_method_params()?;
         self.expect(TokenKind::RParen, "expected `)` after method parameters")?;
         self.expect(TokenKind::Arrow, "expected `=>` in method declaration")?;
-        let (body, end) = if self.at(TokenKind::Newline) {
-            self.bump();
-            let block = self.parse_indented_block()?;
-            let span = block.last().map_or(name_span, |statement| statement.span);
-            (FunctionBody::Block(block), span)
-        } else {
-            let body = self.parse_expr(0)?;
-            let span = body.span;
-            (FunctionBody::Expr(body), span)
-        };
+        let (body, end) = self.parse_function_body(name_span)?;
 
         Some(Stmt {
             span: start.merge(end),

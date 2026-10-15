@@ -1,0 +1,9 @@
+//@version=6
+strategy("Codex combined exit oracle", overlay=false, margin_long=0)
+if last_bar_index - bar_index == 12
+    strategy.entry("E", strategy.long, qty=1)
+    strategy.exit("X", "E", loss=100000, profit=1000000, trail_points=10000, trail_offset=1000000)
+plot(strategy.closedtrades, "closed")
+plot(strategy.closedtrades.exit_price(0), "exit")
+plot(strategy.closedtrades.entry_price(0), "entry")
+plot(strategy.closedtrades.exit_bar_index(0) - strategy.closedtrades.entry_bar_index(0), "bars held")

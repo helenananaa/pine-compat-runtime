@@ -17,6 +17,7 @@ mod checkpoint_tests;
 mod linalg;
 mod linear_algebra;
 mod mutation;
+mod sum;
 mod user_types;
 
 #[cfg(test)]
@@ -487,16 +488,6 @@ impl<'a> HistoricalRuntime<'a> {
             .matrix_is_stochastic(id)
             .map(PineValue::Bool)
             .unwrap_or(PineValue::Na))
-    }
-
-    pub(crate) fn eval_matrix_sum(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
-            return Ok(PineValue::Na);
-        };
-        Ok(self.matrix_sum(id).unwrap_or(PineValue::Na))
     }
 
     pub(crate) fn eval_matrix_avg(

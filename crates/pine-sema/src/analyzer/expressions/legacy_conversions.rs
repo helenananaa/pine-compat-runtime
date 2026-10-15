@@ -1,6 +1,21 @@
 use super::*;
+use std::collections::HashSet;
 
 impl Analyzer {
+    pub(crate) fn ternary_common_kind(
+        &self,
+        left: ValueKind,
+        right: ValueKind,
+    ) -> Option<ValueKind> {
+        if matches!(self.legacy.dialect(), PineDialect::V4 | PineDialect::V5)
+            && ((left == ValueKind::Bool && matches!(right, ValueKind::Int | ValueKind::Float))
+                || (right == ValueKind::Bool && matches!(left, ValueKind::Int | ValueKind::Float)))
+        {
+            return Some(ValueKind::Bool);
+        }
+        common_kind(left, right)
+    }
+
     pub(crate) fn v4_v5_series_output_offset_arg(
         &mut self,
         call_name: &str,
@@ -91,7 +106,7 @@ impl Analyzer {
         expr: &Expr,
         actual_type: PineType,
     ) -> bool {
-        let legacy_ema = self.legacy.dialect() == PineDialect::V4 && call_name == "ta.ema";
+        let legacy_ema = self.legacy.dialect() >= PineDialect::V4 && call_name == "ta.ema";
         let extreme = matches!(self.legacy.dialect(), PineDialect::V5 | PineDialect::V6)
             && matches!(call_name, "ta.lowest" | "ta.highest");
         if !(legacy_ema || extreme)
@@ -99,6 +114,25 @@ impl Analyzer {
             || actual_type.kind != ValueKind::Float
         {
             return false;
+        }
+        // Integer arithmetic can retain a fractional representation in Pine,
+        // while remaining acceptable in an EMA integer-length context. Follow
+        // aliases without accepting explicit float inputs or float operands.
+        // The runtime truncates the final length, not intermediate quotients.
+        if legacy_ema {
+            let accepted = accepts_type(
+                Accepts::SimpleIntCompatible,
+                PineType::new(actual_type.qualifier, ValueKind::Int),
+            ) && self.integer_arithmetic_length_expr(expr, &mut HashSet::new());
+            if accepted {
+                let version = self.legacy.dialect().version();
+                self.compatibility.legacy_emulations.push(crate::compatibility::LegacyEmulation {
+                    feature: format!("v{version}.ema_division_length"),
+                    behavior: format!("Pine v{version} EMA length accepts represented integer arithmetic and truncates the final length; ordinary quotient values retain fractions"),
+                    span: expr.span,
+                });
+            }
+            return accepted;
         }
         let ExprKind::Binary {
             op: BinaryOp::Div,
@@ -127,6 +161,61 @@ impl Analyzer {
                 });
         }
         true
+    }
+
+    fn integer_arithmetic_length_expr(
+        &self,
+        expr: &Expr,
+        visiting: &mut HashSet<SymbolId>,
+    ) -> bool {
+        let expr = expr.without_groups();
+        if self
+            .type_of_expr_with_params(expr, &Default::default())
+            .is_some_and(|ty| ty.kind == ValueKind::Int)
+        {
+            return true;
+        }
+        match &expr.kind {
+            ExprKind::Identifier(name) => {
+                let Some(symbol) = self
+                    .bound_symbol(name, expr.span)
+                    .or_else(|| self.scope.resolve(name))
+                else {
+                    return false;
+                };
+                if visiting.len() >= 64 || !visiting.insert(symbol.id) {
+                    return false;
+                }
+                let result = self
+                    .with_symbol_initializer(symbol.id, |analyzer, init| {
+                        Some(analyzer.integer_arithmetic_length_expr(init, visiting))
+                    })
+                    .unwrap_or(false);
+                visiting.remove(&symbol.id);
+                result
+            }
+            ExprKind::Binary {
+                op: BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod,
+                left,
+                right,
+            } => {
+                self.integer_arithmetic_length_expr(left, visiting)
+                    && self.integer_arithmetic_length_expr(right, visiting)
+            }
+            ExprKind::Unary {
+                op: UnaryOp::Plus | UnaryOp::Minus,
+                expr,
+            } => self.integer_arithmetic_length_expr(expr, visiting),
+            ExprKind::Ternary {
+                then_expr,
+                else_expr,
+                ..
+            } => {
+                self.integer_arithmetic_length_expr(then_expr, visiting)
+                    && self.integer_arithmetic_length_expr(else_expr, visiting)
+            }
+            _ => false,
+        }
     }
 
     fn record_versioned_integer_division(&mut self, span: Span, qualifier: Qualifier) -> PineType {

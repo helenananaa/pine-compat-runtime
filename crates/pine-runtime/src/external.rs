@@ -325,7 +325,10 @@ impl HistoricalRuntime<'_> {
                 return Err(external_error("unsupported external order argument"));
             }
         }
-        if let Some(arg) = args.iter().find(|arg| arg.name.as_deref() == Some("when"))
+        if matches!(
+            callee,
+            "strategy.entry" | "strategy.close" | "strategy.close_all"
+        ) && let Some(arg) = args.iter().find(|arg| arg.name.as_deref() == Some("when"))
             && self.eval_expr(&arg.value)? != PineValue::Bool(true)
         {
             return Ok(PineValue::Void);

@@ -73,9 +73,10 @@ pub use output::view::*;
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
 pub(crate) use request::RequestCacheKey;
 pub use request::{
-    ChartContext, InMemoryRequestDataProvider, NoRequestDataProvider, RequestDataError,
-    RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
-    validate_requested_bars,
+    BAR_CALENDAR_SCHEMA_VERSION, BarCalendar, BarCalendarError, BarCalendarRegistry,
+    BarTimeInterval, ChartContext, InMemoryRequestDataProvider, NoRequestDataProvider,
+    RequestDataError, RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe,
+    RequestTimeframeError, bar_calendars_from_json, validate_requested_bars,
 };
 pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::HistoricalDataset;

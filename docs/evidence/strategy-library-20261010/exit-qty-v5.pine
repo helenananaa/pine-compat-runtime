@@ -1,0 +1,7 @@
+//@version=5
+strategy("Codex exit qty oracle",margin_long=0)
+if bar_index == 0
+    strategy.entry("E",strategy.long,qty=2)
+    strategy.exit("X","E",1,na,100,na,na,na,na,na,na,"","","take profit")
+plot(strategy.position_size)
+plot(strategy.closedtrades)

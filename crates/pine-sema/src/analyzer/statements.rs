@@ -11,6 +11,7 @@ pub(crate) struct SymbolState {
     symbol_user_types: HashMap<SymbolId, String>,
     symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
+    request_param_sources: HashMap<SymbolId, SourcedExpr>,
     typed_na_scalar_symbols: std::collections::HashSet<SymbolId>,
     const_declared_symbols: std::collections::HashSet<SymbolId>,
     legacy_v3_untyped_na_symbols: HashMap<SymbolId, Span>,
@@ -33,6 +34,21 @@ impl Analyzer {
     pub(crate) fn analyze_program(&mut self, program: &Program) {
         self.request_reassigned_names.clear();
         collect_request_reassigned_names(&program.statements, &mut self.request_reassigned_names);
+        // UDF/method locals are separate bindings even when their spelling
+        // matches a global alias. Global control-flow mutations still count,
+        // including assignments after a request's source location.
+        self.request_global_reassigned_names.clear();
+        for statement in &program.statements {
+            if !matches!(
+                statement.kind,
+                StmtKind::Function { .. } | StmtKind::Method(_)
+            ) {
+                collect_request_reassigned_names(
+                    std::slice::from_ref(statement),
+                    &mut self.request_global_reassigned_names,
+                );
+            }
+        }
         self.register_user_types(program);
         self.register_methods(program);
         self.register_functions(program);
@@ -154,13 +170,13 @@ impl Analyzer {
                     self.reject_legacy_input_constant_expression(step);
                 }
                 if let Some(from_type) = from_type {
-                    self.expect_int(from_type, from.span);
+                    self.expect_numeric_loop_bound(from_type, from.span);
                 }
                 if let Some(to_type) = to_type {
-                    self.expect_int(to_type, to.span);
+                    self.expect_numeric_loop_bound(to_type, to.span);
                 }
                 if let Some((step, step_type)) = step.as_ref().zip(step_type) {
-                    self.expect_int(step_type, step.span);
+                    self.expect_loop_step_type(from_type, step_type, step.span);
                     self.expect_non_zero_loop_step(step);
                 }
                 self.compatibility.supported.push(FeatureUse {
@@ -173,7 +189,10 @@ impl Analyzer {
                     .flatten()
                     .map(|pine_type| pine_type.qualifier)
                     .fold(Qualifier::Const, strongest_qualifier);
-                let counter_type = PineType::new(loop_qualifier, ValueKind::Int);
+                let counter_type = PineType::new(
+                    loop_qualifier,
+                    from_type.map_or(ValueKind::Int, |value| value.kind),
+                );
                 self.block_depth += 1;
                 self.loop_depth += 1;
                 self.assignment_qualifier_context.push(loop_qualifier);
@@ -1074,6 +1093,7 @@ impl Analyzer {
             symbol_user_types: self.symbol_user_types.clone(),
             symbol_user_type_identities: self.symbol_user_type_identities.clone(),
             symbol_init_exprs: self.symbol_init_exprs.clone(),
+            request_param_sources: self.request_param_sources.clone(),
             typed_na_scalar_symbols: self.typed_na_scalar_symbols.clone(),
             const_declared_symbols: self.const_declared_symbols.clone(),
             legacy_v3_untyped_na_symbols: self.legacy_v3_untyped_na_symbols.clone(),
@@ -1098,6 +1118,7 @@ impl Analyzer {
         self.symbol_user_types = state.symbol_user_types;
         self.symbol_user_type_identities = state.symbol_user_type_identities;
         self.symbol_init_exprs = state.symbol_init_exprs;
+        self.request_param_sources = state.request_param_sources;
         self.typed_na_scalar_symbols = state.typed_na_scalar_symbols;
         self.const_declared_symbols = state.const_declared_symbols;
         self.legacy_v3_untyped_na_symbols = state.legacy_v3_untyped_na_symbols;

@@ -1,0 +1,5 @@
+//@version=4
+study("Codex legacy mutable request boundary",overlay=true)
+var x=0.0
+x:=close
+plot(security(syminfo.tickerid,timeframe.period,x))

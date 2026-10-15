@@ -5,6 +5,62 @@ use crate::builtins::matrices::MatrixElementKind;
 use super::*;
 
 #[test]
+fn matrix_sum_adds_without_mutating_inputs_and_preserves_integer_type() {
+    let source = SourceFile::new(
+        "matrix_add.pine",
+        include_str!("../../../../tests/fixtures/runtime/matrix_add.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("matrix addition");
+    assert_eq!(result.plots.len(), 7);
+    for (plot, expected) in result.plots.iter().zip([3.0, 5.0, 5.0, 1.0, 3.0, 3.5, 3.5]) {
+        assert_values_close(&plot.values, &[expected]);
+    }
+}
+
+#[test]
+fn matrix_sum_budget_failure_does_not_insert_a_result() {
+    let source = SourceFile::new(
+        "sum-budget.pine",
+        "//@version=6\nindicator(\"budget\")\na=matrix.new<float>(1,1,1.0)\nb=matrix.new<float>(1,1,2.0)\nc=a.sum(b)\nplot(c.get(0,0))\n",
+    );
+    let program = analyze_source(&source).hir.expect("budget program");
+    let mut runtime = HistoricalRuntime::new(&program).with_resource_limits(ResourceLimits {
+        max_collection_bytes_per_bar: Some(2 * std::mem::size_of::<PineValue>()),
+        ..ResourceLimits::default()
+    });
+    let error = runtime
+        .append_bar(bar(1.0))
+        .expect_err("result exceeds budget");
+    assert!(error.message.contains("E_RESOURCE_BUDGET"));
+    assert_eq!(runtime.matrix_store_profile().slots, 2);
+    assert_eq!(runtime.matrix_store_profile().cells, 2);
+}
+
+#[test]
+fn matrix_sum_rejects_mismatched_shapes_and_propagates_na() {
+    let source = SourceFile::new(
+        "sum-shape.pine",
+        "//@version=6\nindicator(\"shape\")\na=matrix.new<float>(1,2,1.0)\nb=matrix.new<float>(2,1,1.0)\nc=matrix.sum(a,b)\nplot(c.get(0,0))\n",
+    );
+    let program = analyze_source(&source).hir.expect("shape program");
+    let error = run_historical(&program, &[bar(1.0)]).expect_err("shape mismatch");
+    assert!(error.message.contains("matching row and column counts"));
+    let source = SourceFile::new(
+        "sum-na.pine",
+        "//@version=6\nindicator(\"missing values\")\na=matrix.new<float>(1,1,na)\nb=a.sum(1.0)\nplot(b.get(0,0))\n",
+    );
+    let program = analyze_source(&source).hir.expect("NA program");
+    let result = run_historical(&program, &[bar(1.0)]).expect("NA addition");
+    assert_eq!(result.plots[0].values, vec![PineValue::Na]);
+}
+
+#[test]
 fn named_matrix_args_preserve_omitted_optional_slots() {
     let source = SourceFile::new(
         "test.pine",

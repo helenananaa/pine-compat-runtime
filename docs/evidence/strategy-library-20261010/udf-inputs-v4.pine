@@ -1,0 +1,12 @@
+//@version=4
+study("Codex UDF inputs oracle",overlay=true)
+f()=>
+    n=input(2,"UDF length",type=input.integer,minval=1)
+    s=input(close,"UDF source",type=input.source)
+    n+s
+a=f()
+b=f()
+var t=table.new(position.top_right,2,1,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,tostring(a),text_color=color.white)
+    table.cell(t,1,0,tostring(b),text_color=color.white)

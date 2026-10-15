@@ -121,13 +121,18 @@ impl Analyzer {
     pub(crate) fn known_history_offset_int_value(&self, expr: &pine_syntax::Expr) -> Option<i64> {
         let mut env = HistoryOffsetIntEnv::default();
         self.known_history_offset_int_value_inner(expr, &mut env)
-            .or_else(|| {
-                (self.type_of_expr_with_params(expr, &HashMap::new())?.kind
-                    == pine_ir::ValueKind::Int)
-                    .then(|| self.known_history_offset_numeric_value_inner(expr, &mut env))
-                    .flatten()
-                    .and_then(exact_i64_from_numeric)
-            })
+            .or_else(
+                || match self.type_of_expr_with_params(expr, &HashMap::new())?.kind {
+                    pine_ir::ValueKind::Int => self
+                        .known_history_offset_numeric_value_inner(expr, &mut env)
+                        .and_then(exact_i64_from_numeric),
+                    pine_ir::ValueKind::Float => self
+                        .known_history_offset_numeric_value_inner(expr, &mut env)
+                        .map(f64::trunc)
+                        .and_then(exact_i64_from_numeric),
+                    _ => None,
+                },
+            )
     }
 
     pub(super) fn known_history_offset_call_value(

@@ -226,6 +226,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_sum.pine",
     ),
     (
+        "runtime_matrix_add.json",
+        "tests/fixtures/runtime/matrix_add.pine",
+    ),
+    (
         "runtime_matrix_avg.json",
         "tests/fixtures/runtime/matrix_avg.pine",
     ),

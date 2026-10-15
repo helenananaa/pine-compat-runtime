@@ -1,0 +1,18 @@
+//@version=6
+indicator("Calendar boundary oracle 19", overlay=false)
+f() =>
+    [time_close-time, time_close("1")-time, time_close("1", timeframe_bars_back=1)-time, time("1", timeframe_bars_back=1)-time, hour, hour(time), minute, hour(time,"UTC"), timestamp(year,month,dayofmonth,9,30)-time, str.format_time(time,"HH:mm")=="09:30"?1:0, syminfo.timezone=="America/New_York"?1:0, time_close("D",bars_back=1)-time, time("D",bars_back=-1)-time]
+[a,b,c,d,e,fv,g,h,j,k,l,m,n]=request.security("NASDAQ:AAPL","D",f())
+plot(a,title="chartClose")
+plot(b,title="minuteDailyClose")
+plot(c,title="previousMinuteClose")
+plot(d,title="previousMinuteOpen")
+plot(e,title="hourVar")
+plot(fv,title="hourCall")
+plot(g,title="minuteVar")
+plot(h,title="hourUTC")
+plot(j,title="implicitTimestamp")
+plot(k,title="implicitFormatTime")
+plot(l,title="exchangeTimezone")
+plot(m,title="previousDailyClose")
+plot(n,title="futureDailyOpen")

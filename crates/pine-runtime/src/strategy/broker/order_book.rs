@@ -156,6 +156,17 @@ impl OrderBook {
         self.prune_oca_membership();
     }
 
+    pub(super) fn remove_exit_by_identity_and_key(
+        &mut self,
+        id: &str,
+        from_entry: &str,
+        target_trade_key: Option<u64>,
+    ) {
+        self.exits
+            .remove_by_identity_and_key(id, from_entry, target_trade_key);
+        self.prune_oca_membership();
+    }
+
     pub(super) fn retain_exits_for_pending_entries(&mut self, filling_entry_id: Option<&str>) {
         let mut pending_ids: HashSet<String> =
             self.entries.iter().map(|entry| entry.id.clone()).collect();

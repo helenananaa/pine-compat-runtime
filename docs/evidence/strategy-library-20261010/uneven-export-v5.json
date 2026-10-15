@@ -1,0 +1,21 @@
+{
+  "source": "TradingView logged-in chart CSV export via Download chart data UI",
+  "symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "10",
+  "pine_version": 5,
+  "dynamic_requests": false,
+  "raw_download_path": "I:\\sys\\下载\\BINANCE_BTCUSDT, 10 (2).csv",
+  "raw_sha256": "889a3f474ca23219cbed960e9e241d4991b38aed2aff9abdbea7b7a4ca75e8f5",
+  "probe_source_sha256": "f6ddba2100c7649003fd99cf5c70f9d9ff0c35fb15170f1a6014dd62c1bb6423",
+  "fixture_sha256": "dae75a59a3871e0e60fec7ef38d21de6802c16f216f931eeb641052ae0e81d3d",
+  "rows": 300,
+  "historical_rows": 299,
+  "test_warmup_rows": 20,
+  "compared_values_per_version": 3069,
+  "notes": [
+    "Fixture retains only public timestamp outputs and history flag, with source column names unchanged.",
+    "Initial export BINANCE_BTCUSDT, 10.csv was taken before historical request merges settled and is excluded from qualification. Price/time_close cross-check and final gaps export stabilized before fixture extraction.",
+    "Rust fixture replay compares v4/v5/v6 controlled equivalents; native official source was v5 only. Live row is excluded; realtime parity remains separate.",
+    "No layout/script save, publish, or live trading. Temporary indicator and chart interval reverted and temporary tab closed."
+  ]
+}

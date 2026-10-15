@@ -404,7 +404,9 @@ mod tests {
     fn registers_strategy_cancel_all_signature() {
         let signature =
             get_phase_1_builtin("strategy.cancel_all").expect("strategy.cancel_all signature");
-        assert!(signature.params.is_empty());
+        assert_eq!(signature.params.len(), 1);
+        assert_eq!(signature.params[0].name, "when");
+        assert!(signature.params[0].optional);
         assert!(!signature.variadic);
     }
 
@@ -426,7 +428,7 @@ mod tests {
     #[test]
     fn registers_strategy_exit_signature() {
         let signature = get_phase_1_builtin("strategy.exit").expect("strategy.exit signature");
-        assert_eq!(signature.params.len(), 21);
+        assert_eq!(signature.params.len(), 22);
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "from_entry");
         assert!(signature.params[1].optional);
@@ -434,55 +436,55 @@ mod tests {
         assert!(signature.params[2].optional);
         assert_eq!(
             signature.params[2].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[3].name, "limit");
         assert!(signature.params[3].optional);
         assert_eq!(
             signature.params[3].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[4].name, "profit");
         assert!(signature.params[4].optional);
         assert_eq!(
             signature.params[4].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[5].name, "loss");
         assert!(signature.params[5].optional);
         assert_eq!(
             signature.params[5].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[6].name, "trail_price");
         assert!(signature.params[6].optional);
         assert_eq!(
             signature.params[6].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[7].name, "trail_points");
         assert!(signature.params[7].optional);
         assert_eq!(
             signature.params[7].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[8].name, "trail_offset");
         assert!(signature.params[8].optional);
         assert_eq!(
             signature.params[8].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[9].name, "qty");
         assert!(signature.params[9].optional);
         assert_eq!(
             signature.params[9].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[10].name, "qty_percent");
         assert!(signature.params[10].optional);
         assert_eq!(
             signature.params[10].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(signature.params[11].name, "oca_name");
         assert!(signature.params[11].optional);

@@ -290,7 +290,7 @@ box.get_right(id: box-compatible) -> series int
 box.all -> simple array<box>
 table.new(position: string-compatible, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible, force_overlay?: const bool) -> series table
 table.delete(id: table-compatible) -> void
-table.clear(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
+table.clear(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column?: int-compatible, end_row?: int-compatible) -> void
 table.merge_cells(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
 table.cell(table_id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: string-compatible, text_formatting?: int-compatible) -> void
 table.set_position(id: table-compatible, position: string-compatible) -> void
@@ -621,7 +621,7 @@ int-compatible `bars_back`, and int-compatible `timeframe_bars_back` offsets.
 `timeframe.period` use the current fixed chart timeframe and return the current
 bar's existing `time` or `time_close` value when no session is supplied and both
 offsets are omitted or 0. For nonzero `bars_back`, the runtime offsets from the
-current bar using the fixed 1-minute chart timeframe before mapping to the
+current bar using the supplied chart timeframe (default 1 minute) before mapping to the
 requested UTC timeframe bucket. It then applies `timeframe_bars_back` on that
 requested timeframe bucket. Supported seconds, minutes, and days return fixed-
 duration UTC bucket boundaries; weeks return Monday-based UTC calendar-week
@@ -635,7 +635,12 @@ are supported. `time_close` clips the returned close timestamp to the matching
 session period end; IANA offsets follow DST at the bar and close instants,
 repeated close times choose the later instant, and nonexistent close times
 advance to the first valid local minute. Exchange timezone defaults and
-named-session data remain unsupported.
+named-session data remain unsupported. In the continuous UTC clock profile,
+lower intraday `time_close` queries on D/W/M charts use the selected requested
+bar's UTC daily close. Requested offsets are applied before selecting that day,
+and explicit sessions can clip its close. Intraday charts retain the requested
+intraday close granularity. Exchange calendars and native unavailable-intrabar
+fallback remain unqualified; a symbol name alone does not supply a calendar.
 
 Timeframe helpers:
 
@@ -807,6 +812,10 @@ strategy.entry(id: simple string, direction: string-compatible, qty?: numeric-co
   the modern string-compatible direction rule.
 strategy.order(id: simple string, direction: string-compatible, qty?: numeric-compatible, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
+  Pine v1-v4 accept boolean direction values and the existing legacy numeric
+  boolean conversion, including the `long` source parameter name. Order sizing,
+  net-position behavior and price triggers use the same broker path as modern
+  directions. Pine v5-v6 retain the string-compatible direction rule.
 strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool)
 -> void
 strategy.close_all(comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool) -> void
@@ -956,12 +965,12 @@ values stay rejected.
 strategy statements on each host-provided forming update with `var` rollback
 and `varip` persistence. It does not change historical bars. Series or
 non-bool values stay rejected.
-`default_qty_type=strategy.cash` is also supported for positive const numeric
+`default_qty_type=strategy.cash` is also supported for non-negative const numeric
 `default_qty_value`; omitted supported entry `qty` resolves once at placement
 time as cash divided by the current close under the current
 no-currency-conversion boundary, then truncates to an explicitly configured
 chart quantity grid. `default_qty_type=strategy.percent_of_equity`
-is also supported for positive const numeric `default_qty_value`; omitted
+is also supported for non-negative const numeric `default_qty_value`; omitted
 supported entry `qty` resolves once at placement time from current supported
 equity and current close. `strategy.default_entry_qty(fill_price)` exposes the
 same fixed, cash, and percent-of-equity sizing calculation as a read-only
@@ -2567,3 +2576,27 @@ Current Phase 4 behavior:
 Explicit `pyramiding=0` uses an effective capacity of one entry: initial entries
 and reversals remain allowed, while same-direction additions are rejected.
 The core stores effective capacity, so both 0 and 1 map to `pyramiding_limit=1`.
+
+The strategy-library numeric-loop profile admits int and float starts/endpoints without endpoint truncation. The start determines the counter kind; an int counter requires an int step, while a float counter accepts either numeric step. Steps must be positive, and direction follows the initial bounds. v6 reevaluates the endpoint; earlier profiles freeze it. Scalar qualified built-in strategy values can be omitted v5/v6 UDF defaults and are read at each call. Default syntax remains unavailable in v4, and existing simple/reference/default-expression guards remain in force.
+
+BarCalendarRegistry v1 is an optional immutable host clock input carried by RequestEnvironment and retained by requested and realtime contexts. Supplied UTC intervals and tradingDay labels drive close/offset/confirmation semantics; timezone supplies exchange defaults for time components, numeric timestamp and str.format_time. Missing intervals are explicit input errors. Explicit virtual-session offsets are implemented under the twentieth clock scope below. See docs/BAR_CALENDAR_INPUT.md.
+
+Strategy-library twentieth clock scope: explicit time/time_close session strings now define independent virtual grids across bindings, rather than clipping ordinary UTC/exchange bar opens. Chart offsets precede requested virtual offsets; versioned weekday defaults, split/overnight sessions, session-phase intraday opens, partial closes, IANA/DST bounds and native chart-dependent W/M closes are covered by recorded controls. Kernel calendar preparation is charged to the existing execution-step budget.
+
+Strategy-library twenty-first clock scope: lower D/W time_close on larger time-based chart periods is supported. Requested-period offsets are independent of chart-period bars_back, and supplied calendar selection/coverage contracts remain in force. Official v6 monthly controls provide the bounded numerical oracle.
+
+Strategy-library twenty-second timestamp scope: const compact English day/month date strings are supported, including preserved seconds and native UTC fallback for numeric/GMT suffixes. Spaced/ISO offset handling remains distinct. Compact named IANA suffixes, invalid calendar fields and unsupported trailing tokens fail explicitly. DateString validation remains an execution-time contract.
+
+
+Batch 23: Pine v5 named `transp` for `plot`, `bgcolor`, `plotshape`,
+`plotchar`, and `plotarrow` is translated separately from modern output
+parameters. Const/input integer or `na` transparency is retained for runtime
+color adaptation; Repeated identical literal plotshape transparency is dropped in v5 as in the
+qualified v4 profile; ambiguous duplicates and argument-order errors retain
+explicit diagnostics. This does
+not enable `transp` on `barcolor` or these outputs in v6. `fill` retains its
+existing separate signature. `bgcolor` and `plotchar` now accept const bool
+`force_overlay` and preserve it in output metadata. The native controls prove
+parameter acceptance and visible pane placement; rendered-alpha numeric parity,
+all deprecated positional signatures and general fill-pane validation remain
+outside this qualification.

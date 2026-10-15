@@ -1,0 +1,7 @@
+{
+  "source_sha256": "6ec508cf269852b7d819c1fdcc78b9ecd1d63385c1fe00f401c367969a966d29",
+  "symbol": "BINANCE:BTCUSDT",
+  "timeframe": "1D",
+  "observation": "Error on bar 995: Cannot create an order with negative quantity. Current qty_type is percent_of_equity and equity is less than 0.",
+  "scope": "Official unchanged original rejects due to negative equity; local bar 950 rejection is same error class, not full broker or trade parity."
+}

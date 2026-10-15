@@ -536,6 +536,9 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "syminfo.currency" {
             return PineValue::String(self.request_environment.chart().currency().to_owned());
         }
+        if name == "syminfo.timezone" {
+            return PineValue::String(self.request_environment.chart_timezone().to_owned());
+        }
         eval_static_builtin_value(name)
     }
 

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Codex empty cell oracle",overlay=true)
+var t=table.new(position.top_right,1,1)
+if barstate.islast
+    table.cell_set_text_color(t,0,0,color.white)
+    table.cell_set_bgcolor(t,0,0,color.black)
+    table.cell_set_text_size(t,0,0,size.large)
+    table.cell_set_text(t,0,0,"empty setter")

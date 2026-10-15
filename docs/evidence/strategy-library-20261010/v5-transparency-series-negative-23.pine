@@ -1,0 +1,4 @@
+//@version=5
+indicator("V5 transparency series negative 23")
+bgcolor(color.green,transp=bar_index%100)
+plot(1)

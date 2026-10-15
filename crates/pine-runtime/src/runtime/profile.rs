@@ -10,6 +10,7 @@ impl HistoricalRuntime<'_> {
         let request_cache_contexts = self
             .request_cache
             .keys()
+            .chain(self.request_evaluations.keys())
             .map(RequestCacheKey::context)
             .collect::<HashSet<_>>()
             .len();
@@ -17,12 +18,30 @@ impl HistoricalRuntime<'_> {
             .request_cache
             .values()
             .map(|values| values.len())
-            .sum::<usize>();
+            .sum::<usize>()
+            + self
+                .request_evaluations
+                .iter()
+                .filter(|(key, _)| !self.request_cache.contains_key(*key))
+                .map(|(_, state)| state.cached_values_profile().0)
+                .sum::<usize>();
         let request_cache_value_capacity = self
             .request_cache
             .values()
             .map(|values| values.capacity())
-            .sum::<usize>();
+            .sum::<usize>()
+            + self
+                .request_evaluations
+                .iter()
+                .filter(|(key, _)| !self.request_cache.contains_key(*key))
+                .map(|(_, state)| state.cached_values_profile().1)
+                .sum::<usize>();
+        let request_cache_entries = self
+            .request_cache
+            .keys()
+            .chain(self.request_evaluations.keys())
+            .collect::<HashSet<_>>()
+            .len();
         let series_buffers = self.series_store.buffers.len();
         let series_values = self
             .series_store
@@ -290,10 +309,12 @@ impl HistoricalRuntime<'_> {
             history_dynamic_retention_misses: self.history_dynamic_retention_misses,
             history_dynamic_retention_max_missed_offset: self
                 .history_dynamic_retention_max_missed_offset,
-            request_cache_entries: self.request_cache.len(),
+            request_cache_entries,
             request_cache_contexts,
             request_cache_values,
             request_cache_value_capacity,
+            static_request_chart_bars: self.static_requests.chart_history_profile().0,
+            static_request_chart_bar_capacity: self.static_requests.chart_history_profile().1,
             symbol_slots: self.current_symbols.len(),
             symbol_capacity: self.current_symbols.capacity(),
             current_series_slots: self.current_series.len(),

@@ -1,0 +1,5 @@
+//@version=6
+indicator("V6 output overlay oracle 23",precision=0)
+bgcolor(color.green,force_overlay=true)
+plotchar(true,title="char",color=color.red,force_overlay=true)
+plot(1,title="marker")

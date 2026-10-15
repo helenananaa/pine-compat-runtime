@@ -143,27 +143,10 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
         param_types: &HashMap<String, PineType>,
     ) -> Option<Option<HirExpr>> {
-        let method_name = builtin_matrix_call_result_method_name(callee, args)
-            .or_else(|| {
-                let (receiver_name, method_name) =
-                    bound_matrix_call_result_method_parts(callee, args)?;
-                let receiver_type = param_types
-                    .get(receiver_name)
-                    .copied()
-                    .or_else(|| {
-                        self.bound_symbol(receiver_name, args.first()?.value.span)
-                            .map(|symbol| symbol.pine_type)
-                    })
-                    .or_else(|| {
-                        self.scope
-                            .resolve(receiver_name)
-                            .map(|symbol| symbol.pine_type)
-                    })?;
-                is_matrix_kind(receiver_type.kind).then_some(method_name)
-            })
-            .or_else(|| self.user_function_call_result_method_name(callee, args))
-            .or_else(|| self.user_method_call_result_method_name(callee, args))
-            .or_else(|| self.local_udf_call_result_method_name(callee, args))?;
+        // Analysis has already validated the producer. Its cached expression
+        // type survives local-scope teardown; resolving the producer's name
+        // again here loses matrices declared inside an if or a loop.
+        let (_, method_name) = postfix_call_result_method_parts(callee, args)?;
         let receiver = args.first()?;
         if !self
             .type_of_expr_with_params(&receiver.value, param_types)

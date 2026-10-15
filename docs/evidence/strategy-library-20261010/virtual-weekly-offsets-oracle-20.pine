@@ -1,0 +1,13 @@
+//@version=6
+indicator("Virtual weekly offsets oracle 20",overlay=false)
+f() =>
+    [time("W","0930-1600:23456","America/New_York",timeframe_bars_back=1)-time,time_close("W","0930-1600:23456","America/New_York",timeframe_bars_back=-1)-time,time("W","0930-0945:23456","America/New_York",timeframe_bars_back=2)-time,time_close("W","0930-0945:23456","America/New_York",timeframe_bars_back=-2)-time,time("W","24x7","America/New_York",timeframe_bars_back=1)-time,time_close("W","24x7","America/New_York",timeframe_bars_back=-1)-time,time("M","0930-1600:23456","America/New_York",timeframe_bars_back=1)-time,time_close("M","0930-1600:23456","America/New_York",timeframe_bars_back=-1)-time]
+[a,b,c,d,e,f1,g,h]=request.security("NASDAQ:AAPL","60",f())
+plot(a,title="regularWeekPast1")
+plot(b,title="regularWeekFuture1Close")
+plot(c,title="shortWeekPast2")
+plot(d,title="shortWeekFuture2Close")
+plot(e,title="allWeekPast1")
+plot(f1,title="allWeekFuture1Close")
+plot(g,title="regularMonthPast1")
+plot(h,title="regularMonthFuture1Close")

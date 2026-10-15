@@ -336,6 +336,7 @@ fn formatting_output_is_bounded(args: &[HirCallArg], template: bool) -> bool {
 pub(super) fn minimal_program(language_version: Option<u16>) -> HirProgram {
     HirProgram {
         language_version,
+        dynamic_requests: language_version.is_some_and(|version| version >= 6),
         script_mode: ScriptMode::Indicator,
         timenow_symbol: None,
         strategy_settings: StrategySettings::default(),

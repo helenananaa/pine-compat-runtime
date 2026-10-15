@@ -1,0 +1,32 @@
+{
+  "timestamp": {
+    "largeYear": 31494784780740000,
+    "monthFirst": 1705622401000,
+    "colonSeparator": 1610514000000,
+    "extendedNumericOffset": 1672639200000
+  },
+  "session": [
+    "0000-2400:1234567",
+    "0000-2400",
+    "2400-1600"
+  ],
+  "lowerTime": {
+    "chart5m": {
+      "open": 1791711000000,
+      "seconds30Close": 1791711030000,
+      "seconds1Close": 1791711001000
+    },
+    "chartMonthly": {
+      "open": 1790812800000,
+      "seconds30Close": 1790899200000,
+      "seconds1Close": 1790899200000
+    },
+    "scope": "Open clock queries confirmed; monthly lower-timeframe close differs from nominal seconds and depends on available native intrabar granularity, not qualified by this patch"
+  },
+  "cleanup": {
+    "ownIndicatorAbsent": true,
+    "originalStrategyPresent": true,
+    "monthlySelected": true
+  },
+  "scope": "Official unpublished minimal probes, not full strategy or native full-trade parity qualification"
+}

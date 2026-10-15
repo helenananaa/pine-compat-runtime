@@ -84,16 +84,18 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Int(_) => Err(RuntimeError {
                 message: "history offset must be non-negative".to_owned(),
             }),
-            PineValue::Float(value) if value >= 0.0 && value.fract() == 0.0 => {
-                if value > usize::MAX as f64 {
+            // Pine converts numeric history indices toward zero before checking
+            // their sign. In particular, -0.8 selects the current bar.
+            PineValue::Float(value) if value.is_finite() && value.trunc() >= 0.0 => {
+                if value.trunc() >= (usize::MAX as u128 + 1) as f64 {
                     Err(RuntimeError {
                         message: "history offset is too large".to_owned(),
                     })
                 } else {
-                    Ok(Some(value as usize))
+                    Ok(Some(value.trunc() as usize))
                 }
             }
-            PineValue::Float(value) if value < 0.0 => Err(RuntimeError {
+            PineValue::Float(value) if value.trunc() < 0.0 => Err(RuntimeError {
                 message: "history offset must be non-negative".to_owned(),
             }),
             PineValue::Na => Ok(None),

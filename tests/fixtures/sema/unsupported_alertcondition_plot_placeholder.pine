@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported alertcondition plot placeholder")
-alertcondition(close > open, "Cross", "{{plot_0}}")

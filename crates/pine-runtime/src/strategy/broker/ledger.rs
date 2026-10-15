@@ -157,6 +157,22 @@ impl TradeLedger {
         allocations
     }
 
+    pub(super) fn allocate_exit_for_close_rule(
+        &self,
+        direction: TradeDirection,
+        from_entry: Option<&str>,
+        requested_quantity: f64,
+        rule: pine_ir::StrategyCloseEntriesRule,
+    ) -> Vec<TradeAllocation> {
+        match (rule, from_entry) {
+            (pine_ir::StrategyCloseEntriesRule::Any, Some(entry_id)) => {
+                self.allocate_exit_any_for_entry_direction(direction, entry_id, requested_quantity)
+            }
+            // FIFO closes the oldest trade regardless of the sizing entry ID.
+            _ => self.allocate_exit_fifo_for_direction(direction, None, requested_quantity),
+        }
+    }
+
     pub(super) fn allocate_all_for_direction(
         &self,
         direction: TradeDirection,

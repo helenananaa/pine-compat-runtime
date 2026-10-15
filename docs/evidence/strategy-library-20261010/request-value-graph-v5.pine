@@ -1,0 +1,20 @@
+//@version=5
+indicator("Codex request value graph oracle",overlay=true)
+h(src)=>
+    value=0.0
+    value:=nz(value[1])+src
+    value
+value=h(close)
+a=request.security(syminfo.tickerid,"12M",value)
+[b,c,d]=request.security(syminfo.tickerid,"12M",[math.pi,color.new(color.red,25),month(time)+dayofmonth(time)+year(time_close)])
+secure(src)=>request.security(syminfo.tickerid,"12M",src[barstate.isrealtime ? 1 : 0])[barstate.isrealtime ? 0 : 1]
+first=secure(close)
+second=secure(first)
+var t=table.new(position.top_right,3,2,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,str.tostring(a),text_color=color.white)
+    table.cell(t,1,0,str.tostring(b),text_color=color.white)
+    table.cell(t,2,0,str.tostring(d),text_color=color.white)
+    table.cell(t,0,1,str.tostring(first),text_color=color.white)
+    table.cell(t,1,1,str.tostring(second),text_color=color.white)
+    table.cell(t,2,1,"color",text_color=c)

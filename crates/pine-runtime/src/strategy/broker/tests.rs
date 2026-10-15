@@ -224,6 +224,8 @@ fn pending_entry_ids(broker: &BrokerState) -> Vec<&str> {
 fn trailing_price_trigger(activation_price: f64, offset_price_distance: f64) -> PendingExitTrigger {
     PendingExitTrigger::Trailing(PendingTrailingExit {
         spec: PendingTrailingSpec {
+            fixed_stop: None,
+            fixed_limit: None,
             activation: PendingTrailingActivation::Price(activation_price),
             offset_price_distance,
         },
@@ -238,6 +240,8 @@ fn trailing_points_trigger(
 ) -> PendingExitTrigger {
     PendingExitTrigger::Trailing(PendingTrailingExit {
         spec: PendingTrailingSpec {
+            fixed_stop: None,
+            fixed_limit: None,
             activation: PendingTrailingActivation::Points {
                 ticks,
                 price: activation_price,
@@ -251,6 +255,8 @@ fn trailing_points_trigger(
 fn trailing_price_exit(activation_price: f64, offset_price_distance: f64) -> PendingTrailingExit {
     PendingTrailingExit {
         spec: PendingTrailingSpec {
+            fixed_stop: None,
+            fixed_limit: None,
             activation: PendingTrailingActivation::Price(activation_price),
             offset_price_distance,
         },
@@ -2667,6 +2673,8 @@ fn trailing_update_helper_activates_without_fill_candidate() {
         trailing.evaluate_update(110.0, 100.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(105.0),
                 offset_price_distance: 2.0,
             },
@@ -2702,6 +2710,8 @@ fn trailing_update_helper_ratchets_upward_only() {
         trailing.evaluate_update(113.0, 109.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(105.0),
                 offset_price_distance: 2.0,
             },
@@ -2722,6 +2732,8 @@ fn trailing_update_helper_inverts_short_activation_fill_and_ratchet() {
         trailing.evaluate_update_for(TradeDirection::Short, 100.0, 89.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(90.0),
                 offset_price_distance: 10.0,
             },
@@ -2746,6 +2758,8 @@ fn trailing_update_helper_inverts_short_activation_fill_and_ratchet() {
         active.evaluate_update_for(TradeDirection::Short, 98.0, 85.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(90.0),
                 offset_price_distance: 10.0,
             },
@@ -4504,6 +4518,8 @@ fn pending_market_entry_resolves_trail_points_attachment_after_fill() {
         broker.pending_exit().unwrap().trigger,
         PendingExitTrigger::Trailing(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Points {
                     ticks: 10.0,
                     price: 105.0,
@@ -6542,6 +6558,8 @@ fn unchanged_repeated_trailing_preserves_active_state() {
             target_trade_key: None,
             trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
                 spec: PendingTrailingSpec {
+                    fixed_stop: None,
+                    fixed_limit: None,
                     activation: PendingTrailingActivation::Price(105.0),
                     offset_price_distance: 2.0,
                 },

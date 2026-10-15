@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-11",
+  "chart": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "url": "https://www.tradingview.com/chart/wf5lRGkJ/",
+  "probes": [
+    {
+      "name": "legacy-tuple-udf-v4",
+      "version": 4,
+      "outcome": "compile/run passed",
+      "observed_values": {
+        "requested": [
+          22,
+          12,
+          1767225600000
+        ],
+        "same_context": [
+          11,
+          1,
+          1790812800000
+        ]
+      },
+      "source_sha256": "45199538a9466c4fa030899d3fc89fb971d93ac1117305e95f958a1fdb668011",
+      "screenshot_sha256": "d3828dcc0918dfd20f05f49a709f5ca79aded5e081497647e719fc49d4b34568"
+    },
+    {
+      "name": "legacy-tuple-v3-rejected",
+      "version": 3,
+      "outcome": "compile rejected: security has no tuple-valued overload",
+      "observed_values": null,
+      "source_sha256": "50f033c32284fa8d2572e7bc2b8648682660d28eecd3c7539362fc8695ce9bc0",
+      "screenshot_sha256": "4c734276493fb54e976af49b531c2b8bfa096e5c82654e027d80310714586736"
+    },
+    {
+      "name": "parameter-request-empty-cell-v5",
+      "version": 5,
+      "outcome": "compile/run passed",
+      "observed_values": {
+        "table_text": "22"
+      },
+      "source_sha256": "c65d58444055ce43018d13c1f82f539c8b0f8a9b31d5fd7e1cb3d85091d80d4e",
+      "screenshot_sha256": "772f050184dd7c81408d6bd63790998af3f06a9836d48498c7f0422edc50584b"
+    },
+    {
+      "name": "empty-cell-setters-v5",
+      "version": 5,
+      "outcome": "compile/run passed",
+      "observed_values": {
+        "table_text": "empty setter"
+      },
+      "source_sha256": "f4b6cf3b931cb831953986348744002b3f13d7c932647d9ce4debe6936eac4e7",
+      "screenshot_sha256": "ad05f80f0198b599610fb107cd36718364cc6aa40dbab8aaa6d2e95d04d5a26a"
+    },
+    {
+      "name": "empty-cell-setters-v6",
+      "version": 6,
+      "outcome": "compile/run passed",
+      "observed_values": {
+        "table_text": "empty setter",
+        "font": "monospace",
+        "format": "bold"
+      },
+      "source_sha256": "2e5a9f29236f999c3c9281190e01f63d586d504c449abad9e7c74c6fba08cba6",
+      "screenshot_sha256": "ba2c8104f921b5bd8053fee672bf1ca3504ba558ad1e7357031c20e1d8038cee"
+    }
+  ],
+  "scope": "Native compilation and displayed current-month values, not original screener parity or trade/profit qualification",
+  "cleanup": "Agent probe removed; original strategy and 1M interval preserved; temporary tab closed"
+}

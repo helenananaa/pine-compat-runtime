@@ -7,17 +7,15 @@ impl Analyzer {
     }
 
     fn modern_request_binding_is_reassigned(&self, name: &str, symbol_id: SymbolId) -> bool {
+        if self.scope.symbol_is_global(symbol_id) {
+            return self.request_global_reassigned_names.contains(name);
+        }
         if !self.request_reassigned_names.contains(name) {
             return false;
         }
-        // The global prepass records names from every UDF. For a local tuple
+        // The global prepass records names from every UDF. For a local
         // binding, a helper UDF's reassignment of the same spelling does not
         // mutate this binding. Restrict the check to the active function body.
-        if !self.symbol_tuple_value_sources.contains_key(&symbol_id)
-            || self.scope.symbol_is_global(symbol_id)
-        {
-            return true;
-        }
         let Some(function) = self
             .function_stack
             .last()
@@ -67,11 +65,20 @@ impl Analyzer {
                     if self.modern_request_binding_is_reassigned(name, symbol.id) {
                         return false;
                     }
-                    let Some(initializer) = self.symbol_init_exprs.get(&symbol.id).or_else(|| {
-                        self.symbol_tuple_value_sources
-                            .get(&symbol.id)
-                            .map(|(source, _)| source)
-                    }) else {
+                    let Some(initializer) = self
+                        .symbol_init_exprs
+                        .get(&symbol.id)
+                        .or_else(|| {
+                            (self.legacy.dialect().version() >= 5)
+                                .then(|| self.request_param_sources.get(&symbol.id))
+                                .flatten()
+                        })
+                        .or_else(|| {
+                            self.symbol_tuple_value_sources
+                                .get(&symbol.id)
+                                .map(|(source, _)| source)
+                        })
+                    else {
                         return false;
                     };
                     if !is_request_scalar_type(symbol.pine_type) {
@@ -111,6 +118,7 @@ impl Analyzer {
                             | "timeframe.main_period"
                     )
                     || crate::types::const_color_value(expr).is_some()
+                    || crate::types::const_numeric_value(expr).is_some()
             }),
             ExprKind::Group(value) | ExprKind::Unary { expr: value, .. } => {
                 self.modern_request_expr(value, locals, visiting, calls)
@@ -141,6 +149,23 @@ impl Analyzer {
                 self.modern_request_expr(condition, locals, visiting, calls)
                     && self.modern_request_block(then_branch, locals, visiting, calls)
                     && self.modern_request_block(else_branch, locals, visiting, calls)
+            }
+            ExprKind::For {
+                counter,
+                from,
+                to,
+                step,
+                body,
+            } => self.modern_request_for(
+                (counter, from, to, step.as_deref()),
+                body,
+                locals,
+                visiting,
+                calls,
+            ),
+            ExprKind::While { condition, body } => {
+                self.modern_request_expr(condition, locals, visiting, calls)
+                    && self.modern_request_block(body, locals, visiting, calls)
             }
             ExprKind::Switch { selector, arms } => {
                 selector.as_deref().is_none_or(|selector| {
@@ -193,9 +218,17 @@ impl Analyzer {
                     return valid;
                 }
                 if name == "request.security" {
+                    let Ok(args) =
+                        super::source_args::normalize_security_source_args(args, expr.span)
+                    else {
+                        return false;
+                    };
+                    if !self.dynamic_requests {
+                        return args.get(2).is_some_and(|expression| {
+                            self.modern_request_expr(&expression.value, locals, visiting, calls)
+                        });
+                    }
                     return self.dynamic_requests
-                        && args.len() == 3
-                        && args.iter().all(|arg| arg.name.is_none())
                         && (matches!(&args[0].value.without_groups().kind,
                             ExprKind::Literal(Literal::String(symbol)) if symbol.is_empty())
                             || expr_name(&args[0].value).as_deref() == Some("syminfo.tickerid"))
@@ -206,10 +239,16 @@ impl Analyzer {
                             expr_name(&args[1].value).as_deref(),
                             Some("timeframe.main_period" | "timeframe.period")
                         ))
-                        && matches!(
-                            expr_name(&args[2].value).as_deref(),
-                            Some("open" | "high" | "low" | "close" | "volume" | "time")
-                        );
+                        && self.modern_request_expr(&args[2].value, locals, visiting, calls);
+                }
+                let source_default = super::source_args::source_input_default(args);
+                // Input metadata is checked by the ordinary call analyzer.
+                // Only defval participates in the requested value graph; the
+                // runtime inherits overrides using this call site's identity.
+                if request_input_call_is_supported(&name) {
+                    return source_default.is_some_and(|value| {
+                        self.modern_request_expr(value, locals, visiting, calls)
+                    });
                 }
                 let array_constructor = matches!(
                     name.as_str(),
@@ -279,6 +318,24 @@ impl Analyzer {
                         && self.modern_request_block(then_branch, &locals, visiting, calls)
                         && self.modern_request_block(else_branch, &locals, visiting, calls)
                 }
+                StmtKind::For {
+                    counter,
+                    from,
+                    to,
+                    step,
+                    body,
+                } => self.modern_request_for(
+                    (counter, from, to, step.as_ref()),
+                    body,
+                    &locals,
+                    visiting,
+                    calls,
+                ),
+                StmtKind::While { condition, body } => {
+                    self.modern_request_expr(condition, &locals, visiting, calls)
+                        && self.modern_request_block(body, &locals, visiting, calls)
+                }
+                StmtKind::Break | StmtKind::Continue => true,
                 _ => false,
             };
             if !valid {
@@ -286,5 +343,25 @@ impl Analyzer {
             }
         }
         true
+    }
+
+    fn modern_request_for(
+        &self,
+        bounds: (&str, &Expr, &Expr, Option<&Expr>),
+        body: &[Stmt],
+        locals: &HashSet<String>,
+        visiting: &mut HashSet<SymbolId>,
+        calls: &mut Vec<String>,
+    ) -> bool {
+        let (counter, from, to, step) = bounds;
+        if !self.modern_request_expr(from, locals, visiting, calls)
+            || !self.modern_request_expr(to, locals, visiting, calls)
+            || step.is_some_and(|step| !self.modern_request_expr(step, locals, visiting, calls))
+        {
+            return false;
+        }
+        let mut loop_locals = locals.clone();
+        loop_locals.insert(counter.to_owned());
+        self.modern_request_block(body, &loop_locals, visiting, calls)
     }
 }

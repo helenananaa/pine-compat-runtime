@@ -201,6 +201,40 @@ impl Analyzer {
         self.lower_stmt_with_params(statement, &HashMap::new(), &HashMap::new())
     }
 
+    fn specialize_immutable_scalar_decl(
+        &mut self,
+        symbol: SymbolInfo,
+        pine_type: PineType,
+    ) -> SymbolInfo {
+        if self.legacy.dialect().version() < 5
+            || self.lower_symbol_overrides.is_empty()
+            || self.lower_reassigned_symbols.contains(&symbol.id)
+            || !crate::analyzer::requests::is_request_scalar_type(symbol.pine_type)
+            || !crate::analyzer::requests::is_request_scalar_type(pine_type)
+            || symbol.pine_type == pine_type
+        {
+            return symbol;
+        }
+        let updated = SymbolInfo {
+            pine_type,
+            series_id: if pine_type.qualifier == Qualifier::Series {
+                symbol
+                    .series_id
+                    .or_else(|| self.series_id_for_type(pine_type))
+            } else {
+                None
+            },
+            ..symbol
+        };
+        self.scope.update_lower_symbol(updated);
+        for overrides in &mut self.lower_symbol_overrides {
+            for info in overrides.values_mut().filter(|info| info.id == symbol.id) {
+                *info = updated;
+            }
+        }
+        updated
+    }
+
     pub(crate) fn lower_stmt_with_params(
         &mut self,
         statement: &pine_syntax::Stmt,
@@ -327,7 +361,12 @@ impl Analyzer {
             },
             StmtKind::Break => HirStmtKind::Break,
             StmtKind::Continue => HirStmtKind::Continue,
-            StmtKind::Decl { name, value, .. } => {
+            StmtKind::Decl {
+                name,
+                value,
+                mode,
+                declared_type,
+            } => {
                 let symbol = self.lower_decl_symbol(name, statement.span)?;
                 if symbol.pine_type.kind == ValueKind::Tuple {
                     if let Some(results) =
@@ -351,6 +390,11 @@ impl Analyzer {
                     self.mark_symbol_user_type_array(symbol, type_name);
                 }
                 let lowered_value = self.lower_expr_with_params(value, param_exprs, param_types)?;
+                let symbol = if *mode == pine_syntax::DeclMode::Normal && declared_type.is_none() {
+                    self.specialize_immutable_scalar_decl(symbol, lowered_value.pine_type)
+                } else {
+                    symbol
+                };
                 let symbol =
                     self.lower_alias_decl_symbol_series_id(name, symbol, value, &lowered_value);
                 HirStmtKind::Decl {
@@ -616,44 +660,45 @@ impl Analyzer {
                 condition,
                 then_expr,
                 else_expr,
-            } => HirExprKind::Ternary {
-                condition: Box::new(self.lower_expr_with_params(
-                    condition,
-                    param_exprs,
-                    param_types,
-                )?),
-                then_expr: Box::new(self.lower_expr_with_params(
-                    then_expr,
-                    param_exprs,
-                    param_types,
-                )?),
-                else_expr: Box::new(self.lower_expr_with_params(
-                    else_expr,
-                    param_exprs,
-                    param_types,
-                )?),
-            },
+            } => {
+                let condition = self.lower_expr_with_params(condition, param_exprs, param_types)?;
+                let then_branch =
+                    self.lower_expr_with_params(then_expr, param_exprs, param_types)?;
+                let else_branch =
+                    self.lower_expr_with_params(else_expr, param_exprs, param_types)?;
+                HirExprKind::Ternary {
+                    condition: Box::new(condition),
+                    then_expr: Box::new(self.lower_ternary_bool_branch(
+                        then_branch,
+                        pine_type.kind,
+                        then_expr.span,
+                    )?),
+                    else_expr: Box::new(self.lower_ternary_bool_branch(
+                        else_branch,
+                        pine_type.kind,
+                        else_expr.span,
+                    )?),
+                }
+            }
             ExprKind::If {
                 condition,
                 then_branch,
                 else_branch,
-            } => HirExprKind::Ternary {
-                condition: Box::new(self.lower_expr_with_params(
-                    condition,
-                    param_exprs,
-                    param_types,
-                )?),
-                then_expr: Box::new(self.lower_expr_branch_return(
-                    then_branch,
-                    param_exprs,
-                    param_types,
-                )?),
-                else_expr: Box::new(self.lower_expr_branch_return(
-                    else_branch,
-                    param_exprs,
-                    param_types,
-                )?),
-            },
+            } => {
+                let condition = self.lower_expr_with_params(condition, param_exprs, param_types)?;
+                let then_expr =
+                    self.lower_expr_branch_return(then_branch, param_exprs, param_types)?;
+                let else_expr = if else_branch.is_empty() {
+                    self.implicit_conditional_default(then_expr.pine_type.kind)
+                } else {
+                    self.lower_expr_branch_return(else_branch, param_exprs, param_types)?
+                };
+                HirExprKind::Ternary {
+                    condition: Box::new(condition),
+                    then_expr: Box::new(then_expr),
+                    else_expr: Box::new(else_expr),
+                }
+            }
             ExprKind::Switch { selector, arms } => HirExprKind::Switch {
                 selector: match selector {
                     Some(selector) => Some(Box::new(self.lower_expr_with_params(
@@ -1011,11 +1056,19 @@ impl Analyzer {
                         },
                     );
                 }
-                let call_site_id = self.alloc_call_site_at(expr.span);
+                let call_site_id = if name == "input" || name.starts_with("input.") {
+                    self.input_call_site_at(expr.span)
+                } else {
+                    self.alloc_call_site_at(expr.span)
+                };
                 let lowered_args =
                     self.lower_builtin_call_args(&name, args, param_exprs, param_types)?;
                 if name == "request.security_lower_tf" && pine_type.kind == ValueKind::Tuple {
-                    let tuple_types = self.tuple_element_types(&args[2].value)?;
+                    let expression = args
+                        .iter()
+                        .find(|arg| arg.name.as_deref() == Some("expression"))
+                        .unwrap_or(&args[2]);
+                    let tuple_types = self.tuple_element_types(&expression.value)?;
                     self.lower_tf_tuple_types.push((
                         call_site_id,
                         tuple_types.into_iter().map(|ty| ty.kind).collect(),

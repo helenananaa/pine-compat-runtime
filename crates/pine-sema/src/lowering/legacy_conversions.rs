@@ -1,6 +1,37 @@
 use super::*;
+use crate::PineDialect;
 
 impl Analyzer {
+    pub(super) fn lower_ternary_bool_branch(
+        &mut self,
+        branch: HirExpr,
+        result_kind: ValueKind,
+        span: Span,
+    ) -> Option<HirExpr> {
+        if !matches!(self.legacy.dialect(), PineDialect::V4 | PineDialect::V5)
+            || result_kind != ValueKind::Bool
+            || !matches!(branch.pine_type.kind, ValueKind::Int | ValueKind::Float)
+        {
+            return Some(branch);
+        }
+        if !self.record_lowering_node(span) {
+            return None;
+        }
+        let pine_type = PineType::new(branch.pine_type.qualifier, ValueKind::Bool);
+        Some(HirExpr {
+            pine_type,
+            series_id: self.series_id_for_type(pine_type),
+            kind: HirExprKind::Call {
+                callee: "bool".to_owned(),
+                call_site_id: self.alloc_call_site(),
+                args: vec![HirCallArg {
+                    name: None,
+                    value: branch,
+                }],
+            },
+        })
+    }
+
     pub(super) fn finish_legacy_expr_coercion(
         &mut self,
         expr: &Expr,

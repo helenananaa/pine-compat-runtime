@@ -1,6 +1,6 @@
 //@version=6
 indicator("Supported matrix sum")
-
 values = matrix.new<float>(1, 2, close)
-plot(matrix.sum(values))
-plot(values.sum())
+added = matrix.sum(values, 2.0)
+plot(added.get(0, 0))
+plot(values.sum(values).get(0, 1))

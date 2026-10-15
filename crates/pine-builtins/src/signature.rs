@@ -288,6 +288,7 @@ pub enum ReturnSpec {
     MatrixElement(usize),
     MatrixArray(usize),
     MatrixMult,
+    MatrixSum,
     IntFromArg(usize),
     FloatFromArg(usize),
     SeriesFromArg(usize),

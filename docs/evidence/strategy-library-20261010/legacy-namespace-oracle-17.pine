@@ -1,0 +1,10 @@
+//@version=4
+study("Legacy namespace oracle 17")
+macd = 7.0
+atr = 11.0
+[m,s,h] = macd(close, 2, 3, 2)
+plot(pvt, title="pvt")
+plot(m+s+h, title="macd tuple")
+plot(atr(2), title="atr call")
+plot(macd, title="macd variable")
+plot(atr, title="atr variable")

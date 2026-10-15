@@ -1,0 +1,7 @@
+//@version=4
+strategy("Codex close positions v4 tail oracle",overlay=true)
+strategy.entry("E",strategy.long,qty=2,when=bar_index==0)
+if bar_index==2
+    strategy.close("E",true,"half",1,na,"half alert",true,false)
+plot(strategy.position_size,"position size")
+plot(strategy.closedtrades,"closed trades")

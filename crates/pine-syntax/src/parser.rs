@@ -409,25 +409,29 @@ impl Parser {
             .map_or(condition.span, |statement| statement.span);
 
         if !self.at(TokenKind::Else) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_PARSE_IF_EXPR",
-                "if expressions require an else branch",
-                start.merge(span),
-            ));
-            return None;
+            return Some(Expr {
+                span: start.merge(span),
+                kind: ExprKind::If {
+                    condition: Box::new(condition),
+                    then_branch,
+                    else_branch: Vec::new(),
+                },
+            });
         }
 
         self.bump();
-        if self.at(TokenKind::If) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_PARSE_IF_EXPR",
-                "else-if expression branches are not supported; use a nested if expression in the else branch",
-                self.current().span,
-            ));
-            return None;
-        }
-        self.expect(TokenKind::Newline, "expected newline after `else`")?;
-        let else_branch = self.parse_indented_block()?;
+        let else_branch = if self.at(TokenKind::If) {
+            // Lower a chain through the guarded expression parser, preserving
+            // branch-local values and the same recursion bound as nested ifs.
+            let nested = self.parse_expr(0)?;
+            vec![Stmt {
+                span: nested.span,
+                kind: crate::StmtKind::Expr(nested),
+            }]
+        } else {
+            self.expect(TokenKind::Newline, "expected newline after `else`")?;
+            self.parse_indented_block()?
+        };
         span = else_branch.last().map_or(span, |statement| statement.span);
 
         Some(Expr {
@@ -915,6 +919,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                     && matches!(
                         method.as_str(),
                         "copy"
+                            | "sum"
                             | "diff"
                             | "eigenvectors"
                             | "inv"
@@ -1009,6 +1014,7 @@ fn is_builtin_matrix_result_qualified_callee(namespace: &str, member: &str) -> b
         && matches!(
             member,
             "copy"
+                | "sum"
                 | "diff"
                 | "eigenvectors"
                 | "inv"

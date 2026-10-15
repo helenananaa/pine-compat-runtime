@@ -76,7 +76,7 @@ pub(crate) fn statements_and_bindings<'a>(
     }
 }
 
-fn expression<'a>(
+pub(crate) fn expression<'a>(
     expr: &'a HirExpr,
     visitor: &mut impl FnMut(&'a HirExpr),
     statement_visitor: &mut impl FnMut(&'a HirStmt),

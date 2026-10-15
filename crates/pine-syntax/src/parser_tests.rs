@@ -1,6 +1,6 @@
 use crate::{
-    BinaryOp, DeclMode, DeclaredType, ExprKind, FunctionBody, Literal, Parse, SourceFile, StmtKind,
-    SwitchArmResult, parse_source,
+    BinaryOp, DeclMode, DeclaredType, Expr, ExprKind, FunctionBody, Literal, Parse, SourceFile,
+    StmtKind, SwitchArmResult, parse_source,
 };
 
 fn parse(text: &str) -> Parse {
@@ -1286,7 +1286,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = matrix.copy(values).is_symmetric().custom()\n",
         "bad = matrix.copy(values).is_antisymmetric().custom()\n",
         "bad = matrix.copy(values).is_stochastic().custom()\n",
-        "bad = matrix.copy(values).sum().custom()\n",
+        "bad = matrix.copy(values).avg().custom()\n",
         "bad = matrix.copy(values).avg().custom()\n",
         "bad = matrix.copy(values).min().custom()\n",
         "bad = matrix.copy(values).max().custom()\n",
@@ -2020,17 +2020,47 @@ fn parses_if_expression_declaration() {
 }
 
 #[test]
-fn rejects_if_expression_without_else() {
+fn parses_if_expression_without_else_and_preserves_next_statement() {
     let parsed = parse("x = if close > open\n    high\nplot(x)\n");
 
-    assert!(
-        parsed
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_PARSE_IF_EXPR"),
-        "{:?}",
-        parsed.diagnostics
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 2);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected if initializer")
+    };
+    let ExprKind::If { else_branch, .. } = &value.kind else {
+        panic!("expected if expression")
+    };
+    assert!(else_branch.is_empty());
+}
+
+#[test]
+fn parses_else_if_value_and_inline_function_statements() {
+    let parsed = parse(
+        "//@version=4\nstudy(\"inline\")\nf(x) => y = x + 1, y * 2\nv = if close > open\n    f(2)\nelse if close < open\n    7\nelse\n    8\nplot(v)\n",
     );
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Function {
+        body: FunctionBody::Block(body),
+        ..
+    } = &parsed.program.statements[1].kind
+    else {
+        panic!("expected inline function block")
+    };
+    assert_eq!(body.len(), 2);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[2].kind else {
+        panic!("expected declaration")
+    };
+    let ExprKind::If { else_branch, .. } = &value.kind else {
+        panic!("expected if value")
+    };
+    assert!(matches!(
+        &else_branch[0].kind,
+        StmtKind::Expr(Expr {
+            kind: ExprKind::If { .. },
+            ..
+        })
+    ));
 }
 
 #[test]

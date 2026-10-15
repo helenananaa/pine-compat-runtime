@@ -1,4 +1,0 @@
-//@version=5
-strategy("Unsupported strategy exit four triggers")
-strategy.entry("L", strategy.long, qty=1)
-strategy.exit("XL", "L", stop=low, limit=high, profit=10, loss=5)

@@ -4,6 +4,9 @@ use crate::builtins::matrices::matrix_array_element_kind;
 use crate::error::RuntimeLoopControl;
 use crate::*;
 
+mod loop_number;
+use loop_number::LoopNumber;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum StmtControl {
     None,
@@ -278,38 +281,30 @@ impl<'a> HistoricalRuntime<'a> {
         body: &[HirStmt],
         result: Option<&HirExpr>,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(from) = self.eval_expr(from)?.as_i64() else {
+        let Some(from) = LoopNumber::from_value(self.eval_expr(from)?) else {
             return Ok(PineValue::Na);
         };
-        let Some(mut to_boundary) = self.eval_expr(to)?.as_i64() else {
+        let Some(mut to_boundary) = LoopNumber::from_value(self.eval_expr(to)?) else {
             return Ok(PineValue::Na);
         };
         let step_size = if let Some(step) = step {
-            let Some(step) = self.eval_expr(step)?.as_i64() else {
+            let Some(step) = LoopNumber::from_value(self.eval_expr(step)?) else {
                 return Ok(PineValue::Na);
             };
-            if step == 0 {
-                return Err(RuntimeError {
-                    message: "for loop step cannot be zero".to_owned(),
-                });
-            }
-            step.checked_abs().ok_or_else(|| RuntimeError {
-                message: "for loop step is out of range".to_owned(),
-            })?
+            Some(step)
         } else {
-            1
+            None
         };
         let dynamic_boundary = self.uses_v6_semantics();
-        let step = if from <= to_boundary {
-            step_size
-        } else {
-            -step_size
-        };
+        let ascending = !from.compare(to_boundary).is_gt();
+        let step = from.step(step_size, ascending)?;
         let mut value = from;
         let mut iterations = 0_usize;
         let mut loop_result = PineValue::Na;
         loop {
-            if (step > 0 && value > to_boundary) || (step < 0 && value < to_boundary) {
+            if (ascending && value.compare(to_boundary).is_gt())
+                || (!ascending && value.compare(to_boundary).is_lt())
+            {
                 break;
             }
             if iterations >= MAX_WHILE_ITERATIONS {
@@ -321,7 +316,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             self.charge_loop_iteration()?;
             iterations += 1;
-            self.set_symbol_value(counter, PineValue::Int(value));
+            self.set_symbol_value(counter, value.into_value());
             let mut control = StmtControl::None;
             for statement in body {
                 match self.eval_stmt(statement) {
@@ -356,12 +351,12 @@ impl<'a> HistoricalRuntime<'a> {
                 StmtControl::Break => break,
                 StmtControl::Continue => {}
             }
-            let Some(next) = value.checked_add(step) else {
+            let Some(next) = value.advance(step) else {
                 break;
             };
             value = next;
             if dynamic_boundary {
-                let Some(next_boundary) = self.eval_expr(to)?.as_i64() else {
+                let Some(next_boundary) = LoopNumber::from_value(self.eval_expr(to)?) else {
                     return Ok(PineValue::Na);
                 };
                 to_boundary = next_boundary;

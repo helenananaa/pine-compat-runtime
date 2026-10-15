@@ -335,8 +335,18 @@ fn parse_request_environment(
         PyValueError::new_err("request_bars must be a dict mapping SYMBOL:TIMEFRAME to bars")
     })?;
     let mut streams = Vec::with_capacity(dict.len());
+    let mut calendars = None;
     for (key, value) in dict {
         let key: String = key.extract()?;
+        if key == "$barCalendars" {
+            let json = PyModule::import(value.py(), "json")?;
+            let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
+            calendars = Some(
+                pine_runtime::bar_calendars_from_json(&raw)
+                    .map_err(|err| PyValueError::new_err(err.to_string()))?,
+            );
+            continue;
+        }
         if key == "$chart" {
             chart = chart_metadata::parse_chart_metadata(chart, &value)?;
             continue;
@@ -346,10 +356,11 @@ fn parse_request_environment(
     }
     let provider = InMemoryRequestDataProvider::from_streams(streams)
         .map_err(|err| PyValueError::new_err(err.to_string()))?;
-    Ok(RequestEnvironment::new(
-        chart,
-        std::sync::Arc::new(provider),
-    ))
+    let environment = RequestEnvironment::new(chart, std::sync::Arc::new(provider));
+    Ok(match calendars {
+        Some(calendars) => environment.with_bar_calendars(std::sync::Arc::new(calendars)),
+        None => environment,
+    })
 }
 
 fn parse_chart_context(

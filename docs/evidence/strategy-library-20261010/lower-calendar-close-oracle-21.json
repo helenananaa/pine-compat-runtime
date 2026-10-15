@@ -1,0 +1,29 @@
+{
+  "name": "lower-calendar-close-oracle-21",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\lower-calendar-close-oracle-21.pine",
+  "source_sha256": "5fb00a7c6b01b47aff7841c6ab564f2b067efeed0e4bb4da34993241acd9c9d1",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\lower-calendar-close-oracle-21.png",
+  "screenshot_sha256": "7516f731b215b155f1b0b8ccebbb768cb09e77025e3bc9e66c1f4f31ae8884f0",
+  "pine_version": 6,
+  "chart_symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "M",
+  "chart_open": 1790812800000,
+  "captured_date": "2026-10-12",
+  "native_values": [
+    0,
+    86400000,
+    -259200000,
+    345600000,
+    0,
+    172800000,
+    -259200000,
+    950400000,
+    null,
+    294300000,
+    -2505600000
+  ],
+  "prior_cli_sha256": "85a46055f3753eb6a6311563752209eb09b60a4de682ae579b559daca2101b9e",
+  "prior_error": "runtime failed: time_close unsupported lower timeframe `D`\n",
+  "status": "confirmed_remaining_core_gap",
+  "scope": "Official v6 monthly-chart daily/weekly clocks compile and execute; batch20 CLI explicitly rejects daily close. Not yet repaired or qualified."
+}

@@ -220,6 +220,30 @@ impl Analyzer {
             return;
         }
 
+        if self.legacy.dialect() >= crate::PineDialect::V6
+            && matches!(
+                name,
+                "strategy.order" | "strategy.exit" | "strategy.cancel" | "strategy.cancel_all"
+            )
+        {
+            let signature = pine_builtins::get_phase_1_builtin(name).expect("order signature");
+            for (index, arg) in args.iter().enumerate() {
+                if arg.name.as_deref() == Some("when")
+                    || (arg.name.is_none()
+                        && signature
+                            .params
+                            .get(index)
+                            .is_some_and(|param| param.name == "when"))
+                {
+                    self.unsupported(
+                        &format!("{name}.when"),
+                        &format!("`{name}` argument `when` was removed in Pine v6"),
+                        arg.span,
+                    );
+                }
+            }
+        }
+
         if !matches!(self.script_declaration, Some((ScriptMode::Strategy, _))) {
             self.diagnostics.push(Diagnostic::error(
                 "E_STRATEGY_MODE",
@@ -786,32 +810,10 @@ impl Analyzer {
             return;
         }
         if has_trailing_args {
-            if trigger_count > 0 {
+            if trailing_activation_count == 0 || !has_trail_offset {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
-                    "`strategy.exit` cannot combine trailing exits with fixed stop, limit, profit, or loss triggers in the current strategy subset",
-                    args.iter()
-                        .find(|arg| {
-                            matches!(
-                                arg.name.as_deref(),
-                                Some(
-                                    "stop"
-                                        | "limit"
-                                        | "profit"
-                                        | "loss"
-                                        | "trail_price"
-                                        | "trail_points"
-                                        | "trail_offset"
-                                )
-                            )
-                        })
-                        .map_or(Span::default(), |arg| arg.span),
-                ));
-            }
-            if trailing_activation_count != 1 || !has_trail_offset {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_NAME",
-                    "`strategy.exit` trailing exits require exactly one of `trail_price` or `trail_points` plus `trail_offset`",
+                    "`strategy.exit` trailing exits require at least one of `trail_price` or `trail_points` plus `trail_offset`",
                     args.iter()
                         .find(|arg| {
                             matches!(
@@ -824,20 +826,7 @@ impl Analyzer {
             }
             return;
         }
-        let downside_trigger_count = usize::from(has_stop) + usize::from(has_loss);
-        let upside_trigger_count = usize::from(has_limit) + usize::from(has_profit);
-        let supported_trigger_shape = trigger_count <= 1
-            || (trigger_count == 2 && downside_trigger_count == 1 && upside_trigger_count == 1);
-        if !supported_trigger_shape {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_NAME",
-                "`strategy.exit` combined trigger families are not supported in the current strategy subset",
-                args.iter()
-                    .find(|arg| matches!(arg.name.as_deref(), Some("limit" | "profit" | "loss")))
-                    .or_else(|| args.get(3))
-                    .map_or(Span::default(), |arg| arg.span),
-            ));
-        } else if trigger_count == 0 && has_id && !has_unsupported_arg {
+        if trigger_count == 0 && has_id && !has_unsupported_arg {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 "`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`",

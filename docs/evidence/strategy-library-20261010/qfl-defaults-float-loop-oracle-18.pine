@@ -1,0 +1,15 @@
+//@version=5
+strategy("QFL defaults and float loop oracle 18",default_qty_value=2)
+f(a=strategy.position_avg_price,p=strategy.position_size)=>nz(a)+p
+limit=input.float(3.8)
+x=0.0
+y=0.0
+for i=0 to limit
+    x+=i
+for j=0.8 to 3.8
+    y+=j
+if bar_index==0
+    strategy.entry("L",strategy.long)
+plot(x,title="zero to input float")
+plot(y,title="float from and to")
+plot(f(),title="default strategy state")

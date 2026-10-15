@@ -1,0 +1,4 @@
+//@version=4
+study("Codex inline input v4 oracle",overlay=true)
+f(x)=>x+1
+plot(f(input(2,"Wrapped input")),"wrapped input")

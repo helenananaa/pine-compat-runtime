@@ -1,0 +1,11 @@
+//@version=6
+indicator("Virtual DST oracle 20",overlay=false)
+f() =>
+    s=time==timestamp("UTC",2026,3,8,0,0)
+    a=time==timestamp("UTC",2025,11,2,0,0)
+    [ta.valuewhen(s,time("1","1700-1700","America/New_York")-time,0),ta.valuewhen(s,time_close("1","1700-1700","America/New_York")-time,0),ta.valuewhen(a,time("1","1700-1700","America/New_York")-time,0),ta.valuewhen(a,time_close("1","1700-1700","America/New_York")-time,0)]
+[a,b,c,d]=request.security("BINANCE:BTCUSDT","D",f())
+plot(a,title="springOpen")
+plot(b,title="springClose")
+plot(c,title="autumnOpen")
+plot(d,title="autumnClose")

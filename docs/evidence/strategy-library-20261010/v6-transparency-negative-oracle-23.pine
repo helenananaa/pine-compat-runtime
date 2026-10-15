@@ -1,0 +1,5 @@
+//@version=6
+indicator("V6 transparency negative control 23",precision=0)
+bgcolor(color.green,transp=90)
+plotshape(true,color=color.blue,transp=30,title="shape")
+plot(1,title="marker")

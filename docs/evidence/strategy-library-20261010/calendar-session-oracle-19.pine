@@ -1,0 +1,9 @@
+//@version=6
+indicator("Calendar session oracle 19",overlay=false)
+f() =>
+    [time("1","0930-0945","America/New_York",timeframe_bars_back=1)-time,time_close("1","0930-0945","America/New_York",timeframe_bars_back=1)-time,time("1","1500-1600","America/New_York",timeframe_bars_back=1)-time,time_close("1","1500-1600","America/New_York",timeframe_bars_back=1)-time]
+[a,b,c,d]=request.security("NASDAQ:AAPL","D",f())
+plot(a,title="morningPreviousOpen")
+plot(b,title="morningPreviousClose")
+plot(c,title="afternoonPreviousOpen")
+plot(d,title="afternoonPreviousClose")

@@ -1,0 +1,8 @@
+//@version=4
+study("Static security UDF dependencies with different selectors")
+
+requestedValue(src, tf) =>
+    otherContext = security("NASDAQ:MSFT", tf, src)
+    security("NYSE:IBM", tf, otherContext)
+
+plot(requestedValue(close, "5"))

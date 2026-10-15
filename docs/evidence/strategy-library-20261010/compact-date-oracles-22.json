@@ -1,0 +1,70 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-oracle-22.pine",
+    "source_sha256": "e59ef7206b618c4a49c54bb2298ba3f98d6906be0d2e361ba255d5356d2768f7",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-oracle-22.png",
+    "screenshot_sha256": "468dedaa797fe2e060ea12a7d8262a72adf67d91f243e89cead1201f28bdee99",
+    "pine_version": 5,
+    "captured_date": "2026-10-12",
+    "native_values": [
+      1660572000000,
+      1660593600000,
+      1660572000000,
+      1660552200000,
+      1660572000000,
+      1660552200000
+    ],
+    "prior_debug_error": "runtime failed: timestamp unsupported dateString `15Aug 2022 14:00 +0000`\n",
+    "status": "confirmed_remaining_core_gap",
+    "affected_original_sha256": "d864a54cc7d0e040c4e6f36a4acc6a57e27bee178a24200404742ce0b144da4a",
+    "scope": "Original Morning Scalp compact 15Aug strings are native-valid. Compact day/month accepts a distinct fallback that ignores the +0530 and GMT+0530 suffix in these saved controls; spaced and ISO inputs apply +0530. Do not assume inserting a space has equivalent semantics. Not implemented/qualified yet.",
+    "native_status": "compiled_and_executed"
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-edge-v5-oracle-22.pine",
+    "source_sha256": "6a06fb75097a4d2be22e54763d4dd91d694375002fd7992c619b8da978b421b4",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-edge-v5-oracle-22.png",
+    "screenshot_sha256": "6804ed1ec8b41189ec23c9ec8ae659163a0b112d82f2b1670b28d9af589255d2",
+    "pine_version": 5,
+    "native_values": [
+      1704087001000,
+      1660521600000,
+      1660572030000,
+      1660572000000,
+      1660572000000,
+      1660572000000
+    ],
+    "native_status": "compiled_and_executed",
+    "captured_date": "2026-10-12",
+    "scope": "Official compact English timestamp controls; named-zone negative compiles locally but must fail explicitly at execution, preserving existing runtime dateString guard rather than claiming native compiler-stage parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-edge-v6-oracle-22.pine",
+    "source_sha256": "dbd017c8df62e8c2161017caaea66e1d2b54edb0be055dfdc30a163407dbb756",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-edge-v6-oracle-22.png",
+    "screenshot_sha256": "18e8a8f1113fa3c63d8d0d6fdf1b3dff3c526f9ea46491b3e5d556fec2943fd3",
+    "pine_version": 6,
+    "native_values": [
+      1704087001000,
+      1660521600000,
+      1660572030000,
+      1660572000000,
+      1660572000000,
+      1660572000000
+    ],
+    "native_status": "compiled_and_executed",
+    "captured_date": "2026-10-12",
+    "scope": "Official compact English timestamp controls; named-zone negative compiles locally but must fail explicitly at execution, preserving existing runtime dateString guard rather than claiming native compiler-stage parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-named-zone-negative-22.pine",
+    "source_sha256": "e36b15ac39d4be760098be61c1589473bd3f5e1c2d08de6bf1c1cea485198eaf",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-named-zone-negative-22.png",
+    "screenshot_sha256": "aaad65aa52b28e1dea789551b4c4d3606c7f3355ee15ced2dc5356a6b22b43a4",
+    "pine_version": 5,
+    "native_values": null,
+    "native_status": "analysis_rejected",
+    "captured_date": "2026-10-12",
+    "scope": "Official compact English timestamp controls; named-zone negative compiles locally but must fail explicitly at execution, preserving existing runtime dateString guard rather than claiming native compiler-stage parity."
+  }
+]

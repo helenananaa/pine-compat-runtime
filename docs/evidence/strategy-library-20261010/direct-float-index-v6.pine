@@ -1,0 +1,7 @@
+//@version=6
+indicator("Codex numeric index oracle",overlay=true)
+n=input.int(19,"Period")
+plot(n/2+1,"quotient")
+plot(close[n/2+1],"implicit index")
+plot(close[int(n/2+1)],"cast index")
+plot(close[2.8],"direct float index")

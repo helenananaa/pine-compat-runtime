@@ -1,8 +1,9 @@
 use crate::prelude::*;
 mod modern;
+pub(crate) mod source_args;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "same-context and provider-backed scalar expressions, immutable scalar dependencies, selected scalar-array results, tuples and admitted UDF-local state are supported with explicit gaps/lookahead policies and named calc_bars_count; provider timeframes may be lower or equal, while higher fixed timeframes must be integer multiples of the chart timeframe and calendar months use calendar boundaries; nested requests, recursive UDFs, external mutable or series-persistent captures, reference graph captures and drawing/output side effects remain unsupported";
-const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided lower/equal/higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases, const/input/simple captures, pure scalar UDF calls, and direct UDF-local immutable dependency graphs whose nested legacy requests use the same selector and merge policy; higher fixed timeframes must be integer multiples of the chart timeframe and calendar months use calendar boundaries; control-flow-local requests, different-selector nested requests, mutable or persistent UDF state, recursive UDFs, mutable captures, and side effects remain unsupported";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "same-context and provider-backed scalar expressions, immutable scalar dependencies, selected scalar-array results, tuples and admitted UDF-local state are supported with explicit gaps/lookahead policies and named calc_bars_count; static nested requests preserve independently calculated chart series, while dynamic nested scalar requests support inherited symbol and literal/current/main timeframes; recursive UDFs, external mutable or series-persistent captures, reference graph captures and drawing/output side effects remain unsupported";
+const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided lower/equal/higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases, const/input/simple captures, scalar and v4 tuple-returning UDF calls with isolated local state, and direct UDF-local immutable dependency graphs whose nested static requests preserve independent selectors and merge policies; higher fixed timeframes need not be integer multiples of the chart timeframe and calendar months use calendar boundaries; control-flow-local requests, recursive UDFs, mutable captures, and side effects remain unsupported";
 const REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON: &str = "host-provided lower-or-equal-timeframe scalar intrabar arrays and tuples of scalar intrabar arrays support three positional arguments and optional named nonnegative calc_bars_count; other optional policies, collection expressions, mutable captures, and side effects remain unsupported";
 
 #[derive(Debug, Clone)]
@@ -19,6 +20,18 @@ impl Analyzer {
         span: Span,
         args: &[CallArg],
     ) -> Option<PineType> {
+        let normalized = if matches!(name, "request.security" | "request.security_lower_tf") {
+            match source_args::normalize_security_source_args(args, span) {
+                Ok(args) => args,
+                Err(diagnostic) => {
+                    self.diagnostics.push(diagnostic);
+                    return None;
+                }
+            }
+        } else {
+            args.to_vec()
+        };
+        let args = normalized.as_slice();
         if !self.dynamic_requests
             && self.block_depth > 0
             && (self.legacy.dialect() >= crate::PineDialect::V6 || self.function_depth == 0)
@@ -57,14 +70,6 @@ impl Analyzer {
         let mut unsupported = false;
         if !(3..=6).contains(&args.len()) {
             unsupported = true;
-        }
-        if args.iter().take(3).any(|arg| arg.name.is_some()) {
-            unsupported = true;
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_NAME",
-                "`request.security` currently requires symbol, timeframe, and expression as positional arguments",
-                span,
-            ));
         }
         if !self.validate_request_security_merge_args(args) {
             unsupported = true;
@@ -244,6 +249,13 @@ impl Analyzer {
 
         let expression_type = arg_types.get(2).copied().flatten();
         let same_context_request = same_context_symbol && same_chart_timeframe;
+        // Tuple-valued security expressions were introduced in Pine v4.
+        if legacy
+            && self.legacy.dialect().version() < 4
+            && expression_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple)
+        {
+            unsupported = true;
+        }
         if expression_type.is_none_or(|pine_type| {
             if same_context_request {
                 !is_request_same_context_type(pine_type)
@@ -259,7 +271,21 @@ impl Analyzer {
             }
             if same_context_request {
                 if legacy {
-                    self.request_expression_is_same_context_value(&arg.value)
+                    if expression_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple) {
+                        legacy_request_context.is_some_and(|request_context| {
+                            self.request_expression_is_legacy_provider_tuple_value(
+                                &arg.value,
+                                request_context,
+                            )
+                        })
+                    } else {
+                        legacy_request_context.is_some_and(|request_context| {
+                            self.request_expression_is_legacy_provider_scalar(
+                                &arg.value,
+                                request_context,
+                            )
+                        })
+                    }
                 } else {
                     self.request_expression_is_modern_same_context_value(&arg.value)
                 }
@@ -469,6 +495,12 @@ impl Analyzer {
                 self.request_expression_is_legacy_provider_scalar(item, request_context)
             }),
             ExprKind::Call { callee, args } => {
+                if matches!(callee.kind, ExprKind::Identifier(_))
+                    && expr_name(callee).is_some_and(|name| self.functions.contains_key(&name))
+                {
+                    return self
+                        .request_expression_is_legacy_provider_scalar(expr, request_context);
+                }
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;
                 };
@@ -497,7 +529,7 @@ impl Analyzer {
             &mut Vec::new(),
             request_context,
             false,
-        )
+        ) || self.modern_request_expression_supported(expr)
     }
 
     fn request_expression_is_legacy_provider_scalar_inner(
@@ -514,6 +546,13 @@ impl Analyzer {
             ExprKind::Literal(_) => true,
             ExprKind::Identifier(name) => {
                 if local_names.contains(name) {
+                    return true;
+                }
+                if self
+                    .legacy
+                    .canonical_value_name(self.current_source_context_id(), expr.span)
+                    .is_some_and(is_request_provider_scalar_name)
+                {
                     return true;
                 }
                 if is_request_provider_scalar_name(name) {
@@ -534,8 +573,13 @@ impl Analyzer {
                 let active_function_local =
                     !global && !self.function_stack.is_empty() && self.block_depth == 0;
                 if (!global && !active_function_local)
-                    || symbol.persistence != PersistenceKind::None
-                    || self.request_reassigned_names.contains(name)
+                    || (symbol.persistence != PersistenceKind::None
+                        && symbol.pine_type.qualifier == Qualifier::Series)
+                    || (if global {
+                        self.request_global_reassigned_names.contains(name)
+                    } else {
+                        self.request_reassigned_names.contains(name)
+                    })
                     || !is_request_scalar_type(symbol.pine_type)
                 {
                     return false;
@@ -568,9 +612,13 @@ impl Analyzer {
                 visiting.remove(&symbol.id);
                 supported
             }
-            ExprKind::QualifiedName(_) => expr_name(expr)
-                .as_deref()
-                .is_some_and(is_request_provider_scalar_name),
+            ExprKind::QualifiedName(_) => {
+                expr_name(expr)
+                    .as_deref()
+                    .is_some_and(is_request_provider_scalar_name)
+                    || crate::types::const_color_value(expr).is_some()
+                    || crate::types::const_numeric_value(expr).is_some()
+            }
             ExprKind::Unary { expr, .. } | ExprKind::Group(expr) => self
                 .request_expression_is_legacy_provider_scalar_inner(
                     expr,
@@ -675,7 +723,9 @@ impl Analyzer {
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;
                 };
-                if allow_nested_legacy_security && name.starts_with("$legacy.security.") {
+                if (allow_nested_legacy_security || !self.dynamic_requests)
+                    && name.starts_with("$legacy.security.")
+                {
                     return self.request_nested_legacy_security_is_supported(
                         &name,
                         args,
@@ -685,10 +735,10 @@ impl Analyzer {
                         request_context,
                     );
                 }
-                if name == "input.source" {
-                    return args.first().is_some_and(|arg| {
+                if request_input_call_is_supported(&name) {
+                    return source_args::source_input_default(args).is_some_and(|value| {
                         self.request_expression_is_legacy_provider_scalar_inner(
-                            &arg.value,
+                            value,
                             visiting,
                             local_names,
                             udf_stack,
@@ -787,15 +837,14 @@ impl Analyzer {
         udf_stack.push(name.to_owned());
         let supported = self.with_source_context_ref(function.source_context_id, |analyzer| {
             match &function.body {
-                FunctionBody::Expr(expr) => analyzer
-                    .request_expression_is_legacy_provider_scalar_inner(
-                        expr,
-                        visiting,
-                        &function_locals,
-                        udf_stack,
-                        request_context,
-                        false,
-                    ),
+                FunctionBody::Expr(expr) => analyzer.request_legacy_udf_result_is_supported(
+                    expr,
+                    visiting,
+                    &function_locals,
+                    udf_stack,
+                    request_context,
+                    false,
+                ),
                 FunctionBody::Block(statements) => {
                     let Some((last, prefix)) = statements.split_last() else {
                         return false;
@@ -824,10 +873,17 @@ impl Analyzer {
                         }
                         function_locals.insert(name.clone());
                     }
-                    let StmtKind::Expr(result) = &last.kind else {
-                        return false;
+                    let result = match &last.kind {
+                        StmtKind::Expr(result) => result,
+                        StmtKind::Decl {
+                            mode: pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const,
+                            name,
+                            value,
+                            ..
+                        } if !function_locals.contains(name) => value,
+                        _ => return false,
                     };
-                    analyzer.request_expression_is_legacy_provider_scalar_inner(
+                    analyzer.request_legacy_udf_result_is_supported(
                         result,
                         visiting,
                         &function_locals,
@@ -842,6 +898,31 @@ impl Analyzer {
         supported
     }
 
+    fn request_legacy_udf_result_is_supported(
+        &self,
+        expr: &Expr,
+        visiting: &mut std::collections::HashSet<SymbolId>,
+        local_names: &std::collections::HashSet<String>,
+        udf_stack: &mut Vec<String>,
+        request_context: &LegacyProviderRequestContext,
+        allow_nested_legacy_security: bool,
+    ) -> bool {
+        let values = match &expr.kind {
+            ExprKind::Tuple(items) => items.as_slice(),
+            _ => std::slice::from_ref(expr),
+        };
+        values.iter().all(|value| {
+            self.request_expression_is_legacy_provider_scalar_inner(
+                value,
+                visiting,
+                local_names,
+                udf_stack,
+                request_context,
+                allow_nested_legacy_security,
+            )
+        })
+    }
+
     fn request_nested_legacy_security_is_supported(
         &self,
         internal_callee: &str,
@@ -851,13 +932,34 @@ impl Analyzer {
         udf_stack: &mut Vec<String>,
         request_context: &LegacyProviderRequestContext,
     ) -> bool {
-        let [symbol, timeframe, expression] = args else {
+        let Some(first) = args.first() else {
             return false;
         };
-        if args.iter().any(|arg| arg.name.is_some())
-            || internal_callee != request_context.internal_callee
-            || !self.request_selector_exprs_match(&symbol.value, &request_context.symbol)
-            || !self.request_selector_exprs_match(&timeframe.value, &request_context.timeframe)
+        let types = args
+            .iter()
+            .map(|arg| self.type_of_expr_with_params(&arg.value, &HashMap::new()))
+            .collect::<Vec<_>>();
+        let strings = args
+            .iter()
+            .map(|arg| self.known_const_string_value(&arg.value))
+            .collect::<Vec<_>>();
+        let bools = args
+            .iter()
+            .map(|arg| self.known_const_bool_value(&arg.value))
+            .collect::<Vec<_>>();
+        let crate::legacy::LegacySecurityBinding::Bound(bound) = self
+            .legacy
+            .bind_legacy_security_args(args, &types, &strings, &bools, first.span)
+        else {
+            return false;
+        };
+        let [symbol, timeframe, expression] = bound.canonical_args.as_slice() else {
+            return false;
+        };
+        if self.dynamic_requests
+            && (internal_callee != request_context.internal_callee
+                || !self.request_selector_exprs_match(&symbol.value, &request_context.symbol)
+                || !self.request_selector_exprs_match(&timeframe.value, &request_context.timeframe))
         {
             return false;
         }
@@ -1020,7 +1122,7 @@ fn series_request_type(pine_type: PineType) -> PineType {
     PineType::new(Qualifier::Series, pine_type.kind)
 }
 
-fn is_request_scalar_type(pine_type: PineType) -> bool {
+pub(crate) fn is_request_scalar_type(pine_type: PineType) -> bool {
     matches!(
         pine_type.kind,
         ValueKind::Int
@@ -1072,6 +1174,15 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
         name,
         "syminfo.tickerid"
             | "timeframe.period"
+            | "timeframe.multiplier"
+            | "timeframe.isticks"
+            | "timeframe.isseconds"
+            | "timeframe.isminutes"
+            | "timeframe.isintraday"
+            | "timeframe.isdaily"
+            | "timeframe.isweekly"
+            | "timeframe.ismonthly"
+            | "timeframe.isdwm"
             | "open"
             | "high"
             | "low"
@@ -1082,6 +1193,7 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "ohlc4"
             | "volume"
             | "time"
+            | "time_close"
             | "tr"
             | "bar_index"
             | "barstate.isfirst"
@@ -1107,6 +1219,26 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
     matches!(
         name,
         "na" | "nz"
+            | "fixnan"
+            | "$legacy.iff"
+            | "int"
+            | "float"
+            | "bool"
+            | "color.new"
+            | "color.rgb"
+            | "color.r"
+            | "color.g"
+            | "color.b"
+            | "color.t"
+            | "year"
+            | "month"
+            | "weekofyear"
+            | "dayofweek"
+            | "dayofmonth"
+            | "hour"
+            | "minute"
+            | "second"
+            | "timestamp"
             | "time"
             | "time_close"
             | "timeframe.in_seconds"
@@ -1197,7 +1329,26 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
 }
 
 fn legacy_request_scalar_call_is_supported(name: &str) -> bool {
-    request_scalar_call_is_supported(name) || name == "int"
+    request_scalar_call_is_supported(name)
+}
+
+fn request_input_call_is_supported(name: &str) -> bool {
+    matches!(
+        name,
+        "input"
+            | "input.bool"
+            | "input.int"
+            | "input.float"
+            | "input.string"
+            | "input.text_area"
+            | "input.color"
+            | "input.price"
+            | "input.time"
+            | "input.symbol"
+            | "input.timeframe"
+            | "input.session"
+            | "input.source"
+    )
 }
 
 fn request_call_argument_is_admitted(callee: &str, arg: &CallArg) -> bool {

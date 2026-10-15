@@ -733,6 +733,27 @@ fn exit_leg_candidates(
     generation: u64,
 ) -> Vec<BrokerCandidate> {
     let mut out = Vec::new();
+    if let PendingExitTrigger::Trailing(trailing) = &pending.trigger {
+        for trigger in trailing
+            .spec
+            .fixed_stop
+            .map(PendingExitTrigger::Stop)
+            .into_iter()
+            .chain(trailing.spec.fixed_limit.map(PendingExitTrigger::Limit))
+        {
+            if let Some(touch) = trigger.touched_candidate_for(direction, high, low, verify)
+                && let Some(crossing) = crossing_on_leg(leg, touch.exit_price)
+            {
+                out.push(exit_fill_candidate(
+                    pending,
+                    leg.index,
+                    crossing,
+                    touch.exit_price,
+                    generation,
+                ));
+            }
+        }
+    }
     match &pending.trigger {
         PendingExitTrigger::Trailing(trailing) => match trailing.state {
             PendingTrailingState::Inactive => {
@@ -853,6 +874,18 @@ fn exit_gap_candidates(
             } else {
                 Vec::new()
             }
+        }
+        PendingExitTrigger::Trailing(trailing)
+            if trailing
+                .spec
+                .fixed_stop
+                .is_some_and(|price| exit_stop_marketable(direction, open, price))
+                || trailing
+                    .spec
+                    .fixed_limit
+                    .is_some_and(|price| exit_limit_marketable(direction, open, price, verify)) =>
+        {
+            vec![fill()]
         }
         PendingExitTrigger::Trailing(trailing) => match trailing.state {
             PendingTrailingState::Inactive => {

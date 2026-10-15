@@ -1,0 +1,104 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-int-ternary-v4-oracle-24.pine",
+    "source_sha256": "086d046a89fbfd7c44c4b63a6c63006520244be454fa510250f5867fb64d5ebd",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-int-ternary-v4-oracle-24.png",
+    "screenshot_sha256": "9965e35e42c9fcffbba435783574a5284a7418db0be6da68e75ae2cb9bba6c9f",
+    "pine_version": 4,
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1,
+      0,
+      1,
+      0
+    ],
+    "captured_date": "2026-10-12",
+    "scope": "Saved both bool-first and int-first ternary branch combinations, numeric literals 0/1 and series condition time>0. Native v4/v5 accepted and v6 refused; other numbers/na/qualifiers and false-condition execution still need qualification."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-int-ternary-v5-oracle-24.pine",
+    "source_sha256": "950bb9c76ab47f296ff45494f8da2d60610dd4eba6bf5f8b4a36cfbadc3ccf81",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-int-ternary-v5-oracle-24.png",
+    "screenshot_sha256": "0029f81d2b361c1e282e8014b829aeaa17105b603959043292f18ac36ba56d49",
+    "pine_version": 5,
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1,
+      0,
+      1,
+      0
+    ],
+    "captured_date": "2026-10-12",
+    "scope": "Saved both bool-first and int-first ternary branch combinations, numeric literals 0/1 and series condition time>0. Native v4/v5 accepted and v6 refused; other numbers/na/qualifiers and false-condition execution still need qualification."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-int-ternary-v6-negative-24.pine",
+    "source_sha256": "5f0fba8af13cacb6aa7c31e4dde6301bb2102ce570ee25b162278b283568c21d",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-int-ternary-v6-negative-24.png",
+    "screenshot_sha256": "53f062a0435abad6700c150e0c1a25f8e63db918d04f544e62a8a1367ff0e11d",
+    "pine_version": 6,
+    "native_status": "analysis_rejected",
+    "native_values": null,
+    "captured_date": "2026-10-12",
+    "scope": "Saved both bool-first and int-first ternary branch combinations, numeric literals 0/1 and series condition time>0. Native v4/v5 accepted and v6 refused; other numbers/na/qualifiers and false-condition execution still need qualification."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-numeric-ternary-expanded-v4-oracle-24.pine",
+    "source_sha256": "81bded51644229d6283806367c0dbcd859cc328d00d338c64e41f972e0f4f222",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-numeric-ternary-expanded-v4-oracle-24.png",
+    "screenshot_sha256": "03fd2d0bdc119673b017d17140351f9684fb5ccebe1307d51120e15c60c3f82c",
+    "pine_version": 4,
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    "captured_date": "2026-10-12",
+    "scope": "Both condition directions and bool/numeric branch orders, nonzero signed integers and fractions, bool/na condition rendering and scalar UDF returns; all on positive-timestamp chart bars. No full original strategy ledger parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-numeric-ternary-expanded-v5-oracle-24.pine",
+    "source_sha256": "ae605751b7b12ff46ab0e74c14251ab950768170c50f27f69ed737ccd3c2f643",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-numeric-ternary-expanded-v5-oracle-24.png",
+    "screenshot_sha256": "dea67c624440efe42d71e51109f10aaa14a40f50fad7f4c6b05a953b371baf9e",
+    "pine_version": 5,
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    "captured_date": "2026-10-12",
+    "scope": "Both condition directions and bool/numeric branch orders, nonzero signed integers and fractions, bool/na condition rendering and scalar UDF returns; all on positive-timestamp chart bars. No full original strategy ledger parity."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-numeric-ternary-type-negative-v5-24.pine",
+    "source_sha256": "3fb28839a58f513ef070454a7fe2b0a9fb24740f15faccdb1d084b49d7c08607",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\bool-numeric-ternary-type-negative-v5-24.png",
+    "screenshot_sha256": "46bbc3bc77ed699496d148d98e89bf7d8ceae302798601a45dde280447cbb563",
+    "pine_version": 5,
+    "native_status": "analysis_rejected",
+    "native_values": null,
+    "captured_date": "2026-10-12",
+    "scope": "Native rejects numeric addition to series bool mixed ternary result."
+  }
+]

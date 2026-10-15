@@ -146,6 +146,18 @@ fn implicit_na_result_expr(analyzer: &Analyzer) -> HirExpr {
 }
 
 impl Analyzer {
+    pub(super) fn implicit_conditional_default(&self, result_kind: ValueKind) -> HirExpr {
+        if self.legacy.dialect().version() >= 6 && result_kind == ValueKind::Bool {
+            HirExpr {
+                pine_type: PineType::new(Qualifier::Const, ValueKind::Bool),
+                series_id: None,
+                kind: HirExprKind::Literal(HirLiteral::Bool(false)),
+            }
+        } else {
+            implicit_na_result_expr(self)
+        }
+    }
+
     pub(super) fn lower_loop_tail(
         &mut self,
         last: &Stmt,
@@ -154,7 +166,10 @@ impl Analyzer {
     ) -> Option<HirExpr> {
         match &last.kind {
             StmtKind::Expr(expr) => self.lower_expr_with_params(expr, param_exprs, param_types),
-            StmtKind::If { .. } | StmtKind::FieldReassign { .. } => self.lower_function_body(
+            StmtKind::If { .. }
+            | StmtKind::Decl { .. }
+            | StmtKind::Reassign { .. }
+            | StmtKind::FieldReassign { .. } => self.lower_function_body(
                 &FunctionBody::Block(vec![last.clone()]),
                 param_exprs,
                 param_types,
@@ -374,7 +389,10 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         let (last, prefix) = branch.split_last()?;
-        if matches!(last.kind, StmtKind::FieldReassign { .. }) {
+        if matches!(
+            last.kind,
+            StmtKind::Decl { .. } | StmtKind::Reassign { .. } | StmtKind::FieldReassign { .. }
+        ) {
             return self.lower_function_branch_return(branch, param_exprs, param_types);
         }
         let statements = prefix
@@ -388,7 +406,7 @@ impl Analyzer {
                 condition,
                 then_branch,
                 else_branch,
-            } if !else_branch.is_empty() => {
+            } => {
                 expr = if_statement_expr(condition, then_branch, else_branch, last.span);
                 &expr
             }
@@ -481,7 +499,9 @@ impl Analyzer {
         let condition_expr = self.lower_expr_with_params(condition, param_exprs, param_types);
         let then_expr = self.lower_function_branch_return(then_branch, param_exprs, param_types);
         let else_expr = if else_branch.is_empty() {
-            Some(implicit_na_result_expr(self))
+            then_expr
+                .as_ref()
+                .map(|expr| self.implicit_conditional_default(expr.pine_type.kind))
         } else {
             self.lower_function_branch_return(else_branch, param_exprs, param_types)
         };

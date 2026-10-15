@@ -1,0 +1,26 @@
+{
+  "scope": "Native v3/v4/v5/v6 local UDF input calls compile and execute; v5 two written invocations expose only one length and one source input in settings; no save/publish/trades. v4 initial probe used illegal str.tostring, corrected to tostring before success.",
+  "versions": [
+    3,
+    4,
+    5,
+    6
+  ],
+  "shared_declaration_settings_items": 2,
+  "cleanup": {
+    "own_indicator_absent": true,
+    "original_strategy_present": true,
+    "monthly_chart_preserved": true
+  },
+  "files": {
+    "udf-inputs-v3-editor.png": "c3f73532b69239efb6d002191c60088aebcb6c863785ca2861803645a8d1dda5",
+    "udf-inputs-v3.pine": "50640b693a314aa4068a04269ac0eb68f0621846e5ab35eb37c175b400f63b07",
+    "udf-inputs-v4-editor.png": "b3dd34395b849bcb6109ef279abca328020f666a64797725656495edae2f352c",
+    "udf-inputs-v4.pine": "c99394e6e6cf15c8dc32cb675c32834ad16e15b7c29ca4316d0b3b115dea5162",
+    "udf-inputs-v5-settings.png": "32b653b1fde7a645a878e2f56619ba9d8147348689046e7b027ac7f2fca0ce88",
+    "udf-inputs-v5.pine": "798e8226a13c98fbebda921769a5a4e0b1937d74c10062920981023fff2a3b8c",
+    "udf-inputs-v5.png": "b77e6322178b1132680e2b31542d810c7e652adfcb1a227ac2ae3b80de462f21",
+    "udf-inputs-v6-editor.png": "ff858be38b0f2cc3214be518e81f24bdfcdfa408ef12804ccabf3f2b606486c3",
+    "udf-inputs-v6.pine": "699d7d80d1a1a8c14263ab52a523314cfdfa6f11d7bd51bbc4cdda4ded8d924b"
+  }
+}

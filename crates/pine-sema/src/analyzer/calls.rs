@@ -408,19 +408,8 @@ impl Analyzer {
     ) -> Option<PineType> {
         self.check_feature_name(name, callee_span);
         let signature = self.select_fill_signature(signature, args, arg_types);
-        // In Pine v4 and earlier, the second positional strategy.close
-        // argument is `when`. The modern signature uses that slot for `qty`.
-        let legacy_close_args = if name == "strategy.close"
-            && self.legacy.dialect() <= crate::PineDialect::V4
-            && args.get(1).is_some_and(|arg| arg.name.is_none())
-        {
-            let mut normalized = args.to_vec();
-            normalized[1].name = Some("when".to_owned());
-            Some(normalized)
-        } else {
-            None
-        };
-        let args = legacy_close_args.as_deref().unwrap_or(args);
+        let source_args = self.normalize_strategy_source_args(name, args);
+        let args = source_args.as_deref().unwrap_or(args);
         self.validate_script_declaration_call(name, callee_span, args);
         self.validate_strategy_order_call(name, callee_span, args);
         self.validate_strategy_value_function_call(name, callee_span);
@@ -1210,10 +1199,16 @@ impl Analyzer {
 
             // In legacy Pine, strategy.long/short were boolean direction values.
             // Public v4 strategies also pass true/false directly to this slot.
-            if signature.name == "strategy.entry"
+            if matches!(signature.name, "strategy.entry" | "strategy.order")
                 && param.name == "direction"
                 && self.legacy.dialect().version() <= 4
-                && arg_type.kind == ValueKind::Bool
+                && (arg_type.kind == ValueKind::Bool
+                    || (matches!(arg_type.kind, ValueKind::Int | ValueKind::Float)
+                        && self.legacy_numeric_bool_arg(
+                            &arg.value,
+                            arg_type,
+                            Accepts::BoolCompatible,
+                        )))
             {
                 continue;
             }

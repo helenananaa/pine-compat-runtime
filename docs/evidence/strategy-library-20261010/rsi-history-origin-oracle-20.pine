@@ -1,0 +1,5 @@
+//@version=6
+indicator("RSI history origin oracle 20",precision=0)
+plot(ta.valuewhen(bar_index==0,time,0),title="firstBarTime")
+plot(ta.valuewhen(bar_index==995,time,0),title="nativeErrorBarTime")
+plot(ta.valuewhen(time==timestamp("UTC",2020,5,8,0,0),bar_index,0),title="May8BarIndex")

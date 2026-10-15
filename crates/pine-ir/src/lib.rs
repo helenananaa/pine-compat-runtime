@@ -50,6 +50,9 @@ pub struct DrawingSettings {
 #[derive(Debug, Clone, PartialEq)]
 pub struct HirProgram {
     pub language_version: Option<u16>,
+    /// Whether requests can evaluate other requests in their requested context.
+    /// Lowered from the declaration, including version-specific defaults.
+    pub dynamic_requests: bool,
     pub script_mode: ScriptMode,
     /// Symbol bound to Pine's host-provided `timenow` execution clock, when used.
     pub timenow_symbol: Option<SymbolId>,

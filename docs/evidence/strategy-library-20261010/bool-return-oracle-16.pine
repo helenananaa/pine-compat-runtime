@@ -1,0 +1,10 @@
+//@version=6
+indicator("Bool dynamic oracle 16",precision=0)
+a=if bar_index<0
+    true
+f(c)=>
+    if c
+        true
+plot(a?1:0,title="Expression bool fallback")
+plot(f(bar_index<0)?1:0,title="Function bool fallback")
+plot(a==false?1:0,title="Expression equals false")

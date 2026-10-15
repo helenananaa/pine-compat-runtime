@@ -11,10 +11,7 @@ fn modern_merge_options_and_calendar_relation_are_reported_without_execution() {
     assert_eq!(report.schema_version, 2);
     assert_eq!(report.requests[0].gaps, "gapsOn");
     assert_eq!(report.requests[0].lookahead, "lookaheadOn");
-    assert_eq!(
-        report.requests[0].timeframe_relation,
-        "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
-    );
+    assert_eq!(report.requests[0].timeframe_relation, "sameOrLowerOrHigher");
     assert_eq!(report.requests[1].gaps, "gapsOff");
     assert_eq!(report.requests[1].lookahead, "lookaheadOff");
 }
@@ -203,23 +200,20 @@ fn security_timeframe_inventory_matches_executable_modern_and_legacy_relations()
             "request.security"
         };
         // A three-minute request is lower than a five-minute chart without
-        // being an integer divisor. Six minutes is a forbidden higher ratio;
-        // calendar months retain their explicit boundary-based exception.
+        // being an integer divisor. Higher requests also use actual request
+        // boundaries, including non-integral ratios and calendar months.
         for (timeframe, accepted) in [
             ("3", true),
             ("5", true),
             ("10", true),
-            ("6", false),
+            ("6", true),
             ("M", true),
         ] {
             let hir = program(&format!(
                 "//@version={version}\n{declaration}(\"relation\")\nplot({function}(\"REMOTE\", \"{timeframe}\", close))\n"
             ));
             let report = host_requirements(&hir);
-            assert_eq!(
-                report.requests[0].timeframe_relation,
-                "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
-            );
+            assert_eq!(report.requests[0].timeframe_relation, "sameOrLowerOrHigher");
             let mut provider = InMemoryRequestDataProvider::new();
             provider
                 .insert(

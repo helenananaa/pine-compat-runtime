@@ -1,0 +1,9 @@
+//@version=2
+study("Codex numeric index oracle",overlay=true)
+n=input(8,"Period",minval=1)
+lag=sqrt(n)
+plot(lag,"sqrt offset")
+plot(close[lag],"implicit sqrt index")
+plot(close[2],"two bars control")
+plot(close[2.8],"direct float index")
+plot(close[-0.8],"negative fractional index")

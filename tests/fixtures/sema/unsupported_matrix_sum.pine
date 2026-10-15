@@ -1,5 +1,5 @@
 //@version=6
 indicator("Unsupported matrix sum")
 
-total = matrix.sum(na)
+total = matrix.sum(na, 1)
 plot(total)

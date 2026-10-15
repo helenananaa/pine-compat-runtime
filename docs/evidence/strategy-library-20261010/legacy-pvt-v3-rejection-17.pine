@@ -1,0 +1,9 @@
+//@version=3
+study("Legacy local namespace oracle 17")
+sma=7.0
+f(sma)=>
+    ema=11.0
+    sma(close,2)+ema(close,2)+sma+ema
+plot(pvt,title="pvt")
+plot(f(13),title="parameter and local")
+plot(sma,title="global variable")

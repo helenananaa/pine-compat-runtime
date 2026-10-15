@@ -1,0 +1,22 @@
+//@version=5
+indicator("Codex uneven 10m 11m oracle", overlay=true, dynamic_requests=false)
+a=request.security(syminfo.tickerid,"11",time)
+b=request.security(syminfo.tickerid,"11",time,lookahead=barmerge.lookahead_on)
+inner=request.security(syminfo.tickerid,timeframe.period,time)
+c=request.security(syminfo.tickerid,"11",inner)
+d=request.security(syminfo.tickerid,"11",inner,lookahead=barmerge.lookahead_on)
+var t=table.new(position.top_right,6,7,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,"i",text_color=color.white)
+    table.cell(t,1,0,"chart UTC",text_color=color.white)
+    table.cell(t,2,0,"11 off",text_color=color.white)
+    table.cell(t,3,0,"11 on",text_color=color.white)
+    table.cell(t,4,0,"static off",text_color=color.white)
+    table.cell(t,5,0,"static on",text_color=color.white)
+    for i=0 to 5
+        table.cell(t,0,i+1,str.tostring(i),text_color=color.white)
+        table.cell(t,1,i+1,str.format_time(time[i],"MM-dd HH:mm","UTC"),text_color=color.white)
+        table.cell(t,2,i+1,str.format_time(a[i],"MM-dd HH:mm","UTC"),text_color=color.white)
+        table.cell(t,3,i+1,str.format_time(b[i],"MM-dd HH:mm","UTC"),text_color=color.white)
+        table.cell(t,4,i+1,str.format_time(c[i],"MM-dd HH:mm","UTC"),text_color=color.white)
+        table.cell(t,5,i+1,str.format_time(d[i],"MM-dd HH:mm","UTC"),text_color=color.white)

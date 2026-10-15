@@ -1,0 +1,14 @@
+//@version=6
+indicator("Virtual intraday oracle 20",overlay=false)
+f() =>
+    [hour*100+minute,time("60","1500-1600","America/New_York")-time,time_close("60","1500-1600","America/New_York")-time,time("30","1515-1600","America/New_York")-time,time_close("30","1515-1600","America/New_York")-time,time("60","1500-1600","America/New_York",timeframe_bars_back=1)-time,time("30","1500-1600","America/New_York",timeframe_bars_back=1)-time,time_close("30","1500-1600","America/New_York",timeframe_bars_back=-1)-time,time("60","0900-1000,1500-1600","America/New_York",timeframe_bars_back=1)-time]
+[a,b,c,d,e,f1,g,h,i]=request.security("NASDAQ:AAPL","60",f())
+plot(a,title="localTime")
+plot(b,title="hourOpen")
+plot(c,title="hourClose")
+plot(d,title="halfHourOpen")
+plot(e,title="halfHourClose")
+plot(f1,title="hourBack1")
+plot(g,title="halfHourBack1")
+plot(h,title="halfHourFuture1Close")
+plot(i,title="splitSessionBack1")

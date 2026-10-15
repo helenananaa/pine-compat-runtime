@@ -61,8 +61,8 @@ map.put(mapping,index,close/2.0)
 if volume<0
     runtime.error("directory branch rollback")
 plot(array.sum(values))
-plot(matrix.sum(cells))
-plot(matrix.sum(previous))
+plot(matrix.avg(cells) * 10000)
+plot(matrix.avg(previous) * 10000)
 plot(array.sum(map.values(mapping)))
 plot(array.get(map.keys(mapping),9999)*1.0)
 plot(array.get(values,4095)+array.get(values,4096)+array.get(values,8191)+array.get(values,8192))
@@ -85,14 +85,14 @@ impl Model {
     }
     fn apply(&mut self, close: f64) -> [f64; 6] {
         let index = close as usize;
-        let previous = self.cells.iter().sum();
+        let previous = self.cells.iter().sum::<f64>() / 10000.0 * 10000.0;
         self.values[index] = close / 4.0;
         self.cells[index] = close / 8.0;
         self.mapping.retain(|(key, _)| *key != index);
         self.mapping.push((index, close / 2.0));
         [
             self.values.iter().sum(),
-            self.cells.iter().sum(),
+            self.cells.iter().sum::<f64>() / 10000.0 * 10000.0,
             previous,
             self.mapping.iter().map(|(_, value)| value).sum(),
             index as f64,

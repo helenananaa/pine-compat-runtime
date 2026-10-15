@@ -1,0 +1,8 @@
+//@version=6
+indicator("Stock clock oracle 16",precision=0)
+[a,b,c,d,e,f]=request.security("NASDAQ:AAPL","D",[time,time_close,time_close("1"),time_close("1","0930-1600","America/New_York"),time("1"),time_close("1",timeframe_bars_back=1)])
+plot(b-a,title="AAPL chart duration")
+plot(c-a,title="AAPL lower close")
+plot(d-a,title="AAPL explicit session close")
+plot(e-a,title="AAPL lower open")
+plot(f-a,title="AAPL prior requested close")

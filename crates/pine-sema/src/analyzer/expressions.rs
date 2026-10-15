@@ -163,6 +163,24 @@ impl Analyzer {
                 let else_type = self.analyze_expr(else_expr);
                 match (condition_type, then_type, else_type) {
                     (Some(condition_type), Some(then_type), Some(else_type)) => {
+                        // The old ternary operator converts a numeric branch to
+                        // bool when its other branch is bool. Keep this separate
+                        // from block/tuple return merging and modern v6 rules.
+                        let (then_type, else_type) = if self
+                            .ternary_common_kind(then_type.kind, else_type.kind)
+                            == Some(ValueKind::Bool)
+                        {
+                            let branch_type = |ty: PineType| {
+                                if matches!(ty.kind, ValueKind::Int | ValueKind::Float) {
+                                    PineType::new(ty.qualifier, ValueKind::Bool)
+                                } else {
+                                    ty
+                                }
+                            };
+                            (branch_type(then_type), branch_type(else_type))
+                        } else {
+                            (then_type, else_type)
+                        };
                         let pine_type = self.merge_branch_types(
                             condition_type,
                             then_type,
@@ -344,6 +362,15 @@ impl Analyzer {
         self.assignment_qualifier_context.pop();
         self.block_depth -= 1;
 
+        let else_type = if else_branch.is_empty()
+            && self.legacy.dialect().version() >= 6
+            && then_type.is_some_and(|ty| ty.kind == ValueKind::Bool)
+        {
+            Some(PineType::new(Qualifier::Const, ValueKind::Bool))
+        } else {
+            else_type
+        };
+
         match (condition_type, then_type, else_type) {
             (Some(condition_type), Some(then_type), Some(else_type)) => {
                 let pine_type = self.merge_branch_types(
@@ -401,6 +428,9 @@ impl Analyzer {
         allow_void: bool,
     ) -> Option<PineType> {
         let Some((last, prefix)) = branch.split_last() else {
+            if keyword == "if" {
+                return Some(PineType::new(Qualifier::Const, ValueKind::Na));
+            }
             self.diagnostics.push(Diagnostic::error(
                 "E_BRANCH_RETURN",
                 format!("{keyword} expression branches must end with a value-producing expression"),
@@ -414,7 +444,7 @@ impl Analyzer {
             self.analyze_stmt(statement);
         }
         let pine_type = match &last.kind {
-            StmtKind::FieldReassign { .. } => {
+            StmtKind::Decl { .. } | StmtKind::Reassign { .. } | StmtKind::FieldReassign { .. } => {
                 self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span)
             }
             StmtKind::If { .. } if allow_void => {
@@ -445,9 +475,7 @@ impl Analyzer {
                 condition,
                 then_branch,
                 else_branch,
-            } if !else_branch.is_empty() => {
-                self.analyze_if_expr(condition, then_branch, else_branch, last.span)
-            }
+            } => self.analyze_if_expr(condition, then_branch, else_branch, last.span),
             StmtKind::For {
                 counter,
                 from,
@@ -504,7 +532,7 @@ impl Analyzer {
         allow_void: bool,
     ) -> Option<PineType> {
         match &last.kind {
-            StmtKind::FieldReassign { .. } => {
+            StmtKind::Decl { .. } | StmtKind::Reassign { .. } | StmtKind::FieldReassign { .. } => {
                 self.analyze_function_body(&FunctionBody::Block(vec![last.clone()]), last.span)
             }
             StmtKind::If { .. } => {
@@ -981,13 +1009,13 @@ impl Analyzer {
         let to_type = self.analyze_expr(to);
         let step_type = step.and_then(|step| self.analyze_expr(step));
         if let Some(from_type) = from_type {
-            self.expect_int(from_type, from.span);
+            self.expect_numeric_loop_bound(from_type, from.span);
         }
         if let Some(to_type) = to_type {
-            self.expect_int(to_type, to.span);
+            self.expect_numeric_loop_bound(to_type, to.span);
         }
         if let Some((step, step_type)) = step.zip(step_type) {
-            self.expect_int(step_type, step.span);
+            self.expect_loop_step_type(from_type, step_type, step.span);
             self.expect_non_zero_loop_step(step);
         }
 
@@ -1001,7 +1029,10 @@ impl Analyzer {
             .flatten()
             .map(|pine_type| pine_type.qualifier)
             .fold(Qualifier::Const, strongest_qualifier);
-        let counter_type = PineType::new(loop_qualifier, ValueKind::Int);
+        let counter_type = PineType::new(
+            loop_qualifier,
+            from_type.map_or(ValueKind::Int, |value| value.kind),
+        );
         self.block_depth += 1;
         self.loop_depth += 1;
         self.assignment_qualifier_context.push(loop_qualifier);
@@ -1150,7 +1181,10 @@ impl Analyzer {
                 self.analyze_stmt(statement);
             }
             match &last.kind {
-                StmtKind::If { .. } | StmtKind::FieldReassign { .. } => {
+                StmtKind::If { .. }
+                | StmtKind::Decl { .. }
+                | StmtKind::Reassign { .. }
+                | StmtKind::FieldReassign { .. } => {
                     self.analyze_loop_expr_body_return(last, "for...in", allow_void)
                 }
                 StmtKind::Expr(expr) => {

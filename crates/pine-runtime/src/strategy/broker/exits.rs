@@ -23,6 +23,8 @@ impl BrokerState {
             placement.from_entry,
             PendingExitTrigger::Trailing(PendingTrailingExit {
                 spec: PendingTrailingSpec {
+                    fixed_stop: None,
+                    fixed_limit: None,
                     activation: placement.activation,
                     offset_price_distance: placement.offset_price_distance,
                 },

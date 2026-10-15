@@ -597,11 +597,11 @@ fn plotcandle_display_accepts_input_selection() {
 }
 
 #[test]
-fn rejects_alert_placeholders() {
+fn rejects_unsupported_alertcondition_message_placeholders() {
     let analysis = analyze(
         r#"alert("{{close}}")
 alertcondition(true, "{{close}}", "Title placeholder")
-alertcondition(true, "Title", "{{timenow}}")
+alertcondition(true, "Title", "{{unknown}}")
 "#,
     );
 
@@ -616,12 +616,12 @@ alertcondition(true, "Title", "{{timenow}}")
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.message.contains("alert placeholder `{{close}}`"))
+            .all(|diagnostic| !diagnostic.message.contains("alert placeholder `{{close}}`"))
     );
     assert!(analysis.diagnostics.iter().any(|diagnostic| {
         diagnostic
             .message
-            .contains("alert placeholder `{{timenow}}`")
+            .contains("alert placeholder `{{unknown}}`")
     }));
     assert!(analysis.hir.is_none());
 }
@@ -6114,4 +6114,44 @@ fn statically_selected_switch_ignores_unreachable_tail_qualifiers() {
             "{name}"
         );
     }
+}
+
+#[test]
+fn udf_inputs_keep_exported_library_and_metadata_boundaries() {
+    let imported = analyze_with_library(
+        "//@version=5\nindicator(\"root\")\nimport user/lib/1 as lib\nplot(lib.f())\n",
+        "//@version=5\nlibrary(\"Inputs\")\nexport f()=>input.int(2,\"Forbidden library input\")\n",
+    );
+    assert!(imported.hir.is_none());
+    assert!(
+        imported
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_IMPORT_FUNCTION_SIDE_EFFECT"),
+        "{:?}",
+        imported.diagnostics
+    );
+    let dynamic = analyze(
+        "//@version=5\nindicator(\"bad metadata\")\nf()=>input.int(2,title=str.tostring(close))\nplot(f())\n",
+    );
+    assert!(dynamic.hir.is_none());
+}
+
+#[test]
+fn legacy_table_udf_native_probe_is_accepted_with_version_boundary() {
+    let source = include_str!(
+        "../../../../docs/evidence/strategy-library-20261010/legacy-table-udf-v4.pine"
+    );
+    let analysis = crate::analyze_source(&SourceFile::new("native-table.pine", source));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    let older = crate::analyze_source(&SourceFile::new(
+        "v3-table.pine",
+        source.replace("//@version=4", "//@version=3"),
+    ));
+    assert!(older.hir.is_none());
 }

@@ -70,9 +70,15 @@ fn explicit_simple_accepts_const_input_and_simple_and_rejects_series() {
 }
 
 #[test]
-fn direct_global_input_keeps_inner_effects_and_function_bodies_rejected() {
+fn static_input_in_function_arguments_keeps_inner_effects_rejected() {
+    let analysis = analyze(6, "f(simple int n) => n\ng() => f(input.int(3))\nplot(g())");
+    assert!(analysis.hir.is_some(), "{:?}", analysis.diagnostics);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
     for body in [
-        "f(simple int n) => n\ng() => f(input.int(3))\nplot(g())",
         "f(simple int n) => n\nplot(f(input.int(3, title=str.tostring(plot(close)))))",
         "f(float n) => n\nplot(f(plot(close)))",
     ] {

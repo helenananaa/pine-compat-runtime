@@ -3330,6 +3330,20 @@ fn quantity_precision_fixture_matches_cli_contract() {
 }
 
 #[test]
+fn requested_symbol_metadata_reaches_wasm_execution() {
+    let output = run_script_csv_with_request_bars_internal(
+        "//@version=6\nindicator(\"metadata\")\nplot(request.security(\"B\",\"1\",syminfo.mintick))",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n60000,1,1,1,1,1\n",
+        r#"{"$chart":{"symbol":"A","timeframe":"1","minMove":1,"priceScale":10},"$symbolMetadata":{"B":{"minMove":1,"priceScale":4}},"B:1":[{"time":0,"open":1,"high":1,"low":1,"close":1,"volume":1},{"time":60000,"open":1,"high":1,"low":1,"close":1,"volume":1}]}"#,
+    ).unwrap();
+    let output: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(
+        output["plots"][0]["values"],
+        serde_json::json!([0.25, 0.25])
+    );
+}
+
+#[test]
 fn run_script_csv_returns_sma_nearby_replacement_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/sma_nearby_replacement.pine"),

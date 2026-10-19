@@ -282,6 +282,9 @@ result = pine_compat.run_script(
 )
 ```
 
+Hosts can also freeze price grids, quantity precision and quote currencies for
+requested symbols through [`$symbolMetadata`](docs/SYMBOL_METADATA_INPUT.md).
+
 Pass one `execution_times` value per bar only when the script can reach
 `timenow`; the runtime does not infer it from bar timestamps or wall-clock time.
 

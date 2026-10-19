@@ -286,11 +286,9 @@ impl<'a> HistoricalRuntime<'a> {
                     vec![],
                 );
             };
-            let requested_chart = if key.symbol() == chart.symbol() {
-                chart.clone().with_timeframe(requested_timeframe)
-            } else {
-                ChartContext::new(&symbol, requested_timeframe)
-            };
+            let requested_chart = self
+                .request_environment
+                .requested_chart(&symbol, requested_timeframe);
             let environment = self.request_environment.for_chart(requested_chart);
             let include_forming = self.request_feed.has_forming(&key);
             let values = if let Some(count) = calc_bars_count {
@@ -317,11 +315,9 @@ impl<'a> HistoricalRuntime<'a> {
             return self.lower_tf_arrays_from_samples(scalar_kind, tuple_kinds.as_deref(), samples);
         }
         if !self.request_cache.contains_key(&cache_key) {
-            let requested_chart = if key.symbol() == chart.symbol() {
-                chart.clone().with_timeframe(requested_timeframe)
-            } else {
-                ChartContext::new(&symbol, requested_timeframe)
-            };
+            let requested_chart = self
+                .request_environment
+                .requested_chart(&symbol, requested_timeframe);
             let environment = self.request_environment.for_chart(requested_chart);
             let values = if let Some(count) = calc_bars_count {
                 let bars = self.resolved_request_bars_from(&key, 0)?;
@@ -665,14 +661,9 @@ impl<'a> HistoricalRuntime<'a> {
         let include_forming = self.current_bar_update_kind != BarUpdateKind::Historical
             && self.request_feed.has_forming(&key);
         if include_forming || !self.request_cache.contains_key(&cache_key) {
-            let requested_chart = if key.symbol() == self.request_environment.chart().symbol() {
-                self.request_environment
-                    .chart()
-                    .clone()
-                    .with_timeframe(requested_timeframe.clone())
-            } else {
-                ChartContext::new(key.symbol(), requested_timeframe.clone())
-            };
+            let requested_chart = self
+                .request_environment
+                .requested_chart(key.symbol(), requested_timeframe.clone());
             let requested_environment = self.request_environment.for_chart(requested_chart);
             let requested_values = if let Some(count) = calc_bars_count {
                 let bars = self.resolved_request_bars_from(&key, 0)?;
@@ -755,14 +746,9 @@ impl<'a> HistoricalRuntime<'a> {
                     .to_owned(),
             });
         };
-        let requested_chart = if key.symbol() == self.request_environment.chart().symbol() {
-            self.request_environment
-                .chart()
-                .clone()
-                .with_timeframe(key.timeframe().clone())
-        } else {
-            ChartContext::new(key.symbol(), key.timeframe().clone())
-        };
+        let requested_chart = self
+            .request_environment
+            .requested_chart(key.symbol(), key.timeframe().clone());
         let requested_environment = self.request_environment.for_chart(requested_chart);
         let include_forming = self.request_feed.has_forming(key);
         let values = if let Some(count) = calc_bars_count {

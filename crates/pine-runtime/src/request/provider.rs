@@ -171,6 +171,7 @@ pub struct RequestEnvironment {
     provider: Arc<dyn RequestDataProvider>,
     calendars: Arc<BarCalendarRegistry>,
     currency_rates: Arc<dyn CurrencyRateProvider>,
+    symbol_contexts: Arc<HashMap<String, ChartContext>>,
 }
 
 impl RequestEnvironment {
@@ -183,6 +184,7 @@ impl RequestEnvironment {
             provider,
             calendars: Arc::new(BarCalendarRegistry::default()),
             currency_rates: Arc::new(NoCurrencyRateProvider),
+            symbol_contexts: Arc::new(HashMap::new()),
         }
     }
 
@@ -194,6 +196,42 @@ impl RequestEnvironment {
     #[must_use]
     pub fn main_timeframe(&self) -> &RequestTimeframe {
         &self.main_timeframe
+    }
+
+    /// Freeze exact symbol metadata. Each entry's timeframe is ignored; the
+    /// active request selects it. The root chart keeps its own supplied grid.
+    pub fn with_symbol_contexts(
+        mut self,
+        contexts: impl IntoIterator<Item = ChartContext>,
+    ) -> Result<Self, String> {
+        let mut entries = HashMap::new();
+        for context in contexts {
+            let symbol = context.symbol().to_owned();
+            if symbol.trim().is_empty() || symbol.trim() != symbol {
+                return Err("symbol metadata requires exact nonempty symbol keys".to_owned());
+            }
+            if entries.insert(symbol.clone(), context).is_some() {
+                return Err(format!("duplicate metadata for symbol `{symbol}`"));
+            }
+        }
+        entries.insert(self.chart.symbol().to_owned(), self.chart.clone());
+        self.symbol_contexts = Arc::new(entries);
+        Ok(self)
+    }
+
+    pub(crate) fn requested_chart(
+        &self,
+        symbol: &str,
+        timeframe: RequestTimeframe,
+    ) -> ChartContext {
+        if symbol == self.chart.symbol() {
+            self.chart.clone().with_timeframe(timeframe)
+        } else {
+            self.symbol_contexts.get(symbol).map_or_else(
+                || ChartContext::new(symbol, timeframe.clone()),
+                |chart| chart.clone().with_timeframe(timeframe.clone()),
+            )
+        }
     }
 
     #[must_use]
@@ -307,12 +345,19 @@ impl RequestEnvironment {
 
     #[must_use]
     pub fn for_chart(&self, chart: ChartContext) -> Self {
+        let mut symbol_contexts = Arc::clone(&self.symbol_contexts);
+        // Remember the caller context for nested requests back to that symbol.
+        if !symbol_contexts.contains_key(self.chart.symbol()) {
+            Arc::make_mut(&mut symbol_contexts)
+                .insert(self.chart.symbol().to_owned(), self.chart.clone());
+        }
         Self {
             chart,
             main_timeframe: self.main_timeframe.clone(),
             provider: Arc::clone(&self.provider),
             calendars: Arc::clone(&self.calendars),
             currency_rates: Arc::clone(&self.currency_rates),
+            symbol_contexts,
         }
     }
 }
@@ -327,6 +372,7 @@ impl Default for RequestEnvironment {
             provider: Arc::new(NoRequestDataProvider),
             calendars: Arc::new(BarCalendarRegistry::default()),
             currency_rates: Arc::new(NoCurrencyRateProvider),
+            symbol_contexts: Arc::new(HashMap::new()),
         }
     }
 }

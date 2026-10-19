@@ -16,6 +16,7 @@ fn modern_requests_admit_pure_scalar_string_transformations() {
         "str.length(str.replace(str.tostring(close), \".\", \"_\"))",
         "str.tonumber(str.replace_all(str.tostring(close), \".\", \"\"))",
         "str.tonumber(str.tostring(close))",
+        "str.tonumber(str.tostring(request.security(\"C\", \"5\", close)))",
         "str.length(str.format(\"value={0}\", close))",
         r#"str.length(str.match(str.tostring(close), close % 2 == 0 ? "[0-9]+" : "[0-9]+\\.[0-9]+"))"#,
         "str.length(str.format_time(time, \"yyyy-MM-dd\", \"UTC\"))",
@@ -57,7 +58,6 @@ fn string_results_do_not_admit_collection_arguments_or_mutable_captures() {
         "plot(request.security(\"B\", \"5\", str.length(str.format(\"{0}\", str.split(str.tostring(close), \".\")))))",
         "type Box\n    float value\nbox = Box.new(close)\nplot(request.security(\"B\", \"5\", str.length(str.tostring(box))))",
         "drawing = line.new(bar_index, close, bar_index + 1, close)\nplot(request.security(\"B\", \"5\", str.length(str.format(\"{0}\", drawing))))",
-        "plot(request.security(\"B\", \"5\", str.tonumber(str.tostring(request.security(\"C\", \"5\", close)))))",
     ] {
         let source = format!("//@version=6\nindicator(\"capture guard\")\n{body}\n");
         let analysis = analyze(&source);

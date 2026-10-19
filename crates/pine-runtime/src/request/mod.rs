@@ -5,6 +5,7 @@ mod currency;
 mod currency_input;
 mod feed;
 mod provider;
+mod symbol_metadata;
 mod timeframe;
 
 pub use bars::validate_requested_bars;
@@ -24,4 +25,5 @@ pub use provider::{
     InMemoryRequestDataProvider, NoRequestDataProvider, RequestDataError, RequestDataProvider,
     RequestEnvironment, RequestKey,
 };
+pub use symbol_metadata::{SYMBOL_METADATA_SCHEMA_VERSION, symbol_contexts_from_json};
 pub use timeframe::{RequestTimeframe, RequestTimeframeError};

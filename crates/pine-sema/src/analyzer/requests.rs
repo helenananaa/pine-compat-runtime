@@ -1185,6 +1185,12 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
     matches!(
         name,
         "syminfo.tickerid"
+            | "syminfo.mintick"
+            | "syminfo.minmove"
+            | "syminfo.pricescale"
+            | "syminfo.mincontract"
+            | "syminfo.pointvalue"
+            | "syminfo.currency"
             | "timeframe.period"
             | "timeframe.multiplier"
             | "timeframe.isticks"

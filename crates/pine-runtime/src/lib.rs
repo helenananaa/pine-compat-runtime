@@ -79,7 +79,8 @@ pub use request::{
     CurrencyRateFrame, CurrencyRateProvider, InMemoryCurrencyRateProvider,
     InMemoryRequestDataProvider, NoCurrencyRateProvider, NoRequestDataProvider, RequestDataError,
     RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
-    bar_calendars_from_json, currency_rates_from_json, validate_requested_bars,
+    SYMBOL_METADATA_SCHEMA_VERSION, bar_calendars_from_json, currency_rates_from_json,
+    symbol_contexts_from_json, validate_requested_bars,
 };
 pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::HistoricalDataset;

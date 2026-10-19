@@ -22,8 +22,16 @@ pub(super) fn parse_request_environment(
     let mut streams = Vec::with_capacity(dict.len());
     let mut calendars = None;
     let mut currency_rates = None;
+    let mut symbol_contexts = Vec::new();
     for (key, value) in dict {
         let key: String = key.extract()?;
+        if key == "$symbolMetadata" {
+            let json = PyModule::import(value.py(), "json")?;
+            let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
+            symbol_contexts =
+                pine_runtime::symbol_contexts_from_json(&raw).map_err(PyValueError::new_err)?;
+            continue;
+        }
         if key == "$currencyRates" {
             let json = PyModule::import(value.py(), "json")?;
             let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
@@ -51,7 +59,9 @@ pub(super) fn parse_request_environment(
     }
     let provider = InMemoryRequestDataProvider::from_streams(streams)
         .map_err(|err| PyValueError::new_err(err.to_string()))?;
-    let environment = RequestEnvironment::new(chart, std::sync::Arc::new(provider));
+    let environment = RequestEnvironment::new(chart, std::sync::Arc::new(provider))
+        .with_symbol_contexts(symbol_contexts)
+        .map_err(PyValueError::new_err)?;
     let environment = match calendars {
         Some(calendars) => environment.with_bar_calendars(std::sync::Arc::new(calendars)),
         None => environment,

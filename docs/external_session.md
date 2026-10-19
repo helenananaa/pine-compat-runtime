@@ -42,6 +42,15 @@ precedence within each pass. Rust callers use
 `append_external_bars_with_execution_times` for the same append behavior or
 `append_bars_with_execution_times` after binding batch account feedback.
 
+`EXTERNAL_CLOSING_TICK_SCHEMA_VERSION == 1` exposes the keyword-only
+`closing_ticks=True` option at session construction and on batch evaluation.
+It permits the `process_orders_on_close` declaration and, with scheduled fill
+passes, repeated confirmed calculations at the same immutable market state.
+The Host still owns scheduling and accounting. See the
+[closing-tick contract](EXTERNAL_BROKER_V1.md#execution-passes-and-requested-data)
+and `python/tests/test_external_closing_ticks.py`. Ordinary sessions default to
+the previous fail-closed behavior.
+
 Streaming dataset endpoints are not retrospective prefix replay. A script using
 `barstate.islast`, `last_bar_index`, visible chart bounds, or initial-window
 selection can produce different historical values when the whole dataset is

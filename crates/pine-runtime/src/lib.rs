@@ -9,7 +9,8 @@ mod builtins;
 mod error;
 mod external;
 pub use external::{
-    EXTERNAL_ORDER_SCHEMA_VERSION, ExternalAccountFrame, ExternalOrderIntent, ExternalPass,
+    EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_SCHEMA_VERSION, ExternalAccountFrame,
+    ExternalExecutionOptions, ExternalOrderIntent, ExternalPass,
 };
 mod host_requirements;
 mod input_metadata;

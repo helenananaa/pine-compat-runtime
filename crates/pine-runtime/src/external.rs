@@ -5,6 +5,12 @@ use pine_ir::{HirCallArg, ScriptMode, StrategyDefaultQuantity};
 use serde::{Deserialize, Serialize};
 
 pub const EXTERNAL_ORDER_SCHEMA_VERSION: u32 = 2;
+pub const EXTERNAL_CLOSING_TICK_SCHEMA_VERSION: u32 = 1;
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ExternalExecutionOptions {
+    pub closing_ticks: bool,
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -30,7 +36,7 @@ pub struct ExternalPass {
     pub request_data: Option<Vec<ExternalRequestStream>>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalRequestStream {
     pub symbol: String,
@@ -73,6 +79,7 @@ pub struct ExternalOrderIntent {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExternalExecution {
+    pub options: ExternalExecutionOptions,
     pub frames: Vec<ExternalAccountFrame>,
     pub passes: Option<Vec<Vec<ExternalPass>>>,
     pub active_pass: Option<(usize, ExternalPass)>,
@@ -150,17 +157,27 @@ impl HistoricalRuntime<'_> {
     }
 
     pub fn with_external_accounts_and_passes(
+        self,
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+    ) -> Result<Self, RuntimeError> {
+        self.with_external_accounts_and_options(frames, passes, ExternalExecutionOptions::default())
+    }
+
+    pub fn with_external_accounts_and_options(
         mut self,
         frames: Vec<ExternalAccountFrame>,
         passes: Option<Vec<Vec<ExternalPass>>>,
+        options: ExternalExecutionOptions,
     ) -> Result<Self, RuntimeError> {
         if self.bars != 0 || self.execution_failed || self.external_execution.is_some() {
             return Err(external_error(
                 "external feedback must be bound to a fresh runtime",
             ));
         }
-        self.validate_external_feedback(&frames, passes.as_deref())?;
+        self.validate_external_feedback(&frames, passes.as_deref(), options)?;
         self.external_execution = Some(ExternalExecution {
+            options,
             frames,
             passes,
             active_pass: None,
@@ -174,12 +191,13 @@ impl HistoricalRuntime<'_> {
         &self,
         frames: &[ExternalAccountFrame],
         passes: Option<&[Vec<ExternalPass>]>,
+        options: ExternalExecutionOptions,
     ) -> Result<(), RuntimeError> {
         let settings = self.program.strategy_settings;
         if self.program.script_mode != ScriptMode::Strategy
             || settings.calc_on_order_fills != passes.is_some()
             || settings.calc_on_every_tick
-            || settings.process_orders_on_close
+            || (settings.process_orders_on_close && !options.closing_ticks)
             || settings.use_bar_magnifier
             || settings.slippage_ticks != 0.0
             || settings.commission.is_some()
@@ -189,7 +207,7 @@ impl HistoricalRuntime<'_> {
             )
         {
             return Err(external_error(
-                "V1 requires a bar-close, next-event, fixed-quantity strategy without native execution settings",
+                "external execution requires fixed quantities, no native costs, and explicit host opt-in for closing ticks",
             ));
         }
         if let Some(groups) = &passes {
@@ -210,7 +228,12 @@ impl HistoricalRuntime<'_> {
                         || bar.time != frame.time
                         || pass.event_time_ms < bar.time
                         || (index > 0
-                            && (group[index - 1].confirmed
+                            && ((group[index - 1].confirmed
+                                && (!settings.process_orders_on_close
+                                    || !pass.confirmed
+                                    || group[index - 1].bar != pass.bar
+                                    || group[index - 1].event_time_ms != pass.event_time_ms
+                                    || group[index - 1].request_data != pass.request_data))
                                 || group[index - 1].event_time_ms > pass.event_time_ms))
                         || [bar.open, bar.high, bar.low, bar.close, bar.volume]
                             .iter()
@@ -318,7 +341,7 @@ impl HistoricalRuntime<'_> {
                 "execute pending feedback before appending new feedback",
             ));
         }
-        self.validate_external_feedback(&frames, passes.as_deref())?;
+        self.validate_external_feedback(&frames, passes.as_deref(), state.options)?;
         let state = self
             .external_execution
             .as_mut()

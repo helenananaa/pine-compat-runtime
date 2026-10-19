@@ -20,6 +20,7 @@ pub(crate) fn run(
     execution_passes: Option<&Bound<'_, PyAny>>,
     request_bars: Option<&Bound<'_, PyAny>>,
     execution_times: Option<&Bound<'_, PyAny>>,
+    closing_ticks: bool,
 ) -> PyResult<Py<PyAny>> {
     let bars = parse_bars(bars)?;
     let execution_times = parse_execution_times(execution_times)?;
@@ -42,7 +43,11 @@ pub(crate) fn run(
             parse_request_environment(request_bars, chart_symbol, chart_timeframe)?,
             parse_input_overrides(input_overrides, &program.hir)?,
         )
-        .with_external_accounts_and_passes(frames, passes)
+        .with_external_accounts_and_options(
+            frames,
+            passes,
+            pine_runtime::ExternalExecutionOptions { closing_ticks },
+        )
         .map_err(|err| PyValueError::new_err(err.message))?;
     py.detach(|| match execution_times.as_deref() {
         Some(times) => runtime.append_bars_with_execution_times(&bars, times),
@@ -84,6 +89,7 @@ impl ExternalSession {
         symbol: Option<&str>,
         timeframe: Option<&str>,
         requests: Option<&Bound<'_, PyAny>>,
+        closing_ticks: bool,
     ) -> PyResult<Self> {
         let runtime =
             HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
@@ -91,13 +97,14 @@ impl ExternalSession {
                 parse_request_environment(requests, symbol, timeframe)?,
                 parse_input_overrides(overrides, &program.hir)?,
             )
-            .with_external_accounts_and_passes(
+            .with_external_accounts_and_options(
                 vec![],
                 if program.hir.strategy_settings.calc_on_order_fills {
                     Some(vec![])
                 } else {
                     None
                 },
+                pine_runtime::ExternalExecutionOptions { closing_ticks },
             )
             .map_err(|err| PyValueError::new_err(err.message))?;
         Ok(Self {

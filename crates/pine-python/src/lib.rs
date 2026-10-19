@@ -70,7 +70,7 @@ impl PyProgram {
         )
     }
     /// Evaluate against host-owned account frames; never run the native broker.
-    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None, execution_times=None))]
+    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None, execution_times=None, *, closing_ticks=false))]
     #[allow(clippy::too_many_arguments)]
     fn run_external(
         &self,
@@ -83,6 +83,7 @@ impl PyProgram {
         execution_passes: Option<&Bound<'_, PyAny>>,
         request_bars: Option<&Bound<'_, PyAny>>,
         execution_times: Option<&Bound<'_, PyAny>>,
+        closing_ticks: bool,
     ) -> PyResult<Py<PyAny>> {
         external::run(
             self,
@@ -95,6 +96,7 @@ impl PyProgram {
             execution_passes,
             request_bars,
             execution_times,
+            closing_ticks,
         )
     }
 
@@ -108,13 +110,14 @@ impl PyProgram {
     }
 
     /// Create a stateful streaming evaluator with host-owned accounts.
-    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None))]
+    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None, *, closing_ticks=false))]
     fn external_session(
         &self,
         input_overrides: Option<&Bound<'_, PyAny>>,
         chart_symbol: Option<&str>,
         chart_timeframe: Option<&str>,
         request_bars: Option<&Bound<'_, PyAny>>,
+        closing_ticks: bool,
     ) -> PyResult<external::ExternalSession> {
         external::ExternalSession::new(
             self,
@@ -122,6 +125,7 @@ impl PyProgram {
             chart_symbol,
             chart_timeframe,
             request_bars,
+            closing_ticks,
         )
     }
 
@@ -297,6 +301,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     module.add("EXTERNAL_CLOCK_SCHEMA_VERSION", 1)?;
+    module.add(
+        "EXTERNAL_CLOSING_TICK_SCHEMA_VERSION",
+        pine_runtime::EXTERNAL_CLOSING_TICK_SCHEMA_VERSION,
+    )?;
     module.add(
         "EXTERNAL_ORDER_SCHEMA_VERSION",
         pine_runtime::EXTERNAL_ORDER_SCHEMA_VERSION,

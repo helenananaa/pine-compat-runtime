@@ -3,6 +3,7 @@ use super::*;
 #[test]
 fn external_order_contract_version_is_exported() {
     assert_eq!(external_order_schema_version(), 2);
+    assert_eq!(external_closing_tick_schema_version(), 1);
 }
 use pine_runtime::PUBLIC_RUNTIME_SCHEMA_VERSION;
 use pine_sema::PUBLIC_ANALYSIS_SCHEMA_VERSION;

@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use pine_runtime::{Bar, ExternalAccountFrame, ExternalPass, HistoricalRuntime, PreparedProgram};
+use pine_runtime::{
+    Bar, ExternalAccountFrame, ExternalExecutionOptions, ExternalPass, HistoricalRuntime,
+    PreparedProgram,
+};
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
@@ -34,6 +37,68 @@ fn account(index: i64) -> ExternalAccountFrame {
         initial_capital: 1_000.0,
         netprofit: index as f64,
         openprofit: 0.0,
+    }
+}
+
+#[test]
+fn closing_ticks_are_explicit_and_allow_only_immutable_confirmed_market_state() {
+    let prepared = program(
+        "//@version=6\nstrategy(\"Close\",process_orders_on_close=true,calc_on_order_fills=true)\nplot(strategy.position_size)\nstrategy.entry(\"L\",strategy.long)",
+    );
+    assert!(
+        HistoricalRuntime::from_prepared(&prepared)
+            .with_external_accounts_and_passes(vec![], Some(vec![]))
+            .is_err()
+    );
+    let first = ExternalPass {
+        account: account(0),
+        bar: bar(0),
+        event_time_ms: 59_999,
+        confirmed: true,
+        request_data: None,
+    };
+    let mut second = first.clone();
+    second.account.position_size = 2.0;
+    second.account.position_avg_price = Some(10.0);
+    let make = || {
+        HistoricalRuntime::from_prepared(&prepared)
+            .with_external_accounts_and_options(
+                vec![],
+                Some(vec![]),
+                ExternalExecutionOptions {
+                    closing_ticks: true,
+                },
+            )
+            .unwrap()
+    };
+    let mut runtime = make();
+    runtime
+        .append_external_bars(
+            &[bar(0)],
+            vec![second.account.clone()],
+            Some(vec![vec![first.clone(), second.clone()]]),
+        )
+        .unwrap();
+    assert_eq!(
+        runtime.result().plots[0].values,
+        vec![pine_runtime::PineValue::Float(2.0)]
+    );
+    for change in 0..3 {
+        let mut changed = second.clone();
+        match change {
+            0 => changed.confirmed = false,
+            1 => changed.event_time_ms += 1,
+            _ => changed.bar.close = 10.5,
+        }
+        assert!(
+            make()
+                .append_external_bars(
+                    &[bar(0)],
+                    vec![changed.account.clone()],
+                    Some(vec![vec![first.clone(), changed]])
+                )
+                .is_err()
+        );
     }
 }
 

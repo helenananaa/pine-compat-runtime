@@ -56,7 +56,7 @@ quantity modes still require additional external-profile work.
 Intents preserve quantities, prices, distances, IDs, direction and bar_index;
 order expressions execute once. The result preserves declared pyramiding.
 The host owns admission, replacements, OCO cancellation, tick conversion,
-entry allocation and fills. Native commission, slippage, magnifier, on-close
+entry allocation and fills. Native commission, slippage, magnifier, default on-close
 execution, every-tick recalculation and non-fixed default quantities reject.
 This is a specific external profile, not native broker parity.
 
@@ -68,6 +68,25 @@ rejects. Each pass contains visible bar, authoritative account, ordered
 `event_time_ms`, and confirmed. A confirmed pass must be last; only the final
 group may end unconfirmed. Bar/account times match their group's chart bar.
 Intents add pass_index.
+
+Development builds exposing `EXTERNAL_CLOSING_TICK_SCHEMA_VERSION == 1` accept
+the keyword-only `closing_ticks=True` on `Program.run_external` and
+`Program.external_session`. Rust callers use
+`with_external_accounts_and_options(..., ExternalExecutionOptions { closing_ticks: true })`.
+Without this explicit opt-in, `process_orders_on_close=true` still rejects.
+The option enables that declaration but never matches orders or invents account
+feedback. With fill recalculation, consecutive confirmed passes are allowed
+only when the declaration is enabled and their bars, timestamps and request
+streams are identical. Accounts may change after Host fills. A confirmed pass
+cannot become unconfirmed or revise market data. The 65-pass limit, rollback,
+`varip` and resource constraints remain in force.
+
+The ordinary rule that a confirmed pass must be last has this explicit closing-
+tick exception. The host owns tick timing, fill prices, liquidity assumptions,
+callbacks, feedback authority and transcript reconstruction. WASM exports
+`externalClosingTickSchemaVersion()` as capability metadata; this does not add
+a WASM external-account execution API. The opt-in is a development contract at
+package version `0.3.2`; identify local builds by source/artifact hashes.
 
 Passes execute against the prior committed evaluation checkpoint. Ordinary var
 state rolls back; varip survives. Only final series values commit per bar.

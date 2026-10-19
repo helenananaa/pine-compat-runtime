@@ -1,4 +1,9 @@
 use super::*;
+
+#[test]
+fn external_order_contract_version_is_exported() {
+    assert_eq!(external_order_schema_version(), 2);
+}
 use pine_runtime::PUBLIC_RUNTIME_SCHEMA_VERSION;
 use pine_sema::PUBLIC_ANALYSIS_SCHEMA_VERSION;
 use std::{collections::HashMap, env, fs, path::PathBuf};

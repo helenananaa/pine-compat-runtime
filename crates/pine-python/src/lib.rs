@@ -298,6 +298,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     module.add("EXTERNAL_CLOCK_SCHEMA_VERSION", 1)?;
     module.add(
+        "EXTERNAL_ORDER_SCHEMA_VERSION",
+        pine_runtime::EXTERNAL_ORDER_SCHEMA_VERSION,
+    )?;
+    module.add(
         "SYMBOL_METADATA_SCHEMA_VERSION",
         pine_runtime::SYMBOL_METADATA_SCHEMA_VERSION,
     )?;

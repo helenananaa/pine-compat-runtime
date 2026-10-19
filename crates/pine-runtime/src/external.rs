@@ -1,9 +1,10 @@
-//! Host-neutral BAR_CLOSE intent evaluation with authoritative account feedback.
-//! V1 deliberately excludes native fills and fill-triggered/realtime recalculation.
+//! Host-neutral order intents with authoritative account and scheduled-pass feedback.
 use crate::builtins::args::call_arg_expr;
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
 use pine_ir::{HirCallArg, ScriptMode, StrategyDefaultQuantity};
 use serde::{Deserialize, Serialize};
+
+pub const EXTERNAL_ORDER_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -64,6 +65,10 @@ pub struct ExternalOrderIntent {
     pub trail_points: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trail_offset: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub oca_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub oca_type: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -404,7 +409,15 @@ impl HistoricalRuntime<'_> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let names: &[&str] = match callee {
-            "strategy.entry" => &["id", "direction", "qty", "limit", "stop"],
+            "strategy.entry" | "strategy.order" => &[
+                "id",
+                "direction",
+                "qty",
+                "limit",
+                "stop",
+                "oca_name",
+                "oca_type",
+            ],
             "strategy.close" => &["id", "qty", "qty_percent"],
             "strategy.exit" => &[
                 "id",
@@ -452,7 +465,8 @@ impl HistoricalRuntime<'_> {
                 _ => return Err(external_error("id must be a nonempty string")),
             }
         };
-        let (direction, qty) = if callee == "strategy.entry" {
+        let opening = matches!(callee, "strategy.entry" | "strategy.order");
+        let (direction, qty) = if opening {
             let value = self.eval_expr(
                 call_arg_expr(args, 1, "direction")
                     .ok_or_else(|| external_error("direction required"))?,
@@ -462,16 +476,26 @@ impl HistoricalRuntime<'_> {
                 PineValue::String(value) if value == "strategy.short" => "short",
                 _ => return Err(external_error("invalid direction")),
             };
-            let qty = match call_arg_expr(args, 2, "qty") {
-                Some(expr) => self
-                    .eval_expr(expr)?
-                    .as_f64()
-                    .ok_or_else(|| external_error("quantity must be numeric"))?,
-                None => match self.program.strategy_settings.default_qty {
+            let explicit_qty = match call_arg_expr(args, 2, "qty") {
+                Some(expr) => {
+                    let value = self.eval_expr(expr)?;
+                    if value.is_na() {
+                        None
+                    } else {
+                        Some(
+                            value
+                                .as_f64()
+                                .ok_or_else(|| external_error("quantity must be numeric"))?,
+                        )
+                    }
+                }
+                None => None,
+            };
+            let qty =
+                explicit_qty.unwrap_or_else(|| match self.program.strategy_settings.default_qty {
                     Some(StrategyDefaultQuantity::Fixed(qty)) => qty,
                     _ => unreachable!(),
-                },
-            };
+                });
             if !qty.is_finite() || qty <= 0.0 {
                 return Err(external_error("quantity must be positive and finite"));
             }
@@ -495,13 +519,13 @@ impl HistoricalRuntime<'_> {
         .enumerate()
         {
             // Entry quantity has already been evaluated exactly once above.
-            if callee == "strategy.entry" && *name == "qty" {
+            if opening && *name == "qty" {
                 continue;
             }
             let position = match (callee, *name) {
-                ("strategy.entry", "limit") => 3,
-                ("strategy.entry", "stop") => 4,
-                ("strategy.entry", "qty") => 2,
+                ("strategy.entry" | "strategy.order", "limit") => 3,
+                ("strategy.entry" | "strategy.order", "stop") => 4,
+                ("strategy.entry" | "strategy.order", "qty") => 2,
                 ("strategy.close", "qty") => 1,
                 ("strategy.close", "qty_percent") => 2,
                 ("strategy.exit", "stop") => 2,
@@ -557,6 +581,27 @@ impl HistoricalRuntime<'_> {
         } else {
             None
         };
+        let mut oca_name = None;
+        let mut oca_type = None;
+        if opening {
+            if let Some(expr) = call_arg_expr(args, 5, "oca_name") {
+                oca_name = Some(match self.eval_expr(expr)? {
+                    PineValue::String(value) => value,
+                    _ => return Err(external_error("oca_name must be a string")),
+                });
+            }
+            if let Some(expr) = call_arg_expr(args, 6, "oca_type") {
+                oca_type = Some(match self.eval_expr(expr)? {
+                    PineValue::String(value) => match value.as_str() {
+                        "strategy.oca.none" => "none".to_owned(),
+                        "strategy.oca.cancel" => "cancel".to_owned(),
+                        "strategy.oca.reduce" => "reduce".to_owned(),
+                        _ => return Err(external_error("invalid OCA type")),
+                    },
+                    _ => return Err(external_error("invalid OCA type")),
+                });
+            }
+        }
         let state = self.external_execution.as_mut().unwrap();
         state.intents.push(ExternalOrderIntent {
             bar_index: self.bars,
@@ -574,6 +619,8 @@ impl HistoricalRuntime<'_> {
             trail_price: numbers[6],
             trail_points: numbers[7],
             trail_offset: numbers[8],
+            oca_name,
+            oca_type,
         });
         Ok(PineValue::Void)
     }

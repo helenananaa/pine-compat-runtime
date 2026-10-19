@@ -32,6 +32,11 @@ pub(crate) use run::{
     run_script_csv_with_request_bars_internal,
 };
 
+#[wasm_bindgen(js_name = externalOrderSchemaVersion)]
+pub fn external_order_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_ORDER_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = packageVersion)]
 pub fn package_version() -> String {
     env!("CARGO_PKG_VERSION").to_owned()

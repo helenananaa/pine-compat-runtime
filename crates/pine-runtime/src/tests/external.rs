@@ -23,6 +23,28 @@ fn account(time: i64, qty: f64) -> ExternalAccountFrame {
 }
 
 #[test]
+fn external_generic_orders_keep_fixed_quantity_and_oca_without_native_execution() {
+    let hir = program(
+        "strategy(\"Orders\",pyramiding=1)\nstrategy.order(\"sell\",strategy.short,qty=3,limit=11,stop=9,oca_name=\"g\",oca_type=strategy.oca.reduce)\nstrategy.entry(\"buy\",strategy.long,qty=2,oca_name=\"g\",oca_type=strategy.oca.cancel)\nplot(strategy.position_size)",
+    );
+    let mut runtime = HistoricalRuntime::new(&hir)
+        .with_external_accounts(vec![account(0, 4.0)])
+        .unwrap();
+    runtime.append_bar(bar(10.0)).unwrap();
+    let intents = runtime.external_intents().unwrap();
+    assert_eq!(intents[0].action, "order");
+    assert_eq!(intents[0].qty, Some(3.0));
+    assert_eq!(intents[0].oca_name.as_deref(), Some("g"));
+    assert_eq!(intents[0].oca_type.as_deref(), Some("reduce"));
+    assert_eq!(intents[1].oca_type.as_deref(), Some("cancel"));
+    assert_eq!(
+        runtime.result().plots[0].values,
+        vec![PineValue::Float(4.0)]
+    );
+    assert!(runtime.result().strategy.is_none());
+}
+
+#[test]
 fn external_append_clock_matches_batch_and_preflight_keeps_feedback_unmodified() {
     let hir = program(
         "strategy(\"Clock\")\nplot(timenow)\nplot(strategy.position_size)\nif timenow > 100000\n    strategy.entry(\"L\", strategy.long)",

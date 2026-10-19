@@ -35,6 +35,24 @@ and order arguments raise `E_EXTERNAL_UNSUPPORTED`.
   trail_points, plus trail_offset.
 - `strategy.cancel` and `cancel_all`, and the supported legacy `when` argument.
 
+Development builds exposing `EXTERNAL_ORDER_SCHEMA_VERSION == 2` also emit
+`strategy.order` with fixed positive quantities and optional limit/stop prices.
+The host must transact that quantity directly, without entry pyramiding or
+automatic reversal sizing. Both `entry` and `order` accept `oca_name` and
+`oca_type`; intents preserve the name and normalize the type to `none`, `cancel`
+or `reduce`. Omitted fields are absent from the wire. The host owns group
+matching, partial-fill cancellation/reduction and all account changes. The
+interpreter only emits intentions. Fixed defaults also apply when explicit
+`qty=na` is used, with each expression evaluated once.
+
+This additive development contract is exported by the Rust core and Python
+module. WASM exports `externalOrderSchemaVersion()` as schema metadata; this
+does not add a WASM external-account execution API. Package version remains
+`0.3.2`; identify new wheels by source revision and hash. Tests cover external
+batch/append equality and preservation of the caller's account authority.
+Order comments/alert metadata, zero-quantity no-op parity, and non-fixed default
+quantity modes still require additional external-profile work.
+
 Intents preserve quantities, prices, distances, IDs, direction and bar_index;
 order expressions execute once. The result preserves declared pyramiding.
 The host owns admission, replacements, OCO cancellation, tick conversion,

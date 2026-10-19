@@ -8,7 +8,9 @@ mod bar;
 mod builtins;
 mod error;
 mod external;
-pub use external::{ExternalAccountFrame, ExternalOrderIntent, ExternalPass};
+pub use external::{
+    EXTERNAL_ORDER_SCHEMA_VERSION, ExternalAccountFrame, ExternalOrderIntent, ExternalPass,
+};
 mod host_requirements;
 mod input_metadata;
 mod magnifier;

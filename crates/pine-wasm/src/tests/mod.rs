@@ -4,6 +4,20 @@ use super::*;
 fn external_order_contract_version_is_exported() {
     assert_eq!(external_order_schema_version(), 2);
     assert_eq!(external_closing_tick_schema_version(), 1);
+    assert_eq!(strategy_risk_configuration_schema_version(), 1);
+}
+
+#[test]
+fn risk_configuration_resolves_context_and_keeps_unexecuted_calls() {
+    let program = compile_script("//@version=6\nstrategy(\"Risk\")\nif false\n    strategy.risk.max_position_size(syminfo.mintick*8)").unwrap();
+    let value: serde_json::Value = serde_json::from_str(
+        &program
+            .strategy_risk_configuration("{}", r#"{"$chart":{"minMove":1,"priceScale":4}}"#)
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(value["rules"][0]["value"], 2.0);
+    assert_eq!(value["unresolvedCallSiteIds"], serde_json::json!([]));
 }
 use pine_runtime::PUBLIC_RUNTIME_SCHEMA_VERSION;
 use pine_sema::PUBLIC_ANALYSIS_SCHEMA_VERSION;

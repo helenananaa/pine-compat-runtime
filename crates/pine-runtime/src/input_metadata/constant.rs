@@ -20,6 +20,7 @@ pub(super) struct ConstEvaluator<'a> {
     minimal: &'a HirProgram,
     runtime: Option<HistoricalRuntime<'a>>,
     remaining: u64,
+    risk_context: Option<(&'a crate::InputOverrides, &'a crate::ChartContext)>,
 }
 
 impl<'a> ConstEvaluator<'a> {
@@ -39,7 +40,27 @@ impl<'a> ConstEvaluator<'a> {
             minimal,
             runtime: None,
             remaining: MAX_STEPS,
+            risk_context: None,
         }
+    }
+
+    pub(super) fn for_risk(
+        program: &'a HirProgram,
+        minimal: &'a HirProgram,
+        overrides: &'a crate::InputOverrides,
+        chart: &'a crate::ChartContext,
+    ) -> Self {
+        let mut value = Self::new(program, minimal);
+        let simple: HashSet<_> = program
+            .symbols
+            .iter()
+            .filter(|symbol| symbol.pine_type.qualifier != Qualifier::Series)
+            .map(|symbol| symbol.id)
+            .collect();
+        value.initializers = super::bindings::initializers(program);
+        value.initializers.retain(|id, _| simple.contains(id));
+        value.risk_context = Some((overrides, chart));
+        value
     }
 
     pub(super) fn value(&mut self, expr: &HirExpr) -> Option<PineValue> {
@@ -82,6 +103,22 @@ impl<'a> ConstEvaluator<'a> {
             HirExprKind::Builtin(name) => {
                 if name == "na" {
                     return Some(PineValue::Na);
+                }
+                if let Some((_, chart)) = self.risk_context {
+                    let contextual = match name.as_str() {
+                        "syminfo.mintick" => Some(PineValue::Float(chart.min_tick())),
+                        "syminfo.minmove" => Some(PineValue::Int(i64::from(chart.min_move()))),
+                        "syminfo.pricescale" => {
+                            Some(PineValue::Int(i64::from(chart.price_scale())))
+                        }
+                        "syminfo.mincontract" => Some(PineValue::Float(chart.min_contract())),
+                        "syminfo.currency" => Some(PineValue::String(chart.currency().to_owned())),
+                        "syminfo.tickerid" => Some(PineValue::String(chart.symbol().to_owned())),
+                        _ => None,
+                    };
+                    if contextual.is_some() {
+                        return contextual;
+                    }
                 }
                 let value = crate::builtins::variables::eval_static_builtin_value(name);
                 (!matches!(value, PineValue::Void)).then_some(value)
@@ -132,6 +169,13 @@ impl<'a> ConstEvaluator<'a> {
                 call_site_id,
                 args,
             } => {
+                if let Some((overrides, _)) = self.risk_context
+                    && (callee == "input" || callee.starts_with("input."))
+                {
+                    return overrides.get(*call_site_id).cloned().or_else(|| {
+                        super::input_arg(args, 0, "defval").and_then(|expr| self.eval(expr, next))
+                    });
+                }
                 let mut literals = Vec::with_capacity(args.len());
                 for arg in args {
                     let value = self.eval(&arg.value, next)?;
@@ -160,6 +204,40 @@ impl<'a> ConstEvaluator<'a> {
                 });
                 runtime.reset_execution_budget();
                 runtime.eval_expr(&call).ok()
+            }
+            HirExprKind::Block { statements, result }
+                if self.risk_context.is_some()
+                    && statements.iter().all(|statement| {
+                        matches!(
+                            statement.kind,
+                            pine_ir::HirStmtKind::Decl { .. }
+                                | pine_ir::HirStmtKind::TupleDecl { .. }
+                        )
+                    }) =>
+            {
+                self.eval(result, next)
+            }
+            HirExprKind::Switch { selector, arms } if self.risk_context.is_some() => {
+                let selector = match selector {
+                    Some(expr) => Some(self.eval(expr, next)?),
+                    None => None,
+                };
+                for arm in arms {
+                    let matches = match &arm.condition {
+                        None => true,
+                        Some(condition) => {
+                            let value = self.eval(condition, next)?;
+                            selector.as_ref().map_or_else(
+                                || value.is_condition_true(),
+                                |selector| selector == &value,
+                            )
+                        }
+                    };
+                    if matches {
+                        return self.eval(&arm.result, next);
+                    }
+                }
+                Some(PineValue::Na)
             }
             // HIR supplied by callers may contain arbitrary execution nodes.
             _ => None,
@@ -371,5 +449,40 @@ pub(super) fn minimal_program(language_version: Option<u16>) -> HirProgram {
         history: HirHistoryRequirements::default(),
         series_history: Vec::new(),
         execution_scoped_series: Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn constant_boolean_identity_keeps_runtime_condition_semantics() {
+        let program = minimal_program(Some(6));
+        let literal = |kind, value| HirExpr {
+            kind: HirExprKind::Literal(value),
+            series_id: None,
+            pine_type: pine_ir::PineType::new(Qualifier::Const, kind),
+        };
+        let condition = literal(pine_ir::ValueKind::Bool, HirLiteral::Bool(false));
+        let expr = HirExpr {
+            pine_type: pine_ir::PineType::new(Qualifier::Const, pine_ir::ValueKind::Int),
+            series_id: None,
+            kind: HirExprKind::Ternary {
+                condition: Box::new(HirExpr {
+                    pine_type: condition.pine_type,
+                    series_id: None,
+                    kind: HirExprKind::Unary {
+                        op: pine_ir::HirUnaryOp::ConstantBoolIdentity(Some(7)),
+                        expr: Box::new(condition),
+                    },
+                }),
+                then_expr: Box::new(literal(pine_ir::ValueKind::Int, HirLiteral::Int(9))),
+                else_expr: Box::new(literal(pine_ir::ValueKind::Int, HirLiteral::Int(2))),
+            },
+        };
+        assert_eq!(
+            ConstEvaluator::new(&program, &program).value(&expr),
+            Some(PineValue::Int(9))
+        );
     }
 }

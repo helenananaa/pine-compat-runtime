@@ -4,6 +4,11 @@ use crate::PineValue;
 
 mod bindings;
 mod constant;
+mod risk;
+pub use risk::{
+    STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION, StrategyRiskConfiguration, StrategyRiskRule,
+    strategy_risk_configuration,
+};
 
 pub(crate) fn constant_string(program: &HirProgram, expr: &HirExpr) -> Option<String> {
     let minimal = constant::minimal_program(program.language_version);

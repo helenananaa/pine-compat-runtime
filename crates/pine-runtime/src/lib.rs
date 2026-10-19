@@ -33,7 +33,10 @@ pub use host_requirements::{
     HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements, HostSourceLocation,
     RequestArgument, RequestRequirement, host_requirements, host_requirements_json,
 };
-pub use input_metadata::{InputCall, input_calls};
+pub use input_metadata::{
+    InputCall, STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION, StrategyRiskConfiguration,
+    StrategyRiskRule, input_calls, strategy_risk_configuration,
+};
 pub use magnifier::{
     MAGNIFIER_SCHEMA_VERSION, MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback,
     MagnifierHostTicks, MagnifierInput, MagnifierInputError, MagnifierTickSource,

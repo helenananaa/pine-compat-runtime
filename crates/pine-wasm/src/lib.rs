@@ -37,6 +37,11 @@ pub fn external_closing_tick_schema_version() -> u32 {
     pine_runtime::EXTERNAL_CLOSING_TICK_SCHEMA_VERSION
 }
 
+#[wasm_bindgen(js_name = strategyRiskConfigurationSchemaVersion)]
+pub fn strategy_risk_configuration_schema_version() -> u32 {
+    pine_runtime::STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = externalOrderSchemaVersion)]
 pub fn external_order_schema_version() -> u32 {
     pine_runtime::EXTERNAL_ORDER_SCHEMA_VERSION

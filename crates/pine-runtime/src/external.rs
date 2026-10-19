@@ -10,6 +10,7 @@ pub const EXTERNAL_CLOSING_TICK_SCHEMA_VERSION: u32 = 1;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ExternalExecutionOptions {
     pub closing_ticks: bool,
+    pub risk_rules: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -85,6 +86,7 @@ pub(crate) struct ExternalExecution {
     pub active_pass: Option<(usize, ExternalPass)>,
     pub intents: Vec<ExternalOrderIntent>,
     pub error: Option<String>,
+    pub risk_configuration: Option<crate::StrategyRiskConfiguration>,
 }
 
 pub(crate) fn external_error(message: impl Into<String>) -> RuntimeError {
@@ -176,6 +178,18 @@ impl HistoricalRuntime<'_> {
             ));
         }
         self.validate_external_feedback(&frames, passes.as_deref(), options)?;
+        let configuration = crate::strategy_risk_configuration(
+            &self.program,
+            &self.input_overrides,
+            self.request_environment.chart(),
+        );
+        if !configuration.rules.is_empty()
+            && (!options.risk_rules || !configuration.unresolved_call_site_ids.is_empty())
+        {
+            return Err(external_error(
+                "risk rules require explicit host enforcement and fully resolved configuration",
+            ));
+        }
         self.external_execution = Some(ExternalExecution {
             options,
             frames,
@@ -183,6 +197,7 @@ impl HistoricalRuntime<'_> {
             active_pass: None,
             intents: vec![],
             error: None,
+            risk_configuration: (!configuration.rules.is_empty()).then_some(configuration),
         });
         Ok(self)
     }
@@ -382,6 +397,12 @@ impl HistoricalRuntime<'_> {
         Ok(&state.intents)
     }
 
+    pub fn external_risk_configuration(&self) -> Option<&crate::StrategyRiskConfiguration> {
+        self.external_execution
+            .as_ref()
+            .and_then(|state| state.risk_configuration.as_ref())
+    }
+
     pub(crate) fn external_value(&mut self, name: &str) -> Option<PineValue> {
         let state = self.external_execution.as_mut()?;
         if let Some((index, pass)) = &state.active_pass {
@@ -431,6 +452,17 @@ impl HistoricalRuntime<'_> {
         callee: &str,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
+        if callee.starts_with("strategy.risk.") {
+            return if self
+                .external_execution
+                .as_ref()
+                .is_some_and(|state| state.options.risk_rules)
+            {
+                Ok(PineValue::Void)
+            } else {
+                Err(external_error("host risk enforcement was not negotiated"))
+            };
+        }
         let names: &[&str] = match callee {
             "strategy.entry" | "strategy.order" => &[
                 "id",

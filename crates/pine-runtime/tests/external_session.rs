@@ -67,6 +67,7 @@ fn closing_ticks_are_explicit_and_allow_only_immutable_confirmed_market_state() 
                 Some(vec![]),
                 ExternalExecutionOptions {
                     closing_ticks: true,
+                    ..Default::default()
                 },
             )
             .unwrap()

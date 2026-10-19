@@ -20,6 +20,7 @@ mod diagnostics;
 mod external;
 mod gradient;
 mod history;
+mod input_metadata;
 mod outputs;
 mod realtime;
 mod replica;
@@ -32,7 +33,8 @@ use alerts::{render_strategy_order_fill_alert_template, render_strategy_order_fi
 use analysis_input::analysis_input_from_python;
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
 use history::{parse_bars, parse_execution_times};
-use outputs::{runtime_result_view_to_py, value_to_py};
+use input_metadata::inputs_to_py;
+use outputs::runtime_result_view_to_py;
 use realtime::PyRealtimeSession;
 use request_input::parse_request_environment;
 
@@ -70,7 +72,7 @@ impl PyProgram {
         )
     }
     /// Evaluate against host-owned account frames; never run the native broker.
-    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None, execution_times=None, *, closing_ticks=false))]
+    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None, execution_times=None, *, closing_ticks=false, risk_rules=false))]
     #[allow(clippy::too_many_arguments)]
     fn run_external(
         &self,
@@ -84,6 +86,7 @@ impl PyProgram {
         request_bars: Option<&Bound<'_, PyAny>>,
         execution_times: Option<&Bound<'_, PyAny>>,
         closing_ticks: bool,
+        risk_rules: bool,
     ) -> PyResult<Py<PyAny>> {
         external::run(
             self,
@@ -97,6 +100,7 @@ impl PyProgram {
             request_bars,
             execution_times,
             closing_ticks,
+            risk_rules,
         )
     }
 
@@ -110,7 +114,7 @@ impl PyProgram {
     }
 
     /// Create a stateful streaming evaluator with host-owned accounts.
-    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None, *, closing_ticks=false))]
+    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None, *, closing_ticks=false, risk_rules=false))]
     fn external_session(
         &self,
         input_overrides: Option<&Bound<'_, PyAny>>,
@@ -118,6 +122,7 @@ impl PyProgram {
         chart_timeframe: Option<&str>,
         request_bars: Option<&Bound<'_, PyAny>>,
         closing_ticks: bool,
+        risk_rules: bool,
     ) -> PyResult<external::ExternalSession> {
         external::ExternalSession::new(
             self,
@@ -126,6 +131,7 @@ impl PyProgram {
             chart_timeframe,
             request_bars,
             closing_ticks,
+            risk_rules,
         )
     }
 
@@ -134,6 +140,26 @@ impl PyProgram {
         Ok(PyModule::import(py, "json")?
             .call_method1("loads", (pine_runtime::host_requirements_json(&self.hir),))?
             .unbind())
+    }
+
+    /// Resolve all declarative risk settings without running the script.
+    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None))]
+    fn strategy_risk_configuration(
+        &self,
+        py: Python<'_>,
+        input_overrides: Option<&Bound<'_, PyAny>>,
+        chart_symbol: Option<&str>,
+        chart_timeframe: Option<&str>,
+        request_bars: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
+        input_metadata::risk_configuration(
+            self,
+            py,
+            input_overrides,
+            chart_symbol,
+            chart_timeframe,
+            request_bars,
+        )
     }
 
     #[pyo3(signature = (
@@ -301,6 +327,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     module.add("EXTERNAL_CLOCK_SCHEMA_VERSION", 1)?;
+    module.add(
+        "STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION",
+        pine_runtime::STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION,
+    )?;
     module.add(
         "EXTERNAL_CLOSING_TICK_SCHEMA_VERSION",
         pine_runtime::EXTERNAL_CLOSING_TICK_SCHEMA_VERSION,
@@ -682,41 +712,6 @@ fn analysis_to_py(py: Python<'_>, source: &SourceFile, analysis: &Analysis) -> P
     output.set_item("compatibility", compatibility_to_py(py, source, analysis)?)?;
     output.set_item("executable", analysis.hir.is_some())?;
     output.set_item("inputs", inputs_to_py(py, analysis)?)?;
-    Ok(output.into_any().unbind())
-}
-
-fn inputs_to_py(py: Python<'_>, analysis: &Analysis) -> PyResult<Py<PyAny>> {
-    let output = PyList::empty(py);
-    if let Some(hir) = &analysis.hir {
-        for input in input_calls(hir) {
-            let item = PyDict::new(py);
-            item.set_item("callSiteId", input.call_site_id)?;
-            item.set_item("name", input.name)?;
-            item.set_item("isSource", input.is_source)?;
-            item.set_item("title", input.title)?;
-            match &input.default_value {
-                Some(value) => item.set_item("default", value_to_py(py, value)?)?,
-                None => item.set_item("default", py.None())?,
-            }
-            if let Some(value) = &input.min_value {
-                item.set_item("min", value_to_py(py, value)?)?;
-            }
-            if let Some(value) = &input.max_value {
-                item.set_item("max", value_to_py(py, value)?)?;
-            }
-            if let Some(value) = &input.step {
-                item.set_item("step", value_to_py(py, value)?)?;
-            }
-            if !input.options.is_empty() {
-                let options = PyList::empty(py);
-                for value in &input.options {
-                    options.append(value_to_py(py, value)?)?;
-                }
-                item.set_item("options", options)?;
-            }
-            output.append(item)?;
-        }
-    }
     Ok(output.into_any().unbind())
 }
 

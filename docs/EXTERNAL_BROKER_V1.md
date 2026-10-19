@@ -60,6 +60,50 @@ entry allocation and fills. Native commission, slippage, magnifier, default on-c
 execution, every-tick recalculation and non-fixed default quantities reject.
 This is a specific external profile, not native broker parity.
 
+## Declarative risk configuration (development)
+
+`STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION == 1` adds
+`Program.strategy_risk_configuration(input_overrides=None, chart_symbol=None,
+chart_timeframe=None, request_bars=None)`. It discovers all six risk command
+kinds in lowered HIR, including calls in unexecuted branches, without running
+the script. The result contains `schemaVersion`, `rules`, and
+`unresolvedCallSiteIds`. Each rule retains its `callSiteId`, `function`, resolved
+numeric `value`/`valueType` or `direction`, optional `alertMessage`, and `resolved`.
+Duplicate rules remain separate; a host must enforce every applicable rule.
+
+Resolution is bounded to immutable scalar expressions, input overrides, known
+chart metadata, and supported pure inlined functions. Mutable/series values,
+side-effecting expressions and unsupported evaluation nodes remain unresolved.
+Current numeric admission requires positive finite values, integral counts up to
+`u32::MAX`, and percentage loss values at most 100. This is a bounded contract,
+not acceptance of every valid Pine simple expression or every numeric boundary.
+Original loops, requests, orders and side effects never execute during discovery.
+
+External batch and session constructors accept keyword-only `risk_rules=True`.
+Without it, any discovered risk call rejects, even in an unreachable branch.
+With it, all arguments must resolve, risk calls become declarations and results
+include a `risk_rules` configuration beside `intents`. No-risk output is unchanged.
+This option delegates enforcement to the caller: it does **not** cap quantities,
+create native fills, stop the account, or validate the caller's risk implementation.
+Native-account execution is unchanged; this patch does not repair its conditional
+risk registration or same-kind rule aggregation gaps.
+
+Rust exports `strategy_risk_configuration` and `ExternalExecutionOptions.risk_rules`.
+WASM exports `strategyRiskConfigurationSchemaVersion()` and
+`Program.strategyRiskConfiguration(input_overrides_json, request_bars_json)` for
+configuration discovery only. It does not add a WASM external-account executor.
+Development artifacts retain package version `0.3.2`; identify them by hash.
+
+On 2026-10-19 the complete Windows verification gate passed 7,912 Rust tests,
+1,731 tests against a newly built/installed Python wheel, 172 tooling tests,
+formatting, Clippy, source structure, host parity and generated WASM/Node smoke.
+A separate generated Node check exercised risk schema 1, input overrides,
+chart-grid resolution and discovery without executing an infinite script loop.
+These are core/binding checks; Host risk execution and official output parity
+require separate qualification. Earlier failed attempts are retained locally:
+one changed constant-boolean identity semantics and was reverted; another hit
+the Python facade line budget, resolved by extracting metadata bindings.
+
 ## Execution passes and requested data
 
 `execution_passes` supplies one nonempty group per chart bar, at most 65 passes

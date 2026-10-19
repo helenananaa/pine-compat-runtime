@@ -21,6 +21,7 @@ pub(crate) fn run(
     request_bars: Option<&Bound<'_, PyAny>>,
     execution_times: Option<&Bound<'_, PyAny>>,
     closing_ticks: bool,
+    risk_rules: bool,
 ) -> PyResult<Py<PyAny>> {
     let bars = parse_bars(bars)?;
     let execution_times = parse_execution_times(execution_times)?;
@@ -46,7 +47,10 @@ pub(crate) fn run(
         .with_external_accounts_and_options(
             frames,
             passes,
-            pine_runtime::ExternalExecutionOptions { closing_ticks },
+            pine_runtime::ExternalExecutionOptions {
+                closing_ticks,
+                risk_rules,
+            },
         )
         .map_err(|err| PyValueError::new_err(err.message))?;
     py.detach(|| match execution_times.as_deref() {
@@ -58,6 +62,16 @@ pub(crate) fn run(
         .external_intents()
         .map_err(|err| PyValueError::new_err(err.message))?;
     let result = PyDict::new(py);
+    if let Some(configuration) = runtime.external_risk_configuration() {
+        result.set_item(
+            "risk_rules",
+            json.call_method1(
+                "loads",
+                (serde_json::to_string(configuration)
+                    .map_err(|err| PyValueError::new_err(err.to_string()))?,),
+            )?,
+        )?;
+    }
     result.set_item("protocol", "external-broker/1")?;
     result.set_item("pyramiding", program.hir.strategy_settings.pyramiding_limit)?;
     result.set_item(
@@ -90,6 +104,7 @@ impl ExternalSession {
         timeframe: Option<&str>,
         requests: Option<&Bound<'_, PyAny>>,
         closing_ticks: bool,
+        risk_rules: bool,
     ) -> PyResult<Self> {
         let runtime =
             HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
@@ -104,7 +119,10 @@ impl ExternalSession {
                 } else {
                     None
                 },
-                pine_runtime::ExternalExecutionOptions { closing_ticks },
+                pine_runtime::ExternalExecutionOptions {
+                    closing_ticks,
+                    risk_rules,
+                },
             )
             .map_err(|err| PyValueError::new_err(err.message))?;
         Ok(Self {
@@ -154,6 +172,16 @@ impl ExternalSession {
         }
         self.cursor += bars.len();
         let result = PyDict::new(py);
+        if let Some(configuration) = self.runtime.external_risk_configuration() {
+            result.set_item(
+                "risk_rules",
+                json.call_method1(
+                    "loads",
+                    (serde_json::to_string(configuration)
+                        .map_err(|err| PyValueError::new_err(err.to_string()))?,),
+                )?,
+            )?;
+        }
         result.set_item("protocol", "external-broker/1")?;
         result.set_item("pyramiding", self.pyramiding)?;
         let intents = self.runtime.external_intents().map_err(|err| {

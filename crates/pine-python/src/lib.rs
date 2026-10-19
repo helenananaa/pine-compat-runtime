@@ -72,7 +72,7 @@ impl PyProgram {
         )
     }
     /// Evaluate against host-owned account frames; never run the native broker.
-    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None, execution_times=None, *, closing_ticks=false, risk_rules=false))]
+    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None, execution_times=None, *, closing_ticks=false, risk_rules=false, execution_schedule=None))]
     #[allow(clippy::too_many_arguments)]
     fn run_external(
         &self,
@@ -87,6 +87,7 @@ impl PyProgram {
         execution_times: Option<&Bound<'_, PyAny>>,
         closing_ticks: bool,
         risk_rules: bool,
+        execution_schedule: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         external::run(
             self,
@@ -101,6 +102,7 @@ impl PyProgram {
             execution_times,
             closing_ticks,
             risk_rules,
+            execution_schedule,
         )
     }
 
@@ -114,7 +116,8 @@ impl PyProgram {
     }
 
     /// Create a stateful streaming evaluator with host-owned accounts.
-    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None, *, closing_ticks=false, risk_rules=false))]
+    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None, *, closing_ticks=false, risk_rules=false, scheduled=false))]
+    #[allow(clippy::too_many_arguments)]
     fn external_session(
         &self,
         input_overrides: Option<&Bound<'_, PyAny>>,
@@ -123,6 +126,7 @@ impl PyProgram {
         request_bars: Option<&Bound<'_, PyAny>>,
         closing_ticks: bool,
         risk_rules: bool,
+        scheduled: bool,
     ) -> PyResult<external::ExternalSession> {
         external::ExternalSession::new(
             self,
@@ -132,6 +136,7 @@ impl PyProgram {
             request_bars,
             closing_ticks,
             risk_rules,
+            scheduled,
         )
     }
 
@@ -327,6 +332,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     module.add("EXTERNAL_CLOCK_SCHEMA_VERSION", 1)?;
+    module.add(
+        "EXTERNAL_SCHEDULE_SCHEMA_VERSION",
+        pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION,
+    )?;
     module.add(
         "STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION",
         pine_runtime::STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION,

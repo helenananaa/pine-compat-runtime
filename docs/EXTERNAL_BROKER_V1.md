@@ -106,6 +106,10 @@ the Python facade line budget, resolved by extracting metadata bindings.
 
 ## Execution passes and requested data
 
+The optional [explicit schedule API](EXTERNAL_SCHEDULE_V1.md) separates historical
+or realtime script state from observation commit. The legacy `execution_passes`
+rules below remain unchanged; using a new schedule requires explicit opt-in.
+
 `execution_passes` supplies one nonempty group per chart bar, at most 65 passes
 per group, and requires `calc_on_order_fills=true`. Without passes that setting
 rejects. Each pass contains visible bar, authoritative account, ordered

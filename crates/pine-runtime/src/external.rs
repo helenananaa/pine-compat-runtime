@@ -1,5 +1,6 @@
 //! Host-neutral order intents with authoritative account and scheduled-pass feedback.
 use crate::builtins::args::call_arg_expr;
+use crate::external_schedule::{ExternalBarState, ExternalPassContext};
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
 use pine_ir::{HirCallArg, ScriptMode, StrategyDefaultQuantity};
 use serde::{Deserialize, Serialize};
@@ -83,6 +84,7 @@ pub(crate) struct ExternalExecution {
     pub options: ExternalExecutionOptions,
     pub frames: Vec<ExternalAccountFrame>,
     pub passes: Option<Vec<Vec<ExternalPass>>>,
+    pub contexts: Option<Vec<Vec<ExternalPassContext>>>,
     pub active_pass: Option<(usize, ExternalPass)>,
     pub intents: Vec<ExternalOrderIntent>,
     pub error: Option<String>,
@@ -106,6 +108,10 @@ impl HistoricalRuntime<'_> {
                     .passes
                     .as_ref()
                     .is_some_and(|groups| groups.len() < skip)
+                || state
+                    .contexts
+                    .as_ref()
+                    .is_some_and(|groups| groups.len() < skip)
             {
                 return Err(external_error(
                     "missing feedback for the historical execution window",
@@ -113,6 +119,9 @@ impl HistoricalRuntime<'_> {
             }
             state.frames.drain(..skip);
             if let Some(groups) = &mut state.passes {
+                groups.drain(..skip);
+            }
+            if let Some(groups) = &mut state.contexts {
                 groups.drain(..skip);
             }
         }
@@ -167,9 +176,19 @@ impl HistoricalRuntime<'_> {
     }
 
     pub fn with_external_accounts_and_options(
+        self,
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+        options: ExternalExecutionOptions,
+    ) -> Result<Self, RuntimeError> {
+        self.with_external_feedback(frames, passes, None, options)
+    }
+
+    pub(crate) fn with_external_feedback(
         mut self,
         frames: Vec<ExternalAccountFrame>,
         passes: Option<Vec<Vec<ExternalPass>>>,
+        contexts: Option<Vec<Vec<ExternalPassContext>>>,
         options: ExternalExecutionOptions,
     ) -> Result<Self, RuntimeError> {
         if self.bars != 0 || self.execution_failed || self.external_execution.is_some() {
@@ -177,7 +196,7 @@ impl HistoricalRuntime<'_> {
                 "external feedback must be bound to a fresh runtime",
             ));
         }
-        self.validate_external_feedback(&frames, passes.as_deref(), options)?;
+        self.validate_external_feedback(&frames, passes.as_deref(), contexts.as_deref(), options)?;
         let configuration = crate::strategy_risk_configuration(
             &self.program,
             &self.input_overrides,
@@ -194,6 +213,7 @@ impl HistoricalRuntime<'_> {
             options,
             frames,
             passes,
+            contexts,
             active_pass: None,
             intents: vec![],
             error: None,
@@ -206,12 +226,14 @@ impl HistoricalRuntime<'_> {
         &self,
         frames: &[ExternalAccountFrame],
         passes: Option<&[Vec<ExternalPass>]>,
+        contexts: Option<&[Vec<ExternalPassContext>]>,
         options: ExternalExecutionOptions,
     ) -> Result<(), RuntimeError> {
         let settings = self.program.strategy_settings;
         if self.program.script_mode != ScriptMode::Strategy
-            || settings.calc_on_order_fills != passes.is_some()
-            || settings.calc_on_every_tick
+            || (contexts.is_none()
+                && (settings.calc_on_order_fills != passes.is_some()
+                    || settings.calc_on_every_tick))
             || (settings.process_orders_on_close && !options.closing_ticks)
             || settings.use_bar_magnifier
             || settings.slippage_ticks != 0.0
@@ -224,6 +246,9 @@ impl HistoricalRuntime<'_> {
             return Err(external_error(
                 "external execution requires fixed quantities, no native costs, and explicit host opt-in for closing ticks",
             ));
+        }
+        if let Some(contexts) = contexts {
+            self.validate_external_schedule(frames, passes, contexts, options)?;
         }
         if let Some(groups) = &passes {
             if groups.len() != frames.len()
@@ -301,7 +326,7 @@ impl HistoricalRuntime<'_> {
         frames: Vec<ExternalAccountFrame>,
         passes: Option<Vec<Vec<ExternalPass>>>,
     ) -> Result<(), RuntimeError> {
-        self.append_external_bars_inner(bars, frames, passes, None)
+        self.append_external_bars_inner(bars, frames, passes, None, None)
     }
 
     /// Append authoritative feedback with one host execution timestamp per bar.
@@ -316,14 +341,15 @@ impl HistoricalRuntime<'_> {
         if execution_times.len() != bars.len() {
             return Err(external_error("execution timestamp count must match bars"));
         }
-        self.append_external_bars_inner(bars, frames, passes, Some(execution_times))
+        self.append_external_bars_inner(bars, frames, passes, None, Some(execution_times))
     }
 
-    fn append_external_bars_inner(
+    pub(crate) fn append_external_bars_inner(
         &mut self,
         bars: &[crate::Bar],
         frames: Vec<ExternalAccountFrame>,
         passes: Option<Vec<Vec<ExternalPass>>>,
+        contexts: Option<Vec<Vec<ExternalPassContext>>>,
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
@@ -331,6 +357,9 @@ impl HistoricalRuntime<'_> {
             .external_execution
             .as_ref()
             .ok_or_else(|| external_error("external mode is not active"))?;
+        if state.contexts.is_some() != contexts.is_some() {
+            return Err(external_error("external schedule mode changed"));
+        }
         if bars.is_empty() && frames.is_empty() && passes.as_ref().is_none_or(Vec::is_empty) {
             return Ok(());
         }
@@ -356,7 +385,12 @@ impl HistoricalRuntime<'_> {
                 "execute pending feedback before appending new feedback",
             ));
         }
-        self.validate_external_feedback(&frames, passes.as_deref(), state.options)?;
+        self.validate_external_feedback(
+            &frames,
+            passes.as_deref(),
+            contexts.as_deref(),
+            state.options,
+        )?;
         let state = self
             .external_execution
             .as_mut()
@@ -374,6 +408,9 @@ impl HistoricalRuntime<'_> {
         }
         state.frames.extend(frames);
         if let (Some(previous), Some(appended)) = (&mut state.passes, passes) {
+            previous.extend(appended);
+        }
+        if let (Some(previous), Some(appended)) = (&mut state.contexts, contexts) {
             previous.extend(appended);
         }
         let result = match execution_times {
@@ -406,13 +443,48 @@ impl HistoricalRuntime<'_> {
     pub(crate) fn external_value(&mut self, name: &str) -> Option<PineValue> {
         let state = self.external_execution.as_mut()?;
         if let Some((index, pass)) = &state.active_pass {
-            match name {
-                "barstate.isconfirmed" => return Some(PineValue::Bool(pass.confirmed)),
-                "barstate.isnew" => return Some(PineValue::Bool(*index == 0)),
-                "barstate.islastconfirmedhistory" if !pass.confirmed => {
-                    return Some(PineValue::Bool(false));
+            if let Some(context) = state
+                .contexts
+                .as_ref()
+                .and_then(|groups| groups.get(self.bars))
+                .and_then(|group| group.get(*index))
+            {
+                let historical = context.bar_state == ExternalBarState::Historical;
+                match name {
+                    "barstate.ishistory" => return Some(PineValue::Bool(historical)),
+                    "barstate.isrealtime" => return Some(PineValue::Bool(!historical)),
+                    "barstate.isconfirmed" => {
+                        return Some(PineValue::Bool(historical || pass.confirmed));
+                    }
+                    "barstate.isnew" => return Some(PineValue::Bool(context.is_new)),
+                    "barstate.islast" if !historical => return Some(PineValue::Bool(true)),
+                    "barstate.islastconfirmedhistory"
+                        if historical
+                            && state
+                                .contexts
+                                .as_ref()
+                                .and_then(|groups| groups.get(self.bars + 1))
+                                .and_then(|group| group.first())
+                                .is_some_and(|next| {
+                                    next.bar_state == ExternalBarState::Realtime
+                                }) =>
+                    {
+                        return Some(PineValue::Bool(true));
+                    }
+                    "barstate.islastconfirmedhistory" if !historical => {
+                        return Some(PineValue::Bool(false));
+                    }
+                    _ => {}
                 }
-                _ => {}
+            } else {
+                match name {
+                    "barstate.isconfirmed" => return Some(PineValue::Bool(pass.confirmed)),
+                    "barstate.isnew" => return Some(PineValue::Bool(*index == 0)),
+                    "barstate.islastconfirmedhistory" if !pass.confirmed => {
+                        return Some(PineValue::Bool(false));
+                    }
+                    _ => {}
+                }
             }
         }
         if !name.starts_with("strategy.") {

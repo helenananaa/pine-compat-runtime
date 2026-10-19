@@ -8,9 +8,14 @@ mod bar;
 mod builtins;
 mod error;
 mod external;
+mod external_schedule;
 pub use external::{
     EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_SCHEMA_VERSION, ExternalAccountFrame,
     ExternalExecutionOptions, ExternalOrderIntent, ExternalPass,
+};
+pub use external_schedule::{
+    EXTERNAL_SCHEDULE_SCHEMA_VERSION, ExternalBarState, ExternalEvaluationTrigger,
+    ExternalPassContext, ExternalScheduledPass,
 };
 mod host_requirements;
 mod input_metadata;

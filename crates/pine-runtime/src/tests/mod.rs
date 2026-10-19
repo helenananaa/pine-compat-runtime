@@ -16,6 +16,7 @@ mod calendar_clock;
 mod drawing_indexes;
 mod execution_clock;
 mod external;
+mod external_schedule;
 mod imports;
 mod legacy_indicators;
 mod magnifier;

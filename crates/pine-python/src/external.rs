@@ -22,6 +22,7 @@ pub(crate) fn run(
     execution_times: Option<&Bound<'_, PyAny>>,
     closing_ticks: bool,
     risk_rules: bool,
+    execution_schedule: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     let bars = parse_bars(bars)?;
     let execution_times = parse_execution_times(execution_times)?;
@@ -38,21 +39,26 @@ pub(crate) fn run(
             serde_json::from_str(&raw).map_err(|err| PyValueError::new_err(err.to_string()))
         })
         .transpose()?;
-    let mut runtime =
-        HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
-            &program.hir,
-            parse_request_environment(request_bars, chart_symbol, chart_timeframe)?,
-            parse_input_overrides(input_overrides, &program.hir)?,
-        )
-        .with_external_accounts_and_options(
-            frames,
-            passes,
-            pine_runtime::ExternalExecutionOptions {
-                closing_ticks,
-                risk_rules,
-            },
-        )
-        .map_err(|err| PyValueError::new_err(err.message))?;
+    if execution_passes.is_some() && execution_schedule.is_some() {
+        return Err(PyValueError::new_err(
+            "E_EXTERNAL_UNSUPPORTED: pass formats are mutually exclusive",
+        ));
+    }
+    let schedule = parse_schedule(&json, execution_schedule)?;
+    let runtime = HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
+        &program.hir,
+        parse_request_environment(request_bars, chart_symbol, chart_timeframe)?,
+        parse_input_overrides(input_overrides, &program.hir)?,
+    );
+    let options = pine_runtime::ExternalExecutionOptions {
+        closing_ticks,
+        risk_rules,
+    };
+    let mut runtime = match schedule {
+        Some(schedule) => runtime.with_external_schedule(frames, schedule, options),
+        None => runtime.with_external_accounts_and_options(frames, passes, options),
+    }
+    .map_err(|err| PyValueError::new_err(err.message))?;
     py.detach(|| match execution_times.as_deref() {
         Some(times) => runtime.append_bars_with_execution_times(&bars, times),
         None => runtime.append_bars(&bars),
@@ -88,6 +94,18 @@ pub(crate) fn run(
     Ok(result.into_any().unbind())
 }
 
+fn parse_schedule(
+    json: &Bound<'_, PyModule>,
+    value: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Option<Vec<Vec<pine_runtime::ExternalScheduledPass>>>> {
+    value
+        .map(|value| {
+            let raw: String = json.call_method1("dumps", (value,))?.extract()?;
+            serde_json::from_str(&raw).map_err(|error| PyValueError::new_err(error.to_string()))
+        })
+        .transpose()
+}
+
 /// Process-local external evaluator. Failed execution poisons the session.
 #[pyclass(name = "ExternalSession", skip_from_py_object)]
 pub(crate) struct ExternalSession {
@@ -95,8 +113,10 @@ pub(crate) struct ExternalSession {
     pyramiding: usize,
     cursor: usize,
     failed: bool,
+    scheduled: bool,
 }
 impl ExternalSession {
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         program: &PyProgram,
         overrides: Option<&Bound<'_, PyAny>>,
@@ -105,37 +125,43 @@ impl ExternalSession {
         requests: Option<&Bound<'_, PyAny>>,
         closing_ticks: bool,
         risk_rules: bool,
+        scheduled: bool,
     ) -> PyResult<Self> {
-        let runtime =
-            HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
-                &program.hir,
-                parse_request_environment(requests, symbol, timeframe)?,
-                parse_input_overrides(overrides, &program.hir)?,
-            )
-            .with_external_accounts_and_options(
+        let runtime = HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
+            &program.hir,
+            parse_request_environment(requests, symbol, timeframe)?,
+            parse_input_overrides(overrides, &program.hir)?,
+        );
+        let options = pine_runtime::ExternalExecutionOptions {
+            closing_ticks,
+            risk_rules,
+        };
+        let runtime = if scheduled {
+            runtime.with_external_schedule(vec![], vec![], options)
+        } else {
+            runtime.with_external_accounts_and_options(
                 vec![],
-                if program.hir.strategy_settings.calc_on_order_fills {
-                    Some(vec![])
-                } else {
-                    None
-                },
-                pine_runtime::ExternalExecutionOptions {
-                    closing_ticks,
-                    risk_rules,
-                },
+                program
+                    .hir
+                    .strategy_settings
+                    .calc_on_order_fills
+                    .then(Vec::new),
+                options,
             )
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        }
+        .map_err(|err| PyValueError::new_err(err.message))?;
         Ok(Self {
             runtime,
             pyramiding: program.hir.strategy_settings.pyramiding_limit,
             cursor: 0,
             failed: false,
+            scheduled,
         })
     }
 }
 #[pymethods]
 impl ExternalSession {
-    #[pyo3(signature=(bars, accounts, execution_passes=None, execution_times=None))]
+    #[pyo3(signature=(bars, accounts, execution_passes=None, execution_times=None, *, execution_schedule=None))]
     fn append(
         &mut self,
         py: Python<'_>,
@@ -143,6 +169,7 @@ impl ExternalSession {
         accounts: &Bound<'_, PyAny>,
         execution_passes: Option<&Bound<'_, PyAny>>,
         execution_times: Option<&Bound<'_, PyAny>>,
+        execution_schedule: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         if self.failed {
             return Err(PyValueError::new_err(
@@ -161,11 +188,27 @@ impl ExternalSession {
                 serde_json::from_str(&raw).map_err(|err| PyValueError::new_err(err.to_string()))
             })
             .transpose()?;
-        if let Err(err) = py.detach(|| match execution_times.as_deref() {
-            Some(times) => self
-                .runtime
-                .append_external_bars_with_execution_times(&bars, frames, passes, times),
-            None => self.runtime.append_external_bars(&bars, frames, passes),
+        if self.scheduled != execution_schedule.is_some()
+            || (self.scheduled && execution_passes.is_some())
+        {
+            return Err(PyValueError::new_err(
+                "E_EXTERNAL_UNSUPPORTED: external schedule mode changed",
+            ));
+        }
+        let schedule = parse_schedule(&json, execution_schedule)?;
+        if let Err(err) = py.detach(|| match schedule {
+            Some(schedule) => self.runtime.append_external_schedule(
+                &bars,
+                frames,
+                schedule,
+                execution_times.as_deref(),
+            ),
+            None => match execution_times.as_deref() {
+                Some(times) => self
+                    .runtime
+                    .append_external_bars_with_execution_times(&bars, frames, passes, times),
+                None => self.runtime.append_external_bars(&bars, frames, passes),
+            },
         }) {
             self.failed = true;
             return Err(PyValueError::new_err(err.message));

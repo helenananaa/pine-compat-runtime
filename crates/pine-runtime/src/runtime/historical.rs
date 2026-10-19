@@ -18,7 +18,12 @@ use super::plot_history::{
 };
 use crate::*;
 
+mod checkpoint;
+mod collections;
+mod price_flow;
 mod ta_state;
+pub(crate) use collections::CollectionCheckpoint;
+use price_flow::PriceFlowCheckpoint;
 pub(crate) use ta_state::{CrossCallState, TaRollbackState};
 
 #[derive(Clone)]
@@ -82,6 +87,8 @@ struct StrategyEvalCheckpoint {
     current_series: HashMap<SeriesId, PineValue>,
     active_series: HashSet<SeriesId>,
     var_store: HashMap<VarSlotId, PineValue>,
+    collections: CollectionCheckpoint,
+    price_flow: Option<PriceFlowCheckpoint>,
 }
 
 #[derive(Clone)]
@@ -980,13 +987,23 @@ impl<'a> HistoricalRuntime<'a> {
         if self.program.script_mode == ScriptMode::Strategy {
             self.strategy_scheduler.begin_bar(bar_index);
         }
+        let price_flow = self
+            .external_execution
+            .as_ref()
+            .is_some_and(|state| state.passes.is_some())
+            .then(|| PriceFlowCheckpoint::capture(self));
         self.set_builtin_symbols(&bar, bar_index)?;
-        // Evaluation checkpoints are only consumed by fill-triggered re-execution.
-        // Single-pass strategies keep live state and need no clone/restore cycle.
+        // Fill recalculations and explicit external schedules roll back between
+        // passes. Other single-pass strategies need no clone/restore cycle.
         if self.program.script_mode == ScriptMode::Strategy
-            && self.program.strategy_settings.calc_on_order_fills
+            && (self.program.strategy_settings.calc_on_order_fills
+                || self
+                    .external_execution
+                    .as_ref()
+                    .is_some_and(|state| state.contexts.is_some()))
         {
             self.snapshot_strategy_eval_checkpoint();
+            self.strategy_eval_checkpoint.as_mut().unwrap().price_flow = price_flow;
         }
         let passes_before_tick = self.strategy_scheduler.script_passes();
         if self.external_execution.is_none() {
@@ -1025,6 +1042,22 @@ impl<'a> HistoricalRuntime<'a> {
                     for (index, pass) in passes.into_iter().enumerate() {
                         self.current_bar = Some(pass.bar);
                         self.current_execution_time = Some(pass.event_time_ms);
+                        if let Some(context) = self
+                            .external_execution
+                            .as_ref()
+                            .and_then(|state| state.contexts.as_ref())
+                            .and_then(|groups| groups.get(bar_index))
+                            .and_then(|group| group.get(index))
+                        {
+                            self.current_bar_update_kind = match context.bar_state {
+                                crate::ExternalBarState::Historical => BarUpdateKind::Historical,
+                                crate::ExternalBarState::Realtime if pass.confirmed => {
+                                    BarUpdateKind::Confirmed
+                                }
+                                crate::ExternalBarState::Realtime => BarUpdateKind::Forming,
+                            };
+                            self.current_bar_is_new = context.is_new;
+                        }
                         self.external_execution.as_mut().unwrap().active_pass = Some((index, pass));
                         self.run_strategy_script_pass()?;
                     }
@@ -1177,47 +1210,9 @@ impl<'a> HistoricalRuntime<'a> {
         diagnostics
     }
 
-    fn snapshot_strategy_eval_checkpoint(&mut self) {
-        self.strategy_eval_checkpoint = Some(StrategyEvalCheckpoint {
-            ta_state: self.ta_state.clone(),
-            valuewhen_local_values: self.valuewhen_budget.local_values,
-            current_symbols: self.current_symbols.clone(),
-            current_series: self.current_series.clone(),
-            active_series: self.active_series.clone(),
-            var_store: self.var_store.clone(),
-        });
-    }
-
-    fn restore_strategy_eval_checkpoint(&mut self) {
-        let Some(checkpoint) = self.strategy_eval_checkpoint.as_ref() else {
-            return;
-        };
-        self.ta_state.restore_from(&checkpoint.ta_state);
-        self.valuewhen_budget.local_values = checkpoint.valuewhen_local_values;
-        self.current_symbols.clone_from(&checkpoint.current_symbols);
-        self.current_series.clone_from(&checkpoint.current_series);
-        self.active_series.clone_from(&checkpoint.active_series);
-        // Historical fill recalculations rerun the script from the previous
-        // committed bar. Ordinary `var` assignments from an earlier pass of
-        // this bar must be discarded; `varip` deliberately survives passes.
-        for slot in self
-            .program
-            .symbols
-            .iter()
-            .filter(|symbol| symbol.persistence == PersistenceKind::Var)
-            .filter_map(|symbol| symbol.var_slot_id)
-        {
-            if let Some(value) = checkpoint.var_store.get(&slot) {
-                self.var_store.insert(slot, value.clone());
-            } else {
-                self.var_store.remove(&slot);
-            }
-        }
-    }
-
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {
         let before = self.strategy_broker.public_fill_event_count();
-        self.restore_strategy_eval_checkpoint();
+        self.restore_strategy_eval_checkpoint()?;
         self.bind_external_request_data()?;
         if self
             .external_execution

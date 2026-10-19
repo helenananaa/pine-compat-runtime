@@ -32,6 +32,11 @@ pub(crate) use run::{
     run_script_csv_with_request_bars_internal,
 };
 
+#[wasm_bindgen(js_name = externalScheduleSchemaVersion)]
+pub fn external_schedule_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = externalClosingTickSchemaVersion)]
 pub fn external_closing_tick_schema_version() -> u32 {
     pine_runtime::EXTERNAL_CLOSING_TICK_SCHEMA_VERSION

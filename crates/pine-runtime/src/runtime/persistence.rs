@@ -72,7 +72,19 @@ impl<'a> HistoricalRuntime<'a> {
         self.metadata.persistent_slots(kind).to_vec()
     }
 
+    #[cfg(test)]
     pub(crate) fn seed_intrabar_array_from(&mut self, previous: &Self, id: u32) {
+        self.seed_intrabar_array_from_checkpoint(
+            &super::historical::CollectionCheckpoint::capture(previous),
+            id,
+        );
+    }
+
+    pub(crate) fn seed_intrabar_array_from_checkpoint(
+        &mut self,
+        previous: &super::historical::CollectionCheckpoint,
+        id: u32,
+    ) {
         self.next_array_id = self.next_array_id.max(id.saturating_add(1));
         if self.array_primary_owners.get(&id) != previous.array_primary_owners.get(&id) {
             self.array_primary_owners
@@ -84,8 +96,9 @@ impl<'a> HistoricalRuntime<'a> {
             };
             self.array_slices.insert(id, slice);
             self.array_kinds.insert(id, kind);
-            self.copy_array_user_type_metadata_from(previous, id, id);
-            self.seed_intrabar_array_from(previous, slice.parent_id);
+            self.array_user_types
+                .copy_entry_from(&previous.array_user_types, id);
+            self.seed_intrabar_array_from_checkpoint(previous, slice.parent_id);
             return;
         }
         let Some(kind) = previous.array_kinds.get(&id).copied() else {
@@ -95,15 +108,24 @@ impl<'a> HistoricalRuntime<'a> {
             return;
         }
         self.array_kinds.insert(id, kind);
-        self.copy_array_user_type_metadata_from(previous, id, id);
+        self.array_user_types
+            .copy_entry_from(&previous.array_user_types, id);
     }
 
-    pub(crate) fn seed_intrabar_map_from(&mut self, previous: &Self, id: u32) {
+    pub(crate) fn seed_intrabar_map_from_checkpoint(
+        &mut self,
+        previous: &super::historical::CollectionCheckpoint,
+        id: u32,
+    ) {
         self.next_map_id = self.next_map_id.max(id.saturating_add(1));
         self.map_store.copy_entry_from(&previous.map_store, id);
     }
 
-    pub(crate) fn seed_intrabar_matrix_from(&mut self, previous: &Self, id: u32) {
+    pub(crate) fn seed_intrabar_matrix_from_checkpoint(
+        &mut self,
+        previous: &super::historical::CollectionCheckpoint,
+        id: u32,
+    ) {
         self.next_matrix_id = self.next_matrix_id.max(id.saturating_add(1));
         self.matrix_store
             .copy_entry_from(&previous.matrix_store, id);

@@ -95,7 +95,7 @@ mod tests {
         assert!(runtime.resource_budget.reserve_collection(8));
         assert!(runtime.resource_budget.matrix.spend(8));
 
-        runtime.restore_strategy_eval_checkpoint();
+        runtime.restore_strategy_eval_checkpoint().unwrap();
 
         assert_eq!(runtime.execution_steps_remaining, 2);
         assert_eq!(runtime.loop_iterations_remaining, 1);

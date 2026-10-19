@@ -23,6 +23,55 @@ fn account(time: i64, qty: f64) -> ExternalAccountFrame {
 }
 
 #[test]
+fn external_append_clock_matches_batch_and_preflight_keeps_feedback_unmodified() {
+    let hir = program(
+        "strategy(\"Clock\")\nplot(timenow)\nplot(strategy.position_size)\nif timenow > 100000\n    strategy.entry(\"L\", strategy.long)",
+    );
+    let bars = [
+        bar(10.0),
+        Bar {
+            time: 60000,
+            ..bar(10.0)
+        },
+    ];
+    let clocks = [59999, 119999];
+    let mut batch = HistoricalRuntime::new(&hir)
+        .with_external_accounts(vec![account(0, 0.0), account(60000, 2.0)])
+        .unwrap();
+    batch
+        .append_bars_with_execution_times(&bars, &clocks)
+        .unwrap();
+    let mut session = HistoricalRuntime::new(&hir)
+        .with_external_accounts(vec![])
+        .unwrap();
+    assert!(
+        session
+            .append_external_bars_with_execution_times(&bars[..1], vec![account(0, 0.0)], None, &[])
+            .is_err()
+    );
+    for (index, time) in [0, 60000].into_iter().enumerate() {
+        session
+            .append_external_bars_with_execution_times(
+                &bars[index..index + 1],
+                vec![account(time, index as f64 * 2.0)],
+                None,
+                &clocks[index..index + 1],
+            )
+            .unwrap();
+    }
+    assert_eq!(session.result().plots, batch.result().plots);
+    assert_eq!(
+        serde_json::to_string(session.external_intents().unwrap()).unwrap(),
+        serde_json::to_string(batch.external_intents().unwrap()).unwrap()
+    );
+    assert_eq!(
+        session.result().plots[0].values,
+        vec![PineValue::Int(59999), PineValue::Int(119999)]
+    );
+    assert!(session.result().strategy.is_none());
+}
+
+#[test]
 fn external_mode_never_exposes_a_native_ledger_on_any_result_surface() {
     let hir = program(
         "strategy(\"External\")\nstrategy.entry(\"L\", strategy.long)\nplot(strategy.position_size[1])",

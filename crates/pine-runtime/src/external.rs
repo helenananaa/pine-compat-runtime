@@ -258,6 +258,31 @@ impl HistoricalRuntime<'_> {
         frames: Vec<ExternalAccountFrame>,
         passes: Option<Vec<Vec<ExternalPass>>>,
     ) -> Result<(), RuntimeError> {
+        self.append_external_bars_inner(bars, frames, passes, None)
+    }
+
+    /// Append authoritative feedback with one host execution timestamp per bar.
+    /// Scheduled fill passes retain their own explicit event timestamps.
+    pub fn append_external_bars_with_execution_times(
+        &mut self,
+        bars: &[crate::Bar],
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+        execution_times: &[i64],
+    ) -> Result<(), RuntimeError> {
+        if execution_times.len() != bars.len() {
+            return Err(external_error("execution timestamp count must match bars"));
+        }
+        self.append_external_bars_inner(bars, frames, passes, Some(execution_times))
+    }
+
+    fn append_external_bars_inner(
+        &mut self,
+        bars: &[crate::Bar],
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+        execution_times: Option<&[i64]>,
+    ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
         let state = self
             .external_execution
@@ -308,7 +333,10 @@ impl HistoricalRuntime<'_> {
         if let (Some(previous), Some(appended)) = (&mut state.passes, passes) {
             previous.extend(appended);
         }
-        let result = self.append_bars(bars);
+        let result = match execution_times {
+            Some(times) => self.append_bars_with_execution_times(bars, times),
+            None => self.append_bars(bars),
+        };
         if result.is_err() {
             self.execution_failed = true;
         }

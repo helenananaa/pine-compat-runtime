@@ -70,7 +70,7 @@ impl PyProgram {
         )
     }
     /// Evaluate against host-owned account frames; never run the native broker.
-    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None))]
+    #[pyo3(signature = (bars, accounts, input_overrides=None, chart_symbol=None, chart_timeframe=None, execution_passes=None, request_bars=None, execution_times=None))]
     #[allow(clippy::too_many_arguments)]
     fn run_external(
         &self,
@@ -82,6 +82,7 @@ impl PyProgram {
         chart_timeframe: Option<&str>,
         execution_passes: Option<&Bound<'_, PyAny>>,
         request_bars: Option<&Bound<'_, PyAny>>,
+        execution_times: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         external::run(
             self,
@@ -93,6 +94,7 @@ impl PyProgram {
             chart_timeframe,
             execution_passes,
             request_bars,
+            execution_times,
         )
     }
 
@@ -294,6 +296,7 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("__version__", env!("CARGO_PKG_VERSION"))?;
     module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
+    module.add("EXTERNAL_CLOCK_SCHEMA_VERSION", 1)?;
     module.add("RENDER_METADATA_VERSION", PUBLIC_RENDER_METADATA_VERSION)?;
     module.add_class::<PyProgram>()?;
     module.add_class::<external::ExternalSession>()?;

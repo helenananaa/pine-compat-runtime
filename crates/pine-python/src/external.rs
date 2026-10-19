@@ -1,6 +1,6 @@
 //! Host-neutral external evaluator binding.
 use crate::{
-    PyProgram, parse_bars, parse_input_overrides, parse_request_environment,
+    PyProgram, parse_bars, parse_execution_times, parse_input_overrides, parse_request_environment,
     runtime_result_view_to_py,
 };
 use pine_runtime::HistoricalRuntime;
@@ -19,8 +19,10 @@ pub(crate) fn run(
     chart_timeframe: Option<&str>,
     execution_passes: Option<&Bound<'_, PyAny>>,
     request_bars: Option<&Bound<'_, PyAny>>,
+    execution_times: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     let bars = parse_bars(bars)?;
+    let execution_times = parse_execution_times(execution_times)?;
     let json = PyModule::import(py, "json")?;
     let raw: String = json.call_method1("dumps", (accounts,))?.extract()?;
     let frames: Vec<pine_runtime::ExternalAccountFrame> =
@@ -42,8 +44,11 @@ pub(crate) fn run(
         )
         .with_external_accounts_and_passes(frames, passes)
         .map_err(|err| PyValueError::new_err(err.message))?;
-    py.detach(|| runtime.append_bars(&bars))
-        .map_err(|err| PyValueError::new_err(err.message))?;
+    py.detach(|| match execution_times.as_deref() {
+        Some(times) => runtime.append_bars_with_execution_times(&bars, times),
+        None => runtime.append_bars(&bars),
+    })
+    .map_err(|err| PyValueError::new_err(err.message))?;
     let intents = runtime
         .external_intents()
         .map_err(|err| PyValueError::new_err(err.message))?;
@@ -105,13 +110,14 @@ impl ExternalSession {
 }
 #[pymethods]
 impl ExternalSession {
-    #[pyo3(signature=(bars, accounts, execution_passes=None))]
+    #[pyo3(signature=(bars, accounts, execution_passes=None, execution_times=None))]
     fn append(
         &mut self,
         py: Python<'_>,
         bars: &Bound<'_, PyAny>,
         accounts: &Bound<'_, PyAny>,
         execution_passes: Option<&Bound<'_, PyAny>>,
+        execution_times: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         if self.failed {
             return Err(PyValueError::new_err(
@@ -119,6 +125,7 @@ impl ExternalSession {
             ));
         }
         let bars = parse_bars(bars)?;
+        let execution_times = parse_execution_times(execution_times)?;
         let json = PyModule::import(py, "json")?;
         let raw: String = json.call_method1("dumps", (accounts,))?.extract()?;
         let frames =
@@ -129,7 +136,12 @@ impl ExternalSession {
                 serde_json::from_str(&raw).map_err(|err| PyValueError::new_err(err.to_string()))
             })
             .transpose()?;
-        if let Err(err) = py.detach(|| self.runtime.append_external_bars(&bars, frames, passes)) {
+        if let Err(err) = py.detach(|| match execution_times.as_deref() {
+            Some(times) => self
+                .runtime
+                .append_external_bars_with_execution_times(&bars, frames, passes, times),
+            None => self.runtime.append_external_bars(&bars, frames, passes),
+        }) {
             self.failed = true;
             return Err(PyValueError::new_err(err.message));
         }

@@ -33,6 +33,15 @@ increase strictly. An unconfirmed final pass must be replaced by a fresh replay
 before another bar can append. Empty appends return the current snapshot, even
 for fill-pass sessions, without requiring an empty `execution_passes` argument.
 
+Development builds exposing `EXTERNAL_CLOCK_SCHEMA_VERSION == 1` also accept
+`execution_times=[...]` on both `Program.run_external` and `ExternalSession.append`.
+Supply one integer millisecond execution timestamp per chart bar, distinct from
+its opening timestamp. This supplies `timenow` without consulting a system clock.
+Scheduled fill passes use their own `event_time_ms`; those timestamps take
+precedence within each pass. Rust callers use
+`append_external_bars_with_execution_times` for the same append behavior or
+`append_bars_with_execution_times` after binding batch account feedback.
+
 Streaming dataset endpoints are not retrospective prefix replay. A script using
 `barstate.islast`, `last_bar_index`, visible chart bounds, or initial-window
 selection can produce different historical values when the whole dataset is
@@ -57,12 +66,13 @@ for prefix-stable series/TA/state and authoritative feedback, fill passes,
 independent sessions, correction rejection, and poisoned-session behavior.
 Rust API regressions are in `crates/pine-runtime/tests/external_session.rs`.
 
-On 2026-10-19 the complete Windows `scripts/verify.ps1 -Python python` gate passed
-with Rust 1.97.1, Python 3.12.7 and Node 22.14.0: 7,900 Rust tests, 1,681 tests
-against a freshly built and installed Python wheel, generated WASM/Node execution,
-formatting, Clippy, source structure and host parity checks. Tooling ran 172 tests:
-171 passed and the optional archived Linux 0.3.0rc1 wheel-tag check was skipped
-because that historical artifact is not retained in this worktree. The focused
-external-broker/session Python suite passed all 36 cases before the full gate.
-These are controlled runtime and binding checks, not release or host-deployment
-qualification.
+On 2026-10-19 the explicit-clock update passed the complete Windows
+`scripts/verify.ps1` gate with Rust 1.97.1, Python 3.12.7 and Node 22.14.0:
+7,901 Rust tests, 1,686 tests against a freshly built and installed Python wheel,
+172 tooling tests, generated WASM/Node execution, formatting, Clippy, source
+structure and binding golden checks. The focused external-broker/session Python
+suite passed 41 cases. An initial gate attempt reused a syntax-fixture executable
+with an embedded path to a removed checkout; clearing only that package's Cargo
+artifacts and rebuilding restored all 27 fixture reads before the successful
+complete rerun. These are controlled runtime and binding checks, not release,
+host-deployment or TradingView differential qualification.

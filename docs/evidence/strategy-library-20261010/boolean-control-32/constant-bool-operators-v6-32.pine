@@ -1,0 +1,16 @@
+//@version=6
+indicator("Constant bool operators 32",precision=0)
+a=if false
+    false
+plot(a?1:0,title="condition")
+plot(a==true?1:0,title="equals true")
+plot(a==false?1:0,title="equals false")
+plot(a!=true?1:0,title="not equal true")
+plot(a!=false?1:0,title="not equal false")
+plot(not a?1:0,title="not")
+plot(a and true?1:0,title="and true")
+plot(a or false?1:0,title="or false")
+plot(a==a?1:0,title="self equality")
+plot(bool(a)?1:0,title="bool cast")
+plot(a[1]?1:0,title="history")
+plot(bar_index>=0?(a?1:0):-1,title="series context")

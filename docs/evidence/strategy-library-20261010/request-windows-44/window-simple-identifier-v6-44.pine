@@ -1,0 +1,9 @@
+//@version=6
+indicator("window-simple-identifier-v6-44",dynamic_requests=true)
+simple=1
+simple:=2
+var count=0
+count+=1
+plot(bar_index)
+plot(simple)
+plot(count)

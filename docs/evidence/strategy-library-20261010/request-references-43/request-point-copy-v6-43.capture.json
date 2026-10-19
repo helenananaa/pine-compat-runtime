@@ -1,0 +1,28 @@
+{
+  "name": "request-point-copy-v6-43",
+  "version": 6,
+  "scenario": "point-copy",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-copy-v6-43.pine",
+  "source_sha256": "38016a7bb75cf3c20e18d1a36b113ab1dd64077a3ae9740435ecf6ceaec1f505",
+  "historical_expected": [
+    15,
+    10,
+    15
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    10,
+    15
+  ],
+  "native_row": "242 row request-point-copy-v6-43 Plot 15.00 Plot 10.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "38016a7bb75cf3c20e18d1a36b113ab1dd64077a3ae9740435ecf6ceaec1f505",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-copy-v6-43.native.ax.txt",
+  "accessibility_sha256": "48f2bad13e6716619a77f9724490870f75d6c6d0ddfa15d4e53ef872311da391",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-copy-v6-43.native.png",
+  "screenshot_sha256": "0dade8e0a6b70ce00ef45ba1ed6d889d4cf7cd5fdfe5237f406342b859c1049b",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

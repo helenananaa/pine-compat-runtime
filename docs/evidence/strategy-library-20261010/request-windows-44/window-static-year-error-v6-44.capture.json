@@ -1,0 +1,23 @@
+{
+  "name": "window-static-year-error-v6-44",
+  "version": 6,
+  "scenario": "static-year-error",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-static-year-error-v6-44.pine",
+  "source_sha256": "562d465e24da17df10993a49f1f55e722ff989d3e882aac9f5adf708d48acf12",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    2
+  ],
+  "native_row": "239 row window-static-year-error-v6-44 Plot 1.00 Plot 1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "562d465e24da17df10993a49f1f55e722ff989d3e882aac9f5adf708d48acf12",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-static-year-error-v6-44.native.ax.txt",
+  "accessibility_sha256": "13a39f9581788b85a41e599285c15fd94ebc3dba403cb27fe8b4169d86bfa184",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-static-year-error-v6-44.native.png",
+  "screenshot_sha256": "9aa2e85b3efcdc5b64ca9d143b529f1a0d5b96a6dd7c15a50ba6793db2b3444e",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

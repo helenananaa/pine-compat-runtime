@@ -1,0 +1,6 @@
+//@version=6
+indicator("Reserved for-v6 probe33",precision=0)
+n=0
+for text=0 to 0
+    n+=text
+plot(n)

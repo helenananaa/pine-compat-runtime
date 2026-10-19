@@ -1,0 +1,34 @@
+//@version=5
+indicator("Constant bool identities v5 probe34",precision=0)
+a=if false
+    true
+b=if false
+    true
+c=if false
+    false
+d=if true
+    true
+e=if true
+    false
+alias=a
+arrD=array.from(d)
+arrE=array.from(e)
+plot(a==a?1:0,title="self")
+plot(a==b?1:0,title="same source shape")
+plot(a==c?1:0,title="different missing body")
+plot(a==alias?1:0,title="alias identity")
+plot(b==c?1:0,title="other missing identity")
+plot(d==d?1:0,title="selected self")
+plot(d==true?1:0,title="selected true comparison")
+plot(e==false?1:0,title="selected false comparison")
+plot(d?1:0,title="selected true condition")
+plot(e?1:0,title="selected false condition")
+plot(bool(d)?1:0,title="selected true cast")
+plot(bool(e)?1:0,title="selected false cast")
+plot(str.tostring(d)=="true"?1:0,title="selected true string true")
+plot(str.tostring(d)=="false"?1:0,title="selected true string false")
+plot(str.tostring(e)=="false"?1:0,title="selected false string")
+plot(array.get(arrD,0)?1:0,title="selected true array")
+plot(array.get(arrE,0)?1:0,title="selected false array")
+plot(d[1]?1:0,title="selected true history")
+plot(e[1]?1:0,title="selected false history")

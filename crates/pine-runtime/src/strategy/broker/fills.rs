@@ -190,7 +190,8 @@ impl BrokerState {
         );
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
         let commission = entry_fill.entry_commission + exit_commission;
-        let profit = (current_price - entry_fill.entry_price) * qty - commission;
+        let profit =
+            self.account_value((current_price - entry_fill.entry_price) * qty) - commission;
         let closed_entry_commission = entry_fill.entry_commission;
 
         self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -216,11 +217,12 @@ impl BrokerState {
         });
 
         self.apply_reduction_cash_and_position(
-            qty * current_price - exit_commission,
+            self.account_value(qty * current_price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            current_price,
         );
     }
 
@@ -260,7 +262,8 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
         let commission = entry_fill.entry_commission + exit_commission;
         let signed_qty = TradeDirection::Short.signed_quantity(qty);
-        let profit = (current_price - entry_fill.entry_price) * signed_qty - commission;
+        let profit =
+            self.account_value((current_price - entry_fill.entry_price) * signed_qty) - commission;
         let closed_entry_commission = entry_fill.entry_commission;
 
         self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -286,11 +289,12 @@ impl BrokerState {
         });
 
         self.apply_reduction_cash_and_position(
-            signed_qty * current_price - exit_commission,
+            self.account_value(signed_qty * current_price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            current_price,
         );
     }
 
@@ -349,6 +353,7 @@ impl BrokerState {
             for allocation in &allocations {
                 let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
                 let entry_fill = AllocatedEntryFill {
+                    extrema: allocation.extrema,
                     entry_price: allocation.entry_price,
                     entry_bar_index: allocation.entry_bar_index,
                     entry_time: allocation.entry_time,
@@ -357,7 +362,8 @@ impl BrokerState {
                 };
                 let commission = allocation.entry_commission + allocated_exit_commission;
                 let signed_qty = direction.signed_quantity(allocation.quantity);
-                let profit = (exit_price - allocation.entry_price) * signed_qty - commission;
+                let profit = self.account_value((exit_price - allocation.entry_price) * signed_qty)
+                    - commission;
 
                 self.record_order_event(
                     exit_id.clone(),
@@ -403,11 +409,12 @@ impl BrokerState {
         };
 
         self.apply_reduction_cash_and_position(
-            direction.signed_quantity(qty) * exit_price - exit_commission,
+            self.account_value(direction.signed_quantity(qty) * exit_price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            exit_price,
         );
     }
 }

@@ -1,0 +1,18 @@
+{
+  "name": "method-simple-param-invalid-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-param-invalid-v6-38.pine",
+  "source_sha256": "8fd5272d12f4d472bc624af16fd9b114b3a61643deee83c6fc2eea0353c56f37",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot call \"plus38\" with argument \"extra\"=\"bar_index\". An argument of \"series int\" type was used but a \"simple int\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d0e53692e377c4ef80dee12994b1fc55e3c3cf05de5fa3f6df7a54a2945f6601",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-param-invalid-v6-38.native.ax.txt",
+  "accessibility_sha256": "24f07e5c9365254c3fd5140e6acbf8d18ccc8490fdba3edbf2cd23e37122758c",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-param-invalid-v6-38.native.png",
+  "screenshot_sha256": "935de5e900d7731ed60e08a2ba7987d8b9296681fd33eb8b541068318f06ffb9",
+  "qualification_scope": "candidate_method_control",
+  "native_values": null,
+  "discovery_record_sha256": "bee4f5074767667b2536d0be9ef28beff066f1d5aecb6faa324d605b2dde0b0f"
+}

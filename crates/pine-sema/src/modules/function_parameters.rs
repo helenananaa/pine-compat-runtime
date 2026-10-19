@@ -4,6 +4,19 @@ use crate::types::array_kind_from_element_type_name;
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{Diagnostic, FunctionParam, Span};
 
+pub(super) fn qualified_method_scalar_type(type_name: &str) -> Option<(PineType, bool)> {
+    let (name, simple) = if let Some(name) = type_name.strip_prefix("simple ") {
+        (name, true)
+    } else {
+        (type_name.strip_prefix("series ")?, false)
+    };
+    let mut pine_type = super::imported_user_type_scalar_field_type(name)?;
+    if simple {
+        pine_type.qualifier = Qualifier::Simple;
+    }
+    Some((pine_type, simple))
+}
+
 pub(super) fn same_parameter_signature(
     left: &[Option<FunctionParamInfo>],
     right: &[Option<FunctionParamInfo>],
@@ -11,7 +24,9 @@ pub(super) fn same_parameter_signature(
     left.len() == right.len()
         && left.iter().zip(right).all(|(a, b)| match (a, b) {
             (Some(a), Some(b)) => {
-                a.pine_type == b.pine_type && a.user_type_name == b.user_type_name
+                a.pine_type == b.pine_type
+                    && a.user_type_name == b.user_type_name
+                    && a.map_type == b.map_type
             }
             (None, None) => true,
             _ => false,
@@ -65,12 +80,19 @@ fn module_function_param_type(
     span: Span,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Option<FunctionParamInfo> {
-    let explicit_series = type_name.starts_with("series ");
-    let explicit_simple = type_name.starts_with("simple ");
+    let mut explicit_series = type_name.starts_with("series ");
+    let mut explicit_simple = type_name.starts_with("simple ");
+    let explicit_const = type_name.starts_with("const ");
     let type_name = type_name
         .strip_prefix("series ")
         .or_else(|| type_name.strip_prefix("simple "))
+        .or_else(|| type_name.strip_prefix("const "))
         .unwrap_or(type_name);
+    let collection = crate::analyzer::functions::collections::collection_parameter_info(type_name);
+    if collection.is_some() {
+        explicit_series = false;
+        explicit_simple = false;
+    }
     if explicit_simple && !matches!(type_name, "int" | "float" | "bool" | "string" | "color") {
         diagnostics.push(Diagnostic::error(
             "E_FUNCTION_PARAM_TYPE",
@@ -79,12 +101,15 @@ fn module_function_param_type(
         ));
         return None;
     }
-    let qualifier = if explicit_simple {
+    let qualifier = if explicit_const {
+        Qualifier::Const
+    } else if explicit_simple {
         Qualifier::Simple
     } else {
         Qualifier::Series
     };
     let (pine_type, user_type_name) = match type_name {
+        _ if collection.is_some() => (collection.unwrap().0, None),
         _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
             let element_type = &type_name["array<".len()..type_name.len() - 1];
             if let Some(kind) = array_kind_from_element_type_name(element_type) {
@@ -139,11 +164,21 @@ fn module_function_param_type(
             return None;
         }
     };
+    if explicit_const && pine_type.kind == ValueKind::UserType {
+        diagnostics.push(Diagnostic::error(
+            "E_FUNCTION_PARAM_TYPE",
+            "user-defined type parameters cannot use the `const` qualifier",
+            span,
+        ));
+        return None;
+    }
     Some(FunctionParamInfo {
         pine_type,
         explicit_series,
         explicit_simple,
+        enforce_qualifier: false,
         user_type_name,
+        map_type: collection.and_then(|(_, map)| map),
         span,
     })
 }

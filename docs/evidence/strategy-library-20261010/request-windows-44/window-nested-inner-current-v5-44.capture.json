@@ -1,0 +1,23 @@
+{
+  "name": "window-nested-inner-current-v5-44",
+  "version": 5,
+  "scenario": "nested-inner-current",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-nested-inner-current-v5-44.pine",
+  "source_sha256": "d8f37f679d04966674d3443fe0c7bf343c23261ecbeafad2e1f81a829aa47407",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    478,
+    3350
+  ],
+  "native_row": "239 row window-nested-inner-current-v5-44 Plot 3,349.00 Plot 478.00 Plot 3,350.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d8f37f679d04966674d3443fe0c7bf343c23261ecbeafad2e1f81a829aa47407",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-nested-inner-current-v5-44.native.ax.txt",
+  "accessibility_sha256": "af1f5059d71b4bfb11d137fc28ca4b46b1ffa83174a339a406c517d7be72ffb4",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-nested-inner-current-v5-44.native.png",
+  "screenshot_sha256": "b0b0f9cbe0275fee5323f0777329aec1a7021c3f0aee5b4383b31aae7e786da6",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

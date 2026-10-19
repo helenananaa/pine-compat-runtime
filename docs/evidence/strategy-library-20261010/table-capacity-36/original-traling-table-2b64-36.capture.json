@@ -1,0 +1,16 @@
+{
+  "name": "original-traling-table-2b64-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-2b64-36.pine",
+  "source_sha256": "6cb75911a55682c70524a72ff6d6dca9088d2598ca1e90362dab3b29f14dcde3",
+  "native_status": "compiled_and_executed",
+  "native_row": "240 row Traling.SL.Target (20, 50, % Based Target and SL, 1, 1, 0.5, 0.3, 0.3, 100, 50, 60, 25, 30) Plot 82,818.91 Plot 80,424.08",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2b64ba164dcfbfb9e5d8e1349d85cfd3617a805b412aca815d8982a75868e71a",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-2b64-36.native.ax.txt",
+  "accessibility_sha256": "efe99b5ca9357e90b828ee4064c3a7d8c677bb141d6cc97e59a57e0d1e7c5b85",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-2b64-36.native.png",
+  "screenshot_sha256": "e3f662e4ab999867d6d55775f0992b0269a836c5c4d031bfd6ae7366ce6c9e63",
+  "scope": "Unmodified saved original executes, displayed trade list reaches51; not a complete native trade-ledger or profit comparison",
+  "qualification_scope": "native_success_only_original_strategy"
+}

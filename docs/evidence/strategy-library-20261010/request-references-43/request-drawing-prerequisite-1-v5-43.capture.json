@@ -1,0 +1,19 @@
+{
+  "name": "request-drawing-prerequisite-1-v5-43",
+  "version": 5,
+  "reassigned": true,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-drawing-prerequisite-1-v5-43.pine",
+  "source_sha256": "23d99203b98c6ddd49c85ea5d1bbd6d8c86d3899a2e17ffd686080d3162ec3f6",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "built-in 'line.new' cannot be used with any parameter of the `security()` function.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "23d99203b98c6ddd49c85ea5d1bbd6d8c86d3899a2e17ffd686080d3162ec3f6",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-drawing-prerequisite-1-v5-43.native.ax.txt",
+  "accessibility_sha256": "6ffc7ef62995eef1acc31b195ef7893857fcb52c947d0e1f6a1cf902b77f28fa",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-drawing-prerequisite-1-v5-43.native.png",
+  "screenshot_sha256": "ba872fe634bbbe6146f1a017c25a76744149fd22bb1ae812a6e1bd77339e4aa1",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

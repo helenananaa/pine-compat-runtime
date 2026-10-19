@@ -1,0 +1,19 @@
+{
+  "name": "body-shape-typed-udt-arrays-unused-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-shape-typed-udt-arrays-unused-v6-46.pine",
+  "source_sha256": "fe357b881de4d0b14d0f708f613bb19cc1fc279b66cc12ba45b7427858326f71",
+  "kind": "typed-udt-arrays-unused",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"operator ?:\" with argument \"expr2\"=\"b\". An argument of \"B\" type was used but a \"A\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b0b06db227dcd95829d803b7aa6bccbe7effcf110db567ed4b87a0793978023e",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-shape-typed-udt-arrays-unused-v6-46.native.ax.txt",
+  "accessibility_sha256": "e9b621b7ae6bce2a150c210a0b66fbbaeb795ffe10258455fe3bc6ebb5128306",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-shape-typed-udt-arrays-unused-v6-46.native.png",
+  "screenshot_sha256": "42e38531414c9751c39e839b5c51acc8462920fa9a74ca46a2fa4647ccf55927",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

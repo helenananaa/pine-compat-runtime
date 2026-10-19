@@ -1,0 +1,18 @@
+//@version=5
+indicator("Bool control defaults v5 probe32",precision=0)
+s=switch 0
+    1=>true
+w=while false
+    true
+xs=array.new_int(0)
+e=for item in xs
+    true
+z=for idx=0 to int(na)
+    true
+n=while false
+    42
+plot(s==false?1:0,title="switch false")
+plot(w==false?1:0,title="while false")
+plot(e==false?1:0,title="foreach false")
+plot(z==false?1:0,title="for false")
+plot(na(n)?1:0,title="numeric missing")

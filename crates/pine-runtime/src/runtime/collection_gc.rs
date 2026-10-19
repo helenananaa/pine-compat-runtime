@@ -139,7 +139,9 @@ impl HistoricalRuntime<'_> {
                         id = slice.parent_id;
                     }
                 }
-                PineValue::UserTypeRef(id) if objects.insert(*id) => {
+                PineValue::UserTypeRef(id) | PineValue::ChartPointRef(id)
+                    if objects.insert(*id) =>
+                {
                     if let Some(fields) = self.object_store.get(id) {
                         pending.extend(fields.iter().filter(can_reference_collection));
                     }
@@ -183,6 +185,8 @@ impl HistoricalRuntime<'_> {
         self.array_kinds
             .retain(|id, _| store.contains_key(&id) || slices.contains_key(&id));
         self.array_user_types
+            .retain(|id, _| store.contains_key(&id) || slices.contains_key(&id));
+        self.array_primary_owners
             .retain(|id, _| store.contains_key(&id) || slices.contains_key(&id));
         self.object_store.retain(|id, _| objects.contains(&id));
         self.object_varip_fields
@@ -581,7 +585,7 @@ mod tests {
     #[test]
     fn object_field_mutation_and_checkpoint_clones_account_for_string_payloads() {
         let program = program(
-            "//@version=6\nindicator(\"object pressure\")\ntype Payload\n    string text\n    int n\nplot(close)\n",
+            "//@version=6\nindicator(\"object pressure\")\ntype Payload\n    string note\n    int n\nplot(close)\n",
         );
         let identity = &program.user_types[0].identity;
         let mut runtime = HistoricalRuntime::new(&program);
@@ -807,7 +811,7 @@ mod tests {
     }
 
     #[test]
-    fn requested_temporary_array_is_frozen_before_child_collection() {
+    fn bounded_equal_context_temporary_array_is_frozen_before_collection() {
         let program = program(
             "//@version=6\nindicator(\"contexts\")\na = request.security(syminfo.tickerid, timeframe.period, array.from(close), calc_bars_count=2050)\nplot(array.get(a, 0))\n",
         );
@@ -818,11 +822,7 @@ mod tests {
             runtime.result().plots[0].values.last(),
             Some(&PineValue::Float(2049.))
         );
-        let child = runtime
-            .bounded_same_context_evaluations
-            .values()
-            .next()
-            .unwrap();
-        assert!(child.array_store.len() < 1024);
+        assert!(runtime.bounded_same_context_evaluations.is_empty());
+        assert!(runtime.array_store.len() < 1024);
     }
 }

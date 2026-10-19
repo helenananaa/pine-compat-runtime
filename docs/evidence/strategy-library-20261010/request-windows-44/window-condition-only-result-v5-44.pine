@@ -1,0 +1,11 @@
+//@version=5
+indicator("window-condition-only-result-v5-44",dynamic_requests=true)
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2)
+float x=0
+if a>=0
+    x:=7
+var count=0
+count+=1
+plot(bar_index)
+plot(x)
+plot(count)

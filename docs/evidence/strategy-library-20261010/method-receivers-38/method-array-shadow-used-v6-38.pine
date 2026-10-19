@@ -1,0 +1,6 @@
+//@version=6
+indicator("method-array-shadow-used-v6-38")
+method size(array<float> self)=>array.size(self)+40
+a=array.from(1.0,2.0)
+plot(a.size())
+plot(array.size(a))

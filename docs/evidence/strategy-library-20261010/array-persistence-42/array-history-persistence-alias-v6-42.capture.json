@@ -1,0 +1,37 @@
+{
+  "name": "array-history-persistence-alias-v6-42",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-history-persistence-alias-v6-42.pine",
+  "source_sha256": "822e6772be4b0ec840e4d23a09d2846c164b8b3162086552ccc517d134b21aa6",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3350,
+    1,
+    3350,
+    1,
+    3350,
+    1,
+    3350,
+    1,
+    0,
+    0,
+    0,
+    0
+  ],
+  "native_marker_suffix": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "native_row": "241 row array-history-persistence-alias-v6-42 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 0.00 Plot 0.00 Plot 0.00 Plot 0.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "08102e15b1dd051395a56fec5c9f7c4ed8fa9b65362542829ed182f1d94a839a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-history-persistence-alias-v6-42.native.ax.txt",
+  "accessibility_sha256": "578a4459d8b5ba37a571628090a03891fb889b6208497d725b07f2c1aac510ff",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-history-persistence-alias-v6-42.native.png",
+  "screenshot_sha256": "750daed715f899cb72bc45db95c469d486031d440233049151687e516cf1ec1a",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day"
+}

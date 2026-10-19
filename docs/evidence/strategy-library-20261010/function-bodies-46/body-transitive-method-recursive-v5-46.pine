@@ -1,0 +1,6 @@
+//@version=5
+indicator("body-transitive-method-recursive-v5-46")
+type Anchor
+    int value
+method g(Anchor self,x)=>self.g(x)+self.value
+plot(1)

@@ -1,0 +1,11 @@
+//@version=5
+indicator("point-copy-alias-v5-41")
+p=chart.point.from_index(1,10)
+a=p
+b=p.copy()
+a.price:=20
+b.index:=9
+plot(p.price)
+plot(b.price)
+plot(p.index)
+plot(b.index)

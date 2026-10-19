@@ -1,0 +1,22 @@
+{
+  "name": "request-point-global-mutation-v5-43",
+  "version": 5,
+  "scenario": "point-global-mutation",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-global-mutation-v5-43.pine",
+  "source_sha256": "555a16f44aed331b08fff9f8407e4ab83b16aec3412125bfa7010817889ba416",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "240 row request-point-global-mutation-v5-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b89cfc04ac2fddfedfac16c657d8016e90ffe0c9729e7010f4dd5e8eb984c16a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-global-mutation-v5-43.native.ax.txt",
+  "accessibility_sha256": "2951d4944c837c5d865c058ab8fba576d7dfc7a4a3ca68c3114ee4513778a5b0",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-global-mutation-v5-43.native.png",
+  "screenshot_sha256": "c75026d7112a0f9ba978ee8c284791e50f091a79512d06895e8d5902a2b141c2",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

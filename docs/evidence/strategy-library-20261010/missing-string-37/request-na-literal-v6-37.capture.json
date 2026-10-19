@@ -1,0 +1,20 @@
+{
+  "name": "request-na-literal-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-literal-v6-37.pine",
+  "source_sha256": "61681a94fab4a41b31506cf2a9b0a2ae882a3188e9e5fc276e84320281a7853f",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "240 row request-na-literal-v6-37 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "61681a94fab4a41b31506cf2a9b0a2ae882a3188e9e5fc276e84320281a7853f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-literal-v6-37.native.ax.txt",
+  "accessibility_sha256": "5af3ca0e4b9fbec665911db161fadb44c51699c3f5e3141debb02dc317920120",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-literal-v6-37.native.png",
+  "screenshot_sha256": "ff7c6fe819269de9882cf9e5cdc576470758437ebc59b0b539c594bc4081431f",
+  "scope": "Follow-up only: v6 literal na timeframe succeeds with current-chart values",
+  "qualification_scope": "candidate_bounded_control"
+}

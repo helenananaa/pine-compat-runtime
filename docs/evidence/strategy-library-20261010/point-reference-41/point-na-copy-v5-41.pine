@@ -1,0 +1,5 @@
+//@version=5
+indicator("point-na-copy-v5-41")
+chart.point p=na
+q=chart.point.copy(p)
+plot(na(q)?1:0)

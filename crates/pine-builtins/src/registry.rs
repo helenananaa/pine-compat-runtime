@@ -312,7 +312,7 @@ mod tests {
         assert_eq!(signature.params[0].name, "fill_price");
         assert_eq!(
             signature.params[0].accepts,
-            crate::Accepts::SeriesOrSimpleNumeric
+            crate::Accepts::NumericCompatible
         );
         assert_eq!(
             signature.returns,

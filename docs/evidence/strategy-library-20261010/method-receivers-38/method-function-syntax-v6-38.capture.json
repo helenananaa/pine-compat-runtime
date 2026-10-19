@@ -1,0 +1,20 @@
+{
+  "name": "method-function-syntax-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-function-syntax-v6-38.pine",
+  "source_sha256": "2c2fa88a27b16ae1fa5913da3a840aeaeff1b71f546c5fd4d7f71aa1d91e3a81",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    12
+  ],
+  "native_row": "319 row method-function-syntax-v6-38 Plot 12.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3217d417417684565c19ecf207f8c234856a4ea9d70cceea2fd940ee0c1f260c",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-function-syntax-v6-38.native.ax.txt",
+  "accessibility_sha256": "b7f25df52af64553e3a1bd9fb1e8b5511e5ba0150142cb40f8a4e7aea45d2b38",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-function-syntax-v6-38.native.png",
+  "screenshot_sha256": "56ec4533bb8d4386af85ddda7ca6ec251970d6cc04baa56ece3f3f284fa8a858",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "4bdb46b623f16f6f12d63fa021d1a2fdbd93b4e58e30c3d1588770916621aac9"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "parameter-method-const-series-arg-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-series-arg-v6-35.pine",
+  "source_sha256": "679c17aacd41a557d6d8433c20db237fb8521e6ba17ed32d36c6c0514d4b0e16",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of \"series int\" type was used but a \"const int\" is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "679c17aacd41a557d6d8433c20db237fb8521e6ba17ed32d36c6c0514d4b0e16",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-series-arg-v6-35.native.ax.txt",
+  "accessibility_sha256": "2a4ee98b625d41d883d9f54acadc6d4b7664634a3af5d87d716644853cc0b5df",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-series-arg-v6-35.native.png",
+  "screenshot_sha256": "870c74a55e98c3010254808ca4dfad840b0922fd5b98ccd80504dc3bac3fb163"
+}

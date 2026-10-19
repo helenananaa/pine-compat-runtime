@@ -1,0 +1,220 @@
+{
+  "status": "native_evidence_runtime_not_yet_qualified",
+  "records": [
+    {
+      "name": "table-1400-cells-v5-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-cells-v5-36.pine",
+      "source_sha256": "22a44c9d77cade60af4f48fb6be23abb29de6ecd5391c7cde6f6231eae6230f3",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1
+      ],
+      "native_row": "238 row table-1400-cells-v5-36 executed 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "22a44c9d77cade60af4f48fb6be23abb29de6ecd5391c7cde6f6231eae6230f3",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-cells-v5-36.native.ax.txt",
+      "accessibility_sha256": "7ccfd2f3e3f49bd4adcf7188e199cf467e5221fe8049b48174fff6044c066307",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-cells-v5-36.native.png",
+      "screenshot_sha256": "f00feb5a00db78cfc3720904f3a4c1dd319ba9300f13b3d46b09b805701d572c",
+      "scope": "Official v5 accepts allocating7x200 cells and writing the last cell. Exact maximum and full table resource lifecycle remain unqualified.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "original-traling-table-7f8b-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-7f8b-36.pine",
+      "saved_corpus_normalized_sha256": "7f8b530ebb9d0618167d4bb7498293e6b7647a92471c5d3b72a6fca9214faa51",
+      "source_sha256": "ffbbffcb926153ff6c3074ef009e9cf7fb52c99d5aada69d30b771ce300ba577",
+      "native_status": "compiled_and_executed",
+      "native_row": "238 row Traling.SL.Target (20, 50, % Based Target and SL, 1, 1, 0.5, 0.3, 0.3, 100, 50, 60, 25, 30) Plot 82,818.91 Plot 80,424.08",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "7f8b530ebb9d0618167d4bb7498293e6b7647a92471c5d3b72a6fca9214faa51",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-7f8b-36.native.ax.txt",
+      "accessibility_sha256": "128cb0f9fdf78a0b8247e4b766d1e7e014b305cbe667091b5a21589d52c9da80",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-7f8b-36.native.png",
+      "screenshot_sha256": "24db1f9ad82ed404497f932a8daea26321f5c45c7af008552d776df5bfc5a233",
+      "scope": "Unmodified saved strategy compiled and executed on native BTCUSDT daily history with its 7x200 table. Full trade ledger, prices, profit and synthetic-input parity are not qualified by this observation.",
+      "qualification_scope": "native_success_only_original_strategy"
+    },
+    {
+      "name": "table-1400-populated-v5-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-populated-v5-36.pine",
+      "source_sha256": "f2e1516f2069a38c5e6e56cd00094f30d2f41bfebf04bcbd6c24e28b6d30e514",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1400
+      ],
+      "native_row": "238 row table-1400-populated-v5-36 filled cells 1,400",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "f2e1516f2069a38c5e6e56cd00094f30d2f41bfebf04bcbd6c24e28b6d30e514",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-populated-v5-36.native.ax.txt",
+      "accessibility_sha256": "c7f1b66c04d47fbb26e0b7c444c34228a3fe1ac4f01cea7518ad4078523aa730",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-populated-v5-36.native.png",
+      "screenshot_sha256": "b63527250beafaa5c7d0a7477343e6d242bce4d59f4d14b52b3d9085655e045c",
+      "scope": "Native v5 executed all1400 table.cell writes, with a counter plot1400. This proves more than1000 populated cells are admitted; an exact maximum and script-wide limits remain unqualified.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "original-traling-table-2b64-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-2b64-36.pine",
+      "source_sha256": "6cb75911a55682c70524a72ff6d6dca9088d2598ca1e90362dab3b29f14dcde3",
+      "native_status": "compiled_and_executed",
+      "native_row": "240 row Traling.SL.Target (20, 50, % Based Target and SL, 1, 1, 0.5, 0.3, 0.3, 100, 50, 60, 25, 30) Plot 82,818.91 Plot 80,424.08",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2b64ba164dcfbfb9e5d8e1349d85cfd3617a805b412aca815d8982a75868e71a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-2b64-36.native.ax.txt",
+      "accessibility_sha256": "efe99b5ca9357e90b828ee4064c3a7d8c677bb141d6cc97e59a57e0d1e7c5b85",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-2b64-36.native.png",
+      "screenshot_sha256": "e3f662e4ab999867d6d55775f0992b0269a836c5c4d031bfd6ae7366ce6c9e63",
+      "scope": "Unmodified saved original executes, displayed trade list reaches51; not a complete native trade-ledger or profit comparison",
+      "qualification_scope": "native_success_only_original_strategy"
+    },
+    {
+      "name": "table-layout-10000-v5-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-10000-v5-36.pine",
+      "source_sha256": "e8ed9d73712ac07240be771c2115d8f4a73d54c0688133fb880065d323e6e9f0",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1
+      ],
+      "native_row": "240 row table-layout-10000-v5-36 executed 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "e8ed9d73712ac07240be771c2115d8f4a73d54c0688133fb880065d323e6e9f0",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-10000-v5-36.native.ax.txt",
+      "accessibility_sha256": "a4b9c976e77721d810f9b897097e4880a7fcd0c02c97d9fbce8f6a2c8f34276b",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-10000-v5-36.native.png",
+      "screenshot_sha256": "d4ee60c84bce821789dad2969b10192ca859916af6bd0fd9a52c1ff0895cfafd",
+      "scope": "Native v5 admits10000 declared slots and one last-coordinate cell; not a fully populated10000-cell or maximum-limit claim.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "table-layout-100000-v6-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-100000-v6-36.pine",
+      "source_sha256": "1bbf260b044f80542bc5412ad2685a5ce832aa9ceef1e03fdc282f29de15e4f5",
+      "native_status": "analysis_or_runtime_rejected",
+      "native_error": "Too many table cells.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1bbf260b044f80542bc5412ad2685a5ce832aa9ceef1e03fdc282f29de15e4f5",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-100000-v6-36.native.ax.txt",
+      "accessibility_sha256": "c3c1ea7e1c10faa4962a2b501f5d7e738be9099e92f45cbc869a6a77e31e56a5",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-100000-v6-36.native.png",
+      "screenshot_sha256": "b4863f9c2d2bc512cca67110062a7bf433b88b3a7d49db4aad2b1bc3f36144e2",
+      "scope": "Native v6 rejects100000 declared slots at table.new on bar0, before cell writes.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "table-edge-10000-v6-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10000-v6-36.pine",
+      "source_sha256": "3afaec8de6d15a67395316625ab3d28144c118e87432cbf04d9662b4b336a109",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1
+      ],
+      "native_row": "240 row table-edge-10000-v6-36 executed 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "3afaec8de6d15a67395316625ab3d28144c118e87432cbf04d9662b4b336a109",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10000-v6-36.native.ax.txt",
+      "accessibility_sha256": "71ee0d1ba37a27989e30474420528a1d3759c63e1494ca51363e4242be26cb9d",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10000-v6-36.native.png",
+      "screenshot_sha256": "56f47b1c9dcbd5f3be7a19ffeed9f4f96e45e0dc49fd1c88569de7ee865b4f7c",
+      "scope": "Native v6 accepts a10000x1 layout and its last cell.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "table-edge-10001-v6-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v6-36.pine",
+      "source_sha256": "2ba2ad934695745af1bed68c0475a58bbd872045340373db178b9e52653806dc",
+      "native_status": "analysis_or_runtime_rejected",
+      "native_error": "Too many table cells.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2ba2ad934695745af1bed68c0475a58bbd872045340373db178b9e52653806dc",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v6-36.native.ax.txt",
+      "accessibility_sha256": "4324c3d799fdf06eb754717477ffe949025929eaabc5f7abc807d2f71a392be0",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v6-36.native.png",
+      "screenshot_sha256": "ace6b1ab6d2c6f6a5b3f9d81f4a991423da8f4d0864744ba177c5f4ae2fead63",
+      "scope": "Native v6 rejects10001 declared cells on bar0 while10000 succeeds.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "table-edge-10001-v5-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v5-36.pine",
+      "source_sha256": "1d828b38caa491f4bcae7f3eb1f7e2e10b5637106a8049edc9ecff158184d458",
+      "native_status": "analysis_or_runtime_rejected",
+      "native_error": "Too many table cells.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1d828b38caa491f4bcae7f3eb1f7e2e10b5637106a8049edc9ecff158184d458",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v5-36.native.ax.txt",
+      "accessibility_sha256": "08e006612d6b8370b7985e9a07957ebd5a7dff87f7156d253a971cdcf0235eb4",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v5-36.native.png",
+      "screenshot_sha256": "ff41853afb5e100cafe90c0abbb9c147db3fa36d2cdcc80c9cd5cabc69834533",
+      "scope": "Native v5 rejects10001 declared cells at table.new;10000 declared cells succeeded in the v5 control.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "table-quota-two-live-v6-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-two-live-v6-36.pine",
+      "source_sha256": "4b7f6878bcc1a8ebfd2d49400205094612b17b0c740856599dfa0acdbf837d7c",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1
+      ],
+      "native_row": "240 row table-quota-two-live-v6-36 executed 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "4b7f6878bcc1a8ebfd2d49400205094612b17b0c740856599dfa0acdbf837d7c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-two-live-v6-36.native.ax.txt",
+      "accessibility_sha256": "3a94d8315e2e9b806652a1613945f43ee6a51c6cb86dbc15b421c59133866767",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-two-live-v6-36.native.png",
+      "screenshot_sha256": "f25caae998b5b89688a81112e6f8404eca3f6bba48ab84ff5b2cae47e25c2829",
+      "scope": "Native v6 admits two simultaneously referenced6000-cell tables at different positions (12000 combined slots). The observed10000 boundary is not a combined-capacity script cap in this control.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "table-quota-delete-before-new-v6-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-delete-before-new-v6-36.pine",
+      "source_sha256": "1107370f3e4c3c3749da8aaeb65a9e6899947d11afa7ed99fb49e2e1188b9c90",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1
+      ],
+      "native_row": "240 row table-quota-delete-before-new-v6-36 executed 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1107370f3e4c3c3749da8aaeb65a9e6899947d11afa7ed99fb49e2e1188b9c90",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-delete-before-new-v6-36.native.ax.txt",
+      "accessibility_sha256": "7f65390f007f2c97ec552c84efa0b6e38ce4b61dceea054849e9259cd1d788b3",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-delete-before-new-v6-36.native.png",
+      "screenshot_sha256": "06831189ffd92ee9dcec0ebf6723315b4f09eadf786226673ecf4bed2c1fc640",
+      "scope": "Native v6 supports repeated6000-cell creation/delete and replacement across history.",
+      "qualification_scope": "candidate_table_control"
+    },
+    {
+      "name": "table-quota-per-bar-v6-36",
+      "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-per-bar-v6-36.pine",
+      "source_sha256": "dc8a7a266a79851043f9f62f6330e8da69e5119f10e32adc0b4975f2d17797e1",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1
+      ],
+      "native_row": "240 row table-quota-per-bar-v6-36 executed 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "dc8a7a266a79851043f9f62f6330e8da69e5119f10e32adc0b4975f2d17797e1",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-per-bar-v6-36.native.ax.txt",
+      "accessibility_sha256": "c45aebea6ca2776e7533eec4cf42d04b841f255788a6adbdd21e568d9f96ba0c",
+      "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-per-bar-v6-36.native.png",
+      "screenshot_sha256": "03ba8eabfad0e0b78941dd1ca255ff18ce2bc152a41c17f18153a2b45c43b6e8",
+      "scope": "6000-cell table created every chart bar; validates layout rather than cumulative allocated-cell quota",
+      "qualification_scope": "candidate_table_control"
+    }
+  ],
+  "scope": "10000 versus10001 layouts, sparse/filled1400, multiple tables, deletion and lifetime. Original strategy native success is not a native ledger/profit comparison."
+}

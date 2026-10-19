@@ -1,0 +1,36 @@
+//@version=6
+indicator("Constant bool storage and effects32",precision=0)
+a=if false
+    true
+bool typed=if false
+    true
+var bool stored=if false
+    true
+i=input.bool(true)
+inputBody=if false
+    i
+seriesBody=if false
+    bar_index>=0
+var counts=array.new_int(1,0)
+touch()=>
+    array.set(counts,0,array.get(counts,0)+1)
+    true
+callBody=if false
+    touch()
+statementBody=if false
+    array.set(counts,0,array.get(counts,0)+100)
+    true
+if a
+    array.set(counts,0,array.get(counts,0)+10)
+var boolArray=array.from(a)
+plot(a?1:0,title="constant")
+plot(typed?1:0,title="typed constant")
+plot(stored?1:0,title="var storage")
+plot(inputBody?1:0,title="input body")
+plot(seriesBody?1:0,title="series body")
+plot(callBody?1:0,title="call body")
+plot(statementBody?1:0,title="statement body")
+plot(array.get(boolArray,0)?1:0,title="array storage")
+plot(array.get(counts,0),title="effect count")
+plot(a[0]?1:0,title="history zero")
+plot(a[1]?1:0,title="history one")

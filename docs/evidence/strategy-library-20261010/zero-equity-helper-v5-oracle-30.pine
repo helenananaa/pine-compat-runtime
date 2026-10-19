@@ -1,0 +1,4 @@
+//@version=5
+strategy("Zero equity helper v5 30",initial_capital=0,default_qty_type=strategy.percent_of_equity,default_qty_value=100,precision=8)
+plot(strategy.equity,title="equity")
+plot(strategy.default_entry_qty(100),title="qty")

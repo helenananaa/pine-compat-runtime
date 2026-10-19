@@ -1,0 +1,17 @@
+//@version=6
+indicator("point-shared-intrabar-v6-41")
+type Wrap
+    chart.point point
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+var p=chart.point.from_index(1,0)
+varip wrapper=Wrap.new(p)
+varip items=array.from(wrapper)
+if barstate.isrealtime
+    p.price+=1
+plot(ticks)
+plot(p.price)
+plot(items.first().point.price)

@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported array join polyline")
 values = array.new_polyline(0)
-text = array.join(values)
+note = array.join(values)
 plot(close)

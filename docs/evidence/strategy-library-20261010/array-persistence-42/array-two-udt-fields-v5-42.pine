@@ -1,0 +1,22 @@
+//@version=5
+indicator("array-two-udt-fields-v5-42")
+type Wrap
+    array<int> first
+    array<int> second
+var a=array.new_int()
+var w=Wrap.new(a,a)
+w.first.push(1)
+w.second.push(2)
+varip int ah=0
+varip int fh=0
+varip int sh=0
+varip int ih=0
+if barstate.ishistory
+    ah:=a.size()
+    fh:=w.first.size()
+    sh:=w.second.size()
+    ih:=bar_index
+plot(ah)
+plot(fh)
+plot(sh)
+plot(ih)

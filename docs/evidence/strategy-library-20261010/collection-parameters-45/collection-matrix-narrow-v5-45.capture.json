@@ -1,0 +1,20 @@
+{
+  "name": "collection-matrix-narrow-v5-45",
+  "version": 5,
+  "scenario": "matrix-narrow",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-matrix-narrow-v5-45.pine",
+  "source_sha256": "ec8de89f5831de8ddd58d528be50cdf674eb410a6ad81081028acd67577df3f2",
+  "expected_values": null,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call 'f' with argument 'v'='values'. An argument of 'matrix<float>' type was used but a 'matrix<int>' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "57160b9bd40d793d88e35d9a989d73c72a5b59f577e0c2120ba6045f72d49380",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-narrow-v5-45.native.ax.txt",
+  "accessibility_sha256": "bf73bcb7101c4b5d007ba88308a63a34159c02ebb71487b8fa269a0a42ee40e7",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-narrow-v5-45.native.png",
+  "screenshot_sha256": "3ba0fa6a67811fe3bb9daacb289496754a6fa5380834e56425ecae10e9b06e84",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

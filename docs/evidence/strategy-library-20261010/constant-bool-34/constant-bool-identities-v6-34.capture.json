@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-identities-v6-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-identities-v6-34.pine",
+  "source_sha256": "39c541b46b09ac230575368d9b76592ccd088e45cb509ea0b19d7438a24f4e8a",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Constant bool identities v6 probe34 self 1 same source shape 0 different missing body 0 alias identity 1 other missing identity 0 selected self 1 selected true comparison 1 selected false comparison 1 selected true condition 1 selected false condition 0 selected true cast 1 selected false cast 0 selected true string true 1 selected true string false 0 selected false string 1 selected true array 1 selected false array 0 selected true history 1 selected false history 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "39c541b46b09ac230575368d9b76592ccd088e45cb509ea0b19d7438a24f4e8a",
+  "normalized_source_sha256": "39c541b46b09ac230575368d9b76592ccd088e45cb509ea0b19d7438a24f4e8a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-identities-v6-34.native.ax.txt",
+  "accessibility_sha256": "116f25aed522a7debcab9ba14b536590ca6f285236ce8c5cbb27844db79453ba",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-identities-v6-34.native.png",
+  "screenshot_sha256": "cecf79bd988b46b55794b69559cb11fb9a4b3feb34bc128989d4add66baf6f11"
+}

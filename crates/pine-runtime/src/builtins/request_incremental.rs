@@ -21,6 +21,7 @@ pub(crate) struct RequestEvaluation<'a> {
     before_last: Arc<HistoricalRuntime<'a>>,
     captures: HashMap<SymbolId, PineValue>,
     provider_len: usize,
+    window_start: usize,
     #[cfg(test)]
     replayed_bars: usize,
 }
@@ -73,8 +74,13 @@ impl<'a> HistoricalRuntime<'a> {
             0,
         ) {
             let bars = self.resolved_request_bars_from(key, 0)?;
+            let start = if self.context_windows.prepared {
+                self.context_windows.source_start(key, &bars)
+            } else {
+                0
+            };
             return self
-                .evaluate_requested_values(&bars, expression, environment)
+                .evaluate_requested_values(&bars[start..], expression, environment)
                 .map(AppendHistory::from_values);
         }
         let provider_bars = match environment.provider().bars(key) {
@@ -90,6 +96,20 @@ impl<'a> HistoricalRuntime<'a> {
         let total = self
             .request_feed
             .resolved_len(key, provider_len, include_forming);
+        let window_start = if self.context_windows.prepared {
+            match self.context_windows.anchored_origin(key) {
+                Some(origin) => origin.map_or(0, |time| {
+                    self.request_feed
+                        .resolved_before(key, provider_bars, include_forming, time)
+                }),
+                None => {
+                    let bars = self.resolved_request_bars_from(key, 0)?;
+                    self.context_windows.source_start(key, &bars)
+                }
+            }
+        } else {
+            0
+        };
         let current_time = self
             .current_bar
             .ok_or_else(|| RuntimeError {
@@ -104,12 +124,20 @@ impl<'a> HistoricalRuntime<'a> {
             .request_feed
             .resolved_before(key, provider_bars, include_forming, horizon)
             .saturating_add(1)
-            .min(total);
+            .min(total)
+            .saturating_sub(window_start);
+        if count == 0 {
+            if total == 0 {
+                self.resolved_request_bars_range(key, 0, 0)?;
+            }
+            return Ok(AppendHistory::default());
+        }
         let previous = self
             .request_evaluations
             .get(cache_key)
             .filter(|saved| {
                 saved.provider_len == provider_len
+                    && saved.window_start == window_start
                     && saved.captures == captures
                     && saved.prefix.len() < count
             })
@@ -129,7 +157,11 @@ impl<'a> HistoricalRuntime<'a> {
         // execution. All newly evaluated requested bars spend today's budget.
         runtime.inherit_execution_budget(self);
         runtime.inherit_valuewhen_budget(self, replaced_values)?;
-        let bars = self.resolved_request_bars_range(key, prefix.len(), count)?;
+        let bars = self.resolved_request_bars_range(
+            key,
+            window_start + prefix.len(),
+            window_start + count,
+        )?;
         if bars.is_empty() {
             self.request_evaluations.remove(cache_key);
             return Ok(prefix);
@@ -171,6 +203,7 @@ impl<'a> HistoricalRuntime<'a> {
                 before_last,
                 captures,
                 provider_len,
+                window_start,
                 #[cfg(test)]
                 replayed_bars: bars.len(),
             }),

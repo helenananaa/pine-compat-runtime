@@ -3,7 +3,7 @@ indicator("Unsupported compound assignment types")
 
 number = 1
 number += "x"
-text = "x"
-text -= "y"
+note = "x"
+note -= "y"
 flag = true
 flag *= 2

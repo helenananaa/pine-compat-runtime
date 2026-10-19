@@ -1,0 +1,21 @@
+//@version=5
+indicator("request-point-field-week-v5-43")
+anchor=request.security(syminfo.tickerid,timeframe.period,bar_index)
+p=chart.point.from_index(bar_index,bar_index)
+p.price:=bar_index+100
+before=p.price
+r=request.security(syminfo.tickerid,"W",p.price)
+requested_index=request.security(syminfo.tickerid,"W",bar_index)
+varip float first_after=na
+varip bool first_r_na=false
+if bar_index==0
+    first_after:=p.price
+    first_r_na:=na(r)
+plot(before)
+plot(r)
+plot(p.price)
+plot(requested_index)
+plot(bar_index)
+plot(anchor)
+plot(first_after)
+plot(first_r_na?1:0)

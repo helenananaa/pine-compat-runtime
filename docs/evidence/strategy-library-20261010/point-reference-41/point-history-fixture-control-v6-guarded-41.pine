@@ -1,0 +1,29 @@
+//@version=6
+indicator("point-history-fixture-control-v6-guarded-41")
+
+point = chart.point.from_index(bar_index % 4, (bar_index % 4 + 1))
+previous = point[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = point[dynamic_offset]
+dynamic_sibling = point[dynamic_offset]
+
+float dynamic_previous_price = na
+float dynamic_sibling_price_after_dynamic_mutation = na
+if bar_index > 0
+    dynamic_previous_price := dynamic_previous.price
+    dynamic_previous.price := (bar_index % 4 + 1) + 700
+    dynamic_sibling_price_after_dynamic_mutation := dynamic_sibling.price
+
+point.price := (bar_index % 4 + 1) + 10
+previous_after_mutation = point[1]
+
+plot(na(previous) ? 1 : 0)
+plot(na(previous) ? na : previous.index)
+plot(na(dynamic_previous) ? 1 : 0)
+plot(dynamic_previous_price)
+plot(na(previous_after_mutation) ? na : previous_after_mutation.price)
+plot(dynamic_sibling_price_after_dynamic_mutation)
+
+plot(dynamic_previous_price == ((bar_index-1)%4+1)+10?1:0)
+plot(bar_index==0?na:previous_after_mutation.price == (bar_index%4+1)+700?1:0)
+plot(dynamic_sibling_price_after_dynamic_mutation == (bar_index%4+1)+700?1:0)

@@ -1,4 +1,4 @@
 //@version=5
 indicator("String tostring grouped format")
-text = str.tostring(1234.5, "#,###.00")
-plot(text == "1,234.50" ? 1 : 0)
+note = str.tostring(1234.5, "#,###.00")
+plot(note == "1,234.50" ? 1 : 0)

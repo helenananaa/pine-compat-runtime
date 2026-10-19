@@ -1,0 +1,6 @@
+//@version=6
+indicator("extra-simple-type-name-v6-44")
+type simple
+    float value
+simple x=simple.new(2)
+plot(x.value)

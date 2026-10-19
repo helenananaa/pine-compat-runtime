@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-const-declaration-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-const-declaration-v5-37.pine",
+  "source_sha256": "bb0877dc1d69e9351c0beb65df98a86a392d49da4cc9d822f3837136dde872d1",
+  "native_status": "analysis_or_runtime_rejected",
+  "native_error": "A variable declared with the 'const' keyword cannot accept values of the 'simple na' form.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "bb0877dc1d69e9351c0beb65df98a86a392d49da4cc9d822f3837136dde872d1",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-const-declaration-v5-37.native.ax.txt",
+  "accessibility_sha256": "ec6cacfe8b8f697df3b52b7cf2e283a38f8b4df0e1feef4cb5ea31859dad6df6",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-const-declaration-v5-37.native.png",
+  "screenshot_sha256": "ea78198361b5553c3f2bf0547fda5c32e151858854827dfc3c964f44e56c5077",
+  "scope": "Follow-up negative bound: v5 const string initialized by na is illegal; typed string-na qualifier repair must not accept this declaration",
+  "qualification_scope": "candidate_bounded_control"
+}

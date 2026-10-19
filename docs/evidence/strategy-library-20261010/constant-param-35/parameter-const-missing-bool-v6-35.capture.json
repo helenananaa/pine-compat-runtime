@@ -1,0 +1,15 @@
+{
+  "name": "parameter-const-missing-bool-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-missing-bool-v6-35.pine",
+  "source_sha256": "b7e5879df2284271deec8a5ba82f2f463711b72eb8c328e81c6a281ab7021724",
+  "library": false,
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of \"simple na\" type was used but a \"const bool\" is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b7e5879df2284271deec8a5ba82f2f463711b72eb8c328e81c6a281ab7021724",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-missing-bool-v6-35.native.ax.txt",
+  "accessibility_sha256": "ed0b146e785e171f5e14d38f8121a20bb01ca2940ec1c7cd75ffca14a1d79c31",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-missing-bool-v6-35.native.png",
+  "screenshot_sha256": "f68506be633d5648cef4599b06f9cec6647544a8bebcfc4947c16c3c255be4ee"
+}

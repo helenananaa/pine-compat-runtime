@@ -155,11 +155,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(AlertFrequency::OncePerBar);
         };
         match self.eval_expr(expr)? {
-            PineValue::String(value) if value == "alert.freq_all" => Ok(AlertFrequency::All),
-            PineValue::String(value) if value == "alert.freq_once_per_bar" => {
-                Ok(AlertFrequency::OncePerBar)
-            }
-            PineValue::String(value) if value == "alert.freq_once_per_bar_close" => {
+            PineValue::String(value) if value == "all" => Ok(AlertFrequency::All),
+            PineValue::String(value) if value == "once_per_bar" => Ok(AlertFrequency::OncePerBar),
+            PineValue::String(value) if value == "once_per_bar_close" => {
                 Ok(AlertFrequency::OncePerBarClose)
             }
             PineValue::String(value) => Err(RuntimeError {

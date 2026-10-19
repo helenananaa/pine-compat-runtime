@@ -35,7 +35,10 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         let x = self.eval_expr(x_arg)?;
-        if matches!(x, PineValue::ChartPoint(_)) {
+        let x = self.materialize_chart_point(x)?;
+        if matches!(x, PineValue::ChartPoint(_))
+            || x_arg.pine_type.kind == pine_ir::ValueKind::ChartPoint
+        {
             return self.eval_label_new_from_point(args, x);
         }
         let Some(y_arg) = label_call_arg_expr(args, 1, "y") else {
@@ -105,6 +108,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_label_option_value(args, 11, "force_overlay", PineValue::Bool(false))?;
         let text_formatting =
             self.eval_label_text_formatting_option_value(args, 12, "text_formatting")?;
+        crate::builtins::chart_points::require_defined_point(&point)?;
         let Some((x, y)) = label_point_coordinates(point, &xloc) else {
             return Ok(PineValue::Na);
         };
@@ -218,6 +222,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_label_id_arg(args)?;
         let point = self.eval_required_label_arg(args, 1, "point")?;
+        crate::builtins::chart_points::require_defined_point(&point)?;
         self.mutate_label(id, |snapshot| {
             if let Some((x, y)) = label_point_coordinates(point, &snapshot.xloc) {
                 snapshot.x = x;
@@ -484,7 +489,8 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("label mutation missing {name} argument"),
             });
         };
-        self.eval_expr(arg)
+        let value = self.eval_expr(arg)?;
+        self.materialize_chart_point(value)
     }
 
     fn eval_label_text_formatting_option_value(

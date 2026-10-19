@@ -137,13 +137,23 @@ fn imported_simple_parameters_and_method_qualifiers_agree_with_local_rules() {
         "method.pine",
         "//@version=6\nindicator(\"simple\")\ntype Point\n    float x\nmethod shift(Point self, simple int n) => self.x + n\nplot(close)\n",
     ));
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some(), "{:?}", analysis.diagnostics);
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|d| d.code == "E_METHOD_PARAM"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
+    );
+    let invalid = analyze_source(&SourceFile::new(
+        "method-series-argument.pine",
+        "//@version=6\nindicator(\"simple\")\ntype Point\n    float x\nmethod shift(Point self, simple int n) => self.x + n\np=Point.new(5)\nplot(p.shift(bar_index))\n",
+    ));
+    assert!(invalid.hir.is_none());
+    assert!(
+        invalid
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_METHOD_ARG_TYPE"),
+        "{:?}",
+        invalid.diagnostics
     );
 }

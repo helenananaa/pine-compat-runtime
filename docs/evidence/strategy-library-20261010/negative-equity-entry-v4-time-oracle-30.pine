@@ -1,0 +1,7 @@
+//@version=4
+strategy("Negative equity entry v4 30",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,precision=8)
+if time==1550448000000
+    strategy.entry("S",strategy.short,qty=1)
+if time==1588896000000
+    strategy.entry("L",strategy.long)
+plot(strategy.equity)

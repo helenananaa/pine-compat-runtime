@@ -1,4 +1,5 @@
 use crate::PineDialect;
+use crate::analyzer::context::ConstantBoolean;
 use crate::prelude::*;
 use crate::resolver::ScopeResolver;
 
@@ -11,9 +12,11 @@ pub(crate) struct SymbolState {
     symbol_user_types: HashMap<SymbolId, String>,
     symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
+    request_reference_sources: HashMap<SymbolId, Vec<SourcedExpr>>,
     request_param_sources: HashMap<SymbolId, SourcedExpr>,
     typed_na_scalar_symbols: std::collections::HashSet<SymbolId>,
     const_declared_symbols: std::collections::HashSet<SymbolId>,
+    simple_declared_symbols: std::collections::HashSet<SymbolId>,
     legacy_v3_untyped_na_symbols: HashMap<SymbolId, Span>,
     legacy_v3_pending_na_symbols: std::collections::HashSet<SymbolId>,
     non_scalar_udt_varip_symbols: std::collections::HashSet<SymbolId>,
@@ -26,7 +29,7 @@ pub(crate) struct SymbolState {
     const_int_symbols: HashMap<SymbolId, i64>,
     const_numeric_symbols: HashMap<SymbolId, f64>,
     const_string_symbols: HashMap<SymbolId, String>,
-    const_bool_symbols: HashMap<SymbolId, bool>,
+    const_bool_symbols: HashMap<SymbolId, ConstantBoolean>,
     const_color_symbols: HashMap<SymbolId, u32>,
 }
 
@@ -52,6 +55,7 @@ impl Analyzer {
         self.register_user_types(program);
         self.register_methods(program);
         self.register_functions(program);
+        self.infer_parameter_qualifiers(program);
         if self.prepare_legacy_v2_declarations(program) {
             return;
         }
@@ -59,6 +63,12 @@ impl Analyzer {
             self.analyze_stmt(statement);
         }
         self.validate_pending_legacy_v3_na_declarations();
+        self.validate_imported_body_declarations();
+        for diagnostic in std::mem::take(&mut self.declaration_diagnostics) {
+            if !self.diagnostics.contains(&diagnostic) {
+                self.diagnostics.push(diagnostic);
+            }
+        }
     }
 
     pub(crate) fn analyze_stmt(&mut self, statement: &Stmt) {
@@ -116,6 +126,9 @@ impl Analyzer {
                     feature: "user-defined methods".to_owned(),
                     span: statement.span,
                 });
+                if self.block_depth == 0 && self.function_depth == 0 {
+                    self.validate_method_declaration(statement.span);
+                }
             }
             StmtKind::If {
                 condition,
@@ -263,13 +276,15 @@ impl Analyzer {
                     ));
                 }
             }
-            StmtKind::Function { .. } => {
+            StmtKind::Function { name, .. } => {
                 if self.block_depth > 0 || self.function_depth > 0 {
                     self.unsupported(
                         "block_local_function",
                         "nested function declarations are not supported",
                         statement.span,
                     );
+                } else {
+                    self.validate_function_declaration(name);
                 }
             }
             StmtKind::Decl {
@@ -391,9 +406,39 @@ impl Analyzer {
                         statement.span,
                     ));
                 }
-                let symbol_type = declared_pine_type
-                    .map(|target_type| declared_symbol_type(target_type, value_type))
+                let mut symbol_type = declared_pine_type
+                    .map(|target_type| {
+                        declared_symbol_type(
+                            target_type,
+                            value_type,
+                            self.legacy.dialect().version() >= 5,
+                        )
+                    })
                     .unwrap_or(value_type);
+                if *mode == pine_syntax::DeclMode::Simple {
+                    if value_type.qualifier == Qualifier::Series
+                        || symbol_type.qualifier == Qualifier::Series
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_SIMPLE_DECL_VALUE",
+                            "`simple` declaration requires a const, input or simple value",
+                            value.span,
+                        ));
+                    }
+                    symbol_type.qualifier = Qualifier::Simple;
+                }
+                if *mode == pine_syntax::DeclMode::Const
+                    && self.legacy.dialect().version() >= 5
+                    && symbol_type.kind == ValueKind::String
+                    && value_type.kind == ValueKind::Na
+                    && value_type.qualifier == Qualifier::Const
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CONST_DECL_VALUE",
+                        "`const` string declaration requires a const string value; untyped na has simple string form",
+                        value.span,
+                    ));
+                }
                 let tuple_element_types = (symbol_type.kind == ValueKind::Tuple)
                     .then(|| self.tuple_element_types(value))
                     .flatten();
@@ -439,8 +484,16 @@ impl Analyzer {
                     const_numeric_symbol_value(symbol_type, self.known_const_numeric_value(value));
                 let const_string_value =
                     const_string_symbol_value(symbol_type, self.known_const_string_value(value));
-                let const_bool_value =
-                    const_bool_symbol_value(symbol_type, self.known_const_bool_value(value));
+                let const_bool_value = const_bool_symbol_value(
+                    symbol_type,
+                    self.known_constant_boolean(value).map(|value| {
+                        if self.materializes_boolean_declaration(declared_type.as_ref()) {
+                            value.materialized()
+                        } else {
+                            value
+                        }
+                    }),
+                );
                 let const_color_value =
                     const_color_symbol_value(symbol_type, self.known_const_color_value(value));
                 let (persistence, var_slot_id) = self.declaration_persistence(
@@ -511,6 +564,9 @@ impl Analyzer {
                 }
                 if *mode == pine_syntax::DeclMode::Const {
                     self.const_declared_symbols.insert(symbol.id);
+                }
+                if *mode == pine_syntax::DeclMode::Simple {
+                    self.simple_declared_symbols.insert(symbol.id);
                 }
                 if is_legacy_v3_untyped_na_decl {
                     self.legacy_v3_untyped_na_symbols
@@ -588,6 +644,18 @@ impl Analyzer {
                         format!("cannot reassign `const` symbol `{name}`"),
                         statement.span,
                     ));
+                } else if self.legacy.dialect().version() >= 5
+                    && self.scope.resolve(name).is_some_and(|symbol| {
+                        self.function_param_symbols
+                            .iter()
+                            .any(|params| params.contains(&symbol.id))
+                    })
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_FUNCTION_PARAM",
+                        format!("function parameter `{name}` cannot be reassigned"),
+                        statement.span,
+                    ));
                 } else if self.function_depth > 0 && self.scope.resolves_to_global(name) {
                     self.unsupported(
                         "function_side_effect",
@@ -642,8 +710,19 @@ impl Analyzer {
                     } else {
                         reassigned_symbol_type(target_type, value_type)
                     };
-                    let assignment_is_valid =
-                        can_reassign(target_type, value_type) || is_legacy_v3_na_inference;
+                    let invalid_simple = symbol
+                        .is_some_and(|symbol| self.simple_declared_symbols.contains(&symbol.id))
+                        && value_type.qualifier == Qualifier::Series;
+                    if invalid_simple {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_SIMPLE_REASSIGN",
+                            "cannot assign a series value to an explicitly simple variable",
+                            value.span,
+                        ));
+                    }
+                    let assignment_is_valid = (can_reassign(target_type, value_type)
+                        || is_legacy_v3_na_inference)
+                        && !invalid_simple;
                     let tuple_element_types = (target_type.kind == ValueKind::Tuple
                         && value_type.kind == ValueKind::Tuple)
                         .then(|| self.tuple_element_types(value))
@@ -677,7 +756,7 @@ impl Analyzer {
                     );
                     let const_bool_value = const_bool_symbol_value(
                         reassigned_type,
-                        self.known_const_bool_value(value),
+                        self.known_constant_boolean(value),
                     );
                     let const_color_value = const_color_symbol_value(
                         reassigned_type,
@@ -870,9 +949,9 @@ impl Analyzer {
                     target
                         .as_ref()
                         .is_some_and(|(_, _, feature, receiver_symbol)| {
-                            *feature == "user-defined type field mutation"
-                                && receiver_symbol.is_some()
-                                && !(receiver_is_function_param && is_method_context)
+                            (*feature == "user-defined type field mutation"
+                                && receiver_symbol.is_some())
+                                || *feature == "chart.point field mutation"
                         });
                 if self.function_depth > 0 && !allowed_function_udt_mutation {
                     let reason = match target.as_ref().map(|(_, _, feature, _)| *feature) {
@@ -1032,6 +1111,7 @@ impl Analyzer {
             }
         }
         self.record_udt_matrix_statement(statement);
+        self.record_request_reference_statement(statement);
     }
 
     fn assignment_contextualized_type(&self, value_type: PineType) -> PineType {
@@ -1093,9 +1173,11 @@ impl Analyzer {
             symbol_user_types: self.symbol_user_types.clone(),
             symbol_user_type_identities: self.symbol_user_type_identities.clone(),
             symbol_init_exprs: self.symbol_init_exprs.clone(),
+            request_reference_sources: self.request_reference_sources.clone(),
             request_param_sources: self.request_param_sources.clone(),
             typed_na_scalar_symbols: self.typed_na_scalar_symbols.clone(),
             const_declared_symbols: self.const_declared_symbols.clone(),
+            simple_declared_symbols: self.simple_declared_symbols.clone(),
             legacy_v3_untyped_na_symbols: self.legacy_v3_untyped_na_symbols.clone(),
             legacy_v3_pending_na_symbols: self.legacy_v3_pending_na_symbols.clone(),
             non_scalar_udt_varip_symbols: self.non_scalar_udt_varip_symbols.clone(),
@@ -1118,9 +1200,11 @@ impl Analyzer {
         self.symbol_user_types = state.symbol_user_types;
         self.symbol_user_type_identities = state.symbol_user_type_identities;
         self.symbol_init_exprs = state.symbol_init_exprs;
+        self.request_reference_sources = state.request_reference_sources;
         self.request_param_sources = state.request_param_sources;
         self.typed_na_scalar_symbols = state.typed_na_scalar_symbols;
         self.const_declared_symbols = state.const_declared_symbols;
+        self.simple_declared_symbols = state.simple_declared_symbols;
         self.legacy_v3_untyped_na_symbols = state.legacy_v3_untyped_na_symbols;
         self.legacy_v3_pending_na_symbols = state.legacy_v3_pending_na_symbols;
         self.non_scalar_udt_varip_symbols = state.non_scalar_udt_varip_symbols;
@@ -1317,8 +1401,16 @@ fn collect_request_reassigned_names_from_expr(
     }
 }
 
-fn declared_symbol_type(target_type: PineType, value_type: PineType) -> PineType {
+fn declared_symbol_type(target_type: PineType, value_type: PineType, modern: bool) -> PineType {
     if value_type.kind == ValueKind::Na {
+        if modern && target_type.kind == ValueKind::String {
+            let qualifier = if value_type.qualifier == Qualifier::Series {
+                Qualifier::Series
+            } else {
+                Qualifier::Simple
+            };
+            return PineType::new(qualifier, ValueKind::String);
+        }
         return target_type;
     }
     PineType::new(value_type.qualifier, target_type.kind)
@@ -1343,7 +1435,10 @@ fn const_string_symbol_value(symbol_type: PineType, value: Option<String>) -> Op
         .flatten()
 }
 
-fn const_bool_symbol_value(symbol_type: PineType, value: Option<bool>) -> Option<bool> {
+fn const_bool_symbol_value(
+    symbol_type: PineType,
+    value: Option<ConstantBoolean>,
+) -> Option<ConstantBoolean> {
     (symbol_type.qualifier == Qualifier::Const && symbol_type.kind == ValueKind::Bool)
         .then_some(value)
         .flatten()
@@ -1376,8 +1471,16 @@ fn reassigned_symbol_type(target_type: PineType, value_type: PineType) -> PineTy
 }
 
 fn typed_na_scalar_reassigned_symbol_type(target_type: PineType, value_type: PineType) -> PineType {
+    let qualifier = if target_type.kind == ValueKind::String
+        && target_type.qualifier == Qualifier::Simple
+        && qualifier_at_most(value_type.qualifier, Qualifier::Simple)
+    {
+        Qualifier::Simple
+    } else {
+        value_type.qualifier
+    };
     PineType::new(
-        value_type.qualifier,
+        qualifier,
         common_kind(target_type.kind, value_type.kind).unwrap_or(target_type.kind),
     )
 }

@@ -35,6 +35,10 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_STMT_DEPTH`: recursive statement nesting exceeds the parser resource
   limit, including `else if` chains, expression blocks, and inline switch arms.
 - `E_PARSE_TYPE`: invalid user-defined type declaration.
+- `E_RESERVED_IDENTIFIER`: a Pine v5/v6 declaration uses a name reserved since
+  v5. This check is declaration-specific: named arguments and qualified members
+  remain valid, and native tuple/for-in binding exceptions are preserved except
+  for the grammar keyword `in`. Pine v1-v4 retain their legacy names.
 - `E_LANGUAGE_VERSION_DUPLICATE`: more than one recognized `//@version=N`
   directive, including the spaced-equals compatibility form, was found.
 
@@ -43,6 +47,8 @@ improved over time, but codes should remain stable once published.
 - `E_CONST_DECL_VALUE`: a scalar `const` declaration is initialized with a
   value that is not available at compile time.
 - `E_CONST_REASSIGN`: reassignment of a `const` declaration.
+- `E_SIMPLE_DECL_VALUE`: an explicitly `simple` variable is initialized with a series value.
+- `E_SIMPLE_REASSIGN`: a series value is assigned to an explicitly `simple` variable.
 - `E_HOST_INPUT`: a host binding rejected malformed input before semantic
   analysis, such as invalid WASM library-source JSON.
 - `E_LANGUAGE_VERSION_`: internal diagnostic-family prefix used to stop before
@@ -159,6 +165,9 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
   user-defined object. Test the object with `na()` before dereferencing it.
 - `E_UDT_UNKNOWN_FIELD`: field read references a field not declared on the
   receiver's user-defined type.
+- `E_CHART_POINT_NA_FIELD`: execution attempted to read coordinates or copy an
+  undefined (`na`) chart.point. Field assignment to an undefined point remains
+  a no-op; coordinate consumers still dereference their point argument.
 - `E_CHART_POINT_UNKNOWN_FIELD`: field read or mutation references a field not
   declared on `chart.point`.
 - `E_METHOD_ARG_TYPE`: user-defined method argument type does not match the
@@ -169,6 +178,8 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_METHOD_PARAM`: user-defined method parameter list is invalid.
 - `E_METHOD_RECEIVER_TYPE`: user-defined method receiver type is missing,
   malformed, or does not match the call receiver.
+- `E_METHOD_VERSION`: a user-defined method declaration requires Pine v5 or
+  later; Pine v1-v4 do not admit method declarations.
 - `E_RECURSIVE_METHOD`: recursive user-defined method call is not supported.
 - `E_LOWERING_BUDGET`: lowering exceeded the supported inline depth, HIR node,
   or generated temporary-symbol budget.

@@ -11,6 +11,20 @@ if (process.argv.length !== 3) {
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
 require('./wasm_closeout_regressions.cjs')(path.resolve(process.argv[2]));
+require('./wasm_bool_control_defaults.cjs')(process.argv[2]);
+require('./wasm_reserved_identifiers.cjs')(process.argv[2]);
+require('./wasm_constant_bool_identities.cjs')(process.argv[2]);
+require('./wasm_constant_parameters.cjs')(process.argv[2]);
+require('./wasm_table_capacity.cjs')(process.argv[2]);
+require('./wasm_missing_strings.cjs')(process.argv[2]);
+require('./wasm_method_receivers.cjs')(process.argv[2]);
+require('./wasm_alert_qualifiers.cjs')(process.argv[2]);
+require('./wasm_point_references.cjs')(process.argv[2]);
+require('./wasm_array_persistence.cjs')(process.argv[2]);
+require('./wasm_request_reference_captures.cjs')(process.argv[2]);
+require('./wasm_request_context_windows.cjs')(process.argv[2]);
+require('./wasm_collection_parameters.cjs')(process.argv[2]);
+require('./wasm_function_body_declarations.cjs')(process.argv[2]);
 
 // Namespace resolution is shared by direct and prepared WASM executions.
 for (const version of [3,4]) {
@@ -43,6 +57,11 @@ require('./wasm_window_lengths.cjs')(process.argv[2]);
 require('./wasm_bar_calendars.cjs')(process.argv[2]);
 require('./wasm_output_transparency.cjs')(process.argv[2]);
 require('./wasm_legacy_ternary_bool.cjs')(process.argv[2]);
+require('./wasm_legacy_strategy_constants.cjs')(process.argv[2]);
+require('./wasm_legacy_direction_truth.cjs')(process.argv[2]);
+require('./wasm_strategy_close_all_source.cjs')(process.argv[2]);
+require('./wasm_strategy_equity_quantity.cjs')(process.argv[2]);
+require('./wasm_strategy_currency_native.cjs')(process.argv[2]);
 require('./wasm_literal_alert_braces.cjs')(process.argv[2]);
 require('./wasm_alert_templates.cjs')(process.argv[2]);
 
@@ -83,7 +102,7 @@ assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
 const requirements = JSON.parse(program.hostRequirements());
-assert.equal(requirements.schemaVersion, 2);
+assert.equal(requirements.schemaVersion, 3);
 {
   const mergeProgram=pine.compileScript('//@version=6\nindicator("merge inventory")\ng=barmerge.gaps_on\nplot(request.security("OTHER","M",close,gaps=g,lookahead=barmerge.lookahead_on))\n');
   const report=JSON.parse(mergeProgram.hostRequirements());
@@ -1171,3 +1190,57 @@ plot(close)
 console.log(
   'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
 );
+
+// Method object writes and Pine extend values survive the public WASM routes.
+{
+  const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,10,10,10,10,1\n120000,10,10,10,10,1\n';
+  for (const version of [5,6]) {
+    const source=`//@version=${version}
+indicator("method drawing compatibility")
+type Child40
+    float value
+type Parent40
+    Child40 child
+    chart.point point
+method bump40(Parent40 self)=>
+    self.child.value += 1
+    self.child.value
+var values=array.new<Parent40>()
+if barstate.isfirst
+    values.push(Parent40.new(Child40.new(0),chart.point.from_index(2,10)))
+alias=values.first()
+value=input.string("r")
+item=line.new(0,1,2,2,extend=value)
+line.set_extend(item,value)
+boxItem=box.new(0,2,1,1,extend=value)
+box.set_extend(boxItem,value)
+plot(alias.bump40())
+plot(values.first().child.value)
+plot(values.first().point.price)
+plot(extend.right=="r"?1:0)
+`;
+    const prepared=pine.compileScript(source);
+    const historical=JSON.parse(pine.runScriptCsv(source,csv));
+    assert.deepEqual(historical.plots.map(p=>p.values),[[1,2,3],[1,2,3],[10,10,10],[1,1,1]]);
+    assert.deepEqual(JSON.parse(prepared.runCsvWithRequestBarsAndInputOverrides(csv,'{}','{}')),historical);
+    assert.ok(historical.lines.every(line=>line.snapshots.every(snapshot=>snapshot.extend==='extend.right')));
+    assert.ok(historical.boxes.every(box=>box.snapshots.every(snapshot=>snapshot.extend==='extend.right')));
+    const session=prepared.realtimeSession();
+    session.seed('time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,10,10,10,10,1\n');
+    const replica=session.replica();
+    const bar=close=>JSON.stringify({time:120000,open:close,high:close,low:close,close,volume:1});
+    for (const close of [40,35]) {
+      const changes=session.applyForming(bar(close));
+      assert.equal(replica.apply(changes),true);
+      assert.equal(replica.result(),session.result());
+      assert.deepEqual(JSON.parse(session.result()).plots.map(p=>p.values.at(-1)),[3,3,10,1]);
+    }
+    assert.equal(replica.apply(session.applyConfirmed(bar(10))),true);
+    assert.equal(replica.result(),session.confirmedResult());
+    assert.deepEqual(JSON.parse(session.confirmedResult()),historical);
+    replica.free();session.free();prepared.free();
+    const invalid=`//@version=${version}\nindicator("invalid extend")\nitem=line.new(0,1,2,2,extend="extend.right")\nplot(1)\n`;
+    assert.equal(JSON.parse(pine.analyzeScript(invalid)).executable,true);
+    assert.throws(()=>pine.runScriptCsv(invalid,csv),/invalid extend value/);
+  }
+}

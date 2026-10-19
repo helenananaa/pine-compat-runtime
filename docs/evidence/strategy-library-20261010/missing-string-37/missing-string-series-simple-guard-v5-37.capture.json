@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-series-simple-guard-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-series-simple-guard-v5-37.pine",
+  "source_sha256": "7a51e7d5bb80cc0a6e6368c790be606a48291d59f65ae1c4ceb82dda3bc273b5",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of 'series string' type was used but a 'simple string' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "7a51e7d5bb80cc0a6e6368c790be606a48291d59f65ae1c4ceb82dda3bc273b5",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-series-simple-guard-v5-37.native.ax.txt",
+  "accessibility_sha256": "b30cd24c3b1c5e4abda8da24b832431284a057e2e2878679de08a86670092a42",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-series-simple-guard-v5-37.native.png",
+  "screenshot_sha256": "a9a37d211df676fd195bc2b2eeb53cf9b92846327c327fb81d78194fb119b831",
+  "scope": "v5 assignment from chart data promotes missing-string binding to series; simple parameter restrictions remain",
+  "qualification_scope": "candidate_bounded_control"
+}

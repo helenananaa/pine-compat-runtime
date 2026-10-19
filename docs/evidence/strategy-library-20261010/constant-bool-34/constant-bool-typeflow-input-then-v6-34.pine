@@ -1,0 +1,11 @@
+//@version=6
+indicator("Bool typeflow input-then v6 probe34",precision=0)
+a=if false
+    true
+up=input.bool(true)
+x=if a
+    up
+else
+    false
+value=input.bool(x)
+plot(value?1:0)

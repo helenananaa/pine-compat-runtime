@@ -1,0 +1,23 @@
+{
+  "name": "window-input-series-selector-v6-44",
+  "version": 6,
+  "scenario": "input-series-selector",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-input-series-selector-v6-44.pine",
+  "source_sha256": "da45f1a916d18356120767ebd9a1f15be04025c01ce7a6edd6754926b412c283",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    2
+  ],
+  "native_row": "621 row window-input-series-selector-v6-44 Plot 1.00 Plot 1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "da45f1a916d18356120767ebd9a1f15be04025c01ce7a6edd6754926b412c283",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-series-selector-v6-44.native.ax.txt",
+  "accessibility_sha256": "6607f27697df34ddf0effc94d5e88cf503b8d24d2954b0ed19f0c34966f12d3d",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-series-selector-v6-44.native.png",
+  "screenshot_sha256": "60bcc2d5a8fed78335e2fce7aea580395ea4871dd781211168bcd367513c009e",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

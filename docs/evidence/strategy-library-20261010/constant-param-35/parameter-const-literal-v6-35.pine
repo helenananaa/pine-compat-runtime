@@ -1,0 +1,4 @@
+//@version=6
+indicator("parameter-const-literal-v6-35",precision=0)
+f(const bool x)=>x
+plot(f(false)?1:0,title="value")

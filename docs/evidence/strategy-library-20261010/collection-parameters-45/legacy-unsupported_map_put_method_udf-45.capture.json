@@ -1,0 +1,31 @@
+{
+  "name": "legacy-unsupported_map_put_method_udf-45",
+  "version": 6,
+  "scenario": "legacy-fixture-admission",
+  "source": "E:\\projects\\pine-interpreter\\tests\\fixtures\\sema\\unsupported_map_put_method_udf.pine",
+  "source_sha256": "5f40bcd2ca0b835a8e419793f42e24de1b43532ce5b7bb9bc2e823c40b2b7d5c",
+  "local_three_bar_values": [
+    10
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    81917.52
+  ],
+  "native_relations": [
+    [
+      "eq",
+      0,
+      0
+    ]
+  ],
+  "native_row": "239 row Unsupported map put method UDF Plot 81,917.52",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "5f40bcd2ca0b835a8e419793f42e24de1b43532ce5b7bb9bc2e823c40b2b7d5c",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/legacy-unsupported_map_put_method_udf-45.native.ax.txt",
+  "accessibility_sha256": "3facb91361b09af6a1a8d0d8685d0139c941d3dae497724195fe62bdeb8ce2dc",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/legacy-unsupported_map_put_method_udf-45.native.png",
+  "screenshot_sha256": "bc0ee03ee17c1912cba32954d360caa7dce46b955837fd203c144a444b5789c6",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

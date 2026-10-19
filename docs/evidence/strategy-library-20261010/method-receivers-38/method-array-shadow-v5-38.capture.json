@@ -1,0 +1,18 @@
+{
+  "name": "method-array-shadow-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-shadow-v5-38.pine",
+  "source_sha256": "db79dbcd3a477ae5f5563493460c8045fc5af45189d3bab8f104931e1663b08d",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "The 'self' argument is not used. The first method argument should be used.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c8c16d02d04e0e7af440738c0283025d11d51d1b904441a3c96e011966f2b264",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-shadow-v5-38.native.ax.txt",
+  "accessibility_sha256": "8b94c13f62d09c1f56bf10d341db3e6d693cddd38fcde129b5612538a3a10f77",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-shadow-v5-38.native.png",
+  "screenshot_sha256": "282651c3fc81aa97bba1de58c9f734fe756bf2b602845221d0362b858e6646dc",
+  "qualification_scope": "unqualified_receiver_use_analysis",
+  "native_values": null,
+  "discovery_record_sha256": "59821db82abe89c2590c20b63fc2a77aca86953f52240fa439023e93c96de5aa"
+}

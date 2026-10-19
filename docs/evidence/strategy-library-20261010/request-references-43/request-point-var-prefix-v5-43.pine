@@ -1,0 +1,26 @@
+//@version=5
+indicator("request-point-var-prefix-v5-43")
+var p=chart.point.from_index(1,10)
+f(chart.point v)=>
+    v.price+=5
+    v.price
+before=p.price
+r=request.security(syminfo.tickerid,timeframe.period,f(p))
+varip float first_r=na
+varip float first_p=na
+varip float second_r=na
+varip float second_p=na
+if bar_index==0
+    first_r:=r
+    first_p:=p.price
+if bar_index==1
+    second_r:=r
+    second_p:=p.price
+plot(before)
+plot(r)
+plot(p.price)
+plot(first_r)
+plot(first_p)
+plot(second_r)
+plot(second_p)
+plot(bar_index)

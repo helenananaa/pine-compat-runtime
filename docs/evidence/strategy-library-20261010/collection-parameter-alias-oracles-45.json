@@ -1,0 +1,65 @@
+{
+  "scope": "Two supplementary Native execution observations explaining prior library alias projections. Separate from48 primary bounded controls.",
+  "records": [
+    {
+      "name": "array-alias-runtime-7-v6-45",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-7-v6-45.pine",
+      "source_sha256": "ca05190338406e74c61dd2b1faa14b90686e700e5ce3977f45276ac4c2647338",
+      "scenario": "persistent-parameter-array-alias",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        1,
+        3305
+      ],
+      "native_row": "487 row array-alias-runtime-7-v6-45 Plot 1.00 Plot 1.00 Plot 3,305.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "9f63a1ec60ce55837c68ec94503b2c7d1628bf25ccad3eb3b651230266e64640",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-7-v6-45.native.ax.txt",
+      "accessibility_sha256": "5f1e75ab835fd463dfca5fd354ddc49f66eaf27a5bb13f2b37aa0338dc8e863b",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-7-v6-45.native.png",
+      "screenshot_sha256": "6e18f8ed31edd2a87394821147a7430d1ef64887200372c231b34d6d1816a686",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Whole-source Native persistent scalar-array parameter-buffer alias control. The final bar counter3305 is projected to three local bars; the constant caller size1 is observed, not assumed.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-7-v6-45.capture.json",
+      "raw_capture_sha256": "95e3f644c36cfd0690c9ba3ae70c79ccf98ecbc1560469abf7d8a6ead49dc0ef",
+      "local_three_bar_values": [
+        1,
+        1,
+        3
+      ]
+    },
+    {
+      "name": "array-alias-runtime-8-v6-45",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-8-v6-45.pine",
+      "source_sha256": "d6af15dec08d21ce97fd22664bf77cb8d69f8b27c6b8071976ea5a16e057fc13",
+      "scenario": "persistent-parameter-array-alias",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        1,
+        3305
+      ],
+      "native_row": "487 row array-alias-runtime-8-v6-45 Plot 1.00 Plot 1.00 Plot 3,305.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "8e53bb90b085971137d318bf60f24c23e20fb8b52276308649c50029a83ede61",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-8-v6-45.native.ax.txt",
+      "accessibility_sha256": "5b67edabdc5418ae05be89768d1b471bacd48b610b3f1d26f7ad407025093c63",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-8-v6-45.native.png",
+      "screenshot_sha256": "8df8271b9aef5d860f036ded9a00bf75f5ccff084d191c34a9baf2a8b3a78237",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Whole-source Native persistent scalar-array parameter-buffer alias control. The final bar counter3305 is projected to three local bars; the constant caller size1 is observed, not assumed.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/array-alias-runtime-8-v6-45.capture.json",
+      "raw_capture_sha256": "4a24fe49f840ea9050a0d2b7c1ddfb178d814666791dc8ac300eeaf945848410",
+      "local_three_bar_values": [
+        1,
+        1,
+        3
+      ]
+    }
+  ]
+}

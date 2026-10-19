@@ -129,6 +129,14 @@ impl Analyzer {
                 }
             }
             BinaryOp::Eq | BinaryOp::NotEq => {
+                if (left_type.kind == ValueKind::ChartPoint
+                    && right_type.kind == ValueKind::ChartPoint)
+                    || (left_type.kind.array_element_kind().is_some()
+                        && right_type.kind.array_element_kind().is_some())
+                {
+                    self.operator_error(op, "comparable operands", left_type, right_type, span);
+                    return None;
+                }
                 let legacy_numeric_bool =
                     matches!(self.legacy.dialect(), PineDialect::V4 | PineDialect::V5)
                         && matches!(
@@ -212,6 +220,9 @@ impl Analyzer {
     }
 
     pub(crate) fn expect_bool(&mut self, pine_type: PineType, span: Span) {
+        if self.legacy_direction_bool_arg(pine_type, Accepts::BoolCompatible, span) {
+            return;
+        }
         if pine_type.kind == ValueKind::Bool {
             return;
         }

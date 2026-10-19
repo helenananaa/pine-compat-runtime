@@ -25,7 +25,7 @@ pine-compat requirements script.pine --library-source Author/Library/1=library.p
 ```
 
 An unsupported script returns a nonzero status with the existing analysis JSON
-diagnostics on stderr. A valid report on stdout uses its own schema version 2;
+diagnostics on stderr. A valid report on stdout uses its own schema version 3;
 it is separate from analysis schema 5 and the current runtime result schema 9.
 
 Python uses the compiled program, including libraries supplied to compilation:
@@ -45,6 +45,14 @@ program.free();
 
 ## Contract and interpretation
 
+Local batch 31 adds schema 3 currency-rate discovery. Strategies expose
+host-supplied account conversion with unit point value; `currencyRates` reports
+pair selectors, effective-time policy and missing-input behavior. Historical
+and realtime queries use the chart-bar opening context. Currency names in Pine
+are case insensitive; provider keys are uppercase. No data acquisition is
+performed by this report or the runtime. See [CURRENCY_RATE_INPUT.md](CURRENCY_RATE_INPUT.md)
+for the input contract and the current qualification boundary.
+
 Version 2 corrects modern request merge discovery: explicit on/off arguments and
 resolvable constant aliases are reported as gapsOn/gapsOff or
 lookaheadOn/lookaheadOff. An unresolved expression is reported as
@@ -54,8 +62,8 @@ retain their existing interpretation. The corrected timeframe relation is
 timeframes need not be integer multiples of the chart timeframe; request values
 align by actual opens and closes, including calendar months. Earlier version-2
 reports imposed the runtime's former integer-multiple limitation, so consumers
-must accept this expanded relation string. The report remains schema
-2; runtime result schema 9 and streaming changes schema 4 are unchanged.
+must accept this expanded relation string. Runtime result schema 9 and
+streaming changes schema 4 are unchanged by schema 3 discovery.
 
 The discovery mode is `conservativeExecutableHirInventory`. It visits all
 lowered executable expressions, including inlined library bodies, loop bounds,
@@ -71,7 +79,8 @@ external-input obligations merely because their text appears in a library.
 | `chart.quantityPrecision` | Decimal-power minimum-contract profile, integer precision 0 through 9. This is not arbitrary lot-step rounding. |
 | `chart.symbolMetadata` | Metadata names read by the executable HIR. Other context-dependent behavior, such as broker fills and chart time boundaries, can still need chart context without a direct metadata read. |
 | `chart.defaults` | Actual synthetic chart symbol/timeframe/grid/quantity defaults, fixed currency/timezone/point value, and explicit absence of symbol lookup. These are defaults, not inferred metadata for the supplied bars. |
-| `account` | Null for indicators. Strategies disclose same-currency linear accounting with unit point value and unsupported currency-conversion, contract-multiplier and nonstandard-chart broker profiles. |
+| `account` | Null for indicators. Strategies disclose linear accounting with host-supplied currency conversion and unit point value; nonunit contract multipliers and nonstandard-chart broker profiles remain unsupported. |
+| `currencyRates` | Optional effective daily currency input contract with account-conversion and request pair selectors. An unsupplied foreign pair is an input error. |
 | `execution.clock` | `explicitTimestampWhenEvaluated` means a reached `timenow` read needs an explicit host execution timestamp. `notUsed` means the inventory found no read. A skipped branch does not become a runtime requirement. |
 | `execution.realtimeUpdates` | The host supplies ordered forming replacements and confirmations; the core implements their state semantics. Rust/Python also accept an optional opening-update marker for attachment to an already open bar; omission retains first-observation inference. This is not a scheduler or market feed. |
 | `execution.calcOnEveryTick`, `calcOnOrderFills`, `processOrdersOnClose` | The compiled strategy switches. Indicator reports set these strategy-only flags to false. |
@@ -176,7 +185,7 @@ Defaults (synthetic, not inferred from a symbol name):
 - chart symbol `NASDAQ:AAPL`, timeframe `1`, minMove 1, priceScale 100,
   quantityPrecision 0, currency `USD`, point value `1`, timezone `Etc/UTC`;
 - indicator reports have a null account contract; strategies disclose
-  same-currency linear accounting with unit point value;
+  linear accounting with unit point value and host-supplied foreign rates when needed;
 - drawing objects use the existing 50-default / 500-max (100 for polylines)
   oldest-active eviction; series history is capped at 1,000,000 committed
   values; `while` loops stop at 100,000 iterations; arrays at 100,000
@@ -188,18 +197,19 @@ manylinux2014 `manylinux_2_17_x86_64` candidate wheel. The latter passed auditwh
 and 715 installed Python tests; see CANDIDATE_ACCEPTANCE.md for evidence.
 macOS, musllinux, ARM, and free-threaded CPython are out of this matrix.
 
-Account and data range for this candidate: standard candles, host-supplied
-price grid, same-currency linear accounting, unit point value. Foreign-currency
-conversion, non-unit contract multipliers, and nonstandard charts remain
-unsupported and fail closed.
+Current local account/data range: standard candles, host-supplied price grid,
+unit point value and explicit effective currency rates for foreign pairs.
+Nonunit contract multipliers and nonstandard charts remain unsupported and
+fail closed. Historical rc.1 release evidence above remains limited to its
+original same-currency profile.
 
 Dynamic input limits: `input.*` overrides apply to compiled call-site IDs from
 the current compilation. Runtime-expression request arguments stay unresolved
 in the inventory; they are not treated as literal keys. Call-site IDs are not
 stable across recompilation.
 
-Version compatibility: analysis schema 5, runtime schema 8, host-requirements
-schema 1. The crate identity is Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. Do not
+Historical rc.1 version compatibility was analysis schema 5, runtime schema 8,
+host-requirements schema 1. Its crate identity was Cargo `0.3.0-rc.1` / PEP 440 `0.3.0rc1`. Do not
 mix this candidate with published `0.2.0` wheels or crates. A failed compile,
 seed, or update returns an error and does not replace previously owned results
 on the realtime session path.

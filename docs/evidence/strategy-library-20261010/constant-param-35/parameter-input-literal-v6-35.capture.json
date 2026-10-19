@@ -1,0 +1,43 @@
+{
+  "name": "parameter-input-literal-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-input-literal-v6-35.pine",
+  "source_sha256": "baf4d33598eaea05edfcf55286c1e018be23a082cf63e6d9e5391d137de59830",
+  "native_status": "analysis_rejected",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "baf4d33598eaea05edfcf55286c1e018be23a082cf63e6d9e5391d137de59830",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-input-literal-v6-35.native.ax.txt",
+  "accessibility_sha256": "034e1f659924b7e038211c9c86bd87e288d5c0364c767b21bb655f043f269123",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-input-literal-v6-35.native.png",
+  "screenshot_sha256": "9900d7b8fd0b4975c57a9aa6f8b8ef30fcb1430955cf91f8c87b4689ff155bb3",
+  "capture_note": "Initial helper copied only a newline after error-widget dismissal. Refocused editor and verified complete source before retaining this receipt.",
+  "qualification_scope": "unqualified_next_batch_research",
+  "baseline33_analysis": {
+    "tested_cli_sha256": "3329fab48774d1d55f3bd00f59dd61b00f345de210d5288ea58cca4bcfabf01d",
+    "executable": false,
+    "diagnostics": [
+      {
+        "code": "E_PARSE_EXPECTED",
+        "severity": "error",
+        "message": "expected `)` after function parameters",
+        "span": {
+          "start": 81,
+          "end": 82,
+          "line": 3,
+          "column": 14
+        }
+      },
+      {
+        "code": "E_UNKNOWN_FUNCTION",
+        "severity": "error",
+        "message": "unknown function `f`",
+        "span": {
+          "start": 92,
+          "end": 93,
+          "line": 4,
+          "column": 6
+        }
+      }
+    ]
+  }
+}

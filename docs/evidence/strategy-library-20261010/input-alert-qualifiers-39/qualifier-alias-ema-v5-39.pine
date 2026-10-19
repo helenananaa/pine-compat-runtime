@@ -1,0 +1,6 @@
+//@version=5
+indicator("qualifier-alias-ema-v5-39")
+average39(int length)=>
+    adjusted=length+1
+    ta.ema(close,adjusted)
+plot(average39(2)==ta.ema(close,3)?1:0)

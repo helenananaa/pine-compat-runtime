@@ -1207,7 +1207,7 @@ fn parses_map_call_result_values_as_array_result_receivers() {
 }
 
 #[test]
-fn rejects_methods_after_terminal_builtin_collection_result_reads() {
+fn parses_methods_after_terminal_collection_reads_for_semantic_dispatch() {
     for source in [
         "bad = array.from(Point.new(1)).get(0).size()\n",
         "bad = array.new<Point>(1, Point.new(1)).first().custom()\n",
@@ -1323,10 +1323,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
     ] {
         let parsed = parse(source);
         assert!(
-            parsed
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
+            parsed.diagnostics.is_empty(),
             "{source}: {:?}",
             parsed.diagnostics
         );
@@ -1334,7 +1331,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
 }
 
 #[test]
-fn rejects_other_builtin_call_result_method_receivers() {
+fn parses_other_builtin_result_method_receivers_for_semantic_dispatch() {
     for source in [
         "bad = array.size(values).size()\n",
         "bad = array.get(values, 0).size()\n",
@@ -1350,12 +1347,11 @@ fn rejects_other_builtin_call_result_method_receivers() {
     ] {
         let parsed = parse(source);
 
-        assert!(parsed.diagnostics.iter().any(|diagnostic| {
-                diagnostic.code == "E_PARSE_EXPR"
-                && diagnostic.message.contains(
-                    "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
-                )
-        }));
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
     }
 }
 

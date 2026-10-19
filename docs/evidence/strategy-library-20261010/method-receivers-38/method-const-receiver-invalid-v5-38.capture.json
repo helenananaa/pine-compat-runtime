@@ -1,0 +1,18 @@
+{
+  "name": "method-const-receiver-invalid-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-receiver-invalid-v5-38.pine",
+  "source_sha256": "c7832d459007fe57dfc2cf5da796e99a0cc945ac1e92c724f0c9e8f05c1ca683",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot call 'keep38' with argument 'self'='x'. An argument of 'series int' type was used but a 'const int' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "7eb33d98b6f9637cf5ca42c07f19fd44b3547b09ccab12bc9ce8166aa5716fff",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-receiver-invalid-v5-38.native.ax.txt",
+  "accessibility_sha256": "b3512d2dad4575c7c3fa87f8840184e9ccf8f35666773615a27ee0b0cc36c0df",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-receiver-invalid-v5-38.native.png",
+  "screenshot_sha256": "1c46d048ac8ac1ddbe46687bcb2f0bb7b2d22b0df69e562d23725cdc671ca4fb",
+  "qualification_scope": "candidate_method_control",
+  "native_values": null,
+  "discovery_record_sha256": "8f935fb87aba92ccdcc4a405915fac9d4adfdcc22b032e450fbca9155e7b7d38"
+}

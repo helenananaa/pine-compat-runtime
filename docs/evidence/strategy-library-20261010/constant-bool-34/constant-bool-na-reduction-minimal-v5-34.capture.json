@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-na-reduction-minimal-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-na-reduction-minimal-v5-34.pine",
+  "source_sha256": "86173c5eb6902354e820404ea91e1835fc2e16e49159b8453d5b53e650ab3528",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool NA reduction minimal probe34 cross equality 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "86173c5eb6902354e820404ea91e1835fc2e16e49159b8453d5b53e650ab3528",
+  "normalized_source_sha256": "86173c5eb6902354e820404ea91e1835fc2e16e49159b8453d5b53e650ab3528",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-minimal-v5-34.native.ax.txt",
+  "accessibility_sha256": "6afd79026a49cb7e2d62f9cb1560146004141494ef72ab30af6b1c4c19cc7520",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-minimal-v5-34.native.png",
+  "screenshot_sha256": "eb4acc6ad9d1add07fce1170cfe27c9100c7bcb88ff6e16acf63bfa0174e7b64"
+}

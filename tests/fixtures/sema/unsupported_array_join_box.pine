@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported array join box")
 values = array.new_box()
-text = array.join(values)
+note = array.join(values)
 plot(close)

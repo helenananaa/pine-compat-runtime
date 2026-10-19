@@ -1,0 +1,20 @@
+{
+  "name": "missing-string-switch-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-switch-v6-37.pine",
+  "source_sha256": "d9e4b6bbab17c88ea6022b5a0b0369b71ed2bfa6e5327670abeccba1ce549433",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1
+  ],
+  "native_row": "251 row missing-string-switch-v6-37 Plot 1 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d9e4b6bbab17c88ea6022b5a0b0369b71ed2bfa6e5327670abeccba1ce549433",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-switch-v6-37.native.ax.txt",
+  "accessibility_sha256": "6073ee91709b217b2160b8cff26600204ca37853a4c9dacd9a6601e348082c8a",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-switch-v6-37.native.png",
+  "screenshot_sha256": "712ef0b30c38be2789bdec686cb3c7f67301607af8c76bb1115f5caf5bfc45c3",
+  "scope": "v6 selector switch matches typed missing strings with empty strings in both selector/case directions",
+  "qualification_scope": "candidate_bounded_control"
+}

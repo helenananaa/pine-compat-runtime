@@ -1,0 +1,5 @@
+//@version=4
+strategy("Zero equity entry v4 30",initial_capital=0,default_qty_type=strategy.percent_of_equity,default_qty_value=100)
+strategy.entry("L",strategy.long)
+plot(strategy.position_size,title="position")
+plot(1,title="compiled")

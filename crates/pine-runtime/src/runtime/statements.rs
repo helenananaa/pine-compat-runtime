@@ -47,7 +47,7 @@ impl<'a> HistoricalRuntime<'a> {
                 else_branch,
             } => {
                 let branch = match self.eval_expr(condition)? {
-                    PineValue::Bool(true) => then_branch,
+                    PineValue::Bool(true) | PineValue::ConstantBool { .. } => then_branch,
                     PineValue::Bool(false) | PineValue::Na => else_branch,
                     _ => return Ok(StmtControl::None),
                 };
@@ -89,7 +89,18 @@ impl<'a> HistoricalRuntime<'a> {
             }
             HirStmtKind::Reassign { symbol, value } => {
                 let value = self.eval_expr(value)?;
-                self.assign_persistent_symbol(*symbol, value.clone());
+                let preserve_constant = self.uses_v6_semantics()
+                    && self.metadata.symbol_index(*symbol).is_some_and(|index| {
+                        let symbol = &self.program.symbols[index];
+                        symbol.persistence == pine_ir::PersistenceKind::None
+                            && symbol.pine_type.qualifier == pine_ir::Qualifier::Const
+                    });
+                let value = if preserve_constant {
+                    value
+                } else {
+                    value.materialize_boolean()
+                };
+                let value = self.assign_persistent_symbol(*symbol, value)?;
                 self.set_symbol_value(*symbol, value);
             }
             HirStmtKind::FieldReassign {
@@ -98,7 +109,7 @@ impl<'a> HistoricalRuntime<'a> {
                 field_index,
                 value,
             } => {
-                let value = self.eval_expr(value)?;
+                let value = self.eval_expr(value)?.materialize_boolean();
                 if !path.is_empty() {
                     let mut receiver = self
                         .current_symbols
@@ -111,17 +122,28 @@ impl<'a> HistoricalRuntime<'a> {
                         };
                         receiver = self.object_field(id, *index)?;
                     }
-                    let PineValue::UserTypeRef(id) = receiver else {
-                        return Err(RuntimeError {
-                            message:
-                                "nested field mutation receiver is undefined or not a UDT object"
-                                    .to_owned(),
-                        });
-                    };
-                    self.set_object_field(id, *field_index, value)?;
+                    match receiver {
+                        PineValue::UserTypeRef(id) => {
+                            self.set_object_field(id, *field_index, value)?
+                        }
+                        PineValue::ChartPointRef(id) => {
+                            self.set_chart_point_field(id, *field_index, value)?
+                        }
+                        _ => {
+                            return Err(RuntimeError {
+                                message:
+                                    "nested field mutation receiver is undefined or not an object"
+                                        .to_owned(),
+                            });
+                        }
+                    }
                     return Ok(StmtControl::None);
                 }
                 let updated = match self.current_symbols.get(symbol).cloned() {
+                    Some(PineValue::ChartPointRef(id)) => {
+                        self.set_chart_point_field(id, *field_index, value)?;
+                        PineValue::ChartPointRef(id)
+                    }
                     Some(PineValue::UserTypeRef(id)) => {
                         self.set_object_field(id, *field_index, value)?;
                         PineValue::UserTypeRef(id)
@@ -149,7 +171,7 @@ impl<'a> HistoricalRuntime<'a> {
                         });
                     }
                 };
-                self.assign_persistent_symbol(*symbol, updated.clone());
+                let updated = self.assign_persistent_symbol(*symbol, updated)?;
                 self.set_symbol_value(*symbol, updated);
             }
             HirStmtKind::ArrayFieldReassign {
@@ -207,9 +229,7 @@ impl<'a> HistoricalRuntime<'a> {
                         PineValue::Bool(true)
                     )
                 }
-                (None, Some(condition)) => {
-                    matches!(self.eval_expr(condition)?, PineValue::Bool(true))
-                }
+                (None, Some(condition)) => self.eval_expr(condition)?.is_condition_true(),
                 (_, None) => true,
             };
 
@@ -375,7 +395,7 @@ impl<'a> HistoricalRuntime<'a> {
         let mut loop_result = PineValue::Na;
         loop {
             match self.eval_expr(condition)? {
-                PineValue::Bool(true) => {}
+                PineValue::Bool(true) | PineValue::ConstantBool { .. } => {}
                 PineValue::Bool(false) | PineValue::Na => break,
                 _ => break,
             }

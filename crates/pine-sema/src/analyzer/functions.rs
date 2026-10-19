@@ -1,14 +1,15 @@
 use std::collections::HashSet;
 
-use crate::analyzer::user_types::{
-    UserTypeArrayElementInference, classify_user_type_array_element_names,
-};
+use crate::analyzer::user_types::UserTypeArrayElementInference;
 use crate::prelude::*;
 use crate::source_graph::{SourceContextId, SourceId};
 
+pub(crate) mod collections;
+mod declarations;
 mod defaults;
 mod local_arrays;
 mod overloads;
+mod qualifiers;
 pub(crate) use defaults::{function_default_values, record_default_shadowing};
 pub(crate) use local_arrays::local_array_mutation_spans;
 
@@ -326,12 +327,19 @@ impl Analyzer {
         type_name: &str,
         span: Span,
     ) -> Option<FunctionParamInfo> {
-        let explicit_series = type_name.starts_with("series ");
-        let explicit_simple = type_name.starts_with("simple ");
+        let mut explicit_series = type_name.starts_with("series ");
+        let mut explicit_simple = type_name.starts_with("simple ");
+        let explicit_const = type_name.starts_with("const ");
         let type_name = type_name
             .strip_prefix("series ")
             .or_else(|| type_name.strip_prefix("simple "))
+            .or_else(|| type_name.strip_prefix("const "))
             .unwrap_or(type_name);
+        let collection = collections::collection_parameter_info(type_name);
+        if collection.is_some() {
+            explicit_series = false;
+            explicit_simple = false;
+        }
         if explicit_simple && !matches!(type_name, "int" | "float" | "bool" | "string" | "color") {
             self.diagnostics.push(Diagnostic::error(
                 "E_FUNCTION_PARAM_TYPE",
@@ -340,21 +348,21 @@ impl Analyzer {
             ));
             return None;
         }
-        let qualifier = if explicit_simple {
+        let qualifier = if explicit_const {
+            Qualifier::Const
+        } else if explicit_simple {
             Qualifier::Simple
         } else {
             Qualifier::Series
         };
         let (pine_type, user_type_name) = match type_name {
+            _ if collection.is_some() => (collection.unwrap().0, None),
             _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
                 let element_type = &type_name["array<".len()..type_name.len() - 1];
                 if let Some(kind) = array_kind_from_element_type_name(element_type) {
                     (PineType::new(Qualifier::Series, kind), None)
                 } else if matches!(
-                    classify_user_type_array_element_names(
-                        &self.user_types,
-                        &[element_type.to_owned()]
-                    ),
+                    self.classify_declared_user_type_array_names(&[element_type.to_owned()]),
                     Some(UserTypeArrayElementInference::SameLocal(_))
                 ) || self
                     .imported_user_types
@@ -406,11 +414,21 @@ impl Analyzer {
                 return None;
             }
         };
+        if explicit_const && pine_type.kind == ValueKind::UserType {
+            self.diagnostics.push(Diagnostic::error(
+                "E_FUNCTION_PARAM_TYPE",
+                "user-defined type parameters cannot use the `const` qualifier",
+                span,
+            ));
+            return None;
+        }
         Some(FunctionParamInfo {
             pine_type,
             explicit_series,
             explicit_simple,
+            enforce_qualifier: false,
             user_type_name,
+            map_type: collection.and_then(|(_, map)| map),
             span,
         })
     }
@@ -674,7 +692,11 @@ impl Analyzer {
                 self.record_symbol_const_switch_key(symbol, key);
             }
             if let Some(expected_type) = expected_type {
-                if !can_assign(expected_type.pine_type, arg_type) {
+                if !expected_type.accepts_argument(arg_type, arg_map_info)
+                    || (self.legacy.dialect().version() >= 6
+                        && expected_type.pine_type.kind == ValueKind::Bool
+                        && arg_type.kind == ValueKind::Na)
+                {
                     self.push_diagnostic_in_context(
                         Diagnostic::error(
                             "E_FUNCTION_ARG_TYPE",
@@ -717,7 +739,11 @@ impl Analyzer {
             if let Some(type_name) = arg_user_type_array {
                 self.mark_symbol_user_type_array(symbol, type_name);
             }
-            if let Some(info) = arg_map_info {
+            if let Some(info) = expected_type
+                .as_ref()
+                .and_then(|p| p.map_type)
+                .or(arg_map_info)
+            {
                 self.mark_symbol_map(symbol, info);
             }
             if let Some(key) = arg_const_switch_key {

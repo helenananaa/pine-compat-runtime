@@ -1,0 +1,10 @@
+//@version=5
+indicator("point-function-writes-v5-41")
+f(chart.point item)=>
+    item.price+=2
+method bump(chart.point self)=>
+    self.price+=3
+p=chart.point.from_index(1,10)
+f(p)
+p.bump()
+plot(p.price)

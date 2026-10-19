@@ -1,0 +1,16 @@
+//@version=6
+indicator("array-function-parameter-return-v6-42")
+f(array<int> a)=>a
+var a=array.new_int()
+b=f(a)
+b.push(1)
+varip int sa=0
+varip int sb=0
+varip int idx=0
+if barstate.ishistory
+    sa:=a.size()
+    sb:=b.size()
+    idx:=bar_index
+plot(sa)
+plot(sb)
+plot(idx)

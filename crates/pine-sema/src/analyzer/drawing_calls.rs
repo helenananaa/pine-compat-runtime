@@ -3,7 +3,6 @@ use crate::prelude::*;
 use pine_builtins::{LABEL_STYLES, LINE_STYLES};
 
 const LINE_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
-const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
 const BOX_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
 const BOX_BORDER_STYLES: &[&str] = &["line.style_solid", "line.style_dotted", "line.style_dashed"];
 const TEXT_HALIGNS: &[&str] = &["text.align_left", "text.align_center", "text.align_right"];
@@ -187,7 +186,7 @@ const BOX_NEW_SCALAR_PARAMS: &[BoxNewParam] = &[
     box_param("border_color", Accepts::ColorCompatible, true),
     box_param("border_width", Accepts::IntCompatible, true),
     box_param("border_style", Accepts::ConstString, true),
-    box_param("extend", Accepts::ConstString, true),
+    box_param("extend", Accepts::StringCompatible, true),
     box_param("xloc", Accepts::ConstString, true),
     box_param("bgcolor", Accepts::ColorCompatible, true),
     box_param("text", Accepts::StringCompatible, true),
@@ -207,7 +206,7 @@ const BOX_NEW_POINT_PARAMS: &[BoxNewParam] = &[
     box_param("border_color", Accepts::ColorCompatible, true),
     box_param("border_width", Accepts::IntCompatible, true),
     box_param("border_style", Accepts::ConstString, true),
-    box_param("extend", Accepts::ConstString, true),
+    box_param("extend", Accepts::StringCompatible, true),
     box_param("xloc", Accepts::ConstString, true),
     box_param("bgcolor", Accepts::ColorCompatible, true),
     box_param("text", Accepts::StringCompatible, true),
@@ -633,7 +632,6 @@ impl Analyzer {
             }
         }
         self.validate_line_new_string_arg(args, params, "xloc", LINE_XLOCS, false);
-        self.validate_line_new_string_arg(args, params, "extend", LINE_EXTENDS, true);
         self.validate_line_new_string_arg(args, params, "style", LINE_STYLES, true);
     }
 
@@ -725,7 +723,6 @@ impl Analyzer {
             }
         }
         self.validate_box_new_string_arg(args, params, "border_style", BOX_BORDER_STYLES);
-        self.validate_box_new_string_arg(args, params, "extend", LINE_EXTENDS);
         self.validate_box_new_string_arg(args, params, "xloc", BOX_XLOCS);
         self.validate_box_new_string_arg(args, params, "text_halign", TEXT_HALIGNS);
         self.validate_box_new_string_arg(args, params, "text_valign", TEXT_VALIGNS);

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Reserved for-in-v6 probe33",precision=0)
+n=0
+nums=array.from(1)
+for text in nums
+    n+=text
+plot(n)

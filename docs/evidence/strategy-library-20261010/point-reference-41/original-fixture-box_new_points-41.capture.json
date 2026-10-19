@@ -1,0 +1,20 @@
+{
+  "name": "original-fixture-box_new_points-41",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\original-fixture-box_new_points-41.pine",
+  "source_sha256": "bcbbe0181697c35389bdd8ed9704cd9136bf802ad92c95e71ad63d0c929406ac",
+  "parent_fixture": "tests/fixtures/runtime/box_new_points.pine",
+  "parent_fixture_sha256": "bcbbe0181697c35389bdd8ed9704cd9136bf802ad92c95e71ad63d0c929406ac",
+  "qualification_scope": "obsolete_positive_fixture_native_rejection",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 0: Cannot access the 'time' field of an undefined object. The object is 'na'. at  #main () : 11",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "bcbbe0181697c35389bdd8ed9704cd9136bf802ad92c95e71ad63d0c929406ac",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/original-fixture-box_new_points-41.native.ax.txt",
+  "accessibility_sha256": "e87900ea65bbbe00f0c44a0f18add282ffb6af344feb18a053be5e6e93bb0cce",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/original-fixture-box_new_points-41.native.png",
+  "screenshot_sha256": "cde7896ea19c3d0270ea2fc7668afe595b46355b2e34244ee22abc15fd81776f",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

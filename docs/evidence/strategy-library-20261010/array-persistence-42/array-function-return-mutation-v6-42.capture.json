@@ -1,0 +1,22 @@
+{
+  "name": "array-function-return-mutation-v6-42",
+  "version": 6,
+  "scenario": "function-return-mutation",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-function-return-mutation-v6-42.pine",
+  "source_sha256": "54f6a012649c5ef30a3c926b9eb1ae0cd1b11ce5ca47c04e202c80e3734b7915",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    6700,
+    3349
+  ],
+  "native_row": "241 row array-function-return-mutation-v6-42 Plot 6,700.00 Plot 3,349.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "fd160528401a2e580d63cfcfa66d2c1be7405daada64b49d573995f1a3aade86",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-function-return-mutation-v6-42.native.ax.txt",
+  "accessibility_sha256": "8bd6a3134313554cee1d5d1812acc81a3baf392a1f168d3bd6222d10bc88e517",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-function-return-mutation-v6-42.native.png",
+  "screenshot_sha256": "7887a5f75d27be6ecd2dc432ed0b4f8c0cb7832d3ba1113c6c91823b2d0b3ee6",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

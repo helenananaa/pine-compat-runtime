@@ -42,11 +42,6 @@ impl HistoricalSession {
                 "execution_times must match the historical bar count",
             ));
         }
-        let first_execution_index = program
-            .hir
-            .calc_bars_count
-            .filter(|count| *count > 0)
-            .map_or(0, |count| bars.len().saturating_sub(count as usize));
         let mut runtime =
             HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
                 &program.hir,
@@ -61,11 +56,8 @@ impl HistoricalSession {
                 .with_session_windows(windows)
                 .map_err(|err| PyValueError::new_err(err.message))?;
         }
-        runtime
-            .set_historical_horizon(
-                bars.len() - first_execution_index,
-                bars.last().unwrap().time,
-            )
+        let first_execution_index = py
+            .detach(|| runtime.initialize_historical_dataset(&bars, execution_times.as_deref()))
             .map_err(|e| PyValueError::new_err(e.message))?;
         Ok(Self {
             runtime,

@@ -1,0 +1,20 @@
+{
+  "name": "missing-string-cast-simple-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-simple-v6-37.pine",
+  "source_sha256": "d5664deda587710200e9717f69b98927fb62ac152ec1b676473bb7845a0aba88",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "251 row missing-string-cast-simple-v6-37 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d5664deda587710200e9717f69b98927fb62ac152ec1b676473bb7845a0aba88",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-simple-v6-37.native.ax.txt",
+  "accessibility_sha256": "34055687c640719981fbdf19a225df352890e5ca55ad0bc6124964535f0a40df",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-simple-v6-37.native.png",
+  "screenshot_sha256": "3946ad329c95a0bff5532118cf53fbb5fb8c0f482e382c6c576bb3f8c0b00f28",
+  "scope": "v6 string(na) is accepted by simple string parameters, keeps missing identity and has length0",
+  "qualification_scope": "candidate_bounded_control"
+}

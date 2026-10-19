@@ -1,0 +1,19 @@
+{
+  "name": "table-quota-delete-before-new-v6-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-delete-before-new-v6-36.pine",
+  "source_sha256": "1107370f3e4c3c3749da8aaeb65a9e6899947d11afa7ed99fb49e2e1188b9c90",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "240 row table-quota-delete-before-new-v6-36 executed 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1107370f3e4c3c3749da8aaeb65a9e6899947d11afa7ed99fb49e2e1188b9c90",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-delete-before-new-v6-36.native.ax.txt",
+  "accessibility_sha256": "7f65390f007f2c97ec552c84efa0b6e38ce4b61dceea054849e9259cd1d788b3",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-delete-before-new-v6-36.native.png",
+  "screenshot_sha256": "06831189ffd92ee9dcec0ebf6723315b4f09eadf786226673ecf4bed2c1fc640",
+  "scope": "Native v6 supports repeated6000-cell creation/delete and replacement across history.",
+  "qualification_scope": "candidate_table_control"
+}

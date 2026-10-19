@@ -1,0 +1,5 @@
+//@version=4
+study("alert-frequency-input-v4-39")
+frequency=input(alert.freq_once_per_bar,type=input.string)
+alert("bounded legacy frequency probe",frequency)
+plot(1)

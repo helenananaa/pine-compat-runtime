@@ -39,7 +39,9 @@ pub(super) fn collect_body_field_param_keys(
                     } => {
                         if !matches!(
                             mode,
-                            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const
+                            pine_syntax::DeclMode::Normal
+                                | pine_syntax::DeclMode::Const
+                                | pine_syntax::DeclMode::Simple
                         ) {
                             return None;
                         }

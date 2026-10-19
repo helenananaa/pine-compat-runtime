@@ -29,6 +29,7 @@ pub(super) struct FillRequest {
 pub(super) struct PositionSnapshot {
     pub(super) signed_size: f64,
     pub(super) avg_price: f64,
+    pub(super) quote_to_account_rate: f64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -60,6 +61,7 @@ pub(super) enum FillCalcError {
     NonPositiveQuantity,
     NonFinitePrice,
     NonFinitePosition,
+    InvalidConversionRate,
     NotSameSide,
     NoReduciblePosition,
 }
@@ -98,6 +100,9 @@ fn validate_inputs(
     }
     if !snapshot.signed_size.is_finite() || !snapshot.avg_price.is_finite() {
         return Err(FillCalcError::NonFinitePosition);
+    }
+    if !snapshot.quote_to_account_rate.is_finite() || snapshot.quote_to_account_rate <= 0.0 {
+        return Err(FillCalcError::InvalidConversionRate);
     }
     Ok(())
 }
@@ -146,8 +151,9 @@ fn close_cash_delta(
     quantity: f64,
     price: f64,
     exit_commission: f64,
+    rate: f64,
 ) -> f64 {
-    direction.signed_quantity(quantity) * price - exit_commission
+    direction.signed_quantity(quantity) * price * rate - exit_commission
 }
 
 fn open_cash_delta(
@@ -155,14 +161,16 @@ fn open_cash_delta(
     quantity: f64,
     price: f64,
     entry_commission: f64,
+    rate: f64,
 ) -> f64 {
-    -(direction.signed_quantity(quantity) * price + entry_commission)
+    -(direction.signed_quantity(quantity) * price * rate + entry_commission)
 }
 
 fn realized_from_allocations(
     allocations: &[TradeAllocation],
     price: f64,
     exit_commission: f64,
+    rate: f64,
 ) -> f64 {
     if allocations.is_empty() {
         return 0.0;
@@ -181,7 +189,7 @@ fn realized_from_allocations(
             };
             let commission = allocation.entry_commission + allocated_exit;
             let signed_qty = allocation.direction.signed_quantity(allocation.quantity);
-            (price - allocation.entry_price) * signed_qty - commission
+            (price - allocation.entry_price) * signed_qty * rate - commission
         })
         .sum()
 }
@@ -230,6 +238,7 @@ pub(super) fn calculate_same_side_addition(
             split.open_quantity,
             fill_price,
             entry_commission,
+            snapshot.quote_to_account_rate,
         ),
         realized_profit: 0.0,
         commission: entry_commission,
@@ -265,6 +274,7 @@ pub(super) fn calculate_reduce_only(
             &allocations,
             fill_price,
             filled_exit_commission,
+            snapshot.quote_to_account_rate,
         ),
         closed_allocations: allocations,
         opened_trade: None,
@@ -277,6 +287,7 @@ pub(super) fn calculate_reduce_only(
             close_quantity,
             fill_price,
             filled_exit_commission,
+            snapshot.quote_to_account_rate,
         ),
         commission: filled_exit_commission,
         routable: true,
@@ -312,8 +323,14 @@ pub(super) fn calculate_netting_transition(
             split.close_quantity,
             fill_price,
             close_commission,
+            snapshot.quote_to_account_rate,
         );
-        realized_profit = realized_from_allocations(&allocations, fill_price, close_commission);
+        realized_profit = realized_from_allocations(
+            &allocations,
+            fill_price,
+            close_commission,
+            snapshot.quote_to_account_rate,
+        );
     }
     let opened_trade = split.open_direction.map(|open_direction| {
         cash_delta += open_cash_delta(
@@ -321,6 +338,7 @@ pub(super) fn calculate_netting_transition(
             split.open_quantity,
             fill_price,
             open_commission,
+            snapshot.quote_to_account_rate,
         );
         OpenedExposure {
             direction: open_direction,
@@ -365,11 +383,13 @@ mod tests {
         PositionSnapshot {
             signed_size,
             avg_price,
+            quote_to_account_rate: 1.0,
         }
     }
 
     fn allocation(direction: TradeDirection, quantity: f64, entry_price: f64) -> TradeAllocation {
         TradeAllocation {
+            extrema: Default::default(),
             trade_index: 0,
             trade_key: 0,
             entry_id: "E".to_owned(),

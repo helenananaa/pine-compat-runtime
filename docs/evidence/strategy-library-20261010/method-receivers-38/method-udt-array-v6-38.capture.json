@@ -1,0 +1,20 @@
+{
+  "name": "method-udt-array-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-array-v6-38.pine",
+  "source_sha256": "54bee0581750b2544e8dbbafdce1440ed1cce5f5669b5eda840a91550ae9b230",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    7
+  ],
+  "native_row": "319 row method-udt-array-v6-38 Plot 7.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "57d052d87fd8722700860c832b315e1e99de321aaf59d140d0bf222370d9472f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-array-v6-38.native.ax.txt",
+  "accessibility_sha256": "cbe03dd2235e0bbee45ca32e408cfd55f1e8dcb799c6779c390c7a97fae11e58",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-array-v6-38.native.png",
+  "screenshot_sha256": "6199529a2dc86d6b41ae4fb275abbe8ae006312f2132088e539eca425e00feff",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "05e4755bc0df282ae6aa18d63d97dc51c723550519ffe71e6f841dd37cbe98b7"
+}

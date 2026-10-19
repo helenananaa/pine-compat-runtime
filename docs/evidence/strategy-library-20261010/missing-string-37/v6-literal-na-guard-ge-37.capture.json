@@ -1,0 +1,19 @@
+{
+  "name": "v6-literal-na-guard-ge-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-ge-37.pine",
+  "source_sha256": "3609395bafd7d49b8ddb7985bb6ece9bb5ac19356cf1f757a624ad1f6936ba6b",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "251 row v6-literal-na-guard-ge-37 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3609395bafd7d49b8ddb7985bb6ece9bb5ac19356cf1f757a624ad1f6936ba6b",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-ge-37.native.ax.txt",
+  "accessibility_sha256": "b0075eff4e80902df8ea4d838629d4753c59dc62a842409cc7bfe99f6af3bb69",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-ge-37.native.png",
+  "screenshot_sha256": "85631996e090c8aff8abc234ab6541baebe41e6e4850b703a2eec8d58e67fa25",
+  "scope": "v6 greater-or-equal comparison with literal na is legal and false",
+  "qualification_scope": "candidate_bounded_control"
+}

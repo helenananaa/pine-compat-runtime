@@ -1,0 +1,4 @@
+//@version=6
+import TradingView/text/1
+indicator("Implicit reserved import probe33")
+plot(close)

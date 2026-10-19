@@ -1,0 +1,6 @@
+//@version=6
+indicator("Reserved field-v6 probe33",precision=0)
+type Holder
+    int text
+h=Holder.new(7)
+plot(h.text)

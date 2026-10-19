@@ -1,0 +1,23 @@
+{
+  "name": "window-nested-outer-bounded-v5-44",
+  "version": 5,
+  "scenario": "nested-outer-bounded",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-nested-outer-bounded-v5-44.pine",
+  "source_sha256": "3cf2abf242656f2084b6dfe53184e7a31cf05db2ed37fd0a3f7aaec11e8e5627",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    1,
+    3350
+  ],
+  "native_row": "239 row window-nested-outer-bounded-v5-44 Plot 3,349.00 Plot 1.00 Plot 3,350.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3cf2abf242656f2084b6dfe53184e7a31cf05db2ed37fd0a3f7aaec11e8e5627",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-nested-outer-bounded-v5-44.native.ax.txt",
+  "accessibility_sha256": "55d0aaf768c5afb51a9d6fae5575ea0b0b5977881d1b85a28d9b1192b30f7ca2",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-nested-outer-bounded-v5-44.native.png",
+  "screenshot_sha256": "6b4d576060a141b96a9f353a9908d9b1e351448f952078c8642f2810a79a2463",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

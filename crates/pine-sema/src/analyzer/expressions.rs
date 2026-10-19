@@ -2,6 +2,7 @@ use crate::PineDialect;
 use crate::prelude::*;
 
 mod legacy_conversions;
+mod legacy_directions;
 mod members;
 mod resolution;
 mod type_queries;
@@ -144,9 +145,47 @@ impl Analyzer {
                 let left_type = self.analyze_expr(left);
                 let right_type = self.analyze_expr(right);
                 match (left_type, right_type) {
-                    (Some(left_type), Some(right_type)) => self.infer_binary_with_legacy(
-                        *op, left_type, right_type, left.span, right.span, expr.span,
-                    ),
+                    (Some(left_type), Some(right_type)) => {
+                        let (left_type, right_type) = if self.legacy.dialect() == PineDialect::V6
+                            && matches!(
+                                op,
+                                BinaryOp::Gt | BinaryOp::Gte | BinaryOp::Lt | BinaryOp::Lte
+                            ) {
+                            // Relational numeric comparisons admit a missing operand;
+                            // the runtime retains its NA value and returns false in v6.
+                            let numeric_context = |ty: PineType, other: PineType| {
+                                if ty.kind == ValueKind::Na
+                                    && matches!(other.kind, ValueKind::Int | ValueKind::Float)
+                                {
+                                    PineType::new(ty.qualifier, other.kind)
+                                } else {
+                                    ty
+                                }
+                            };
+                            (
+                                numeric_context(left_type, right_type),
+                                numeric_context(right_type, left_type),
+                            )
+                        } else {
+                            (left_type, right_type)
+                        };
+                        if self.legacy.dialect() == PineDialect::V6
+                            && matches!(op, BinaryOp::Eq | BinaryOp::NotEq)
+                            && ((left_type.kind == ValueKind::Na
+                                && matches!(&left.without_groups().kind, ExprKind::Identifier(name) if name == "na"))
+                                || (right_type.kind == ValueKind::Na
+                                    && matches!(&right.without_groups().kind, ExprKind::Identifier(name) if name == "na")))
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_OPERATOR_TYPE",
+                                "Pine v6 cannot compare a value to untyped na directly; use na() instead",
+                                expr.span,
+                            ));
+                        }
+                        self.infer_binary_with_legacy(
+                            *op, left_type, right_type, left.span, right.span, expr.span,
+                        )
+                    }
                     _ => None,
                 }
             }

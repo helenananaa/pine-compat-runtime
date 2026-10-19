@@ -22,6 +22,7 @@ impl BrokerState {
         let snapshot = PositionSnapshot {
             signed_size: self.position_size,
             avg_price: self.avg_price,
+            quote_to_account_rate: self.quote_to_account_rate,
         };
         let request = FillRequest {
             order_key: InternalOrderKey(0),
@@ -54,7 +55,7 @@ impl BrokerState {
                 true
             }
             Err(FillCalcError::NotSameSide) => {
-                self.cash -= signed_quantity * fill_price + entry_commission;
+                self.cash -= self.account_value(signed_quantity * fill_price) + entry_commission;
                 self.record_open_fill(
                     fill,
                     fill_price,
@@ -88,6 +89,7 @@ impl BrokerState {
         let alert_id = fill.id.clone();
         let alert_metadata = fill.metadata.clone();
         let open_trade = OpenTrade {
+            extrema: Default::default(),
             key: 0,
             id: fill.id.clone(),
             direction,
@@ -236,6 +238,7 @@ impl BrokerState {
         let snapshot = PositionSnapshot {
             signed_size: self.position_size,
             avg_price: self.avg_price,
+            quote_to_account_rate: self.quote_to_account_rate,
         };
         let split = match super::fill_transition::split_fill_quantities(
             snapshot.signed_size,
@@ -297,8 +300,9 @@ impl BrokerState {
         let close_commission = transition.commission - open_commission;
         let open_cash = match transition.opened_trade.as_ref() {
             Some(opened) => {
-                -(opened.direction.signed_quantity(opened.quantity) * opened.price
-                    + opened.commission)
+                -(self.account_value(
+                    opened.direction.signed_quantity(opened.quantity) * opened.price,
+                ) + opened.commission)
             }
             None => 0.0,
         };
@@ -321,12 +325,14 @@ impl BrokerState {
                 };
                 let commission = allocation.entry_commission + allocated_exit;
                 let signed_qty = allocation.direction.signed_quantity(allocation.quantity);
-                let profit = (fill_price - allocation.entry_price) * signed_qty - commission;
+                let profit = self.account_value((fill_price - allocation.entry_price) * signed_qty)
+                    - commission;
                 closed_entry_commission += allocation.entry_commission;
                 self.record_closed_trade_fill(ClosedTradeFill {
                     entry_id: allocation.entry_id.clone(),
                     exit_id: id.clone(),
                     entry_fill: AllocatedEntryFill {
+                        extrema: allocation.extrema,
                         entry_price: allocation.entry_price,
                         entry_bar_index: allocation.entry_bar_index,
                         entry_time: allocation.entry_time,
@@ -348,6 +354,7 @@ impl BrokerState {
                 transition.close_quantity,
                 closed_entry_commission,
                 bar_index,
+                fill_price,
             );
         }
 
@@ -411,6 +418,7 @@ impl BrokerState {
         let min_equity_before_entry = self.min_equity_before_open_trade;
         let max_equity_before_entry = self.max_equity_before_open_trade;
         let open_trade = OpenTrade {
+            extrema: Default::default(),
             key: 0,
             id: fill.id,
             direction,
@@ -444,18 +452,26 @@ impl BrokerState {
         qty: f64,
         closed_entry_commission: f64,
         bar_index: usize,
+        price: f64,
     ) {
+        let fully_closed = qty >= self.position_size.abs();
         self.cash += cash_delta;
-        if qty >= self.position_size.abs() {
+        if fully_closed {
+            // Clear aggregate metadata before rebuilding it from the ledger.
+            // Fractional allocation can leave a representable residual; its
+            // exposure must remain visible until that ledger quantity closes.
+            self.clear_open_long_legacy_state();
+        } else {
+            self.open_entry_commission -= closed_entry_commission;
+        }
+        self.apply_trade_allocations_and_sync_position(allocations);
+        // Include final execution prices and exit fees before advancing the
+        // next position's closed-equity baseline.
+        self.observe_strategy_equity_extremes(price);
+        if fully_closed {
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.clear_open_long_legacy_state();
-            self.apply_trade_allocations_and_sync_position(allocations);
-            self.record_position_snapshot(bar_index);
-            return;
         }
-        self.open_entry_commission -= closed_entry_commission;
-        self.apply_trade_allocations_and_sync_position(allocations);
         self.record_position_snapshot(bar_index);
     }
 }

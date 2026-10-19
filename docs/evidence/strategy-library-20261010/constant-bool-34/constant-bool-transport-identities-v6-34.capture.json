@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-transport-identities-v6-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-transport-identities-v6-34.pine",
+  "source_sha256": "064f26c54f1c7cc36391ae584083e195b99e0a222d2fefca116d83b971855ab1",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool transport and identity v6 probe34 separate equal false payload 0 same alias 1 separate selected true payload 1 dynamic choice identity condition 0 dynamic choice zero history 0 mutable carry identity condition 0 mutable carry zero history 0 parameter true condition 1 parameter true equality 1 parameter false condition 1 parameter false distinct calls 1 parameter false self 1 local parameter false return 1 unused parameter literal false 0 no parameter literal false 0 bar parity 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "064f26c54f1c7cc36391ae584083e195b99e0a222d2fefca116d83b971855ab1",
+  "normalized_source_sha256": "064f26c54f1c7cc36391ae584083e195b99e0a222d2fefca116d83b971855ab1",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-transport-identities-v6-34.native.ax.txt",
+  "accessibility_sha256": "7bb40dd5ffa70646b240770f6f5f981a594fafd522bff1691befa0040cd6c4f1",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-transport-identities-v6-34.native.png",
+  "screenshot_sha256": "9e497a3c15ad0781ae24b270b63874af443bf83d13a874e173a5a9be524a1769"
+}

@@ -1,0 +1,6 @@
+//@version=5
+indicator("table-layout-10000-v5-36",precision=0)
+var t=table.new(position.bottom_right,100,100)
+if barstate.islast
+    table.cell(t,99,99,"last")
+plot(1,title="executed")

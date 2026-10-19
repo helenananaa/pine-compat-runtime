@@ -1,0 +1,4 @@
+//@version=5
+indicator("body-boundary-known-wrong-arity-v5-46")
+f(x)=>ta.sma(x)
+plot(1)

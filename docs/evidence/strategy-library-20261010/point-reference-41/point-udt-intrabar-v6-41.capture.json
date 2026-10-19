@@ -1,0 +1,25 @@
+{
+  "name": "point-udt-intrabar-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-udt-intrabar-v6-41.pine",
+  "source_sha256": "c9de048dadb3c0ba29c0648f09ff17ca92f828a6abf2e7f62f928a3519f4a744",
+  "qualification_scope": "intrabar_relation",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    254,
+    1,
+    1,
+    254
+  ],
+  "native_realtime_relation": "udt",
+  "native_row": "235 row point-udt-intrabar-v6-41 Plot 254.00 Plot 1.00 Plot 1.00 Plot 254.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "0d69bfb6563b2e73e28318ebecfdf707148ce297e38fb3d442d3e55c2098ce6f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-udt-intrabar-v6-41.native.ax.txt",
+  "accessibility_sha256": "ef3512c5d871513e40afb971b7d0280212006d29f3aea39c13092f5c709a6ba1",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-udt-intrabar-v6-41.native.png",
+  "screenshot_sha256": "d4fa1b6584b97c84bdd15dc0bceedcca0724a0f4f61e26a6d42acc050886c8e9",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

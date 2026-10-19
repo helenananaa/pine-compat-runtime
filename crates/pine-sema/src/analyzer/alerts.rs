@@ -27,13 +27,6 @@ fn unsupported_alert_placeholder(value: &str, supported: &[&str]) -> Option<Stri
     None
 }
 
-fn is_supported_alert_frequency(value: &str) -> bool {
-    matches!(
-        value,
-        "alert.freq_all" | "alert.freq_once_per_bar" | "alert.freq_once_per_bar_close"
-    )
-}
-
 impl Analyzer {
     pub(crate) fn validate_alert_args(&mut self, signature: &BuiltinSignature, args: &[CallArg]) {
         if !matches!(signature.name, "alert" | "alertcondition") {
@@ -48,19 +41,8 @@ impl Analyzer {
                 continue;
             };
 
-            if signature.name == "alert" && param_name == "freq" {
-                let supported = self
-                    .known_const_string_value(&arg.value)
-                    .as_deref()
-                    .is_some_and(is_supported_alert_frequency);
-                if !supported {
-                    self.unsupported(
-                        "alert_frequency",
-                        "only alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close are supported in the current alert frequency subset",
-                        arg.span,
-                    );
-                }
-            }
+            // Frequency is an input string. Its finite value domain is
+            // validated when the alert executes, including literal strings.
 
             // alert() messages and alertcondition() titles are plain strings,
             // including braces that resemble placeholders. Only the message

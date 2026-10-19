@@ -1,0 +1,32 @@
+{
+  "name": "array-opening-buffer-alias-v5-42",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-opening-buffer-alias-v5-42.pine",
+  "source_sha256": "7b3681f9d58706d746a60a56d9cf57ae5f7fcef0320304a8a608735c8cf1462d",
+  "parent_source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\ordinary-array-alias-v5-41.pine",
+  "parent_sha256": "318907e102fbde96a3f0ca245ff7b86253d23d1c231994ec9aac689c59a892e3",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+  "native_relation": "opening_and_second_alias_zero",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    51,
+    51,
+    0,
+    1,
+    0,
+    0
+  ],
+  "native_marker_suffix": [
+    0,
+    0
+  ],
+  "native_row": "235 row array-opening-buffer-alias-v5-42 Plot 51.00 Plot 51.00 Plot 0.00 Plot 1.00 Plot 0.00 Plot 0.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "59a6db7d72cbaf18608146e21068360d5b38acffcaece83bb1a830c6c0d91824",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-opening-buffer-alias-v5-42.native.ax.txt",
+  "accessibility_sha256": "9fc5a418993aa4cdf924bab48707509d9218eb6edb1860fdac8543b55dc6b8a9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-opening-buffer-alias-v5-42.native.png",
+  "screenshot_sha256": "7cd657a1827298431a0e0f9997ef0ab3f2ae57215b7062660fc300acbc3d89a8",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day"
+}

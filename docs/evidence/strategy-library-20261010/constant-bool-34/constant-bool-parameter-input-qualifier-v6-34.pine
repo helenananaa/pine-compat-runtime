@@ -1,0 +1,7 @@
+//@version=6
+indicator("Parameter bool input qualifier v6 probe34",precision=0)
+f(x)=>
+    if x
+        true
+value=input.bool(f(false))
+plot(value?1:0)

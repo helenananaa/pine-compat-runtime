@@ -1,0 +1,29 @@
+{
+  "name": "library-array-ownership-3-v6-45",
+  "version": 6,
+  "native_title": "ArrayOwnershipCase3Batch45",
+  "kind": "loop",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\library-array-ownership-3-v6-45.pine",
+  "source_sha256": "d29a4d616ec8099825a0b484ac379b31cda37d2a2071b6f1bcceae6741d5f5f7",
+  "local_three_bar_plots": [
+    [
+      3,
+      6,
+      9
+    ],
+    [
+      3,
+      6,
+      9
+    ]
+  ],
+  "native_status": "compiled_library",
+  "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+  "source_text_checked_via_editor_copy": true,
+  "normalized_source_sha256": "920c0f7a14a9f9806c8d62bba34c3fb31dedb312d0f2316ce095e12064832800",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/library-array-ownership-3-v6-45.native.ax.txt",
+  "accessibility_sha256": "89546fc20e5cd713c42d68c7cb0b8a114f20ea71fbbadfbbc50b27b29aed3b59",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/library-array-ownership-3-v6-45.native.png",
+  "screenshot_sha256": "02b84e9243222c4212262fefc22532529d9256087503998e1c35b449c8baf918",
+  "scope": "Whole-source official library compilation only. No publication, import execution or strategy ledger claim."
+}

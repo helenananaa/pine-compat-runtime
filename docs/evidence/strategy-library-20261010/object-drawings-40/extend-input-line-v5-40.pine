@@ -1,0 +1,7 @@
+//@version=5
+indicator("extend-input-line-v5-40")
+choice=input.string("Right",options=["None","Right","Left","Both"])
+value=str.lower(array.get(str.split(choice,""),0))
+item=line.new(0,1,2,2,extend=value)
+line.set_extend(item,value)
+plot(line.get_x2(item))

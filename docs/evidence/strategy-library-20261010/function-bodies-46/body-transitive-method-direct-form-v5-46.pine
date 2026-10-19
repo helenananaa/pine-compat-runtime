@@ -1,0 +1,8 @@
+//@version=5
+indicator("body-transitive-method-direct-form-v5-46")
+type Anchor
+    int value
+h(bool flag)=>flag
+method g(Anchor self,x)=>h(x)?self.value:0
+f(Anchor self,x)=>g(self,x)
+plot(1)

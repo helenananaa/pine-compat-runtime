@@ -1,0 +1,14 @@
+//@version=3
+strategy("Legacy order when gates 28",precision=0)
+n=cum(1)-1
+if n==0
+    strategy.entry("blocked",strategy.long,when=strategy.short)
+if n==1
+    strategy.entry("L",strategy.long,qty=1,when=strategy.long)
+if n==2
+    strategy.exit("X","L",limit=1,when=strategy.short)
+if n==3
+    strategy.close_all(when=strategy.short)
+if n==4
+    strategy.close("L",when=strategy.long)
+plot(strategy.position_size,title="position")

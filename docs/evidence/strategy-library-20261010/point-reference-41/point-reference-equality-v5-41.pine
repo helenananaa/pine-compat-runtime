@@ -1,0 +1,7 @@
+//@version=5
+indicator("point-reference-equality-v5-41")
+p=chart.point.from_index(1,10)
+a=p
+b=p.copy()
+plot(p==a?1:0)
+plot(p==b?1:0)

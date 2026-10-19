@@ -1,0 +1,19 @@
+//@version=5
+indicator("point-udt-array-scalar-v5-41")
+type Wrap
+    float count
+    chart.point point
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+varip items=array.from(Wrap.new(0,chart.point.from_index(1,0)))
+if barstate.isrealtime
+    w=items.first()
+    w.count+=1
+    w.point.price+=1
+plot(ticks)
+plot(items.first().count)
+plot(items.first().point.price)
+plot(1)

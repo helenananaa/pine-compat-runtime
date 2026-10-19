@@ -1,0 +1,281 @@
+{
+  "scope": "Eight additional Native-compiled whole library sources supporting ownership expectation migration. Separate from48 primary sources and bounded totals.",
+  "records": [
+    {
+      "name": "library-array-ownership-1-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase1Batch45",
+      "kind": "loop",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-1-v6-45.pine",
+      "source_sha256": "a9304ffc8deafa526b6cf838ef166bdeda3ffc141e2f79bc86bc15e1d3ee4407",
+      "local_three_bar_plots": [
+        [
+          3,
+          6,
+          9
+        ],
+        [
+          3,
+          6,
+          9
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "24da3da4cfdce52e6d6f06ac8d1d1430e557f51c2cc70e97a55bdb5382de57ac",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-1-v6-45.native.ax.txt",
+      "accessibility_sha256": "38f993ea26d24046752402676ff88c4e861ba744e1f37b1212a0969b5e6d7524",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-1-v6-45.native.png",
+      "screenshot_sha256": "738e859a4834652bfc419cc3606df8602df9924daac192a7d180463ac9333082",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-1-v6-45.capture.json",
+      "raw_capture_sha256": "1d49c6d13c90812f07f27f1f44be82e0002c3612324e80657c7b4d17ec377412"
+    },
+    {
+      "name": "library-array-ownership-2-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase2Batch45",
+      "kind": "loop",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-2-v6-45.pine",
+      "source_sha256": "520c8dfc75e987413b39c8c407319a85e1fd221284ece104a17eed5c8b568dfc",
+      "local_three_bar_plots": [
+        [
+          3,
+          6,
+          9
+        ],
+        [
+          3,
+          6,
+          9
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "c69ee62d93d527cf4ab6b919da0ef0212bc6bd70dafc7019951207e1b62a8858",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-2-v6-45.native.ax.txt",
+      "accessibility_sha256": "fe0a4e59387d7a1730bc3ac3389d71eeabe3eb1452c8b61d1abfea193c57734d",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-2-v6-45.native.png",
+      "screenshot_sha256": "197c953a13190e331f91b6983561e3a0cbbd3573a2d275dee145fd988601dd6a",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-2-v6-45.capture.json",
+      "raw_capture_sha256": "341c502a9ee7d9374da8f8f091a56c8375a805ca0d47f9c3905549c89a91bc20"
+    },
+    {
+      "name": "library-array-ownership-3-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase3Batch45",
+      "kind": "loop",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-3-v6-45.pine",
+      "source_sha256": "d29a4d616ec8099825a0b484ac379b31cda37d2a2071b6f1bcceae6741d5f5f7",
+      "local_three_bar_plots": [
+        [
+          3,
+          6,
+          9
+        ],
+        [
+          3,
+          6,
+          9
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "920c0f7a14a9f9806c8d62bba34c3fb31dedb312d0f2316ce095e12064832800",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-3-v6-45.native.ax.txt",
+      "accessibility_sha256": "89546fc20e5cd713c42d68c7cb0b8a114f20ea71fbbadfbbc50b27b29aed3b59",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-3-v6-45.native.png",
+      "screenshot_sha256": "02b84e9243222c4212262fefc22532529d9256087503998e1c35b449c8baf918",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-3-v6-45.capture.json",
+      "raw_capture_sha256": "a72af0837d5fa85b02a73cb51a964891255590b85d16f0fc58b8bc517d77d95a"
+    },
+    {
+      "name": "library-array-ownership-4-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase4Batch45",
+      "kind": "state",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-4-v6-45.pine",
+      "source_sha256": "e907c1b0251112008a3b8c547e2dd49b98449a7de9a7cf6ba8dbc2d02f4bc80c",
+      "local_three_bar_plots": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          2,
+          3,
+          4
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "006a856bcdbebfe20d7ce9e8eb6d422ab4002e9a9bb810f1a23f037c1d5f7e41",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-4-v6-45.native.ax.txt",
+      "accessibility_sha256": "c27df481967b1e4ae0c0dd34ad6f59d6c69fada3990a6510f1d37cd5838ba8b9",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-4-v6-45.native.png",
+      "screenshot_sha256": "df83c69443473318ba3718aabc16c41b8d64e0d95068b43f5d5de45c466fc932",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-4-v6-45.capture.json",
+      "raw_capture_sha256": "91c76ab7f68614f3e16bd7dfb9811fb617ff24f35d27b0adae4e4685690b0dee"
+    },
+    {
+      "name": "library-array-ownership-5-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase5Batch45",
+      "kind": "state",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-5-v6-45.pine",
+      "source_sha256": "c45ceadaccc3abf1f6120062ae028887c95847ed8b6aef40621e157c8f16e41a",
+      "local_three_bar_plots": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "07fb61a277b6e38c147433e88cbdd77b573034872fe0a2362b29ee386c997d2b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-5-v6-45.native.ax.txt",
+      "accessibility_sha256": "9a1deec50b7a090cadf8ccae0d4897444a3dbc09a0eacfea732a2509d855371c",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-5-v6-45.native.png",
+      "screenshot_sha256": "1c6ce346e5990c71d837c93acdf6e3ef33978d957ebb57984c1699fc737ef291",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-5-v6-45.capture.json",
+      "raw_capture_sha256": "542306481a19c74cf3146123cecd05a0538492b24b5e9d5bf5981d6ef005847f"
+    },
+    {
+      "name": "library-array-ownership-6-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase6Batch45",
+      "kind": "state",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-6-v6-45.pine",
+      "source_sha256": "609df9af4ec9211452e064c560bd9c7a7d49dd4ffa090648c0927002e04886f0",
+      "local_three_bar_plots": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          2,
+          3,
+          4
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "27a115acf11ebdb558c2a93a1e964150775afd29ce33437b1b45cf1d20cd9ae4",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-6-v6-45.native.ax.txt",
+      "accessibility_sha256": "f0d9a6b6ea3abe48c41f664e65c42034007cd1102de6c1f1c104118e3b485888",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-6-v6-45.native.png",
+      "screenshot_sha256": "4a063603569387dae2006f16f08387445827466c84725ba7bbe70a53fed636b9",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-6-v6-45.capture.json",
+      "raw_capture_sha256": "ea65dfeb1e5e8b84d4ffd316b684211e9a3bcf73323ea0b9d0b1a8b7fe794391"
+    },
+    {
+      "name": "library-array-ownership-7-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase7Batch45",
+      "kind": "state",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-7-v6-45.pine",
+      "source_sha256": "07e492d6f1eb42b846ad470dd703837e10e80794c0c0a1c7d6f7dfc37663e555",
+      "local_three_bar_plots": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "7f63a20f402cd26df9e2de56985bacb06d4db2aeaf091cfc195fa52543bd3aa1",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-7-v6-45.native.ax.txt",
+      "accessibility_sha256": "c5245e18d1c4eb9dc85343f1a51ca907e5d855bb4b907813c2fd92506ab6225d",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-7-v6-45.native.png",
+      "screenshot_sha256": "c4e0f834718916ed78a6b3e2004c55c1013312fb407ebf0daf26772db10d8175",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-7-v6-45.capture.json",
+      "raw_capture_sha256": "944916a029633bbd957177dcac890463ebc4194d35b437492d487d3d7a44dd63",
+      "superseded_local_three_bar_plots": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "local_projection_evidence": "docs/evidence/strategy-library-20261010/collection-parameter-alias-oracles-45.json",
+      "projection_basis": "Native direct equivalent keeps the caller array size1 despite persistent local rebinding to an ordinary parameter buffer; previous growth projection was rejected by the core test and then disproved by Native."
+    },
+    {
+      "name": "library-array-ownership-8-v6-45",
+      "version": 6,
+      "native_title": "ArrayOwnershipCase8Batch45",
+      "kind": "state",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-8-v6-45.pine",
+      "source_sha256": "d652dfbe00f1990cb7b0615b9bc3eb245be077d7bdbff31b8eb338e7e43a2a98",
+      "local_three_bar_plots": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "90bb999055f24b4b67f3a02749313f124c4fa22f0aea9f1425f694f2d1ce70a6",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-8-v6-45.native.ax.txt",
+      "accessibility_sha256": "3ffd5f21ebf93fa5809aab5d529606903ada19518a2de43c69f1b13ace58e977",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-8-v6-45.native.png",
+      "screenshot_sha256": "05b3bd0bcce1f86f66f683fad26383171f7eb63270ddb98efdac5049d9890305",
+      "scope": "Exact historical ownership-test bodies compiled by Native as libraries. Derived local three-bar projections exercise aliases, rebinding and persistent per-call state; no publication, Native import execution or ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-array-ownership-8-v6-45.capture.json",
+      "raw_capture_sha256": "18c8d654a2d59ebdf7beb2720223372cbbff8da2ec8f7a798b77fecb6955a52a",
+      "superseded_local_three_bar_plots": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "local_projection_evidence": "docs/evidence/strategy-library-20261010/collection-parameter-alias-oracles-45.json",
+      "projection_basis": "Native direct equivalent keeps the caller array size1 despite persistent local rebinding to an ordinary parameter buffer; previous growth projection was rejected by the core test and then disproved by Native."
+    }
+  ]
+}

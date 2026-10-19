@@ -1,0 +1,23 @@
+{
+  "name": "scalar-request-window-only-bounded-v5-43",
+  "version": 5,
+  "scenario": "only-bounded",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\scalar-request-window-only-bounded-v5-43.pine",
+  "source_sha256": "aec37d0ffba862734c8265e0cebbec536a311362e487ece0714a1e54a813df4d",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    1
+  ],
+  "native_row": "240 row scalar-request-window-only-bounded-v5-43 Plot 1.00 Plot 1.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "dce91d54f6db7f58b83b2b7d7589c47fbb5b18da9e200cfa4f1c81ee1fdb1d16",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/scalar-request-window-only-bounded-v5-43.native.ax.txt",
+  "accessibility_sha256": "1d7ce62eea1a32dc3d4f658436a96a89c3ec250dc686bf7487fba901cac23bd6",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/scalar-request-window-only-bounded-v5-43.native.png",
+  "screenshot_sha256": "53e52419c930f97c43fa6f0f2e36c2d968b71d02a47e17858847182918e7fa05",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

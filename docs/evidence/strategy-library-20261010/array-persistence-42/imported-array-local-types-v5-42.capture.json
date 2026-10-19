@@ -1,0 +1,75 @@
+{
+  "name": "imported-array-local-types-v5-42",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\imported-array-local-types-v5-42.pine",
+  "source_sha256": "814b4d1847a5f1ef8b0763c1fadd9e0bb292341175a58745b4e86921556b8b23",
+  "normalization": "Replace unavailable test import with its exact Point/Wrapper declarations and remove lib qualification; all executable expressions unchanged.",
+  "parent_source": "tests/fixtures/runtime/import_udt_array_varip.pine",
+  "parent_sha256": "9f31b90aa7bbf745d25db2d03b9b8ff55069041e3ca905660089ff35ef5a15db",
+  "plot_titles": [
+    "points_size",
+    "first_x",
+    "last_x",
+    "copied_size",
+    "copy_last_x",
+    "wrapper_points_size",
+    "wrapper_first_x",
+    "wrapper_last_x",
+    "new_points_size",
+    "new_first_x",
+    "new_last_x",
+    "new_wrapper_points_size",
+    "new_wrapper_first_x",
+    "new_wrapper_last_x"
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3392,
+    4285.08,
+    81750.41,
+    3393,
+    81760.41,
+    3392,
+    4385.08,
+    81850.41,
+    3392,
+    4485.08,
+    81950.41,
+    3392,
+    4585.08,
+    82050.41
+  ],
+  "native_relations": [
+    [
+      "offset",
+      3,
+      0,
+      1
+    ],
+    [
+      "eq",
+      5,
+      0
+    ],
+    [
+      "eq",
+      8,
+      0
+    ],
+    [
+      "eq",
+      11,
+      0
+    ]
+  ],
+  "native_row": "241 row imported-array-local-types-v5-42 points_size 3,392.00 first_x 4,285.08 last_x 81,750.41 copied_size 3,393.00 copy_last_x 81,760.41 wrapper_points_size 3,392.00 wrapper_first_x 4,385.08 wrapper_last_x 81,850.41 new_points_size 3,392.00 new_first_x 4,485.08 new_last_x 81,950.41 new_wrapper_points_size 3,392.00 new_wrapper_first_x 4,585.08 new_wrapper_last_x 82,050.41",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "85c44a49097051b9749ead9c8706da6db7a5d1ee83d135d8d428784f8a0a470c",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/imported-array-local-types-v5-42.native.ax.txt",
+  "accessibility_sha256": "70fe4b0e9dcbe21b94c9073f91fc7b523a63f22cf02064daf464b260f131e0f8",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/imported-array-local-types-v5-42.native.png",
+  "screenshot_sha256": "a907f7e8527979bb25786ca805b6cd330358275e71828d9c4e88ffac542fc6a6",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

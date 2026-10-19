@@ -12,14 +12,20 @@ impl<'a> HistoricalRuntime<'a> {
             return self.eval_line_new_from_points(args, PineValue::Na);
         }
         let x1 = self.eval_required_line_arg(args, 0, "x1")?;
-        if matches!(x1, PineValue::ChartPoint(_)) {
+        if matches!(x1, PineValue::ChartPoint(_))
+            || line_call_arg_expr(args, 0, "x1")
+                .is_some_and(|arg| arg.pine_type.kind == pine_ir::ValueKind::ChartPoint)
+        {
             return self.eval_line_new_from_points(args, x1);
         }
         let y1 = self.eval_required_line_arg(args, 1, "y1")?;
         let x2 = self.eval_required_line_arg(args, 2, "x2")?;
         let y2 = self.eval_required_line_arg(args, 3, "y2")?;
         let xloc = self.eval_line_option(args, 4, "xloc", "xloc.bar_index")?;
-        let extend = self.eval_line_option(args, 5, "extend", "extend.none")?;
+        let extend = super::extend::normalize_extend(
+            self.eval_line_option(args, 5, "extend", "n")?,
+            "line.new",
+        )?;
         let color = self.eval_line_option_value(args, 6, "color", PineValue::Color(0x2196F3))?;
         let style = self.eval_line_option(args, 7, "style", "line.style_solid")?;
         let width = self.eval_line_option_value(args, 8, "width", PineValue::Int(1))?;
@@ -50,12 +56,15 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let second = self.eval_required_line_arg(args, 1, "second_point")?;
         let xloc = self.eval_line_option(args, 2, "xloc", "xloc.bar_index")?;
-        let extend = self.eval_line_option(args, 3, "extend", "extend.none")?;
+        let extend = self.eval_line_option(args, 3, "extend", "n")?;
         let color = self.eval_line_option_value(args, 4, "color", PineValue::Color(0x2196F3))?;
         let style = self.eval_line_option(args, 5, "style", "line.style_solid")?;
         let width = self.eval_line_option_value(args, 6, "width", PineValue::Int(1))?;
         let _force_overlay =
             self.eval_line_option_value(args, 7, "force_overlay", PineValue::Bool(false))?;
+        crate::builtins::chart_points::require_defined_point(&first)?;
+        crate::builtins::chart_points::require_defined_point(&second)?;
+        let extend = super::extend::normalize_extend(extend, "line.new")?;
         let Some((x1, y1)) = line_point_coordinates(first, &xloc) else {
             return Ok(PineValue::Na);
         };
@@ -127,6 +136,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_line_id_arg(args)?;
         let point = self.eval_required_line_arg(args, 1, "point")?;
+        crate::builtins::chart_points::require_defined_point(&point)?;
         self.mutate_line(id, |snapshot| {
             if let Some((x, y)) = line_point_coordinates(point, &snapshot.xloc) {
                 snapshot.x1 = x;
@@ -176,6 +186,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_line_id_arg(args)?;
         let point = self.eval_required_line_arg(args, 1, "point")?;
+        crate::builtins::chart_points::require_defined_point(&point)?;
         self.mutate_line(id, |snapshot| {
             if let Some((x, y)) = line_point_coordinates(point, &snapshot.xloc) {
                 snapshot.x2 = x;
@@ -262,6 +273,10 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_line_id_arg(args)?;
         let extend = self.eval_required_line_arg(args, 1, "extend")?;
+        if id.is_none() {
+            return Ok(PineValue::Void);
+        }
+        let extend = super::extend::normalize_extend(extend, "line.set_extend")?;
         self.mutate_line(id, |snapshot| {
             snapshot.extend = extend;
         })
@@ -491,7 +506,8 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("line.new missing {name} argument"),
             });
         };
-        self.eval_expr(arg)
+        let value = self.eval_expr(arg)?;
+        self.materialize_chart_point(value)
     }
 
     fn eval_line_option(

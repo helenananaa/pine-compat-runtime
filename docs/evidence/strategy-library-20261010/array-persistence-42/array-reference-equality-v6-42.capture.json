@@ -1,0 +1,18 @@
+{
+  "name": "array-reference-equality-v6-42",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-reference-equality-v6-42.pine",
+  "source_sha256": "096dfbfcfb937d81be851755a3ec4d64474a63c75ee7de75caed15a0859cc8e1",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"operator ==\" with argument \"expr0\"=\"a\". An argument of \"array<int>\" type was used but a \"simple string\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "81da890d696f60b7b5d7a824d4823fbc5ce5cf3f0e62500f7324d8bfa58eab65",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-reference-equality-v6-42.native.ax.txt",
+  "accessibility_sha256": "52bcc32d9744a3319352e2b683433de7c7add6d02c0d6eb3313a034274040095",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-reference-equality-v6-42.native.png",
+  "screenshot_sha256": "6c6d9bf7022f94a34bde2bfd52ab827631a63db650ebb6df032b58dcc0535fc7",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,17 @@
+{
+  "name": "parameter-const-reference-array-mutates-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-array-mutates-v6-35.pine",
+  "source_sha256": "efcf1d30f781d0eee9332c63a3a0a2083675c7329f30c1f248bdf567369b046f",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "238 row parameter-const-reference-array-mutates-v6-35 mutated size 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "efcf1d30f781d0eee9332c63a3a0a2083675c7329f30c1f248bdf567369b046f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-array-mutates-v6-35.native.ax.txt",
+  "accessibility_sha256": "dac31daa519a756f1714b5209a269f53f847a9450f95d046e029a2e295434ccb",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-array-mutates-v6-35.native.png",
+  "screenshot_sha256": "29c31fb8a00472633d6ce0d726d0db02da0af1d52df48b3a767ccce5c9e5ab07"
+}

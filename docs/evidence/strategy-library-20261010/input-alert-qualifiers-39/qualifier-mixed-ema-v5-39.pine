@@ -1,0 +1,4 @@
+//@version=5
+indicator("qualifier-mixed-ema-v5-39")
+average39(float source,int length)=>ta.ema(source,length)
+plot(average39(close,3)==ta.ema(close,3)?1:0)

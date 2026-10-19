@@ -1,0 +1,6 @@
+//@version=6
+indicator("body-contrast-valid-unused-v6-46")
+f(map<string,float> v)=>
+    v.put("x",2.0)
+    v.size()
+plot(1)

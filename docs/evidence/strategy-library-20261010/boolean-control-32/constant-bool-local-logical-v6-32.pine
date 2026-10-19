@@ -1,0 +1,20 @@
+//@version=6
+indicator("Local bool and logical identities32",precision=0)
+a=if false
+    true
+f()=>
+    localBool=if false
+        true
+    localBool?1:0
+g()=>
+    localBool=if false
+        true
+    localBool
+plot(f(),title="local condition")
+plot(g()?1:0,title="local returned bool")
+plot((true and a)==a?1:0,title="true and preserves")
+plot((false or a)==a?1:0,title="false or preserves")
+plot((a and a)==a?1:0,title="two missing and")
+plot((a or a)==a?1:0,title="two missing or")
+plot((a and false)==false?1:0,title="and false")
+plot((a or true)==a?1:0,title="or true preserves left")

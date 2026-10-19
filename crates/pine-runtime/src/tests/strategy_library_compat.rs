@@ -959,7 +959,10 @@ fn missing_else_preserves_side_effects_and_versioned_bool_defaults() {
         assert!(result.plots[1].values.iter().all(PineValue::is_na));
         assert_values_close(&result.plots[2].values, &[7.0, 0.0, 7.0, 0.0]);
         assert_values_close(&result.plots[3].values, &[1.0; 4]);
-        assert_values_close(&result.plots[4].values, &[1.0; 4]);
+        // The const-parameter v6 missing arm has an identity distinct from
+        // primitive false; see the source-verified native transport probe34.
+        let expected = if version >= 6 { 0.0 } else { 1.0 };
+        assert_values_close(&result.plots[4].values, &[expected; 4]);
     }
 }
 

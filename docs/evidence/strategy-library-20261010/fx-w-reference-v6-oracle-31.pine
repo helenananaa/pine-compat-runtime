@@ -1,0 +1,11 @@
+//@version=6
+strategy("FX W currency reference 31",currency=currency.EUR,initial_capital=10000,default_qty_type=strategy.percent_of_equity,default_qty_value=25,commission_type=strategy.commission.percent,commission_value=1,margin_long=0,margin_short=0,precision=8)
+rate=request.currency_rate(syminfo.currency,strategy.account_currency)
+snap=time==1578268800000
+plot(ta.valuewhen(snap,rate,0),title="rate20200102")
+plot(ta.valuewhen(snap,strategy.convert_to_account(100),0),title="account100")
+plot(ta.valuewhen(snap,strategy.convert_to_symbol(100),0),title="symbol100")
+plot(ta.valuewhen(snap,strategy.default_entry_qty(100),0),title="qty100")
+plot(syminfo.currency=="USDT"?1:0,title="quoteUSDT")
+plot(strategy.account_currency=="EUR"?1:0,title="accountEUR")
+plot(ta.valuewhen(snap,time_close,0),title="snapClose")

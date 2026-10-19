@@ -1,0 +1,15 @@
+//@version=6
+indicator("method-nested-write-v6-40")
+type Inner40
+    int value
+type Holder40
+    Inner40 child
+method increase40(Holder40 self)=>
+    self.child.value+=1
+    self.child.value
+child=Inner40.new(1)
+item=Holder40.new(child)
+other=item
+item.increase40()
+plot(child.value)
+plot(other.child.value)

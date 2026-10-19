@@ -39,6 +39,13 @@ pub(crate) fn request_environment_and_execution_times_from_json(
         })
         .transpose()?;
     let execution_times = parse_execution_times(object.get("$executionTimes"))?;
+    let currency_rates = object
+        .get("$currencyRates")
+        .map(|value| {
+            pine_runtime::currency_rates_from_json(&value.to_string())
+                .map_err(|error| error.to_string())
+        })
+        .transpose()?;
     let magnifier = parse_magnifier(object.get("$magnifier"))?;
     let session_windows = parse_session_windows(object.get("$sessionWindows"))?;
 
@@ -46,7 +53,12 @@ pub(crate) fn request_environment_and_execution_times_from_json(
     for (key, bars) in deterministic_entries(object) {
         if matches!(
             key.as_str(),
-            "$chart" | "$executionTimes" | "$magnifier" | "$sessionWindows" | "$barCalendars"
+            "$chart"
+                | "$executionTimes"
+                | "$magnifier"
+                | "$sessionWindows"
+                | "$barCalendars"
+                | "$currencyRates"
         ) {
             continue;
         }
@@ -62,6 +74,10 @@ pub(crate) fn request_environment_and_execution_times_from_json(
     };
     let environment = match calendars {
         Some(calendars) => environment.with_bar_calendars(Arc::new(calendars)),
+        None => environment,
+    };
+    let environment = match currency_rates {
+        Some(rates) => environment.with_currency_rates(Arc::new(rates)),
         None => environment,
     };
     Ok(RequestHostParse {
@@ -121,7 +137,13 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
     if let Some(field) = object.keys().find(|field| {
         !matches!(
             field.as_str(),
-            "symbol" | "timeframe" | "minMove" | "priceScale" | "quantityPrecision" | "pointValue"
+            "symbol"
+                | "timeframe"
+                | "minMove"
+                | "priceScale"
+                | "quantityPrecision"
+                | "pointValue"
+                | "currency"
         )
     }) {
         return Err(format!("request bars `$chart` has unknown field `{field}`"));
@@ -132,6 +154,12 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
             .as_f64()
             .ok_or("request bars `$chart.pointValue` must be numeric")?;
         chart = chart.with_point_value(value).map_err(str::to_owned)?;
+    }
+    if let Some(currency) = object.get("currency") {
+        let currency = currency
+            .as_str()
+            .ok_or("request bars `$chart.currency` must be a string")?;
+        chart = chart.with_currency(currency).map_err(str::to_owned)?;
     }
     if let Some(precision) = object.get("quantityPrecision") {
         let precision = precision

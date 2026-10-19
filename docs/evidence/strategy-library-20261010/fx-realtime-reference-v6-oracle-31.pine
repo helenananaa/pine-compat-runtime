@@ -1,0 +1,9 @@
+//@version=6
+strategy("FX realtime reference 31",currency=currency.EUR,initial_capital=10000,default_qty_type=strategy.percent_of_equity,default_qty_value=25,commission_type=strategy.commission.percent,commission_value=1,margin_long=0,margin_short=0,calc_on_every_tick=true,precision=8)
+plot(request.currency_rate(syminfo.currency,strategy.account_currency),title="liveRate")
+plot(strategy.convert_to_account(100),title="liveAccount")
+plot(strategy.convert_to_symbol(100),title="liveSymbol")
+plot(strategy.default_entry_qty(100),title="liveQty")
+plot(time,title="barOpen")
+plot(timenow,title="executionTime")
+plot(barstate.isrealtime?1:0,title="isRealtime")

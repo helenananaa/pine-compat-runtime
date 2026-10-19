@@ -45,6 +45,16 @@ pub fn strategy_exit_source_parameter(index: usize, version: u16) -> Option<&'st
 
 /// Source order includes `when` before Pine v6; normalized runtime slots do not.
 pub fn strategy_close_source_parameter(index: usize, version: u16) -> Option<&'static str> {
+    strategy_close_source_parameter_with_overload(index, version, false)
+}
+
+/// v5 retains both the deprecated boolean `when` and the string `comment`
+/// positional overloads. Select using the second source argument's type.
+pub fn strategy_close_source_parameter_with_overload(
+    index: usize,
+    version: u16,
+    comment_overload: bool,
+) -> Option<&'static str> {
     const LEGACY: &[&str] = &[
         "id",
         "when",
@@ -74,8 +84,24 @@ pub fn strategy_close_source_parameter(index: usize, version: u16) -> Option<&'s
     ];
     let parameters = match version {
         1..=4 => LEGACY,
-        5 => V5,
+        5 if !comment_overload => V5,
         _ => V6,
+    };
+    parameters.get(index).copied()
+}
+
+/// Legacy `close_all` takes `when` first. v5 also has a separate comment-first
+/// overload with `immediately` and `disable_alert`; those layouts cannot mix.
+pub fn strategy_close_all_source_parameter(
+    index: usize,
+    version: u16,
+    comment_overload: bool,
+) -> Option<&'static str> {
+    let parameters: &[&str] = match version {
+        1..=3 => &["when"],
+        4 => &["when", "comment", "alert_message"],
+        5 if !comment_overload => &["when", "comment", "alert_message"],
+        _ => &["comment", "alert_message", "immediately", "disable_alert"],
     };
     parameters.get(index).copied()
 }

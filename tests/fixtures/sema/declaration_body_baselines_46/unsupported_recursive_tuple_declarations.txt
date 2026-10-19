@@ -1,0 +1,4 @@
+recursive function `direct` is not supported
+recursive function `wrapped` is not supported
+recursive function `mutualA` is not supported
+recursive method `recursive` is not supported

@@ -1,0 +1,5 @@
+//@version=4
+study("method-v4-guard-38")
+method keep38(int self)=>self
+x=2
+plot(x.keep38())

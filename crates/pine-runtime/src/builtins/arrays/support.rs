@@ -86,7 +86,7 @@ pub(crate) fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElement
             PineValue::Polyline(_) => ArrayElementKind::Polyline,
             PineValue::Box(_) => ArrayElementKind::Box,
             PineValue::Table(_) => ArrayElementKind::Table,
-            PineValue::ChartPoint(_) => ArrayElementKind::ChartPoint,
+            PineValue::ChartPoint(_) | PineValue::ChartPointRef(_) => ArrayElementKind::ChartPoint,
             _ => return None,
         };
         inferred_kind = Some(match (inferred_kind, next_kind) {
@@ -171,6 +171,9 @@ pub(crate) fn array_value_for_kind(kind: ArrayElementKind, value: PineValue) -> 
         (ArrayElementKind::Table, PineValue::Table(value)) => PineValue::Table(value),
         (ArrayElementKind::ChartPoint, PineValue::ChartPoint(value)) => {
             PineValue::ChartPoint(value)
+        }
+        (ArrayElementKind::ChartPoint, PineValue::ChartPointRef(id)) => {
+            PineValue::ChartPointRef(id)
         }
         (ArrayElementKind::UserType, PineValue::UserType(value)) => PineValue::UserType(value),
         (ArrayElementKind::UserType, PineValue::UserTypeRef(id)) => PineValue::UserTypeRef(id),

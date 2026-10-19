@@ -1,0 +1,20 @@
+{
+  "name": "original-fixture-line_point_mutation-41",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\original-fixture-line_point_mutation-41.pine",
+  "source_sha256": "9906863f9a27678c6bea55471414bd663af4aa83f3b99bce5e7d6c33366b7e7f",
+  "parent_fixture": "tests/fixtures/runtime/line_point_mutation.pine",
+  "parent_fixture_sha256": "9906863f9a27678c6bea55471414bd663af4aa83f3b99bce5e7d6c33366b7e7f",
+  "qualification_scope": "obsolete_positive_fixture_native_rejection",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 0: Cannot access the 'index' field of an undefined object. The object is 'na'. at  #main () : 16",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "9906863f9a27678c6bea55471414bd663af4aa83f3b99bce5e7d6c33366b7e7f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/original-fixture-line_point_mutation-41.native.ax.txt",
+  "accessibility_sha256": "3f7bc8a98d7ca646d18474f356d7681cdc5596dc381ebb2cf671ae3b98d31380",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/original-fixture-line_point_mutation-41.native.png",
+  "screenshot_sha256": "0500e0f83c5cd1e41f26d1d2ba9701b870720a6e173106814a01771ea778c585",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

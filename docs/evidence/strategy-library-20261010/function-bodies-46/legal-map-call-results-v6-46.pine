@@ -1,0 +1,49 @@
+//@version=6
+indicator("legal-map-call-results-v6-46")
+type Anchor
+    int tag
+method make(Anchor self)=>
+    values=map.new<string,float>()
+    values.put("v",self.tag)
+    values
+method block(Anchor self)=>
+    values=self.make()
+    values
+method selected(Anchor self,bool copied)=>
+    values=self.make()
+    copied?values.copy():values
+method switched(Anchor self,int mode)=>
+    values=self.make()
+    switch mode
+        0=>values
+        =>values.copy()
+method looped(Anchor self)=>
+    for i=0 to 0
+        values=self.make()
+        values
+method repeated(Anchor self)=>
+    int remaining=1
+    values=self.make()
+    while remaining>0
+        values.put("v",self.tag)
+        remaining-=1
+    values
+method fresh(Anchor self)=>
+    values=map.new<int,string>()
+    values.put(self.tag,str.tostring(self.tag))
+    values
+identity(values)=>values
+anchor=Anchor.new(3)
+plot(anchor.make().size())
+plot(anchor.make().get("v"))
+plot(identity(anchor.make()).copy().get("v"))
+plot(anchor.block().get("v"))
+plot(anchor.selected(true).get("v"))
+plot(anchor.switched(0).get("v"))
+plot(anchor.looped().get("v"))
+plot(anchor.repeated().get("v"))
+float total=0
+for [key,value] in identity(anchor.make())
+    total+=value
+plot(total)
+plot(anchor.fresh().get(3)=="3"?1:0)

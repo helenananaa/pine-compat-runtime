@@ -49,8 +49,19 @@ impl CallFamily {
             | "bgcolor" | "barcolor" | "hline" | "fill" => Self::Output,
             "year" | "month" | "weekofyear" | "dayofmonth" | "dayofweek" | "hour" | "minute"
             | "second" | "timestamp" | "time" | "time_close" => Self::Time,
-            "int" | "float" | "bool" | "string" | "box" | "color" | "label" | "line"
-            | "linefill" | "polyline" | "table" => Self::Cast,
+            "int"
+            | "float"
+            | "bool"
+            | "__legacy_direction_order_condition"
+            | "string"
+            | "box"
+            | "color"
+            | "label"
+            | "line"
+            | "linefill"
+            | "polyline"
+            | "table" => Self::Cast,
+            _ if callee.starts_with("$parameter.") => Self::Cast,
             _ if callee.starts_with("chart.point.") => Self::ChartPoint,
             _ => match callee.split_once('.').map(|(namespace, _)| namespace) {
                 Some("input") => Self::Variable,

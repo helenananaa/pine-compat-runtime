@@ -1,0 +1,5 @@
+//@version=5
+indicator("body-transitive-default-function-v5-46")
+g(bool flag, int offset=0)=>flag?offset:0
+f(x)=>g(x)
+plot(1)

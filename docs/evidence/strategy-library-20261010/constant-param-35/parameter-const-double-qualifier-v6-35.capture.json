@@ -1,0 +1,15 @@
+{
+  "name": "parameter-const-double-qualifier-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-double-qualifier-v6-35.pine",
+  "source_sha256": "5f51df585504347c82ea43304ebebb5a6061cc8cfac471ec6f6435faaa43bb01",
+  "library": false,
+  "native_status": "analysis_rejected",
+  "native_error": "Syntax error at input \"simple\"",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "5f51df585504347c82ea43304ebebb5a6061cc8cfac471ec6f6435faaa43bb01",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-double-qualifier-v6-35.native.ax.txt",
+  "accessibility_sha256": "f13cd8aa5beb37d9b0f2fd2a16d4f2256bd7953cae6812ae00fde9da916636b3",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-double-qualifier-v6-35.native.png",
+  "screenshot_sha256": "cfc118c04d3da41148322dace683034885db0ad2d672a65e1b2939250fab592f"
+}

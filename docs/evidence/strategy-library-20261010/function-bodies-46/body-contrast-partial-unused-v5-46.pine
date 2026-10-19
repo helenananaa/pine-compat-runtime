@@ -1,0 +1,6 @@
+//@version=5
+indicator("body-contrast-partial-unused-v5-46")
+f(map<string,float> v,x)=>
+    v.put("x",x)
+    v.size()
+plot(1)

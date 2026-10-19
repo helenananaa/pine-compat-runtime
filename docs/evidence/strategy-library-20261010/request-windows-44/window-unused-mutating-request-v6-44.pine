@@ -1,0 +1,12 @@
+//@version=6
+indicator("window-unused-mutating-request-v6-44",dynamic_requests=true)
+var p=chart.point.from_index(1,10)
+f(chart.point v)=>
+    v.price+=5
+    v.price
+a=request.security(syminfo.tickerid,timeframe.period,f(p),calc_bars_count=2)
+var count=0
+count+=1
+plot(bar_index)
+plot(p.price)
+plot(count)

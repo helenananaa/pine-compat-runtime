@@ -1,0 +1,23 @@
+{
+  "name": "window-simple-literal-reassign-v6-44",
+  "version": 6,
+  "scenario": "simple-literal-reassign",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-simple-literal-reassign-v6-44.pine",
+  "source_sha256": "8b3fe33dab37d029309624c9748716fd3f73be7674bc842f56d09020fb98005a",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    2,
+    3350
+  ],
+  "native_row": "621 row window-simple-literal-reassign-v6-44 Plot 3,349.00 Plot 2.00 Plot 3,350.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "8b3fe33dab37d029309624c9748716fd3f73be7674bc842f56d09020fb98005a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-literal-reassign-v6-44.native.ax.txt",
+  "accessibility_sha256": "7e0b4135ee38ec87c893c9cc992bffdf272781c4d1c8cfd5022f7e4ad2a61a61",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-literal-reassign-v6-44.native.png",
+  "screenshot_sha256": "eb021caeed94a1e8cd7da573dd455ec98cc832dc42c6520a4ee60000ad45477a",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

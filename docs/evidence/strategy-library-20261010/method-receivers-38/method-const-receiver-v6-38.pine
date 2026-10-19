@@ -1,0 +1,5 @@
+//@version=6
+indicator("method-const-receiver-v6-38")
+method keep38(const int self)=>self
+x=2
+plot(x.keep38())

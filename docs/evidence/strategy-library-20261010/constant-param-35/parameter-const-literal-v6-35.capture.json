@@ -1,0 +1,47 @@
+{
+  "name": "parameter-const-literal-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-literal-v6-35.pine",
+  "source_sha256": "76bba0324e2484e3bda1cb1ab924d3179a0043e7a9db5a01aa574d8edfae8686",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row parameter-const-literal-v6-35 value 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "76bba0324e2484e3bda1cb1ab924d3179a0043e7a9db5a01aa574d8edfae8686",
+  "normalized_source_sha256": "76bba0324e2484e3bda1cb1ab924d3179a0043e7a9db5a01aa574d8edfae8686",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-literal-v6-35.native.ax.txt",
+  "accessibility_sha256": "b998bd7be7de813eee3463f1dbb9effa00e367534fb22d2e42808c8bf634b624",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-literal-v6-35.native.png",
+  "screenshot_sha256": "36ad9185e849530d8a12bdc4f77750c95f52470aaa8a7ba3b05fde17b591c634",
+  "qualification_scope": "unqualified_next_batch_research",
+  "native_values": [
+    0
+  ],
+  "baseline33_analysis": {
+    "tested_cli_sha256": "3329fab48774d1d55f3bd00f59dd61b00f345de210d5288ea58cca4bcfabf01d",
+    "executable": false,
+    "diagnostics": [
+      {
+        "code": "E_PARSE_EXPECTED",
+        "severity": "error",
+        "message": "expected `)` after function parameters",
+        "span": {
+          "start": 81,
+          "end": 82,
+          "line": 3,
+          "column": 14
+        }
+      },
+      {
+        "code": "E_UNKNOWN_FUNCTION",
+        "severity": "error",
+        "message": "unknown function `f`",
+        "span": {
+          "start": 92,
+          "end": 93,
+          "line": 4,
+          "column": 6
+        }
+      }
+    ]
+  }
+}

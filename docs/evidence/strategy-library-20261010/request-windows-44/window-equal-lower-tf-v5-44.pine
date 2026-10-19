@@ -1,0 +1,8 @@
+//@version=5
+indicator("window-equal-lower-tf-v5-44",dynamic_requests=true)
+a=request.security_lower_tf(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2)
+var count=0
+count+=1
+plot(bar_index)
+plot(a.size()>0?a.last():-1)
+plot(count)

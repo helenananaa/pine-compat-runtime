@@ -13,8 +13,9 @@ fn closed_trade_profit_percent(
     qty: f64,
     entry_commission: f64,
     profit: f64,
+    rate: f64,
 ) -> f64 {
-    let denominator = entry_price * qty.abs() + entry_commission;
+    let denominator = entry_price * qty.abs() * rate + entry_commission;
     if !profit.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
         return 0.0;
     }
@@ -23,6 +24,7 @@ fn closed_trade_profit_percent(
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct AllocatedEntryFill {
+    pub(super) extrema: super::trade_extrema::TradeExtrema,
     pub(super) entry_price: f64,
     pub(super) entry_bar_index: usize,
     pub(super) entry_time: i64,
@@ -40,6 +42,7 @@ impl AllocatedEntryFill {
     ) -> Self {
         let Some(first_allocation) = allocations.first() else {
             return Self {
+                extrema: Default::default(),
                 entry_price: fallback_entry_price,
                 entry_bar_index: fallback_entry_bar_index,
                 entry_time: fallback_entry_time,
@@ -49,6 +52,7 @@ impl AllocatedEntryFill {
         };
 
         Self {
+            extrema: first_allocation.extrema,
             entry_price: first_allocation.entry_price,
             entry_bar_index: first_allocation.entry_bar_index,
             entry_time: first_allocation.entry_time,
@@ -77,6 +81,20 @@ pub(super) struct ClosedTradeFill {
 
 impl BrokerState {
     pub(super) fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
+        let mut extrema = fill.entry_fill.extrema;
+        let quantity = fill.qty.abs();
+        if quantity > 0.0 {
+            // The exit fill itself is part of this trade's observed path,
+            // including a gap, limit endpoint or adverse execution slippage.
+            // Native trade extrema include entry fees but exclude exit fees.
+            extrema.observe(
+                fill.entry_fill.entry_price,
+                fill.qty.signum(),
+                fill.entry_fill.entry_commission / quantity,
+                (fill.exit_price, fill.exit_price),
+                self.quote_to_account_rate,
+            );
+        }
         self.record_window_realized_pnl(fill.profit);
         // Preserve the trade-order left fold used by realized_profit(), once per close.
         self.realized_profit_sum += fill.profit;
@@ -93,15 +111,19 @@ impl BrokerState {
             profit: fill.profit,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
+            quote_to_account_rate: self.quote_to_account_rate,
             commission: fill.commission,
             profit_percent: closed_trade_profit_percent(
                 fill.entry_fill.entry_price,
                 fill.qty,
                 fill.entry_fill.entry_commission,
                 fill.profit,
+                self.quote_to_account_rate,
             ),
-            max_runup: self.current_open_trade_max_runup_for_quantity(fill.qty.abs()),
-            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(fill.qty.abs()),
+            max_runup: extrema.runup * quantity,
+            max_runup_percent: extrema.runup_percent,
+            max_drawdown: extrema.drawdown * quantity,
+            max_drawdown_percent: extrema.drawdown_percent,
             entry_comment: fill.entry_fill.entry_metadata.comment.clone(),
             exit_comment: fill.close_metadata.comment.clone(),
             close_metadata: fill.close_metadata,
@@ -110,6 +132,14 @@ impl BrokerState {
 
     pub(super) fn record_open_long_legacy_state(&mut self, trade: &OpenTrade) {
         if self.position_size == 0.0 {
+            // Native run-up keeps the lowest realized balance reached when
+            // opening a position, after its first entry fee. Pyramiding fees
+            // debit equity without restarting that position's baseline.
+            if let Some(equity) = trade.equity_on_entry {
+                self.min_equity_before_open_trade = self
+                    .min_equity_before_open_trade
+                    .min(equity - trade.entry_commission);
+            }
             self.position_entry_name = Some(trade.id.clone());
         }
         let signed_size = trade.direction.signed_quantity(trade.quantity);

@@ -1,0 +1,7 @@
+//@version=6
+indicator("point-varip-field-v6-41")
+type Wrap
+    varip chart.point point
+var p=Wrap.new(chart.point.from_index(1,10))
+p.point.price:=20
+plot(p.point.price)

@@ -1,0 +1,7 @@
+//@version=6
+indicator("parameter-plain-dead-reassign-v6-35",precision=0)
+f(bool x)=>
+    if false
+        x:=true
+    x
+plot(f(false)?1:0)

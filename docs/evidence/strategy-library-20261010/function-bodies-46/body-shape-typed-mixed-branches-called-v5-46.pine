@@ -1,0 +1,5 @@
+//@version=5
+indicator("body-shape-typed-mixed-branches-called-v5-46")
+f(bool flag)=>flag?1:"bad"
+r=f(true)
+plot(1)

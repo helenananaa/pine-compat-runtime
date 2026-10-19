@@ -1,0 +1,96 @@
+{
+  "status": "frozen_prior_cli_diagnostic_receipts",
+  "baseline_qualification_sha256": "1c4406506aaceb447f19a38debe809abcccc7d1271c5282c957d016feb322fbe",
+  "rows": [
+    {
+      "name": "unsupported_recursive_tuple_declarations",
+      "source": "tests/fixtures/sema/unsupported_recursive_tuple_declarations.pine",
+      "source_sha256": "9863aee274045b9fa3dddf66bab5241e8a9fb17ef4a44aa021f4b7990e6d0688",
+      "tested_cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+      "diagnostics": 4,
+      "expected_messages": "tests/fixtures/sema/declaration_body_baselines_46/unsupported_recursive_tuple_declarations.txt",
+      "expected_messages_sha256": "1079d5c5c6bf371b98d87d75a7887d7926b50051a050e83655ea8f51f3837005",
+      "analysis": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unsupported_recursive_tuple_declarations.baseline45.analysis.json",
+      "analysis_sha256": "af9ccd20e79b387b0bfc2df2a006ffc220895b03b189f05e778266a65ff7a4e3"
+    },
+    {
+      "name": "unsupported_local_user_method_map_call_result_reads",
+      "source": "tests/fixtures/sema/unsupported_local_user_method_map_call_result_reads.pine",
+      "source_sha256": "7f49e6a7c6d338b6e8e962f58fb84a1ffc2cb1b8905dfe44c0fd0053678e49b0",
+      "tested_cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+      "diagnostics": 14,
+      "expected_messages": "tests/fixtures/sema/declaration_body_baselines_46/unsupported_local_user_method_map_call_result_reads.txt",
+      "expected_messages_sha256": "0b72f3bb7ecd3d4d4ab0460d1d43cf31cad6b7a95c3586cbe29299684cdd6b1d",
+      "analysis": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unsupported_local_user_method_map_call_result_reads.baseline45.analysis.json",
+      "analysis_sha256": "3c68ccbffbdbbfdfeb3104cb079cbb176751c1312e68c8f31fda50c8d282586e"
+    },
+    {
+      "name": "unsupported_map_udf_method_return_templates",
+      "source": "tests/fixtures/sema/unsupported_map_udf_method_return_templates.pine",
+      "source_sha256": "fa9d392d7911c302982934f47ab1ab3fc6c2409fa2740dcea943e07406ec24e4",
+      "tested_cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+      "diagnostics": 4,
+      "expected_messages": "tests/fixtures/sema/declaration_body_baselines_46/unsupported_map_udf_method_return_templates.txt",
+      "expected_messages_sha256": "8b69d6921636487ecdf094cde59208e4eacad6284059dabaeab2119160a64708",
+      "analysis": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unsupported_map_udf_method_return_templates.baseline45.analysis.json",
+      "analysis_sha256": "e5e329ee3eb8fa3cf3d2ec8a8850531be81d0efc340119b478b843ad165b78af"
+    },
+    {
+      "name": "unsupported_local_user_type_array_call_result_chaining",
+      "source": "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine",
+      "source_sha256": "d0c1a35e02e9eacd434d6a247f82394d3a793b2b832ffb1634e94615ccd4c0e6",
+      "tested_cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+      "diagnostics": 210,
+      "expected_messages": "tests/fixtures/sema/declaration_body_baselines_46/unsupported_local_user_type_array_call_result_chaining.txt",
+      "expected_messages_sha256": "6890873af3aa8c7e99d3798ff1c19f738b5ba916bb2eb0c13194be7faea2cd47",
+      "analysis": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unsupported_local_user_type_array_call_result_chaining.baseline45.analysis.json",
+      "analysis_sha256": "c6ecc0c7e18e23041fa78200a140ed13cf24a93915ddda46d4e081f20528d872"
+    },
+    {
+      "name": "unsupported_imported_user_type_array_call_result_chaining",
+      "source": "tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine",
+      "source_sha256": "62359aa74a251c3f1ec8e981437e5bc30ffa79011b82a35fb156d4fb5de66506",
+      "tested_cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+      "diagnostics": 192,
+      "expected_messages": "tests/fixtures/sema/declaration_body_baselines_46/unsupported_imported_user_type_array_call_result_chaining.txt",
+      "expected_messages_sha256": "69b24920b21a72a7580648b265880cce57bd994bc1221acad1ddfcc60df7522b",
+      "analysis": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unsupported_imported_user_type_array_call_result_chaining.baseline45.analysis.json",
+      "analysis_sha256": "e43d219737aece0ca65cdaa308e7b601a185ab018572862e9864b94a7b061975",
+      "library": "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+      "original_library_sha256": "ff9722e5697aedaf74b2a342a8f5ea978448c43f2a589ac381df12ab7a5e8ae9",
+      "version_matched_library_sha256": "693680a4538806019d2af4aad94c2371373a76592b2ee7f04d2f103c1fe9cfb1",
+      "library_key": "user/udt_array_returns/1"
+    },
+    {
+      "name": "unsupported_imported_user_type_array_tuple_alias_mutation",
+      "source": "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine",
+      "source_sha256": "48c743d3e05989c8e1e6276c524acdb20bc5780fac1b536745a2bce7184c8d34",
+      "tested_cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+      "diagnostics": 9,
+      "expected_messages": "tests/fixtures/sema/declaration_body_baselines_46/unsupported_imported_user_type_array_tuple_alias_mutation.txt",
+      "expected_messages_sha256": "0e0071ff9a7dad52b60efa8ba5d4130afc4263db4bfe49d7fe2a9f1f55074882",
+      "analysis": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unsupported_imported_user_type_array_tuple_alias_mutation.baseline45.analysis.json",
+      "analysis_sha256": "18a0860d73682cd7b97095ed9ca19680548b8fe6b51aded335d942bad8d7ae0e",
+      "library": "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+      "original_library_sha256": "ff9722e5697aedaf74b2a342a8f5ea978448c43f2a589ac381df12ab7a5e8ae9",
+      "version_matched_library_sha256": "693680a4538806019d2af4aad94c2371373a76592b2ee7f04d2f103c1fe9cfb1",
+      "library_key": "user/udt_array_returns/1"
+    },
+    {
+      "name": "unsupported_imported_user_type_array_tuple_return_identities",
+      "source": "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_return_identities.pine",
+      "source_sha256": "3bd4b95c2b08c80172daa916ac2d7fffc6d41780637447b1708354060a6ebc3e",
+      "tested_cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+      "diagnostics": 27,
+      "expected_messages": "tests/fixtures/sema/declaration_body_baselines_46/unsupported_imported_user_type_array_tuple_return_identities.txt",
+      "expected_messages_sha256": "49fd0629b46d20ebd553dde398b63308a847f3fdae4a83f862719d729719d846",
+      "analysis": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unsupported_imported_user_type_array_tuple_return_identities.baseline45.analysis.json",
+      "analysis_sha256": "95993b33e309e9dec0076edcae8e8bdcad1ff0a58e68ab50f54c3f4d410202d9",
+      "library": "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+      "original_library_sha256": "ff9722e5697aedaf74b2a342a8f5ea978448c43f2a589ac381df12ab7a5e8ae9",
+      "version_matched_library_sha256": "693680a4538806019d2af4aad94c2371373a76592b2ee7f04d2f103c1fe9cfb1",
+      "library_key": "user/udt_array_returns/1"
+    }
+  ],
+  "scope": "Exact previous actual-call diagnostic sequence retained as a required prefix; any newly appended errors must be approved declaration diagnostics inside original function/method bodies. No missing old diagnostic is permitted."
+}

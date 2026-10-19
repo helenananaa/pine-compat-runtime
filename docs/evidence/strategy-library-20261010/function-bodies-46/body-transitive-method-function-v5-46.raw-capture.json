@@ -1,0 +1,75 @@
+{
+  "name": "body-transitive-method-function-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-method-function-v5-46.pine",
+  "source_sha256": "491cf0abf10aeb90e1c996b220893cbd2de1a92d6971e87b00f94da20c0da391",
+  "version": 5,
+  "kind": "generic_transitive_method_function",
+  "candidate_analysis": {
+    "schemaVersion": 6,
+    "languageVersion": 5,
+    "languageVersionOrigin": "explicit",
+    "dialect": "v5",
+    "scriptMode": "indicator",
+    "executable": true,
+    "diagnostics": [],
+    "inputs": [],
+    "compatibility": {
+      "supported": [
+        {
+          "feature": "indicator",
+          "span": {
+            "start": 14,
+            "end": 23,
+            "line": 2,
+            "column": 1
+          }
+        },
+        {
+          "feature": "user-defined types",
+          "span": {
+            "start": 66,
+            "end": 94,
+            "line": 3,
+            "column": 1
+          }
+        },
+        {
+          "feature": "user-defined methods",
+          "span": {
+            "start": 114,
+            "end": 156,
+            "line": 6,
+            "column": 1
+          }
+        },
+        {
+          "feature": "plot",
+          "span": {
+            "start": 187,
+            "end": 191,
+            "line": 8,
+            "column": 1
+          }
+        }
+      ],
+      "unsupported": [],
+      "legacyTranslations": [],
+      "legacyEmulations": []
+    }
+  },
+  "tested_cli_sha256": "62540a668599943424c4af1207f030b8b051ff4d1b53ccfb596cb9aea3494478",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "226 row body-transitive-method-function-v5-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e3f742f5574db39c759fb8947d4512bc191ca0100b4eac74689d7c34c1daeb74",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-function-v5-46.native.ax.txt",
+  "accessibility_sha256": "f5030ba219fb99a2b5e4fb2af8313d68da1f7299033b6e6ee25526cc659f4f4b",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-function-v5-46.native.png",
+  "screenshot_sha256": "ba624cf34261c698a27cabb3e63ebcf1d3f086f2d2c86891ea51db7fa1ac02b7",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

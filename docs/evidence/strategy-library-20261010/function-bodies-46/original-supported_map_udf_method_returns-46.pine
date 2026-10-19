@@ -1,0 +1,133 @@
+//@version=6
+indicator("Supported map UDF and method returns")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => string_float
+
+method exposeBlock(Anchor self) =>
+    made = string_float.copy()
+    made
+
+method exposeFresh(Anchor self) => map.new<int, string>()
+
+method exposeIf(Anchor self, bool use_copy) =>
+    if use_copy
+        string_float.copy()
+    else
+        string_float
+
+method exposeSwitch(Anchor self, int mode) =>
+    switch mode
+        0 => string_float
+        => string_float.copy()
+
+method exposeFor(Anchor self) =>
+    for i = 0 to 0
+        made = string_float.copy()
+        made
+
+method exposeWhile(Anchor self) =>
+    int iterations = 0
+    while iterations < 1
+        iterations := iterations + 1
+        made = string_float.copy()
+        made
+
+method exposeViaUdf(Anchor self) => identity(string_float)
+
+identity(id) => id
+
+blockAlias(id) =>
+    made = id.copy()
+    made
+
+nested(id) => blockAlias(identity(id))
+
+choose(left, right, mode) =>
+    mode == 0 ? left : (mode == 1 ? right : na)
+
+finalIf(id) =>
+    if bar_index % 2 == 0
+        id
+    else
+        id.copy()
+
+finalSwitch(id) =>
+    switch bar_index % 2
+        0 => id
+        => id.copy()
+
+finalFor(id) =>
+    for i = 0 to 0
+        made = id.copy()
+        made
+
+finalForIn(id) =>
+    for item in array.from(0)
+        made = id.copy()
+        made
+
+finalWhile(id) =>
+    int iterations = 0
+    while iterations < 1
+        iterations := iterations + 1
+        made = id.copy()
+        made
+
+fresh() => map.new<string, float>()
+
+string_float = map.new<string, float>()
+string_float.put("v", 10)
+string_float_other = map.new<string, float>()
+string_float_other.put("v", 20)
+int_string = map.new<int, string>()
+int_string.put(1, "one")
+int_string_other = map.new<int, string>()
+int_string_other.put(1, "other")
+
+direct_size = map.size(identity(string_float))
+direct_get = map.get(blockAlias(string_float), "v")
+direct_copy = map.copy(nested(string_float))
+direct_history = map.get(identity(string_float)[1], "v")
+
+first_template = map.get(choose(int_string, int_string_other, 0), 1) == "one" ? 1 : 0
+second_template = map.get(choose(mode=1, right=string_float_other, left=string_float), "v")
+nullable_template = map.size(choose(left=string_float, mode=2, right=na))
+nested_int_template = map.get(nested(int_string), 1) == "one" ? 1 : 0
+nested_float_template = map.get(nested(string_float), "v")
+
+if_return = finalIf(string_float)
+switch_return = finalSwitch(string_float)
+for_return = finalFor(string_float)
+for_in_return = finalForIn(string_float)
+while_return = finalWhile(string_float)
+fresh_return = fresh()
+
+bound = identity(string_float)
+bound_size = bound.size()
+bound_get = bound.get("v")
+bound_copy = bound.copy()
+
+float udf_total = 0
+for [key, value] in identity(string_float)
+    udf_total := udf_total + value
+
+anchor = Anchor.new(1)
+method_direct = map.get(anchor.expose(), "v")
+method_history = map.get(anchor.expose()[1], "v")
+method_block = anchor.exposeBlock()
+method_fresh = anchor.exposeFresh()
+method_if = anchor.exposeIf(use_copy=true)
+method_switch = anchor.exposeSwitch(mode=0)
+method_for = anchor.exposeFor()
+method_while = anchor.exposeWhile()
+method_nested = anchor.exposeViaUdf()
+method_qualified = Anchor.expose(anchor)
+
+float method_total = 0
+for [key, value] in anchor.expose()
+    method_total := method_total + value
+
+plot(direct_size + direct_get + direct_copy.get("v") + direct_history + first_template + second_template + nullable_template + nested_int_template + nested_float_template + if_return.get("v") + switch_return.get("v") + for_return.get("v") + for_in_return.get("v") + while_return.get("v") + fresh_return.size() + bound_size + bound_get + bound_copy.get("v") + udf_total + method_direct + method_history + method_block.get("v") + (na(method_fresh.get(1)) ? 1 : 0) + method_if.get("v") + method_switch.get("v") + method_for.get("v") + method_while.get("v") + method_nested.get("v") + method_qualified.get("v") + method_total)

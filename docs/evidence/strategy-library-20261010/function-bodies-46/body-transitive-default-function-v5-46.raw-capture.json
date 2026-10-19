@@ -1,0 +1,21 @@
+{
+  "name": "body-transitive-default-function-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-default-function-v5-46.pine",
+  "source_sha256": "b05822574b1f404f93af4d883ebf4304ec19f6a9f1e9904217546a8a02a99c3f",
+  "kind": "function",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "226 row body-transitive-default-function-v5-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6a32c86940152c0b21e8fb71e31c80d54c7e0296ac7b4717b9e07745e83d1111",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-default-function-v5-46.native.ax.txt",
+  "accessibility_sha256": "c629db4ea2a11a5c7a9b58d5c19dbc3ba88a70caf376cb89c75fd74d64c85cf9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-default-function-v5-46.native.png",
+  "screenshot_sha256": "f967949840f3355eaf84df0f2da5abed16506124d0068a720ef25111f4802c02",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

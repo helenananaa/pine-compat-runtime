@@ -1,0 +1,34 @@
+{
+  "name": "point-realtime-history-fixture-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-realtime-history-fixture-v5-41.pine",
+  "source_sha256": "e8513e8fd31f103fcf4a01e6316d7c8b356ac1852a5edf57562132fc7b5c4f4d",
+  "parent_fixture": "E:\\projects\\pine-interpreter\\tests\\fixtures\\realtime\\chart_point_varip.pine",
+  "parent_fixture_sha256": "39848d99c209e3c4b4a07555ee90309c2e404d8f8938cee6fad9e5438cdbf2d2",
+  "transforms": "Version/title selection; append two non-mutating shared-history relation markers. Original fixture unchanged.",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    7635.08,
+    7639.08,
+    0,
+    0,
+    7639.08,
+    7639.08,
+    1,
+    1
+  ],
+  "native_marker_suffix": [
+    1,
+    1
+  ],
+  "native_row": "235 row point-realtime-history-fixture-v5-41 Plot 7,635.08 Plot 7,639.08 Plot 0.00 Plot 0.00 Plot 7,639.08 Plot 7,639.08 Plot 1.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "aaa3d6d06b423f27b4c1abc9995c990fb63134c14e47acd580bad5fc9bbc285b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-realtime-history-fixture-v5-41.native.ax.txt",
+  "accessibility_sha256": "217818f8a2cea3866f629766df17c52a8164bc9aee888df7c7ff30fdf3d3a6f2",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-realtime-history-fixture-v5-41.native.png",
+  "screenshot_sha256": "5cc02c47b4413b3b2f2db1d6ef91a784fd994cb5680ae7330ffbcc94e66415e3",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,16 @@
+{
+  "name": "v6-literal-na-guard-group-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-group-37.pine",
+  "source_sha256": "3b4a4f48dbd31bda8d678effe986f214972cfbc6a4a26e9936231d9614da7b94",
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot compare a value to \"na\" directly. Use the \"na()\" function instead.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3b4a4f48dbd31bda8d678effe986f214972cfbc6a4a26e9936231d9614da7b94",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-group-37.native.ax.txt",
+  "accessibility_sha256": "acb5e0c59f4fb0f00f0b3f0766641487a36e5ee514b6a3353430154c1b41f3e2",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-group-37.native.png",
+  "screenshot_sha256": "6e39031fe2e21ab3a7c1a554396d499c9134d1e989445b0c675b04399db0d99c",
+  "scope": "v6 rejects direct untyped na comparison; current diagnostic source line checked before capture",
+  "qualification_scope": "candidate_bounded_control"
+}

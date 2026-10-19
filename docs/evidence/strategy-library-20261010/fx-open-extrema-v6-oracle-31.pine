@@ -1,0 +1,39 @@
+//@version=6
+strategy("FX open extrema 31",currency=currency.EUR,initial_capital=10000,commission_type=strategy.commission.percent,commission_value=1,margin_long=0,margin_short=0,precision=8)
+rate=request.currency_rate(syminfo.currency,strategy.account_currency)
+if time==1577836800000
+    strategy.entry("L",strategy.long,qty=0.01)
+if time==1578614400000
+    strategy.close("L")
+entry=time==1577923200000
+held=time==1578614400000
+closed=time==1578700800000
+plot(ta.valuewhen(entry,rate,0),title="entryRate")
+plot(ta.valuewhen(entry,strategy.opentrades.entry_price(0),0),title="entryPrice")
+plot(ta.valuewhen(entry,strategy.opentrades.commission(0),0),title="entryFee")
+plot(ta.valuewhen(entry,strategy.netprofit,0),title="netEntry")
+plot(ta.valuewhen(held,rate,0),title="heldRate")
+plot(ta.valuewhen(held,strategy.openprofit,0),title="heldProfit")
+plot(ta.valuewhen(held,strategy.openprofit_percent,0),title="heldPercent")
+plot(ta.valuewhen(closed,rate,0),title="exitRate")
+plot(ta.valuewhen(closed,strategy.closedtrades.exit_price(0),0),title="exitPrice")
+plot(ta.valuewhen(closed,strategy.closedtrades.commission(0),0),title="closedFee")
+plot(ta.valuewhen(closed,strategy.closedtrades.profit(0),0),title="closedProfit")
+plot(ta.valuewhen(closed,strategy.closedtrades.profit_percent(0),0),title="closedPercent")
+plot(ta.valuewhen(closed,strategy.equity,0),title="closedEquity")
+plot(ta.valuewhen(held,close,0),title="heldClose")
+plot(ta.valuewhen(entry,strategy.position_size,0),title="entrySize")
+plot(ta.valuewhen(held,strategy.equity,0),title="heldEquity")
+plot(ta.valuewhen(closed,strategy.closedtrades.max_runup(0),0),title="tradeRunup")
+plot(ta.valuewhen(closed,strategy.closedtrades.max_drawdown(0),0),title="tradeDrawdown")
+plot(ta.valuewhen(closed,strategy.closedtrades.max_runup_percent(0),0),title="tradeRunupPct")
+plot(ta.valuewhen(closed,strategy.closedtrades.max_drawdown_percent(0),0),title="tradeDrawdownPct")
+plot(ta.valuewhen(closed,strategy.max_runup,0),title="strategyRunup")
+plot(ta.valuewhen(closed,strategy.max_drawdown,0),title="strategyDrawdown")
+late=time==1579478400000
+plot(ta.valuewhen(late,strategy.closedtrades.max_runup(0),0),title="lateTradeRunup")
+plot(ta.valuewhen(late,strategy.closedtrades.max_runup_percent(0),0),title="lateTradeRunupPct")
+plot(ta.valuewhen(held,strategy.opentrades.max_runup(0),0),title="openRunup")
+plot(ta.valuewhen(held,strategy.opentrades.max_drawdown(0),0),title="openDrawdown")
+plot(ta.valuewhen(held,strategy.opentrades.max_runup_percent(0),0),title="openRunupPct")
+plot(ta.valuewhen(held,strategy.opentrades.max_drawdown_percent(0),0),title="openDrawdownPct")

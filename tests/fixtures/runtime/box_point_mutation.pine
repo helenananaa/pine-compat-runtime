@@ -13,5 +13,7 @@ if bar_index == 2
     box.set_top_left_point(time_box, time_top_left)
     time_box.set_bottom_right_point(time_bottom_right)
 box.set_top_left_point(na, chart.point.now(close))
-box.set_bottom_right_point(index_box, na)
+chart.point missing = na
+if not na(missing)
+    box.set_bottom_right_point(index_box, missing)
 plot(close)

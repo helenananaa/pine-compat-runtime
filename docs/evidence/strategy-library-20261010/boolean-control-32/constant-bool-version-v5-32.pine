@@ -1,0 +1,27 @@
+//@version=5
+indicator("Constant bool version 5 probe32",precision=0)
+a=if false
+    true
+b=if false
+    false
+f(x)=>
+    if x
+        true
+d=if bar_index<0
+    true
+k=false
+e=if k
+    true
+x=if false
+    true
+else
+    false
+plot(a?1:0,title="const true body")
+plot(b?1:0,title="const false body")
+plot(f(false)?1:0,title="function false")
+plot(d?1:0,title="dynamic false")
+plot(e?1:0,title="const variable")
+plot(x?1:0,title="explicit else")
+plot(a==true?1:0,title="equals true")
+plot(a==false?1:0,title="equals false")
+plot(a[1]?1:0,title="history")

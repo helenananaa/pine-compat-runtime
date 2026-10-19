@@ -5,6 +5,8 @@ use crate::{
 
 mod collection_templates;
 mod declarations;
+mod identifiers;
+mod parameter_templates;
 #[path = "parser_phase_j.rs"]
 mod phase_j;
 mod statements;
@@ -636,7 +638,24 @@ impl Parser {
             };
             return self.finish_call(callee);
         }
-        self.finish_call_result_method_call(receiver)
+        // The receiver's type and available methods are semantic questions.
+        // Keep an arbitrary expression here so grouped scalar expressions and
+        // producers outside the legacy call-result encoding can dispatch too.
+        let start = receiver.span;
+        self.expect(TokenKind::Dot, "expected `.` before method name")?;
+        let method_span = self.current().span;
+        let TokenKind::Identifier(name) = self.current().kind.clone() else {
+            self.error_here("E_PARSE_NAME", "expected method name after `.`");
+            return None;
+        };
+        self.bump();
+        self.finish_call(Expr {
+            span: start.merge(method_span),
+            kind: ExprKind::Member {
+                receiver: Box::new(receiver),
+                name,
+            },
+        })
     }
 
     fn finish_call_result_method_call(&mut self, receiver: Expr) -> Option<Expr> {
@@ -812,7 +831,10 @@ impl Parser {
             field_count += 1;
             offset += 2;
         }
-        (field_count >= 2 && self.nth_at(offset, TokenKind::ColonEq)).then_some(offset)
+        (field_count >= 2
+            && (self.nth_at(offset, TokenKind::ColonEq)
+                || self.compound_assignment_op(offset).is_some()))
+        .then_some(offset)
     }
 
     fn get_call_field_reassign_colon_eq_offset(&self) -> Option<usize> {

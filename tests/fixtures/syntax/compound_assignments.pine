@@ -6,8 +6,8 @@ number -= 3
 number *= 4
 number /= 6
 number %= 4
-text = "Pine"
-text += " Script"
+note = "Pine"
+note += " Script"
 missing = float(na)
 missing += 1
 plot(number)

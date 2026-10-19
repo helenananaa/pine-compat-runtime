@@ -132,6 +132,18 @@ pub(crate) fn is_supported_strategy_value_function(name: &str) -> bool {
 }
 
 impl Analyzer {
+    pub(crate) fn legacy_na_dynamic_request_arg(
+        &self,
+        callee: &str,
+        param: &str,
+        value: PineType,
+    ) -> bool {
+        self.legacy.dialect().version() == 5
+            && matches!(callee, "indicator" | "strategy")
+            && param == "dynamic_requests"
+            && value == PineType::new(Qualifier::Const, ValueKind::Na)
+    }
+
     pub(crate) fn validate_script_declaration_call(
         &mut self,
         name: &str,
@@ -184,8 +196,18 @@ impl Analyzer {
                     "`dynamic_requests` requires Pine v5 or v6",
                     value.span,
                 ));
-            } else if let Some(enabled) = self.known_const_bool_value(&value.value) {
-                self.dynamic_requests = enabled;
+            } else {
+                // Native resolves this annotation before ordinary const
+                // evaluation: false/zero literals disable requests, while
+                // const aliases and even `not true` enable them.
+                self.dynamic_requests = match value.value.without_groups().kind {
+                    pine_syntax::ExprKind::Literal(pine_syntax::Literal::Bool(value)) => value,
+                    pine_syntax::ExprKind::Literal(pine_syntax::Literal::Int(value)) => value != 0,
+                    pine_syntax::ExprKind::Literal(pine_syntax::Literal::Float(value)) => {
+                        value != 0.0
+                    }
+                    _ => true,
+                };
             }
         }
         if mode == ScriptMode::Strategy {
@@ -723,13 +745,25 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_close_all_args(&mut self, args: &[CallArg]) {
-        for (index, arg) in args.iter().enumerate() {
-            if (arg.name.as_deref() == Some("when") || (arg.name.is_none() && index == 4))
-                && self.legacy.dialect() >= crate::PineDialect::V6
-            {
+        let version = self.legacy.dialect().version();
+        let has_when = args.iter().any(|arg| arg.name.as_deref() == Some("when"));
+        for arg in args {
+            let Some(name) = arg.name.as_deref() else {
+                continue;
+            };
+            if name == "when" && version >= 6 {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
                     "`strategy.close_all` argument `when` was removed in Pine v6",
+                    arg.span,
+                ));
+            } else if (version <= 3 && name != "when")
+                || (version == 4 && matches!(name, "immediately" | "disable_alert"))
+                || (version == 5 && has_when && matches!(name, "immediately" | "disable_alert"))
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    format!("`strategy.close_all` argument `{name}` is not available in this Pine v{version} overload"),
                     arg.span,
                 ));
             }

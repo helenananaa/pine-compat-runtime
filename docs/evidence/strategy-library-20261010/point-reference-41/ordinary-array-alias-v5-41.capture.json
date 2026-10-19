@@ -1,0 +1,29 @@
+{
+  "name": "ordinary-array-alias-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\ordinary-array-alias-v5-41.pine",
+  "source_sha256": "318907e102fbde96a3f0ca245ff7b86253d23d1c231994ec9aac689c59a892e3",
+  "qualification_scope": "intrabar_retention_frontier",
+  "native_relation": "array_alias_split",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    208,
+    208,
+    0,
+    1
+  ],
+  "native_marker_suffix": [
+    0,
+    1
+  ],
+  "native_row": "235 row ordinary-array-alias-v5-41 Plot 208.00 Plot 208.00 Plot 0.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "0a7018e3dc0908352d618fcc9bac68ed73a89475d56de1e57111359289705e45",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/ordinary-array-alias-v5-41.native.ax.txt",
+  "accessibility_sha256": "acbfa19f49f1db225311faa56249d6078d7dee1514ac4d8f3c67c4ecb712fce9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/ordinary-array-alias-v5-41.native.png",
+  "screenshot_sha256": "18f96b32c343477da70c094c781569b697a7e9474bfb390cfacfccf668ca68e7",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

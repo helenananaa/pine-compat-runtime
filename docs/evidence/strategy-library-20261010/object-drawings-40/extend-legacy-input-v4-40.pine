@@ -1,0 +1,6 @@
+//@version=4
+study("extend-legacy-input-v4-40")
+value=input("r")
+item=line.new(0,1,2,2,extend=value)
+line.set_extend(item,value)
+plot(line.get_x2(item))

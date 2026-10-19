@@ -1,5 +1,8 @@
 use crate::*;
 
+mod arrays;
+pub(crate) use arrays::PersistentArrayOwner;
+
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_decl(
         &mut self,
@@ -7,22 +10,34 @@ impl<'a> HistoricalRuntime<'a> {
         value: &HirExpr,
     ) -> Result<PineValue, RuntimeError> {
         let Some((_persistence, var_slot_id)) = self.persistent_slot_for_symbol(symbol) else {
-            return self.eval_expr(value);
+            let value = self.eval_expr(value)?;
+            return self.bind_array_value(value, None);
         };
 
         if let Some(value) = self.var_store.get(&var_slot_id).cloned() {
             Ok(value)
         } else {
             let value = self.eval_expr(value)?;
+            let value =
+                self.bind_array_value(value, Some(PersistentArrayOwner::Variable(var_slot_id)))?;
             self.var_store.insert(var_slot_id, value.clone());
             Ok(value)
         }
     }
 
-    pub(crate) fn assign_persistent_symbol(&mut self, symbol: SymbolId, value: PineValue) {
-        if let Some((_persistence, var_slot_id)) = self.persistent_slot_for_symbol(symbol) {
-            self.var_store.insert(var_slot_id, value);
+    pub(crate) fn assign_persistent_symbol(
+        &mut self,
+        symbol: SymbolId,
+        value: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let slot = self
+            .persistent_slot_for_symbol(symbol)
+            .map(|(_, slot)| slot);
+        let value = self.bind_array_value(value, slot.map(PersistentArrayOwner::Variable))?;
+        if let Some(slot) = slot {
+            self.var_store.insert(slot, value.clone());
         }
+        Ok(value)
     }
 
     pub(crate) fn seed_intrabar_persistence_from(
@@ -59,6 +74,10 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn seed_intrabar_array_from(&mut self, previous: &Self, id: u32) {
         self.next_array_id = self.next_array_id.max(id.saturating_add(1));
+        if self.array_primary_owners.get(&id) != previous.array_primary_owners.get(&id) {
+            self.array_primary_owners
+                .copy_entry_from(&previous.array_primary_owners, id);
+        }
         if let Some(slice) = previous.array_slices.get(&id).copied() {
             let Some(kind) = previous.array_kinds.get(&id).copied() else {
                 return;

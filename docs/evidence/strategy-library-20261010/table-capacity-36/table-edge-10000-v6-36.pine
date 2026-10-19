@@ -1,0 +1,6 @@
+//@version=6
+indicator("table-edge-10000-v6-36",precision=0)
+var t=table.new(position.bottom_right,10000,1)
+if barstate.islast
+    table.cell(t,9999,0,"last")
+plot(1,title="executed")

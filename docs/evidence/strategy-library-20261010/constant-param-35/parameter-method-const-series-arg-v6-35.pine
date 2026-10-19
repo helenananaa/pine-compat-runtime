@@ -1,0 +1,5 @@
+//@version=6
+indicator("parameter-method-const-series-arg-v6-35",precision=0)
+method plus(float receiver,const int extra)=>receiver+extra
+value=10.0
+plot(value.plus(bar_index),title="sum")

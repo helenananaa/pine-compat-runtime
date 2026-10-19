@@ -13,6 +13,7 @@ pub enum ValueKind {
     Bool,
     String,
     PlotDisplay,
+    StrategyDirection,
     Color,
     Plot,
     HLine,

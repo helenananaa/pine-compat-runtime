@@ -1,0 +1,26 @@
+{
+  "name": "request-udt-scalar-write-v5-43",
+  "version": 5,
+  "scenario": "udt-scalar-write",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-udt-scalar-write-v5-43.pine",
+  "source_sha256": "cc2767b77716759fb5b0ee20ba7b675660da92f91b0a8a543ad42376816a4acd",
+  "historical_expected": [
+    15,
+    15
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "242 row request-udt-scalar-write-v5-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "cc2767b77716759fb5b0ee20ba7b675660da92f91b0a8a543ad42376816a4acd",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-udt-scalar-write-v5-43.native.ax.txt",
+  "accessibility_sha256": "936a35cb5243cbcd211ab5a1c1dbdd7dbb836e866f8b639c1a487797567566e4",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-udt-scalar-write-v5-43.native.png",
+  "screenshot_sha256": "d55c873d0ef849eea6096fc7ff4bfbd6979ecbcfebc0f52dc276a1c3d39dd7a2",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

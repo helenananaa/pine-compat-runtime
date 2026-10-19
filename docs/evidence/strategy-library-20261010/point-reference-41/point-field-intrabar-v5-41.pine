@@ -1,0 +1,14 @@
+//@version=5
+indicator("point-field-intrabar-v5-41")
+type Wrap
+    varip chart.point point
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+var wrapper=Wrap.new(chart.point.from_index(1,0))
+if barstate.isrealtime
+    wrapper.point.price+=1
+plot(ticks)
+plot(wrapper.point.price)

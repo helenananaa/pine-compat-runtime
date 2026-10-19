@@ -1,0 +1,24 @@
+{
+  "name": "array-slice-parent-v5-42",
+  "version": 5,
+  "scenario": "parent",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-slice-parent-v5-42.pine",
+  "source_sha256": "4e47206aa2e9811b5228c8c8819746a33e4d40d8d0f20ee2f0381d0329c989bb",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    3349,
+    0,
+    3349
+  ],
+  "native_row": "241 row array-slice-parent-v5-42 Plot 3,349.00 Plot 3,349.00 Plot 0.00 Plot 3,349.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e4f1aca7c978f1f55065c47a764fce7bb428af4ca9776e1b99daaab318d0c990",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-slice-parent-v5-42.native.ax.txt",
+  "accessibility_sha256": "1c3248c2ffe03726446823a06870b9baf00eb6e7ee9824b1ebeb9b39c93361de",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-slice-parent-v5-42.native.png",
+  "screenshot_sha256": "b85d53f1728ae78053360ce203fd2f64add4fd05fdfdc04896a2c65ee46edc8e",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

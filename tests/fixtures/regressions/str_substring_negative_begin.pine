@@ -1,4 +1,4 @@
 //@version=5
 indicator("String substring negative begin")
-text = str.substring("SMA", -1)
-plot(str.length(text))
+note = str.substring("SMA", -1)
+plot(str.length(note))

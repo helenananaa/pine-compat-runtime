@@ -1,5 +1,5 @@
 //@version=5
 indicator("String format time result limit")
 format = str.repeat("Zx", 7000)
-text = str.format_time(1609459200000, format, "UTC")
-plot(str.length(text))
+note = str.format_time(1609459200000, format, "UTC")
+plot(str.length(note))

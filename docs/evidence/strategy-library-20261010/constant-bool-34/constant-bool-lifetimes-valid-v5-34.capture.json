@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-lifetimes-valid-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-lifetimes-valid-v5-34.pine",
+  "source_sha256": "37fe99f8ad287df029c5a84f40eac90ea6736e6a398b959c9b5c8db71e00bac7",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Valid bool lifetime boundaries v5 probe34 dynamic materialization violations 0 unconditional reassignment 0 persistent reassignment 0 different parameter functions 1 nested parameter return 0 global alias with unused parameter 0 and right true 1 or left identity 1 and right identity 1 or right identity 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "37fe99f8ad287df029c5a84f40eac90ea6736e6a398b959c9b5c8db71e00bac7",
+  "normalized_source_sha256": "37fe99f8ad287df029c5a84f40eac90ea6736e6a398b959c9b5c8db71e00bac7",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-lifetimes-valid-v5-34.native.ax.txt",
+  "accessibility_sha256": "dd47a124d1d6bbbf596ecfa73384178798bc280893f5da18a67899c40115ce62",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-lifetimes-valid-v5-34.native.png",
+  "screenshot_sha256": "6638a0768c72e3e05f475af2e3cf902d0a1f32fabdb7de722bf1762ddad0a8d5"
+}

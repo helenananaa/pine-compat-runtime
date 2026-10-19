@@ -1,0 +1,12 @@
+//@version=5
+indicator("missing-string-comparison-v5-37",precision=0)
+string a=na
+string b=na
+plot(a==b?1:0)
+plot(a!=b?1:0)
+plot(a==""?1:0)
+plot(""==a?1:0)
+plot(a=="x"?1:0)
+plot(a!="x"?1:0)
+plot(na(a)?1:0)
+plot(na(a[1])?1:0)

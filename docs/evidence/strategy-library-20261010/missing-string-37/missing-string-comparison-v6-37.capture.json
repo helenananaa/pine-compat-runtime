@@ -1,0 +1,26 @@
+{
+  "name": "missing-string-comparison-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-comparison-v6-37.pine",
+  "source_sha256": "6a120344be4d1a0da5656949808ffdd13df2a63419bd889801797cf641c3d617",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1
+  ],
+  "native_row": "251 row missing-string-comparison-v6-37 Plot 1 Plot 0 Plot 1 Plot 1 Plot 0 Plot 1 Plot 1 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6a120344be4d1a0da5656949808ffdd13df2a63419bd889801797cf641c3d617",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-comparison-v6-37.native.ax.txt",
+  "accessibility_sha256": "1f286224b038c395db972842686ffec451522c9b50f1a4bf9a6be21ebe359bf6",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-comparison-v6-37.native.png",
+  "screenshot_sha256": "c12c5c7136a912b69a1d723261e5027f41931bb5cd243d860cc768df46fbcc89",
+  "scope": "v6 missing string equality preserves missing identity and matches empty string operands",
+  "qualification_scope": "candidate_bounded_control"
+}

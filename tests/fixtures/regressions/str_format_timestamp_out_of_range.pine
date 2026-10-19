@@ -1,4 +1,4 @@
 //@version=5
 indicator("String format timestamp out of range")
-text = str.format("{0,date,yyyy-MM-dd}", 9223372036854775807)
-plot(str.length(text))
+note = str.format("{0,date,yyyy-MM-dd}", 9223372036854775807)
+plot(str.length(note))

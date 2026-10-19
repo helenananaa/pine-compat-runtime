@@ -1,0 +1,18 @@
+{
+  "name": "point-reference-inequality-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-reference-inequality-v6-41.pine",
+  "source_sha256": "f970795e695308fca91cb2bd373246b2310824940c956c4e4edf75183601305a",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"operator !=\" with argument \"expr0\"=\"p\". An argument of \"chart.point\" type was used but a \"simple string\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "25f1aab859f52b3a393892c9829d19d9bf2d2a16682a9e19c837af2b70f9c3b6",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-reference-inequality-v6-41.native.ax.txt",
+  "accessibility_sha256": "b286654003dfc0eee26b0854251203387226b050964d088296d1068f50248f4f",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-reference-inequality-v6-41.native.png",
+  "screenshot_sha256": "6b5cba592fd6035bc69d192a124b580bac84105acc25538c9aa465fd1870b3fd",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

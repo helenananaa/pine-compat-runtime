@@ -66,6 +66,17 @@ impl Analyzer {
                                 Qualifier::Const,
                                 if name.starts_with("display.") {
                                     ValueKind::PlotDisplay
+                                } else if crate::legacy::strategy_direction_bool(
+                                    &name,
+                                    self.legacy.dialect().version(),
+                                )
+                                .is_some()
+                                {
+                                    ValueKind::Bool
+                                } else if self.legacy.dialect().version() != 4
+                                    && matches!(name.as_str(), "strategy.long" | "strategy.short")
+                                {
+                                    ValueKind::StrategyDirection
                                 } else {
                                     ValueKind::String
                                 },
@@ -335,12 +346,12 @@ impl Analyzer {
             let receiver_arg = receiver_call_arg(receiver_name, receiver_span);
             let builtin_name = map_method_builtin_name(method_name)?;
             return match builtin_name {
-                "map.get" => {
+                "map.get" | "map.remove" => {
                     let info = self.map_type_of_expr(&receiver_arg.value)?;
                     Some(PineType::new(Qualifier::Series, info.value_kind))
                 }
                 "map.contains" => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
-                "map.put" | "map.clear" | "map.remove" | "map.put_all" => {
+                "map.put" | "map.clear" | "map.put_all" => {
                     Some(PineType::new(Qualifier::Series, ValueKind::Void))
                 }
                 "map.copy" => Some(PineType::new(Qualifier::Simple, ValueKind::Map)),
@@ -1059,6 +1070,14 @@ impl Analyzer {
                 receiver_symbol
                     .as_ref()
                     .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned())
+            })
+            .or_else(|| {
+                let ty = context
+                    .param_types
+                    .get(receiver_name)
+                    .copied()
+                    .or_else(|| receiver_symbol.as_ref().map(|s| s.pine_type))?;
+                self.named_method_receiver_key(receiver_name, receiver_span, ty)
             })?;
         let receiver_type = context
             .param_types
@@ -1134,6 +1153,10 @@ impl Analyzer {
         let mut nested_param_types = HashMap::new();
         let mut nested_param_user_types = HashMap::new();
         let nested_tuple_aliases = HashMap::new();
+        let receiver_type = method
+            .receiver_binding
+            .as_ref()
+            .map_or(receiver_type, |b| b.bound_type(receiver_type));
         nested_param_types.insert(method.receiver_name.clone(), receiver_type);
         nested_param_user_types.insert(method.receiver_name.clone(), method.receiver_type.clone());
         let mut resolved_arg_types = vec![None; method.params.len()];
@@ -1149,7 +1172,7 @@ impl Analyzer {
             .iter()
             .zip(resolved_arg_types.into_iter().zip(resolved_arg_user_types))
         {
-            nested_param_types.insert(param.name.clone(), arg_type?);
+            nested_param_types.insert(param.name.clone(), param.bound_type(arg_type?));
             if let Some(type_name) = arg_user_type {
                 nested_param_user_types.insert(param.name.clone(), type_name);
             }

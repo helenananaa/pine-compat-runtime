@@ -123,6 +123,28 @@ fn runtime_fixtures_match_incremental_append_execution() {
             || text.contains("last_bar_time")
             || text.contains("chart.right_visible_bar_time");
         let analysis = analyze_fixture(&path, text);
+        if matches!(
+            path.file_name().and_then(|name| name.to_str()),
+            Some(
+                "local_user_method_map_call_result_reads.pine"
+                    | "user_method_matrix_call_result_reads.pine"
+                    | "map_udf_read.pine"
+            )
+        ) {
+            assert!(
+                analysis.hir.is_none(),
+                "{} must reject forward globals",
+                path.display()
+            );
+            assert!(
+                analysis
+                    .diagnostics
+                    .iter()
+                    .any(|d| d.code == "E_UNKNOWN_SYMBOL" || d.code == "E_UNKNOWN_FUNCTION")
+            );
+            checked += 1;
+            continue;
+        }
         assert!(
             analysis.diagnostics.is_empty(),
             "{} diagnostics: {:?}",
@@ -396,7 +418,9 @@ fn analyze_fixture(path: &Path, text: String) -> Analysis {
     } else if text.contains("import user/udt_array_returns/1") {
         Some((
             "user/udt_array_returns/1",
-            "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+            // Synthetic positive input: the original retains an unused,
+            // incompatible typed return as a declaration-rejection control.
+            "tests/fixtures/libraries/import_udt_array_return_checked_bodies_46.pine",
         ))
     } else if text.contains("import user/udt/1") {
         Some(("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine"))

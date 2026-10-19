@@ -2,5 +2,5 @@
 indicator("Array join result limit")
 values = array.new_string(410)
 array.set(values, 0, str.repeat("x", 100))
-text = array.join(values, str.repeat("y", 100))
-plot(str.length(text))
+note = array.join(values, str.repeat("y", 100))
+plot(str.length(note))

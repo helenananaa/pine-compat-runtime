@@ -1,0 +1,12 @@
+//@version=6
+indicator("method-scalar-write-v6-40")
+type Flag40
+    bool broken
+method violate40(Flag40 self)=>
+    self.broken:=true
+    self.broken
+item=Flag40.new(false)
+other=item
+item.violate40()
+plot(item.broken?1:0)
+plot(other.broken?1:0)

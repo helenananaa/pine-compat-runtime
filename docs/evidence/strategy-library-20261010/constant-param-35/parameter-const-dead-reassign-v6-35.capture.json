@@ -1,0 +1,14 @@
+{
+  "name": "parameter-const-dead-reassign-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-dead-reassign-v6-35.pine",
+  "source_sha256": "b032c241baf9440073c06f40667fb94230fb44fdea86207041d33050a8a5028f",
+  "native_status": "analysis_rejected",
+  "native_error": "Function arguments cannot be mutable (\"x\")",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b032c241baf9440073c06f40667fb94230fb44fdea86207041d33050a8a5028f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-dead-reassign-v6-35.native.ax.txt",
+  "accessibility_sha256": "48e0f3208beb4ed19c060b76afeacb1671dbbaefe8a5410b63a6e0f863ce6760",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-dead-reassign-v6-35.native.png",
+  "screenshot_sha256": "8af53e8738931e06095e76a640375472b880816306ccf00c32334c88b892439e"
+}

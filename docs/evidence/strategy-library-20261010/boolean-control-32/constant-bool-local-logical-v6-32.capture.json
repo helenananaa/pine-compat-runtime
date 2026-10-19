@@ -1,0 +1,38 @@
+{
+  "name": "constant-bool-local-logical-v6-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-local-logical-v6-32.pine",
+  "source_sha256": "29aac04106abc416d1c859881acaa9dde65e1e9352ffe4a1f64116a5508af68e",
+  "native_status": "compiled_and_executed",
+  "native_row": "247 row Local bool and logical identities32 local condition 1 local returned bool 0 true and preserves 1 false or preserves 1 two missing and 1 two missing or 1 and false 1 or true preserves left 1",
+  "cursor_refreshed": true,
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4b0a2e976d1658495668216d5b61013aaa9e0da2b46f9c84b393c3b2b270baa9",
+  "editor_source_sha256": "4b0a2e976d1658495668216d5b61013aaa9e0da2b46f9c84b393c3b2b270baa9",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-local-logical-v6-32.native.png",
+  "screenshot_sha256": "753acbf9a417100f39c23de928db845e6cd2091611f82a5a8ba234080ba582ca",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-local-logical-v6-32.native.ax.txt",
+  "accessibility_sha256": "d061ec2a7fa673f8ad313888b0854be19ebb8760cf378b11cb719d01d87c1e90",
+  "native_values": [
+    1.0,
+    0.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "labels": [
+    "local condition",
+    "local returned bool",
+    "true and preserves",
+    "false or preserves",
+    "two missing and",
+    "two missing or",
+    "and false",
+    "or true preserves left"
+  ],
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

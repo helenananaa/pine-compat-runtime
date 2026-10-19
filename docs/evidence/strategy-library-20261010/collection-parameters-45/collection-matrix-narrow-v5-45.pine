@@ -1,0 +1,5 @@
+//@version=5
+indicator("collection-matrix-narrow-v5-45")
+f(matrix<int> v)=>v.get(0,0)
+values=matrix.new<float>(1,1,1)
+plot(f(values))

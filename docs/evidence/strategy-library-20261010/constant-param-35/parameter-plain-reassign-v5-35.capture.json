@@ -1,0 +1,14 @@
+{
+  "name": "parameter-plain-reassign-v5-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-reassign-v5-35.pine",
+  "source_sha256": "3f4b8b5f773803bb5dbb0ee6e3bdb4a64805fb2eca509cd1d5ea42ad38a4d1d5",
+  "native_status": "analysis_rejected",
+  "native_error": "Function arguments cannot be mutable ('x')",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3f4b8b5f773803bb5dbb0ee6e3bdb4a64805fb2eca509cd1d5ea42ad38a4d1d5",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-reassign-v5-35.native.ax.txt",
+  "accessibility_sha256": "57ea29b0e0446c78be609a50eef37c0b07975f65f61faccac3288d55abc601f7",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-reassign-v5-35.native.png",
+  "screenshot_sha256": "6d8fb257978dc7895b45c1790ecf4b58a9ea5172fdfea9db0ac4e148d914d61d"
+}

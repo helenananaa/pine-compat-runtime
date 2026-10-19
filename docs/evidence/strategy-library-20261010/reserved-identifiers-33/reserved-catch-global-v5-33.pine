@@ -1,0 +1,4 @@
+//@version=5
+indicator("Reserved catch-global-v5 probe33",precision=0)
+catch=19
+plot(catch)

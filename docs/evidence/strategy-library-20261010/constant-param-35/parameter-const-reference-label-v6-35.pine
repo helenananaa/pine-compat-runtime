@@ -1,0 +1,5 @@
+//@version=6
+indicator("parameter-const-reference-label-v6-35",precision=0)
+f(const label x)=>label.get_x(x)
+b=label.new(0,10)
+plot(f(b),title="label x")

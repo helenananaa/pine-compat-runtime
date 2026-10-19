@@ -1,0 +1,7 @@
+//@version=6
+indicator("Parameter bool const annotation probe34",precision=0)
+f(x)=>
+    if x
+        true
+const bool value=f(false)
+plot(value?1:0)

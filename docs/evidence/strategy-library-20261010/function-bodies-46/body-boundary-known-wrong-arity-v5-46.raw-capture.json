@@ -1,0 +1,19 @@
+{
+  "name": "body-boundary-known-wrong-arity-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-boundary-known-wrong-arity-v5-46.pine",
+  "source_sha256": "a3bdc04cd864325c145f5568de43b398e963cd627025ca57777e4d0e700c091a",
+  "kind": "known-wrong-arity",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "No value assigned to the `length` parameter in ta.sma()",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "ba69abb117542008905d1201357ece490ad8b179a201a39a4f380576ed098fc2",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-known-wrong-arity-v5-46.native.ax.txt",
+  "accessibility_sha256": "ddeb7c0a83ee9ddf03b65214ce40dd8feccf5f465fd53fadb7625be3380397e0",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-known-wrong-arity-v5-46.native.png",
+  "screenshot_sha256": "6a571f732e610ab9065ebeef12dcffae1a94722d88c31de2c8abd420cc145604",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

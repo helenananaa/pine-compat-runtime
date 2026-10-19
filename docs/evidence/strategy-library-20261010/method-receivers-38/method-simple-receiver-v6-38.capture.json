@@ -1,0 +1,20 @@
+{
+  "name": "method-simple-receiver-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-receiver-v6-38.pine",
+  "source_sha256": "77b32656c8e7df1d66469cbaadb0c6657d4bdea05d39a7a36a2b102a367bcb2a",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2
+  ],
+  "native_row": "319 row method-simple-receiver-v6-38 (2) Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b57dada685e7d1fa26054c76145d84d49663b7d025474ba384b2c35f22e9b727",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-receiver-v6-38.native.ax.txt",
+  "accessibility_sha256": "e1d66346d94b866c3f8c5d8d87cf07862026061f4fa003e1473af53460b8a754",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-receiver-v6-38.native.png",
+  "screenshot_sha256": "54ea75ede4055991a4b1dd7dbcf87b2fc793fa92d07156b6ba96fd850fe6fd59",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "6e512819a1d1358b3d11483fd15a36f384c1c9b1595e6f100dd06ed370b26afb"
+}

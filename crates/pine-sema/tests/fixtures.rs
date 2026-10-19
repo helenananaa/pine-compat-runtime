@@ -6053,10 +6053,8 @@ fn rejects_unbounded_drawing_enum_strings_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_drawing_unbounded_enum_strings.pine",
         &[
-            "`line.new` argument `extend` only supports",
             "`line.new` argument `style` only supports",
             "`line.set_style` argument `style` only supports",
-            "`line.set_extend` argument `extend` only supports",
             "`label.new` argument `style` only supports",
             "`label.set_style` argument `style` only supports",
         ],
@@ -7486,7 +7484,13 @@ fn reports_recursive_tuple_declarations_without_overflowing() {
             "recursive method `recursive` is not supported",
         ],
     );
-    assert_diagnostic_count(path, 4);
+    assert_prior_call_diagnostics_plus_declarations(
+        path,
+        None,
+        include_str!(
+            "../../../tests/fixtures/sema/declaration_body_baselines_46/unsupported_recursive_tuple_declarations.txt"
+        ),
+    );
 }
 
 #[test]
@@ -7711,7 +7715,13 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.sort` expects at most 2 argument(s), got 3",
         ],
     );
-    assert_diagnostic_count(path, 210);
+    assert_prior_call_diagnostics_plus_declarations(
+        path,
+        None,
+        include_str!(
+            "../../../tests/fixtures/sema/declaration_body_baselines_46/unsupported_local_user_type_array_call_result_chaining.txt"
+        ),
+    );
 }
 
 #[test]
@@ -8138,7 +8148,11 @@ fn reports_unsupported_local_udf_matrix_call_result_reads_fixture() {
 
 #[test]
 fn accepts_supported_user_method_matrix_call_result_reads_fixture() {
-    assert_valid_fixture("tests/fixtures/sema/supported_user_method_matrix_call_result_reads.pine");
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/supported_user_method_matrix_call_result_reads.pine",
+        "E_UNKNOWN_SYMBOL",
+    );
+    assert_valid_fixture("tests/fixtures/sema/legal-matrix-call-results-v6-46.pine");
 }
 
 #[test]
@@ -8256,10 +8270,6 @@ fn reports_unsupported_builtin_map_call_result_reads_fixture() {
     assert_exact_diagnostic_messages(
         path,
         &[
-            "`function_side_effect` is not supported: collection mutation via `map.put` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `map.clear` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `map.remove` is not supported inside user-defined functions",
-            "`function_side_effect` is not supported: collection mutation via `map.put_all` is not supported inside user-defined functions",
             "`map.get` argument `key` expects string-compatible, got const int",
             "`map.contains` argument `key` expects integer-compatible, got const string",
             "`map.size` expects 1 argument(s), got 2",
@@ -8274,7 +8284,7 @@ fn reports_unsupported_builtin_map_call_result_reads_fixture() {
             "`map.put_all` expects 2 argument(s), got 1",
         ],
     );
-    assert_diagnostic_count(path, 16);
+    assert_diagnostic_count(path, 12);
 }
 
 #[test]
@@ -8332,15 +8342,17 @@ fn reports_unsupported_local_udf_map_call_result_reads_fixture() {
 
 #[test]
 fn accepts_supported_local_user_method_map_call_result_reads_fixture() {
-    assert_valid_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/supported_local_user_method_map_call_result_reads.pine",
+        "E_UNKNOWN_SYMBOL",
     );
+    assert_valid_fixture("tests/fixtures/sema/legal-map-call-results-v6-46.pine");
 }
 
 #[test]
 fn reports_unsupported_local_user_method_map_call_result_reads_fixture() {
     let path = "tests/fixtures/sema/unsupported_local_user_method_map_call_result_reads.pine";
-    assert_exact_diagnostic_messages(
+    assert_diagnostic_messages(
         path,
         &[
             "`map.get` argument `key` expects string-compatible, got const int",
@@ -8359,7 +8371,13 @@ fn reports_unsupported_local_user_method_map_call_result_reads_fixture() {
             "`matrix.contains` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.set()`, `.fill()`, `.reverse()`, `.reshape()`, `.add_row()`, `.add_col()`, numeric-only `.sort()`, `.swap_rows()`, `.swap_columns()`, `.remove_row()`, `.remove_col()`, `.copy()`, `.diff()`, `.eigenvectors()`, `.inv()`, `.kron()`, `.mult()`, `.pinv()`, `.pow()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
         ],
     );
-    assert_diagnostic_count(path, 14);
+    assert_prior_call_diagnostics_plus_declarations(
+        path,
+        None,
+        include_str!(
+            "../../../tests/fixtures/sema/declaration_body_baselines_46/unsupported_local_user_method_map_call_result_reads.txt"
+        ),
+    );
 }
 
 #[test]
@@ -8474,8 +8492,6 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
     assert_exact_diagnostic_messages(
         path,
         &[
-            "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
-            "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
             "`matrix.get` argument `row` expects simple int, got const string",
             "`matrix.get` argument `column` expects simple int, got const string",
             "`matrix.set` argument `row` expects simple int, got const string",
@@ -8557,10 +8573,12 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`matrix.get` argument `row` expects simple int, got const string",
             "`matrix.set` argument `value` expects numeric-compatible, got const string",
             "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.set()`, `.fill()`, `.reverse()`, `.reshape()`, `.add_row()`, `.add_col()`, numeric-only `.sort()`, `.swap_rows()`, `.swap_columns()`, `.remove_row()`, `.remove_col()`, `.copy()`, `.diff()`, `.eigenvectors()`, `.inv()`, `.kron()`, `.mult()`, `.pinv()`, `.pow()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
-            "`matrix.new<float>` argument `rows` expects simple int, got const string",
+            "`matrix.new<float>` argument `rows` expects integer-compatible, got const string",
             "`matrix.get` argument `row` expects simple int, got const string",
             "`matrix.set` argument `value` expects bool-compatible, got const string",
             "`matrix.fill` argument `value` expects bool-compatible, got const string",
+            "method `rows` is not supported for const void",
+            "method `rows` is not supported for const void",
             "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.set()`, `.fill()`, `.reverse()`, `.reshape()`, `.add_row()`, `.add_col()`, numeric-only `.sort()`, `.swap_rows()`, `.swap_columns()`, `.remove_row()`, `.remove_col()`, `.copy()`, `.diff()`, `.eigenvectors()`, `.inv()`, `.kron()`, `.mult()`, `.pinv()`, `.pow()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
             "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
             "`array.columns` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
@@ -14956,7 +14974,7 @@ fn accepts_supported_imported_user_type_array_returns_fixture() {
     assert_import_ok_fixture_with_library(
         "tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine",
         "user/udt_array_returns/1",
-        "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+        "tests/fixtures/libraries/import_udt_array_return_checked_bodies_46.pine",
     );
 }
 
@@ -14984,7 +15002,7 @@ fn accepts_supported_imported_user_type_array_tuple_returns_fixture() {
     assert_import_ok_fixture_with_library(
         "tests/fixtures/sema/supported_imported_user_type_array_tuple_returns.pine",
         "user/udt_array_returns/1",
-        "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+        "tests/fixtures/libraries/import_udt_array_return_checked_bodies_46.pine",
     );
 }
 
@@ -15002,7 +15020,13 @@ fn reports_unsupported_imported_user_type_array_tuple_return_identities_fixture(
             "tuple element 2 user-defined type array must resolve to one element identity",
         ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 27);
+    assert_prior_call_diagnostics_plus_declarations(
+        path,
+        Some(("user/udt_array_returns/1", library)),
+        include_str!(
+            "../../../tests/fixtures/sema/declaration_body_baselines_46/unsupported_imported_user_type_array_tuple_return_identities.txt"
+        ),
+    );
 
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -15051,7 +15075,13 @@ fn reports_unsupported_imported_user_type_array_tuple_alias_mutation_fixture() {
             "tuple element 2 user-defined type array must resolve to one element identity",
         ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 9);
+    assert_prior_call_diagnostics_plus_declarations(
+        path,
+        Some(("user/udt_array_returns/1", library)),
+        include_str!(
+            "../../../tests/fixtures/sema/declaration_body_baselines_46/unsupported_imported_user_type_array_tuple_alias_mutation.txt"
+        ),
+    );
 
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -15274,7 +15304,13 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.sort` expects at most 2 argument(s), got 3",
         ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 192);
+    assert_prior_call_diagnostics_plus_declarations(
+        path,
+        Some(("user/udt_array_returns/1", library)),
+        include_str!(
+            "../../../tests/fixtures/sema/declaration_body_baselines_46/unsupported_imported_user_type_array_call_result_chaining.txt"
+        ),
+    );
 }
 
 #[test]
@@ -16045,21 +16081,30 @@ fn reports_unsupported_imported_method_qualified_receiver_order_fixture() {
 }
 
 #[test]
-fn reports_unsupported_imported_method_field_mutation_fixture() {
-    assert_import_diagnostic_messages_with_library(
-        "tests/fixtures/sema/unsupported_imported_method_field_mutation.pine",
-        "user/udt_side_effect/1",
-        "tests/fixtures/libraries/import_udt_method_side_effect_lib.pine",
-        &[
-            "`function_side_effect` is not supported: mutating user-defined type fields inside methods is not supported",
-        ],
+fn accepts_imported_method_field_mutation_fixture() {
+    // Keep the historical fixture bytes; Native permits field writes through
+    // object references independently of parameter-binding reassignment.
+    let path =
+        workspace_fixture("tests/fixtures/sema/unsupported_imported_method_field_mutation.pine");
+    let source = SourceFile::new(
+        path.display().to_string(),
+        fs::read_to_string(&path).unwrap(),
     );
-    assert_import_diagnostic_count_with_library(
-        "tests/fixtures/sema/unsupported_imported_method_field_mutation.pine",
-        "user/udt_side_effect/1",
-        "tests/fixtures/libraries/import_udt_method_side_effect_lib.pine",
-        2,
+    let library_path =
+        workspace_fixture("tests/fixtures/libraries/import_udt_method_side_effect_lib.pine");
+    let library = version_matched_fixture_library(&library_path, source.text());
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/udt_side_effect/1".to_owned(), library)],
+    )
+    .unwrap();
+    let analysis = analyze_input(&input);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -16312,12 +16357,8 @@ fn reports_unsupported_user_method_side_effect_arg_fixture() {
 }
 
 #[test]
-fn reports_unsupported_user_method_field_mutation_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_user_method_field_mutation.pine",
-        "function_side_effect",
-        "mutating user-defined type fields inside methods",
-    );
+fn accepts_user_method_field_mutation_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_user_method_field_mutation.pine");
 }
 
 #[test]
@@ -16482,35 +16523,22 @@ fn reports_non_array_method_fixture_as_receiver_diagnostic() {
 }
 
 #[test]
-fn reports_unsupported_alert_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alert.pine",
-        "alert_frequency",
-        "alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close",
-    );
+fn admits_alert_fixture_for_runtime_frequency_validation() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_alert.pine");
 }
 
 #[test]
-fn reports_unsupported_alert_dynamic_frequency_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alert_dynamic_frequency.pine",
-        "alert_frequency",
-        "alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close",
-    );
+fn admits_alert_input_frequency_for_runtime_validation() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_alert_dynamic_frequency.pine");
 }
 
 #[test]
 fn reports_unsupported_alert_unknown_frequency_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_alert_unknown_frequency.pine",
-        "alert_frequency",
-        "alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close",
+        &["alert.freq_unknown"],
     );
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_alert_named_const_frequency.pine",
-        "alert_frequency",
-        "alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close",
-    );
+    assert_valid_fixture("tests/fixtures/sema/unsupported_alert_named_const_frequency.pine");
 }
 
 #[test]
@@ -17158,7 +17186,11 @@ fn reports_unsupported_map_control_flow_template_fixture() {
 
 #[test]
 fn accepts_supported_map_udf_method_returns_fixture() {
-    assert_valid_fixture("tests/fixtures/sema/supported_map_udf_method_returns.pine");
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/supported_map_udf_method_returns.pine",
+        "E_UNKNOWN_SYMBOL",
+    );
+    assert_valid_fixture("tests/fixtures/sema/legal-map-call-results-v6-46.pine");
 }
 
 #[test]
@@ -17173,7 +17205,13 @@ fn reports_unsupported_map_udf_method_return_templates_fixture() {
             "`map.put_all` source map template int/string does not match target string/float",
         ],
     );
-    assert_diagnostic_count(path, 4);
+    assert_prior_call_diagnostics_plus_declarations(
+        path,
+        None,
+        include_str!(
+            "../../../tests/fixtures/sema/declaration_body_baselines_46/unsupported_map_udf_method_return_templates.txt"
+        ),
+    );
 }
 
 #[test]
@@ -17257,39 +17295,23 @@ fn reports_unsupported_map_assign_template_fixture() {
 }
 
 #[test]
-fn reports_unsupported_map_put_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_map_put_udf.pine",
-        "function_side_effect",
-        "collection mutation via `map.put`",
-    );
+fn accepts_historical_map_put_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_map_put_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_map_put_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_map_put_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via `map.put`",
-    );
+fn accepts_historical_map_put_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_map_put_method_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_map_clear_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_map_clear_udf.pine",
-        "function_side_effect",
-        "collection mutation via `map.clear`",
-    );
+fn accepts_historical_map_clear_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_map_clear_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_map_remove_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_map_remove_udf.pine",
-        "function_side_effect",
-        "collection mutation via `map.remove`",
-    );
+fn accepts_historical_map_remove_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_map_remove_udf.pine");
 }
 
 #[test]
@@ -17389,21 +17411,13 @@ fn reports_unsupported_map_put_all_template_fixture() {
 }
 
 #[test]
-fn reports_unsupported_map_put_all_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_map_put_all_udf.pine",
-        "function_side_effect",
-        "collection mutation via `map.put_all` is not supported inside user-defined functions",
-    );
+fn accepts_historical_map_put_all_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_map_put_all_udf.pine");
 }
 
 #[test]
-fn reports_unsupported_map_put_all_method_udf_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_map_put_all_method_udf.pine",
-        "function_side_effect",
-        "collection mutation via `map.put_all` is not supported inside user-defined functions",
-    );
+fn accepts_historical_map_put_all_method_udf_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/unsupported_map_put_all_method_udf.pine");
 }
 
 #[test]
@@ -23315,7 +23329,7 @@ fn reports_unsupported_udf_final_for_reassignment_series_bound_qualifier_fixture
 fn reports_unsupported_method_final_for_reassignment_series_bound_qualifier_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_method_final_for_reassignment_series_bound_qualifier.pine",
-        &["`ta.ema` argument `length` expects simple integer-compatible, got series int"],
+        &["cannot pass series int to method parameter `limit` of type simple int"],
     );
 }
 
@@ -23355,7 +23369,7 @@ fn reports_unsupported_udf_final_if_reassignment_series_condition_qualifier_fixt
 fn reports_unsupported_method_final_if_reassignment_series_condition_qualifier_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_method_final_if_reassignment_series_condition_qualifier.pine",
-        &["`ta.ema` argument `length` expects simple integer-compatible, got series int"],
+        &["cannot pass series bool to method parameter `flag` of type simple bool"],
     );
 }
 
@@ -23367,9 +23381,10 @@ fn accepts_supported_udf_final_if_const_reassignment_qualifier_fixture() {
 }
 
 #[test]
-fn accepts_supported_method_final_if_const_reassignment_qualifier_fixture() {
-    assert_valid_fixture(
+fn rejects_supported_method_final_if_const_reassignment_qualifier_as_simple_fixture() {
+    assert_diagnostic_messages(
         "tests/fixtures/sema/supported_method_final_if_const_reassignment_qualifier.pine",
+        &["expects simple integer-compatible, got series int"],
     );
 }
 
@@ -23397,9 +23412,10 @@ fn accepts_supported_udf_final_switch_const_reassignment_qualifier_fixture() {
 }
 
 #[test]
-fn accepts_supported_method_final_switch_const_reassignment_qualifier_fixture() {
-    assert_valid_fixture(
+fn rejects_supported_method_final_switch_const_reassignment_qualifier_as_simple_fixture() {
+    assert_diagnostic_messages(
         "tests/fixtures/sema/supported_method_final_switch_const_reassignment_qualifier.pine",
+        &["expects simple integer-compatible, got series int"],
     );
 }
 
@@ -23428,10 +23444,11 @@ fn accepts_supported_udf_final_selector_switch_numeric_color_const_reassignment_
 }
 
 #[test]
-fn accepts_supported_method_final_selector_switch_numeric_color_const_reassignment_qualifier_fixture()
+fn rejects_supported_method_final_selector_switch_numeric_color_const_reassignment_qualifier_as_simple_fixture()
  {
-    assert_valid_fixture(
+    assert_diagnostic_messages(
         "tests/fixtures/sema/supported_method_final_selector_switch_numeric_color_const_reassignment_qualifier.pine",
+        &["expects simple integer-compatible, got series int"],
     );
 }
 
@@ -23750,7 +23767,7 @@ fn reports_unsupported_udf_final_while_reassignment_series_condition_qualifier_f
 fn reports_unsupported_method_final_while_reassignment_series_condition_qualifier_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_method_final_while_reassignment_series_condition_qualifier.pine",
-        &["`ta.ema` argument `length` expects simple integer-compatible, got series int"],
+        &["cannot pass series bool to method parameter `flag` of type simple bool"],
     );
 }
 
@@ -23903,6 +23920,93 @@ fn assert_valid_fixture(path: &str) {
         analysis.diagnostics
     );
     assert!(analysis.hir.is_some());
+}
+
+// Keep every prior actual-call diagnostic in order. Eager validation may add
+// language errors, but only inside a declaration in the unchanged input sources.
+fn assert_prior_call_diagnostics_plus_declarations(
+    path: &str,
+    library: Option<(&str, &str)>,
+    expected: &str,
+) {
+    fn declarations(source: &SourceFile) -> Vec<pine_syntax::Span> {
+        pine_syntax::parse_source(source)
+            .program
+            .statements
+            .iter()
+            .filter_map(|statement| match &statement.kind {
+                pine_syntax::StmtKind::Function { .. } | pine_syntax::StmtKind::Method(_) => {
+                    Some(statement.span)
+                }
+                pine_syntax::StmtKind::Export(export)
+                    if matches!(export.item, pine_syntax::ExportItem::Function { .. }) =>
+                {
+                    Some(statement.span)
+                }
+                _ => None,
+            })
+            .collect()
+    }
+    let path = workspace_fixture(path);
+    let source = SourceFile::new(
+        path.display().to_string(),
+        fs::read_to_string(&path).unwrap(),
+    );
+    let root_declarations = declarations(&source);
+    let (input, library_declarations) = if let Some((key, fixture)) = library {
+        let library_source =
+            version_matched_fixture_library(&workspace_fixture(fixture), source.text());
+        let spans = declarations(&library_source);
+        (
+            AnalysisInput::with_library_sources(source, vec![(key.to_owned(), library_source)])
+                .unwrap(),
+            spans,
+        )
+    } else {
+        (AnalysisInput::new(source), Vec::new())
+    };
+    let analysis = analyze_input(&input);
+    let expected: Vec<_> = expected.lines().collect();
+    assert!(
+        analysis.diagnostics.len() > expected.len(),
+        "{}: expected new declaration errors: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis.diagnostics[..expected.len()]
+            .iter()
+            .map(|d| d.message.as_str())
+            .collect::<Vec<_>>(),
+        expected,
+        "{}: prior call diagnostics changed",
+        path.display()
+    );
+    for diagnostic in &analysis.diagnostics[expected.len()..] {
+        assert!(
+            matches!(
+                diagnostic.code.as_str(),
+                "E_UNKNOWN_SYMBOL"
+                    | "E_UNKNOWN_FUNCTION"
+                    | "E_BRANCH_TYPE"
+                    | "E_RECURSIVE_FUNCTION"
+                    | "E_RECURSIVE_METHOD"
+            ),
+            "unexpected added diagnostic: {diagnostic:?}"
+        );
+        let ranges = match diagnostic.source.as_ref().map_or(0, |s| s.source_id) {
+            0 => &root_declarations,
+            1 if library.is_some() => &library_declarations,
+            _ => panic!("unexpected diagnostic source: {diagnostic:?}"),
+        };
+        assert!(
+            ranges
+                .iter()
+                .any(|r| r.start <= diagnostic.span.start && diagnostic.span.end <= r.end),
+            "added error is outside a declaration: {diagnostic:?}"
+        );
+    }
+    assert!(analysis.hir.is_none());
 }
 
 fn assert_diagnostic_fixture(path: &str, code: &str) {

@@ -11,6 +11,7 @@ mod combined_exits;
 mod exit_placements;
 mod fields;
 mod metadata;
+mod quantity;
 
 #[derive(Clone, Copy)]
 enum StrategyExitQuantityArg {
@@ -40,51 +41,6 @@ struct RuntimeExitBracketPlacement {
 }
 
 impl<'a> HistoricalRuntime<'a> {
-    fn default_order_qty(
-        &self,
-        equity: f64,
-        close: f64,
-        is_long: bool,
-        market: bool,
-    ) -> Option<f64> {
-        // A cash market order is sized from the expected fill price, including
-        // its configured slippage. The actual next-bar open is not known yet.
-        let price = if market
-            && matches!(
-                self.program.strategy_settings.default_qty,
-                Some(StrategyDefaultQuantity::Cash(_))
-            ) {
-            let slippage = self.program.strategy_settings.slippage_ticks
-                * self.request_environment.chart().min_tick();
-            close + if is_long { slippage } else { -slippage }
-        } else {
-            close
-        };
-        match self.program.strategy_settings.default_qty {
-            Some(StrategyDefaultQuantity::PercentOfEquity(percent))
-                if equity.is_finite() && equity > 0.0 && price.is_finite() && price > 0.0 =>
-            {
-                Some(crate::strategy::percent_of_equity_order_qty(
-                    equity,
-                    percent,
-                    price,
-                    self.program.strategy_settings.commission,
-                    self.request_environment.chart().configured_quantity_scale(),
-                ))
-            }
-            _ => self
-                .program
-                .strategy_settings
-                .default_entry_qty(equity, price)
-                .map(|qty| {
-                    crate::strategy::quantity_on_chart_grid(
-                        qty,
-                        self.request_environment.chart().configured_quantity_scale(),
-                    )
-                }),
-        }
-    }
-
     pub(crate) fn eval_strategy_call(
         &mut self,
         callee: &str,
@@ -114,7 +70,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
         Some(match callee {
             "strategy.convert_to_account" | "strategy.convert_to_symbol" => {
-                self.eval_strategy_currency_conversion(args)
+                self.eval_strategy_currency_conversion(callee, args)
             }
             "strategy.default_entry_qty" => self.eval_strategy_default_entry_qty(args),
             "strategy.entry" => self.eval_strategy_entry(args),
@@ -177,61 +133,25 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_strategy_currency_conversion(
         &mut self,
+        callee: &str,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let Some(value_expr) = call_arg_expr(args, 0, "value") else {
             return Ok(PineValue::Na);
         };
-        Ok(self
-            .eval_expr(value_expr)?
-            .as_f64()
-            .map_or(PineValue::Na, PineValue::Float))
-    }
-
-    fn eval_strategy_default_entry_qty(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let Some(fill_price_expr) = call_arg_expr(args, 0, "fill_price") else {
+        let Some(value) = self.eval_expr(value_expr)?.as_f64() else {
             return Ok(PineValue::Na);
         };
-        let fill_price = self
-            .eval_expr(fill_price_expr)?
-            .as_f64()
-            .unwrap_or(f64::NAN);
-        let Some(bar) = self.current_bar else {
-            return Err(RuntimeError {
-                message: "`strategy.default_entry_qty` requires an active bar".to_owned(),
-            });
+        let Some(rate) = self.current_account_currency_rate()? else {
+            return Ok(PineValue::Na);
         };
-        let equity = self.strategy_broker.equity_value(bar.close);
-        let qty = match self.program.strategy_settings.default_qty {
-            Some(StrategyDefaultQuantity::PercentOfEquity(percent))
-                if equity.is_finite()
-                    && equity > 0.0
-                    && fill_price.is_finite()
-                    && fill_price > 0.0 =>
-            {
-                Some(crate::strategy::percent_of_equity_order_qty(
-                    equity,
-                    percent,
-                    fill_price,
-                    self.program.strategy_settings.commission,
-                    self.request_environment.chart().configured_quantity_scale(),
-                ))
-            }
-            _ => self
-                .program
-                .strategy_settings
-                .default_entry_qty(equity, fill_price)
-                .map(|qty| {
-                    crate::strategy::quantity_on_chart_grid(
-                        qty,
-                        self.request_environment.chart().configured_quantity_scale(),
-                    )
-                }),
-        };
-        Ok(qty.map_or(PineValue::Na, PineValue::Float))
+        Ok(PineValue::Float(
+            if callee == "strategy.convert_to_symbol" {
+                value / rate
+            } else {
+                value * rate
+            },
+        ))
     }
 
     fn eval_strategy_risk_allow_entry_in(
@@ -444,7 +364,7 @@ impl<'a> HistoricalRuntime<'a> {
                 bar.close,
                 is_long,
                 limit_expr.is_none() && stop_expr.is_none(),
-            )
+            )?
             .unwrap_or(f64::NAN)
         };
         if qty == 0.0 {
@@ -588,7 +508,7 @@ impl<'a> HistoricalRuntime<'a> {
                 bar.close,
                 matches!(&direction, PineValue::String(value) if value == "strategy.long"),
                 limit_expr.is_none() && stop_expr.is_none(),
-            )
+            )?
             .unwrap_or(f64::NAN)
         } else {
             return Ok(PineValue::Void);

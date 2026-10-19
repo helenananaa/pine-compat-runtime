@@ -1,0 +1,7 @@
+//@version=6
+indicator("Literal bool const annotation probe34",precision=0)
+direct()=>
+    if false
+        true
+const bool value=direct()
+plot(value?1:0)

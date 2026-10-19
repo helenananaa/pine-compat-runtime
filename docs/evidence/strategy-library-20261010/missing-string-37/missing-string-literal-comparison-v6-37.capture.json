@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-literal-comparison-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-literal-comparison-v6-37.pine",
+  "source_sha256": "25704f48c6cbf1c7629a6f0b73c6172ebe1cf179baa22594153b7b763b1bbb91",
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot compare a value to \"na\" directly. Use the \"na()\" function instead.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "25704f48c6cbf1c7629a6f0b73c6172ebe1cf179baa22594153b7b763b1bbb91",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-literal-comparison-v6-37.native.ax.txt",
+  "accessibility_sha256": "3c5f83c1c98188f40cb67d5910ffc0f20c68221efd2ecd246639d84204400ca7",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-literal-comparison-v6-37.native.png",
+  "screenshot_sha256": "1a7f58d0d4ba18656a90cdf9157f8e791ec2f8195ca8727d679161d750159dd5",
+  "scope": "v6 rejects literal na comparisons at analysis time; unlike v5 string-context na comparisons",
+  "qualification_scope": "candidate_bounded_control"
+}

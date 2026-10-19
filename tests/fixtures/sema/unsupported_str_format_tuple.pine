@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported str format tuple")
 value = [close, open]
-text = str.format("Tuple {0}", value)
+note = str.format("Tuple {0}", value)
 plot(close)

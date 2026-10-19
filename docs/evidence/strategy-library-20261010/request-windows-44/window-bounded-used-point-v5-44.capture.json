@@ -1,0 +1,24 @@
+{
+  "name": "window-bounded-used-point-v5-44",
+  "version": 5,
+  "scenario": "bounded-used-point",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-bounded-used-point-v5-44.pine",
+  "source_sha256": "753df1c720141bb9010939ffdb7a6abdb5d08f77019fb115b77b86533563dd2e",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    20,
+    20,
+    2
+  ],
+  "native_row": "239 row window-bounded-used-point-v5-44 Plot 1.00 Plot 20.00 Plot 20.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "753df1c720141bb9010939ffdb7a6abdb5d08f77019fb115b77b86533563dd2e",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-bounded-used-point-v5-44.native.ax.txt",
+  "accessibility_sha256": "846bee070b9af3d2cd5a0a03b8f57cb4148bcec09def24f5ed16cf1f6baf868d",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-bounded-used-point-v5-44.native.png",
+  "screenshot_sha256": "062824c7e0b0aa14570c9ba5870aa50f3c131892c7716f33e6ead1aa1e35060b",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

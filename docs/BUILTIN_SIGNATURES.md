@@ -257,8 +257,8 @@ linefill.get_line1(id: linefill-compatible) -> series line
 linefill.get_line2(id: linefill-compatible) -> series line
 linefill.delete(id: linefill-compatible) -> void
 linefill.all -> simple array<linefill>
-box.new(left: int-compatible, top: numeric-compatible, right: int-compatible, bottom: numeric-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
-box.new(top_left: chart.point-compatible, bottom_right: chart.point-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
+box.new(left: int-compatible, top: numeric-compatible, right: int-compatible, bottom: numeric-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: string-compatible, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
+box.new(top_left: chart.point-compatible, bottom_right: chart.point-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: string-compatible, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
 box.set_left(id: box-compatible, x: int-compatible) -> void
 box.set_top(id: box-compatible, y: numeric-compatible) -> void
 box.set_right(id: box-compatible, x: int-compatible) -> void
@@ -271,7 +271,7 @@ box.set_bgcolor(id: box-compatible, color: color-compatible) -> void
 box.set_border_color(id: box-compatible, color: color-compatible) -> void
 box.set_border_width(id: box-compatible, width: int-compatible) -> void
 box.set_border_style(id: box-compatible, style: const string) -> void
-box.set_extend(id: box-compatible, extend: const string) -> void
+box.set_extend(id: box-compatible, extend: string-compatible) -> void
 box.set_xloc(id: box-compatible, left: int-compatible, right: int-compatible, xloc: const string) -> void
 box.set_text(id: box-compatible, text: string-compatible) -> void
 box.set_text_color(id: box-compatible, text_color: color-compatible) -> void

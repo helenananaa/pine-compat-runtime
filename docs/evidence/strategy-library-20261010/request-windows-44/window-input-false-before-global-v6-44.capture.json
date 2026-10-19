@@ -1,0 +1,24 @@
+{
+  "name": "window-input-false-before-global-v6-44",
+  "version": 6,
+  "scenario": "input-false-before-global",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-input-false-before-global-v6-44.pine",
+  "source_sha256": "d90df2a050ef4b193cbc9684720195198465d89ea91d30d82287aacb6a725d95",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    99,
+    -1,
+    99,
+    100
+  ],
+  "native_row": "621 row window-input-false-before-global-v6-44 Plot 99.00 Plot −1.00 Plot 99.00 Plot 100.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d90df2a050ef4b193cbc9684720195198465d89ea91d30d82287aacb6a725d95",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-false-before-global-v6-44.native.ax.txt",
+  "accessibility_sha256": "cd4763f1901c986f7d0e6c7034e0c049646d0861a02549680278dabe504b4a1d",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-false-before-global-v6-44.native.png",
+  "screenshot_sha256": "76bc5b7ced4f6d6e51b9b45367c917e27caadc944096d82109cf0382a11a5355",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,8 @@
+//@version=6
+indicator("collection-map-return-v6-45")
+values=map.new<string,float>()
+values.put("x",10)
+f(map<string,float> v)=>v
+r=f(values)
+r.put("x",20)
+plot(values.get("x"))

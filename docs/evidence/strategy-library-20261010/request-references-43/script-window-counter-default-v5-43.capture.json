@@ -1,0 +1,25 @@
+{
+  "name": "script-window-counter-default-v5-43",
+  "version": 5,
+  "requested": null,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\script-window-counter-default-v5-43.pine",
+  "source_sha256": "5a450764e1f9c4054337efcfeb1cef2456f42fd0be4bf53ed74e79bfe6898522",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    2,
+    0,
+    1
+  ],
+  "native_row": "242 row script-window-counter-default-v5-43 (2) Plot 1.00 Plot 1.00 Plot 2.00 Plot 0.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d293692023d94458577fcd4de97a1efc86c371faa15fcdd1cf0c0d09956e77eb",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/script-window-counter-default-v5-43.native.ax.txt",
+  "accessibility_sha256": "0e0af2266d8c395485a58b1fd1f779829929ffff59896357be784f1505591973",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/script-window-counter-default-v5-43.native.png",
+  "screenshot_sha256": "dedd0030fb8b9bb4af5c9457a5511b067a420657a4b03f2884f66a4eed2fc23c",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,7 @@
+//@version=6
+indicator("missing-string-dynamic-guard-v6-37",dynamic_requests=false,precision=0)
+string tf=na
+if close>open
+    tf:="60"
+v=request.security(syminfo.tickerid,tf,close)
+plot(v)

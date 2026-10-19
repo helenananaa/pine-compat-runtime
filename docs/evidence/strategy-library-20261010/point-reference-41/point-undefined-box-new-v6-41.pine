@@ -1,0 +1,5 @@
+//@version=6
+indicator("point-undefined-box-new-v6-41")
+chart.point p=na
+b=box.new(p,p)
+plot(1)

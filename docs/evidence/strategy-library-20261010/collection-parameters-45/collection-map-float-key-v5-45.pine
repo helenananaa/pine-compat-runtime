@@ -1,0 +1,5 @@
+//@version=5
+indicator("collection-map-float-key-v5-45")
+f(map<float,float> v)=>v.size()
+values=map.new<int,float>()
+plot(f(values))

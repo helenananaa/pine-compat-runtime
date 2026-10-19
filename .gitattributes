@@ -18,3 +18,13 @@
 
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# Native captures from batch 27 onward include byte-level SHA256 receipts.
+# Preserve their original line endings and accessibility whitespace on checkout.
+docs/evidence/strategy-library-20261010/*-2[7-9].* -text -whitespace
+docs/evidence/strategy-library-20261010/*-[34][0-9].* -text -whitespace
+docs/evidence/strategy-library-20261010/*-[34][0-9]/** -text -whitespace
+docs/evidence/strategy-library-20261010/function-body-* -text -whitespace
+
+# This derived stress input deliberately retains the original source offsets.
+tests/fixtures/libraries/import_udt_array_return_checked_bodies_46.pine -whitespace

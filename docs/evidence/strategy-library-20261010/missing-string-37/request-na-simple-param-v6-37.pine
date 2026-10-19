@@ -1,0 +1,5 @@
+//@version=6
+indicator("request-na-simple-param-v6-37",precision=0)
+string missing=na
+f(simple string x)=>str.length(x)
+plot(na(f(missing))?1:0)

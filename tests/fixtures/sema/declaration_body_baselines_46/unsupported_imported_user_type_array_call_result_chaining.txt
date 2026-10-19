@@ -1,0 +1,192 @@
+`array.concat` argument `id2` expects UDT array `lib.First`, got `lib.Second`
+`array.includes` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.includes` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.includes` argument `value` expects integer-compatible, got const string
+`array.includes` expects at most 2 argument(s), got 3
+`array.indexof` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.indexof` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.indexof` argument `value` expects integer-compatible, got const string
+`array.indexof` expects at most 2 argument(s), got 3
+`array.lastindexof` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.lastindexof` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.lastindexof` argument `value` expects integer-compatible, got const string
+`array.lastindexof` expects at most 2 argument(s), got 3
+`array.binary_search` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.binary_search` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.binary_search` argument `id` expects numeric array, got simple array<string>
+`array.binary_search` expects at most 2 argument(s), got 3
+`array.binary_search_leftmost` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.binary_search_leftmost` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.binary_search_leftmost` argument `id` expects numeric array, got simple array<string>
+`array.binary_search_leftmost` expects at most 2 argument(s), got 3
+`array.binary_search_rightmost` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.binary_search_rightmost` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.binary_search_rightmost` argument `id` expects numeric array, got simple array<string>
+`array.binary_search_rightmost` expects at most 2 argument(s), got 3
+`array.abs` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.abs` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.abs` argument `id` expects numeric array, got simple array<string>
+`array.abs` expects at most 1 argument(s), got 2
+`array.min` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.min` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.min` argument `id` expects numeric array, got simple array<string>
+`array.min` argument `nth` expects integer-compatible, got const float
+`array.min` expects at most 2 argument(s), got 3
+`array.max` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.max` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.max` argument `id` expects numeric array, got simple array<string>
+`array.max` argument `nth` expects integer-compatible, got const float
+`array.max` expects at most 2 argument(s), got 3
+`array.sum` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.sum` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.sum` argument `id` expects numeric array, got simple array<string>
+`array.sum` expects at most 1 argument(s), got 2
+`array.avg` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.avg` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.avg` argument `id` expects numeric array, got simple array<string>
+`array.avg` expects at most 1 argument(s), got 2
+`array.range` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.range` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.range` argument `id` expects numeric array, got simple array<string>
+`array.range` expects at most 1 argument(s), got 2
+`array.median` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.median` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.median` argument `id` expects numeric array, got simple array<string>
+`array.median` expects at most 1 argument(s), got 2
+`array.mode` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.mode` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.mode` argument `id` expects numeric array, got simple array<string>
+`array.mode` expects at most 1 argument(s), got 2
+`array.percentile_nearest_rank` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.percentile_nearest_rank` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.percentile_nearest_rank` argument `id` expects numeric array, got simple array<string>
+`array.percentile_nearest_rank` expects at least 2 argument(s), got 1
+`array.percentile_nearest_rank` argument `percentage` expects series/simple numeric, got const string
+`array.percentile_nearest_rank` expects at most 2 argument(s), got 3
+`array.percentile_linear_interpolation` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.percentile_linear_interpolation` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.percentile_linear_interpolation` argument `id` expects numeric array, got simple array<string>
+`array.percentile_linear_interpolation` expects at least 2 argument(s), got 1
+`array.percentile_linear_interpolation` argument `percentage` expects series/simple numeric, got const string
+`array.percentile_linear_interpolation` expects at most 2 argument(s), got 3
+`array.percentrank` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.percentrank` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.percentrank` argument `id` expects numeric array, got simple array<string>
+`array.percentrank` expects at least 2 argument(s), got 1
+`array.percentrank` argument `index` expects simple integer-compatible, got const string
+`array.percentrank` argument `index` expects simple integer-compatible, got series int
+`array.percentrank` expects at most 2 argument(s), got 3
+`array.covariance` argument `id1` expects numeric array, got simple array<UDT>
+`array.covariance` argument `id2` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.covariance` argument `id1` expects numeric array, got series array<UDT>
+`array.covariance` argument `id2` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.covariance` argument `id1` expects numeric array, got simple array<string>
+`array.covariance` argument `id2` expects numeric array, got simple array<string>
+`array.covariance` expects at least 2 argument(s), got 1
+`array.covariance` argument `biased` expects bool-compatible, got series float
+`array.covariance` expects at most 3 argument(s), got 4
+`array.standardize` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.standardize` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.standardize` argument `id` expects numeric array, got simple array<string>
+`array.standardize` expects at most 1 argument(s), got 2
+`array.variance` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.variance` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.variance` argument `id` expects numeric array, got simple array<string>
+`array.variance` argument `biased` expects bool-compatible, got series float
+`array.variance` expects at most 2 argument(s), got 3
+`array.stdev` argument `id` expects numeric array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.stdev` argument `id` expects numeric array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.stdev` argument `id` expects numeric array, got simple array<string>
+`array.stdev` argument `biased` expects bool-compatible, got series float
+`array.stdev` expects at most 2 argument(s), got 3
+`array.sort_indices` argument `id` expects numeric/string array, got simple array<bool>
+`array.sort_indices` argument `order` expects const string, got series float
+`array.sort_indices` expects at most 2 argument(s), got 3
+`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`
+`array.sort_indices` argument `sort_field` expects const int or string, got series string
+`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`
+`array.concat` expects at least 2 argument(s), got 1
+`array.concat` argument `id2` expects simple array<int>, got simple array<string>
+`array.concat` argument `id2` expects UDT array `lib.First`, got `lib.Second`
+`array.concat` argument `id2` expects UDT array `lib.First`, got `lib.Second`
+`array.concat` expects at most 2 argument(s), got 3
+`array.every` argument `id` expects numeric/bool array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.every` argument `id` expects numeric/bool array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.every` argument `id` expects numeric/bool array, got simple array<string>
+`array.every` expects at most 1 argument(s), got 2
+`array.some` argument `id` expects numeric/bool array, got simple array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.some` argument `id` expects numeric/bool array, got series array<UDT>
+`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`
+`array.some` argument `id` expects numeric/bool array, got simple array<string>
+`array.some` expects at most 1 argument(s), got 2
+`array.join` argument `separator` expects string-compatible, got series float
+`array.join` expects at most 2 argument(s), got 3
+`array.slice` argument `index_from` expects integer-compatible, got const string
+`array.slice` argument `index_to` expects integer-compatible, got const string
+`array.slice` expects at least 3 argument(s), got 2
+`array.slice` expects at most 3 argument(s), got 4
+`array.clear` expects at most 1 argument(s), got 2
+`array.reverse` expects at most 1 argument(s), got 2
+`array.pop` expects at most 1 argument(s), got 2
+`array.shift` expects at most 1 argument(s), got 2
+`array.remove` argument `index` expects integer-compatible, got const string
+`array.remove` expects at most 2 argument(s), got 3
+`array.push` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.push` expects at most 2 argument(s), got 3
+`array.unshift` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.unshift` expects at most 2 argument(s), got 3
+`array.insert` argument `index` expects integer-compatible, got const string
+`array.insert` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.insert` expects at most 3 argument(s), got 4
+`array.set` argument `index` expects integer-compatible, got const string
+`array.set` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.set` expects at most 3 argument(s), got 4
+`array.fill` argument `value` expects UDT `lib.First`, got `lib.Second`
+`array.fill` argument `index_from` expects simple integer-compatible, got const string
+`array.fill` argument `index_to` expects simple integer-compatible, got const string
+`array.fill` expects at most 4 argument(s), got 5
+`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`
+`array.sort` argument `sort_field` expects const int or string, got series float
+`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`
+`array.sort` argument `id` expects numeric/string array, got simple array<bool>
+`array.sort` argument `order` expects const string, got series float
+`array.sort` expects at most 2 argument(s), got 3

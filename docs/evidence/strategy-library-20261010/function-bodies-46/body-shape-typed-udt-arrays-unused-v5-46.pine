@@ -1,0 +1,8 @@
+//@version=5
+indicator("body-shape-typed-udt-arrays-unused-v5-46")
+type A
+    int value
+type B
+    int value
+f(bool flag,array<A> a,array<B> b)=>flag?a:b
+plot(1)

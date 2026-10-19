@@ -1,0 +1,23 @@
+{
+  "name": "collection-map-widen-write-v6-45",
+  "version": 6,
+  "scenario": "map-widen-write",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-map-widen-write-v6-45.pine",
+  "source_sha256": "2073aa7bc3405f7d0a4fd86622b31b89fae88fc34c0ab22c3351923a15e17056",
+  "expected_values": null,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2.5,
+    2.5
+  ],
+  "native_row": "239 row collection-map-widen-write-v6-45 Plot 2.50 Plot 2.50",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "41b592cf6ed4c8f67b2cab0d51e4dfc772bf7bda8834c59ed1ac3893e17089be",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-map-widen-write-v6-45.native.ax.txt",
+  "accessibility_sha256": "88bd99cf75f36943b8c1b97c68cf13a51e0e42dcd6dff22e3a188eb7c17687fc",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-map-widen-write-v6-45.native.png",
+  "screenshot_sha256": "5b94a760945e51ec39bf9e60396988fd93c2827d812f85c03c20649a0cecc805",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

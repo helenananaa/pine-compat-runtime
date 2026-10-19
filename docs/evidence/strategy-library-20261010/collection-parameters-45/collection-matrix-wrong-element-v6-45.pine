@@ -1,0 +1,5 @@
+//@version=6
+indicator("collection-matrix-wrong-element-v6-45")
+f(matrix<float> v)=>v.get(0,0)
+values=matrix.new<int>(1,1,10)
+plot(f(values))

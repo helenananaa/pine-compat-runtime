@@ -152,6 +152,7 @@ fn expected_partial_builtin(name: &str) -> bool {
         || matches!(
             name,
             "request.security"
+                | "request.currency_rate"
                 | "request.security_lower_tf"
                 | "strategy"
                 | "max_bars_back"

@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-constant-reassignment-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-constant-reassignment-v6-37.pine",
+  "source_sha256": "d08d4f7ae7dc5afa39b0ea68ea6ceae523b28b97c335d8ebfa6ab7fc7f33405b",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of \"simple string\" type was used but a \"const string\" is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d08d4f7ae7dc5afa39b0ea68ea6ceae523b28b97c335d8ebfa6ab7fc7f33405b",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-constant-reassignment-v6-37.native.ax.txt",
+  "accessibility_sha256": "cb8246ff482e6f6807d1b17029f2d0aa377950afabc0772569d581ef7438d21c",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-constant-reassignment-v6-37.native.png",
+  "screenshot_sha256": "ae06e9dd69f542eef72936279b6e05be3e6553d30b2c1b7326e9a2531b23650a",
+  "scope": "v6 typed missing-string qualification remains at least simple after constant reassignment",
+  "qualification_scope": "candidate_bounded_control"
+}

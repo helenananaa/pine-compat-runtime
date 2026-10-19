@@ -1,0 +1,27 @@
+{
+  "name": "array-late-history-v6-42",
+  "version": 6,
+  "scenario": "late-history",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-late-history-v6-42.pine",
+  "source_sha256": "c53d72abfdfec94d18e7bd77798c0b2319ab7686a3bfee6c011319e44b4c779a",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    28,
+    28,
+    0,
+    1
+  ],
+  "native_marker_suffix": [
+    1
+  ],
+  "native_row": "241 row array-late-history-v6-42 Plot 28.00 Plot 28.00 Plot 0.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "f0f89a52c72f604c0fdd646597fc824024659839ad48d68b0da575d2ef8a9817",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-late-history-v6-42.native.ax.txt",
+  "accessibility_sha256": "de810e24befe741cc10b343f8e74601b4b5ffaa1d022e48890689d3793cb06b9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-late-history-v6-42.native.png",
+  "screenshot_sha256": "d960057f1b4479e69efb125daa429e4f676a3a8d36eec60662ffa195b2cff6c8",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

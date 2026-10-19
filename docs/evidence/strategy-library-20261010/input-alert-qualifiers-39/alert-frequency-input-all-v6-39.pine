@@ -1,0 +1,5 @@
+//@version=6
+indicator("alert-frequency-input-all-v6-39")
+frequency=input.string(alert.freq_all)
+alert("bounded frequency admission probe",frequency)
+plot(1)

@@ -1,0 +1,21 @@
+{
+  "name": "body-boundary-partial-wrong-key-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-boundary-partial-wrong-key-v5-46.pine",
+  "source_sha256": "e3bf9872adcb5bfd7801789b0f373576d99916cccb6b20f11f5299f25bfefcb5",
+  "kind": "partial-wrong-key",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "278 row body-boundary-partial-wrong-key-v5-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "49b0a52c41ecc1c5c1e3cc9b7e3b30e78ca5897190efbafff471d0280923deb5",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-partial-wrong-key-v5-46.native.ax.txt",
+  "accessibility_sha256": "9fbd10e5b6138050e5ac72bb16371ce043f2be61c0f1efcb094260c7b2d5c2c0",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-partial-wrong-key-v5-46.native.png",
+  "screenshot_sha256": "1cb8318bbd58d3eda4a2455477093717d5f05fc6c3427c002494a7cd9edd962d",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

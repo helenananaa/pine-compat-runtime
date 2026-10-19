@@ -1,17 +1,17 @@
 //@version=6
 indicator("Supported str promoted string return qualifier")
 
-text = input.string("ABCDE", "Text")
+note = input.string("ABCDE", "Text")
 begin_pos = input.int(1, "Begin")
 end_pos = input.int(4, "End")
 repeat_count = input.int(2, "Repeat")
 target = input.string("B", "Target")
 replacement = input.string("X", "Replacement")
 
-substring_text = str.substring(text, begin_pos, end_pos)
-repeat_text = str.repeat(text, repeat_count)
-replace_text = str.replace(text, target, replacement)
-replace_all_text = str.replace_all(text, target, replacement)
+substring_text = str.substring(note, begin_pos, end_pos)
+repeat_text = str.repeat(note, repeat_count)
+replace_text = str.replace(note, target, replacement)
+replace_all_text = str.replace_all(note, target, replacement)
 
 substring_length = str.length(substring_text)
 repeat_length = str.length(repeat_text)

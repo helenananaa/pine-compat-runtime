@@ -1,0 +1,4 @@
+//@version=5
+indicator("method-builtin-result-v5-38")
+method twice38(int self)=>self*2
+plot(str.length("ab").twice38())

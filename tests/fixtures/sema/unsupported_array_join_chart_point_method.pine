@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported array join chart point method")
 points = array.new<chart.point>()
-text = points.join()
+note = points.join()
 plot(close)

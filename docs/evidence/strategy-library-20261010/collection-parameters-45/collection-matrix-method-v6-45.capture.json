@@ -1,0 +1,26 @@
+{
+  "name": "collection-matrix-method-v6-45",
+  "version": 6,
+  "scenario": "matrix-method",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-matrix-method-v6-45.pine",
+  "source_sha256": "97e2f7f6c477c89a22247c3c62e72c4995e941a5af04ef8a3b82b56b7a0bb0b9",
+  "expected_values": [
+    15,
+    15
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "239 row collection-matrix-method-v6-45 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1c1f092195fb9171df2c83deb9dfd532015d2c1072ffa6e8db2d2276b74cc48d",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-method-v6-45.native.ax.txt",
+  "accessibility_sha256": "2ec051a5168701833ad273e07c9aab7a8e3b5912d33389c7b6d7d8d2e7f46131",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-method-v6-45.native.png",
+  "screenshot_sha256": "cf9408ae36bab3b337f83f43c44cd5544ff2b36f86d7faea31f1b50c3fbb7245",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

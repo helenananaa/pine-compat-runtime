@@ -972,11 +972,18 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
-            return Ok(PineValue::Na);
-        };
-
-        Ok(PineValue::Int(value.chars().count() as i64))
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::String(value) => PineValue::Int(value.chars().count() as i64),
+            PineValue::Na
+                if self
+                    .program
+                    .language_version
+                    .is_some_and(|version| version >= 5) =>
+            {
+                PineValue::Int(0)
+            }
+            _ => PineValue::Na,
+        })
     }
 
     pub(crate) fn eval_str_case(

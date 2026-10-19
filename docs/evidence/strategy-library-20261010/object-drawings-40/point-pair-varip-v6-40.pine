@@ -1,0 +1,7 @@
+//@version=6
+indicator("point-pair-varip-v6-40")
+type Pair40
+    chart.point firstPoint
+varip array<Pair40> values=array.new<Pair40>()
+values.push(Pair40.new(chart.point.from_index(1,10)))
+plot(values.first().firstPoint.price)

@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-input-metadata-v6-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-input-metadata-v6-34.pine",
+  "source_sha256": "aa0a8f9858fe8804cc092e085669c1590a0b4e815a350ce68a4b1e3368e30d07",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool input metadata v6 probe34 direct default 0 cast default value 1 ternary default value 1 or default value 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "aa0a8f9858fe8804cc092e085669c1590a0b4e815a350ce68a4b1e3368e30d07",
+  "normalized_source_sha256": "aa0a8f9858fe8804cc092e085669c1590a0b4e815a350ce68a4b1e3368e30d07",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-input-metadata-v6-34.native.ax.txt",
+  "accessibility_sha256": "929b169cf15ff711428a99f11e38bb76ac5d452bcee47648597ad6316170214e",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-input-metadata-v6-34.native.png",
+  "screenshot_sha256": "601752778a88812572530cd8e52302a7c562185b421c2cf2537f744228dc8420"
+}

@@ -2,5 +2,5 @@
 indicator("Unsupported str.tostring color matrix")
 
 values = matrix.new<color>(1, 1, color.red)
-text = str.tostring(values)
-plot(str.length(text))
+note = str.tostring(values)
+plot(str.length(note))

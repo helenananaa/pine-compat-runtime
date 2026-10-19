@@ -1,0 +1,4 @@
+//@version=6
+indicator("missing-string-cast-const-decl-v6-37",precision=0)
+const string x=string(na)
+plot(na(x)?1:0)

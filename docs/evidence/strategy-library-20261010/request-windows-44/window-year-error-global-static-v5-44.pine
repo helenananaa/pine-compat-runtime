@@ -1,0 +1,10 @@
+//@version=5
+indicator("window-year-error-global-static-v5-44",dynamic_requests=true)
+if year<2020
+    runtime.error("old chart prefix")
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2)
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(count)

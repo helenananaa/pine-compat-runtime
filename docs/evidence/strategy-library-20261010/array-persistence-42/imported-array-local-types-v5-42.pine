@@ -1,0 +1,58 @@
+//@version=5
+indicator("imported-array-local-types-v5-42")
+type Point
+    float x
+type Wrapper
+    Point nested
+
+varip array<Point> points = array.from(Point.new(close))
+points.push(Point.new(close + 10))
+
+varip Point[] alias = points
+alias.push(Point.new(close + 20))
+
+varip copied = points.copy()
+copied.push(Point.new(close + 30))
+
+varip array<Wrapper> wrappers = array.from(Wrapper.new(Point.new(close + 100)))
+wrappers.push(Wrapper.new(Point.new(close + 110)))
+
+varip Wrapper[] wrapper_alias = wrappers
+wrapper_alias.push(Wrapper.new(Point.new(close + 120)))
+
+varip array<Point> new_points = array.new<Point>(1, Point.new(close + 200))
+new_points.push(Point.new(close + 210))
+
+varip Point[] new_alias = new_points
+new_alias.push(Point.new(close + 220))
+
+varip array<Wrapper> new_wrappers = array.new<Wrapper>(1, Wrapper.new(Point.new(close + 300)))
+new_wrappers.push(Wrapper.new(Point.new(close + 310)))
+
+varip Wrapper[] new_wrapper_alias = new_wrappers
+new_wrapper_alias.push(Wrapper.new(Point.new(close + 320)))
+
+first = points.get(0)
+last = alias.last()
+copy_last = copied.last()
+wrapper_first = wrappers.get(0)
+wrapper_last = wrapper_alias.last()
+new_first = new_points.get(0)
+new_last = new_alias.last()
+new_wrapper_first = new_wrappers.get(0)
+new_wrapper_last = new_wrapper_alias.last()
+
+plot(points.size(), "points_size")
+plot(first.x, "first_x")
+plot(last.x, "last_x")
+plot(copied.size(), "copied_size")
+plot(copy_last.x, "copy_last_x")
+plot(wrappers.size(), "wrapper_points_size")
+plot(wrapper_first.nested.x, "wrapper_first_x")
+plot(wrapper_last.nested.x, "wrapper_last_x")
+plot(new_points.size(), "new_points_size")
+plot(new_first.x, "new_first_x")
+plot(new_last.x, "new_last_x")
+plot(new_wrappers.size(), "new_wrapper_points_size")
+plot(new_wrapper_first.nested.x, "new_wrapper_first_x")
+plot(new_wrapper_last.nested.x, "new_wrapper_last_x")

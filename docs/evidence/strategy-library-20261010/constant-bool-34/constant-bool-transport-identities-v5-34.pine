@@ -1,0 +1,48 @@
+//@version=5
+indicator("Bool transport and identity v5 probe34",precision=0)
+a=if true
+    false
+b=if true
+    false
+t=if true
+    true
+t2=if true
+    true
+alias=a
+choose=bar_index%2==0?a:false
+var bool carry=a
+if bar_index%2==0
+    carry:=a
+else
+    carry:=false
+fp(x)=>
+    if x
+        true
+fq(x)=>
+    localBool=if x
+        true
+    localBool
+fr(x)=>
+    if false
+        true
+direct()=>
+    if false
+        true
+q1=fp(false)
+q2=fp(false)
+plot(a==b?1:0,title="separate equal false payload")
+plot(a==alias?1:0,title="same alias")
+plot(t==t2?1:0,title="separate selected true payload")
+plot((choose?1:0)==(bar_index%2==0?1:0)?1:0,title="dynamic choice identity condition")
+plot(choose[0]?1:0,title="dynamic choice zero history")
+plot((carry?1:0)==(bar_index%2==0?1:0)?1:0,title="mutable carry identity condition")
+plot(carry[0]?1:0,title="mutable carry zero history")
+plot(fp(true)?1:0,title="parameter true condition")
+plot(fp(true)==true?1:0,title="parameter true equality")
+plot(q1?1:0,title="parameter false condition")
+plot(q1==q2?1:0,title="parameter false distinct calls")
+plot(q1==q1?1:0,title="parameter false self")
+plot(fq(false)?1:0,title="local parameter false return")
+plot(fr(false)?1:0,title="unused parameter literal false")
+plot(direct()?1:0,title="no parameter literal false")
+plot(bar_index%2,title="bar parity")

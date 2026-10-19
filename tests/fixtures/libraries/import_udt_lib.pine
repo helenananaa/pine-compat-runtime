@@ -56,7 +56,7 @@ export passExportedLengthSwitchLoop(bool flag, int length) =>
             while false
                 length
 export maxBarsLength() => 20
-export passExportedTimeframe(string tf) =>
+export passExportedTimeframe(simple string tf) =>
     local = tf
     local
 export sameOffset(Offset offset) => offset
@@ -92,17 +92,17 @@ method nestedSource(Wrapper w) => w.nestedShift(1)
 method otherNestedShift(Point p, Wrapper other, float delta) => other.nested.x + delta
 method otherNestedSource(Point p, Wrapper other) => p.otherNestedShift(other, 1)
 method otherNestedSourceNamed(Point p, Wrapper other, float delta) => p.otherNestedShift(delta=delta, other=other)
-method passLength(Point p, int length) => length
-method passLengthBlock(Point p, int length) =>
+method passLength(Point p, simple int length) => length
+method passLengthBlock(Point p, simple int length) =>
     local = length
     local
-method passLengthFor(Point p, int length) =>
+method passLengthFor(Point p, simple int length) =>
     for i = 0 to 0
         length
-method passTimeframe(Point p, string tf) =>
+method passTimeframe(Point p, simple string tf) =>
     local = tf
     local
-method passTimeframeFor(Point p, string tf) =>
+method passTimeframeFor(Point p, simple string tf) =>
     for i = 0 to 0
         tf
 method same(Point p) => p

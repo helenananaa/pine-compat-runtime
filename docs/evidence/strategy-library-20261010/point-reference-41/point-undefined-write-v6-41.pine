@@ -1,0 +1,5 @@
+//@version=6
+indicator("point-undefined-write-v6-41")
+chart.point p=na
+p.price:=10
+plot(1)

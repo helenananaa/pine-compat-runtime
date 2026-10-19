@@ -336,8 +336,18 @@ fn parse_request_environment(
     })?;
     let mut streams = Vec::with_capacity(dict.len());
     let mut calendars = None;
+    let mut currency_rates = None;
     for (key, value) in dict {
         let key: String = key.extract()?;
+        if key == "$currencyRates" {
+            let json = PyModule::import(value.py(), "json")?;
+            let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
+            currency_rates = Some(
+                pine_runtime::currency_rates_from_json(&raw)
+                    .map_err(|error| PyValueError::new_err(error.to_string()))?,
+            );
+            continue;
+        }
         if key == "$barCalendars" {
             let json = PyModule::import(value.py(), "json")?;
             let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
@@ -357,8 +367,12 @@ fn parse_request_environment(
     let provider = InMemoryRequestDataProvider::from_streams(streams)
         .map_err(|err| PyValueError::new_err(err.to_string()))?;
     let environment = RequestEnvironment::new(chart, std::sync::Arc::new(provider));
-    Ok(match calendars {
+    let environment = match calendars {
         Some(calendars) => environment.with_bar_calendars(std::sync::Arc::new(calendars)),
+        None => environment,
+    };
+    Ok(match currency_rates {
+        Some(rates) => environment.with_currency_rates(std::sync::Arc::new(rates)),
         None => environment,
     })
 }

@@ -1,0 +1,21 @@
+{
+  "name": "method-tuple-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-tuple-v5-38.pine",
+  "source_sha256": "e350c6cdd2c2ad9bda84f2929028ddeb5445b421fccf1d3c656b91b6fb6e1ed5",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2,
+    3
+  ],
+  "native_row": "319 row method-tuple-v5-38 Plot 2.00 Plot 3.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "ba8e757412ed6ef6f6ba98712499acc7ab1014c2653fe73e8d0f38b686e2ce5b",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-tuple-v5-38.native.ax.txt",
+  "accessibility_sha256": "8931607d05fdb36f169db14031f87e2f6d39c4414df67bced0247c7c4a17f711",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-tuple-v5-38.native.png",
+  "screenshot_sha256": "053f8093f1ae5b2d4a1eba735f54f8d35795ee8c60e626a05aebea3045800ed4",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "07dbafacd2436e7e15d8dbb791d5dc8823b8b0e4ea101fb73e58c6c968fd3821"
+}

@@ -1,0 +1,4 @@
+//@version=6
+indicator("body-boundary-untyped-receiver-v6-46")
+f(x)=>x.get(0)
+plot(1)

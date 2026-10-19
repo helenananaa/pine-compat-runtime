@@ -1,0 +1,21 @@
+{
+  "name": "body-contrast-valid-unused-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-contrast-valid-unused-v6-46.pine",
+  "source_sha256": "125eeafed334c79adff35fb27784267e2c9eb6a6e36438289919936038fcfaef",
+  "kind": "valid-unused",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "239 row body-contrast-valid-unused-v6-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "221d99ae4e0a6fbc31de82015164f4a184ed50589c5948aafe841004f7511b10",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-valid-unused-v6-46.native.ax.txt",
+  "accessibility_sha256": "873409609d0fd7d5f22aabbab68b770dc849aaf47468960df1cc24210b65ba80",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-valid-unused-v6-46.native.png",
+  "screenshot_sha256": "f16632f96375dc0051465260aa717e94b52f651745db296b4661517f9728a170",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

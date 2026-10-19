@@ -1,0 +1,486 @@
+{
+  "records": [
+    {
+      "name": "imported-array-local-types-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v5-42.pine",
+      "source_sha256": "814b4d1847a5f1ef8b0763c1fadd9e0bb292341175a58745b4e86921556b8b23",
+      "normalization": "Replace unavailable test import with its exact Point/Wrapper declarations and remove lib qualification; all executable expressions unchanged.",
+      "parent_source": "tests/fixtures/runtime/import_udt_array_varip.pine",
+      "parent_sha256": "9f31b90aa7bbf745d25db2d03b9b8ff55069041e3ca905660089ff35ef5a15db",
+      "plot_titles": [
+        "points_size",
+        "first_x",
+        "last_x",
+        "copied_size",
+        "copy_last_x",
+        "wrapper_points_size",
+        "wrapper_first_x",
+        "wrapper_last_x",
+        "new_points_size",
+        "new_first_x",
+        "new_last_x",
+        "new_wrapper_points_size",
+        "new_wrapper_first_x",
+        "new_wrapper_last_x"
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3392,
+        4285.08,
+        81750.41,
+        3393,
+        81760.41,
+        3392,
+        4385.08,
+        81850.41,
+        3392,
+        4485.08,
+        81950.41,
+        3392,
+        4585.08,
+        82050.41
+      ],
+      "native_relations": [
+        [
+          "offset",
+          3,
+          0,
+          1
+        ],
+        [
+          "eq",
+          5,
+          0
+        ],
+        [
+          "eq",
+          8,
+          0
+        ],
+        [
+          "eq",
+          11,
+          0
+        ]
+      ],
+      "native_row": "241 row imported-array-local-types-v5-42 points_size 3,392.00 first_x 4,285.08 last_x 81,750.41 copied_size 3,393.00 copy_last_x 81,760.41 wrapper_points_size 3,392.00 wrapper_first_x 4,385.08 wrapper_last_x 81,850.41 new_points_size 3,392.00 new_first_x 4,485.08 new_last_x 81,950.41 new_wrapper_points_size 3,392.00 new_wrapper_first_x 4,585.08 new_wrapper_last_x 82,050.41",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "85c44a49097051b9749ead9c8706da6db7a5d1ee83d135d8d428784f8a0a470c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v5-42.native.ax.txt",
+      "accessibility_sha256": "70fe4b0e9dcbe21b94c9073f91fc7b523a63f22cf02064daf464b260f131e0f8",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v5-42.native.png",
+      "screenshot_sha256": "a907f7e8527979bb25786ca805b6cd330358275e71828d9c4e88ffac542fc6a6",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v5-42.capture.json",
+      "raw_capture_sha256": "5adfcdcaa05b47a7c875f7d8e5082ffacf7619d4207637621f710d829d4ec45d",
+      "fixture_scope": "Unchanged original fixture, or explicit exact-library-type normalization described by normalization; executable fixture sources in the repository remain unchanged."
+    },
+    {
+      "name": "imported-array-local-types-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v6-42.pine",
+      "source_sha256": "d6c3066064b226fdfbddcef78fabe1c2d1df097f666e73451c8cacb396e2ee36",
+      "normalization": "Replace unavailable test import with its exact Point/Wrapper declarations and remove lib qualification; all executable expressions unchanged.",
+      "parent_source": "tests/fixtures/runtime/import_udt_array_varip.pine",
+      "parent_sha256": "9f31b90aa7bbf745d25db2d03b9b8ff55069041e3ca905660089ff35ef5a15db",
+      "plot_titles": [
+        "points_size",
+        "first_x",
+        "last_x",
+        "copied_size",
+        "copy_last_x",
+        "wrapper_points_size",
+        "wrapper_first_x",
+        "wrapper_last_x",
+        "new_points_size",
+        "new_first_x",
+        "new_last_x",
+        "new_wrapper_points_size",
+        "new_wrapper_first_x",
+        "new_wrapper_last_x"
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3379,
+        4285.08,
+        81750.41,
+        3380,
+        81760.41,
+        3379,
+        4385.08,
+        81850.41,
+        3379,
+        4485.08,
+        81950.41,
+        3379,
+        4585.08,
+        82050.41
+      ],
+      "native_relations": [
+        [
+          "offset",
+          3,
+          0,
+          1
+        ],
+        [
+          "eq",
+          5,
+          0
+        ],
+        [
+          "eq",
+          8,
+          0
+        ],
+        [
+          "eq",
+          11,
+          0
+        ]
+      ],
+      "native_row": "241 row imported-array-local-types-v6-42 points_size 3,379.00 first_x 4,285.08 last_x 81,750.41 copied_size 3,380.00 copy_last_x 81,760.41 wrapper_points_size 3,379.00 wrapper_first_x 4,385.08 wrapper_last_x 81,850.41 new_points_size 3,379.00 new_first_x 4,485.08 new_last_x 81,950.41 new_wrapper_points_size 3,379.00 new_wrapper_first_x 4,585.08 new_wrapper_last_x 82,050.41",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1feb735519322b93994af763102b17f5815dc986213df2dbea9e63f464cfcabe",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v6-42.native.ax.txt",
+      "accessibility_sha256": "2e207b6531100d928dd47080e3e27a91b527bb439a6eefff49f774f707ba2876",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v6-42.native.png",
+      "screenshot_sha256": "22231c67f20bee6764bf2cb7cd5639d7de30e843baf43116cf5ea5ea06ad3c78",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/imported-array-local-types-v6-42.capture.json",
+      "raw_capture_sha256": "09a4f1dc5cf8610776a7584c82d55a5fecb24a536f278441f74c5a68c4e4f5a2",
+      "fixture_scope": "Unchanged original fixture, or explicit exact-library-type normalization described by normalization; executable fixture sources in the repository remain unchanged."
+    },
+    {
+      "name": "original-user_type_array_varip-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v5-42.pine",
+      "source_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+      "parent_fixture": "tests\\fixtures\\runtime\\user_type_array_varip.pine",
+      "parent_fixture_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+      "transforms": "Unchanged original fixture bytes.",
+      "plot_titles": [
+        "points_size",
+        "first_x",
+        "last_x",
+        "copied_size",
+        "copy_last_x",
+        "wrapper_points_size",
+        "wrapper_first_x",
+        "wrapper_last_x",
+        "new_wrapper_points_size",
+        "new_wrapper_first_x",
+        "new_wrapper_last_x"
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3410,
+        4285.08,
+        81732.54,
+        3411,
+        81742.54,
+        3411,
+        4385.08,
+        81842.54,
+        3411,
+        4485.08,
+        81942.54
+      ],
+      "native_relations": [
+        [
+          "offset",
+          3,
+          0,
+          1
+        ],
+        [
+          "eq",
+          5,
+          3
+        ],
+        [
+          "eq",
+          8,
+          3
+        ]
+      ],
+      "native_row": "241 row User type array varip points_size 3,410.00 first_x 4,285.08 last_x 81,732.54 copied_size 3,411.00 copy_last_x 81,742.54 wrapper_points_size 3,411.00 wrapper_first_x 4,385.08 wrapper_last_x 81,842.54 new_wrapper_points_size 3,411.00 new_wrapper_first_x 4,485.08 new_wrapper_last_x 81,942.54",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v5-42.native.ax.txt",
+      "accessibility_sha256": "d8ec8f247c310015c31d0215ebec159b4865168542a7a9488fe31a9dd89c1272",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v5-42.native.png",
+      "screenshot_sha256": "613be0f93b93547c71c14b09cd22c3819477615fe6ad1b2761d0eb3cb7038432",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v5-42.capture.json",
+      "raw_capture_sha256": "bf42d4ba06475c7c523d4c3fe307770d469825916ccfac67dfd3413858bdcbeb",
+      "fixture_scope": "Unchanged original fixture, or explicit exact-library-type normalization described by normalization; executable fixture sources in the repository remain unchanged."
+    },
+    {
+      "name": "original-user_type_array_varip-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v6-42.pine",
+      "source_sha256": "4a47a84a1dbdd62c9265ac1e0b451d0acfdbcdf8ccfe77df8e2dd17d435d96b5",
+      "parent_fixture": "tests\\fixtures\\runtime\\user_type_array_varip.pine",
+      "parent_fixture_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+      "transforms": "Version selection only; original fixture unchanged.",
+      "plot_titles": [
+        "points_size",
+        "first_x",
+        "last_x",
+        "copied_size",
+        "copy_last_x",
+        "wrapper_points_size",
+        "wrapper_first_x",
+        "wrapper_last_x",
+        "new_wrapper_points_size",
+        "new_wrapper_first_x",
+        "new_wrapper_last_x"
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3372,
+        4285.08,
+        81720.42,
+        3373,
+        81730.42,
+        3373,
+        4385.08,
+        81830.42,
+        3373,
+        4485.08,
+        81930.42
+      ],
+      "native_relations": [
+        [
+          "offset",
+          3,
+          0,
+          1
+        ],
+        [
+          "eq",
+          5,
+          3
+        ],
+        [
+          "eq",
+          8,
+          3
+        ]
+      ],
+      "native_row": "241 row User type array varip points_size 3,372.00 first_x 4,285.08 last_x 81,720.42 copied_size 3,373.00 copy_last_x 81,730.42 wrapper_points_size 3,373.00 wrapper_first_x 4,385.08 wrapper_last_x 81,830.42 new_wrapper_points_size 3,373.00 new_wrapper_first_x 4,485.08 new_wrapper_last_x 81,930.42",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "4a47a84a1dbdd62c9265ac1e0b451d0acfdbcdf8ccfe77df8e2dd17d435d96b5",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v6-42.native.ax.txt",
+      "accessibility_sha256": "ddb7b3e1c6d0f78b1aa4892ebe9f7b6cf13305f0f003636200362b7be05456c9",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v6-42.native.png",
+      "screenshot_sha256": "841ef7e9e8e7fa44c382b4a22fd5d0975b62465cb47467de685fd29cb5afc7a6",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-user_type_array_varip-v6-42.capture.json",
+      "raw_capture_sha256": "00ae729307e078b3a08fe6cdc1e7e9808e4a3d01d5724aa95594d08d8babb9ff",
+      "fixture_scope": "Unchanged original fixture, or explicit exact-library-type normalization described by normalization; executable fixture sources in the repository remain unchanged."
+    },
+    {
+      "name": "original-varip_array-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v5-42.pine",
+      "source_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+      "parent_fixture": "tests\\fixtures\\runtime\\varip_array.pine",
+      "parent_fixture_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+      "transforms": "Unchanged original fixture bytes.",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3375,
+        3377,
+        3375,
+        3375,
+        3375,
+        3376,
+        3376,
+        3377,
+        3375
+      ],
+      "native_relations": [
+        [
+          "offset",
+          1,
+          0,
+          2
+        ],
+        [
+          "eq",
+          2,
+          0
+        ],
+        [
+          "eq",
+          3,
+          0
+        ],
+        [
+          "eq",
+          4,
+          0
+        ],
+        [
+          "offset",
+          5,
+          0,
+          1
+        ],
+        [
+          "eq",
+          6,
+          5
+        ],
+        [
+          "offset",
+          7,
+          5,
+          1
+        ]
+      ],
+      "native_row": "241 row varip array Plot 3,375.00 Plot 3,377.00 Plot 3,375.00 Plot 3,375.00 Plot 3,375.00 Plot 3,376.00 Plot 3,376.00 Plot 3,377.00 Plot 3,375.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v5-42.native.ax.txt",
+      "accessibility_sha256": "7951e7f6c298d38548b256c6b6f852178a523c7afb17619d06e668de327ee066",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v5-42.native.png",
+      "screenshot_sha256": "295f917c33e3eb604340e80d964c6f13d6f557fbb6cdcf8db84979d0d60ef613",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v5-42.capture.json",
+      "raw_capture_sha256": "ab4bafb725d12e40765d51ba5b8aae2d8bb511ec4666442f60406df360169d20",
+      "fixture_scope": "Unchanged original fixture, or explicit exact-library-type normalization described by normalization; executable fixture sources in the repository remain unchanged."
+    },
+    {
+      "name": "original-varip_array-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v6-42.pine",
+      "source_sha256": "d87b41b0e29cf4d972ce23c6947d4893b8a09d25f62c11c59ce5a76029982565",
+      "parent_fixture": "tests\\fixtures\\runtime\\varip_array.pine",
+      "parent_fixture_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+      "transforms": "Version selection only; original fixture unchanged.",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3412,
+        3414,
+        3412,
+        3412,
+        3412,
+        3413,
+        3413,
+        3414,
+        3412
+      ],
+      "native_relations": [
+        [
+          "offset",
+          1,
+          0,
+          2
+        ],
+        [
+          "eq",
+          2,
+          0
+        ],
+        [
+          "eq",
+          3,
+          0
+        ],
+        [
+          "eq",
+          4,
+          0
+        ],
+        [
+          "offset",
+          5,
+          0,
+          1
+        ],
+        [
+          "eq",
+          6,
+          5
+        ],
+        [
+          "offset",
+          7,
+          5,
+          1
+        ]
+      ],
+      "native_row": "241 row varip array Plot 3,412.00 Plot 3,414.00 Plot 3,412.00 Plot 3,412.00 Plot 3,412.00 Plot 3,413.00 Plot 3,413.00 Plot 3,414.00 Plot 3,412.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "d87b41b0e29cf4d972ce23c6947d4893b8a09d25f62c11c59ce5a76029982565",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v6-42.native.ax.txt",
+      "accessibility_sha256": "84cefb87e19f6c7f6c9351cd122e76a72c17023f85ef083d946af9aa99c6de10",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v6-42.native.png",
+      "screenshot_sha256": "d8fd8591e6912ee419fc3ce3135a3c1d69b4c6f8cba2c2d9f5ca91a73940408f",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/original-varip_array-v6-42.capture.json",
+      "raw_capture_sha256": "3c989110dacf86fed575d4983a085ba7bbf80f5076acf36914866f4e4eb8a42f",
+      "fixture_scope": "Unchanged original fixture, or explicit exact-library-type normalization described by normalization; executable fixture sources in the repository remain unchanged."
+    }
+  ],
+  "migrations": [
+    {
+      "path": "tests/snapshots/runtime_user_type_array_varip.json",
+      "source_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+      "before_sha256": "d3b1175b403f2db5764541ed5cdd993c00e21dde7b6e57f89a806efea37bfbc7",
+      "after_sha256": "3cc6f0f3e8eb920ff31c76e35ec14327fec7175e7123794402b2e82f1084c6b7",
+      "changed_plot_indices": [
+        0,
+        5,
+        8
+      ],
+      "reason": "Whole unchanged fixture has Native-backed persistent array buffer relations; element identities and all other outputs unchanged."
+    },
+    {
+      "path": "tests/snapshots/runtime_varip_array.json",
+      "source_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+      "before_sha256": "670923eadf4c5ab6d3b9be061d2f6e4041334a16cedfa314098a048da2a62cd3",
+      "after_sha256": "97aa9c01117a2ef5175f08cbd899174924e242b0a0b9e1f52db9629deeb7e46f",
+      "changed_plot_indices": [
+        5,
+        6
+      ],
+      "reason": "Whole unchanged fixture has Native-backed persistent array buffer relations; element identities and all other outputs unchanged."
+    },
+    {
+      "path": "crates/pine-runtime/src/tests/arrays.rs",
+      "before_sha256": "00a52d0312ee90a06f146bc9dd6dd081a4df5c3afc7bfb29ca3ba3ad75f506c2",
+      "after_sha256": "68d24bb2b80a6e069433e42bceb107c5ec0b229ecf3a2c2a9d63242ac3464f97",
+      "reason": "Replace three obsolete shared-buffer count assertions with whole-fixture Native relations."
+    },
+    {
+      "path": "tests/snapshots/runtime_import_udt_array_varip.json",
+      "source_sha256": "9f31b90aa7bbf745d25db2d03b9b8ff55069041e3ca905660089ff35ef5a15db",
+      "before_sha256": "534bff1fd658cc4c7cfdbcfba6fe06a6bdef94e079758ac28652289c0b9baa44",
+      "after_sha256": "640fe9a89ad768fcb670715ff994de0f5e11b163ad8522e51c5e93eda9d6f73d",
+      "changed_plot_indices": [
+        0,
+        5,
+        8,
+        11
+      ],
+      "reason": "Native-tested equivalent source uses the exact Point/Wrapper declarations from the unavailable local test library; executable expressions unchanged. Original imported Pine fixture and library untouched."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+//@version=5
+indicator("method-udt-simple-param-v5-38")
+type Point38
+    float x
+method shift38(Point38 self,simple int n)=>self.x+n
+p=Point38.new(5.0)
+plot(p.shift38(2))

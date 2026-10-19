@@ -1,0 +1,35 @@
+{
+  "name": "array-transient-persistent-source-view-v5-42",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-transient-persistent-source-view-v5-42.pine",
+  "source_sha256": "945b71817c787b374d1abbf80655ac2eb320a9c07d09c3db9f68139f81dc6645",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    0,
+    0,
+    3349
+  ],
+  "native_relations": [
+    [
+      "eq",
+      0,
+      3
+    ],
+    [
+      "eq",
+      1,
+      2
+    ]
+  ],
+  "native_row": "241 row array-transient-persistent-source-view-v5-42 Plot 3,349.00 Plot 0.00 Plot 0.00 Plot 3,349.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d17582ef5c4c4e8c7d4990d54dd4c44a207b0ac1b5a43996656515deef8505b7",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-transient-persistent-source-view-v5-42.native.ax.txt",
+  "accessibility_sha256": "b85728303951b34007418ce8c9f8198303beff50912a1d84b6985406410941a4",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-transient-persistent-source-view-v5-42.native.png",
+  "screenshot_sha256": "0aeb16f6c9814a867165ca441204362ad0f30f33488fb8fc649620895775b90d",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

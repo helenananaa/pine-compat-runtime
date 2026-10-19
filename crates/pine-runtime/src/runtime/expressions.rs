@@ -22,7 +22,8 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(series_id) = expr.series_id
             && self.activate_bar_aligned_series(series_id)
         {
-            self.current_series.insert(series_id, value.clone());
+            self.current_series
+                .insert(series_id, value.clone().materialize_boolean());
         }
 
         Ok(value)
@@ -50,22 +51,52 @@ impl<'a> HistoricalRuntime<'a> {
                 eval_unary(*op, value)
             }
             HirExprKind::Binary { op, left, right } => {
+                let string_equality = self
+                    .program
+                    .language_version
+                    .is_some_and(|version| version >= 5)
+                    && matches!(op, HirBinaryOp::Eq | HirBinaryOp::NotEq)
+                    && string_comparison_context(left.pine_type.kind, right.pine_type.kind);
+                let materialize_booleans = left.pine_type.kind == pine_ir::ValueKind::Bool
+                    && right.pine_type.kind == pine_ir::ValueKind::Bool
+                    && (left.pine_type.qualifier != pine_ir::Qualifier::Const
+                        || right.pine_type.qualifier != pine_ir::Qualifier::Const);
                 if self.uses_v6_semantics() {
                     match op {
                         HirBinaryOp::And => {
                             let left = self.eval_expr(left)?;
+                            let left = if materialize_booleans {
+                                left.materialize_boolean()
+                            } else {
+                                left
+                            };
                             if matches!(left, PineValue::Bool(false)) {
                                 return Ok(PineValue::Bool(false));
                             }
                             let right = self.eval_expr(right)?;
+                            let right = if materialize_booleans {
+                                right.materialize_boolean()
+                            } else {
+                                right
+                            };
                             return eval_binary_with_semantics(*op, left, right, true);
                         }
                         HirBinaryOp::Or => {
                             let left = self.eval_expr(left)?;
-                            if matches!(left, PineValue::Bool(true)) {
-                                return Ok(PineValue::Bool(true));
+                            let left = if materialize_booleans {
+                                left.materialize_boolean()
+                            } else {
+                                left
+                            };
+                            if left.is_condition_true() {
+                                return Ok(left);
                             }
                             let right = self.eval_expr(right)?;
+                            let right = if materialize_booleans {
+                                right.materialize_boolean()
+                            } else {
+                                right
+                            };
                             return eval_binary_with_semantics(*op, left, right, true);
                         }
                         _ => {}
@@ -73,6 +104,18 @@ impl<'a> HistoricalRuntime<'a> {
                 }
                 let left = self.eval_expr(left)?;
                 let right = self.eval_expr(right)?;
+                let (left, right) = if string_equality {
+                    // Only the comparison consumes missing strings as empty.
+                    // Stored values and na() observations keep their missing identity.
+                    (
+                        string_comparison_value(left),
+                        string_comparison_value(right),
+                    )
+                } else if materialize_booleans {
+                    (left.materialize_boolean(), right.materialize_boolean())
+                } else {
+                    (left, right)
+                };
                 if self.program.language_version == Some(4)
                     && matches!(op, HirBinaryOp::Eq | HirBinaryOp::NotEq)
                     && matches!(
@@ -91,11 +134,20 @@ impl<'a> HistoricalRuntime<'a> {
                 condition,
                 then_expr,
                 else_expr,
-            } => match self.eval_expr(condition)? {
-                PineValue::Bool(true) => self.eval_expr(then_expr)?,
-                PineValue::Bool(false) | PineValue::Na => self.eval_expr(else_expr)?,
-                _ => PineValue::Na,
-            },
+            } => {
+                let value = match self.eval_expr(condition)? {
+                    PineValue::Bool(true) | PineValue::ConstantBool { .. } => {
+                        self.eval_expr(then_expr)?
+                    }
+                    PineValue::Bool(false) | PineValue::Na => self.eval_expr(else_expr)?,
+                    _ => PineValue::Na,
+                };
+                if condition.pine_type.qualifier == pine_ir::Qualifier::Const {
+                    value
+                } else {
+                    value.materialize_boolean()
+                }
+            }
             HirExprKind::Switch { selector, arms } => {
                 self.eval_switch(selector.as_deref(), arms)?
             }
@@ -129,13 +181,13 @@ impl<'a> HistoricalRuntime<'a> {
             HirExprKind::Tuple(items) => PineValue::Tuple(
                 items
                     .iter()
-                    .map(|item| self.eval_expr(item))
+                    .map(|item| self.eval_expr(item).map(PineValue::materialize_boolean))
                     .collect::<Result<_, _>>()?,
             ),
             HirExprKind::UserTypeConstruct { fields, identity } => {
                 let fields = fields
                     .iter()
-                    .map(|field| self.eval_expr(field))
+                    .map(|field| self.eval_expr(field).map(PineValue::materialize_boolean))
                     .collect::<Result<_, _>>()?;
                 self.allocate_object(fields, identity)?
             }
@@ -145,12 +197,21 @@ impl<'a> HistoricalRuntime<'a> {
             } => self.eval_user_type_array_construct(type_name, elements)?,
             HirExprKind::FieldAccess { value, index } => match self.eval_expr(value)? {
                 PineValue::UserType(fields) => fields.get(*index).cloned().unwrap_or(PineValue::Na),
-                PineValue::UserTypeRef(id) => self.object_field(id, *index)?,
+                PineValue::UserTypeRef(id) | PineValue::ChartPointRef(id) => {
+                    self.object_field(id, *index)?
+                }
                 PineValue::ChartPoint(point) => point.field(*index),
                 PineValue::Na if value.pine_type.kind == pine_ir::ValueKind::UserType => {
                     return Err(RuntimeError {
                         message: format!(
                             "E_UDT_NA_FIELD: cannot access field {index} of an undefined (na) user-defined object"
+                        ),
+                    });
+                }
+                PineValue::Na if value.pine_type.kind == pine_ir::ValueKind::ChartPoint => {
+                    return Err(RuntimeError {
+                        message: format!(
+                            "E_CHART_POINT_NA_FIELD: cannot access field {index} of an undefined (na) chart.point"
                         ),
                     });
                 }
@@ -187,7 +248,24 @@ impl<'a> HistoricalRuntime<'a> {
             HirExprKind::History { expr, offset } => self.eval_history(expr, offset)?,
         };
 
-        Ok(value)
+        // In v6 a control structure with no selected/evaluated result has a
+        // false boolean default. Other result types and legacy boolean NA
+        // retain their missing value, including across function boundaries.
+        if self.uses_v6_semantics()
+            && expr.pine_type.kind == pine_ir::ValueKind::Bool
+            && value.is_na()
+            && matches!(
+                expr.kind,
+                HirExprKind::Switch { .. }
+                    | HirExprKind::For { .. }
+                    | HirExprKind::ForIn { .. }
+                    | HirExprKind::While { .. }
+            )
+        {
+            Ok(PineValue::Bool(false))
+        } else {
+            Ok(value)
+        }
     }
 
     fn eval_user_type_array_construct(
@@ -223,19 +301,32 @@ impl<'a> HistoricalRuntime<'a> {
             let matches = match (&selector_value, &arm.condition) {
                 (Some(selector_value), Some(case_expr)) => {
                     let case_value = self.eval_expr(case_expr)?;
+                    let selector_value = selector_value.clone();
+                    let (selector_value, case_value) = if self
+                        .program
+                        .language_version
+                        .is_some_and(|version| version >= 5)
+                        && selector.is_some_and(|expr| {
+                            string_comparison_context(expr.pine_type.kind, case_expr.pine_type.kind)
+                        }) {
+                        (
+                            string_comparison_value(selector_value),
+                            string_comparison_value(case_value),
+                        )
+                    } else {
+                        (selector_value, case_value)
+                    };
                     matches!(
                         eval_binary_with_semantics(
                             HirBinaryOp::Eq,
-                            selector_value.clone(),
+                            selector_value,
                             case_value,
                             self.uses_v6_semantics(),
                         )?,
                         PineValue::Bool(true)
                     )
                 }
-                (None, Some(condition)) => {
-                    matches!(self.eval_expr(condition)?, PineValue::Bool(true))
-                }
+                (None, Some(condition)) => self.eval_expr(condition)?.is_condition_true(),
                 (_, None) => true,
             };
 
@@ -259,6 +350,22 @@ pub(crate) fn eval_literal(literal: &HirLiteral) -> PineValue {
 }
 
 pub(crate) fn eval_unary(op: HirUnaryOp, value: PineValue) -> PineValue {
+    if op == HirUnaryOp::MaterializeBool {
+        return value.materialize_boolean();
+    }
+    if let HirUnaryOp::FunctionBoolReturn { materialize } = op {
+        return if materialize {
+            value.materialize_boolean()
+        } else {
+            value
+        };
+    }
+    if let HirUnaryOp::ConstantBoolIdentity(identity) = op {
+        return match value.materialize_boolean() {
+            PineValue::Bool(value) => PineValue::ConstantBool { value, identity },
+            _ => PineValue::Na,
+        };
+    }
     if value.is_na() {
         return if op == HirUnaryOp::Not {
             PineValue::Bool(true)
@@ -278,8 +385,26 @@ pub(crate) fn eval_unary(op: HirUnaryOp, value: PineValue) -> PineValue {
         },
         HirUnaryOp::Not => match value {
             PineValue::Bool(value) => PineValue::Bool(!value),
+            PineValue::ConstantBool { .. } => PineValue::Bool(false),
             _ => PineValue::Na,
         },
+        HirUnaryOp::ConstantBoolIdentity(_)
+        | HirUnaryOp::MaterializeBool
+        | HirUnaryOp::FunctionBoolReturn { .. } => unreachable!(),
+    }
+}
+
+fn string_comparison_context(left: pine_ir::ValueKind, right: pine_ir::ValueKind) -> bool {
+    use pine_ir::ValueKind::{Na, String};
+    matches!(left, String | Na)
+        && matches!(right, String | Na)
+        && (left == String || right == String)
+}
+
+fn string_comparison_value(value: PineValue) -> PineValue {
+    match value {
+        PineValue::Na => PineValue::String(String::new()),
+        value => value,
     }
 }
 
@@ -342,10 +467,34 @@ pub(crate) fn eval_binary_with_semantics(
 // versions that preserve NA for numeric comparisons. Evaluation eagerness is
 // handled separately by eval_expr (v6 short-circuits, older versions do not).
 fn eval_logical_and(left: PineValue, right: PineValue) -> PineValue {
+    if matches!(left, PineValue::ConstantBool { .. })
+        || matches!(right, PineValue::ConstantBool { .. })
+    {
+        return if left.is_condition_true() {
+            if right.is_na() {
+                PineValue::Bool(false)
+            } else {
+                right
+            }
+        } else {
+            PineValue::Bool(false)
+        };
+    }
     PineValue::Bool(matches!(left, PineValue::Bool(true)) && matches!(right, PineValue::Bool(true)))
 }
 
 fn eval_logical_or(left: PineValue, right: PineValue) -> PineValue {
+    if matches!(left, PineValue::ConstantBool { .. })
+        || matches!(right, PineValue::ConstantBool { .. })
+    {
+        return if left.is_condition_true() {
+            left
+        } else if right.is_na() {
+            PineValue::Bool(false)
+        } else {
+            right
+        };
+    }
     PineValue::Bool(matches!(left, PineValue::Bool(true)) || matches!(right, PineValue::Bool(true)))
 }
 
@@ -429,6 +578,21 @@ fn compare_binary(op: HirBinaryOp, left: PineValue, right: PineValue) -> PineVal
 }
 
 pub(crate) fn values_equal(left: &PineValue, right: &PineValue) -> bool {
+    if let (
+        PineValue::ConstantBool {
+            value: a,
+            identity: a_id,
+            ..
+        },
+        PineValue::ConstantBool {
+            value: b,
+            identity: b_id,
+            ..
+        },
+    ) = (left, right)
+    {
+        return a == b && a_id == b_id;
+    }
     match (left.as_f64(), right.as_f64()) {
         // Array first/last lookup shares the native numeric equality boundary.
         (Some(left), Some(right)) => {

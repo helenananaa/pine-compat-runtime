@@ -1,0 +1,64 @@
+{
+  "name": "original-user_type_array_varip-v5-42",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\original-user_type_array_varip-v5-42.pine",
+  "source_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+  "parent_fixture": "tests\\fixtures\\runtime\\user_type_array_varip.pine",
+  "parent_fixture_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+  "transforms": "Unchanged original fixture bytes.",
+  "plot_titles": [
+    "points_size",
+    "first_x",
+    "last_x",
+    "copied_size",
+    "copy_last_x",
+    "wrapper_points_size",
+    "wrapper_first_x",
+    "wrapper_last_x",
+    "new_wrapper_points_size",
+    "new_wrapper_first_x",
+    "new_wrapper_last_x"
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3410,
+    4285.08,
+    81732.54,
+    3411,
+    81742.54,
+    3411,
+    4385.08,
+    81842.54,
+    3411,
+    4485.08,
+    81942.54
+  ],
+  "native_relations": [
+    [
+      "offset",
+      3,
+      0,
+      1
+    ],
+    [
+      "eq",
+      5,
+      3
+    ],
+    [
+      "eq",
+      8,
+      3
+    ]
+  ],
+  "native_row": "241 row User type array varip points_size 3,410.00 first_x 4,285.08 last_x 81,732.54 copied_size 3,411.00 copy_last_x 81,742.54 wrapper_points_size 3,411.00 wrapper_first_x 4,385.08 wrapper_last_x 81,842.54 new_wrapper_points_size 3,411.00 new_wrapper_first_x 4,485.08 new_wrapper_last_x 81,942.54",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-user_type_array_varip-v5-42.native.ax.txt",
+  "accessibility_sha256": "d8ec8f247c310015c31d0215ebec159b4865168542a7a9488fe31a9dd89c1272",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-user_type_array_varip-v5-42.native.png",
+  "screenshot_sha256": "613be0f93b93547c71c14b09cd22c3819477615fe6ad1b2761d0eb3cb7038432",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

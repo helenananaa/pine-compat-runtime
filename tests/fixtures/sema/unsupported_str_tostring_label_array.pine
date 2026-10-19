@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported str tostring label array")
 values = array.new_label()
-text = str.tostring(values)
+note = str.tostring(values)
 plot(close)

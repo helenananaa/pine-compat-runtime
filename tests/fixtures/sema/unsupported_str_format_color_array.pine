@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported str format color array")
 values = array.new_color()
-text = str.format("Colors {0}", values)
+note = str.format("Colors {0}", values)
 plot(close)

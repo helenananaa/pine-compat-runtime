@@ -1,0 +1,14 @@
+{
+  "name": "parameter-plain-missing-bool-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-missing-bool-v6-35.pine",
+  "source_sha256": "a8755b7617c7d500a853360f8aced575b6d497b9e195d417803d01a021301ab3",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of \"simple na\" type was used but a \"series bool\" is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "a8755b7617c7d500a853360f8aced575b6d497b9e195d417803d01a021301ab3",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-missing-bool-v6-35.native.ax.txt",
+  "accessibility_sha256": "9a9ac9da1203f13b7d298dbc373e6ac644f78d9d58d4fb8c3709ec2a192f18bf",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-missing-bool-v6-35.native.png",
+  "screenshot_sha256": "02fd4e455cd42c4d698d4b6038d1a58593219b622694a5030e5630ba029fa407"
+}

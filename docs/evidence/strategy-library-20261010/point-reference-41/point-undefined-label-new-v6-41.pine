@@ -1,0 +1,5 @@
+//@version=6
+indicator("point-undefined-label-new-v6-41")
+chart.point p=na
+l=label.new(p,"point")
+plot(1)

@@ -1,0 +1,10 @@
+//@version=5
+indicator("request-point-rebound-v5-43")
+p=chart.point.from_index(1,10)
+p:=chart.point.from_index(1,20)
+f(chart.point v)=>
+    v.price+=5
+    v.price
+r=request.security(syminfo.tickerid,timeframe.period,f(p))
+plot(r)
+plot(p.price)

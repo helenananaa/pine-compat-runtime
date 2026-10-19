@@ -1,0 +1,19 @@
+{
+  "name": "unused-map-body-exported-v6-46",
+  "version": 6,
+  "kind": "exported",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\unused-map-body-exported-v6-46.pine",
+  "source_sha256": "0d5caf59bafb255804031f3b0882906409ff9fcf99b84149b295587a8db5bdad",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"map.put\" with argument \"key\"=\"1\". An argument of \"literal int\" type was used but a \"series string\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "77eebf617fb4cfd74eba18334934689ee39ac385e14b5d37f5bc13528ef94c2e",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/unused-map-body-exported-v6-46.native.ax.txt",
+  "accessibility_sha256": "83b4e05068b7e9b72475af0c2e5c87e10a24960fd676f8a852390c7a8f461e1e",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/unused-map-body-exported-v6-46.native.png",
+  "screenshot_sha256": "9147cbc37e65d3c444efd41759934fdbca57773a610c2e70fce69eed4b1a66c5",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

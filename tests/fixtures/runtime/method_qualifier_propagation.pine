@@ -5,7 +5,7 @@ type QualifierTool
     int seed
 
 method inc(QualifierTool tool, int x) => x + 1
-method pass_tf(QualifierTool tool, string tf) =>
+method pass_tf(QualifierTool tool, simple string tf) =>
     local = tf
     local
 method choose_length(QualifierTool tool, bool flag, int x) =>
@@ -15,7 +15,7 @@ method choose_length(QualifierTool tool, bool flag, int x) =>
     else
         local = x + 1
         local
-method loop_tf(QualifierTool tool, string tf) =>
+method loop_tf(QualifierTool tool, simple string tf) =>
     for i = 0 to 0
         local = tf
         local

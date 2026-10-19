@@ -5,6 +5,9 @@ mod blocks;
 mod budget;
 mod builtin_calls;
 mod call_result_methods;
+mod close_all;
+mod collection_parameters;
+mod constant_booleans;
 mod function_returns;
 mod inline_calls;
 mod legacy;
@@ -37,37 +40,6 @@ fn builtin_qualified_series_key(parts: &[String]) -> Option<String> {
                 || name.starts_with("session.")
         });
     (is_named_const || is_stable_builtin_value).then(|| format!("builtin:{name}"))
-}
-
-fn pure_math_call_name(name: &str) -> bool {
-    matches!(
-        name,
-        "math.abs"
-            | "math.max"
-            | "math.min"
-            | "math.avg"
-            | "math.floor"
-            | "math.ceil"
-            | "math.trunc"
-            | "math.sqrt"
-            | "math.cbrt"
-            | "math.log"
-            | "math.log10"
-            | "math.exp"
-            | "math.acos"
-            | "math.asin"
-            | "math.atan"
-            | "math.sign"
-            | "math.todegrees"
-            | "math.toradians"
-            | "math.sin"
-            | "math.cos"
-            | "math.tan"
-            | "math.pow"
-            | "math.hypot"
-            | "math.round"
-            | "math.round_to_mintick"
-    )
 }
 
 fn pure_math_variadic_call_name(name: &str) -> bool {
@@ -390,6 +362,12 @@ impl Analyzer {
                     self.mark_symbol_user_type_array(symbol, type_name);
                 }
                 let lowered_value = self.lower_expr_with_params(value, param_exprs, param_types)?;
+                let lowered_value = if self.materializes_boolean_declaration(declared_type.as_ref())
+                {
+                    self.materialize_lowered_boolean(lowered_value)
+                } else {
+                    lowered_value
+                };
                 let symbol = if *mode == pine_syntax::DeclMode::Normal && declared_type.is_none() {
                     self.specialize_immutable_scalar_decl(symbol, lowered_value.pine_type)
                 } else {
@@ -647,6 +625,13 @@ impl Analyzer {
                     return self.finish_legacy_expr_coercion(expr, value);
                 }
                 self.lower_legacy_value(expr.span)
+                    .or_else(|| {
+                        crate::legacy::strategy_direction_bool(
+                            &parts.join("."),
+                            self.legacy.dialect().version(),
+                        )
+                        .map(|value| HirExprKind::Literal(HirLiteral::Bool(value)))
+                    })
                     .unwrap_or_else(|| HirExprKind::Builtin(parts.join(".")))
             }
             ExprKind::Unary { op, expr } => HirExprKind::Unary {
@@ -946,17 +931,17 @@ impl Analyzer {
                     && self
                         .bound_symbol(receiver_name, callee.span)
                         .or_else(|| self.scope.resolve(receiver_name))
-                        .and_then(|symbol| {
-                            self.symbol_user_types.get(&symbol.id).cloned().or_else(|| {
-                                (symbol.pine_type.kind == ValueKind::Color
-                                    && self.methods.contains_key(&(
-                                        "color".to_owned(),
-                                        method_name.to_owned(),
-                                    )))
-                                .then(|| "color".to_owned())
-                            })
+                        .is_some_and(|symbol| {
+                            self.has_named_user_method(
+                                receiver_name,
+                                callee.span,
+                                param_types
+                                    .get(receiver_name)
+                                    .copied()
+                                    .unwrap_or(symbol.pine_type),
+                                method_name,
+                            )
                         })
-                        .is_some()
                 {
                     let pure_call_series_id = pure_series::pure_user_method_call_series_key(
                         self,
@@ -988,6 +973,11 @@ impl Analyzer {
                     if let Some(series_id) = pure_call_series_id {
                         call.series_id = Some(series_id);
                     }
+                    return self.finish_legacy_expr_coercion(expr, call);
+                }
+                if let Some(call) =
+                    self.lower_plain_user_method(&name, args, param_exprs, param_types)
+                {
                     return self.finish_legacy_expr_coercion(expr, call);
                 }
                 if let Some(lowered) = self.lower_recorded_legacy_call(
@@ -1063,6 +1053,15 @@ impl Analyzer {
                 };
                 let lowered_args =
                     self.lower_builtin_call_args(&name, args, param_exprs, param_types)?;
+                if name == "strategy.close_all" && !args.is_empty() {
+                    return self.lower_close_all_eager_call(
+                        expr,
+                        args,
+                        lowered_args,
+                        param_types,
+                        (call_site_id, pine_type, series_id),
+                    );
+                }
                 if name == "request.security_lower_tf" && pine_type.kind == ValueKind::Tuple {
                     let expression = args
                         .iter()
@@ -1110,14 +1109,20 @@ impl Analyzer {
             }
         };
 
-        self.finish_legacy_expr_coercion(
-            expr,
-            HirExpr {
-                kind,
-                pine_type,
-                series_id,
-            },
-        )
+        let mut lowered = HirExpr {
+            kind,
+            pine_type,
+            series_id,
+        };
+        if let ExprKind::If {
+            condition,
+            else_branch,
+            ..
+        } = &expr.kind
+        {
+            self.preserve_if_boolean_identity(condition, else_branch, &mut lowered);
+        }
+        self.finish_legacy_expr_coercion(expr, lowered)
     }
 
     /// Analysis-time symbol constants may belong to another call of an inlined

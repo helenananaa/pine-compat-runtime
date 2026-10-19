@@ -1134,12 +1134,9 @@ fn request_security_bounded_equal_context_preserves_tuple_shape() {
             timed_bar(120_000, 11.0),
         ])
         .expect("bounded same-context tuple should keep both fields");
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_eq!(result.plots[0].values[1], PineValue::Na);
-    assert_values_close(&result.plots[0].values[2..], &[11.0]);
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(&result.plots[1].values[2..], &[0.0]);
+    // Native batch44: equal-context counts select the chart dataset itself.
+    assert_values_close(&result.plots[0].values, &[11.0]);
+    assert_values_close(&result.plots[1].values, &[0.0]);
 }
 
 #[test]
@@ -1155,10 +1152,8 @@ fn request_security_bounded_equal_context_restarts_expression_state() {
             timed_bar(180_000, 11.0),
         ])
         .expect("bounded same-context state should restart at retained history");
-    assert_eq!(result.plots[0].values[0], PineValue::Na);
-    assert_values_close(&result.plots[0].values[1..], &[7.0, 16.0, 27.0]);
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_values_close(&result.plots[1].values[1..], &[0.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[0].values, &[7.0, 16.0, 27.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 1.0, 2.0]);
 }
 
 #[test]
@@ -1523,10 +1518,8 @@ fn request_security_lower_tf_equal_chart_context_obeys_calc_bars_count() {
             timed_bar(120_000, 11.0),
         ])
         .expect("equal-timeframe request should respect the requested history limit");
-    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0]);
-    assert_eq!(result.plots[1].values[0], PineValue::Na);
-    assert_eq!(result.plots[1].values[1], PineValue::Na);
-    assert_values_close(&result.plots[1].values[2..], &[11.0]);
+    assert_values_close(&result.plots[0].values, &[1.0]);
+    assert_values_close(&result.plots[1].values, &[11.0]);
 }
 
 #[test]

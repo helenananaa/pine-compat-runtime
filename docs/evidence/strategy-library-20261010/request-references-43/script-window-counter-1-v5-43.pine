@@ -1,0 +1,12 @@
+//@version=5
+indicator("script-window-counter-1-v5-43",calc_bars_count=2)
+var int count=0
+count+=1
+var int first_index=bar_index
+var bool first_flag=barstate.isfirst
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=1)
+plot(bar_index)
+plot(a)
+plot(count)
+plot(first_index)
+plot(first_flag?1:0)

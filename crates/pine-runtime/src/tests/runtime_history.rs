@@ -376,13 +376,13 @@ fn max_bars_back_pure_history_and_scalar_calls_match_all_execution_modes() {
         r#"indicator("pure history identity")
 offset = bar_index % 3
 shade = close >= open ? color.red : color.green
-text = close >= open ? "alpha" : "beta"
+note = close >= open ? "alpha" : "beta"
 lagged = close[1]
 red = color.r(shade)
 green = color.g(shade)
 blue = color.b(shade)
 transparency = color.t(shade)
-position = str.pos(text, "p")
+position = str.pos(note, "p")
 max_bars_back(lagged, 2)
 max_bars_back(red, 2)
 max_bars_back(green, 2)
@@ -394,7 +394,7 @@ plot(color.r(shade)[offset])
 plot(color.g(shade)[offset])
 plot(color.b(shade)[offset])
 plot(color.t(shade)[offset])
-plot(str.pos(text, "p")[offset])
+plot(str.pos(note, "p")[offset])
 "#,
     );
     let analysis = analyze_source(&source);

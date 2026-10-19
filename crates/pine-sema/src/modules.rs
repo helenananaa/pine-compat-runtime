@@ -45,6 +45,7 @@ pub(crate) use model::{
 };
 use modules_rewrite::{RewriteContext, rewrite_expr, rewrite_function_body, rewrite_program};
 use side_effects::{first_statement_span, function_body_has_side_effect, visit_statement_exprs};
+
 pub(crate) fn visit_expression(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
     side_effects::visit_expr(expr, visitor);
 }
@@ -163,6 +164,19 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     body,
                     span,
                 } => {
+                    for param in params {
+                        if param
+                            .type_name
+                            .as_deref()
+                            .is_some_and(|name| name.starts_with("const "))
+                        {
+                            diagnostics.push(Diagnostic::error(
+                                "E_FUNCTION_PARAM_TYPE",
+                                "exported function parameters cannot use the `const` qualifier",
+                                param.span,
+                            ));
+                        }
+                    }
                     let param_types =
                         module_function_param_types(module, params, None, diagnostics);
                     let distinct_overload =
@@ -181,7 +195,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                             diagnostics,
                         );
                     }
-                    if function_body_has_side_effect(body, &statements) {
+                    if function_body_has_side_effect(body, &statements, params) {
                         diagnostics.push(Diagnostic::error(
                             "E_IMPORT_FUNCTION_SIDE_EFFECT",
                             format!("exported function `{name}` contains unsupported side effects"),
@@ -623,7 +637,12 @@ fn imported_method_info(
 
     let mut params = Vec::with_capacity(method.params.len());
     for param in &method.params {
-        params.push(imported_method_param_info(alias, module, param)?);
+        params.push(imported_method_param_info(
+            alias,
+            module,
+            param,
+            method.span,
+        )?);
     }
 
     Some(MethodInfo {
@@ -631,6 +650,7 @@ fn imported_method_info(
         source_context_id,
         receiver_type: format!("{alias}.{}", identity.name),
         receiver_name: method.receiver_name.clone(),
+        receiver_binding: None,
         params,
         body: rewrite_function_body(&method.body, &method.param_names, module_context),
         span: method.span,
@@ -641,12 +661,32 @@ fn imported_method_param_info(
     alias: &str,
     module: &ModuleInfo,
     param: &ModuleMethodParamInfo,
+    span: Span,
 ) -> Option<MethodParamInfo> {
+    if let Some((pine_type, simple)) =
+        function_parameters::qualified_method_scalar_type(&param.type_name)
+    {
+        return Some(MethodParamInfo {
+            name: param.name.clone(),
+            pine_type,
+            user_type_name: None,
+            binding: Some(crate::analyzer::context::FunctionParamInfo {
+                pine_type,
+                explicit_simple: simple,
+                explicit_series: !simple,
+                enforce_qualifier: false,
+                user_type_name: None,
+                map_type: None,
+                span,
+            }),
+        });
+    }
     if param.type_name.starts_with("array<") && param.type_name.ends_with('>') {
         let element_type = &param.type_name["array<".len()..param.type_name.len() - 1];
         if let Some(kind) = array_kind_from_element_type_name(element_type) {
             return Some(MethodParamInfo {
                 name: param.name.clone(),
+                binding: None,
                 pine_type: PineType::new(Qualifier::Series, kind),
                 user_type_name: None,
             });
@@ -654,6 +694,7 @@ fn imported_method_param_info(
         if exported_scalar_tree_user_type(module, element_type) {
             return Some(MethodParamInfo {
                 name: param.name.clone(),
+                binding: None,
                 pine_type: PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
                 user_type_name: Some(format!("{alias}.{element_type}")),
             });
@@ -663,6 +704,7 @@ fn imported_method_param_info(
     if let Some(pine_type) = imported_user_type_scalar_field_type(&param.type_name) {
         return Some(MethodParamInfo {
             name: param.name.clone(),
+            binding: None,
             pine_type,
             user_type_name: None,
         });
@@ -672,6 +714,7 @@ fn imported_method_param_info(
     }
     Some(MethodParamInfo {
         name: param.name.clone(),
+        binding: None,
         pine_type: PineType::new(Qualifier::Series, ValueKind::UserType),
         user_type_name: Some(format!("{alias}.{}", param.type_name)),
     })

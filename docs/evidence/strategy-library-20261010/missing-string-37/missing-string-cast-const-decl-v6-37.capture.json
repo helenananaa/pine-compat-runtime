@@ -1,0 +1,19 @@
+{
+  "name": "missing-string-cast-const-decl-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-decl-v6-37.pine",
+  "source_sha256": "d355593ad3511e116c057ff1704b96834f6cf9c4adde85a3303f3c935ec0b396",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "251 row missing-string-cast-const-decl-v6-37 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d355593ad3511e116c057ff1704b96834f6cf9c4adde85a3303f3c935ec0b396",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-decl-v6-37.native.ax.txt",
+  "accessibility_sha256": "3f3baac88d3fe256300335ec5f159615875e50b14142af313cdeb365d6e0f859",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-decl-v6-37.native.png",
+  "screenshot_sha256": "a142226b28e82e601c7cd8ad55a4b9fddea2c7eb74cd000c6f617aa8d58dbb3a",
+  "scope": "v6 const string=string(na) is valid; preserve explicit conversion boundary",
+  "qualification_scope": "candidate_bounded_control"
+}

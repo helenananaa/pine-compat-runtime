@@ -1,0 +1,4 @@
+//@version=5
+indicator("parameter-const-reference-v5-35",precision=0)
+f(const array<int> x)=>array.size(x)
+plot(f(array.new_int()))

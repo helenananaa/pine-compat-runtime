@@ -1,0 +1,32 @@
+//@version=6
+strategy("FX pyramid margin 31",currency=currency.EUR,initial_capital=140,pyramiding=2,commission_type=strategy.commission.percent,commission_value=1,margin_long=0,margin_short=100,precision=8)
+if time==1577836800000
+    strategy.entry("A",strategy.short,qty=0.01)
+if time==1577923200000
+    strategy.entry("B",strategy.short,qty=0.01)
+if time==1579478400000
+    strategy.close_all()
+snap=time==1579564800000
+plot(ta.valuewhen(snap,strategy.closedtrades,0),title="closedCount")
+plot(ta.valuewhen(snap,strategy.netprofit,0),title="netProfit")
+plot(ta.valuewhen(snap,strategy.equity,0),title="equity")
+plot(ta.valuewhen(snap,strategy.closedtrades.size(0),0),title="size0")
+plot(ta.valuewhen(snap,strategy.closedtrades.entry_price(0),0),title="entry0")
+plot(ta.valuewhen(snap,strategy.closedtrades.exit_price(0),0),title="exit0")
+plot(ta.valuewhen(snap,strategy.closedtrades.profit(0),0),title="profit0")
+plot(ta.valuewhen(snap,strategy.closedtrades.commission(0),0),title="fee0")
+plot(ta.valuewhen(snap,strategy.closedtrades.size(1),0),title="size1")
+plot(ta.valuewhen(snap,strategy.closedtrades.entry_price(1),0),title="entry1")
+plot(ta.valuewhen(snap,strategy.closedtrades.exit_price(1),0),title="exit1")
+plot(ta.valuewhen(snap,strategy.closedtrades.profit(1),0),title="profit1")
+plot(ta.valuewhen(snap,strategy.closedtrades.commission(1),0),title="fee1")
+plot(ta.valuewhen(snap,strategy.closedtrades.size(2),0),title="size2")
+plot(ta.valuewhen(snap,strategy.closedtrades.entry_price(2),0),title="entry2")
+plot(ta.valuewhen(snap,strategy.closedtrades.exit_price(2),0),title="exit2")
+plot(ta.valuewhen(snap,strategy.closedtrades.profit(2),0),title="profit2")
+plot(ta.valuewhen(snap,strategy.closedtrades.commission(2),0),title="fee2")
+plot(ta.valuewhen(snap,strategy.closedtrades.size(3),0),title="size3")
+plot(ta.valuewhen(snap,strategy.closedtrades.entry_price(3),0),title="entry3")
+plot(ta.valuewhen(snap,strategy.closedtrades.exit_price(3),0),title="exit3")
+plot(ta.valuewhen(snap,strategy.closedtrades.profit(3),0),title="profit3")
+plot(ta.valuewhen(snap,strategy.closedtrades.commission(3),0),title="fee3")

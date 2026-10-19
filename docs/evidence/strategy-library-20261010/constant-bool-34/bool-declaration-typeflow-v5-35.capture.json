@@ -1,0 +1,14 @@
+{
+  "name": "bool-declaration-typeflow-v5-35",
+  "source": "E:/projects/pine-interpreter/target/strategy-gap-research35-20261017/bool-declaration-typeflow-v5-35.pine",
+  "source_sha256": "315cade26ca6b26743e1dba6a9cb41b23cd5f98c23cb9f21658741054f5c8962",
+  "native_status": "analysis_rejected",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "315cade26ca6b26743e1dba6a9cb41b23cd5f98c23cb9f21658741054f5c8962",
+  "normalized_source_sha256": "315cade26ca6b26743e1dba6a9cb41b23cd5f98c23cb9f21658741054f5c8962",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/bool-declaration-typeflow-v5-35.native.ax.txt",
+  "accessibility_sha256": "75ed5d78937ac2a9fd4b7cf2ab3b55618559742b2dff76a790df2fb17c288d02",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/bool-declaration-typeflow-v5-35.native.png",
+  "screenshot_sha256": "c59f8f5a7f04195765c308fc6927efb5a92396e8a65736727c5179d14ebe65f3"
+}

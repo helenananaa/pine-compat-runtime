@@ -1,0 +1,3 @@
+//@version=3
+study("Legacy string condition guard 28")
+plot("strategy.long"?1:0)

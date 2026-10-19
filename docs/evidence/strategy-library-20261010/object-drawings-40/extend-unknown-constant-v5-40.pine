@@ -1,0 +1,4 @@
+//@version=5
+indicator("extend-unknown-constant-v5-40")
+item=line.new(0,1,2,2,extend=extend.unknown)
+plot(1)

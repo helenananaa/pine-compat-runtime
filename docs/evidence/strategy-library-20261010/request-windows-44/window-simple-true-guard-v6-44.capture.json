@@ -1,0 +1,23 @@
+{
+  "name": "window-simple-true-guard-v6-44",
+  "version": 6,
+  "scenario": "simple-true-guard",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-simple-true-guard-v6-44.pine",
+  "source_sha256": "8826be2e0df2e75fdf473ed7abcf414d1507e0a4d7fa69b650582e398de58aa8",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    3349,
+    3350
+  ],
+  "native_row": "621 row window-simple-true-guard-v6-44 Plot 3,349.00 Plot 3,349.00 Plot 3,350.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "8826be2e0df2e75fdf473ed7abcf414d1507e0a4d7fa69b650582e398de58aa8",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-true-guard-v6-44.native.ax.txt",
+  "accessibility_sha256": "1898c0e183d4bb72766db5475154bd5a04f327dcfdee478d1bfa91fd7460bb6e",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-true-guard-v6-44.native.png",
+  "screenshot_sha256": "13a546f255b7cc657104985724c61a3d27f8431370dead6d3a8090133b3d39f1",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

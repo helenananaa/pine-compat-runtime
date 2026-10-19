@@ -1,0 +1,25 @@
+{
+  "name": "window-grow-after-inherited-foreign-v5-44",
+  "version": 5,
+  "scenario": "grow-after-inherited-foreign",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-grow-after-inherited-foreign-v5-44.pine",
+  "source_sha256": "5c240bf1498dce6ad2536678676f32c97622cde02f8fbc543b2eb9c6ecc578c8",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    0,
+    1,
+    2
+  ],
+  "native_row": "239 row window-grow-after-inherited-foreign-v5-44 Plot 1.00 Plot 1.00 Plot 0.00 Plot 1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "5c240bf1498dce6ad2536678676f32c97622cde02f8fbc543b2eb9c6ecc578c8",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-grow-after-inherited-foreign-v5-44.native.ax.txt",
+  "accessibility_sha256": "fe70e8dc3423d8f1c668ba94ff885803c031714ed364e4a8ffbc570270d9ba39",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-grow-after-inherited-foreign-v5-44.native.png",
+  "screenshot_sha256": "565493888dac3a6e894932d8c30624a8b50561b0f48616635ab7fb88c1ba2f0b",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

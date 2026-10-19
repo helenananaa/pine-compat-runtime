@@ -306,6 +306,7 @@ fn ledger_open_trade_with_direction(
     let entry_bar_index = entry_price as usize;
     let entry_time = (entry_price as i64) * 10;
     OpenTrade {
+        extrema: Default::default(),
         key: 0,
         id: id.to_owned(),
         direction,
@@ -1542,6 +1543,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
         ledger.allocate_exit_fifo(None, 2.25),
         vec![
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 0,
                 trade_key: 0,
                 entry_id: "A".to_owned(),
@@ -1554,6 +1556,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
                 entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 1,
                 trade_key: 1,
                 entry_id: "B".to_owned(),
@@ -1622,6 +1625,7 @@ fn trade_ledger_allocates_specific_open_trade_key() {
     assert_eq!(
         allocations,
         vec![TradeAllocation {
+            extrema: Default::default(),
             trade_index: 1,
             trade_key: 1,
             entry_id: "A".to_owned(),
@@ -1725,6 +1729,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
         ledger.allocate_exit_fifo(Some("A"), 2.5),
         vec![
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 0,
                 trade_key: 0,
                 entry_id: "A".to_owned(),
@@ -1737,6 +1742,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
                 entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 2,
                 trade_key: 2,
                 entry_id: "A".to_owned(),
@@ -1763,6 +1769,7 @@ fn trade_ledger_allocates_any_rule_by_exact_entry_id_in_ledger_order() {
         ledger.allocate_exit_any_for_entry("target", 3.5),
         vec![
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 1,
                 trade_key: 1,
                 entry_id: "target".to_owned(),
@@ -1775,6 +1782,7 @@ fn trade_ledger_allocates_any_rule_by_exact_entry_id_in_ledger_order() {
                 entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 2,
                 trade_key: 2,
                 entry_id: "target".to_owned(),
@@ -4763,6 +4771,7 @@ fn open_trade_fields_read_trade_ledger_entries() {
     let mut first = ledger_open_trade("A", 1.0, 100.0, 2.0);
     first.max_high = Some(112.0);
     first.min_low = Some(95.0);
+    first.extrema.observe(100.0, 1.0, 2.0, (112.0, 95.0), 1.0);
     broker.trade_ledger.append_long(first);
     broker
         .trade_ledger
@@ -4775,8 +4784,8 @@ fn open_trade_fields_read_trade_ledger_entries() {
     assert_eq!(broker.open_trade_size(0), Some(1.0));
     assert_eq!(broker.open_trade_profit(0, 112.0), Some(10.0));
     assert_eq!(broker.open_trade_commission(0), Some(2.0));
-    assert_eq!(broker.open_trade_max_runup(0), Some(12.0));
-    assert_eq!(broker.open_trade_max_drawdown(0), Some(5.0));
+    assert_eq!(broker.open_trade_max_runup(0), Some(10.0));
+    assert_eq!(broker.open_trade_max_drawdown(0), Some(7.0));
 
     assert_eq!(broker.open_trade_entry_price(1), Some(110.0));
     assert_eq!(broker.open_trade_entry_id(1), Some("B"));

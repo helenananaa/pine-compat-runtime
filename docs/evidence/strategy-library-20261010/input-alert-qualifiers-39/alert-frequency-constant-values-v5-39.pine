@@ -1,0 +1,8 @@
+//@version=5
+indicator("alert-frequency-constant-values-v5-39")
+plot(str.length(alert.freq_all))
+plot(str.length(alert.freq_once_per_bar))
+plot(str.length(alert.freq_once_per_bar_close))
+plot(alert.freq_all=="all"?1:0)
+plot(alert.freq_once_per_bar=="once_per_bar"?1:0)
+plot(alert.freq_once_per_bar_close=="once_per_bar_close"?1:0)

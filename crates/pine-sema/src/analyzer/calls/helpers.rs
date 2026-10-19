@@ -1,14 +1,28 @@
 use crate::prelude::*;
 
 impl Analyzer {
+    pub(crate) fn close_all_comment_overload(
+        args: &[CallArg],
+        first_type: Option<PineType>,
+    ) -> bool {
+        !args.iter().any(|arg| arg.name.as_deref() == Some("when"))
+            && (first_type.is_some_and(|ty| ty.kind == ValueKind::String)
+                || args.iter().any(|arg| {
+                    matches!(arg.name.as_deref(), Some("immediately" | "disable_alert"))
+                }))
+    }
+
     pub(super) fn normalize_strategy_source_args(
         &mut self,
         name: &str,
         args: &[CallArg],
+        arg_types: &[Option<PineType>],
     ) -> Option<Vec<CallArg>> {
         let legacy = self.legacy.dialect() <= crate::PineDialect::V4;
-        if !matches!(name, "strategy.exit" | "strategy.close")
-            && !(legacy && matches!(name, "strategy.entry" | "strategy.order"))
+        if !matches!(
+            name,
+            "strategy.exit" | "strategy.close" | "strategy.close_all"
+        ) && !(legacy && matches!(name, "strategy.entry" | "strategy.order"))
         {
             return None;
         }
@@ -38,15 +52,34 @@ impl Analyzer {
                     ));
                 }
             } else if name == "strategy.close" && arg.name.is_none() {
-                arg.name = pine_builtins::strategy_close_source_parameter(
+                arg.name = pine_builtins::strategy_close_source_parameter_with_overload(
                     index,
                     self.legacy.dialect().version(),
+                    arg_types
+                        .get(1)
+                        .copied()
+                        .flatten()
+                        .is_some_and(|ty| ty.kind == ValueKind::String),
                 )
                 .map(str::to_owned);
                 if arg.name.is_none() {
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARITY",
                         "`strategy.close` has no source parameter at this position",
+                        arg.span,
+                    ));
+                }
+            } else if name == "strategy.close_all" && arg.name.is_none() {
+                arg.name = pine_builtins::strategy_close_all_source_parameter(
+                    index,
+                    self.legacy.dialect().version(),
+                    Self::close_all_comment_overload(args, arg_types.first().copied().flatten()),
+                )
+                .map(str::to_owned);
+                if arg.name.is_none() {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARITY",
+                        "`strategy.close_all` has no source parameter at this position",
                         arg.span,
                     ));
                 }
@@ -151,7 +184,8 @@ impl Analyzer {
                     | "array.remove"
                     | "array.shift"
                     | "array.concat"
-            ) || name.starts_with("matrix."))
+            ) || name.starts_with("matrix.")
+                || is_map_mutation_builtin(name))
     }
 
     pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {

@@ -40,6 +40,13 @@ pub enum PineValue {
     Int(i64),
     Float(f64),
     Bool(bool),
+    /// Interpreter-internal identity of a compiler-created boolean constant.
+    /// Host wire values and typed storage boundaries expose the bool payload.
+    #[doc(hidden)]
+    ConstantBool {
+        value: bool,
+        identity: Option<u64>,
+    },
     String(String),
     Color(u64),
     Plot(u32),
@@ -51,6 +58,9 @@ pub enum PineValue {
     Box(u32),
     Table(u32),
     ChartPoint(ChartPointValue),
+    /// Runtime-owned chart.point identity, materialized at public drawing sinks.
+    #[doc(hidden)]
+    ChartPointRef(u32),
     Array(u32),
     Matrix(u32),
     Map(u32),
@@ -119,6 +129,17 @@ pub const fn is_valid_public_color(value: u64) -> bool {
 }
 
 impl PineValue {
+    pub(crate) fn is_condition_true(&self) -> bool {
+        matches!(self, Self::Bool(true) | Self::ConstantBool { .. })
+    }
+
+    pub(crate) fn materialize_boolean(self) -> Self {
+        match self {
+            Self::ConstantBool { value, .. } => Self::Bool(value),
+            value => value,
+        }
+    }
+
     pub(crate) fn can_reference_collection(&self) -> bool {
         matches!(
             self,
@@ -126,6 +147,7 @@ impl PineValue {
                 | Self::Map(_)
                 | Self::Matrix(_)
                 | Self::UserTypeRef(_)
+                | Self::ChartPointRef(_)
                 | Self::Tuple(_)
                 | Self::UserType(_)
                 | Self::ChartPoint(_)

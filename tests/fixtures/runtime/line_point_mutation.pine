@@ -13,5 +13,7 @@ if bar_index == 2
     line.set_first_point(time_line, time_first)
     time_line.set_second_point(time_second)
 line.set_first_point(na, chart.point.now(close))
-line.set_second_point(index_line, na)
+chart.point missing = na
+if not na(missing)
+    line.set_second_point(index_line, missing)
 plot(close)

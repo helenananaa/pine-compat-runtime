@@ -1,0 +1,16 @@
+{
+  "name": "request-na-qualifier-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-qualifier-v5-37.pine",
+  "source_sha256": "c9e0744c72dc5b6385d323bd314a08f34697bdc756de5b1bec56d8db9ff9df04",
+  "native_status": "analysis_or_runtime_rejected",
+  "native_error": "An argument of 'simple string' type was used but a 'const string' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c9e0744c72dc5b6385d323bd314a08f34697bdc756de5b1bec56d8db9ff9df04",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-qualifier-v5-37.native.ax.txt",
+  "accessibility_sha256": "48953db24472786f2f4e5b17a6d0ef5a2bcd4c63bc73748386c46988ad872804",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-qualifier-v5-37.native.png",
+  "screenshot_sha256": "4472f54f540ab9d692f533830b62fe734560105ebdd1de1b9d43e548ae690f1d",
+  "scope": "Follow-up native negative: typed string na is simple, not const; avoid globally promoting missing strings to const",
+  "qualification_scope": "candidate_bounded_control"
+}

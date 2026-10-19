@@ -782,7 +782,7 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         PineValue::Int(value) => output.append(*value),
         PineValue::Float(value) if value.is_finite() => output.append(*value),
         PineValue::Float(_) => output.append(py.None()),
-        PineValue::Bool(value) => output.append(*value),
+        PineValue::Bool(value) | PineValue::ConstantBool { value, .. } => output.append(*value),
         PineValue::String(value) => output.append(value),
         PineValue::Color(value) => output.append(*value),
         PineValue::Plot(value)
@@ -805,6 +805,7 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         }
         PineValue::Array(_)
         | PineValue::UserTypeRef(_)
+        | PineValue::ChartPointRef(_)
         | PineValue::Matrix(_)
         | PineValue::Map(_)
         | PineValue::Na

@@ -1,0 +1,28 @@
+{
+  "name": "request-point-field-week-v5-43",
+  "version": 5,
+  "scenario": "field-week",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-field-week-v5-43.pine",
+  "source_sha256": "e857079dcc661e7c5bb3d05cd6b6fa12e0c938f83617465e2530fcfea5e67dde",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3449,
+    578,
+    3449,
+    478,
+    3349,
+    3349,
+    100,
+    1
+  ],
+  "native_row": "238 row request-point-field-week-v5-43 Plot 3,449.00 Plot 578.00 Plot 3,449.00 Plot 478.00 Plot 3,349.00 Plot 3,349.00 Plot 100.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "96f265dad0f8a758a9afaa675f7ed92797d9c725dcfcd28f54da1bcfa0dd0df2",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-field-week-v5-43.native.ax.txt",
+  "accessibility_sha256": "3ae2bfd5e427cd38f6db3e5d8b2d59124b41d12d7035b9f4730de0793522b106",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-field-week-v5-43.native.png",
+  "screenshot_sha256": "77ba94373570138045e4158564c14e9257b4459ee3a35644c58d9e2c759cd71e",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

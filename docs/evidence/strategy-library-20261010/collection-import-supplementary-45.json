@@ -1,0 +1,132 @@
+{
+  "scope": "Two simple array reference sources execute in Native; four map/matrix/array library sources compile as visible library chart instances. No library publication or Native import execution; all supplemental observations remain outside primary bounded totals.",
+  "official_library_rules": "https://www.tradingview.com/pine-script-docs/concepts/libraries/",
+  "records": [
+    {
+      "name": "collection-simple-array-v5-45",
+      "version": 5,
+      "scenario": "simple-array",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v5-45.pine",
+      "source_sha256": "c44c5155e635dfda83c3da437317136e426a1a955e77e9c89c85933f896778be",
+      "local_three_bar_values": [
+        2,
+        2
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2,
+        2
+      ],
+      "native_row": "486 row collection-simple-array-v5-45 Plot 2.00 Plot 2.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "aa593492372341f40eddc1bd327621414b5d2e65588ab47cad17068046c74fa7",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v5-45.native.ax.txt",
+      "accessibility_sha256": "6fc3adb2215f3a3248572ba05d955d58021d6446be38b580220bdd542c628f4a",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v5-45.native.png",
+      "screenshot_sha256": "a6f34d68dcc9064be3a3197013e7976e73e29f534c0c1b3e7c4eea5f87de7127",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v5-45.capture.json",
+      "raw_capture_sha256": "7bad4126111b3fa4150e7c2d4dbb3c6d488f42dea518ac0426712779a9c23e94"
+    },
+    {
+      "name": "collection-simple-array-v6-45",
+      "version": 6,
+      "scenario": "simple-array",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v6-45.pine",
+      "source_sha256": "2c0d75956e7b8ca86aa5a8c3cebd5832659c595b494152d510285d25dfa5364f",
+      "local_three_bar_values": [
+        2,
+        2
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2,
+        2
+      ],
+      "native_row": "486 row collection-simple-array-v6-45 Plot 2.00 Plot 2.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "a3dbf9f8f037fbec8a1a679c856c8eff4776c0d80bcda4bbe6e288ecdae4b509",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v6-45.native.ax.txt",
+      "accessibility_sha256": "64357e9ca0151a6bb219e71ea5f115b3a5bf9f1a2b266f8a0923c7b5438a236a",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v6-45.native.png",
+      "screenshot_sha256": "d1f37516c1f2f70a5f8aa093bb6a97ee531438461a5c808480f051a997558fdd",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-simple-array-v6-45.capture.json",
+      "raw_capture_sha256": "30c81e060872c6bced73f2ac7b0ba62f8fd678f6d7dcd7bf7a9513ae53554498"
+    },
+    {
+      "name": "library-mutable-collection-v5-45",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-library-v5.pine",
+      "source_sha256": "028ddd8dfdfbe599e4c717fd34355eccfb56356ed795b4075ccf51e5c53e41d4",
+      "native_status": "compiled_library",
+      "native_admission": "Library toolbar is present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "9c91f69be82ffa605b277441d3c308e0158ba7d58e26d869036a58b8d757717d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-collection-v5-45.native.ax.txt",
+      "accessibility_sha256": "b5771a001f538984ba64fc77dd959def639b5ed37d079fb148bc8864efea070c",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-collection-v5-45.native.png",
+      "screenshot_sha256": "9422749a442eda56aad5913e6c297fec220e5ba13851dda3176f30780cc303ac",
+      "scope": "Whole-source official library compilation only. No publication, import execution or strategy ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-collection-v5-45.capture.json",
+      "raw_capture_sha256": "35f8dd1d45f503755ca5b839d5aa5751099d72b6428eca00b92702cb17f884d0"
+    },
+    {
+      "name": "library-mutable-collection-v6-45",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-collection-v6-45.pine",
+      "source_sha256": "de5bf1d1e373a628b5ebb0b320c1e2d3c907ba7afeb8cac4b5afb47a8ea31b71",
+      "native_status": "compiled_library",
+      "native_admission": "Library toolbar is present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "0ebed03492522f68e2b49347281bfdfedc1ba88d670f3eaf9bd2fc592e58ef5d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-collection-v6-45.native.ax.txt",
+      "accessibility_sha256": "e7d9973e78f533d9285304e2c9ed822d4cb43a5c86888920d006d5cdf60076f0",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-collection-v6-45.native.png",
+      "screenshot_sha256": "2b46f57520ae9deaf14736cdb40d0ce9431f8b838b2757e8f46dc7c53c70b6e9",
+      "scope": "Whole-source official library compilation only. No publication, import execution or strategy ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-collection-v6-45.capture.json",
+      "raw_capture_sha256": "410fa28825447db591080e2d0743ad8f25824267b9b95a7f4460cb02c30514e6"
+    },
+    {
+      "name": "library-mutable-array-v5-45",
+      "version": 5,
+      "native_title": "ArrayContractV5Batch45",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v5-45.valid.pine",
+      "source_sha256": "fda77d10f9eea2a95fff78f9a0709231dd38721e7ec0bb51f284cd7f5f84c8f5",
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "afbe2f8cbd805cea724843245d6b90b004cbd9d5d7b246a38982d3914fee1d70",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v5-45.native.ax.txt",
+      "accessibility_sha256": "57c81538b2e15b55c7409cb55c83e146526229446da3e08fa790a074fedf8c3a",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v5-45.native.png",
+      "screenshot_sha256": "0f7687657bea612259a091947ef0ef6b7d903f8988778c1a705a021745db94d4",
+      "scope": "Whole-source official library compilation only. No publication, import execution or strategy ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v5-45.capture.json",
+      "raw_capture_sha256": "5db1db7ec8a6c2173fa6e0fd2b1b3f1399212b8cf78a0eecc1153c8d90563dbe"
+    },
+    {
+      "name": "library-mutable-array-v6-45",
+      "version": 6,
+      "native_title": "ArrayContractV6Batch45",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v6-45.valid.pine",
+      "source_sha256": "e1341f87a40e31a7eabddf9bffdb762d14c71afb5957910a80fed41b5a81b810",
+      "native_status": "compiled_library",
+      "native_admission": "Unique library toolbar present after compile with no compilation/runtime error",
+      "source_text_checked_via_editor_copy": true,
+      "normalized_source_sha256": "1391063e32247fac0e69f21556f7acc94a4494098f785414b7a645b88e8c4b71",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v6-45.native.ax.txt",
+      "accessibility_sha256": "c8a134b9d9741b43a3e7c8276a179fdfbdf3aba31802c889cfee24e8d4810e7b",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v6-45.native.png",
+      "screenshot_sha256": "a34a8c1c09c601b288d8ffad7e42a89c0561f4dfd80b178967153793213c0a24",
+      "scope": "Whole-source official library compilation only. No publication, import execution or strategy ledger claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/library-mutable-array-v6-45.capture.json",
+      "raw_capture_sha256": "5350b17ef04d6bbd242a87b1f146324f8b50ff8ab17f073e4a85516c3f0ca339"
+    }
+  ]
+}

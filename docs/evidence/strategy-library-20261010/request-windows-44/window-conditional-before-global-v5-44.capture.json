@@ -1,0 +1,24 @@
+{
+  "name": "window-conditional-before-global-v5-44",
+  "version": 5,
+  "scenario": "conditional-before-global",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-conditional-before-global-v5-44.pine",
+  "source_sha256": "0fd28d93d9241c5ce349e753842c3afa013f53ea77999f5d4a0b5fecdb5e3873",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    1,
+    2
+  ],
+  "native_row": "239 row window-conditional-before-global-v5-44 Plot 1.00 Plot 1.00 Plot 1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "0fd28d93d9241c5ce349e753842c3afa013f53ea77999f5d4a0b5fecdb5e3873",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-conditional-before-global-v5-44.native.ax.txt",
+  "accessibility_sha256": "40556f07111bfb46d7e2f9a1137339ce422b18ac6f64f500f5ba91fc52116ce7",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-conditional-before-global-v5-44.native.png",
+  "screenshot_sha256": "ca571bf38bb1dfee88eaed36be9873e967c3ddc2b9f0f7240c6a5db869b96ab8",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

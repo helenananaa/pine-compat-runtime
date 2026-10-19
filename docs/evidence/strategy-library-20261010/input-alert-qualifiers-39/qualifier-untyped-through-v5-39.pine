@@ -1,0 +1,5 @@
+//@version=5
+indicator("qualifier-untyped-through-v5-39")
+identity39(value)=>value
+average39(int length)=>ta.ema(close,identity39(length))
+plot(average39(3)==ta.ema(close,3)?1:0)

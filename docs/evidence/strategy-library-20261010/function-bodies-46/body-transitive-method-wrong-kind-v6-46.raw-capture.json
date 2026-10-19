@@ -1,0 +1,20 @@
+{
+  "name": "body-transitive-method-wrong-kind-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-method-wrong-kind-v6-46.pine",
+  "source_sha256": "73130df38640fc2acbe3e9a12d9479f52d5acdb0ca4a6e622c22483e51f9a0bb",
+  "version": 6,
+  "kind": "wrong-kind",
+  "expected_values": null,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"h\" with argument \"flag\"=\"x\". An argument of \"const string\" type was used but a \"series bool\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "953f376b7ba50d55c19b02e1f9f7c22720c869076f4ebea390edd8dbbb09522e",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-wrong-kind-v6-46.native.ax.txt",
+  "accessibility_sha256": "0f11eb5c480cb99096cde4734b005408407a486e724eb776a132b4a65e445409",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-wrong-kind-v6-46.native.png",
+  "screenshot_sha256": "00e88c2abcf21831fae62784bba9f7b5f0092e5abbe571c5f4dc2a62cca3d6d7",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -154,7 +154,7 @@ impl MapEntries {
         )
     }
 
-    pub(super) fn clone_allocation_bytes(&self) -> usize {
+    pub(in crate::builtins) fn clone_allocation_bytes(&self) -> usize {
         Self::payload_allocation_bytes(self.values.clone_allocation_values())
     }
 
@@ -303,12 +303,10 @@ impl MapEntries {
         self.remove_with_lookup(lookup);
     }
 
-    pub(super) fn remove_with_lookup(&mut self, lookup: EntryLookup) {
-        let Some(slot) = lookup.slot else {
-            return;
-        };
+    pub(super) fn remove_with_lookup(&mut self, lookup: EntryLookup) -> Option<PineValue> {
+        let slot = lookup.slot?;
         remove_index_slot(&mut self.index, lookup.hash, slot);
-        *self.values.get_mut(slot).expect("indexed slot") = None;
+        let (_, removed) = self.values.get_mut(slot).expect("indexed slot").take()?;
         self.len -= 1;
         if self.is_empty() {
             self.clear();
@@ -317,6 +315,7 @@ impl MapEntries {
             // each deletion. Reinserted keys naturally append at the end.
             *self = self.iter().cloned().collect::<Vec<_>>().into();
         }
+        Some(removed)
     }
 }
 

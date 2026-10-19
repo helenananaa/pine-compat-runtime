@@ -1,0 +1,24 @@
+{
+  "name": "window-foreign-unbounded-first-v5-44",
+  "version": 5,
+  "scenario": "foreign-unbounded-first",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-foreign-unbounded-first-v5-44.pine",
+  "source_sha256": "a9848140e784ab0cf4fbe084d65fd41c7a59e7f6405395cfbf220115facda722",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    478,
+    578,
+    3350
+  ],
+  "native_row": "243 row window-foreign-unbounded-first-v5-44 Plot 3,349.00 Plot 478.00 Plot 578.00 Plot 3,350.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "a9848140e784ab0cf4fbe084d65fd41c7a59e7f6405395cfbf220115facda722",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-foreign-unbounded-first-v5-44.native.ax.txt",
+  "accessibility_sha256": "3655cb87bff06ed0e27da7bfcec45630cc07ddbbfc74dfa71f46f4028c48ca72",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-foreign-unbounded-first-v5-44.native.png",
+  "screenshot_sha256": "7d3ad26dc1f1e8183510c4f871d535f0a8f38656aa96dcf1384213e1aa58967c",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

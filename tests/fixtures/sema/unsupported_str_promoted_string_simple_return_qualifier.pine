@@ -1,12 +1,12 @@
 //@version=6
 indicator("Unsupported str promoted string simple return qualifier")
 
-text = timeframe.period
+note = timeframe.period
 
-substring_text = str.substring(text, 0, 1)
-repeat_text = str.repeat(text, 2)
-replace_text = str.replace(text, "D", "W")
-replace_all_text = str.replace_all(text, "D", "W")
+substring_text = str.substring(note, 0, 1)
+repeat_text = str.repeat(note, 2)
+replace_text = str.replace(note, "D", "W")
+replace_all_text = str.replace_all(note, "D", "W")
 
 substring_length = str.length(substring_text)
 repeat_length = str.length(repeat_text)

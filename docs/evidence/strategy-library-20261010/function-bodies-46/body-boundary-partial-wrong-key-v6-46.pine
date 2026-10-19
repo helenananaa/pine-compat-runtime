@@ -1,0 +1,6 @@
+//@version=6
+indicator("body-boundary-partial-wrong-key-v6-46")
+f(map<string,float> v,x)=>
+    v.put(1,x)
+    v.size()
+plot(1)

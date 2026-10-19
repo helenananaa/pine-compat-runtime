@@ -1,0 +1,23 @@
+{
+  "name": "window-input-pure-count-v5-44",
+  "version": 5,
+  "scenario": "input-pure-count",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-input-pure-count-v5-44.pine",
+  "source_sha256": "8b4d8c270c53f45932036ad0f434248b57865e699ec3e9c56c1cec54c6cff93c",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    2
+  ],
+  "native_row": "243 row window-input-pure-count-v5-44 (1) Plot 1.00 Plot 1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "8b4d8c270c53f45932036ad0f434248b57865e699ec3e9c56c1cec54c6cff93c",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-pure-count-v5-44.native.ax.txt",
+  "accessibility_sha256": "0c6141a16cf877f024ad0c158228dfe877e2c3b715c8fec05b1ebec2e68b331a",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-pure-count-v5-44.native.png",
+  "screenshot_sha256": "78842bd4fcde61a693e516588eff36f599a796a2a908520c6ee6b05ef6c5171f",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

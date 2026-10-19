@@ -1,0 +1,5 @@
+//@version=6
+indicator("missing-string-cast-simple-v6-37",precision=0)
+f(simple string x)=>na(x)?1:0
+plot(f(string(na)))
+plot(str.length(string(na)))

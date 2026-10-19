@@ -1,0 +1,20 @@
+{
+  "name": "collection-map-wrong-key-v5-45",
+  "version": 5,
+  "scenario": "map-wrong-key",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-map-wrong-key-v5-45.pine",
+  "source_sha256": "300dfbb77b5d7fb41c760dc8f6a248800b19d887201cf95aad7409a37d5f573d",
+  "expected_values": null,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call 'f' with argument 'v'='values'. An argument of 'map<int, float>' type was used but a 'map<string, float>' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "a38d1818c5ab24e1fb3cb4a07977ab11a0a7152ecd6ed81e03525bfd8dfd40a6",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-map-wrong-key-v5-45.native.ax.txt",
+  "accessibility_sha256": "43fad86296ce423fce9ef75b56d137ce333e9d378fccf84912228c9813c043f2",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-map-wrong-key-v5-45.native.png",
+  "screenshot_sha256": "f11b646e3b8ceca8acdf661c12ae4511b3ed57b0155a6586bcb8d2dee3358ea8",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

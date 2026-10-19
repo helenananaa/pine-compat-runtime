@@ -10,7 +10,7 @@ const ALERT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "freq",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::AtMostInputString,
         optional: true,
     },
 ];

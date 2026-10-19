@@ -1,0 +1,20 @@
+{
+  "name": "request-na-typed-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-typed-v6-37.pine",
+  "source_sha256": "1226712fa5be72b88f9409017d67f017e45b4182e0da46a13b23ad3b69d19221",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "240 row request-na-typed-v6-37 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1226712fa5be72b88f9409017d67f017e45b4182e0da46a13b23ad3b69d19221",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-typed-v6-37.native.ax.txt",
+  "accessibility_sha256": "e8a527a7aa0a9fad64e0139428c8ec73db8c34e2d4bc2f2006cd528480398fb8",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-typed-v6-37.native.png",
+  "screenshot_sha256": "5932a0f8f967fc6a92eb61bafaac17567ea3c1079477548fe0033a4abf50f1e6",
+  "scope": "Follow-up only: v6 typed string na timeframe inherits current chart",
+  "qualification_scope": "candidate_bounded_control"
+}

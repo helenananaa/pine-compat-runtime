@@ -1,0 +1,6 @@
+//@version=5
+indicator("body-boundary-parameter-reassignment-v5-46")
+f(x)=>
+    x:=1
+    x
+plot(1)

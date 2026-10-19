@@ -1,0 +1,4 @@
+//@version=5
+indicator("alert-domain-literal-close-v5-39")
+alert("probe","once_per_bar_close")
+plot(1)

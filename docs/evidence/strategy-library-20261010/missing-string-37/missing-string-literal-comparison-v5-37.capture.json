@@ -1,0 +1,24 @@
+{
+  "name": "missing-string-literal-comparison-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-literal-comparison-v5-37.pine",
+  "source_sha256": "8224bce3c3f8d2d650bb5e51a6d206dd8f3cae92ef124e3677421e13fc9ea76b",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    1,
+    0,
+    1,
+    0
+  ],
+  "native_row": "251 row missing-string-literal-comparison-v5-37 Plot 1 Plot 1 Plot 1 Plot 0 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "8224bce3c3f8d2d650bb5e51a6d206dd8f3cae92ef124e3677421e13fc9ea76b",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-literal-comparison-v5-37.native.ax.txt",
+  "accessibility_sha256": "0edac4fe5ee27ba720e3f70f96ac0747b1f08edd80aa60a64ab76aeeb0ac1bad",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-literal-comparison-v5-37.native.png",
+  "screenshot_sha256": "4eb3ad03e71a40f3ea1a4c5ec3f01d0eb3f93a00fb53bc3a89e07a1c5b90a2ed",
+  "scope": "v5 bare na used in a string comparison adopts empty-string comparison without propagating bool na",
+  "qualification_scope": "candidate_bounded_control"
+}

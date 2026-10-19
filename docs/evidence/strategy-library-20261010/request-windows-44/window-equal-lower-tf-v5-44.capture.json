@@ -1,0 +1,23 @@
+{
+  "name": "window-equal-lower-tf-v5-44",
+  "version": 5,
+  "scenario": "equal-lower-tf",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-equal-lower-tf-v5-44.pine",
+  "source_sha256": "042525b3ec5459e553a65ba238ddbbac9416c22a65046b58a54a5da8ebc792b8",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    2
+  ],
+  "native_row": "243 row window-equal-lower-tf-v5-44 Plot 1.00 Plot 1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "042525b3ec5459e553a65ba238ddbbac9416c22a65046b58a54a5da8ebc792b8",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-equal-lower-tf-v5-44.native.ax.txt",
+  "accessibility_sha256": "6dbc0742c590d181ec363a67966b6c175933f34eac42e9613fb659fffd1e9dae",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-equal-lower-tf-v5-44.native.png",
+  "screenshot_sha256": "4c9ea3ba4ce0ffcedd5cd27231798dbd19c54ec80dcb7cac21b9495933a774f5",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

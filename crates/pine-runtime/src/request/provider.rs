@@ -5,7 +5,8 @@ use pine_ir::CallSiteId;
 use crate::Bar;
 
 use super::{
-    BarCalendar, BarCalendarRegistry, ChartContext, RequestTimeframe, bars::validate_requested_bars,
+    BarCalendar, BarCalendarRegistry, ChartContext, CurrencyRateError, CurrencyRateProvider,
+    NoCurrencyRateProvider, RequestTimeframe, bars::validate_requested_bars,
 };
 use crate::RuntimeError;
 
@@ -169,6 +170,7 @@ pub struct RequestEnvironment {
     main_timeframe: RequestTimeframe,
     provider: Arc<dyn RequestDataProvider>,
     calendars: Arc<BarCalendarRegistry>,
+    currency_rates: Arc<dyn CurrencyRateProvider>,
 }
 
 impl RequestEnvironment {
@@ -180,6 +182,7 @@ impl RequestEnvironment {
             main_timeframe,
             provider,
             calendars: Arc::new(BarCalendarRegistry::default()),
+            currency_rates: Arc::new(NoCurrencyRateProvider),
         }
     }
 
@@ -196,6 +199,27 @@ impl RequestEnvironment {
     #[must_use]
     pub fn provider(&self) -> &dyn RequestDataProvider {
         self.provider.as_ref()
+    }
+
+    #[must_use]
+    pub fn with_currency_rates(mut self, provider: Arc<dyn CurrencyRateProvider>) -> Self {
+        self.currency_rates = provider;
+        self
+    }
+
+    /// Read a host-supplied effective rate without consulting wall-clock time.
+    /// The caller specifies the calculation timestamp explicitly.
+    pub fn currency_rate(&self, from: &str, to: &str, time: i64) -> Result<f64, CurrencyRateError> {
+        super::currency::validate_currency(from)?;
+        super::currency::validate_currency(to)?;
+        if from == to {
+            return Ok(1.0);
+        }
+        let rate = self.currency_rates.rate(from, to, time)?;
+        if !rate.is_finite() || rate <= 0.0 {
+            return Err(CurrencyRateError::InvalidResolvedRate);
+        }
+        Ok(rate)
     }
 
     #[must_use]
@@ -283,6 +307,7 @@ impl RequestEnvironment {
             main_timeframe: self.main_timeframe.clone(),
             provider: Arc::clone(&self.provider),
             calendars: Arc::clone(&self.calendars),
+            currency_rates: Arc::clone(&self.currency_rates),
         }
     }
 }
@@ -296,6 +321,7 @@ impl Default for RequestEnvironment {
             main_timeframe,
             provider: Arc::new(NoRequestDataProvider),
             calendars: Arc::new(BarCalendarRegistry::default()),
+            currency_rates: Arc::new(NoCurrencyRateProvider),
         }
     }
 }

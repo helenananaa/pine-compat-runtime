@@ -1,0 +1,8 @@
+//@version=6
+indicator("table-quota-delete-before-new-v6-36",precision=0)
+a=table.new(position.top_left,60,100)
+table.delete(a)
+b=table.new(position.bottom_right,60,100)
+if barstate.islast
+    table.cell(b,59,99,"b")
+plot(1,title="executed")

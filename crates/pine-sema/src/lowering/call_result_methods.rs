@@ -10,6 +10,23 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
         param_types: &HashMap<String, PineType>,
     ) -> Option<Option<HirExpr>> {
+        if let Some(result) =
+            self.lower_postfix_user_type_call_result_method(callee, args, param_exprs, param_types)
+        {
+            let mut method_call = match result {
+                Some(method_call) => method_call,
+                None => return Some(None),
+            };
+            if super::pure_series::pure_postfix_user_type_call_result_method_series_key(
+                self, callee, args,
+            )
+            .and(series_id)
+            .is_some()
+            {
+                method_call.series_id = series_id;
+            }
+            return Some(Some(method_call));
+        }
         if let Some(result) = self.lower_postfix_array_call_result_method(
             callee,
             args,
@@ -49,23 +66,6 @@ impl Analyzer {
             param_types,
         ) {
             return Some(result);
-        }
-        if let Some(result) =
-            self.lower_postfix_user_type_call_result_method(callee, args, param_exprs, param_types)
-        {
-            let mut method_call = match result {
-                Some(method_call) => method_call,
-                None => return Some(None),
-            };
-            if super::pure_series::pure_postfix_user_type_call_result_method_series_key(
-                self, callee, args,
-            )
-            .and(series_id)
-            .is_some()
-            {
-                method_call.series_id = series_id;
-            }
-            return Some(Some(method_call));
         }
         postfix_call_result_method_parts(callee, args).map(|_| None)
     }

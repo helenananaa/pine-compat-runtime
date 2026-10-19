@@ -1,0 +1,40 @@
+{
+  "name": "constant-bool-crossing-v6-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-crossing-v6-32.pine",
+  "source_sha256": "d2bea3d11728a7c66011a8c40a92692caece512d99c10166b1f3274a715e2bfe",
+  "native_status": "compiled_and_executed",
+  "native_row": "247 row Constant bool crossing probe32 global function return 0 argument identity 0 input default 0 request return 1 switch missing 0 while false 0 and equals true 1 or equals true 0 not equals false 1",
+  "cursor_refreshed": true,
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1a46539ceb7a04c9da947c90f2f613b9ac1fd2e3ae5bb2b067e3eefb209fb231",
+  "editor_source_sha256": "1a46539ceb7a04c9da947c90f2f613b9ac1fd2e3ae5bb2b067e3eefb209fb231",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-crossing-v6-32.native.png",
+  "screenshot_sha256": "5bfe645ab440dde26f4ff140bb32f96934d74c4ff9c1c6dc03d1a1c22b4d4995",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-crossing-v6-32.native.ax.txt",
+  "accessibility_sha256": "906b706f5179eb6a4df7ed46d646428faef2a744e5a472bc1d2965090d80b859",
+  "native_values": [
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    1.0
+  ],
+  "labels": [
+    "global function return",
+    "argument identity",
+    "input default",
+    "request return",
+    "switch missing",
+    "while false",
+    "and equals true",
+    "or equals true",
+    "not equals false"
+  ],
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

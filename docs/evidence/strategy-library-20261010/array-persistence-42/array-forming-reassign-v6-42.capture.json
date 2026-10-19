@@ -1,0 +1,27 @@
+{
+  "name": "array-forming-reassign-v6-42",
+  "version": 6,
+  "scenario": "forming-reassign",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-forming-reassign-v6-42.pine",
+  "source_sha256": "bf780cc485d743bdde51f7e7046b8768343261c3cc1519d38637a0115ef98182",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    13,
+    1,
+    14,
+    1
+  ],
+  "native_marker_suffix": [
+    1
+  ],
+  "native_row": "241 row array-forming-reassign-v6-42 Plot 13.00 Plot 1.00 Plot 14.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d015973d34177fda4ef3d3c58ad528d2d0f6fa2a9a36fa732af1dd9d71544def",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-forming-reassign-v6-42.native.ax.txt",
+  "accessibility_sha256": "05b043769f8a6d83e3ac9efad9cb1cf9a381260139343ec136437598f5a98ce9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-forming-reassign-v6-42.native.png",
+  "screenshot_sha256": "a0c030c72b684cfe8446aff78b54d14986e47b70db7326cadcd00aa85ef86778",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

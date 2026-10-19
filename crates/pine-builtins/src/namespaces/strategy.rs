@@ -328,7 +328,7 @@ const STRATEGY_TRADE_FIELD_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 
 const STRATEGY_DEFAULT_ENTRY_QTY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "fill_price",
-    accepts: Accepts::SeriesOrSimpleNumeric,
+    accepts: Accepts::NumericCompatible,
     optional: false,
 }];
 

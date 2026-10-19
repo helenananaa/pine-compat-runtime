@@ -1,0 +1,6 @@
+//@version=5
+indicator("missing-string-constant-reassignment-v5-37",precision=0)
+string x=na
+x:=""
+f(const string p)=>str.length(p)
+plot(f(x))

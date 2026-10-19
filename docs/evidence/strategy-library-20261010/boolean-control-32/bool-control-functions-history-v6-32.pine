@@ -1,0 +1,34 @@
+//@version=6
+indicator("Control bool functions v6 probe32",precision=0)
+empty=array.new_int(0)
+sw()=>
+    switch 0
+        1=>true
+ww()=>
+    while false
+        true
+ff()=>
+    for idx=0 to int(na)
+        true
+ee()=>
+    for item in empty
+        true
+s=sw()
+w=ww()
+r=ff()
+e=ee()
+one=for idx=0 to 0
+    true
+zero=for idx=0 to 0
+    false
+num=while false
+    42
+plot(s==false?1:0,title="function switch")
+plot(w==false?1:0,title="function while")
+plot(r==false?1:0,title="function for")
+plot(e==false?1:0,title="function foreach")
+plot(w[0]==false?1:0,title="current bool history")
+plot(e[1]==false?1:0,title="previous bool history")
+plot(one==true?1:0,title="selected true")
+plot(zero==false?1:0,title="selected false")
+plot(na(num)?1:0,title="numeric missing")

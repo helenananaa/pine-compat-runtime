@@ -1787,7 +1787,10 @@ plot(str.format("Flags {0}", bool_values) == "Flags [true, false]" ? 1 : 0)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
-    for plot in &result.plots[1..] {
+    // Native missing-string length is zero, so the aggregate na(length)
+    // predicate is false while upper/lower retain their missing identity.
+    assert_values_close(&result.plots[1].values, &[0.0, 0.0]);
+    for plot in &result.plots[2..] {
         assert_values_close(&plot.values, &[1.0, 1.0]);
     }
 }

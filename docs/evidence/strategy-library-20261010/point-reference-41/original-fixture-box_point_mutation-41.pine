@@ -1,0 +1,17 @@
+//@version=5
+indicator("Box point mutation")
+var index_box = box.new(bar_index, high, bar_index + 1, low)
+var time_box = box.new(time, high, time + 60000, low, xloc=xloc.bar_time)
+if bar_index == 1
+    top_left = chart.point.from_index(bar_index - 1, open)
+    bottom_right = chart.point.from_index(bar_index + 2, close)
+    box.set_top_left_point(index_box, top_left)
+    index_box.set_bottom_right_point(bottom_right)
+if bar_index == 2
+    time_top_left = chart.point.from_time(time - 60000, open)
+    time_bottom_right = chart.point.from_time(time + 120000, close)
+    box.set_top_left_point(time_box, time_top_left)
+    time_box.set_bottom_right_point(time_bottom_right)
+box.set_top_left_point(na, chart.point.now(close))
+box.set_bottom_right_point(index_box, na)
+plot(close)

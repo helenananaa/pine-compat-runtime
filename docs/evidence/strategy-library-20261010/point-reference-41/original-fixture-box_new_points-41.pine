@@ -1,0 +1,12 @@
+//@version=5
+indicator("Box new points")
+if bar_index == 0
+    top_left = chart.point.now(high)
+    bottom_right = chart.point.from_index(bar_index + 1, low)
+    box.new(top_left, bottom_right, color.purple, 2, bgcolor=color.green)
+    time_top_left = chart.point.from_time(time, high + 1)
+    time_bottom_right = chart.point.from_time(time + 60000, low + 1)
+    box.new(top_left=time_top_left, bottom_right=time_bottom_right, xloc=xloc.bar_time, border_style=line.style_dotted, text="time box")
+    box.new(na, na, na, na, color.white, 1, xloc=xloc.bar_time)
+    box.new(top_left=na, bottom_right=time_bottom_right, xloc=xloc.bar_time)
+plot(close)

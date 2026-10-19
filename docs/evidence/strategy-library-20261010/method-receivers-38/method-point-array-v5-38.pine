@@ -1,0 +1,10 @@
+//@version=5
+indicator("method-point-array-v5-38")
+method reversed38(array<chart.point> self)=>
+    result=array.copy(self)
+    array.reverse(result)
+    result
+a=array.from(chart.point.from_index(0,1.0),chart.point.from_index(1,2.0))
+b=a.reversed38()
+p=b.get(0)
+plot(p.price)

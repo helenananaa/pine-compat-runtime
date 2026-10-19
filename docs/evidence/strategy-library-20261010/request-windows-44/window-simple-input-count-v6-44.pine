@@ -1,0 +1,9 @@
+//@version=6
+indicator("window-simple-input-count-v6-44",dynamic_requests=true)
+simple int n=input.int(2,"simple-count-44")
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=n)
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(count)

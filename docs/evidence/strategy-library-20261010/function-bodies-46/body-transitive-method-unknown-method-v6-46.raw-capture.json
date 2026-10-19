@@ -1,0 +1,20 @@
+{
+  "name": "body-transitive-method-unknown-method-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-method-unknown-method-v6-46.pine",
+  "source_sha256": "2a91d721038bb0bfbed5dd8bdaa363834467c3c6f8e2d1f16e2ea06e520c0cbe",
+  "version": 6,
+  "kind": "unknown-method",
+  "expected_values": null,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Could not find method or method reference 'self.absent' (CE10271)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "74f03ae10427465142ab5f093cb133e86409cd1a3408cc81f8ae07ac6e7bee16",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-unknown-method-v6-46.native.ax.txt",
+  "accessibility_sha256": "3e1030dae4c7c81e3e34dc4b28cd9478f3e60d409d1fb84722e989c9ad281922",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-unknown-method-v6-46.native.png",
+  "screenshot_sha256": "27baffb367d9209077fcb6581b3eb1af2c9af01db8989bebb2a595ea08166122",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

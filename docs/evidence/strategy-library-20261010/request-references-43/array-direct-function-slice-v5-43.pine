@@ -1,0 +1,18 @@
+//@version=5
+indicator("array-direct-function-slice-v5-43")
+f()=>
+    var a=array.from(0)
+    a.set(0,bar_index)
+    a
+view=array.slice(f(),0,1)
+var held=view
+varip int vh=0
+varip int hh=0
+varip int ih=0
+if barstate.ishistory
+    vh:=view.first()
+    hh:=held.first()
+    ih:=bar_index
+plot(vh)
+plot(hh)
+plot(ih)

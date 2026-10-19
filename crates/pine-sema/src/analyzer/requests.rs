@@ -1,4 +1,5 @@
 use crate::prelude::*;
+mod currency;
 mod modern;
 pub(crate) mod source_args;
 
@@ -44,6 +45,7 @@ impl Analyzer {
             return None;
         }
         match name {
+            "request.currency_rate" => self.analyze_currency_rate(span, args),
             "request.security" => self.analyze_request_security(span, args),
             "request.security_lower_tf" => self.analyze_request_security_lower_tf(span, args),
             _ => {
@@ -109,19 +111,19 @@ impl Analyzer {
         let expression_type = arg_types.get(2).copied().flatten();
         let symbol_ok = args.first().is_some_and(|arg| {
             self.request_symbol_is_chart(&arg.value, false)
-                || arg_types.first().copied().flatten().is_some_and(|ty| {
-                    ty.kind == ValueKind::String
-                        && (self.dynamic_requests
-                            || qualifier_at_most(ty.qualifier, Qualifier::Simple))
-                })
+                || arg_types
+                    .first()
+                    .copied()
+                    .flatten()
+                    .is_some_and(|ty| self.request_selector_type_supported(ty, false))
         });
         let timeframe_ok = args.get(1).is_some_and(|arg| {
             self.request_timeframe_is_chart(&arg.value, false)
-                || arg_types.get(1).copied().flatten().is_some_and(|ty| {
-                    ty.kind == ValueKind::String
-                        && (self.dynamic_requests
-                            || qualifier_at_most(ty.qualifier, Qualifier::Simple))
-                })
+                || arg_types
+                    .get(1)
+                    .copied()
+                    .flatten()
+                    .is_some_and(|ty| self.request_selector_type_supported(ty, false))
         });
         let tuple_array_kinds = (expression_type.is_some_and(|ty| ty.kind == ValueKind::Tuple))
             .then(|| self.tuple_element_types(&args[2].value))
@@ -219,11 +221,7 @@ impl Analyzer {
                 .first()
                 .copied()
                 .flatten()
-                .is_some_and(|pine_type| {
-                    pine_type.kind == ValueKind::String
-                        && (self.dynamic_requests
-                            || qualifier_at_most(pine_type.qualifier, Qualifier::Simple))
-                }));
+                .is_some_and(|pine_type| self.request_selector_type_supported(pine_type, legacy)));
         if !same_context_symbol && !provider_symbol {
             unsupported = true;
         }
@@ -238,11 +236,7 @@ impl Analyzer {
                 .get(1)
                 .copied()
                 .flatten()
-                .is_some_and(|pine_type| {
-                    pine_type.kind == ValueKind::String
-                        && (self.dynamic_requests
-                            || qualifier_at_most(pine_type.qualifier, Qualifier::Simple))
-                }));
+                .is_some_and(|pine_type| self.request_selector_type_supported(pine_type, legacy)));
         if !same_chart_timeframe && !provider_timeframe {
             unsupported = true;
         }
@@ -267,7 +261,14 @@ impl Analyzer {
         }
         let supported_expression = args.get(2).is_some_and(|arg| {
             if !legacy {
-                return self.modern_request_expression_supported(&arg.value);
+                // Select bounded chart datasets before execution so direct
+                // requests preserve the chart arena. Foreign routes still need
+                // ordered prerequisite replay in an independent object arena.
+                return if same_context_request {
+                    self.modern_request_reference_expression_supported(&arg.value)
+                } else {
+                    self.modern_request_expression_supported(&arg.value)
+                };
             }
             if same_context_request {
                 if legacy {
@@ -332,6 +333,12 @@ impl Analyzer {
         }
 
         expression_type.map(series_request_type)
+    }
+
+    fn request_selector_type_supported(&self, pine_type: PineType, legacy: bool) -> bool {
+        (pine_type.kind == ValueKind::String
+            || (!legacy && self.legacy.dialect().version() >= 5 && pine_type.kind == ValueKind::Na))
+            && (self.dynamic_requests || qualifier_at_most(pine_type.qualifier, Qualifier::Simple))
     }
 
     fn request_symbol_is_chart(&self, expr: &Expr, legacy: bool) -> bool {
@@ -858,7 +865,9 @@ impl Analyzer {
                         };
                         if !matches!(
                             mode,
-                            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const
+                            pine_syntax::DeclMode::Normal
+                                | pine_syntax::DeclMode::Const
+                                | pine_syntax::DeclMode::Simple
                         ) || function_locals.contains(name)
                             || !analyzer.request_expression_is_legacy_provider_scalar_inner(
                                 value,
@@ -876,7 +885,10 @@ impl Analyzer {
                     let result = match &last.kind {
                         StmtKind::Expr(result) => result,
                         StmtKind::Decl {
-                            mode: pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const,
+                            mode:
+                                pine_syntax::DeclMode::Normal
+                                | pine_syntax::DeclMode::Const
+                                | pine_syntax::DeclMode::Simple,
                             name,
                             value,
                             ..

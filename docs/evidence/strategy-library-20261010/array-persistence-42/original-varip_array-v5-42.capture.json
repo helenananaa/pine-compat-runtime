@@ -1,0 +1,71 @@
+{
+  "name": "original-varip_array-v5-42",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\original-varip_array-v5-42.pine",
+  "source_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+  "parent_fixture": "tests\\fixtures\\runtime\\varip_array.pine",
+  "parent_fixture_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+  "transforms": "Unchanged original fixture bytes.",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3375,
+    3377,
+    3375,
+    3375,
+    3375,
+    3376,
+    3376,
+    3377,
+    3375
+  ],
+  "native_relations": [
+    [
+      "offset",
+      1,
+      0,
+      2
+    ],
+    [
+      "eq",
+      2,
+      0
+    ],
+    [
+      "eq",
+      3,
+      0
+    ],
+    [
+      "eq",
+      4,
+      0
+    ],
+    [
+      "offset",
+      5,
+      0,
+      1
+    ],
+    [
+      "eq",
+      6,
+      5
+    ],
+    [
+      "offset",
+      7,
+      5,
+      1
+    ]
+  ],
+  "native_row": "241 row varip array Plot 3,375.00 Plot 3,377.00 Plot 3,375.00 Plot 3,375.00 Plot 3,375.00 Plot 3,376.00 Plot 3,376.00 Plot 3,377.00 Plot 3,375.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-varip_array-v5-42.native.ax.txt",
+  "accessibility_sha256": "7951e7f6c298d38548b256c6b6f852178a523c7afb17619d06e668de327ee066",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-varip_array-v5-42.native.png",
+  "screenshot_sha256": "295f917c33e3eb604340e80d964c6f13d6f557fbb6cdcf8db84979d0d60ef613",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

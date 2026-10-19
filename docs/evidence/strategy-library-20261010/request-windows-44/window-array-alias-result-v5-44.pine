@@ -1,0 +1,11 @@
+//@version=5
+indicator("window-array-alias-result-v5-44",dynamic_requests=true)
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2)
+var values=array.new_float()
+alias=values
+array.push(alias,a)
+var count=0
+count+=1
+plot(bar_index)
+plot(array.last(values))
+plot(count)

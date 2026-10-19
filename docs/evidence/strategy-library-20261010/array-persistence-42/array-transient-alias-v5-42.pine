@@ -1,0 +1,8 @@
+//@version=5
+indicator("array-transient-alias-v5-42")
+varip a=array.new_int()
+b=a
+a.push(1)
+plot(b.size()==a.size()?1:0)
+plot(b.size())
+plot(a.size())

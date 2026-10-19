@@ -1,0 +1,20 @@
+{
+  "name": "point-history-alias-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-history-alias-v6-41.pine",
+  "source_sha256": "f40102d6bae8333bfebc652f69fda48faca8fe5aaefed0d40f42c0668bbe2ca5",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "478 row point-history-alias-v6-41 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "995eb533e6db6d90de70df479ca51d603e48d99ab0c89ce738f9b88321317367",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-history-alias-v6-41.native.ax.txt",
+  "accessibility_sha256": "01b6c3667618ccaad11e2e6ba48d2dfc24f23528427080b115860c9136ad2b59",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-history-alias-v6-41.native.png",
+  "screenshot_sha256": "e1fff15ee0aa45864bce795f835d62dad4925acb3671735748db2f7fca286faa",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

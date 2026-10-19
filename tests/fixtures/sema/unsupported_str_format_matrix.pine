@@ -2,5 +2,5 @@
 indicator("Unsupported str.format matrix")
 
 values = matrix.new<float>(1, 1, 1.0)
-text = str.format("{0}", values)
-plot(str.length(text))
+note = str.format("{0}", values)
+plot(str.length(note))

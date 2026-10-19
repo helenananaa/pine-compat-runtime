@@ -51,6 +51,23 @@ impl Analyzer {
         // Lower the receiver exactly once, then let ordinary argument binding
         // consume the already lowered value through an unspellable placeholder.
         let value = self.lower_expr_with_params(receiver, param_exprs, param_types)?;
+        if let Some(key) = self.method_receiver_key(receiver, value.pine_type)
+            && self.methods.contains_key(&(key.clone(), method.to_owned()))
+        {
+            let result = self.lower_user_method_call_with_receiver_expr(
+                super::inline_calls::LoweredMethodReceiver {
+                    label: key.clone(),
+                    type_name: key,
+                    span: receiver.span,
+                    expr: value,
+                },
+                method,
+                args,
+                param_exprs,
+                param_types,
+            )?;
+            return self.finish_legacy_expr_coercion(expr, result);
+        }
         let name = Self::member_builtin_name(value.pine_type.kind, method)?;
         let placeholder = "\0member_receiver".to_owned();
         let mut exprs = param_exprs.clone();

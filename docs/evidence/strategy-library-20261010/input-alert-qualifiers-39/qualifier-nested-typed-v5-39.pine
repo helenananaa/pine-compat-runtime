@@ -1,0 +1,5 @@
+//@version=5
+indicator("qualifier-nested-typed-v5-39")
+identity39(int value)=>value
+average39(int length)=>ta.ema(close,identity39(length))
+plot(average39(3))

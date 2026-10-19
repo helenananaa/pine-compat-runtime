@@ -1,0 +1,5 @@
+//@version=5
+indicator("collection-map-const-v5-45")
+f(const map<string,float> v)=>v.size()
+values=map.new<string,float>()
+plot(f(values))

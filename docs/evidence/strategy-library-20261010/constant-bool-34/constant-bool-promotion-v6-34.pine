@@ -1,0 +1,14 @@
+//@version=6
+indicator("Missing bool promotion v6 probe34",precision=0)
+a=if false
+    true
+seriesFalse=bar_index<0
+inputFalse=input.bool(false)
+simpleFalse=syminfo.type=="never-a-symbol-type"
+plot(a==seriesFalse?1:0,title="missing versus series")
+plot(a==inputFalse?1:0,title="missing versus input")
+plot(a==simpleFalse?1:0,title="missing versus simple")
+plot(a and (bar_index>=0)?1:0,title="missing and series true")
+plot(a or (bar_index<0)?1:0,title="missing or series false")
+plot((a and (bar_index>=0))==true?1:0,title="and series equality")
+plot((a or (bar_index<0))==false?1:0,title="or series equality")

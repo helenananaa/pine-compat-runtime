@@ -1,0 +1,19 @@
+{
+  "name": "table-1400-cells-v5-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-cells-v5-36.pine",
+  "source_sha256": "22a44c9d77cade60af4f48fb6be23abb29de6ecd5391c7cde6f6231eae6230f3",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "238 row table-1400-cells-v5-36 executed 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "22a44c9d77cade60af4f48fb6be23abb29de6ecd5391c7cde6f6231eae6230f3",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-cells-v5-36.native.ax.txt",
+  "accessibility_sha256": "7ccfd2f3e3f49bd4adcf7188e199cf467e5221fe8049b48174fff6044c066307",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-1400-cells-v5-36.native.png",
+  "screenshot_sha256": "f00feb5a00db78cfc3720904f3a4c1dd319ba9300f13b3d46b09b805701d572c",
+  "scope": "Official v5 accepts allocating7x200 cells and writing the last cell. Exact maximum and full table resource lifecycle remain unqualified.",
+  "qualification_scope": "candidate_table_control"
+}

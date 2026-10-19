@@ -291,6 +291,7 @@ fn prepared_hir_host_input_source_and_requested_output_ids_are_preserved() {
     actual.append_bars(&bars).unwrap();
     expected.append_bars(&bars).unwrap();
     assert_same(&actual.result(), &expected.result());
-    assert_eq!(actual.result().plots[0].values[1], PineValue::Float(10.5));
-    assert!(!actual.bounded_same_context_evaluations.is_empty());
+    assert_eq!(actual.result().plots[0].values.len(), 3);
+    assert_eq!(actual.result().plots[0].values[1], PineValue::Float(45.5));
+    assert!(actual.bounded_same_context_evaluations.is_empty());
 }

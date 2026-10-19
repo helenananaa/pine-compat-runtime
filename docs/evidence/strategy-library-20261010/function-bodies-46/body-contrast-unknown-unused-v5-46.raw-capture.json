@@ -1,0 +1,19 @@
+{
+  "name": "body-contrast-unknown-unused-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-contrast-unknown-unused-v5-46.pine",
+  "source_sha256": "bdf747793a799e630abdf2e148a4d1734bb1e63c71a3e413d7d726beacadb32e",
+  "kind": "unknown-unused",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Could not find function or function reference 'missingBuiltin46'",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c6e15d2407e60c2c3a146f93583259c9ea7de3ca304a960afe7786deba0b6f60",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-unknown-unused-v5-46.native.ax.txt",
+  "accessibility_sha256": "a63dba9baff667113468a5c50d3d62852ad1f25b552074539a7c0bff00e90c7e",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-unknown-unused-v5-46.native.png",
+  "screenshot_sha256": "553fd574dc2eede836445ae3aa9817c6ee9fdab632b59beb165bd1d068307c6b",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

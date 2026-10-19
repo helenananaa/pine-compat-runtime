@@ -52,6 +52,17 @@ impl Analyzer {
                 Qualifier::Const,
                 if name.starts_with("display.") {
                     ValueKind::PlotDisplay
+                } else if crate::legacy::strategy_direction_bool(
+                    name,
+                    self.legacy.dialect().version(),
+                )
+                .is_some()
+                {
+                    ValueKind::Bool
+                } else if self.legacy.dialect().version() != 4
+                    && matches!(name, "strategy.long" | "strategy.short")
+                {
+                    ValueKind::StrategyDirection
                 } else {
                     ValueKind::String
                 },
@@ -66,6 +77,12 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_COLOR",
                 format!("unknown named color `{name}`"),
+                span,
+            ));
+        } else if name.starts_with("alert.") || name.starts_with("extend.") {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UNKNOWN_SYMBOL",
+                format!("unknown symbol `{name}`"),
                 span,
             ));
         }

@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-constant-reassignment-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-constant-reassignment-v5-37.pine",
+  "source_sha256": "bc56af957bede0041420208a963bf4d545396b9a9a5b777fd0bf643ef99c1427",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of 'simple string' type was used but a 'const string' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "bc56af957bede0041420208a963bf4d545396b9a9a5b777fd0bf643ef99c1427",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-constant-reassignment-v5-37.native.ax.txt",
+  "accessibility_sha256": "902f70f2735ce67a9901cf2515bdadbba7f11e1940a6c9605a4c5a1042d6412f",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-constant-reassignment-v5-37.native.png",
+  "screenshot_sha256": "9d6f5c4d3a8bd86d84f02b0e5b25b1cc8a73113aba3866a39666c635b1a95e29",
+  "scope": "v5 missing-string binding retains simple qualification after reassignment to an empty constant string",
+  "qualification_scope": "candidate_bounded_control"
+}

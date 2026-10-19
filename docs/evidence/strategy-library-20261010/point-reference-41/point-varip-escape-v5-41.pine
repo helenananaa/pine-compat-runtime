@@ -1,0 +1,15 @@
+//@version=5
+indicator("point-varip-escape-v5-41")
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+varip items=array.from(chart.point.from_index(1,0))
+var p=items.first()
+if barstate.isfirst
+    items.clear()
+if barstate.isrealtime
+    p.price+=1
+plot(ticks)
+plot(p.price)

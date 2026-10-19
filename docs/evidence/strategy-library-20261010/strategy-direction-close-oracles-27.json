@@ -1,0 +1,112 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\legacy-direction-v4-oracle-27.pine",
+    "source_sha256": "5655ca22a3cb9bf322d516fd801015e19bc3bda084499dd1b382235c8d8d68d2",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\legacy-direction-v4-oracle-27.png",
+    "screenshot_sha256": "6cba7867f94f1ba8eca4b58bb485bb0212e0f5a32afac724b8e0f0d70fc69aa0",
+    "version": 4,
+    "native_values": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      0
+    ],
+    "native_status": "compiled_and_executed",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\close-comment-v5-oracle-27.pine",
+    "source_sha256": "2669764f29af6d6bac02f822a63f2558e02c2e11007520a3652bc68d0f27c57d",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\close-comment-v5-oracle-27.png",
+    "screenshot_sha256": "cd1542956220d18a67cc90a951d68be8de533fc455b957392f92b615fef2169b",
+    "version": 5,
+    "native_values": [
+      1
+    ],
+    "native_status": "compiled_and_executed",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\close-bool-v5-oracle-27.pine",
+    "source_sha256": "e38112a7292dc284545f4cddfb55521e14f7c94117a24c5778206bf2569fad6e",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\close-bool-v5-oracle-27.png",
+    "screenshot_sha256": "bfc3d4108e3d87b1d745f674622d47afe86b1d0e64ad4f9f999332b59f9bdadb",
+    "version": 5,
+    "native_values": [
+      1
+    ],
+    "native_status": "compiled_and_executed",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\modern-direction-v5-negative-27.pine",
+    "source_sha256": "ce6439411721e61bcbd490f2f502de657b9d210cdeb78609fc25c9aa7bc3c4ab",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\modern-direction-v5-negative-27.png",
+    "screenshot_sha256": "af6afd9b3384619c11853576f870117429fb0aed3ab97ca3b2cb32f5697c4427",
+    "version": 5,
+    "native_values": null,
+    "native_status": "analysis_rejected",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\close-direction-v5-negative-27.pine",
+    "source_sha256": "801e9351e127a5a19d99f70af1151a0eea87d3d0aa39b1e3427784b618b8436e",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\close-direction-v5-negative-27.png",
+    "screenshot_sha256": "ba8588802c6114ef54f4ee7516c0c09926cd6c8d736ee7426f4b54fceab2a899",
+    "version": 5,
+    "native_values": null,
+    "native_status": "analysis_rejected",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\strategy-constants-string-v5-negative-27.pine",
+    "source_sha256": "701dda12e1e56efd8708c69b3472475350f6dbc0dcd61bc9464ed1eb61310428",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\strategy-constants-string-v5-negative-27.png",
+    "screenshot_sha256": "6148905733ce0c160f2f2c12ce06d144313e9350ff2cf537e665ad85988e867a",
+    "version": 5,
+    "native_values": null,
+    "native_status": "analysis_rejected",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\strategy-constants-identity-v5-oracle-27.pine",
+    "source_sha256": "3896a81ed97f4b5fdad23db4a54b265c280058f9029462b2d098cb653abee8de",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\strategy-constants-identity-v5-oracle-27.png",
+    "screenshot_sha256": "49f8069c04510ffa886f0222b51ab65d24afe8ef1352bf0fbe8e5a3ace0a1f26",
+    "version": 5,
+    "native_values": [
+      1
+    ],
+    "native_status": "compiled_and_executed",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\legacy-direction-v3-original-probe-27.pine",
+    "source_sha256": "efd252efb0e2d591bf5d46a5711e2ca343d319c0acdfca29123c8ee21739d918",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\legacy-direction-v3-original-probe-27.png",
+    "screenshot_sha256": "ec6a24804610c19aeadea7ea7905dd08fdcf48ee116034f9bdd38ad31bf8c574",
+    "version": 3,
+    "native_values": [
+      1,
+      1,
+      0,
+      0,
+      1,
+      0
+    ],
+    "native_status": "unresolved_native_difference",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\legacy-direction-v3-raw-negative-27.pine",
+    "source_sha256": "84810f597cf34095148e08291da51da920482554dc980d00a15fe629fa64a641",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\legacy-direction-v3-raw-negative-27.png",
+    "screenshot_sha256": "3bdbe6d288eb99370932f41e2a62fd9e3cfd3a0889c4b18581828a085fed0b12",
+    "version": 3,
+    "native_values": null,
+    "native_status": "native_rejected_raw_bool_plot",
+    "scope": "Native minimal compiler/chart evidence; no market-profit or full native ledger qualification. v3 differences retained as unresolved, outside the v4 boolean fix."
+  }
+]

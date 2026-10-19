@@ -1,0 +1,34 @@
+{
+  "name": "point-udt-array-anchor-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-udt-array-anchor-v5-41.pine",
+  "source_sha256": "9ebbd13126350afa52378fb44fcc3223f4a0da3022114c30f7da34b7fd154387",
+  "qualification_scope": "intrabar_retention_frontier",
+  "native_relation": "ordinary_udt_anchor",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    97,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "native_marker_suffix": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "native_row": "235 row point-udt-array-anchor-v5-41 Plot 97.00 Plot 1.00 Plot 1.00 Plot 1.00 Plot 1.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "a1de2d21207f804b926d266dbbd8779ca96528498d900fb035a9ee978d88de93",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-udt-array-anchor-v5-41.native.ax.txt",
+  "accessibility_sha256": "61502a7bfab2b90a51d785c831423057fdce0062de60c5dd9f01bf9fd95c9855",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-udt-array-anchor-v5-41.native.png",
+  "screenshot_sha256": "7686d55a830dc92c0798fb59de1506d73d0b5cfad044986941587e65ad14e977",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

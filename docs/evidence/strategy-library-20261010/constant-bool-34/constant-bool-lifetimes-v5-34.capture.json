@@ -1,0 +1,14 @@
+{
+  "name": "constant-bool-lifetimes-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-lifetimes-v5-34.pine",
+  "source_sha256": "60bb79523d697295982990a34309e1d3095a2c1e014ec40f684fd02ee1218cff",
+  "native_status": "analysis_rejected",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "60bb79523d697295982990a34309e1d3095a2c1e014ec40f684fd02ee1218cff",
+  "normalized_source_sha256": "60bb79523d697295982990a34309e1d3095a2c1e014ec40f684fd02ee1218cff",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-lifetimes-v5-34.native.ax.txt",
+  "accessibility_sha256": "0a5a6d819d7f8f66471020ba6d5f1fc1d50cdbe4bd80cd57d0da26a7fea403e0",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-lifetimes-v5-34.native.png",
+  "screenshot_sha256": "c123fc71b7f5ae2c35246079c7d84712b52cc1b52757ad3c74c115dda5ba3c87"
+}

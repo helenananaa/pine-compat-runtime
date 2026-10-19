@@ -1,0 +1,11 @@
+//@version=5
+indicator("request-point-array-v5-43")
+p=chart.point.from_index(1,10)
+values=array.from(p)
+f(array<chart.point> values)=>
+    v=values.first()
+    v.price+=5
+    v.price
+r=request.security(syminfo.tickerid,timeframe.period,f(values))
+plot(r)
+plot(p.price)

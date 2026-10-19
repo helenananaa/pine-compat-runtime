@@ -1,0 +1,14 @@
+{
+  "name": "parameter-const-reference-qualifier-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-qualifier-v6-35.pine",
+  "source_sha256": "36c498eede622ef10fac516b57f2d1b3f660c3bd34d757d8384a46dd50209f14",
+  "native_status": "analysis_rejected",
+  "native_error": "A variable declared with the \"const\" keyword cannot accept values of the \"series int\" form.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "36c498eede622ef10fac516b57f2d1b3f660c3bd34d757d8384a46dd50209f14",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-qualifier-v6-35.native.ax.txt",
+  "accessibility_sha256": "12179cf0449dc1b8905a4ffb40bee6152ec2ddb2f6db0ef8aad3fd489f02b168",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-qualifier-v6-35.native.png",
+  "screenshot_sha256": "116d30230394afe1e4342a56babbbeae43b420b40f64f03e310be23aedaf2acd"
+}

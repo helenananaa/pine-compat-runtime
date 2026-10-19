@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported str format chart point array")
 points = array.new<chart.point>()
-text = str.format("Points {0}", points)
+note = str.format("Points {0}", points)
 plot(close)

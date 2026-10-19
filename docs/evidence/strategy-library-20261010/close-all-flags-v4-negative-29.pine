@@ -1,0 +1,3 @@
+//@version=4
+strategy("Close all flags guard v4 29")
+strategy.close_all(immediately=true,disable_alert=false)

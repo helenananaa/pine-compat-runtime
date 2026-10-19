@@ -1,0 +1,7 @@
+//@version=6
+indicator("const-selected-if-bool-v6-35",precision=0)
+const bool value=if true
+    false
+plot(value?1:0,title="condition")
+plot(value==false?1:0,title="equals false")
+plot(str.tostring(value)=="false"?1:0,title="false payload")

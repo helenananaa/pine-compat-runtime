@@ -1,0 +1,7 @@
+//@version=6
+indicator("request-na-input-v6-37",precision=0)
+opt=input.string("Current")
+tf=opt=="current"?"":na
+value=request.security(syminfo.tickerid,tf,close)
+plot(value==close?1:0)
+plot(na(value)?1:0)

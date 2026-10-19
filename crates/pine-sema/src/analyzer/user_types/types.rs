@@ -149,6 +149,7 @@ fn is_supported_user_type_array_field(field: &UserTypeFieldInfo) -> bool {
             | ValueKind::Box
             | ValueKind::Table
             | ValueKind::Polyline
+            | ValueKind::ChartPoint
             | ValueKind::LineArray
             | ValueKind::BoxArray
     )

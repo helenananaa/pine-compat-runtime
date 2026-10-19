@@ -14,13 +14,13 @@ number *= 4
 number /= 6
 number %= 4
 
-text = "Pine"
-text += " Script"
+note = "Pine"
+note += " Script"
 
 series_value = 0
 series_value += bar_index
 
 plot(number)
-plot(str.length(text))
+plot(str.length(note))
 plot(series_value)
 plot(calculate(close))

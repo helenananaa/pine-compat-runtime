@@ -1,0 +1,10 @@
+//@version=5
+indicator("request-drawing-rebound-v5-43")
+make()=>
+    line.new(0,1,1,2)
+    chart.point.from_index(1,10)
+p=chart.point.from_index(1,10)
+p:=make()
+a=request.security(syminfo.tickerid,timeframe.period,p.price)
+plot(a)
+plot(p.price)

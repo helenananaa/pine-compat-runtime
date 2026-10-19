@@ -1,0 +1,18 @@
+{
+  "name": "method-udt-simple-param-invalid-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-simple-param-invalid-v5-38.pine",
+  "source_sha256": "0f899be26012157a90444c44badbcf74c2860b70a25240ce6ac192675a286b3e",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot call 'shift38' with argument 'n'='bar_index'. An argument of 'series int' type was used but a 'simple int' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b64441ff5f5d5a73b07449ba4809101f44c3fd38ddfb0b08363f0cd5220a09aa",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-simple-param-invalid-v5-38.native.ax.txt",
+  "accessibility_sha256": "1b3ff5c6c8d0978ee224a2d44f62cb5b45dceb2098c0703328761dc0ab15db7f",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-simple-param-invalid-v5-38.native.png",
+  "screenshot_sha256": "3f662da99a29e43cbe587e76949b64a695ddbc257d320ff3b3a74c2e779bdd4b",
+  "qualification_scope": "candidate_method_control",
+  "native_values": null,
+  "discovery_record_sha256": "f87dccdd1307613f10a8d8638fcefb4158a64880010cdf757acc449391312852"
+}

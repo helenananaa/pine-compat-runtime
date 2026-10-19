@@ -1,0 +1,22 @@
+{
+  "name": "request-point-udt-v5-43",
+  "version": 5,
+  "scenario": "point-udt",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-udt-v5-43.pine",
+  "source_sha256": "40ac9ecf40cb8c96297e0c0add868e2755035fb90d33fb4e935cb5b75cc9c5b7",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "240 row request-point-udt-v5-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "63e0dddb098662348adacd89a455ec8c705adc0963799380645a5d3b156573de",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-udt-v5-43.native.ax.txt",
+  "accessibility_sha256": "4e76918536b0d774beccb5f384efb9683ce899d4d056b570f0282554f2fc134a",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-udt-v5-43.native.png",
+  "screenshot_sha256": "7c29b7bf06f550214fd21badaa22f10932c74137495641bde4c6364a699ce649",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,20 @@
+{
+  "name": "body-transitive-method-recursive-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-method-recursive-v5-46.pine",
+  "source_sha256": "34e7f957c9c0431a68042cfa21b079d53851f8e0c090b4fd6d5e8d121b431682",
+  "version": 5,
+  "kind": "recursive",
+  "expected_values": null,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Could not find method or method reference 'g' for 'self'",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4adeaf6522f6c2e5d6cd0f967cb9664c1311e76ad43e681ba0a3b67168604cb9",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-recursive-v5-46.native.ax.txt",
+  "accessibility_sha256": "e4556a96eef7b744521f4995107277b197df902259f75ebe15321869d4200858",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-recursive-v5-46.native.png",
+  "screenshot_sha256": "56e19520b6e1bb189097fdd15a83ac046c5d53de441fcb3ea0982367c0d7db74",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

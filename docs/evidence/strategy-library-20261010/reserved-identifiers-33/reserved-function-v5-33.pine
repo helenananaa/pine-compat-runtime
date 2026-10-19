@@ -1,0 +1,4 @@
+//@version=5
+indicator("Reserved function-v5 probe33",precision=0)
+text(value)=>value
+plot(text(1))

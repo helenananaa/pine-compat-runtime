@@ -1,0 +1,19 @@
+//@version=5
+indicator("array-slice-parent-v5-42")
+var p=array.from(0)
+var s=p.slice(0,1)
+var b=p
+p.set(0,bar_index)
+varip int ph=0
+varip int sh=0
+varip int bh=0
+varip int ih=0
+if barstate.ishistory
+    ph:=p.first()
+    sh:=s.first()
+    bh:=b.first()
+    ih:=bar_index
+plot(ph)
+plot(sh)
+plot(bh)
+plot(ih)

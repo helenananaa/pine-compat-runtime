@@ -1,0 +1,16 @@
+{
+  "name": "table-edge-10001-v5-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v5-36.pine",
+  "source_sha256": "1d828b38caa491f4bcae7f3eb1f7e2e10b5637106a8049edc9ecff158184d458",
+  "native_status": "analysis_or_runtime_rejected",
+  "native_error": "Too many table cells.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1d828b38caa491f4bcae7f3eb1f7e2e10b5637106a8049edc9ecff158184d458",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v5-36.native.ax.txt",
+  "accessibility_sha256": "08e006612d6b8370b7985e9a07957ebd5a7dff87f7156d253a971cdcf0235eb4",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v5-36.native.png",
+  "screenshot_sha256": "ff41853afb5e100cafe90c0abbb9c147db3fa36d2cdcc80c9cd5cabc69834533",
+  "scope": "Native v5 rejects10001 declared cells at table.new;10000 declared cells succeeded in the v5 control.",
+  "qualification_scope": "candidate_table_control"
+}

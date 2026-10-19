@@ -1,0 +1,5 @@
+//@version=5
+indicator("request-na-literal-v5-37",precision=0)
+value=request.security(syminfo.tickerid,na,close)
+plot(value==close?1:0)
+plot(na(value)?1:0)

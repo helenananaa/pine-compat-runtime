@@ -1,0 +1,4 @@
+//@version=6
+indicator("qualifier-false-gate-series-v6-39")
+average39(int length,enabled)=>enabled?ta.ema(close,length):close
+plot(average39(bar_index+1,false)==close?1:0)

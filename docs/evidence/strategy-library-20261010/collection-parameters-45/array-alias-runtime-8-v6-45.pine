@@ -1,0 +1,13 @@
+//@version=6
+indicator("array-alias-runtime-8-v6-45")
+f(array<float> values) =>
+    var local = array.new<float>()
+    array.push(local,1)
+    if true
+        local := values
+    1
+var values=array.new<float>(1,10)
+r=f(values)
+plot(r)
+plot(values.size())
+plot(bar_index+1)

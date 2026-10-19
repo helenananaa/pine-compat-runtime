@@ -1,4 +1,4 @@
 //@version=5
 indicator("String format unmatched left brace")
-text = str.format("Value {0", close)
-plot(str.length(text))
+note = str.format("Value {0", close)
+plot(str.length(note))

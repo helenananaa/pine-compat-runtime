@@ -1,0 +1,3 @@
+//@version=6
+indicator("FX flag series v6 31",dynamic_requests=false)
+plot(request.currency_rate("USD","USD",bar_index%2==0))

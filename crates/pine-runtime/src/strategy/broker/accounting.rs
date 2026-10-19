@@ -6,14 +6,6 @@ fn normalize_zero(value: f64) -> f64 {
     if value == 0.0 { 0.0 } else { value }
 }
 
-fn trade_value_percent(amount: f64, entry_price: f64, quantity: f64) -> Option<f64> {
-    let denominator = entry_price * quantity.abs();
-    if !amount.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
-        return None;
-    }
-    Some(normalize_zero(amount / denominator * 100.0))
-}
-
 impl BrokerState {
     fn mark_price(&self, price: f64) -> f64 {
         let Some(tick) = self.price_tick else {
@@ -33,7 +25,7 @@ impl BrokerState {
 
     pub(crate) fn record_equity(&mut self, bar_index: usize, close: f64) {
         let close = self.mark_price(close);
-        let market_value = self.position_size * close;
+        let market_value = self.account_value(self.position_size * close);
         let equity = self.cash + market_value;
         let net_profit = normalize_zero(equity - self.initial_capital);
         let snapshot = StrategyEquitySnapshot {
@@ -58,31 +50,29 @@ impl BrokerState {
         if self.open_trade_count() <= 0 {
             return;
         }
-        self.trade_ledger.update_extremes(high, low);
-        if self.open_trade_count() != 1 {
-            return;
+        self.trade_ledger
+            .update_extremes(high, low, self.quote_to_account_rate);
+        if self.open_trade_count() == 1 {
+            if high.is_finite() {
+                self.open_trade_max_high = Some(
+                    self.open_trade_max_high
+                        .map_or(high, |value| value.max(high)),
+                );
+            }
+            if low.is_finite() {
+                self.open_trade_min_low =
+                    Some(self.open_trade_min_low.map_or(low, |value| value.min(low)));
+            }
         }
-        if high.is_finite() {
-            self.open_trade_max_high = Some(
-                self.open_trade_max_high
-                    .map_or(high, |current| current.max(high)),
-            );
-        }
-        if low.is_finite() {
-            self.open_trade_min_low = Some(
-                self.open_trade_min_low
-                    .map_or(low, |current| current.min(low)),
-            );
-        }
-        self.update_open_trade_max_runup();
-        self.update_open_trade_max_drawdown();
+        self.observe_strategy_equity_extremes(high);
+        self.observe_strategy_equity_extremes(low);
     }
 
     #[must_use]
     pub(crate) fn open_profit(&self, close: f64) -> f64 {
         let close = self.mark_price(close);
         if self.position_size != 0.0 {
-            normalize_zero((close - self.avg_price) * self.position_size)
+            normalize_zero(self.account_value((close - self.avg_price) * self.position_size))
         } else {
             0.0
         }
@@ -147,7 +137,9 @@ impl BrokerState {
             TradeDirection::Short
         };
         let ratio = self.margin_ratio_for_direction(direction)?;
-        Some(normalize_zero(self.position_size.abs() * price * ratio))
+        Some(normalize_zero(
+            self.account_value(self.position_size.abs() * price * ratio),
+        ))
     }
 
     #[must_use]
@@ -160,7 +152,7 @@ impl BrokerState {
             if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
                 return None;
             }
-            let denominator = self.position_size * (1.0 - margin_ratio);
+            let denominator = self.account_value(self.position_size * (1.0 - margin_ratio));
             if !denominator.is_finite() || denominator == 0.0 {
                 return None;
             }
@@ -174,7 +166,7 @@ impl BrokerState {
         if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
             return None;
         }
-        let denominator = self.position_size.abs() * (1.0 + margin_ratio);
+        let denominator = self.account_value(self.position_size.abs() * (1.0 + margin_ratio));
         if !denominator.is_finite() || denominator == 0.0 {
             return None;
         }
@@ -191,7 +183,7 @@ impl BrokerState {
         let Some(ratio) = self.margin_ratio_for_direction(TradeDirection::Long) else {
             return true;
         };
-        let required_margin = qty * fill_price * ratio;
+        let required_margin = self.account_value(qty * fill_price * ratio);
         required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
     }
 
@@ -200,7 +192,7 @@ impl BrokerState {
         let Some(ratio) = self.margin_ratio_for_direction(TradeDirection::Short) else {
             return true;
         };
-        let required_margin = qty * fill_price * ratio;
+        let required_margin = self.account_value(qty * fill_price * ratio);
         required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
     }
 
@@ -385,7 +377,7 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         let close = self.mark_price(close);
-        normalize_zero(self.cash + self.position_size * close)
+        normalize_zero(self.cash + self.account_value(self.position_size * close))
     }
 
     fn initial_capital_percent(&self, value: f64) -> f64 {
@@ -436,9 +428,10 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn closed_trade_max_runup_percent(&self, trade_num: i64) -> Option<f64> {
-        let trade = self.closed_trade(trade_num)?;
-        let amount = self.closed_trade_max_runup(trade_num)?;
-        trade_value_percent(amount, trade.entry_price, trade.qty)
+        let index = usize::try_from(trade_num).ok()?;
+        self.closed_trade_metrics
+            .get(index)
+            .map(|metrics| metrics.max_runup_percent)
     }
 
     #[must_use]
@@ -459,9 +452,10 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn closed_trade_max_drawdown_percent(&self, trade_num: i64) -> Option<f64> {
-        let trade = self.closed_trade(trade_num)?;
-        let amount = self.closed_trade_max_drawdown(trade_num)?;
-        trade_value_percent(amount, trade.entry_price, trade.qty)
+        let index = usize::try_from(trade_num).ok()?;
+        self.closed_trade_metrics
+            .get(index)
+            .map(|metrics| metrics.max_drawdown_percent)
     }
 
     #[must_use]
@@ -561,8 +555,9 @@ impl BrokerState {
         let close = self.mark_price(close);
         self.open_trade_at(trade_num).map(|trade| {
             normalize_zero(
-                (close - trade.entry_price) * trade.direction.signed_quantity(trade.quantity)
-                    - trade.entry_commission
+                self.account_value(
+                    (close - trade.entry_price) * trade.direction.signed_quantity(trade.quantity),
+                ) - trade.entry_commission
                     - self.exit_commission_for_fill(trade.quantity, close),
             )
         })
@@ -572,7 +567,8 @@ impl BrokerState {
     pub(crate) fn open_trade_profit_percent(&self, trade_num: i64, close: f64) -> Option<f64> {
         let trade = self.open_trade_at(trade_num)?;
         let amount = self.open_trade_profit(trade_num, close)?;
-        let capital = trade.entry_price * trade.quantity + trade.entry_commission;
+        let capital =
+            self.account_value(trade.entry_price * trade.quantity) + trade.entry_commission;
         if !amount.is_finite() || !capital.is_finite() || capital <= 0.0 {
             return None;
         }
@@ -587,111 +583,26 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn open_trade_max_runup(&self, trade_num: i64) -> Option<f64> {
-        self.open_trade_at(trade_num).and_then(|trade| {
-            let max_high = trade.max_high?;
-            Some(normalize_zero(
-                (max_high - trade.entry_price).max(0.0) * trade.quantity,
-            ))
-        })
+        self.open_trade_at(trade_num)
+            .map(|trade| normalize_zero(trade.extrema.runup * trade.quantity))
     }
 
     #[must_use]
     pub(crate) fn open_trade_max_runup_percent(&self, trade_num: i64) -> Option<f64> {
-        let trade = self.open_trade_at(trade_num)?;
-        let max_high = trade.max_high?;
-        let amount = normalize_zero((max_high - trade.entry_price).max(0.0) * trade.quantity);
-        trade_value_percent(amount, trade.entry_price, trade.quantity)
+        self.open_trade_at(trade_num)
+            .map(|trade| trade.extrema.runup_percent)
     }
 
     #[must_use]
     pub(crate) fn open_trade_max_drawdown(&self, trade_num: i64) -> Option<f64> {
-        self.open_trade_at(trade_num).and_then(|trade| {
-            let min_low = trade.min_low?;
-            Some(normalize_zero(
-                (trade.entry_price - min_low).max(0.0) * trade.quantity,
-            ))
-        })
+        self.open_trade_at(trade_num)
+            .map(|trade| normalize_zero(trade.extrema.drawdown * trade.quantity))
     }
 
     #[must_use]
     pub(crate) fn open_trade_max_drawdown_percent(&self, trade_num: i64) -> Option<f64> {
-        let trade = self.open_trade_at(trade_num)?;
-        let min_low = trade.min_low?;
-        let amount = normalize_zero((trade.entry_price - min_low).max(0.0) * trade.quantity);
-        trade_value_percent(amount, trade.entry_price, trade.quantity)
-    }
-
-    #[must_use]
-    pub(super) fn current_open_trade_max_runup_for_quantity(&self, qty: f64) -> f64 {
-        let Some(max_high) = self.open_trade_max_high else {
-            return 0.0;
-        };
-        normalize_zero((max_high - self.avg_price).max(0.0) * qty)
-    }
-
-    fn current_open_strategy_max_runup(&self) -> Option<f64> {
-        if self.open_trade_count() != 1 {
-            return None;
-        }
-        let equity_on_entry = self.open_trade_equity_on_entry?;
-        let min_equity_before_entry = self.open_trade_min_equity_before_entry?;
-        let max_high = self.open_trade_max_high?;
-        Some(normalize_zero(
-            (equity_on_entry - min_equity_before_entry
-                + (max_high - self.avg_price).max(0.0) * self.position_size)
-                .max(0.0),
-        ))
-    }
-
-    fn update_open_trade_max_runup(&mut self) {
-        if let Some(runup) = self.current_open_strategy_max_runup() {
-            self.max_runup = self.max_runup.max(runup);
-            if let Some(percent) = self.current_open_strategy_percent(runup) {
-                self.max_runup_percent = self.max_runup_percent.max(percent);
-            }
-        }
-    }
-
-    fn current_open_strategy_max_drawdown(&self) -> Option<f64> {
-        if self.open_trade_count() != 1 {
-            return None;
-        }
-        let equity_on_entry = self.open_trade_equity_on_entry?;
-        let max_equity_before_entry = self.open_trade_max_equity_before_entry?;
-        let min_low = self.open_trade_min_low?;
-        Some(normalize_zero(
-            (max_equity_before_entry - equity_on_entry
-                + (self.avg_price - min_low).max(0.0) * self.position_size)
-                .max(0.0),
-        ))
-    }
-
-    fn update_open_trade_max_drawdown(&mut self) {
-        if let Some(drawdown) = self.current_open_strategy_max_drawdown() {
-            self.max_drawdown = self.max_drawdown.max(drawdown);
-            if let Some(percent) = self.current_open_strategy_percent(drawdown) {
-                self.max_drawdown_percent = self.max_drawdown_percent.max(percent);
-            }
-        }
-    }
-
-    fn current_open_strategy_percent(&self, amount: f64) -> Option<f64> {
-        if self.open_trade_count() != 1 {
-            return None;
-        }
-        let denominator = self.avg_price * self.position_size;
-        if !amount.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
-            return None;
-        }
-        Some(normalize_zero(amount / denominator * 100.0))
-    }
-
-    #[must_use]
-    pub(super) fn current_open_trade_max_drawdown_for_quantity(&self, qty: f64) -> f64 {
-        let Some(min_low) = self.open_trade_min_low else {
-            return 0.0;
-        };
-        normalize_zero((self.avg_price - min_low).max(0.0) * qty)
+        self.open_trade_at(trade_num)
+            .map(|trade| trade.extrema.drawdown_percent)
     }
 
     #[must_use]
@@ -724,15 +635,17 @@ impl super::BrokerState {
             if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
                 return None;
             }
-            let margin_required = self.position_size * current_price * margin_ratio;
+            let margin_required =
+                self.account_value(self.position_size * current_price * margin_ratio);
             let available_funds = self.equity_value(current_price) - margin_required;
             if !available_funds.is_finite() || available_funds >= 0.0 {
                 return None;
             }
-            let cover_amount = ((available_funds / margin_ratio / current_price)
-                * f64::from(self.quantity_scale))
-            .trunc()
-                / f64::from(self.quantity_scale);
+            let cover_amount =
+                ((available_funds / margin_ratio / self.account_value(current_price))
+                    * f64::from(self.quantity_scale))
+                .trunc()
+                    / f64::from(self.quantity_scale);
             let qty = (cover_amount * 4.0).abs().min(self.position_size);
             return (qty.is_finite() && qty > 0.0).then_some(qty);
         }
@@ -746,10 +659,11 @@ impl super::BrokerState {
             if !available_funds.is_finite() || available_funds >= 0.0 {
                 return None;
             }
-            let cover_amount = ((available_funds / margin_ratio / current_price)
-                * f64::from(self.quantity_scale))
-            .trunc()
-                / f64::from(self.quantity_scale);
+            let cover_amount =
+                ((available_funds / margin_ratio / self.account_value(current_price))
+                    * f64::from(self.quantity_scale))
+                .trunc()
+                    / f64::from(self.quantity_scale);
             let qty = (cover_amount * 4.0).abs().min(self.position_size.abs());
             return (qty.is_finite() && qty > 0.0).then_some(qty);
         }

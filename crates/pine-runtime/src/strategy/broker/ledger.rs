@@ -18,6 +18,7 @@ impl TradeDirection {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct OpenTrade {
+    pub(super) extrema: super::trade_extrema::TradeExtrema,
     pub(super) key: u64,
     pub(super) id: String,
     pub(super) direction: TradeDirection,
@@ -51,6 +52,7 @@ impl Default for NetPosition {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct TradeAllocation {
+    pub(super) extrema: super::trade_extrema::TradeExtrema,
     pub(super) trade_index: usize,
     pub(super) trade_key: u64,
     pub(super) entry_id: String,
@@ -99,8 +101,15 @@ impl TradeLedger {
         self.rebuild_net_position();
     }
 
-    pub(super) fn update_extremes(&mut self, high: f64, low: f64) {
+    pub(super) fn update_extremes(&mut self, high: f64, low: f64, rate: f64) {
         for open_trade in &mut self.open_trades {
+            open_trade.extrema.observe(
+                open_trade.entry_price,
+                open_trade.direction.signed_quantity(1.0),
+                open_trade.entry_commission / open_trade.quantity,
+                (high, low),
+                rate,
+            );
             if high.is_finite() {
                 open_trade.max_high = Some(
                     open_trade
@@ -288,6 +297,7 @@ impl TradeLedger {
     ) -> TradeAllocation {
         let entry_commission = trade.entry_commission * (quantity / trade.quantity);
         TradeAllocation {
+            extrema: trade.extrema,
             trade_index,
             trade_key: trade.key,
             entry_id: trade.id.clone(),

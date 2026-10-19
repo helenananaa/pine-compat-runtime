@@ -60,6 +60,9 @@ impl Analyzer {
         actual_type: PineType,
         accepts: Accepts,
     ) -> bool {
+        if self.legacy_direction_bool_arg(actual_type, accepts, expr.span) {
+            return true;
+        }
         if self.legacy.dialect() == PineDialect::V6
             || !matches!(
                 accepts,
@@ -252,6 +255,11 @@ impl Analyzer {
         expression_span: Span,
     ) -> Option<PineType> {
         let dialect = self.legacy.dialect();
+        if op == UnaryOp::Not
+            && self.legacy_direction_bool_arg(expr_type, Accepts::BoolCompatible, operand_span)
+        {
+            return Some(PineType::new(expr_type.qualifier, ValueKind::Bool));
+        }
         if matches!(dialect, PineDialect::V1 | PineDialect::V2)
             && matches!(op, UnaryOp::Plus | UnaryOp::Minus)
             && expr_type.kind == ValueKind::Bool
@@ -287,6 +295,11 @@ impl Analyzer {
         right_span: Span,
         span: Span,
     ) -> Option<PineType> {
+        if let Some(ty) =
+            self.infer_legacy_direction_binary(op, (left_type, left_span), (right_type, right_span))
+        {
+            return Some(ty);
+        }
         let dialect = self.legacy.dialect();
         if self.uses_versioned_integer_division(op, left_type, right_type) {
             return Some(self.record_versioned_integer_division(

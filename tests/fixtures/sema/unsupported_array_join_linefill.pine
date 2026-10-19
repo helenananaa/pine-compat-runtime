@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported array join linefill")
 values = array.new_linefill(0)
-text = array.join(values)
+note = array.join(values)
 plot(close)

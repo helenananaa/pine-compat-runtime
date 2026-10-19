@@ -1,0 +1,18 @@
+{
+  "name": "point-na-target-setter-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-na-target-setter-v6-41.pine",
+  "source_sha256": "f3aab6873c1ff2338a0f6ef8c0cf304760e0d27aaf2efd43f487d58a7c624613",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 0: Cannot access the 'index' field of an undefined object. The object is 'na'. at  #main () : 5",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "a8da85684ab266cc49d6c9c2af7502ef94e1fc9aa9bf756e232ec2b834411e9f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-na-target-setter-v6-41.native.ax.txt",
+  "accessibility_sha256": "06f864a3cfb5e8d375afa73b4c66e8c990b143b0f6040ffc93d5252a9e010cbc",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-na-target-setter-v6-41.native.png",
+  "screenshot_sha256": "6ba60acad1d965fc8d69a4cddbdfd4a1acdb8e7e24c23b2e2a2e1459253e4e52",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

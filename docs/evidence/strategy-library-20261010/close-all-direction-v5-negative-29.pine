@@ -1,0 +1,5 @@
+//@version=5
+strategy("Close all direction guard v5 29")
+d=strategy.long
+f(x)=>x
+strategy.close_all(f(d))

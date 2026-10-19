@@ -1,0 +1,5 @@
+//@version=6
+indicator("parameter-const-reference-qualifier-v6-35",precision=0)
+f(const array<int> x)=>array.size(x)
+const int size=f(array.new_int())
+plot(size)

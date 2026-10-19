@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-dynamic-guard-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-dynamic-guard-v6-37.pine",
+  "source_sha256": "ac31f9a5ed908c52d7e1879dccb5123bc48f557f815d69426f73282d33c1cfcd",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of \"series string\" type was used but a \"simple string\" is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "ac31f9a5ed908c52d7e1879dccb5123bc48f557f815d69426f73282d33c1cfcd",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-dynamic-guard-v6-37.native.ax.txt",
+  "accessibility_sha256": "ec8f5aab29b86a154669a15ec1e97bef69ec2b9b736446f74865388d01dff901",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-dynamic-guard-v6-37.native.png",
+  "screenshot_sha256": "7139ebf95b16f107bf17c8b74c93e82eaf27b5e7e1c829dc4b8ec698943eea29",
+  "scope": "v6 dynamic_requests=false still rejects series timeframe selectors",
+  "qualification_scope": "candidate_bounded_control"
+}

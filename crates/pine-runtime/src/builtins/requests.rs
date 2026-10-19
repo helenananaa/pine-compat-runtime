@@ -42,6 +42,9 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
+        if callee == "request.currency_rate" {
+            return Some(self.eval_currency_rate(args));
+        }
         if self.static_requests.is_requested_context()
             && !self.program.dynamic_requests
             && super::static_requests::is_security(callee)
@@ -155,16 +158,22 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             None
         };
-        let PineValue::String(symbol) = self.eval_expr(symbol_arg)? else {
-            return Err(RuntimeError {
-                message: "request.security_lower_tf symbol must evaluate to string".to_owned(),
-            });
-        };
-        let PineValue::String(timeframe) = self.eval_expr(timeframe_arg)? else {
-            return Err(RuntimeError {
-                message: "request.security_lower_tf timeframe must evaluate to string".to_owned(),
-            });
-        };
+        let modern = self
+            .program
+            .language_version
+            .is_some_and(|version| version >= 5);
+        let symbol = self.eval_request_selector_string(
+            symbol_arg,
+            "request.security_lower_tf",
+            "symbol",
+            modern,
+        )?;
+        let timeframe = self.eval_request_selector_string(
+            timeframe_arg,
+            "request.security_lower_tf",
+            "timeframe",
+            modern,
+        )?;
         let scalar_kind = lower_tf_array_kind(expression_arg.pine_type.kind);
         let tuple_kinds = self
             .program
@@ -216,6 +225,20 @@ impl<'a> HistoricalRuntime<'a> {
             &symbol,
             &requested_timeframe,
         )?;
+        if !self.register_context_window(
+            call_site_id,
+            RequestKey::new(&symbol, requested_timeframe.clone()),
+            calc_bars_count,
+        )? {
+            let value = self.eval_expr(expression_arg)?;
+            let sample = self.freeze_requested_value(&value)?;
+            return self.lower_tf_arrays_from_samples(
+                scalar_kind,
+                tuple_kinds.as_deref(),
+                vec![sample],
+            );
+        }
+        let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
         if symbol == chart.symbol() && requested_timeframe == chart_timeframe {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
@@ -320,7 +343,9 @@ impl<'a> HistoricalRuntime<'a> {
             let start = values.partition_point(|(time, _)| *time < current_time);
             let end = values.partition_point(|(time, _)| *time < chart_close);
             let samples = (start..end).map(|index| values[index].1.clone()).collect();
-            if !self.request_evaluations.contains_key(&cache_key) {
+            if !self.request_evaluations.contains_key(&cache_key)
+                && !(self.context_windows.prepared && values.is_empty())
+            {
                 self.request_cache.insert(cache_key.clone(), values);
             }
             return self.lower_tf_arrays_from_samples(scalar_kind, tuple_kinds.as_deref(), samples);
@@ -387,6 +412,22 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.new_array_from_values(kind, values))
     }
 
+    fn eval_request_selector_string(
+        &mut self,
+        expr: &HirExpr,
+        function: &str,
+        parameter: &str,
+        allow_missing: bool,
+    ) -> Result<String, RuntimeError> {
+        match self.eval_expr(expr)? {
+            PineValue::String(value) => Ok(value),
+            PineValue::Na if allow_missing => Ok(String::new()),
+            _ => Err(RuntimeError {
+                message: format!("{function} {parameter} must evaluate to string"),
+            }),
+        }
+    }
+
     fn eval_request_security(
         &mut self,
         call_site_id: CallSiteId,
@@ -419,21 +460,19 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "request.security missing symbol argument".to_owned(),
             });
         };
-        let PineValue::String(symbol) = self.eval_expr(symbol_expr)? else {
-            return Err(RuntimeError {
-                message: "request.security symbol must evaluate to string".to_owned(),
-            });
-        };
+        let symbol =
+            self.eval_request_selector_string(symbol_expr, "request.security", "symbol", modern)?;
         let Some(timeframe_expr) = call_arg_expr(args, 1, "timeframe") else {
             return Err(RuntimeError {
                 message: "request.security missing timeframe argument".to_owned(),
             });
         };
-        let PineValue::String(timeframe) = self.eval_expr(timeframe_expr)? else {
-            return Err(RuntimeError {
-                message: "request.security timeframe must evaluate to string".to_owned(),
-            });
-        };
+        let timeframe = self.eval_request_selector_string(
+            timeframe_expr,
+            "request.security",
+            "timeframe",
+            modern,
+        )?;
         let Some(expression) = call_arg_expr(args, 2, "expression") else {
             return Err(RuntimeError {
                 message: "request.security missing expression argument".to_owned(),
@@ -467,6 +506,16 @@ impl<'a> HistoricalRuntime<'a> {
             )?;
         }
 
+        if modern
+            && !self.register_context_window(
+                call_site_id,
+                RequestKey::new(&symbol, requested_timeframe.clone()),
+                calc_bars_count,
+            )?
+        {
+            return self.eval_expr(expression);
+        }
+        let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
         if symbol == chart_symbol && requested_timeframe == chart_timeframe {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
@@ -652,7 +701,10 @@ impl<'a> HistoricalRuntime<'a> {
                 include_forming,
                 RequestMergeClock::new(&self.request_environment, &key),
             )?;
-            if !include_forming && !self.request_evaluations.contains_key(&cache_key) {
+            if !include_forming
+                && !self.request_evaluations.contains_key(&cache_key)
+                && !(self.context_windows.prepared && requested_values.is_empty())
+            {
                 self.request_cache
                     .insert(cache_key.clone(), requested_values);
             }

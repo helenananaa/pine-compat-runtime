@@ -1,0 +1,20 @@
+{
+  "name": "method-chain-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-chain-v5-38.pine",
+  "source_sha256": "43b0a5ccff2a6bee07aed9c7e5e352cbe898489ede31c4d282c087a7d0348e1d",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15
+  ],
+  "native_row": "319 row method-chain-v5-38 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "fca57cd5cc3577e64f5d806283e2670ca1388f301e2763019fa36a976a2a9992",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-chain-v5-38.native.ax.txt",
+  "accessibility_sha256": "7e6524c7c9a77b876734e798dac31f091dc8687aa7b8684a6b896734bc73c060",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-chain-v5-38.native.png",
+  "screenshot_sha256": "2d6bc434a6f4feb9212f2c551888503fbd2ca97e105630e78227d1fe90232142",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "43e0f6935f4e7767cd469c924598e4596e8c4f107588d5a85a08c66095a14fcd"
+}

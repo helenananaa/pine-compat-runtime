@@ -1,0 +1,17 @@
+//@version=5
+indicator("Line point mutation")
+var index_line = line.new(bar_index, high, bar_index + 1, low)
+var time_line = line.new(x1=time, y1=high, x2=time + 60000, y2=low, xloc=xloc.bar_time)
+if bar_index == 1
+    first = chart.point.from_index(bar_index - 1, open)
+    second = chart.point.from_index(bar_index + 2, close)
+    line.set_first_point(index_line, first)
+    index_line.set_second_point(second)
+if bar_index == 2
+    time_first = chart.point.from_time(time - 60000, open)
+    time_second = chart.point.from_time(time + 120000, close)
+    line.set_first_point(time_line, time_first)
+    time_line.set_second_point(time_second)
+line.set_first_point(na, chart.point.now(close))
+line.set_second_point(index_line, na)
+plot(close)

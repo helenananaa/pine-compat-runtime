@@ -1,0 +1,9 @@
+//@version=5
+indicator("window-simple-const-argument-v5-44",dynamic_requests=true)
+simple int x=2
+plot(close,title=str.tostring(x))
+var count=0
+count+=1
+plot(bar_index)
+plot(x)
+plot(count)

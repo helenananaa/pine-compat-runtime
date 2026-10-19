@@ -1,0 +1,8 @@
+//@version=6
+indicator("collection-matrix-bool-v6-45")
+f(matrix<bool> v)=>
+    v.set(0,0,true)
+    v.get(0,0)
+values=matrix.new<bool>(1,1,false)
+plot(f(values)?1:0)
+plot(values.get(0,0)?1:0)

@@ -1,0 +1,32 @@
+//@version=6
+indicator("Selected bool arms v6 probe32",precision=0)
+falseThen=if true
+    false
+trueThen=if true
+    true
+falseElse=if false
+    true
+else
+    false
+trueElse=if false
+    false
+else
+    true
+bothFalse=if false
+    false
+else
+    false
+f()=>false
+g()=>true
+plot(falseThen?1:0,title="false then condition")
+plot(falseThen==false?1:0,title="false then equal false")
+plot(falseThen==true?1:0,title="false then equal true")
+plot(trueThen?1:0,title="true then condition")
+plot(trueThen==true?1:0,title="true then equal true")
+plot(falseElse?1:0,title="false else condition")
+plot(falseElse==false?1:0,title="false else equal false")
+plot(trueElse?1:0,title="true else condition")
+plot(trueElse==true?1:0,title="true else equal true")
+plot(f()?1:0,title="function literal false")
+plot(g()?1:0,title="function literal true")
+plot(bothFalse?1:0,title="both false")

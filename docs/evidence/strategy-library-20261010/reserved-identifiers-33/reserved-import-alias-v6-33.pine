@@ -1,0 +1,4 @@
+//@version=6
+indicator("Reserved import alias probe33",precision=0)
+import TradingView/ta/8 as text
+plot(1)

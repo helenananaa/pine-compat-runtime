@@ -245,6 +245,18 @@ impl Analyzer {
     ) -> Option<PineType> {
         self.expr_types.remove(&self.expr_key(span));
         let receiver_type = self.analyze_expr(receiver)?;
+        if self
+            .method_receiver_key(receiver, receiver_type)
+            .is_some_and(|key| self.methods.contains_key(&(key, name.to_owned())))
+        {
+            let types = args
+                .iter()
+                .map(|arg| self.analyze_expr(&arg.value))
+                .collect::<Vec<_>>();
+            return self
+                .analyze_expression_user_method(receiver, receiver_type, name, span, args, &types)
+                .unwrap_or(None);
+        }
         let canonical = Self::member_builtin_name(receiver_type.kind, name);
         let Some(canonical) = canonical else {
             self.diagnostics.push(Diagnostic::error(

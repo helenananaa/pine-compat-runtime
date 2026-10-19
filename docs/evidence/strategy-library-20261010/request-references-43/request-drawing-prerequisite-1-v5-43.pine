@@ -1,0 +1,10 @@
+//@version=5
+indicator("request-drawing-prerequisite-1-v5-43")
+make()=>
+    line.new(0,1,1,2)
+    chart.point.from_index(1,10)
+p=make()
+p.price:=20
+a=request.security(syminfo.tickerid,timeframe.period,p.price)
+plot(a)
+plot(p.price)

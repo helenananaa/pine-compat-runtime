@@ -1,0 +1,8 @@
+//@version=6
+indicator("body-transitive-method-wrong-kind-v6-46")
+type Anchor
+    int value
+h(bool flag)=>flag
+method g(Anchor self,x)=>h(x)?self.value:0
+f(Anchor self,x)=>self.g(x)
+plot(f(Anchor.new(3),"bad"))

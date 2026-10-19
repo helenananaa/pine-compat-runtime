@@ -2,6 +2,44 @@ use super::*;
 use crate::PineDialect;
 
 impl Analyzer {
+    pub(super) fn lower_legacy_direction_order_conditions(
+        &mut self,
+        name: &str,
+        args: &mut [HirCallArg],
+        span: Span,
+    ) -> Option<()> {
+        if self.legacy.dialect().version() > 3 || !name.starts_with("strategy.") {
+            return Some(());
+        }
+        let Some(index) = pine_builtins::get_phase_1_builtin(name)
+            .and_then(|sig| sig.params.iter().position(|p| p.name == "when"))
+        else {
+            return Some(());
+        };
+        for (i, arg) in args.iter_mut().enumerate() {
+            if (arg.name.as_deref() == Some("when") || (arg.name.is_none() && i == index))
+                && arg.value.pine_type.kind == ValueKind::StrategyDirection
+            {
+                if !self.record_lowering_node(span) {
+                    return None;
+                }
+                let pine_type = PineType::new(arg.value.pine_type.qualifier, ValueKind::Bool);
+                arg.value = HirExpr {
+                    pine_type,
+                    series_id: self.series_id_for_type(pine_type),
+                    kind: HirExprKind::Call {
+                        callee: "__legacy_direction_order_condition".to_owned(),
+                        call_site_id: self.alloc_call_site(),
+                        args: vec![HirCallArg {
+                            name: None,
+                            value: arg.value.clone(),
+                        }],
+                    },
+                };
+            }
+        }
+        Some(())
+    }
     pub(super) fn lower_ternary_bool_branch(
         &mut self,
         branch: HirExpr,

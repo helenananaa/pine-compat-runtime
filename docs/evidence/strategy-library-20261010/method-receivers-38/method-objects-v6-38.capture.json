@@ -1,0 +1,24 @@
+{
+  "name": "method-objects-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-objects-v6-38.pine",
+  "source_sha256": "38d1b4e78e6e480bdbf16ec186c3b023c439eef275a9cf5e15cc944f34f7737f",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2,
+    10,
+    10,
+    1,
+    7
+  ],
+  "native_row": "319 row method-objects-v6-38 Plot 2.00 Plot 10.00 Plot 10.00 Plot 1.00 Plot 7.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "aeb4b4286333abb6bacef2614beb476054fdcf17b80730e9ee284a2ad1f0bc83",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-objects-v6-38.native.ax.txt",
+  "accessibility_sha256": "e9650abd1a8a7cca70ea5878bd01a0a1e2cf39e785470b64a62a88c67b18c311",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-objects-v6-38.native.png",
+  "screenshot_sha256": "dc0e5ec34186399045afcf2a698c04f2e5e0a3e4c471ef9bfdf6a2e3ded7005a",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "6d42c416b49a787b2315f5bb70c888a515a428207692c19dfce90672d6b53552"
+}

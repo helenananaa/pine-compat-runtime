@@ -147,7 +147,13 @@ impl<'a> HistoricalRuntime<'a> {
                         message: "polyline.new expected array<chart.point>".to_owned(),
                     });
                 }
-                Ok(Some(self.array_values_clone(array_id)?.unwrap_or_default()))
+                let values = self.array_values_clone(array_id)?.unwrap_or_default();
+                Ok(Some(
+                    values
+                        .into_iter()
+                        .map(|value| self.materialize_chart_point(value))
+                        .collect::<Result<Vec<_>, _>>()?,
+                ))
             }
             PineValue::Na => Ok(None),
             value => Err(RuntimeError {

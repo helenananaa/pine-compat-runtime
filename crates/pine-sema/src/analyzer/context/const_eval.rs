@@ -2,7 +2,9 @@ use super::*;
 use crate::analyzer::functions::resolve_udf_arg_indices;
 use crate::constant_values::{ConstValue, eval_pure_const_call, exact_i64_from_numeric};
 use crate::legacy::PineDialect;
+mod booleans;
 mod tuple_projection;
+pub(crate) use booleans::ConstantBoolean;
 
 const MAX_STRING_VALUE_DOMAIN_DEPTH: u32 = 64;
 const MAX_STRING_VALUE_DOMAIN_VALUES: usize = 64;
@@ -21,7 +23,8 @@ impl Analyzer {
     ) {
         match key {
             ConstSwitchKey::Bool(value) => {
-                self.const_bool_symbols.insert(symbol.id, *value);
+                self.const_bool_symbols
+                    .insert(symbol.id, ConstantBoolean::primitive(*value));
             }
             ConstSwitchKey::Numeric(value) => {
                 self.const_numeric_symbols.insert(symbol.id, *value);
@@ -642,6 +645,15 @@ impl Analyzer {
 
     pub(crate) fn known_const_string_value(&self, expr: &pine_syntax::Expr) -> Option<String> {
         let expr = expr.without_groups();
+        if let pine_syntax::ExprKind::QualifiedName(parts) = &expr.kind
+            && crate::legacy::strategy_direction_bool(
+                &parts.join("."),
+                self.legacy.dialect().version(),
+            )
+            .is_some()
+        {
+            return None;
+        }
         if let pine_syntax::ExprKind::Binary { op, left, right } = &expr.kind
             && matches!(op, pine_syntax::BinaryOp::Add | pine_syntax::BinaryOp::Sub)
             && self
@@ -1245,74 +1257,7 @@ impl Analyzer {
     }
 
     pub(crate) fn known_const_bool_value(&self, expr: &pine_syntax::Expr) -> Option<bool> {
-        let expr = expr.without_groups();
-        match &expr.kind {
-            pine_syntax::ExprKind::Literal(pine_syntax::Literal::Bool(value)) => Some(*value),
-            pine_syntax::ExprKind::Identifier(name) => {
-                if let Some(ConstSwitchKey::Bool(value)) =
-                    self.function_param_const_switch_key(name)
-                {
-                    return Some(*value);
-                }
-                let symbol = self.const_lookup_symbol(name, expr.span)?;
-                self.const_bool_symbols.get(&symbol.id).copied()
-            }
-            pine_syntax::ExprKind::Unary {
-                op: pine_syntax::UnaryOp::Not,
-                expr,
-            } => self.known_const_bool_value(expr).map(|value| !value),
-            pine_syntax::ExprKind::Binary {
-                op: pine_syntax::BinaryOp::And,
-                left,
-                right,
-            } => Some(self.known_const_bool_value(left)? && self.known_const_bool_value(right)?),
-            pine_syntax::ExprKind::Binary {
-                op: pine_syntax::BinaryOp::Or,
-                left,
-                right,
-            } => Some(self.known_const_bool_value(left)? || self.known_const_bool_value(right)?),
-            pine_syntax::ExprKind::Ternary {
-                condition,
-                then_expr,
-                else_expr,
-            } => {
-                if self.known_const_bool_value(condition)? {
-                    self.known_const_bool_value(then_expr)
-                } else {
-                    self.known_const_bool_value(else_expr)
-                }
-            }
-            pine_syntax::ExprKind::If {
-                condition,
-                then_branch,
-                else_branch,
-            } => {
-                if self.known_const_bool_value(condition)? {
-                    self.known_const_bool_branch_result(then_branch)
-                } else {
-                    self.known_const_bool_branch_result(else_branch)
-                }
-            }
-            pine_syntax::ExprKind::Switch { selector, arms } => {
-                self.known_const_bool_switch_result(selector.as_deref(), arms)
-            }
-            pine_syntax::ExprKind::Binary {
-                op:
-                    op @ (pine_syntax::BinaryOp::Eq
-                    | pine_syntax::BinaryOp::NotEq
-                    | pine_syntax::BinaryOp::Gt
-                    | pine_syntax::BinaryOp::Gte
-                    | pine_syntax::BinaryOp::Lt
-                    | pine_syntax::BinaryOp::Lte),
-                left,
-                right,
-            } => self
-                .known_const_numeric_comparison(*op, left, right)
-                .or_else(|| self.known_const_bool_comparison(*op, left, right))
-                .or_else(|| self.known_const_string_comparison(*op, left, right))
-                .or_else(|| self.known_const_color_comparison(*op, left, right)),
-            _ => None,
-        }
+        self.known_constant_boolean(expr)?.condition_value()
     }
 
     fn known_const_bool_branch_result(&self, statements: &[pine_syntax::Stmt]) -> Option<bool> {

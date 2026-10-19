@@ -1,0 +1,5 @@
+//@version=5
+indicator("collection-matrix-const-v5-45")
+f(const matrix<float> v)=>v.get(0,0)
+values=matrix.new<float>(1,1,10)
+plot(f(values))

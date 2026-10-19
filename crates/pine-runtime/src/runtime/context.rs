@@ -140,7 +140,8 @@ impl<'a> HistoricalRuntime<'a> {
                 && self.activate_bar_aligned_series(series_id)
             {
                 self.current_symbols.insert(symbol_id, value.clone());
-                self.current_series.insert(series_id, value);
+                self.current_series
+                    .insert(series_id, value.materialize_boolean());
             } else {
                 self.current_symbols.insert(symbol_id, value);
             }
@@ -358,7 +359,8 @@ impl<'a> HistoricalRuntime<'a> {
             && self.activate_bar_aligned_series(series_id)
         {
             self.current_symbols.insert(symbol, value.clone());
-            self.current_series.insert(series_id, value);
+            self.current_series
+                .insert(series_id, value.materialize_boolean());
         } else {
             self.current_symbols.insert(symbol, value);
         }
@@ -409,7 +411,8 @@ impl<'a> HistoricalRuntime<'a> {
             } else {
                 self.clone_collection_history_value(value)?
             };
-            self.series_store.commit(series_id, value, max_depth);
+            self.series_store
+                .commit(series_id, value.materialize_boolean(), max_depth);
         }
         Ok(())
     }

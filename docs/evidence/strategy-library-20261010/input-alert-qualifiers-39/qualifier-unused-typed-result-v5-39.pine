@@ -1,0 +1,4 @@
+//@version=5
+indicator("qualifier-unused-typed-result-v5-39")
+constant39(int value)=>3
+plot(ta.ema(close,constant39(bar_index))==ta.ema(close,3)?1:0)

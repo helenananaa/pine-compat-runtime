@@ -1,0 +1,29 @@
+{
+  "name": "live-current-origin-v6-44.initial",
+  "version": 6,
+  "scenario": "live-current-origin",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\live-current-origin-v6-44.pine",
+  "source_sha256": "0858cfdd82bcca7619d52f81fcb1a0fcac3faa46e0f8ac8e4d45db2db02a73bd",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    2,
+    1792323120000
+  ],
+  "native_marker_prefix": [
+    1,
+    1,
+    2
+  ],
+  "native_row": "228 row live-current-origin-v6-44 Plot 1.00 Plot 1.00 Plot 2.00 Plot 1,792,323,120,000.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "0858cfdd82bcca7619d52f81fcb1a0fcac3faa46e0f8ac8e4d45db2db02a73bd",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/live-current-origin-v6-44.initial.native.ax.txt",
+  "accessibility_sha256": "c73d8d48e943847f525631cdc794ea0968af1a9e97bb4ad7b3f8a31f0a0f05c0",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/live-current-origin-v6-44.initial.native.png",
+  "screenshot_sha256": "fbaa4d69d33dc1043a2b7f990b9b6e8ddb0b3dc87a260510e46428eeea247a38",
+  "chart_ui_context": "166 image Chart for BINANCE:BTCUSDT, 1 minute",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

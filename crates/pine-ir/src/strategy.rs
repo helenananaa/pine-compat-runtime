@@ -116,13 +116,13 @@ impl StrategySettings {
         self.default_qty.and_then(|default_qty| match default_qty {
             StrategyDefaultQuantity::Fixed(qty) => Some(qty),
             StrategyDefaultQuantity::Cash(cash) => {
-                if !price.is_finite() || price <= 0.0 {
+                if !price.is_finite() || price == 0.0 {
                     return None;
                 }
                 Some(cash / price)
             }
             StrategyDefaultQuantity::PercentOfEquity(percent) => {
-                if !equity.is_finite() || !price.is_finite() || equity <= 0.0 || price <= 0.0 {
+                if !equity.is_finite() || !price.is_finite() || price == 0.0 {
                     return None;
                 }
                 Some(equity * percent / 100.0 / price)

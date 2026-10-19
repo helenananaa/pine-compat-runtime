@@ -9,6 +9,7 @@ use crate::retention::SeriesRetention;
 pub(crate) struct RuntimeMetadata {
     pub(crate) calls: super::call_plan::CallPlan,
     pub(crate) static_request_dependencies: bool,
+    pub(crate) context_windows: super::context_windows::plan::ContextPlan,
     symbols: HashMap<SymbolId, usize>,
     names: HashMap<String, usize>,
     // Exact nonzero retention eligibility, including unbounded dynamic history.
@@ -22,6 +23,7 @@ impl RuntimeMetadata {
     pub(crate) fn from_program(program: &HirProgram, retention: &SeriesRetention) -> Self {
         let mut metadata = Self {
             calls: super::call_plan::CallPlan::from_program(program),
+            context_windows: super::context_windows::plan::ContextPlan::from_program(program),
             static_request_dependencies: crate::builtins::static_requests::needs_chart_history(
                 program,
             ),

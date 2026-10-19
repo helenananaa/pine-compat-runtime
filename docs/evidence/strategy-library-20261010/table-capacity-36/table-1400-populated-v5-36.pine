@@ -1,0 +1,10 @@
+//@version=5
+indicator("table-1400-populated-v5-36",precision=0)
+var t=table.new(position.bottom_right,7,200)
+filled=0
+if barstate.islast
+    for row=0 to 199
+        for column=0 to 6
+            table.cell(t,column,row,"x")
+            filled+=1
+plot(filled,title="filled cells")

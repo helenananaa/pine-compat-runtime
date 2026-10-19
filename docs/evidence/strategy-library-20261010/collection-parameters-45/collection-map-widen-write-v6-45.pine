@@ -1,0 +1,9 @@
+//@version=6
+indicator("collection-map-widen-write-v6-45")
+f(map<string,float> v)=>
+    v.put("x",2.5)
+    v.get("x")
+values=map.new<string,int>()
+values.put("x",1)
+plot(f(values))
+plot(values.get("x"))

@@ -58,7 +58,8 @@ impl Parser {
             return None;
         }
 
-        let alias = if self.current_identifier_is("as") {
+        let explicit_alias = self.current_identifier_is("as");
+        let alias = if explicit_alias {
             self.bump();
             let alias_span = self.current().span;
             match self.current().kind.clone() {
@@ -81,6 +82,11 @@ impl Parser {
             })
         };
 
+        // Native parses an omitted alias as a library namespace and proceeds
+        // to library lookup even when its title is a reserved declaration name.
+        if explicit_alias && let Some(alias) = &alias {
+            self.reject_reserved_binding(&alias.name, alias.span);
+        }
         let end = alias.as_ref().map_or(key_end, |alias| alias.span);
         Some(Stmt {
             span: start.merge(end),
@@ -155,6 +161,7 @@ impl Parser {
         } else if let TokenKind::Identifier(name) = self.current().kind.clone() {
             let item_start = self.current().span;
             if self.nth_at(1, TokenKind::Eq) {
+                self.reject_reserved_binding(&name, item_start);
                 self.bump();
                 self.bump();
                 let value = self.parse_expr(0)?;
@@ -190,6 +197,7 @@ impl Parser {
         let start = self.current().span;
         self.bump();
         let (name, name_span) = self.expect_identifier("expected user-defined type name")?;
+        self.reject_reserved_binding(&name, name_span);
         let mut end = name_span;
         let fields = if self.at(TokenKind::Newline) && self.nth_at(1, TokenKind::Indent) {
             self.bump();
@@ -212,6 +220,7 @@ impl Parser {
                 }
                 let (type_name, type_span) = self.expect_field_type_name()?;
                 let (field_name, field_span) = self.expect_identifier("expected field name")?;
+                self.reject_reserved_binding(&field_name, field_span);
                 end = field_span;
                 let default_value = if self.at(TokenKind::Eq) {
                     self.bump();
@@ -252,6 +261,7 @@ impl Parser {
         let start = self.current().span;
         self.bump();
         let (name, name_span) = self.expect_identifier("expected method name")?;
+        self.reject_reserved_binding(&name, name_span);
         self.expect(TokenKind::LParen, "expected `(` after method name")?;
         let params = self.parse_method_params()?;
         self.expect(TokenKind::RParen, "expected `)` after method parameters")?;

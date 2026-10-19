@@ -1,4 +1,5 @@
 mod boxes;
+mod extend;
 mod labels;
 mod linefills;
 mod lines;

@@ -1,0 +1,1419 @@
+{
+  "scope": "44 new complete-source Native v5/v6 collection parameter observations plus 4 unchanged prior request-frontier sources. Controlled scalar projections and explicit rejection contracts; not exhaustive reference-type or full strategy ledger qualification.",
+  "records": [
+    {
+      "name": "collection-map-global-v5-45",
+      "version": 5,
+      "scenario": "map-global",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v5-45.pine",
+      "source_sha256": "e54f9a880a15782c960fa0fac3a5a10cefa1912f684013e6d5580f1c0d939c7a",
+      "expected_values": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "239 row collection-map-global-v5-45 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "cf8a5e12c5f647d516b556d0750ffd16e7baa284808bbe6206e305eb174420eb",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v5-45.native.ax.txt",
+      "accessibility_sha256": "e30fccba998ff2a05d90b4726e01bee7bc22732408be46d22ccc659565c22cce",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v5-45.native.png",
+      "screenshot_sha256": "866969be07bd49cbf8ef8192a0dd2e7212c491557aefc7cd6ed058305da753ae",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v5-45.capture.json",
+      "raw_capture_sha256": "2c153091d7e0e1ee6d5d6980f971d6adf4b8651d9be320f76e1127878787afe7",
+      "local_three_bar_values": [
+        15,
+        15
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-copy-v5-45",
+      "version": 5,
+      "scenario": "map-copy",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v5-45.pine",
+      "source_sha256": "b45e8f0443f5a9a1f3e0afd1e5b1d7f0726a5e26aef8e7f6e35656923cb09940",
+      "expected_values": [
+        20,
+        10
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        10
+      ],
+      "native_row": "239 row collection-map-copy-v5-45 Plot 20.00 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2de8805a047050904cc4ffda906bd766f2671ec7ee2aab2e1060f390bebb9c20",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v5-45.native.ax.txt",
+      "accessibility_sha256": "832acac79452fae248b1810b986381058f977475e8a947893d48c9185e62ad53",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v5-45.native.png",
+      "screenshot_sha256": "cc594e8ba1d8c19e48013ca8f198f2487ba8c04cec3596f3e209918b140359cb",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v5-45.capture.json",
+      "raw_capture_sha256": "07d15affe8036fde1b5f0a7c9920822cc8f42ecf1ca4f82d53a244a3c7ccb25d",
+      "local_three_bar_values": [
+        20,
+        10
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-return-v5-45",
+      "version": 5,
+      "scenario": "map-return",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v5-45.pine",
+      "source_sha256": "0a34acd18502e9118eb10c681d78f376e10045b3542e943bd7b6350c0edfcb48",
+      "expected_values": [
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20
+      ],
+      "native_row": "239 row collection-map-return-v5-45 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "0136ae079e55df9a2e85966acf1c125a333df3be293ba62a8b121f75011e65e7",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v5-45.native.ax.txt",
+      "accessibility_sha256": "9fc8081530179d533217cee2ab231f192cfe29c706c0c8900a49ddab7fa3e9a2",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v5-45.native.png",
+      "screenshot_sha256": "2edd44a83c311b6455dc1d49df5abec3408bf8e8be5d0fa67c42320e95099ea6",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v5-45.capture.json",
+      "raw_capture_sha256": "6c5ec22a777c713de3ba2c67847b3dbe2e36eac0154e1223ef0d9dbf5b76f595",
+      "local_three_bar_values": [
+        20
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-operations-v5-45",
+      "version": 5,
+      "scenario": "map-operations",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v5-45.pine",
+      "source_sha256": "14641cf331289a0050d2ea5c38f7bb91941359524db48140ea42f558321fa913",
+      "expected_values": [
+        1,
+        0
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        0
+      ],
+      "native_row": "239 row collection-map-operations-v5-45 Plot 1.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c522b711e648b8721f4ced889d532d467b15e6d5d9889fed74e9ee0c5c4256a0",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v5-45.native.ax.txt",
+      "accessibility_sha256": "f612c483f2f3a6754bd7e897967b9b13db9190c781eec858ef779ad421a70cc9",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v5-45.native.png",
+      "screenshot_sha256": "86b9d1e93b99ed4fa1671a05b3fad6b9f18b4016a99b1b437011bede9dce614b",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v5-45.capture.json",
+      "raw_capture_sha256": "bf60c7933c275bf0bc51ffbbf31a4b74bfe5e33130210c22e0eb9edcb48473d2",
+      "local_three_bar_values": [
+        1,
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-remove-return-v5-45",
+      "version": 5,
+      "scenario": "map-remove-return",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v5-45.pine",
+      "source_sha256": "c6731251970793efea4c4e7212c249f1a46d5f9307f925eceabe52b4271bca2f",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10,
+        0
+      ],
+      "native_row": "239 row collection-map-remove-return-v5-45 Plot 10.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "65ad44a5bd919fbb8a784f11a975dca498a9bf3fcc8223f801acbcec4751df21",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v5-45.native.ax.txt",
+      "accessibility_sha256": "0f3be469c17a1c9708d5b76b01138034726814f415c8ad76122df22844af9841",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v5-45.native.png",
+      "screenshot_sha256": "ed8cc8497068f0b85a22657cca360609051ddf4f9930656c3731f046d219e4a6",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v5-45.capture.json",
+      "raw_capture_sha256": "8a59e0b564ecacb6b7548a5c8ac9eee79584905fdd83919908ee8eab116eceb9",
+      "local_three_bar_values": [
+        10,
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-persistent-v5-45",
+      "version": 5,
+      "scenario": "map-persistent",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v5-45.pine",
+      "source_sha256": "6b72c5ad6ce07de10c5dad58da4803106c50bc3a1b9fb92f22e76ebdedd5f5a7",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3305,
+        3305
+      ],
+      "native_row": "239 row collection-map-persistent-v5-45 Plot 3,305.00 Plot 3,305.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "a468ef1a9957a7378a65f3f2c3b43239290406f5473a29f2015f6deb026f4746",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v5-45.native.ax.txt",
+      "accessibility_sha256": "ce79ba761bee73ce4c4ad33a4c3f1e331177602f3ddefdfa4249e6e11bac0ba0",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v5-45.native.png",
+      "screenshot_sha256": "455ed615872abc115ad048fe784efab67665d9ac65bab1e41a0502b62d7690bf",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v5-45.capture.json",
+      "raw_capture_sha256": "7b3ae89c6cd29f2c0701a4aa91707c6f754496e878f0f204ba2b451df82453dc",
+      "local_three_bar_values": [
+        3,
+        3
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-wrong-key-v5-45",
+      "version": 5,
+      "scenario": "map-wrong-key",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v5-45.pine",
+      "source_sha256": "300dfbb77b5d7fb41c760dc8f6a248800b19d887201cf95aad7409a37d5f573d",
+      "expected_values": null,
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call 'f' with argument 'v'='values'. An argument of 'map<int, float>' type was used but a 'map<string, float>' is expected.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "a38d1818c5ab24e1fb3cb4a07977ab11a0a7152ecd6ed81e03525bfd8dfd40a6",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v5-45.native.ax.txt",
+      "accessibility_sha256": "43fad86296ce423fce9ef75b56d137ce333e9d378fccf84912228c9813c043f2",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v5-45.native.png",
+      "screenshot_sha256": "f11b646e3b8ceca8acdf661c12ae4511b3ed57b0155a6586bcb8d2dee3358ea8",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v5-45.capture.json",
+      "raw_capture_sha256": "14d09d38f614bbbaecb401fce3fecec2b6c2ba0100524b3822f9c74000e5934f"
+    },
+    {
+      "name": "collection-map-wrong-value-v5-45",
+      "version": 5,
+      "scenario": "map-wrong-value",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v5-45.pine",
+      "source_sha256": "2cd93ce4ef2ddf292e6b2487c69bd0b6140bc9320f1e30de33d09a2ed40f5c54",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-wrong-value-v5-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "9aeb5f5e45a12cef4a39965bd2cc1ceb80b6b2affd6971fd5ba68551f8daeb80",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v5-45.native.ax.txt",
+      "accessibility_sha256": "2ed68d1e707538af1c2b4d81ec197522cf3da64c218461350ac0c23aedae4f9f",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v5-45.native.png",
+      "screenshot_sha256": "366ef5555707b54376f26bcc39cec2400ed6a9be35b44cbd50e10f7f93d9f37c",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v5-45.capture.json",
+      "raw_capture_sha256": "d472b3bb350e4d61c00ec237145dbe61030bec3cec0c29df5f89e24b6aafae31",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-const-v5-45",
+      "version": 5,
+      "scenario": "map-const",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v5-45.pine",
+      "source_sha256": "8ae7ad4ef5ef5e639f2462dfe2fdb173943d752af3f2bfd1dab07f3536e37465",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-const-v5-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "69c8dbb025e0a4bfe856477a1506a32dba6e0389aea66ad011f19ea5b0f9e5b8",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v5-45.native.ax.txt",
+      "accessibility_sha256": "c7919553feac3ab6885351880c0aff20ec8796b52639f23177afb5676196ae85",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v5-45.native.png",
+      "screenshot_sha256": "f0d9328a07e90cf7d4030bf1ca5f9bdb257293b1ee928578b26edca56c12326a",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v5-45.capture.json",
+      "raw_capture_sha256": "741ee09d8944c10127413ae9dae9e08c1c2c8222a3dff95ac2f03216b06046a7",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-const-v5-45",
+      "version": 5,
+      "scenario": "matrix-const",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v5-45.pine",
+      "source_sha256": "e9445de469c9f421abcfe708e6880a46a6f661b99b0b4b928c28fbecfba5aa16",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10
+      ],
+      "native_row": "239 row collection-matrix-const-v5-45 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "8679fe24f4bb96ca40d02a11e5bc9e0513347704139f305824bac2dfb17f627c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v5-45.native.ax.txt",
+      "accessibility_sha256": "380876a48c0aec836c721eb025f509304560b37f12732d23073a3730102fcd5f",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v5-45.native.png",
+      "screenshot_sha256": "acbb54d2e94c85fd13c97f226499e74b5b71753dc37a57e5d479b721b189fb17",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v5-45.capture.json",
+      "raw_capture_sha256": "8dc18b6987650cc28208333b114991880c92662e6d936cc725aecd8f26866881",
+      "local_three_bar_values": [
+        10
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-wrong-element-v5-45",
+      "version": 5,
+      "scenario": "matrix-wrong-element",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v5-45.pine",
+      "source_sha256": "686b1435207f264d069d548dc452d1e45f02da3bab8c9b77aafb7f39025c1158",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10
+      ],
+      "native_row": "239 row collection-matrix-wrong-element-v5-45 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c31020db3b84ca0884a7fe7e61a09a8a38410d5620d9ff94b851182b6409484b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v5-45.native.ax.txt",
+      "accessibility_sha256": "f68a6f623da95e5e6015602f63ded9ea9efc66a08976bcd24ff2a6938ccf53a9",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v5-45.native.png",
+      "screenshot_sha256": "46ae6f36cad7d0604be1b15950e2c0f313b35c4fed27de7d5cd16ae0bc7c00b7",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v5-45.capture.json",
+      "raw_capture_sha256": "780b9265a0ec7e24fe9dd4eaa575f22c72f57f130558566b2e7a25df60392ab1",
+      "local_three_bar_values": [
+        10
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-string-v5-45",
+      "version": 5,
+      "scenario": "matrix-string",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v5-45.pine",
+      "source_sha256": "18d9d99b688fdca56aebcaf1d9ab32ba5dead98ccac72d5da3a3752f0ebc9e94",
+      "expected_values": [
+        3,
+        3
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3,
+        3
+      ],
+      "native_row": "239 row collection-matrix-string-v5-45 Plot 3.00 Plot 3.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "db5d8a69c517aa93f19f4693f5b6e385f7065e818231c7477d1a92ea65be3732",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v5-45.native.ax.txt",
+      "accessibility_sha256": "8c9ee4407d2d37447d55e5378556e96188baaf259f83656af09bb4d6b4c73918",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v5-45.native.png",
+      "screenshot_sha256": "483eb2843f706dc27029b80f7970f629c824c98f2c41c3e83c588840d7b8aa7e",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v5-45.capture.json",
+      "raw_capture_sha256": "cb5d47e50433ad7d535d7ff3233ab7adebddc7a4e37a14f15dd99c17d67158a3",
+      "local_three_bar_values": [
+        3,
+        3
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-bool-v5-45",
+      "version": 5,
+      "scenario": "matrix-bool",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v5-45.pine",
+      "source_sha256": "847d50952753913f228d860ea795ae32752ed37419890050fab9958683bf6459",
+      "expected_values": [
+        1,
+        1
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        1
+      ],
+      "native_row": "239 row collection-matrix-bool-v5-45 Plot 1.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "f70282fb929ad54a9a6301e2be44a6e1b257c51b4827a8102f1b0591cd517447",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v5-45.native.ax.txt",
+      "accessibility_sha256": "604dae679e1ba7d832d4e67b370898b903b75ac63cc39e4af622af05a347fb28",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v5-45.native.png",
+      "screenshot_sha256": "3d410e464f25c57d304bd1be04a0fa3bddc228ee012f10816afc630cc6ca0347",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v5-45.capture.json",
+      "raw_capture_sha256": "49133d6b6b38ec407d6ba27617fed66e26b225bae1d47ef74836524582f4f7cd",
+      "local_three_bar_values": [
+        1,
+        1
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-method-v5-45",
+      "version": 5,
+      "scenario": "map-method",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v5-45.pine",
+      "source_sha256": "ad3f86d70a3adad569d520760c8c1e2b15047758f72b05ad7cc7339957b4f4bd",
+      "expected_values": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "239 row collection-map-method-v5-45 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "902dee3db1c6cf3ca110ef9d952ad9b3495d7bf08c24f5756664e1342b99e1fc",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v5-45.native.ax.txt",
+      "accessibility_sha256": "4a277a3ac31ce1815de4497be5bd9e76b518e05e333b8bfb98a849d730effa29",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v5-45.native.png",
+      "screenshot_sha256": "2d5327bd934f18ca747fcc1a4d67b726f39a9a540234fe6e6086e229671e7b98",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v5-45.capture.json",
+      "raw_capture_sha256": "dbf55371f29ae8beacc31b2e6ec678111354d6da36443111b8d9d0f40399650e",
+      "local_three_bar_values": [
+        15,
+        15
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-method-v5-45",
+      "version": 5,
+      "scenario": "matrix-method",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v5-45.pine",
+      "source_sha256": "9af4afd9820cef1e901dbbb22dcf4085385d1258c720ff22f9e5a366f8a26df6",
+      "expected_values": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "239 row collection-matrix-method-v5-45 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2da015b6e28295a301be44ee62e11d128a22f9e3c52bc71cda83601dd5c8d71a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v5-45.native.ax.txt",
+      "accessibility_sha256": "13c7bd48817ad9fd3ca6b44c96954a35b64c7f5c2866cad72541334d1234e11c",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v5-45.native.png",
+      "screenshot_sha256": "75bf26bb1b3cb5e2580a9f474df35f8da52e1ccde805fc8297d75345767b48ff",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v5-45.capture.json",
+      "raw_capture_sha256": "c658e54a12968fdfa71fbe2a3dbab35354bf6bf52c93f1ff7f8751460ab26e2d",
+      "local_three_bar_values": [
+        15,
+        15
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-global-v6-45",
+      "version": 6,
+      "scenario": "map-global",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v6-45.pine",
+      "source_sha256": "f39575be2c2c4a7a8f8e92b013e3d39d1db9aa80bc1b784e522f68281348c8f2",
+      "expected_values": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "239 row collection-map-global-v6-45 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "a08c2e8c19a83df8a72e5b3174f5f2a730acc9f6ea20e8972c1c78fa8476ec46",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v6-45.native.ax.txt",
+      "accessibility_sha256": "6bad7f47e5c998d346af0935dfc5990eaec41e57c2b9d2d6ec7ae05ec9b4ce2a",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v6-45.native.png",
+      "screenshot_sha256": "c63e7e2862bde33d56aadd2b5379aa837069092a9b4bc86c66004725336f7bf6",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-global-v6-45.capture.json",
+      "raw_capture_sha256": "955045f7521e84d66d2a67c9f486ac0d4552699d0714a8006da0b0772e9a306b",
+      "local_three_bar_values": [
+        15,
+        15
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-copy-v6-45",
+      "version": 6,
+      "scenario": "map-copy",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v6-45.pine",
+      "source_sha256": "614e0d6f7927f717db6ed9f8216efe179fece7795d14b004a85b064aa648d346",
+      "expected_values": [
+        20,
+        10
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        10
+      ],
+      "native_row": "239 row collection-map-copy-v6-45 Plot 20.00 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "9f1ab68cc454b49460a67ee8b6b1e7c25d52c19fb5d5a573e0367de30687155f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v6-45.native.ax.txt",
+      "accessibility_sha256": "8044516f4250fddb1afd0ed4c66ebf0b42f309b7971ab7de622b69a5d16347b9",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v6-45.native.png",
+      "screenshot_sha256": "9c0e149d60eca428f1405dbc82ea74c546f6e58d9ad85a2b9b6e64a327707a4b",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-copy-v6-45.capture.json",
+      "raw_capture_sha256": "2c90cea849e79efa925d2675ba5ee627f5710187d8206b3f98fff6330f696814",
+      "local_three_bar_values": [
+        20,
+        10
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-return-v6-45",
+      "version": 6,
+      "scenario": "map-return",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v6-45.pine",
+      "source_sha256": "4409e5537cb5411dcc4fed3568d93756e4ddab18f91b4ce348f496a5f71b9b9e",
+      "expected_values": [
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20
+      ],
+      "native_row": "239 row collection-map-return-v6-45 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "e6c4eab83655f50eac662d5eec5331ab05e410b940c47e217b91929b6ffa6d8b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v6-45.native.ax.txt",
+      "accessibility_sha256": "46155b21e3d7c547fa155188a3d1534dccd3aca42df68fd51754f1467aa3b29b",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v6-45.native.png",
+      "screenshot_sha256": "a027d3c8b19d85d9700570a23a3361235186c15e19341639fb86a4f58a6454d0",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-return-v6-45.capture.json",
+      "raw_capture_sha256": "efc5012dd4ebdfe19a015469139c3fe01ea741aee94491c2aae0d0b28a209888",
+      "local_three_bar_values": [
+        20
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-operations-v6-45",
+      "version": 6,
+      "scenario": "map-operations",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v6-45.pine",
+      "source_sha256": "9ed5b998fb2505fab142acd895b0e5aef32e96fb753e93f45169854301d084c6",
+      "expected_values": [
+        1,
+        0
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        0
+      ],
+      "native_row": "239 row collection-map-operations-v6-45 Plot 1.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "e801fae8f8bfd2e64bdd3649014ba8baeaeeb3535860d35bd6ed8b1ffaea0359",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v6-45.native.ax.txt",
+      "accessibility_sha256": "b930351d8347546174e030b2aca9f00d84ab51e5406dcd06277fe404934a6281",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v6-45.native.png",
+      "screenshot_sha256": "de229667926cfdf48e7c9e033f0d40970b6caa0a9b6602009b0210b50da2e27f",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-operations-v6-45.capture.json",
+      "raw_capture_sha256": "630a3b325e4ebc6132403a049a9379164e2a472a030e7a4b849a6d96e55af609",
+      "local_three_bar_values": [
+        1,
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-remove-return-v6-45",
+      "version": 6,
+      "scenario": "map-remove-return",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v6-45.pine",
+      "source_sha256": "80fe84770ab1e194303526dd6f502412c7b29231018e20bf56b7ce102553c48e",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10,
+        0
+      ],
+      "native_row": "239 row collection-map-remove-return-v6-45 Plot 10.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "6ab32c37c482151738b7cd1ff9fd14166e0d7334689851eac5e6dcb5d21609bc",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v6-45.native.ax.txt",
+      "accessibility_sha256": "9fbb70887a5fb6b37f0a8ece1552b3c8a046b7e5908ee60a0451f075586c6422",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v6-45.native.png",
+      "screenshot_sha256": "811210dcc5a9dc0220a78589732c5b0df95b9d08102bb7f21d131e8b98d151bf",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-remove-return-v6-45.capture.json",
+      "raw_capture_sha256": "3400967286ebcdbc3dfc4b6a705616aa6a6b563664efcf8e1e5ad1a189012f56",
+      "local_three_bar_values": [
+        10,
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-persistent-v6-45",
+      "version": 6,
+      "scenario": "map-persistent",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v6-45.pine",
+      "source_sha256": "81ea037b72a115c45e8194b7962acc96623dd52e5d552e0d2bc97a14b049b528",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3305,
+        3305
+      ],
+      "native_row": "239 row collection-map-persistent-v6-45 Plot 3,305.00 Plot 3,305.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "803ea3e14ab8241753342b3397793ca85d3abcb274b9c852a91f544211333ede",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v6-45.native.ax.txt",
+      "accessibility_sha256": "3e1bd86aa96c949728c48e718247d4ac4058bd456a4fe90388dea9bc0b6329eb",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v6-45.native.png",
+      "screenshot_sha256": "9c7323bae285b9595944eb2d8867dc2c1877030780e20125c6bab8dd40116d90",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-persistent-v6-45.capture.json",
+      "raw_capture_sha256": "5d829148b0899b306cbc13c2156f81a5af0bea00001654e904fbae8f6814eea9",
+      "local_three_bar_values": [
+        3,
+        3
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-wrong-key-v6-45",
+      "version": 6,
+      "scenario": "map-wrong-key",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v6-45.pine",
+      "source_sha256": "0a92e2dfa7726b1d69f1d929ad7831c22642ac53e43327824580883f84bdbf3d",
+      "expected_values": null,
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call \"f\" with argument \"v\"=\"values\". An argument of \"map<int, float>\" type was used but a \"map<string, float>\" is expected. (CE10123)",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "3fb731bc832c12fdcc633a266a9720a649e539db25664aad2bbfdf7b2a5bcbf7",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v6-45.native.ax.txt",
+      "accessibility_sha256": "6b327499556820da553b75ef8017d867b0b6e9b79dfd25811e71f0460ace1fad",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v6-45.native.png",
+      "screenshot_sha256": "4f29cf3195e240cf6cd87cbcb4688a3b9803238e9fc490aa55483cd69945d202",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-key-v6-45.capture.json",
+      "raw_capture_sha256": "9e933d1cdf0e5e9616293b860a3f5d93d33384be5a371f264d2f95c336f20c4a"
+    },
+    {
+      "name": "collection-map-wrong-value-v6-45",
+      "version": 6,
+      "scenario": "map-wrong-value",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v6-45.pine",
+      "source_sha256": "30d563f14d9c1780764ff7cd61f3999f83bc3e7a541e3673a2f5cebfa914c79c",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-wrong-value-v6-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "3181af1e3ba9c0dae17ff744277b1b91a4e17cbca4c95f24678ed5d8be4d7d7c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v6-45.native.ax.txt",
+      "accessibility_sha256": "e2446863d720579649d6ce252b6e03c09a75c9a1bb04711bf97ba275f0d89cd1",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v6-45.native.png",
+      "screenshot_sha256": "0e71f465c8236f70a1c6fe9bce18452511771533face06003cd171ca072efb30",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-wrong-value-v6-45.capture.json",
+      "raw_capture_sha256": "015a0eb69bc168d5ab30322e55678b616fcf0d3a704f026e1dd32b1c40cfdd5c",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-const-v6-45",
+      "version": 6,
+      "scenario": "map-const",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v6-45.pine",
+      "source_sha256": "c48b115574646164e4fe70ded30744b3f320d0a94414415a08b0c87e31d1aaf3",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-const-v6-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "d4d748f023dab3690ca7d99f4f58091e571788a9e93c50fe7673562d64e34d52",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v6-45.native.ax.txt",
+      "accessibility_sha256": "2871706a29bbd63c37f3779ee176e5f104f2afa1181f3b4178cc3977178caf0d",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v6-45.native.png",
+      "screenshot_sha256": "2766727480bf89f9691796c3a1e6e615bf1a53c193c0dccef427cde57d78118f",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-const-v6-45.capture.json",
+      "raw_capture_sha256": "fbecfe191d52f15cb65e6611f88654b30bf8083572784b9b7c13abb7e4cd00ea",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-const-v6-45",
+      "version": 6,
+      "scenario": "matrix-const",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v6-45.pine",
+      "source_sha256": "f46e079b48f5f0092de400f2a2903a4841f0ef9e4035dfa0dd9e7892705974a6",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10
+      ],
+      "native_row": "239 row collection-matrix-const-v6-45 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "6d694abc004835468ab8cccb3a4be01efb889869a49d7ed1ac7ace3beb07057f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v6-45.native.ax.txt",
+      "accessibility_sha256": "0b643d52dd0d5b7e17ef12b20b1add3d4cfee3beaf2a16c7b6205ca78bd11b8d",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v6-45.native.png",
+      "screenshot_sha256": "1ca641f6cac5e17c933e122ef9f3bfb87e05162f4329271cd63c3b299f639898",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-const-v6-45.capture.json",
+      "raw_capture_sha256": "f975590a528e71b5ddc76cdb7025d607be8e043f1fe1a445a8ea7ee4145bf266",
+      "local_three_bar_values": [
+        10
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-wrong-element-v6-45",
+      "version": 6,
+      "scenario": "matrix-wrong-element",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v6-45.pine",
+      "source_sha256": "a91bc802c26285700df25d6b9b34108d1f3e3914b77c035bb8cc5e858af95f22",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10
+      ],
+      "native_row": "239 row collection-matrix-wrong-element-v6-45 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ab356dc96e86092964ef4ee0d6eeb53da97964e13cad3306e6cf20c81f8a71c6",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v6-45.native.ax.txt",
+      "accessibility_sha256": "0b4445745fee02df3707327cef59116c942f8e8ea500f5cf1fe4ff9617e97354",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v6-45.native.png",
+      "screenshot_sha256": "73bca31afa67f0438c6971bdc250537927efdb20084f6945c6b65ed903634d1f",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-wrong-element-v6-45.capture.json",
+      "raw_capture_sha256": "7dbdee85ad0de00d9d8ca6c824c3601cddd551fa2c91512dbb6f779bc9b05db2",
+      "local_three_bar_values": [
+        10
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-string-v6-45",
+      "version": 6,
+      "scenario": "matrix-string",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v6-45.pine",
+      "source_sha256": "a72a63e7cb3d508625ac388082aeed0e54d15009db10778601b9b54a5248009f",
+      "expected_values": [
+        3,
+        3
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3,
+        3
+      ],
+      "native_row": "239 row collection-matrix-string-v6-45 Plot 3.00 Plot 3.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2c1061b38ebc52e2593fdf09f9659c9a1607d33361aed36099ae76ebd3ad501b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v6-45.native.ax.txt",
+      "accessibility_sha256": "eb14eaff6e637799c6337066e0640b8fb54d089d479894216fcaf0ad296e6d8b",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v6-45.native.png",
+      "screenshot_sha256": "5bc9cdf08eff2ff5e08aa064d4f293e36e7bc4fb1dbbb5320b847a03c2e402a1",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-string-v6-45.capture.json",
+      "raw_capture_sha256": "c845cb6b93c759cc464ffa5449814bf9abbd74a41a23c20e750cc97ebd9a515b",
+      "local_three_bar_values": [
+        3,
+        3
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-bool-v6-45",
+      "version": 6,
+      "scenario": "matrix-bool",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v6-45.pine",
+      "source_sha256": "96fbb72362899116be85284d98a8c4438fd385e29ec597b790fb777403e020fb",
+      "expected_values": [
+        1,
+        1
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        1
+      ],
+      "native_row": "239 row collection-matrix-bool-v6-45 Plot 1.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1e2293bb1a2facd85a2701dd8aa4fb372d4be1cb34a112e8fe98976c86b78198",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v6-45.native.ax.txt",
+      "accessibility_sha256": "0ce17ea2cb2582891cb5a7e8e094565db612b4c81796d1d4e2624489691211f1",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v6-45.native.png",
+      "screenshot_sha256": "a512ab2d6f9b35e9a935b2ef98b3241a548285a1f33c7a705496ba6b73aa61d0",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-bool-v6-45.capture.json",
+      "raw_capture_sha256": "501f660f60bf9acff6b7a02ef9805d5aeef35ff9a55dc17f6310d49c2d032e43",
+      "local_three_bar_values": [
+        1,
+        1
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-method-v6-45",
+      "version": 6,
+      "scenario": "map-method",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v6-45.pine",
+      "source_sha256": "69098337207e0f989295c54aed4e66f620461f7b1cbc7654e2414a1b3c484d15",
+      "expected_values": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "239 row collection-map-method-v6-45 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "29bd5da9702a9c3482c6ae7f849c45630f67edcc737e3db839964c68a8027594",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v6-45.native.ax.txt",
+      "accessibility_sha256": "2a73bd29e5ee8aa577a7ab7381ad8be9fe00ae4d10e33541fe804220c77799de",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v6-45.native.png",
+      "screenshot_sha256": "c0c93d524659a63a9c69f6ced9ce48e1d7a3f9cdce4e47152bf1147227d92d96",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-method-v6-45.capture.json",
+      "raw_capture_sha256": "6a12696de522844645d0ee23db518eb6a85f8f51fe444c6ffa988fe011079e33",
+      "local_three_bar_values": [
+        15,
+        15
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-method-v6-45",
+      "version": 6,
+      "scenario": "matrix-method",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v6-45.pine",
+      "source_sha256": "97e2f7f6c477c89a22247c3c62e72c4995e941a5af04ef8a3b82b56b7a0bb0b9",
+      "expected_values": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "239 row collection-matrix-method-v6-45 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1c1f092195fb9171df2c83deb9dfd532015d2c1072ffa6e8db2d2276b74cc48d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v6-45.native.ax.txt",
+      "accessibility_sha256": "2ec051a5168701833ad273e07c9aab7a8e3b5912d33389c7b6d7d8d2e7f46131",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v6-45.native.png",
+      "screenshot_sha256": "cf9408ae36bab3b337f83f43c44cd5544ff2b36f86d7faea31f1b50c3fbb7245",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-method-v6-45.capture.json",
+      "raw_capture_sha256": "f76601e7b3568c9ee78160fca04810432f909f0ffba6abba2df4639b4937826d",
+      "local_three_bar_values": [
+        15,
+        15
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-widen-write-v5-45",
+      "version": 5,
+      "scenario": "map-widen-write",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v5-45.pine",
+      "source_sha256": "4f0783b011bc77eb67127e4863e8b000dba868d1e8dd20671bf010686102f298",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2.5,
+        2.5
+      ],
+      "native_row": "239 row collection-map-widen-write-v5-45 Plot 2.50 Plot 2.50",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "3c9cb858897c5f530ebaeebf341a8bc8f2cdc517c4b1c0d9c8f69d7bb73cfde1",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v5-45.native.ax.txt",
+      "accessibility_sha256": "01ff31e20c656951e6bafa2b17b7e9c0d8c31ac9c3e65245105acdd1e483f42a",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v5-45.native.png",
+      "screenshot_sha256": "b0f8aebacf63bb4054651ca1e8d07ae2be35d84282f48af95dcc36400e6e811b",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v5-45.capture.json",
+      "raw_capture_sha256": "73b0d9d2116a7c26389e22e4a9afec5168088dd658f987399229c4ddd4f99ce2",
+      "local_three_bar_values": [
+        2.5,
+        2.5
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-widen-write-v5-45",
+      "version": 5,
+      "scenario": "matrix-widen-write",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v5-45.pine",
+      "source_sha256": "c1774d67b2646edac1961a7d34b6e2051f588718ba08a53f1fc9ba6e96291d91",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2.5,
+        2.5
+      ],
+      "native_row": "239 row collection-matrix-widen-write-v5-45 Plot 2.50 Plot 2.50",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ba9b045063f89d24fe2c5ced9d8779b7c753fe55ad80caccca9f95e461024093",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v5-45.native.ax.txt",
+      "accessibility_sha256": "d212260a97d35a654607390643ca5c2091d5c9619e75761a84d4f46747b51a5d",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v5-45.native.png",
+      "screenshot_sha256": "aaae5b9745aee94ee5bc475760befbf31a16ee71e31367fe7f872d585be024dc",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v5-45.capture.json",
+      "raw_capture_sha256": "26e9469db99a4cb1f8d6cbfdf12efb20f60972e231ece8e3d9e114519d16378a",
+      "local_three_bar_values": [
+        2.5,
+        2.5
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-narrow-v5-45",
+      "version": 5,
+      "scenario": "map-narrow",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v5-45.pine",
+      "source_sha256": "59f780e31544e436a4473b23c69b70437106227e5574a25ad5b1cfec5468af93",
+      "expected_values": null,
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call 'f' with argument 'v'='values'. An argument of 'map<string, float>' type was used but a 'map<string, int>' is expected.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "699e2e9dfac1eee766f5ef1f5c06ef0998ba5239d53dda64ec672d81b95c48ed",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v5-45.native.ax.txt",
+      "accessibility_sha256": "7f8e69c423fb618f91a5108b51443ce6d1c27156b9d8e836d55523844c44c0eb",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v5-45.native.png",
+      "screenshot_sha256": "83fd5d8cc1ab5a27c60fbb20acd147c592bbbc5658b6ff72875023fd74d57013",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v5-45.capture.json",
+      "raw_capture_sha256": "9224ac57469c600b2257a38c40c99e8d220a064c0a4aee6691c1bf9159c1c16c"
+    },
+    {
+      "name": "collection-matrix-narrow-v5-45",
+      "version": 5,
+      "scenario": "matrix-narrow",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v5-45.pine",
+      "source_sha256": "ec8de89f5831de8ddd58d528be50cdf674eb410a6ad81081028acd67577df3f2",
+      "expected_values": null,
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call 'f' with argument 'v'='values'. An argument of 'matrix<float>' type was used but a 'matrix<int>' is expected.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "57160b9bd40d793d88e35d9a989d73c72a5b59f577e0c2120ba6045f72d49380",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v5-45.native.ax.txt",
+      "accessibility_sha256": "bf73bcb7101c4b5d007ba88308a63a34159c02ebb71487b8fa269a0a42ee40e7",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v5-45.native.png",
+      "screenshot_sha256": "3ba0fa6a67811fe3bb9daacb289496754a6fa5380834e56425ecae10e9b06e84",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v5-45.capture.json",
+      "raw_capture_sha256": "eccd5714a935600877294404ebcdaae7782cf0172ca5676288913ece4fcdeeed"
+    },
+    {
+      "name": "collection-map-float-key-v5-45",
+      "version": 5,
+      "scenario": "map-float-key",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v5-45.pine",
+      "source_sha256": "8e21b8dace531a7a11441fc5467160a855997b2e64555db2bf5f9c2247826b50",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-float-key-v5-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "a35de44ce861f1da98ec0a641375e54b015e5f4fefc9e49461bc994cdf1c54cf",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v5-45.native.ax.txt",
+      "accessibility_sha256": "0ea07685aae1eb38e954b6df1798760b95da4e15b58428a04e688a24fc5bf20e",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v5-45.native.png",
+      "screenshot_sha256": "82a870b3ec1a18a454bddc725fe141b1f445f6b0c96d26872b7f5cd96a25e364",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v5-45.capture.json",
+      "raw_capture_sha256": "ab4b609d388ae22b0b9564d3ca9895aeb1e37bbbf7067cf3a6e7acf0a6690493",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-series-v5-45",
+      "version": 5,
+      "scenario": "map-series",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v5-45.pine",
+      "source_sha256": "a5905b3fbeaa759c8cbf904f6457c481c575ee08e76670837e7420a1e0907fc9",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-series-v5-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "9c3f9ef0ad35453befb7ba51a64921e457334f1955690e854e07248428ed003d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v5-45.native.ax.txt",
+      "accessibility_sha256": "6454a23eff0fba8cb673e9957bb3982cfe0b07f71082d48ff19c493cf4e51646",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v5-45.native.png",
+      "screenshot_sha256": "0436bfc7a5101b5d7cc5564bee78e46ede227ca6e2e2321d278cbbcb947e6078",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v5-45.capture.json",
+      "raw_capture_sha256": "ebf1ec92c48d265c22554d9fe49f4b26337536e3571823ae95f23ca7eed3f862",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-simple-v5-45",
+      "version": 5,
+      "scenario": "map-simple",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v5-45.pine",
+      "source_sha256": "0764d116c51cce6c6f4017065afea6f77eff6cd22f4ca3e9d79329c1697d814b",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-simple-v5-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "40a36ff31c19d09bc7f0a6649ccef0ad3a4f72b9fb66acba880cd7761d72487b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v5-45.native.ax.txt",
+      "accessibility_sha256": "d94d200620aeaa212ad7d07e5ed61af012a3fa57aa2a8bfb6c6cfbc49e587b2f",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v5-45.native.png",
+      "screenshot_sha256": "93d90588d74c84303372ce5a04d69b1b42ffc06061619445a5935a4f6f03794c",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v5-45.capture.json",
+      "raw_capture_sha256": "9e136a65e97e7d8392529ae7d418ee865d5bc10afa8335888017fd298466f28a",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-widen-write-v6-45",
+      "version": 6,
+      "scenario": "map-widen-write",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v6-45.pine",
+      "source_sha256": "2073aa7bc3405f7d0a4fd86622b31b89fae88fc34c0ab22c3351923a15e17056",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2.5,
+        2.5
+      ],
+      "native_row": "239 row collection-map-widen-write-v6-45 Plot 2.50 Plot 2.50",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "41b592cf6ed4c8f67b2cab0d51e4dfc772bf7bda8834c59ed1ac3893e17089be",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v6-45.native.ax.txt",
+      "accessibility_sha256": "88bd99cf75f36943b8c1b97c68cf13a51e0e42dcd6dff22e3a188eb7c17687fc",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v6-45.native.png",
+      "screenshot_sha256": "5b94a760945e51ec39bf9e60396988fd93c2827d812f85c03c20649a0cecc805",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-widen-write-v6-45.capture.json",
+      "raw_capture_sha256": "fb4ec1102606e1d48f93fc9b6ea77f96a951951e564ccb23be6d299d798d90e0",
+      "local_three_bar_values": [
+        2.5,
+        2.5
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-matrix-widen-write-v6-45",
+      "version": 6,
+      "scenario": "matrix-widen-write",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v6-45.pine",
+      "source_sha256": "677ee409e0c43889cecd95482bb5f425ea267128daba70639a7f933e716d19d4",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2.5,
+        2.5
+      ],
+      "native_row": "239 row collection-matrix-widen-write-v6-45 Plot 2.50 Plot 2.50",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ae4a499787426ed281e5efcf105e2cc058a10a6d48db5542a3949a96f787700f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v6-45.native.ax.txt",
+      "accessibility_sha256": "6bb71dff33f469defff3c60272dca1aea3df7083620b9575f2e0b2aa1002314a",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v6-45.native.png",
+      "screenshot_sha256": "63408a5e93ffb5c7b0027e04cf18d299e3ba82d121eb354e1715be60e5520bf5",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-widen-write-v6-45.capture.json",
+      "raw_capture_sha256": "614fd766aa7eb9807c7b9b9f97dd5af6b2b47a0994fa4de77a81a01153d83fea",
+      "local_three_bar_values": [
+        2.5,
+        2.5
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-narrow-v6-45",
+      "version": 6,
+      "scenario": "map-narrow",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v6-45.pine",
+      "source_sha256": "2f857b6bf8db3d3e43d0c806d9b6eecb96139014af12b24106578e9a4e9c9e3d",
+      "expected_values": null,
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call \"f\" with argument \"v\"=\"values\". An argument of \"map<string, float>\" type was used but a \"map<string, int>\" is expected. (CE10123)",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "244f8aadfda23ee22ccb38a2f7927f13bb0c28ab12013a08e3d8d5107f53fa55",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v6-45.native.ax.txt",
+      "accessibility_sha256": "c2770ed338e130a10c2001d855b09bcbcbfebc4a2473b797abb9b224119828f6",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v6-45.native.png",
+      "screenshot_sha256": "c3a583963df11e5d1179be81ea6767fe0ed1d4bbedde6ad17f8b54f8f66ec14a",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-narrow-v6-45.capture.json",
+      "raw_capture_sha256": "e7ecb51eb759cd60d20362e903941e9a4d95eb38855598ccf979fda94f086abc"
+    },
+    {
+      "name": "collection-matrix-narrow-v6-45",
+      "version": 6,
+      "scenario": "matrix-narrow",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v6-45.pine",
+      "source_sha256": "9ba1ac810d2d718ab2105584e10e0cf64dced94209cd78f862bfc4a7fb0d9395",
+      "expected_values": null,
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call \"f\" with argument \"v\"=\"values\". An argument of \"matrix<float>\" type was used but a \"matrix<int>\" is expected. (CE10123)",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "b13d67a901aa450dfab5a73f1adb5c22924062001dfa39dd477c9278a578f92e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v6-45.native.ax.txt",
+      "accessibility_sha256": "1c1bb177359a19ab7309fb261640fedc55a96e21fb62b0d824478838ac682594",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v6-45.native.png",
+      "screenshot_sha256": "78197ead3d632cf696a24116fc6edf4988ba5f491b4d7d757df8d985c893ce28",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-matrix-narrow-v6-45.capture.json",
+      "raw_capture_sha256": "e2d043d35e9bf2be9602589dfc224caaf83efe97f8471e75346ee6a1252b66c5"
+    },
+    {
+      "name": "collection-map-float-key-v6-45",
+      "version": 6,
+      "scenario": "map-float-key",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v6-45.pine",
+      "source_sha256": "3dcd0fdcfe642a230f201b9d750f11610794a58d48dfdc9db168cbffdcae978d",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-float-key-v6-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "f50e86b478e2602b5ceaf7177d971b6ce94eee1163904f884a7f7ad3957bbb89",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v6-45.native.ax.txt",
+      "accessibility_sha256": "dfb2cfad80deaf999e1436f650d899ed4fb68cc301f518ea724d1d9d4b8741ea",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v6-45.native.png",
+      "screenshot_sha256": "76d3f0e445c2d6d1d9bf13514670b1e2f5883eb4f7a0668ed0688ee2a4935b1a",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-float-key-v6-45.capture.json",
+      "raw_capture_sha256": "dbfc5a7a56abe7d9b7bc4d51cc0dc354e0fc71c1509722e7cc6a2794b29cf0df",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-series-v6-45",
+      "version": 6,
+      "scenario": "map-series",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v6-45.pine",
+      "source_sha256": "f08ea2b95e3244c59d6bb8726b04c3e3b72c3bfaf48d7f2cc378b98e0e0152aa",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-series-v6-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ca85cf240eb12650b677ef9e6101396d97914871ce5669ed99332a8f0d0e3071",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v6-45.native.ax.txt",
+      "accessibility_sha256": "c07bfcd898fc6608dc0842a7c605af3aa57c070b4a0614d3d7682db5964c3076",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v6-45.native.png",
+      "screenshot_sha256": "31c1f656a2ccf5cce34ec8751e946584ff1e8ce61970d5318208e87e625bd7e1",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-series-v6-45.capture.json",
+      "raw_capture_sha256": "c8a3fd0e42e0d5b6ce56567b284f02d4454f515f4d5c847969b9783761bf2d4b",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "collection-map-simple-v6-45",
+      "version": 6,
+      "scenario": "map-simple",
+      "source": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v6-45.pine",
+      "source_sha256": "ba08533824217fa687e13fdf523bdec5401b4a65063d177a1ee6ad48a68ea55f",
+      "expected_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row collection-map-simple-v6-45 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "acf55a9e3dad22a9c8b11cf5e4d7e8a7acb7156e8f6733d82674a1fa13e4e660",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v6-45.native.ax.txt",
+      "accessibility_sha256": "3693c075455eda3e546b21381cc970d1b15eec60c55b7a39a12ab687edcb7155",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v6-45.native.png",
+      "screenshot_sha256": "d18832eae991948ae3b36b9ca761a31638758011ebd469ac7310b22e8bcbd477",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/collection-map-simple-v6-45.capture.json",
+      "raw_capture_sha256": "8a8c31f4acc5580659fb73d4db10e89a0b15a5b2778f487669218817f6c91d88",
+      "local_three_bar_values": [
+        0
+      ],
+      "local_projection_scope": "Three flat bars. Persistent count is projected from its observed equality with bar_index+1; other outputs are source constants independent of market prices."
+    },
+    {
+      "name": "request-map-write-v5-43",
+      "version": 5,
+      "scenario": "map-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v5-43.pine",
+      "source_sha256": "79f25b6d9a07b901df2ede50fd355764bdc004dab64d1a853f1e0df9f2893204",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-map-write-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "79f25b6d9a07b901df2ede50fd355764bdc004dab64d1a853f1e0df9f2893204",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v5-43.native.ax.txt",
+      "accessibility_sha256": "485be9bdf8a3b4ad4f827875d7575a9d6546dde8a5be3081a2d2e4d131f5aa20",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v5-43.native.png",
+      "screenshot_sha256": "8742d776884070382fd605b738640c2092ef4b93ef75ef44ea0b5326edea60b3",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Reused unchanged complete-source batch43 Native observation; now requalified through collection parameter support.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v5-43.capture.json",
+      "raw_capture_sha256": "e0bb1ad70323fe27485f973c015def57d993db00860bd409cf27edc16653a704",
+      "local_three_bar_values": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-map-write-v6-43",
+      "version": 6,
+      "scenario": "map-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v6-43.pine",
+      "source_sha256": "5cad9cc8b4978817a8b05a954a3f138a8cc7a97ac1b22671d61c8a572fc51eea",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-map-write-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "5cad9cc8b4978817a8b05a954a3f138a8cc7a97ac1b22671d61c8a572fc51eea",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v6-43.native.ax.txt",
+      "accessibility_sha256": "2647dc94c4da5f6e36517206d78c59772dd11a4ee967037b6feb46fb38ac50f1",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v6-43.native.png",
+      "screenshot_sha256": "1bd8c6a1dc04a32db22553ae81a3885c53e4b2b3e07efc4837aac25ea0173bfc",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Reused unchanged complete-source batch43 Native observation; now requalified through collection parameter support.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-map-write-v6-43.capture.json",
+      "raw_capture_sha256": "e49fbc0882a9722bcdf8538408402c3fad1c60b40a836aef8b67c967e4ff79db",
+      "local_three_bar_values": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-matrix-write-v5-43",
+      "version": 5,
+      "scenario": "matrix-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v5-43.pine",
+      "source_sha256": "2b2e1068b43f6c9a167e7c67d4b9ca509608a69e66c5222014088cc366aac43e",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-matrix-write-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2b2e1068b43f6c9a167e7c67d4b9ca509608a69e66c5222014088cc366aac43e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v5-43.native.ax.txt",
+      "accessibility_sha256": "c742186bc7c18b215fdb2b66e2379900c4337bfedaeea63a377c7a5b6e229642",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v5-43.native.png",
+      "screenshot_sha256": "e4890f42d5c7db7d011df3d8cbb56caaad5b2a6e141a60a5b7c46fc335274dbc",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Reused unchanged complete-source batch43 Native observation; now requalified through collection parameter support.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v5-43.capture.json",
+      "raw_capture_sha256": "d9f2736a638a6aeb521b48950f42289a7807a1c7cbe4e4548d334e9cb373bc82",
+      "local_three_bar_values": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-matrix-write-v6-43",
+      "version": 6,
+      "scenario": "matrix-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v6-43.pine",
+      "source_sha256": "79d0ddb844f0f5ac13513c00283be23c2e7d78d34a2227a3abaa0b547a530666",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-matrix-write-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "79d0ddb844f0f5ac13513c00283be23c2e7d78d34a2227a3abaa0b547a530666",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v6-43.native.ax.txt",
+      "accessibility_sha256": "7633347c765de6a08c18a812914f70f5f9a699b2e678a5c3fa5fdbfdcec33b70",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v6-43.native.png",
+      "screenshot_sha256": "77fcf20f669938442b9725894e2789251398d44d72df3928ae958a8e9213fe60",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Reused unchanged complete-source batch43 Native observation; now requalified through collection parameter support.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-matrix-write-v6-43.capture.json",
+      "raw_capture_sha256": "b0cbd4e65b54bdb9994a4ff293e9fac18ac39f207e90f405d55e7ead19782e2a",
+      "local_three_bar_values": [
+        15,
+        15
+      ]
+    }
+  ]
+}

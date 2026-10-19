@@ -1,0 +1,11 @@
+//@version=6
+indicator("Label new points")
+if bar_index == 1
+    index_point = chart.point.from_index(bar_index + 2, high)
+    label.new(index_point, "index", color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_left, tooltip="point", text_font_family=font.family_monospace, text_formatting=text.format_bold)
+if bar_index == 2
+    time_point = chart.point.from_time(time + 120000, low)
+    label.new(point=time_point, xloc=xloc.bar_time, yloc=yloc.belowbar, style=label.style_label_down)
+if bar_index == 3
+    label.new(point=na, text="missing")
+plot(close)

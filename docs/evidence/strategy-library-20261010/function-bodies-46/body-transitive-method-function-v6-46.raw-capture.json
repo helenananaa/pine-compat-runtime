@@ -1,0 +1,87 @@
+{
+  "name": "body-transitive-method-function-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-method-function-v6-46.pine",
+  "source_sha256": "ceb863101a87621b38c8c7abbfb83052ef73c70a51ef96c6d27cbfa13df1bbae",
+  "version": 6,
+  "kind": "generic_transitive_method_function",
+  "candidate_analysis": {
+    "schemaVersion": 6,
+    "languageVersion": 6,
+    "languageVersionOrigin": "explicit",
+    "dialect": "v6",
+    "scriptMode": "indicator",
+    "executable": false,
+    "diagnostics": [
+      {
+        "code": "E_FUNCTION_ARG_TYPE",
+        "severity": "error",
+        "message": "cannot pass series na to function parameter `flag` of type series bool",
+        "span": {
+          "start": 96,
+          "end": 105,
+          "line": 5,
+          "column": 3
+        }
+      }
+    ],
+    "inputs": [],
+    "compatibility": {
+      "supported": [
+        {
+          "feature": "indicator",
+          "span": {
+            "start": 14,
+            "end": 23,
+            "line": 2,
+            "column": 1
+          }
+        },
+        {
+          "feature": "user-defined types",
+          "span": {
+            "start": 66,
+            "end": 94,
+            "line": 3,
+            "column": 1
+          }
+        },
+        {
+          "feature": "user-defined methods",
+          "span": {
+            "start": 114,
+            "end": 156,
+            "line": 6,
+            "column": 1
+          }
+        },
+        {
+          "feature": "plot",
+          "span": {
+            "start": 187,
+            "end": 191,
+            "line": 8,
+            "column": 1
+          }
+        }
+      ],
+      "unsupported": [],
+      "legacyTranslations": [],
+      "legacyEmulations": []
+    }
+  },
+  "tested_cli_sha256": "62540a668599943424c4af1207f030b8b051ff4d1b53ccfb596cb9aea3494478",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "226 row body-transitive-method-function-v6-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "681c768a8fb51a22283d9ad8b007abe42bc53846b2ab43b24fe3d13f2c977a3a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-function-v6-46.native.ax.txt",
+  "accessibility_sha256": "cd6864682ea847d6c2c5575fac296ed1663dc49169238d8dc82b047deb344b0f",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-function-v6-46.native.png",
+  "screenshot_sha256": "8b7de89cf74803543fbb344b67e842ebde18078b1ee0777f74aa3c1a3cf6e456",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

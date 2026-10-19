@@ -1,0 +1,6 @@
+//@version=5
+indicator("table-1400-cells-v5-36",precision=0)
+var t=table.new(position.bottom_right,7,200)
+if barstate.islast
+    table.cell(t,6,199,"1400 cells")
+plot(1,title="executed")

@@ -1,0 +1,22 @@
+{
+  "name": "point-field-intrabar-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-field-intrabar-v6-41.pine",
+  "source_sha256": "4d197e0ba8b146838388383b6fbfdc32b9d9230aa5f84a938aa7b11c734dc330",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    28,
+    28
+  ],
+  "native_realtime_relation": "field",
+  "native_row": "235 row point-field-intrabar-v6-41 Plot 28.00 Plot 28.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b3110d4bee510f7e6c11542a2c5330e4d2f35f037c97497c67ee263af5d82f42",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-field-intrabar-v6-41.native.ax.txt",
+  "accessibility_sha256": "43a0b8754e95211209d0bce0c883832cd56757fab791bf3080bbf4216c0114b6",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-field-intrabar-v6-41.native.png",
+  "screenshot_sha256": "0c005b802171e3252d44ccf3652864f93a1bed32ae57571c05565de2b4292eaf",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

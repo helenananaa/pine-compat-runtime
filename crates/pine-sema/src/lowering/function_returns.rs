@@ -526,7 +526,7 @@ impl Analyzer {
             } else {
                 None
             };
-        let result = HirExpr {
+        let mut result = HirExpr {
             pine_type,
             series_id,
             kind: HirExprKind::Ternary {
@@ -535,6 +535,7 @@ impl Analyzer {
                 else_expr: Box::new(else_expr),
             },
         };
+        self.preserve_if_boolean_identity(condition, else_branch, &mut result);
         Some(prepend_block_statements(lowered_statements?, result))
     }
 

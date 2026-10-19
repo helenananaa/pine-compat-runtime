@@ -1,0 +1,13 @@
+//@version=5
+indicator("Bool NA reduction na-q probe34",precision=0)
+fp(x)=>
+    if x
+        true
+fq(x)=>
+    localBool=if x
+        true
+    localBool
+p=fp(false)
+q=fq(false)
+plot(p==q?1:0,title="cross equality")
+plot(na(q)?1:0,title="observe q na")

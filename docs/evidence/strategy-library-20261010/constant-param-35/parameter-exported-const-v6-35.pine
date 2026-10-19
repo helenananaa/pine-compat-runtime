@@ -1,0 +1,3 @@
+//@version=6
+library("parameter-exported-const-v6-35")
+export f(const bool x)=>x

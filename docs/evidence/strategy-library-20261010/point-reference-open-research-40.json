@@ -1,0 +1,191 @@
+{
+  "records": [
+    {
+      "name": "point-pair-varip-v5-40",
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/point-pair-varip-v5-40.pine",
+      "source_sha256": "27787af38cd253e3463caa343aa184db7aa51d92eb1385c8ebc02b3cbdfafaed",
+      "version": 5,
+      "proposed_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10
+      ],
+      "native_row": "231 row point-pair-varip-v5-40 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "7b29c4ef53bc8276940984d2e21065b5c1b3ecdd2598253f148804b931e90a4e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/point-pair-varip-v5-40.native.ax.txt",
+      "accessibility_sha256": "c7e560ffe7ba8239824adc5681eb977120cb10e68387fc6499183d9d22f26548",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/point-pair-varip-v5-40.native.png",
+      "screenshot_sha256": "dc1f6a1ad6d653dca18a27ae3337f99d213c73bf1615c432ba90e2fd0e232ef3",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    },
+    {
+      "name": "point-pair-varip-v6-40",
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/point-pair-varip-v6-40.pine",
+      "source_sha256": "824847ccd8a641edaf61bc89c2d27d4b3824280f2692e91f50c4c705fb074d4a",
+      "version": 6,
+      "proposed_values": null,
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        10
+      ],
+      "native_row": "231 row point-pair-varip-v6-40 Plot 10.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "9185a2fdf05bb48f711b677dee35f836eb21458b574bc84df96ed6d0b8510e9d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/point-pair-varip-v6-40.native.ax.txt",
+      "accessibility_sha256": "c5e3440d4ee4075f762477b508380cac837cb3dfc6ec9a0f78ea92875c96017a",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/point-pair-varip-v6-40.native.png",
+      "screenshot_sha256": "0476bbd2d76caf4e1a081c87375b39dbd5d981e00362d2e2ca6226648ef6ae4a",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    },
+    {
+      "name": "extend-point-na-invalid-v5-40",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/extend-point-na-invalid-v5-40.pine",
+      "source_sha256": "7aa02d1a5993b47baba892c636b3e1c57f4a308b8e7b0a4bcf1cb5d95a469f9e",
+      "native_status": "runtime_error",
+      "native_values": null,
+      "native_error": "Error on bar 0: Cannot access the 'index' field of an undefined object. The object is 'na'. at  #main () : 4",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "9738a5b93a9a4803ad04062ea5c0e30774380bfc36cd2f81de4a519c4dde5b8a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/extend-point-na-invalid-v5-40.native.ax.txt",
+      "accessibility_sha256": "518f0875bd2fa0aa1af5536574bc59db8121bf8620296ded06a186ed4a16dee3",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/extend-point-na-invalid-v5-40.native.png",
+      "screenshot_sha256": "5367a438b05ebdbd68422879179fc549815eeadb358b5a660cc484cd2f8166b9",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    },
+    {
+      "name": "extend-point-na-invalid-v6-40",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/extend-point-na-invalid-v6-40.pine",
+      "source_sha256": "fe74447d8f76d0e170e0e99eb6b59b4bf87187c6dc16c187ffb8b6bb65861cf2",
+      "native_status": "runtime_error",
+      "native_values": null,
+      "native_error": "Error on bar 0: Cannot access the 'index' field of an undefined object. The object is 'na'. at  #main () : 4",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c0fcc1f9b0916bd014e50c312c20f20ff24709edf902938cb862f842aa572216",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/extend-point-na-invalid-v6-40.native.ax.txt",
+      "accessibility_sha256": "a0edc21841f6282232092a9bba8568dbbaf577e4b0f09b702544b03192dd0e7f",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/extend-point-na-invalid-v6-40.native.png",
+      "screenshot_sha256": "3d909855909373a04d115fbbb3014e26782708ed9f60ee54401c0e8d95354922",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    },
+    {
+      "name": "chartpoint-alias-v5-40",
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-alias-v5-40.pine",
+      "source_sha256": "3e53ef688f588ac9c878199fbf9c6da2f8751033581db43dbbfe50612c19e45f",
+      "version": 5,
+      "proposed_values": [
+        20,
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        20
+      ],
+      "native_row": "231 row chartpoint-alias-v5-40 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "76f474881eaddefb5fc8ae929ccdc978801ca4b6ecd79494688fbf8fe45efc13",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-alias-v5-40.native.ax.txt",
+      "accessibility_sha256": "4052d041f5f6c613f1001633ab6f99aefbc6a5162fc6d4fc9a180aeb4d9ffe02",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-alias-v5-40.native.png",
+      "screenshot_sha256": "2310cb43591285f1395235458d7d361a367b54aea0e127a75fa505c5193bc97e",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    },
+    {
+      "name": "chartpoint-udt-alias-v5-40",
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-udt-alias-v5-40.pine",
+      "source_sha256": "7544973317f8b09e9e9c9d45d8c16b1d5874eb922dbcba32f3179873686963ae",
+      "version": 5,
+      "proposed_values": [
+        20,
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        20
+      ],
+      "native_row": "231 row chartpoint-udt-alias-v5-40 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1f60a534dfce961a36c246ff12b3099ba8a649017d60fa57c864e48fe6038e7a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-udt-alias-v5-40.native.ax.txt",
+      "accessibility_sha256": "eaa61c4a9f30f6e4fb91bba63c8e894e7f1613925e957caaea7f7dd394753d54",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-udt-alias-v5-40.native.png",
+      "screenshot_sha256": "b7fe797040bea32617183480a81fab3036bbd66a19126b3ba277c3016c198a92",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    },
+    {
+      "name": "chartpoint-alias-v6-40",
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-alias-v6-40.pine",
+      "source_sha256": "82cfb5684808a456e4a8424cdc1e69e87c1adf52fc8e58ab8ac6f16d71e3e196",
+      "version": 6,
+      "proposed_values": [
+        20,
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        20
+      ],
+      "native_row": "231 row chartpoint-alias-v6-40 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "b656f7ad492c4eda992ab02b3788bbff51b0129ccbdb4e7a7302552e7cb48aab",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-alias-v6-40.native.ax.txt",
+      "accessibility_sha256": "09057d12282ae7835920740544a5a56966d54f9f76e3fc95bcfe9cf0d43ea34f",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-alias-v6-40.native.png",
+      "screenshot_sha256": "13d146bfe7d00ef2a4d99c6b58e5510c7436e59a23e596aa4a92646f621f4bc9",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    },
+    {
+      "name": "chartpoint-udt-alias-v6-40",
+      "source": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-udt-alias-v6-40.pine",
+      "source_sha256": "0caeac8d928192fe5f83216455ad4b754c4f0097c6f5833afad10b96d3515102",
+      "version": 6,
+      "proposed_values": [
+        20,
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        20
+      ],
+      "native_row": "231 row chartpoint-udt-alias-v6-40 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "96ac1d8cf4225432498f68d5c2d5e31d64c29aaefa34754a5997fa9b79d18a1d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-udt-alias-v6-40.native.ax.txt",
+      "accessibility_sha256": "d0cc52c67cac82c97332d53a4e4e255e58cea86ffcfd0e71dc1efbebef405764",
+      "screenshot": "docs/evidence/strategy-library-20261010/object-drawings-40/chartpoint-udt-alias-v6-40.native.png",
+      "screenshot_sha256": "f6b3e022980c66cd8da31d8bcdc543a76a56eddb5a119a75ce895b9de50c1ba3",
+      "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "qualification": "open_preexisting_point_semantics"
+    }
+  ],
+  "scope": "Complete-source native editor copy, AX and screenshot evidence. Open chart.point identity/varip/undefined-object research is excluded from qualified control totals."
+}

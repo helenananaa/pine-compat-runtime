@@ -6,8 +6,12 @@ mod closed_trades;
 #[cfg(test)]
 mod combined_exit_reservation_tests;
 mod combined_exits;
+mod currency;
+#[cfg(test)]
+mod currency_accounting_tests;
 mod deferred_relative_exits;
 mod entries;
+mod equity_extrema;
 mod exit_orders;
 mod exit_placement;
 mod exit_price_orders;
@@ -30,6 +34,7 @@ mod risk;
 mod shared_history;
 mod state;
 mod stop_profit_brackets;
+mod trade_extrema;
 mod types;
 
 #[cfg(test)]
@@ -69,6 +74,7 @@ use crate::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrokerState {
     initial_capital: f64,
+    quote_to_account_rate: f64,
     commission: Option<StrategyCommission>,
     pyramiding_limit: usize,
     close_entries_rule: StrategyCloseEntriesRule,

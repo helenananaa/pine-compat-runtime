@@ -1,0 +1,4 @@
+//@version=5
+indicator("parameter-plain-missing-bool-v5-35",precision=0)
+f(bool x)=>x
+plot(na(f(na))?1:0,title="missing bool")

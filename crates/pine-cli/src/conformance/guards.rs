@@ -643,7 +643,7 @@ fn validate_map_boundary_fixture_paths(
     ] {
         if !fixtures.contains(&fixture) {
             return Err(format!(
-                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, control-flow result, direct key/value for-in, typed declaration, history, varip, read-only UDF, method-alias, and rollback subset"
+                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, control-flow result, direct key/value for-in, typed declaration, history, varip, UDF reads and scalar mutations, method-alias, and rollback subset"
             ));
         }
     }

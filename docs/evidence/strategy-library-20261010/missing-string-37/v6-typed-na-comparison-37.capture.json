@@ -1,0 +1,27 @@
+{
+  "name": "v6-typed-na-comparison-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/v6-typed-na-comparison-37.pine",
+  "source_sha256": "ebdb1c53bb0a41dd482aabe76f9b13700b5a476dd12bbd45345ed669e9ac8a03",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1,
+    0
+  ],
+  "native_row": "251 row v6-typed-na-comparison-37 Plot 0 Plot 0 Plot 1 Plot 1 Plot 0 Plot 1 Plot 1 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "ebdb1c53bb0a41dd482aabe76f9b13700b5a476dd12bbd45345ed669e9ac8a03",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/v6-typed-na-comparison-37.native.ax.txt",
+  "accessibility_sha256": "687bfe4b246982150d46da539515d6b1b36aa00f1faff3d432056adefc9e8c91",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/v6-typed-na-comparison-37.native.png",
+  "screenshot_sha256": "1c749b1d6bfe6ac70f5e6c193b463662440d9d1552bfbc270d9befaf6d8fb69a",
+  "scope": "v6 permits typed/cast missing comparisons; raw str.length(na)=0, upper/lower retain missing identity, trim(na) compares empty. Final aggregate reproduces the existing strings fixture predicate and is0.",
+  "qualification_scope": "candidate_bounded_control"
+}

@@ -133,6 +133,18 @@ impl Analyzer {
                 })
             })
             .collect::<Option<_>>()?;
+        if builtin_name != "bool" {
+            for (index, arg) in lowered_args.iter_mut().enumerate() {
+                let request_expression = matches!(
+                    builtin_name,
+                    "request.security" | "request.security_lower_tf" | "request.seed"
+                ) && (arg.name.as_deref() == Some("expression")
+                    || (arg.name.is_none() && index == 2));
+                if !request_expression {
+                    arg.value = self.materialize_lowered_boolean(arg.value.clone());
+                }
+            }
+        }
         if builtin_name == "strategy.exit" {
             for (index, arg) in lowered_args.iter_mut().enumerate() {
                 if arg.name.is_none() {
@@ -156,16 +168,43 @@ impl Analyzer {
         }
 
         if builtin_name == "strategy.close" {
+            let comment_overload = lowered_args
+                .get(1)
+                .is_some_and(|arg| arg.value.pine_type.kind == ValueKind::String);
             for (index, arg) in lowered_args.iter_mut().enumerate() {
                 if arg.name.is_none() {
-                    arg.name = pine_builtins::strategy_close_source_parameter(
+                    arg.name = pine_builtins::strategy_close_source_parameter_with_overload(
                         index,
                         self.legacy.dialect().version(),
+                        comment_overload,
                     )
                     .map(str::to_owned);
                 }
             }
         }
+
+        if builtin_name == "strategy.close_all" {
+            let comment_overload = Self::close_all_comment_overload(
+                args,
+                lowered_args.first().map(|arg| arg.value.pine_type),
+            );
+            for (index, arg) in lowered_args.iter_mut().enumerate() {
+                if arg.name.is_none() {
+                    arg.name = pine_builtins::strategy_close_all_source_parameter(
+                        index,
+                        self.legacy.dialect().version(),
+                        comment_overload,
+                    )
+                    .map(str::to_owned);
+                }
+            }
+        }
+
+        self.lower_legacy_direction_order_conditions(
+            builtin_name,
+            &mut lowered_args,
+            args.first().map_or(Span::default(), |arg| arg.span),
+        )?;
 
         if !lowered_args.iter().any(|arg| arg.name.is_some())
             || matches!(builtin_name, "array.min" | "array.max")

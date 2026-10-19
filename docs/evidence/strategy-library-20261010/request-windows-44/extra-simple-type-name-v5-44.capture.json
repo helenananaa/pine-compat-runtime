@@ -1,0 +1,21 @@
+{
+  "name": "extra-simple-type-name-v5-44",
+  "version": 5,
+  "scenario": "simple-type-name",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\extra-simple-type-name-v5-44.pine",
+  "source_sha256": "23d489fb1b5170145e8d2337c75d543db1caa986d845bc46d57ab9b1dc7c13d7",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2
+  ],
+  "native_row": "228 row extra-simple-type-name-v5-44 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "23d489fb1b5170145e8d2337c75d543db1caa986d845bc46d57ab9b1dc7c13d7",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/extra-simple-type-name-v5-44.native.ax.txt",
+  "accessibility_sha256": "90555e7ad9a12ba9fc8d6286fec177fad5fa8ccf60a83077c4a072f812840d83",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/extra-simple-type-name-v5-44.native.png",
+  "screenshot_sha256": "7517b6ec95a4c94b1616969d5bdfd08e314872e29a0b01a8c14895cc7ee86b68",
+  "chart_ui_context": "166 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

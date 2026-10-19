@@ -1,4 +1,4 @@
 //@version=5
 indicator("String repeat negative count")
-text = str.repeat("x", -1)
-plot(str.length(text))
+note = str.repeat("x", -1)
+plot(str.length(note))

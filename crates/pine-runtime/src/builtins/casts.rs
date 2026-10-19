@@ -13,6 +13,11 @@ impl<'a> HistoricalRuntime<'a> {
             "int" => self.eval_int_cast(args),
             "float" => self.eval_float_cast(args),
             "bool" => self.eval_bool_cast(args),
+            "__legacy_direction_order_condition" => self.eval_expr(&args[0].value).map(|value| {
+                PineValue::Bool(
+                    matches!(value, PineValue::String(ref direction) if direction=="strategy.long"),
+                )
+            }),
             "string" => self.eval_string_cast(args),
             "box" => self.eval_box_cast(args),
             "color" => self.eval_color_cast(args),
@@ -21,6 +26,7 @@ impl<'a> HistoricalRuntime<'a> {
             "linefill" => self.eval_linefill_cast(args),
             "polyline" => self.eval_polyline_cast(args),
             "table" => self.eval_table_cast(args),
+            _ if callee.starts_with("$parameter.") => self.eval_collection_parameter(callee, args),
             _ => return None,
         })
     }
@@ -56,6 +62,13 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Int(value) => PineValue::Bool(value != 0),
             PineValue::Float(value) => PineValue::Bool(value != 0.0 && !value.is_nan()),
             PineValue::Bool(value) => PineValue::Bool(value),
+            PineValue::ConstantBool { .. } => PineValue::Bool(true),
+            PineValue::String(value)
+                if self.program.language_version.is_some_and(|v| v <= 3)
+                    && args[0].value.pine_type.kind == pine_ir::ValueKind::StrategyDirection =>
+            {
+                PineValue::Bool(matches!(value.as_str(), "strategy.long" | "strategy.short"))
+            }
             PineValue::Na => PineValue::Bool(false),
             _ => PineValue::Bool(false),
         })

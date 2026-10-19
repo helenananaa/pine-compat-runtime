@@ -1,0 +1,20 @@
+{
+  "name": "point-undefined-write-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-undefined-write-v5-41.pine",
+  "source_sha256": "30a5972982be66d4275a5899b35da69e1a85d0f939ebfbb75eb0b8d87c3422c8",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "478 row point-undefined-write-v5-41 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "9918074487d7acf5352bc56ffa9eccf60d6632698f18eeb31ba457356480cc31",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-undefined-write-v5-41.native.ax.txt",
+  "accessibility_sha256": "c65a7791874921a6e7fe79422339764c29255315bb4356b8ec6f33a344ec5418",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-undefined-write-v5-41.native.png",
+  "screenshot_sha256": "5c7f212e097d3cae0f14327f114b5d1bf81e4cf38c732cc3139ffb1c0909661e",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

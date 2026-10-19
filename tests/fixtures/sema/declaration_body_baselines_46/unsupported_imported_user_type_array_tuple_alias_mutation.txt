@@ -1,0 +1,9 @@
+tuple element 1 user-defined type array must resolve to one element identity
+tuple element 2 user-defined type array must resolve to one element identity
+tuple element 1 user-defined type array must resolve to one element identity
+tuple element 2 user-defined type array must resolve to one element identity
+tuple element 1 user-defined type array must resolve to one element identity
+tuple element 2 user-defined type array must resolve to one element identity
+tuple element 1 user-defined type array must resolve to one element identity
+tuple element 2 user-defined type array must resolve to one element identity
+tuple element 1 user-defined type array must resolve to one element identity

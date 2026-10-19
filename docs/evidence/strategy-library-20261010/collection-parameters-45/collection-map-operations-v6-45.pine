@@ -1,0 +1,14 @@
+//@version=6
+indicator("collection-map-operations-v6-45")
+values=map.new<string,float>()
+values.put("x",10)
+f(map<string,float> v)=>
+    b=map.new<string,float>()
+    b.put("y",20)
+    map.put_all(v,b)
+    map.remove(v,"x")
+    n=v.size()
+    map.clear(v)
+    n
+plot(f(values))
+plot(values.size())

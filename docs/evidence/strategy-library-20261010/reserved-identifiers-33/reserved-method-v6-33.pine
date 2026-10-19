@@ -1,0 +1,5 @@
+//@version=6
+indicator("Reserved method probe33",precision=0)
+method text(float self)=>self
+v=1.0
+plot(v.text())

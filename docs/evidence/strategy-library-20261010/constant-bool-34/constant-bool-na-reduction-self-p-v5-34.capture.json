@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-na-reduction-self-p-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-na-reduction-self-p-v5-34.pine",
+  "source_sha256": "2d668d99402c1bbfdbec06351e6c24961f1261b29ab952da868b85108fd98ffd",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool NA reduction self-p probe34 cross equality 1 observe p self 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "2d668d99402c1bbfdbec06351e6c24961f1261b29ab952da868b85108fd98ffd",
+  "normalized_source_sha256": "2d668d99402c1bbfdbec06351e6c24961f1261b29ab952da868b85108fd98ffd",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-self-p-v5-34.native.ax.txt",
+  "accessibility_sha256": "c99b86ee7114124f24dc24a2e28aacb373573c674a6aa423a4fb105f34c9b183",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-self-p-v5-34.native.png",
+  "screenshot_sha256": "a84290c4dc7fa93de5fca3742b2c9242ca849c244508daf8c9a9e2e5d11eefc6"
+}

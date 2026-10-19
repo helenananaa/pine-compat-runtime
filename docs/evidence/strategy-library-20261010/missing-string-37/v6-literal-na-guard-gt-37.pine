@@ -1,0 +1,3 @@
+//@version=6
+indicator("v6-literal-na-guard-gt-37",precision=0)
+plot(close>na?1:0)

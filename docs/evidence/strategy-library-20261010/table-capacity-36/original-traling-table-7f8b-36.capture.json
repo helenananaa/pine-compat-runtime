@@ -1,0 +1,17 @@
+{
+  "name": "original-traling-table-7f8b-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-7f8b-36.pine",
+  "saved_corpus_normalized_sha256": "7f8b530ebb9d0618167d4bb7498293e6b7647a92471c5d3b72a6fca9214faa51",
+  "source_sha256": "ffbbffcb926153ff6c3074ef009e9cf7fb52c99d5aada69d30b771ce300ba577",
+  "native_status": "compiled_and_executed",
+  "native_row": "238 row Traling.SL.Target (20, 50, % Based Target and SL, 1, 1, 0.5, 0.3, 0.3, 100, 50, 60, 25, 30) Plot 82,818.91 Plot 80,424.08",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "7f8b530ebb9d0618167d4bb7498293e6b7647a92471c5d3b72a6fca9214faa51",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-7f8b-36.native.ax.txt",
+  "accessibility_sha256": "128cb0f9fdf78a0b8247e4b766d1e7e014b305cbe667091b5a21589d52c9da80",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/original-traling-table-7f8b-36.native.png",
+  "screenshot_sha256": "24db1f9ad82ed404497f932a8daea26321f5c45c7af008552d776df5bfc5a233",
+  "scope": "Unmodified saved strategy compiled and executed on native BTCUSDT daily history with its 7x200 table. Full trade ledger, prices, profit and synthetic-input parity are not qualified by this observation.",
+  "qualification_scope": "native_success_only_original_strategy"
+}

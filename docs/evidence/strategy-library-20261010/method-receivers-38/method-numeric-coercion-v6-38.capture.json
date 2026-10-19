@@ -1,0 +1,18 @@
+{
+  "name": "method-numeric-coercion-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-numeric-coercion-v6-38.pine",
+  "source_sha256": "f083d10ed5cfbe54e8b551d17894890a986fd9a72d605638d1429a04a99b316f",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_error": "Could not find method or method reference 'x.half38' (CE10271)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3916be0624cc52d9b3688505f46414df9713be36c3845d699ca4acc472153a3f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-numeric-coercion-v6-38.native.ax.txt",
+  "accessibility_sha256": "cddc4a9d3e2a6e1eae2bd970802beffad14040cb46ea8aeb7b2d14ed50b8cf58",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-numeric-coercion-v6-38.native.png",
+  "screenshot_sha256": "a5e619533309ef420e689b8bab9363b89b01e003277c8b1583b147aea8ba2c2a",
+  "qualification_scope": "candidate_method_control",
+  "native_values": null,
+  "discovery_record_sha256": "e537f6600ec27d937ef39e6d9d455e1b232a52680fbad2ab0957d1b0dbf114a8"
+}

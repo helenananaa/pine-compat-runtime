@@ -1,0 +1,16 @@
+//@version=4
+study("All future reserved words v4 probe33",precision=0)
+catch=1
+class=2
+do=3
+ellipse=4
+in=5
+is=6
+polygon=7
+range=8
+return=9
+struct=10
+text=11
+throw=12
+try=13
+plot(catch+class+do+ellipse+in+is+polygon+range+return+struct+text+throw+try)

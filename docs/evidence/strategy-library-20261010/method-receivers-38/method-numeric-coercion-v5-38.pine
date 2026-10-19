@@ -1,0 +1,5 @@
+//@version=5
+indicator("method-numeric-coercion-v5-38")
+method half38(float self)=>self+0.5
+x=2
+plot(x.half38())

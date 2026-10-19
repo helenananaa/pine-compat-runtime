@@ -2,7 +2,6 @@ use super::*;
 use std::collections::BTreeSet;
 
 use pine_builtins::{Accepts, PHASE_1_BUILTINS, ReturnSpec};
-use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
 fn dynamic_request_selectors_obey_versioned_declaration_gate() {
@@ -218,7 +217,7 @@ fn reports_supported_phase_1_calls() {
 }
 
 #[test]
-fn builtin_collection_result_producer_parser_allowlists_match_registry() {
+fn builtin_collection_result_producers_and_general_receivers_parse_before_type_checks() {
     let registered = PHASE_1_BUILTINS
         .iter()
         .filter(|signature| signature.name.starts_with("array."))
@@ -277,11 +276,8 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         );
         let parsed = pine_syntax::parse_source(&source);
         assert!(
-            parsed
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
-            "non-producer array builtin `{}` unexpectedly admitted a call-result method: {:?}",
+            parsed.diagnostics.is_empty(),
+            "non-producer array builtin `{}` must be parsed before semantic method resolution: {:?}",
             signature.name,
             parsed.diagnostics
         );
@@ -374,11 +370,8 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
             );
         } else {
             assert!(
-                parsed
-                    .diagnostics
-                    .iter()
-                    .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
-                "non-allowlisted matrix producer `{name}` unexpectedly admitted a call-result method: {:?}",
+                parsed.diagnostics.is_empty(),
+                "non-allowlisted matrix producer `{name}` must be parsed before semantic method resolution: {:?}",
                 parsed.diagnostics
             );
         }
@@ -400,11 +393,8 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         );
         let parsed = pine_syntax::parse_source(&source);
         assert!(
-            parsed
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
-            "non-producer cross-namespace builtin `{}` unexpectedly admitted a call-result method: {:?}",
+            parsed.diagnostics.is_empty(),
+            "non-producer cross-namespace builtin `{}` must be parsed before semantic method resolution: {:?}",
             signature.name,
             parsed.diagnostics
         );
@@ -423,7 +413,7 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
 }
 
 #[test]
-fn builtin_map_result_parser_template_allowlist_matches_supported_scalar_templates() {
+fn builtin_map_result_templates_parse_before_semantic_capability_checks() {
     const SCALAR_TEMPLATES: &[&str] = &["int", "float", "bool", "string", "color"];
 
     for key_type in SCALAR_TEMPLATES {
@@ -448,11 +438,8 @@ fn builtin_map_result_parser_template_allowlist_matches_supported_scalar_templat
         );
         let parsed = pine_syntax::parse_source(&source);
         assert!(
-            parsed
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
-            "unsupported map.new<{unsupported},int> call-result escaped parser gate: {:?}",
+            parsed.diagnostics.is_empty(),
+            "unsupported map.new<{unsupported},int> call-result must be parsed before semantic template checking: {:?}",
             parsed.diagnostics
         );
     }
@@ -5122,7 +5109,7 @@ fn import_accepts_imported_method_control_flow_constructor_returns_and_history_r
 }
 
 #[test]
-fn import_tuple_destructuring_preserves_alias_qualified_method_returned_input_and_simple_values() {
+fn import_tuple_destructuring_rejects_default_typed_method_return_as_simple() {
     let analysis = analyze_with_libraries(
         "import user/tuple/1 as lib\nbox = lib.Box.new(1)\nlength = input.int(2, \"Length\")\ntf = timeframe.period\n[len, chart_tf] = lib.pair(box, length, tf)\nplot(ta.sma(close, len))\nplot(timeframe.in_seconds(chart_tf))\n",
         vec![(
@@ -5131,33 +5118,22 @@ fn import_tuple_destructuring_preserves_alias_qualified_method_returned_input_an
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.is_empty(), "{codes:?}");
-    let hir = analysis.hir.expect("HIR");
-    let len = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "len")
-        .expect("len symbol");
-    let chart_tf = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "chart_tf")
-        .expect("chart_tf symbol");
-
-    assert_eq!(
-        len.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
+    assert!(
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
     );
-    assert_eq!(
-        chart_tf.pine_type,
-        PineType::new(Qualifier::Simple, ValueKind::String)
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
     );
 }
 
 #[test]
-fn import_tuple_destructuring_preserves_udf_param_alias_qualified_method_returned_input_and_simple_values()
- {
+fn import_tuple_destructuring_rejects_forwarded_default_typed_method_return_as_simple() {
     let analysis = analyze_with_libraries(
         "import user/tuple/1 as lib\nforward(box, length, tf) => lib.pair(box, length, tf)\nbox = lib.Box.new(1)\nlength = input.int(2, \"Length\")\ntf = timeframe.period\n[len, chart_tf] = forward(box, length, tf)\nplot(ta.sma(close, len))\nplot(timeframe.in_seconds(chart_tf))\n",
         vec![(
@@ -5166,27 +5142,17 @@ fn import_tuple_destructuring_preserves_udf_param_alias_qualified_method_returne
         )],
     );
 
-    let codes = diagnostic_codes(&analysis);
-    assert!(codes.is_empty(), "{codes:?}");
-    let hir = analysis.hir.expect("HIR");
-    let len = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "len")
-        .expect("len symbol");
-    let chart_tf = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "chart_tf")
-        .expect("chart_tf symbol");
-
-    assert_eq!(
-        len.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
+    assert!(
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
     );
-    assert_eq!(
-        chart_tf.pine_type,
-        PineType::new(Qualifier::Simple, ValueKind::String)
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
     );
 }
 

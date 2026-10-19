@@ -1,0 +1,8 @@
+//@version=5
+indicator("collection-matrix-string-v5-45")
+f(matrix<string> v)=>
+    v.set(0,0,"abc")
+    str.length(v.get(0,0))
+values=matrix.new<string>(1,1,"a")
+plot(f(values))
+plot(str.length(values.get(0,0)))

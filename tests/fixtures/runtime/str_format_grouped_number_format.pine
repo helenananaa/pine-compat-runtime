@@ -1,4 +1,4 @@
 //@version=5
 indicator("String format grouped number format")
-text = str.format("Value {0,number,#,###.00}", 1234.5)
-plot(text == "Value 1,234.50" ? 1 : 0)
+note = str.format("Value {0,number,#,###.00}", 1234.5)
+plot(note == "Value 1,234.50" ? 1 : 0)

@@ -193,7 +193,7 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
         "tests/fixtures/runtime/import_udt_array_udf_method_returns_guarded.pine",
         &[(
             "user/udt_array_returns/1",
-            "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+            "tests/fixtures/libraries/import_udt_array_return_checked_bodies_46.pine",
         )],
     ),
     (
@@ -201,7 +201,7 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
         "tests/fixtures/runtime/import_udt_array_tuple_returns.pine",
         &[(
             "user/udt_array_returns/1",
-            "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+            "tests/fixtures/libraries/import_udt_array_return_checked_bodies_46.pine",
         )],
     ),
     (

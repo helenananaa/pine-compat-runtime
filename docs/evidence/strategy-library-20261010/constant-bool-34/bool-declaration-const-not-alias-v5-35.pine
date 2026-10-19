@@ -1,0 +1,8 @@
+//@version=5
+indicator("bool-declaration-const-not-alias-v5-35",precision=0)
+a=if true
+    false
+const bool value=not a
+plot(value?1:0,title="condition")
+plot(value==false?1:0,title="equals false")
+plot(str.tostring(value)=="false"?1:0,title="false payload")

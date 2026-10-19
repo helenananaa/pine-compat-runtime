@@ -1,0 +1,20 @@
+{
+  "name": "point-history-alias-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-history-alias-v5-41.pine",
+  "source_sha256": "9de50b15153c9adc2abc47494c482eb6ef06ecc6e519dffda5224d6d405424b1",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "478 row point-history-alias-v5-41 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c9d95623d6e071c93c4b84398a2c773f3d91b8b6f40c315ac44fefda747b7476",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-history-alias-v5-41.native.ax.txt",
+  "accessibility_sha256": "106e6a59d0b3018ef3f237aaf51f186ee034b8bf330cc4b2900d81b976236309",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-history-alias-v5-41.native.png",
+  "screenshot_sha256": "05a9bc965d8d8036e71a74dba879e91eb015ef43c7ba109266b2dd6fb9e5c979",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

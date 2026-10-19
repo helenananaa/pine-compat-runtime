@@ -1,4 +1,4 @@
 //@version=5
 indicator("String substring begin out of range")
-text = str.substring("SMA", 4)
-plot(str.length(text))
+note = str.substring("SMA", 4)
+plot(str.length(note))

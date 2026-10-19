@@ -1,4 +1,4 @@
 //@version=5
 indicator("String format time timestamp out of range")
-text = str.format_time(9223372036854775807)
-plot(str.length(text))
+note = str.format_time(9223372036854775807)
+plot(str.length(note))

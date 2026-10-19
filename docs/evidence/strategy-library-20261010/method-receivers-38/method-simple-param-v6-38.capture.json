@@ -1,0 +1,20 @@
+{
+  "name": "method-simple-param-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-param-v6-38.pine",
+  "source_sha256": "57cd246dd91385daf80f33f0c8d5e1b20fd78b6d3a7d89bd7c2cba18a9d40276",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    12
+  ],
+  "native_row": "319 row method-simple-param-v6-38 (2) Plot 12.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1751af848bdf99b0ec6db4c40e7db995eca028aa811e38c26138bc2e938a5180",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-param-v6-38.native.ax.txt",
+  "accessibility_sha256": "428c557f5df652f475f9b4493943a8ce0e84e79fdf12af750ab24af181f610d3",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-param-v6-38.native.png",
+  "screenshot_sha256": "50af27fc6880b0a6db9ddcfdc7277dc381ddc7526159e830d43a34b391185c9a",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "f60fd2987f909a2c6a32fff3f1b947cec388bf7a3341e9c95532480d009d4163"
+}

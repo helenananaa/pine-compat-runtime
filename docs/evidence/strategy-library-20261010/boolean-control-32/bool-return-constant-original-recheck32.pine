@@ -1,0 +1,10 @@
+//@version=6
+indicator("Bool return oracle 16",precision=0)
+a=if false
+    true
+f(c)=>
+    if c
+        true
+plot(a?1:0,title="Expression bool fallback")
+plot(f(false)?1:0,title="Function bool fallback")
+plot(a==false?1:0,title="Expression equals false")

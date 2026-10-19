@@ -1,0 +1,29 @@
+//@version=5
+indicator("Chart point varip")
+
+dyn = bar_index == 0 ? na : 1
+
+varip chart.point typed = chart.point.from_index(bar_index, close)
+typed.price := typed.price + 1
+typed_prior = typed[1]
+typed_dynamic_prior = typed[dyn]
+
+varip chart.point seeded = na
+if na(seeded)
+    seeded := chart.point.from_index(bar_index, close)
+else
+    seeded.price := seeded.price + 2
+
+varip inferred = chart.point.from_index(bar_index, close)
+inferred.price := inferred.price + 3
+
+plot(typed.index)
+plot(typed.price)
+plot(typed_prior.index)
+plot(typed_prior.price)
+plot(typed_dynamic_prior.index)
+plot(typed_dynamic_prior.price)
+plot(seeded.index)
+plot(seeded.price)
+plot(inferred.index)
+plot(inferred.price)

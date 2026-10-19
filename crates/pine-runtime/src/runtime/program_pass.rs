@@ -17,6 +17,7 @@ impl HistoricalRuntime<'_> {
                 Err(error) => return Err(error),
             }
         }
+        self.snapshot_persistent_array_aliases()?;
         self.flush_alert_events();
         Ok(())
     }

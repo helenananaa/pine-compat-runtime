@@ -15,7 +15,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         if offset == 0 {
-            return self.eval_expr(expr);
+            return self.eval_expr(expr).map(PineValue::materialize_boolean);
         }
 
         if let pine_ir::HirExprKind::Builtin(name) = &expr.kind
@@ -58,7 +58,7 @@ impl<'a> HistoricalRuntime<'a> {
             {
                 PineValue::Bool(false)
             } else {
-                value
+                value.materialize_boolean()
             };
             self.clone_collection_history_value(value)
         } else {

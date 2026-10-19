@@ -1,0 +1,5 @@
+//@version=6
+indicator("method-simple-receiver-invalid-v6-38")
+method keep38(simple int self)=>self
+x=bar_index
+plot(x.keep38())

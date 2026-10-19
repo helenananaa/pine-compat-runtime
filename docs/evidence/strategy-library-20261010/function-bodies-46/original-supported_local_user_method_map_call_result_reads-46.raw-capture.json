@@ -1,0 +1,19 @@
+{
+  "name": "original-supported_local_user_method_map_call_result_reads-46",
+  "source": "E:\\projects\\pine-interpreter\\tests\\fixtures\\sema\\supported_local_user_method_map_call_result_reads.pine",
+  "source_sha256": "810ef60ff20ca97b0f57ac9e31cbd2b286d7d76ad5df03d46f8b13c9bf1bc17a",
+  "kind": "unchanged-original-fixture",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Undeclared identifier \"string_float\" (CE10272)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "810ef60ff20ca97b0f57ac9e31cbd2b286d7d76ad5df03d46f8b13c9bf1bc17a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-supported_local_user_method_map_call_result_reads-46.native.ax.txt",
+  "accessibility_sha256": "ef3ed4eb203ae05e2275e8f7ec953c876a247ed20c56875d772b2d64eb602076",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-supported_local_user_method_map_call_result_reads-46.native.png",
+  "screenshot_sha256": "e569e1591e749de5be2656fa68d936c6d62d15f63ea9728c7aac7c0d73a9701e",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

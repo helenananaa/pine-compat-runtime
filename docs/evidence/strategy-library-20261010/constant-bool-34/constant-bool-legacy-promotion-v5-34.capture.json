@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-legacy-promotion-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-legacy-promotion-v5-34.pine",
+  "source_sha256": "8d27da2035bf24f82c7048550232fd990b421d804c233f6581b6a909742d189a",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Legacy bool missing and promotion probe34 global na 1 direct parameter na 1 local parameter na 1 direct equals false 0 local equals false 0 cross parameter equality 0 direct self 0 local self 0 same string representation 1 global na versus series 0 global na versus input 0 global na versus simple 0 direct na versus series 0 local na versus series 0 boxed false versus series 1 boxed false versus input 1 boxed false versus simple 1 boxed false and series true 0 boxed false or series false 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "8d27da2035bf24f82c7048550232fd990b421d804c233f6581b6a909742d189a",
+  "normalized_source_sha256": "8d27da2035bf24f82c7048550232fd990b421d804c233f6581b6a909742d189a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-legacy-promotion-v5-34.native.ax.txt",
+  "accessibility_sha256": "513e7bf184fb5f02abd0606218dbacb8af190a0cd49751872e3ff47f6049ed63",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-legacy-promotion-v5-34.native.png",
+  "screenshot_sha256": "900e582dc066ecef3e042ecd30ea18c6546d79b7394f88e15cbde358044770d9"
+}

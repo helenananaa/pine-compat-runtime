@@ -1,0 +1,19 @@
+//@version=6
+indicator("point-intrabar-v6-41")
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+var normal=chart.point.from_index(1,0)
+varip direct=chart.point.from_index(1,0)
+varip items=array.from(chart.point.from_index(1,0))
+if barstate.isrealtime
+    normal.price+=1
+    direct.price+=1
+    p=items.first()
+    p.price+=1
+plot(ticks)
+plot(normal.price)
+plot(direct.price)
+plot(items.first().price)

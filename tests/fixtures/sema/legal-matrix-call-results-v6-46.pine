@@ -1,0 +1,29 @@
+//@version=6
+indicator("legal-matrix-call-results-v6-46")
+type Anchor
+    int tag
+method make(Anchor self)=>matrix.new<float>(2,2,self.tag)
+method block(Anchor self)=>
+    values=self.make()
+    values
+method integers(Anchor self)=>matrix.new<int>(1,2,self.tag)
+method booleans(Anchor self)=>matrix.new<bool>(1,1,self.tag>0)
+method strings(Anchor self)=>matrix.new<string>(1,1,str.tostring(self.tag))
+method colors(Anchor self)=>matrix.new<color>(1,1,self.tag>0?color.red:color.blue)
+method empty(Anchor self)=>matrix.new<float>(0,self.tag)
+method selected(Anchor self,bool copy)=>copy?self.make().copy():self.make()
+method nested(Anchor self)=>self.block()
+anchor=Anchor.new(3)
+plot(anchor.make().rows())
+plot(anchor.make().columns())
+plot(anchor.make().elements_count())
+plot(anchor.make().get(0,1))
+plot(anchor.make().copy().get(1,1))
+plot(anchor.integers().get(0,1))
+plot(anchor.booleans().get(0,0)?1:0)
+plot(anchor.strings().get(0,0)=="3"?1:0)
+plot(anchor.colors().get(0,0)==color.red?1:0)
+plot(anchor.empty().columns())
+plot(anchor.selected(true).get(0,0))
+plot(anchor.nested().get(0,0))
+plot(make(anchor).get(0,0))

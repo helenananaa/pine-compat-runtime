@@ -605,7 +605,7 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     ),
     (
         "tests/fixtures/regressions/table_new_cell_limit.pine",
-        "table cell count cannot exceed 1000",
+        "table cell count cannot exceed 10000",
     ),
     (
         "tests/fixtures/regressions/table_new_positive_dimensions.pine",

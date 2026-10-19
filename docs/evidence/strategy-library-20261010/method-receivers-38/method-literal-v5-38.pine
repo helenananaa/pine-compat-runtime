@@ -1,0 +1,4 @@
+//@version=5
+indicator("method-literal-v5-38")
+method keep38(int self)=>self
+plot((2).keep38())

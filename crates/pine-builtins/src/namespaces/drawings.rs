@@ -636,7 +636,7 @@ const BOX_NEW_POINT_PARAMS: &[BuiltinParam] = &[
     param("border_color", Accepts::ColorCompatible, true),
     param("border_width", Accepts::IntCompatible, true),
     param("border_style", Accepts::ConstString, true),
-    param("extend", Accepts::ConstString, true),
+    param("extend", Accepts::StringCompatible, true),
     param("xloc", Accepts::ConstString, true),
     param("bgcolor", Accepts::ColorCompatible, true),
     param("text", Accepts::StringCompatible, true),
@@ -658,7 +658,7 @@ const BOX_NEW_PARAMS: &[BuiltinParam] = &[
     param("border_color", Accepts::ColorCompatible, true),
     param("border_width", Accepts::IntCompatible, true),
     param("border_style", Accepts::ConstString, true),
-    param("extend", Accepts::ConstString, true),
+    param("extend", Accepts::StringCompatible, true),
     param("xloc", Accepts::ConstString, true),
     param("bgcolor", Accepts::ColorCompatible, true),
     param("text", Accepts::StringCompatible, true),
@@ -763,7 +763,7 @@ const BOX_SET_EXTEND_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "extend",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];

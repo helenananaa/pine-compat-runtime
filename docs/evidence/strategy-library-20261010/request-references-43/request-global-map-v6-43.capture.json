@@ -1,0 +1,26 @@
+{
+  "name": "request-global-map-v6-43",
+  "version": 6,
+  "scenario": "global-map",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-global-map-v6-43.pine",
+  "source_sha256": "3f4b18120a0f1a547d419fa46908537301f43d0a1f4a89c9667d1b2be758e6ad",
+  "historical_expected": [
+    15,
+    15
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "242 row request-global-map-v6-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3f4b18120a0f1a547d419fa46908537301f43d0a1f4a89c9667d1b2be758e6ad",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-global-map-v6-43.native.ax.txt",
+  "accessibility_sha256": "d00f2673f156ec9bbdd0eaa59a766ecdcad692b11fdc52d4e454db37737d14fa",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-global-map-v6-43.native.png",
+  "screenshot_sha256": "d1188b6d47c08d6ecb99ae81d69db4c2c227255f6d3c0580f2b869591a3f689b",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

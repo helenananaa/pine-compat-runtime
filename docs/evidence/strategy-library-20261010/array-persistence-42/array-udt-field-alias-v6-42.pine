@@ -1,0 +1,15 @@
+//@version=6
+indicator("array-udt-field-alias-v6-42")
+type Wrap
+    array<int> items
+var a=array.new_int()
+var w=Wrap.new(a)
+a.push(1)
+varip int ah=0
+varip int wh=0
+if barstate.ishistory
+    ah:=a.size()
+    wh:=w.items.size()
+plot(ah)
+plot(wh)
+plot(ah==wh?1:0)

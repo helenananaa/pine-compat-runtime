@@ -1,0 +1,23 @@
+{
+  "name": "point-label-box-copy-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-label-box-copy-v5-41.pine",
+  "source_sha256": "b2b65ef2ba970f4c4252085fcc5fb16176d97614bee6dae6639fde1371f76e34",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    10,
+    10,
+    30,
+    30
+  ],
+  "native_row": "235 row point-label-box-copy-v5-41 Plot 10.00 Plot 10.00 Plot 30.00 Plot 30.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "8671ea86eba055664c460af5456d552bc5ba6a9f13545e8be0cf2a0fa740786b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-label-box-copy-v5-41.native.ax.txt",
+  "accessibility_sha256": "c13cf94b62eaf7b2a24e1cf14c56e3ab284deb71f4e920529f82a5a1a5a05dbd",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-label-box-copy-v5-41.native.png",
+  "screenshot_sha256": "bfbe83a766cf3950aee2e9130754e827e2ee521f21f93b3b3bdb92172de9c993",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

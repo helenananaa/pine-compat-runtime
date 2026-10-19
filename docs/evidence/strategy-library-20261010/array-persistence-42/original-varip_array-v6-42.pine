@@ -1,0 +1,39 @@
+//@version=6
+indicator("varip array")
+
+varip float[] floats = array.new_float()
+floats.push(close)
+plot(floats.size())
+
+varip int[] ints = array.from(1, 2)
+ints.push(3)
+plot(ints.size())
+
+varip bool[] flags = array.new_bool()
+flags.push(close > open)
+plot(flags.size())
+
+varip string[] words = array.new_string()
+words.push("tick")
+plot(words.size())
+
+varip color[] colors = array.new_color()
+colors.push(color.red)
+plot(colors.size())
+
+varip source = array.new_int()
+source.push(1)
+varip alias = source
+alias.push(20)
+varip copy = array.copy(source)
+copy.push(10)
+plot(source.size())
+plot(alias.size())
+plot(copy.size())
+
+branch_out = close - close
+if close >= 3
+    varip branch = array.new_int()
+    branch.push(1)
+    branch_out := branch.size()
+plot(branch_out)

@@ -1,0 +1,34 @@
+{
+  "name": "matrix-series-dimensions-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\matrix-series-dimensions-v5-46.pine",
+  "source_sha256": "db35c900296530fadaaf422fd1e44800d8b86a112439e1aab107d468c34f7ffa",
+  "kind": "series-dimensions",
+  "version": 5,
+  "expected_values": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    3
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    3
+  ],
+  "native_row": "226 row matrix-series-dimensions-v5-46 Plot 1.00 Plot 1.00 Plot 1.00 Plot 1.00 Plot 1.00 Plot 3.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "8ed6b5557b4f9337225ce2dfd916647187f4f2c231782873cf0c1c60bf04de77",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/matrix-series-dimensions-v5-46.native.ax.txt",
+  "accessibility_sha256": "d877f62a5dbec8f606a82ad9e54eed1cde839fac5b5f48085d678f36f29fa719",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/matrix-series-dimensions-v5-46.native.png",
+  "screenshot_sha256": "c947a136baca2e50a503af243cf0c85bc823d1a7a630944cc586460a918755fc",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

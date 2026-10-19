@@ -1,0 +1,11 @@
+//@version=5
+indicator("missing-string-switch-v5-37",precision=0)
+string a=na
+x=switch a
+    ""=>1
+    =>2
+y=switch ""
+    a=>1
+    =>2
+plot(x)
+plot(y)

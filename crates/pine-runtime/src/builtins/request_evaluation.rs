@@ -13,6 +13,12 @@ impl HistoricalRuntime<'_> {
         runtime.input_overrides = self.input_overrides.clone();
         runtime.request_feed = self.request_feed.clone();
         runtime.static_requests = self.static_requests.for_requested_context();
+        runtime.context_windows = self.context_windows.clone();
+        let chart = runtime.request_environment.chart();
+        runtime.context_windows.enter_scope(crate::RequestKey::new(
+            chart.symbol(),
+            chart.timeframe().clone(),
+        ));
         runtime.inherit_execution_budget(self);
         runtime
     }
@@ -66,6 +72,7 @@ impl HistoricalRuntime<'_> {
 
         let value = self.eval_expr(expression)?;
         let value = self.freeze_requested_value(&value)?;
+        self.snapshot_persistent_array_aliases()?;
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;

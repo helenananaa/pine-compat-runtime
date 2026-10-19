@@ -1,0 +1,189 @@
+{
+  "scope": "Six supplementary unchanged fixture observations supporting test expectation migration; separate from48 primary controls.",
+  "records": [
+    {
+      "name": "legacy-unsupported_map_put_udf-45",
+      "version": 6,
+      "scenario": "legacy-fixture-admission",
+      "source": "tests/fixtures/sema/unsupported_map_put_udf.pine",
+      "source_sha256": "72a2b4f1fb9f07d24ab65564f63732b847f5b5c84f36f498c4fe4484586f6055",
+      "local_three_bar_values": [
+        10
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        81932.18
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          0
+        ]
+      ],
+      "native_row": "239 row Unsupported map put UDF Plot 81,932.18",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "72a2b4f1fb9f07d24ab65564f63732b847f5b5c84f36f498c4fe4484586f6055",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_udf-45.native.ax.txt",
+      "accessibility_sha256": "15399511ceb616f684c548a51ae9ec31b83b46a251c389950f7e9f5a0b21069f",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_udf-45.native.png",
+      "screenshot_sha256": "6055745d38785019d05d5bff89d074cc361173561c09159f706f01d70de365cc",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Supplementary exact historical fixture admission. Source bytes unchanged. OHLC-dependent close plots are projected onto explicitly flat local bars at10; not a market-price or strategy-ledger equality claim and excluded from primary bounded control totals.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_udf-45.capture.json",
+      "raw_capture_sha256": "a85a6e23080cf6668e5e137106f9c186bf8d127784fe496d29932326bc9ae656"
+    },
+    {
+      "name": "legacy-unsupported_map_put_method_udf-45",
+      "version": 6,
+      "scenario": "legacy-fixture-admission",
+      "source": "tests/fixtures/sema/unsupported_map_put_method_udf.pine",
+      "source_sha256": "5f40bcd2ca0b835a8e419793f42e24de1b43532ce5b7bb9bc2e823c40b2b7d5c",
+      "local_three_bar_values": [
+        10
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        81917.52
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          0
+        ]
+      ],
+      "native_row": "239 row Unsupported map put method UDF Plot 81,917.52",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "5f40bcd2ca0b835a8e419793f42e24de1b43532ce5b7bb9bc2e823c40b2b7d5c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_method_udf-45.native.ax.txt",
+      "accessibility_sha256": "3facb91361b09af6a1a8d0d8685d0139c941d3dae497724195fe62bdeb8ce2dc",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_method_udf-45.native.png",
+      "screenshot_sha256": "bc0ee03ee17c1912cba32954d360caa7dce46b955837fd203c144a444b5789c6",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Supplementary exact historical fixture admission. Source bytes unchanged. OHLC-dependent close plots are projected onto explicitly flat local bars at10; not a market-price or strategy-ledger equality claim and excluded from primary bounded control totals.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_method_udf-45.capture.json",
+      "raw_capture_sha256": "e191fcf6a87394a07d90c9dc34b6aaac9c05e0abaabc73274342dbd6abadf449"
+    },
+    {
+      "name": "legacy-unsupported_map_clear_udf-45",
+      "version": 6,
+      "scenario": "legacy-fixture-admission",
+      "source": "tests/fixtures/sema/unsupported_map_clear_udf.pine",
+      "source_sha256": "76e35039607220a75a2328967334a7cf5aceba69b6d3a133dfb33c7cccebb563",
+      "local_three_bar_values": [
+        0
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row Unsupported map clear udf Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "76e35039607220a75a2328967334a7cf5aceba69b6d3a133dfb33c7cccebb563",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_clear_udf-45.native.ax.txt",
+      "accessibility_sha256": "a574e472ba750a84f0f64999e95e311d13eae567ce6e1677ce86f27159535a2c",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_clear_udf-45.native.png",
+      "screenshot_sha256": "b1236ad91e8af085a67d7c995af5d2003365f4f89d0f36306f680d6c056243f3",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Supplementary exact historical fixture admission. Source bytes unchanged. OHLC-dependent close plots are projected onto explicitly flat local bars at10; not a market-price or strategy-ledger equality claim and excluded from primary bounded control totals.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_clear_udf-45.capture.json",
+      "raw_capture_sha256": "31b0c7d2f263bbcde6a7032dc6936cb3405f142ff8ec5bd0da5711f7f0c93486"
+    },
+    {
+      "name": "legacy-unsupported_map_remove_udf-45",
+      "version": 6,
+      "scenario": "legacy-fixture-admission",
+      "source": "tests/fixtures/sema/unsupported_map_remove_udf.pine",
+      "source_sha256": "d8ee3f64326f329d2211e022feb6a26c95ea086d8c61ce6bfa0b1a4a2fd209b9",
+      "local_three_bar_values": [
+        0
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0
+      ],
+      "native_row": "239 row Unsupported map remove udf Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "d8ee3f64326f329d2211e022feb6a26c95ea086d8c61ce6bfa0b1a4a2fd209b9",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_remove_udf-45.native.ax.txt",
+      "accessibility_sha256": "5ce4ae173fcfbe699cacaf37cd4b09db1a00516157d05f9a8e5ac7aff24e6442",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_remove_udf-45.native.png",
+      "screenshot_sha256": "ad399dfeeb001913441049b42e738469bba2e11d6cb4c54fb66a9e0a15423386",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Supplementary exact historical fixture admission. Source bytes unchanged. OHLC-dependent close plots are projected onto explicitly flat local bars at10; not a market-price or strategy-ledger equality claim and excluded from primary bounded control totals.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_remove_udf-45.capture.json",
+      "raw_capture_sha256": "bea5eaaef21b5d8102131da54ffaf320e68d8b74f91b22cbbd21db6937ebc897"
+    },
+    {
+      "name": "legacy-unsupported_map_put_all_udf-45",
+      "version": 6,
+      "scenario": "legacy-fixture-admission",
+      "source": "tests/fixtures/sema/unsupported_map_put_all_udf.pine",
+      "source_sha256": "30664ab074970b5725bb7484972236e1025a4a3f5d22db9bc2d58fff60fa7c08",
+      "local_three_bar_values": [
+        10
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        81922.64
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          0
+        ]
+      ],
+      "native_row": "239 row Unsupported map.put_all UDF Plot 81,922.64",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "30664ab074970b5725bb7484972236e1025a4a3f5d22db9bc2d58fff60fa7c08",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_all_udf-45.native.ax.txt",
+      "accessibility_sha256": "a3480c23886be807f1aee164893a2d5f6389ae89be3dc84967ad33de44b23e4c",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_all_udf-45.native.png",
+      "screenshot_sha256": "bdd27ffb7a75ab8692dbfaff45fac40507828574f7be8001eb1bebdd61cd164e",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Supplementary exact historical fixture admission. Source bytes unchanged. OHLC-dependent close plots are projected onto explicitly flat local bars at10; not a market-price or strategy-ledger equality claim and excluded from primary bounded control totals.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_all_udf-45.capture.json",
+      "raw_capture_sha256": "d8c387103ecf9f639b317d5cc908a01fbaf340170b0895084b705f33ced5cfc4"
+    },
+    {
+      "name": "legacy-unsupported_map_put_all_method_udf-45",
+      "version": 6,
+      "scenario": "legacy-fixture-admission",
+      "source": "tests/fixtures/sema/unsupported_map_put_all_method_udf.pine",
+      "source_sha256": "6c6c88d78f22484853ad7790c01bad34b960639ed80d1a03e5c4131adb8bf30b",
+      "local_three_bar_values": [
+        10
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        81922.65
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          0
+        ]
+      ],
+      "native_row": "239 row Unsupported map.put_all method UDF Plot 81,922.65",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "6c6c88d78f22484853ad7790c01bad34b960639ed80d1a03e5c4131adb8bf30b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_all_method_udf-45.native.ax.txt",
+      "accessibility_sha256": "f8530293653da616135668c1e182df5daabb238af6e284bc01edfd07013958f1",
+      "screenshot": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_all_method_udf-45.native.png",
+      "screenshot_sha256": "4f4dbcb74c44c537ff852a0c5c6e33ec4ede072b6db94eeb26447fc034f3d277",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Supplementary exact historical fixture admission. Source bytes unchanged. OHLC-dependent close plots are projected onto explicitly flat local bars at10; not a market-price or strategy-ledger equality claim and excluded from primary bounded control totals.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/collection-parameters-45/legacy-unsupported_map_put_all_method_udf-45.capture.json",
+      "raw_capture_sha256": "459405d59fe9028bce38eb45a1eadc483e50c3dacca82571e00d0e4bb59f2c38"
+    }
+  ]
+}

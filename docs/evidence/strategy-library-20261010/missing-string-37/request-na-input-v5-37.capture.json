@@ -1,0 +1,20 @@
+{
+  "name": "request-na-input-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-input-v5-37.pine",
+  "source_sha256": "0c211b0a588c7c8f2e5577f3fc842ffc085750e472eb48f91f6e1250d4ea6543",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "240 row request-na-input-v5-37 (Current) Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "0c211b0a588c7c8f2e5577f3fc842ffc085750e472eb48f91f6e1250d4ea6543",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-input-v5-37.native.ax.txt",
+  "accessibility_sha256": "70667cce0f35fbe6be065b7f2f4551b6a7d1f13ebaa39b8f5d404aa52fb54600",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-input-v5-37.native.png",
+  "screenshot_sha256": "16a4d62839be2d90df7eda239d2da9debedde620233f1c9ed24a0cab6919aa1d",
+  "scope": "Follow-up only: v5 input-string ternary na resolves to the current chart timeframe natively",
+  "qualification_scope": "candidate_bounded_control"
+}

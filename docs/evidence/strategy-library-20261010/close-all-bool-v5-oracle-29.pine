@@ -1,0 +1,12 @@
+//@version=5
+strategy("Close all legacy v5 29",precision=0)
+n=bar_index
+if n==0
+    strategy.entry("L",strategy.long,qty=1)
+if n==1
+    strategy.close_all(false,"blocked","a")
+if n==3
+    strategy.close_all(true,"allowed","exit")
+plot(strategy.position_size,title="position")
+plot(strategy.closedtrades.exit_bar_index(0),title="exit_bar")
+plot(1,title="compiled")

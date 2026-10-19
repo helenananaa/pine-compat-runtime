@@ -1,0 +1,19 @@
+{
+  "name": "window-simple-series-reassignment-v5-44",
+  "version": 5,
+  "scenario": "simple-series-reassignment",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-simple-series-reassignment-v5-44.pine",
+  "source_sha256": "51a230476d83dc446e928970b4b892d3bbdfa15f5defa9d6721a0701daacb059",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot assign a value of the `int` type to the 'x' variable. The variable is declared with the `int` type.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "51a230476d83dc446e928970b4b892d3bbdfa15f5defa9d6721a0701daacb059",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-series-reassignment-v5-44.native.ax.txt",
+  "accessibility_sha256": "612ceb4db727d3d157f17413099c6a8ad904bcfaea67f125122e1adffa1b7480",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-series-reassignment-v5-44.native.png",
+  "screenshot_sha256": "66ab4171db447332a9fd1cf140e8970f946ee9f0d2e60a9a469aa9944fa92c64",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

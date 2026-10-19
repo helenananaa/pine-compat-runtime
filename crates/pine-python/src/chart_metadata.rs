@@ -14,12 +14,16 @@ pub(crate) fn parse_chart_metadata(
         .map_err(|_| PyValueError::new_err("$chart must be a dict with minMove and priceScale"))?;
     let has_quantity_precision = grid.contains("quantityPrecision")?;
     let has_point_value = grid.contains("pointValue")?;
-    if grid.len() != 2 + usize::from(has_quantity_precision) + usize::from(has_point_value)
+    let has_currency = grid.contains("currency")?;
+    if grid.len()
+        != 2 + usize::from(has_quantity_precision)
+            + usize::from(has_point_value)
+            + usize::from(has_currency)
         || !grid.contains("minMove")?
         || !grid.contains("priceScale")?
     {
         return Err(PyValueError::new_err(
-            "$chart requires minMove and priceScale, optionally quantityPrecision and pointValue; use chart_symbol/chart_timeframe for identity",
+            "$chart requires minMove and priceScale, optionally quantityPrecision, pointValue and currency; use chart_symbol/chart_timeframe for identity",
         ));
     }
     let integer = |key: &str| -> PyResult<u32> {
@@ -34,6 +38,15 @@ pub(crate) fn parse_chart_metadata(
     chart = chart
         .with_price_grid(integer("minMove")?, integer("priceScale")?)
         .map_err(PyValueError::new_err)?;
+    if has_currency {
+        let value = grid.get_item("currency")?.expect("checked key");
+        let currency = value
+            .extract::<String>()
+            .map_err(|_| PyValueError::new_err("chart currency must be a string"))?;
+        chart = chart
+            .with_currency(currency)
+            .map_err(PyValueError::new_err)?;
+    }
     if has_point_value {
         let value = grid.get_item("pointValue")?.expect("checked key");
         if value.is_instance_of::<PyBool>() {

@@ -1,0 +1,3 @@
+//@version=6
+indicator("BTC contract grid 30",precision=8)
+plot(syminfo.mincontract,title="mincontract")

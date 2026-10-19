@@ -1,0 +1,19 @@
+//@version=6
+indicator("array-slice-window-alias-v6-42")
+var p=array.from(0)
+var s=p.slice(0,1)
+var t=s
+s.push(1)
+varip int ph=0
+varip int sh=0
+varip int th=0
+varip int ih=0
+if barstate.ishistory
+    ph:=p.size()
+    sh:=s.size()
+    th:=t.size()
+    ih:=bar_index
+plot(ph)
+plot(sh)
+plot(th)
+plot(ih)

@@ -3,7 +3,9 @@ use std::collections::HashMap;
 
 mod body_fields;
 mod call_args;
+mod call_names;
 use call_args::udf_call_param_keys;
+use call_names::pure_math_call_name;
 mod control_flow;
 mod user_types;
 use body_fields::{BodyFieldContext, BodyFieldKind, collect_body_field_param_keys};
@@ -437,7 +439,9 @@ fn pure_function_body_series_key(
                     } => {
                         if !matches!(
                             mode,
-                            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const
+                            pine_syntax::DeclMode::Normal
+                                | pine_syntax::DeclMode::Const
+                                | pine_syntax::DeclMode::Simple
                         ) {
                             return None;
                         }
@@ -712,8 +716,7 @@ fn pure_expr_series_key_with_params(
                 .map_or(source_name, str::to_owned);
             let is_pure_numeric_cast = matches!(name.as_str(), "int" | "float");
             let is_pure_fixed_builtin = super::pure_fixed_builtin_call_name(&name);
-            if !super::pure_math_call_name(&name) && !is_pure_numeric_cast && !is_pure_fixed_builtin
-            {
+            if !pure_math_call_name(&name) && !is_pure_numeric_cast && !is_pure_fixed_builtin {
                 return None;
             }
             let arg_keys = if super::pure_math_variadic_call_name(&name) {

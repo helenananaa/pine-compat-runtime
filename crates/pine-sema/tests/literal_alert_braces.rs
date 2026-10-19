@@ -21,13 +21,12 @@ fn alert_messages_and_alertcondition_titles_accept_native_literal_braces() {
 }
 
 #[test]
-fn plain_braces_do_not_relax_message_templates_types_frequency_or_scope() {
+fn plain_braces_do_not_relax_message_templates_types_or_scope() {
     for body in [
         "alertcondition(true,\"Title\",\"{{plot_20}}\")",
         "alertcondition(true,\"Title\",\"{{unknown}}\")",
         "alertcondition(true,str.tostring(close),\"message\")",
         "alert(1)",
-        "alert(\"{{ticker}}\",\"invalid_frequency\")",
         "f()=>alert(\"{{ticker}}\")\nf()",
     ] {
         let result = analyze_source(&SourceFile::new(
@@ -37,4 +36,13 @@ fn plain_braces_do_not_relax_message_templates_types_frequency_or_scope() {
         assert!(result.hir.is_none(), "{body}");
         assert!(!result.diagnostics.is_empty());
     }
+}
+
+#[test]
+fn literal_braces_keep_frequency_value_validation_at_execution() {
+    let report = analyze_source(&SourceFile::new(
+        "frequency.pine",
+        "//@version=5\nindicator(\"frequency\")\nalert(\"{{ticker}}\",\"invalid_frequency\")\nplot(1)\n",
+    ));
+    assert!(report.hir.is_some(), "{:?}", report.diagnostics);
 }

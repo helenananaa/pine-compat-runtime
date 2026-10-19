@@ -1,0 +1,6 @@
+//@version=5
+indicator("point-undefined-box-set-v5-41")
+chart.point p=na
+b=box.new(0,1,1,0)
+box.set_top_left_point(b,p)
+plot(1)

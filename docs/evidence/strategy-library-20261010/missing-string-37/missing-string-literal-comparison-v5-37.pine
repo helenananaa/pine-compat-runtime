@@ -1,0 +1,9 @@
+//@version=5
+indicator("missing-string-literal-comparison-v5-37",precision=0)
+string a=na
+plot(na==""?1:0)
+plot(""==na?1:0)
+plot(na!="x"?1:0)
+plot(na(na=="")?1:0)
+plot(a==na?1:0)
+plot(na(a==na)?1:0)

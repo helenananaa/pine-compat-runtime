@@ -1,0 +1,5 @@
+//@version=6
+indicator("method-function-syntax-v6-38")
+method plus38(float self,float extra)=>self+extra
+x=10.0
+plot(plus38(x,2.0))

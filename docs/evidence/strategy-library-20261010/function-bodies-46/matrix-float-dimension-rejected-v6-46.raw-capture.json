@@ -1,0 +1,20 @@
+{
+  "name": "matrix-float-dimension-rejected-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\matrix-float-dimension-rejected-v6-46.pine",
+  "source_sha256": "82b739d30b3200cc7d1163263b3d48dc5e9410846ed36f6932b365b048c5be6f",
+  "kind": "float-dimension-rejected",
+  "version": 6,
+  "expected_values": null,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"matrix.new\" with argument \"rows\"=\"rows\". An argument of \"series float\" type was used but a \"series int\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "60c700ab24a18b9a885a767f6f6a7e4d9859ae19cf9d997f1b40230f59881b5f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/matrix-float-dimension-rejected-v6-46.native.ax.txt",
+  "accessibility_sha256": "0e06852eb51855457b3d057ca9fe62eb7a1c1734003b606b9c0ad5655baa0fe7",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/matrix-float-dimension-rejected-v6-46.native.png",
+  "screenshot_sha256": "79e4831dce3c419493f5137cb64b97258680143c8ab83b4fbba98f4fd49f1014",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

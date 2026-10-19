@@ -4,5 +4,5 @@ type Point
     float x
 
 p = Point.new(close)
-text = str.tostring(p)
+note = str.tostring(p)
 plot(close)

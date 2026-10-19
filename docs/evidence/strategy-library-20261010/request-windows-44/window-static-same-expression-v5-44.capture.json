@@ -1,0 +1,24 @@
+{
+  "name": "window-static-same-expression-v5-44",
+  "version": 5,
+  "scenario": "static-same-expression",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-static-same-expression-v5-44.pine",
+  "source_sha256": "85b19797ab04f6fb4091d44196f71d0dcbd517a0a6cf2b210753ecbfcc8fd92f",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    99,
+    99,
+    99,
+    100
+  ],
+  "native_row": "239 row window-static-same-expression-v5-44 Plot 99.00 Plot 99.00 Plot 99.00 Plot 100.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "85b19797ab04f6fb4091d44196f71d0dcbd517a0a6cf2b210753ecbfcc8fd92f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-static-same-expression-v5-44.native.ax.txt",
+  "accessibility_sha256": "c89a22ebf833803c90330690888505e1837996e64b9acc6a452ce4966b62dc01",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-static-same-expression-v5-44.native.png",
+  "screenshot_sha256": "8b1ff96601d14ada5ae20b5a4dad9f530d4fab6c00741224f8102d5270e91b87",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

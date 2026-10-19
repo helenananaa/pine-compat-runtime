@@ -1,0 +1,12 @@
+//@version=5
+indicator("parameter-const-scalars-v5-35",precision=0)
+fi(const int x)=>x+1
+ff(const float x)=>x+0.5
+fb(const bool x)=>x
+fs(const string x)=>x
+fc(const color x)=>x
+plot(fi(2)==3?1:0,title="int")
+plot(ff(2)==2.5?1:0,title="float widening")
+plot(fb(false)?1:0,title="bool")
+plot(fs("ok")=="ok"?1:0,title="string")
+plot(fc(color.red)==color.red?1:0,title="color")

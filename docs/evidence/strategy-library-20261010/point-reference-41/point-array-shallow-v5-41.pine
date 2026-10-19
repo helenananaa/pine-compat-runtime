@@ -1,0 +1,9 @@
+//@version=5
+indicator("point-array-shallow-v5-41")
+p=chart.point.from_index(1,10)
+items=array.from(p)
+copy=items.copy()
+q=copy.first()
+q.price:=20
+plot(items.first().price)
+plot(p.price)

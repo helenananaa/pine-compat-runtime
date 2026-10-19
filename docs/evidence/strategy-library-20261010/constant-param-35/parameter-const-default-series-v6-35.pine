@@ -1,0 +1,4 @@
+//@version=6
+indicator("parameter-const-default-series-v6-35",precision=0)
+f(const float x=close)=>x
+plot(f())

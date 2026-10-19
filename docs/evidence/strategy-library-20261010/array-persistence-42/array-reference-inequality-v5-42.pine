@@ -1,0 +1,5 @@
+//@version=5
+indicator("array-reference-inequality-v5-42")
+var a=array.from(1)
+var b=a
+plot(a!=b?1:0)

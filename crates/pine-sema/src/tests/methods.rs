@@ -1424,7 +1424,7 @@ plot(q.x)
 }
 
 #[test]
-fn rejects_user_type_receiver_field_mutation_inside_method() {
+fn accepts_user_type_receiver_field_mutation_inside_method() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -1438,13 +1438,10 @@ plot(q.x)
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| { feature.feature == "function_side_effect" }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }

@@ -1,0 +1,14 @@
+//@version=5
+indicator("array-late-history-v5-42")
+varip a=array.new_int()
+var b=array.new_int()
+if barstate.islastconfirmedhistory
+    b:=a
+varip int ticks=0
+if barstate.isrealtime
+    ticks+=1
+    a.push(1)
+plot(ticks)
+plot(a.size())
+plot(b.size())
+plot(barstate.isrealtime and ticks>=2 and a.size()==ticks and b.size()==0?1:0)

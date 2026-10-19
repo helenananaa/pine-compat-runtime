@@ -1,0 +1,17 @@
+//@version=5
+indicator("Label point mutation")
+var index_label = label.new(bar_index, high, "index")
+var time_label = label.new(time, high, "time", xloc=xloc.bar_time)
+if bar_index == 1
+    first = chart.point.from_index(bar_index - 1, open)
+    second = chart.point.from_index(bar_index + 2, close)
+    label.set_point(index_label, first)
+    index_label.set_point(second)
+if bar_index == 2
+    time_first = chart.point.from_time(time - 60000, open)
+    time_second = chart.point.from_time(time + 120000, close)
+    label.set_point(time_label, time_first)
+    time_label.set_point(time_second)
+label.set_point(na, chart.point.now(close))
+label.set_point(index_label, na)
+plot(close)

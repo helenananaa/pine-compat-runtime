@@ -1,0 +1,4 @@
+//@version=6
+indicator("alert-domain-literal-all-v6-39")
+alert("probe","all")
+plot(1)

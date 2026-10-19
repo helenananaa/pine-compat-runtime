@@ -1,0 +1,15 @@
+//@version=6
+indicator("matrix-series-dimensions-v6-46")
+rows=bar_index%2+1
+columns=bar_index%3+1
+mf=matrix.new<float>(rows,columns,1)
+mi=matrix.new<int>(rows,columns,2)
+mb=matrix.new<bool>(rows,columns,true)
+ms=matrix.new<string>(rows,columns,"ok")
+mc=matrix.new<color>(rows,columns,color.red)
+plot(mf.rows()==rows and mf.columns()==columns?1:0)
+plot(mi.rows()==rows and mi.columns()==columns?1:0)
+plot(mb.rows()==rows and mb.columns()==columns?1:0)
+plot(ms.rows()==rows and ms.columns()==columns?1:0)
+plot(mc.rows()==rows and mc.columns()==columns?1:0)
+plot(mf.get(0,0)+mi.get(0,0))

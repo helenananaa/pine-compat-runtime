@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 mod const_eval;
+pub(crate) use const_eval::ConstantBoolean;
 mod history_offsets;
 mod provenance;
 
@@ -46,9 +47,12 @@ impl Default for LoweringLimits {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct Analyzer {
     pub(crate) source_texts: HashMap<SourceId, Arc<SourceFile>>,
     pub(crate) diagnostics: Vec<Diagnostic>,
+    pub(crate) declaration_diagnostics: Vec<Diagnostic>,
+    pub(crate) declaration_validation: bool,
     pub(crate) compatibility: CompatibilityReport,
     pub(crate) legacy: LegacyFrontEnd,
     pub(crate) source_context_id: Cell<SourceContextId>,
@@ -61,6 +65,8 @@ pub(crate) struct Analyzer {
     pub(crate) bindings: HashMap<BindingKey, SymbolInfo>,
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
     pub(crate) lower_reassigned_symbols: HashSet<SymbolId>,
+    pub(crate) constant_bool_origins: HashMap<(SourceContextId, usize), u64>,
+    pub(crate) has_boolean_return_boundaries: bool,
     pub(crate) request_reassigned_names: HashSet<String>,
     pub(crate) request_global_reassigned_names: HashSet<String>,
     pub(crate) functions: HashMap<String, FunctionInfo>,
@@ -70,9 +76,12 @@ pub(crate) struct Analyzer {
     pub(crate) symbol_user_types: HashMap<SymbolId, String>,
     pub(crate) symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     pub(crate) symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
+    // Admission provenance survives invalidation of the constant/type cache.
+    pub(crate) request_reference_sources: HashMap<SymbolId, Vec<SourcedExpr>>,
     pub(crate) request_param_sources: HashMap<SymbolId, SourcedExpr>,
     pub(crate) typed_na_scalar_symbols: HashSet<SymbolId>,
     pub(crate) const_declared_symbols: HashSet<SymbolId>,
+    pub(crate) simple_declared_symbols: HashSet<SymbolId>,
     pub(crate) legacy_v3_untyped_na_symbols: HashMap<SymbolId, Span>,
     pub(crate) legacy_v3_pending_na_symbols: HashSet<SymbolId>,
     pub(crate) legacy_v2_declaration_plan: crate::legacy::LegacyV2DeclarationPlan,
@@ -91,7 +100,7 @@ pub(crate) struct Analyzer {
     pub(crate) const_int_symbols: HashMap<SymbolId, i64>,
     pub(crate) const_numeric_symbols: HashMap<SymbolId, f64>,
     pub(crate) const_string_symbols: HashMap<SymbolId, String>,
-    pub(crate) const_bool_symbols: HashMap<SymbolId, bool>,
+    pub(crate) const_bool_symbols: HashMap<SymbolId, ConstantBoolean>,
     pub(crate) const_color_symbols: HashMap<SymbolId, u32>,
     pub(crate) expr_user_types: HashMap<ExprKey, String>,
     pub(crate) expr_user_type_identities: HashMap<ExprKey, UserTypeIdentity>,
@@ -160,13 +169,19 @@ pub(crate) struct FunctionParamInfo {
     pub(crate) pine_type: PineType,
     pub(crate) explicit_series: bool,
     pub(crate) explicit_simple: bool,
+    pub(crate) enforce_qualifier: bool,
     pub(crate) user_type_name: Option<String>,
+    pub(crate) map_type: Option<MapTypeInfo>,
     pub(crate) span: Span,
 }
 
 impl FunctionParamInfo {
     pub(crate) fn bound_type(&self, argument: PineType) -> PineType {
-        if self.explicit_series || self.explicit_simple {
+        if self.explicit_series
+            || self.explicit_simple
+            || self.enforce_qualifier
+            || self.pine_type.qualifier == pine_ir::Qualifier::Const
+        {
             self.pine_type
         } else if (argument.kind == pine_ir::ValueKind::Int
             && self.pine_type.kind == pine_ir::ValueKind::Float)
@@ -192,6 +207,7 @@ pub(crate) struct MethodInfo {
     pub(crate) source_context_id: SourceContextId,
     pub(crate) receiver_type: String,
     pub(crate) receiver_name: String,
+    pub(crate) receiver_binding: Option<FunctionParamInfo>,
     pub(crate) params: Vec<MethodParamInfo>,
     pub(crate) body: FunctionBody,
     pub(crate) span: Span,
@@ -201,6 +217,15 @@ pub(crate) struct MethodParamInfo {
     pub(crate) name: String,
     pub(crate) pine_type: PineType,
     pub(crate) user_type_name: Option<String>,
+    pub(crate) binding: Option<FunctionParamInfo>,
+}
+
+impl MethodParamInfo {
+    pub(crate) fn bound_type(&self, argument: PineType) -> PineType {
+        self.binding
+            .as_ref()
+            .map_or(argument, |binding| binding.bound_type(argument))
+    }
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum UdfArgError {

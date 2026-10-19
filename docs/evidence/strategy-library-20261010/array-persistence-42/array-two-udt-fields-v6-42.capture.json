@@ -1,0 +1,37 @@
+{
+  "name": "array-two-udt-fields-v6-42",
+  "version": 6,
+  "scenario": "array-two-udt-fields",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-two-udt-fields-v6-42.pine",
+  "source_sha256": "13bf8a67248f7d1f4b2eeb7c4163baf5ea7550a0c1dbddb8ecf6fdfe6c35ba78",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2,
+    3351,
+    3351,
+    3349
+  ],
+  "native_relations": [
+    [
+      "eq",
+      1,
+      2
+    ],
+    [
+      "offset",
+      1,
+      3,
+      2
+    ]
+  ],
+  "native_row": "241 row array-two-udt-fields-v6-42 Plot 2.00 Plot 3,351.00 Plot 3,351.00 Plot 3,349.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "842087d0b9a7cc8b654aa1b6ab4d2f3348dd05297597e70e9831307ce671e4ee",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-two-udt-fields-v6-42.native.ax.txt",
+  "accessibility_sha256": "55e867b6d3c604ee253c75b65698db8d8b1eaa2681bae5f523bc541ccfedf34b",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-two-udt-fields-v6-42.native.png",
+  "screenshot_sha256": "28597cc15284456fc9611a23f9bd31c6491329e852fd30aedf0a95de1794a4f4",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,5 @@
+//@version=6
+indicator("qualifier-untyped-constant-helper-v6-39")
+constant39(value)=>3
+average39(int length)=>ta.ema(close,constant39(length))
+plot(average39(bar_index+1)==ta.ema(close,3)?1:0)

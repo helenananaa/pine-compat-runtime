@@ -1,0 +1,22 @@
+{
+  "name": "collection-matrix-wrong-element-v5-45",
+  "version": 5,
+  "scenario": "matrix-wrong-element",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-matrix-wrong-element-v5-45.pine",
+  "source_sha256": "686b1435207f264d069d548dc452d1e45f02da3bab8c9b77aafb7f39025c1158",
+  "expected_values": null,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    10
+  ],
+  "native_row": "239 row collection-matrix-wrong-element-v5-45 Plot 10.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c31020db3b84ca0884a7fe7e61a09a8a38410d5620d9ff94b851182b6409484b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-wrong-element-v5-45.native.ax.txt",
+  "accessibility_sha256": "f68a6f623da95e5e6015602f63ded9ea9efc66a08976bcd24ff2a6938ccf53a9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-wrong-element-v5-45.native.png",
+  "screenshot_sha256": "46ae6f36cad7d0604be1b15950e2c0f313b35c4fed27de7d5cd16ae0bc7c00b7",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

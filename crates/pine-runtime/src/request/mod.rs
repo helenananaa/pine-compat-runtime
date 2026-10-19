@@ -1,6 +1,8 @@
 mod bars;
 mod calendar;
 mod chart;
+mod currency;
+mod currency_input;
 mod feed;
 mod provider;
 mod timeframe;
@@ -11,6 +13,11 @@ pub use calendar::{
     BarTimeInterval, bar_calendars_from_json,
 };
 pub use chart::ChartContext;
+pub use currency::{
+    CurrencyRateError, CurrencyRateFrame, CurrencyRateProvider, InMemoryCurrencyRateProvider,
+    NoCurrencyRateProvider,
+};
+pub use currency_input::{CURRENCY_RATE_SCHEMA_VERSION, currency_rates_from_json};
 pub(crate) use feed::{RequestFeed, RequestFeedError};
 pub(crate) use provider::RequestCacheKey;
 pub use provider::{

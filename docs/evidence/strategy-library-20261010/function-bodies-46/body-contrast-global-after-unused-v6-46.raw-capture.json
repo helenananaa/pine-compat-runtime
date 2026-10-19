@@ -1,0 +1,19 @@
+{
+  "name": "body-contrast-global-after-unused-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-contrast-global-after-unused-v6-46.pine",
+  "source_sha256": "c368a461849ae23a9d4651ad1fa312c5ae58ffff9bcbe7abc4d2495143c4eaf7",
+  "kind": "global-after-unused",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Undeclared identifier \"later46\" (CE10272)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e3e9f20da89d8351a73bd2811f75d1685ef368fbec11bde7ebfdbb9877953c4b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-global-after-unused-v6-46.native.ax.txt",
+  "accessibility_sha256": "2bf487dd6a69fa4e0b565f8c8a724730fe2b8ba2aeb225aa58bb57cd7761c218",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-global-after-unused-v6-46.native.png",
+  "screenshot_sha256": "2973c6944161ea45cdb8c37e884ce20cb2536390a072f4311ef9fd3f71185d84",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

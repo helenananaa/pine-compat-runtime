@@ -1,0 +1,467 @@
+{
+  "official_source": "https://www.tradingview.com/pine-script-docs/migration-guides/to-pine-version-5/",
+  "date": "2026-10-17",
+  "scope": "Versioned declaration rejection; native tuple and foreach binding exceptions retained except grammar keyword in. Source corpus unmodified.",
+  "cases": [
+    {
+      "name": "reserved-all-for-in-v5-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-for-in-v5-33.pine",
+      "source_sha256": "c0b4eb06abcfd27d2edc7d7b5bedd0810b029b54815026881caec11c45d4104d",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "eccd3da8d4c8f309727d16b151e49da8ebb30ecdf557b6a75f2ddad70bb9ad6e",
+      "normalized_source_sha256": "eccd3da8d4c8f309727d16b151e49da8ebb30ecdf557b6a75f2ddad70bb9ad6e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-for-in-v5-33.native.ax.txt",
+      "accessibility_sha256": "e4cbe7dec86a0405bbcd98374b63f26f880da023e1d80ebd1071826932e15abd",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-for-in-v5-33.native.png",
+      "screenshot_sha256": "bc8144e2a2fecc6468ce56d55f6a2aced50fb68a2c207cbdb5e9e00f2111a393",
+      "native_messages": [
+        "489 container for in in array.from(1), Error at 12:5.",
+        "491 container for in in array.from(1), Error at 12:5."
+      ]
+    },
+    {
+      "name": "reserved-all-for-in-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-for-in-v6-33.pine",
+      "source_sha256": "04ae525a6824a69ff577f40f5d2c95a44559c037f69045b127dafd22c4d77c5d",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "23c2315e87e2e102372b7db4b32ced5be048bc0fe1f9728b48ad16408b4631fa",
+      "normalized_source_sha256": "23c2315e87e2e102372b7db4b32ced5be048bc0fe1f9728b48ad16408b4631fa",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-for-in-v6-33.native.ax.txt",
+      "accessibility_sha256": "e20a6ef2975f7579afc79f026cd0a4ff68a2868d0dde70742f2a62b4ff9adb3f",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-for-in-v6-33.native.png",
+      "screenshot_sha256": "550b909937daeefe64f35351e66f413499f3e14674f548cfacf11bb4c63b1311",
+      "native_messages": [
+        "489 container for in in array.from(1), Error at 12:5.",
+        "491 container for in in array.from(1), Error at 12:5."
+      ]
+    },
+    {
+      "name": "reserved-all-legacy-v4-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-legacy-v4-33.pine",
+      "source_sha256": "7b3e7e8d6c359842080f8b245de17fa14d9467e731cccd401837fbd60a1cba06",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row All future reserved words v4 probe33 Plot 91",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "10209c910b57d9496d41dbf5e23ee291bcc94fb8b1a1a0a3c95381868307325f",
+      "normalized_source_sha256": "10209c910b57d9496d41dbf5e23ee291bcc94fb8b1a1a0a3c95381868307325f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-legacy-v4-33.native.ax.txt",
+      "accessibility_sha256": "a2da7df6adb6325cb67fafcd4edd86616d435ec6d123d73e284b2a7d9e7e3569",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-legacy-v4-33.native.png",
+      "screenshot_sha256": "da3da922154b9118cdc35bfa3e082be3700581e534c01ae1f4ae821476d0696c",
+      "native_messages": [],
+      "expected_plots": [
+        91
+      ]
+    },
+    {
+      "name": "reserved-all-tuple-v5-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-tuple-v5-33.pine",
+      "source_sha256": "4b37a279b004a44b246f4ee6718d96d37ac147b5548bb0d6f1a2d858dee95f59",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "ffc338371bfcf3c0570b40239c755f14063f43b7f54880dd732d4dc6ef4551be",
+      "normalized_source_sha256": "ffc338371bfcf3c0570b40239c755f14063f43b7f54880dd732d4dc6ef4551be",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-tuple-v5-33.native.ax.txt",
+      "accessibility_sha256": "4f57e4d10899d392bf6046def6a90970b33673d5773124409c94fe57306273b5",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-tuple-v5-33.native.png",
+      "screenshot_sha256": "512b788943256ba8b17ab7c162d92d275ff4eeb7e0f6e68699ede570e0e39aa9",
+      "native_messages": [
+        "490 container [catch,class,do,ellipse,in,is,polygon,range,return,struct,text,throw,try]=values(), Error at 4:25.",
+        "492 container [catch,class,do,ellipse,in,is,polygon,range,return,struct,text,throw,try]=values(), Error at 4:25."
+      ]
+    },
+    {
+      "name": "reserved-all-tuple-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-tuple-v6-33.pine",
+      "source_sha256": "468a89c0e2b5caeb3a9573cfa196e3ec6fc842579a443730f40c221820f0ecff",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "b5ec2e59c548770a6f76b1c31f7d7b884be11dae44896a68d753b0aa7632f984",
+      "normalized_source_sha256": "b5ec2e59c548770a6f76b1c31f7d7b884be11dae44896a68d753b0aa7632f984",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-tuple-v6-33.native.ax.txt",
+      "accessibility_sha256": "ab1e434361d301ef27e0ffe8024aed710dacaa5743b99def2f336d72491bf4e2",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-all-tuple-v6-33.native.png",
+      "screenshot_sha256": "751be077dc06e2c75c98028609de1f8110891730ad8c7b4bce46dd893f91ee86",
+      "native_messages": [
+        "489 container [catch,class,do,ellipse,in,is,polygon,range,return,struct,text,throw,try]=values(), Error at 4:25.",
+        "491 container [catch,class,do,ellipse,in,is,polygon,range,return,struct,text,throw,try]=values(), Error at 4:25."
+      ]
+    },
+    {
+      "name": "reserved-catch-global-v5-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-catch-global-v5-33.pine",
+      "source_sha256": "d2d6831025356432f424078a9b728ac571974addb5dda21a3934677a79b63ed5",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "ed3f9c15201986a702c16ed08b2ae33fa5a8d280cd37dc6aaee2656f862d8c0e",
+      "normalized_source_sha256": "ed3f9c15201986a702c16ed08b2ae33fa5a8d280cd37dc6aaee2656f862d8c0e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-catch-global-v5-33.native.ax.txt",
+      "accessibility_sha256": "6383563ea11412603e78c89c8d63c7ef0d8f0a456d66008ef301ec3bd444e687",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-catch-global-v5-33.native.png",
+      "screenshot_sha256": "6a9305a29a7ed3cc5088eea69ba6d104b38356ed7559b17bbf587acc02a831cb",
+      "native_messages": [
+        "489 container catch=19, Error at 3:1.",
+        "491 container catch=19, Error at 3:1."
+      ]
+    },
+    {
+      "name": "reserved-field-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-field-v6-33.pine",
+      "source_sha256": "fffd510e3f10a49ca83b1fdacdd4e6a28d4a15c6d3c9f4c38284a794a78e1e7d",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "2f3750e60eac488ce437503346f6358ba0a8c0dd6f18ec09f9339d49765056ff",
+      "normalized_source_sha256": "2f3750e60eac488ce437503346f6358ba0a8c0dd6f18ec09f9339d49765056ff",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-field-v6-33.native.ax.txt",
+      "accessibility_sha256": "9378da66e42aa652d6c5a6665d19400b18011428f516b6d625a75d0096e987fd",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-field-v6-33.native.png",
+      "screenshot_sha256": "7a62fb09907432430eaa819e1266b989a09f37d72ec04b3892d31f150e034b33",
+      "native_messages": [
+        "489 container  int text, Error at 4:9.",
+        "491 container  int text, Error at 4:9."
+      ]
+    },
+    {
+      "name": "reserved-for-in-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-for-in-v6-33.pine",
+      "source_sha256": "5d3e34c7f736e5686f608c8f81780eca8a3a859346f0b2ef2319b203d8b21f63",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row Reserved for-in-v6 probe33 Plot 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "9bc700b24da8646dbc625f600bec03176d842566f50a55aaf9b1cf9625bc1418",
+      "normalized_source_sha256": "9bc700b24da8646dbc625f600bec03176d842566f50a55aaf9b1cf9625bc1418",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-for-in-v6-33.native.ax.txt",
+      "accessibility_sha256": "83f89914d4471578d25b8aabe20a81d40794104d872e2677e3cff9385802625a",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-for-in-v6-33.native.png",
+      "screenshot_sha256": "0fca472a826b3993553430223ce387ad4065da12599c648b0c60d8339ecdff0e",
+      "native_messages": [],
+      "expected_plots": [
+        1
+      ]
+    },
+    {
+      "name": "reserved-for-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-for-v6-33.pine",
+      "source_sha256": "fbbf11b4b047c8fae75801b7912e8045af13e2409f0d19b6abe025cfdc38f52a",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "fcfa96855d1a0afe5135a204e89c6372666719cc735f0773d8f90b2ca9a2256b",
+      "normalized_source_sha256": "fcfa96855d1a0afe5135a204e89c6372666719cc735f0773d8f90b2ca9a2256b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-for-v6-33.native.ax.txt",
+      "accessibility_sha256": "45980f937f3efaf8dcd3624c543f359acb3594d1c32b6ce9bd1fa604576757b4",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-for-v6-33.native.png",
+      "screenshot_sha256": "4fec1556143fdeb8f1c49fc89aa4bf40cd78922e79bedbc7c8f7340beff9e61d",
+      "native_messages": [
+        "489 container for text=0 to 0, Error at 4:5.",
+        "491 container for text=0 to 0, Error at 4:5."
+      ]
+    },
+    {
+      "name": "reserved-function-v5-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-function-v5-33.pine",
+      "source_sha256": "de0d9ff5c92e004dfbe8b49bc611477746460a424fd147c5b483cee461e99955",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "234a81720c9449056705ef219ab8d26f05dc697e1de70743f136bb7699f11067",
+      "normalized_source_sha256": "234a81720c9449056705ef219ab8d26f05dc697e1de70743f136bb7699f11067",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-function-v5-33.native.ax.txt",
+      "accessibility_sha256": "2cd95ce78691dd2d14a62c386447aa32faad0b3b21543a157df28c7970eac1c1",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-function-v5-33.native.png",
+      "screenshot_sha256": "f63625d8894fa56e80913a34b0ea9c9446aed21da49cb28a0df63c9f49ea55cd",
+      "native_messages": [
+        "489 container text(value)=>value, Error at 3:1.",
+        "491 container text(value)=>value, Error at 3:1."
+      ]
+    },
+    {
+      "name": "reserved-import-alias-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-import-alias-v6-33.pine",
+      "source_sha256": "0bf58d447d829f4f4099401f288dc52a562178c728f9c081133a90229481d09f",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "ecc0f9306128daffce7a67003629cbcec4210377852b56750e416d899f764e9b",
+      "normalized_source_sha256": "ecc0f9306128daffce7a67003629cbcec4210377852b56750e416d899f764e9b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-import-alias-v6-33.native.ax.txt",
+      "accessibility_sha256": "f713ee518443ff4a04a185e047a45027faec3471e83e118f5851e3e905ef5492",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-import-alias-v6-33.native.png",
+      "screenshot_sha256": "49cb15af66863d2204fbaed20e6908e221d71a30bee2a7d3512dce75115b3847",
+      "native_messages": [
+        "490 container import TradingView/ta/8 as text, Error at 3:28.",
+        "492 container import TradingView/ta/8 as text, Error at 3:28."
+      ]
+    },
+    {
+      "name": "reserved-method-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-method-v6-33.pine",
+      "source_sha256": "69f8bf9c2b70d76d18fc5902c97b9637ed7b7d672e0aeaa8ddc2e15d3d5f985c",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "b64bfdac2791067f42cebb3f691cf7d528267bb78dcbf5ebd967ffc64f56440c",
+      "normalized_source_sha256": "b64bfdac2791067f42cebb3f691cf7d528267bb78dcbf5ebd967ffc64f56440c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-method-v6-33.native.ax.txt",
+      "accessibility_sha256": "a0a31baa837c9ec529ba26bd50180acfa01c8b938b992bb4e99e2b2e7fb7e80f",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-method-v6-33.native.png",
+      "screenshot_sha256": "91a1b5768b37c1b44e1b6b4b392689f4545684a448711d928d387d39c2935aa8",
+      "native_messages": [
+        "490 container method text(float self)=>self, Error at 3:8.",
+        "492 container method text(float self)=>self, Error at 3:8."
+      ]
+    },
+    {
+      "name": "reserved-named-argument-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-named-argument-v6-33.pine",
+      "source_sha256": "3d41a74658b1a6f7af429ee063e125c0333bb6fe3a391ae3ba4894bd66db0cd2",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row Reserved named-argument-v6 probe33 Plot 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "d64cab2acd51f79e53afa5f6f4e73b14117eb7d1ec35ae7a1782ca898e4d5f5c",
+      "normalized_source_sha256": "d64cab2acd51f79e53afa5f6f4e73b14117eb7d1ec35ae7a1782ca898e4d5f5c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-named-argument-v6-33.native.ax.txt",
+      "accessibility_sha256": "e929a8a87e50c493c3b26219c70a37a5a65bd6735f7d74f2eea550f897c29476",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-named-argument-v6-33.native.png",
+      "screenshot_sha256": "0206d67eddd6088afc9f9e9b3764da9c35adcaf80c501101a1b8f555604697df",
+      "native_messages": [],
+      "expected_plots": [
+        1
+      ]
+    },
+    {
+      "name": "reserved-non-in-for-in-v5-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-for-in-v5-33.pine",
+      "source_sha256": "ad81df6e7ca5c9402eb497608689ca32259dc20a34acaf8137f54b63a27d642a",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row Non-in reserved for-in v5 probe33 Plot 12",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "0fda8bc76d5afef592a3aca5b3b77de19619ea79264e2f70ca00a70c12584fc8",
+      "normalized_source_sha256": "0fda8bc76d5afef592a3aca5b3b77de19619ea79264e2f70ca00a70c12584fc8",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-for-in-v5-33.native.ax.txt",
+      "accessibility_sha256": "6ae428d066f9645fd94470278ce98869f2d59a78e6bf76635d67bd5ade07c092",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-for-in-v5-33.native.png",
+      "screenshot_sha256": "22930b2c9eedd32dc4f213321b8cad58429152015a7689e92cc57f433d3e876d",
+      "native_messages": [],
+      "expected_plots": [
+        12
+      ]
+    },
+    {
+      "name": "reserved-non-in-for-in-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-for-in-v6-33.pine",
+      "source_sha256": "0fb6a81bf5fbf145dee4b525277250ddb21d4997c328df7f5e77489d2ded56f2",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row Non-in reserved for-in v6 probe33 Plot 12",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "f634d5046aacc35221529df10736f45d43fbd8eecac23351dec675ea12626a53",
+      "normalized_source_sha256": "f634d5046aacc35221529df10736f45d43fbd8eecac23351dec675ea12626a53",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-for-in-v6-33.native.ax.txt",
+      "accessibility_sha256": "5dea207fd8c540fae496eb58e91f7c25e04ba361aa21b1129071c23580b87525",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-for-in-v6-33.native.png",
+      "screenshot_sha256": "f65bc94d8c0196d297d96cf2de1e709c9a9df0a53e8be804d1b7db152bf8f04c",
+      "native_messages": [],
+      "expected_plots": [
+        12
+      ]
+    },
+    {
+      "name": "reserved-non-in-tuple-v5-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-tuple-v5-33.pine",
+      "source_sha256": "439388f7d6bb984934d94e64f3f067258bd615556981c41d86d32c5b817c52ea",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row Non-in reserved tuple v5 probe33 Plot 78",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "a60949baa5730ca3abff5ec1165384711b3232eb036181389533abde772cdcff",
+      "normalized_source_sha256": "a60949baa5730ca3abff5ec1165384711b3232eb036181389533abde772cdcff",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-tuple-v5-33.native.ax.txt",
+      "accessibility_sha256": "f29f5a6567ca6ea9a34cbf1cf6e0efa00fd653570a566690a87a9b4e80ce624d",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-tuple-v5-33.native.png",
+      "screenshot_sha256": "d32f513d4f739678206e9ff3407c0a95b33686e242bc4a46ad5ff2040f36f3a7",
+      "native_messages": [],
+      "expected_plots": [
+        78
+      ]
+    },
+    {
+      "name": "reserved-non-in-tuple-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-tuple-v6-33.pine",
+      "source_sha256": "b45221827b245b2195af3ce2f53124a71594532ada7238568e8c652c1d81dbb6",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row Non-in reserved tuple v6 probe33 Plot 78",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "d3525958f8972911331c8270f90308a353a4abb520a8ff3bcbdd6427c0609534",
+      "normalized_source_sha256": "d3525958f8972911331c8270f90308a353a4abb520a8ff3bcbdd6427c0609534",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-tuple-v6-33.native.ax.txt",
+      "accessibility_sha256": "f34785faf3797084fbe47a5e514f29581c4bbffc3f7a177252d263a908b5e61b",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-non-in-tuple-v6-33.native.png",
+      "screenshot_sha256": "e4f4bfa1da2fba19830feae5e277cdaaa37864ef476c1c28bcc34ae71c9890fb",
+      "native_messages": [],
+      "expected_plots": [
+        78
+      ]
+    },
+    {
+      "name": "reserved-parameter-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-parameter-v6-33.pine",
+      "source_sha256": "fbbe604d6e34ff581ee42407e398790c8dbbf02e26162a798c0b88ce2308fa6e",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "a81e5bef38509683207e073602c6e06cf2c3b516533a61c1b09713c1c190fdf5",
+      "normalized_source_sha256": "a81e5bef38509683207e073602c6e06cf2c3b516533a61c1b09713c1c190fdf5",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-parameter-v6-33.native.ax.txt",
+      "accessibility_sha256": "4bb8c92a336b312281fd7e64458c410fc49d3bad78a5921ff8d1462878fe8684",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-parameter-v6-33.native.png",
+      "screenshot_sha256": "60ee1e973392208c0104250ed13926fc925e5b2709a8f1e1135e3f9985ef5641",
+      "native_messages": [
+        "489 container f(text)=>text, Error at 3:3.",
+        "491 container f(text)=>text, Error at 3:3."
+      ]
+    },
+    {
+      "name": "reserved-text-global-v4-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-global-v4-33.pine",
+      "source_sha256": "18d1a81d939f6788d500a1b4edde5c4f15bc9cf1676cbfbe909567f04d4bef97",
+      "native_status": "compiled_and_executed",
+      "native_row": "247 row Reserved text v4 probe33 Plot 7",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "b34d91287231282bc2c4cf5d4e098f2b5a9a7c43fa4a547a7b799fa79caf5046",
+      "normalized_source_sha256": "b34d91287231282bc2c4cf5d4e098f2b5a9a7c43fa4a547a7b799fa79caf5046",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-global-v4-33.native.ax.txt",
+      "accessibility_sha256": "7ccf97afbfd937f170d282300a904842d4478aebdbc112882e4bd3ba99c1ebbc",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-global-v4-33.native.png",
+      "screenshot_sha256": "8af03d96ce08532456c0b364c771b9ec28f33e88affa50aa2c14456142cac7d8",
+      "native_messages": [],
+      "expected_plots": [
+        7
+      ]
+    },
+    {
+      "name": "reserved-text-global-v5-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-global-v5-33.pine",
+      "source_sha256": "0fcb4f37a0754a7ac258dbbc09fa64a3b7e9bedbebac557251a71c1773316eb5",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "bcbba2ed49347856b3d7bb5a1194593d222d9f8589321a3e68020666f1029a51",
+      "normalized_source_sha256": "bcbba2ed49347856b3d7bb5a1194593d222d9f8589321a3e68020666f1029a51",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-global-v5-33.native.ax.txt",
+      "accessibility_sha256": "4a4d26d1466764ad932ba98ec63a2f84afc65b5107590de83cc85fa4a7235a7f",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-global-v5-33.native.png",
+      "screenshot_sha256": "e5670796834c632e247db31d28418c4fa3366720722aa5f5a06a25c35f77bbd3",
+      "native_messages": [
+        "522 container text=7, Error at 3:1.",
+        "524 container text=7, Error at 3:1."
+      ]
+    },
+    {
+      "name": "reserved-text-prefix-control-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-prefix-control-v6-33.pine",
+      "source_sha256": "eecf66afb963743a1d77630450affc59fd49d96180a5952a65bebea13345efc3",
+      "native_status": "compiled_and_executed",
+      "native_row": "247 row Reserved text prefix control33 Plot 10",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "9e9a68e14c7399728fc783b666134864e1feaa5ed93783f35bb97096140a209f",
+      "normalized_source_sha256": "9e9a68e14c7399728fc783b666134864e1feaa5ed93783f35bb97096140a209f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-prefix-control-v6-33.native.ax.txt",
+      "accessibility_sha256": "d40a59726ea512927ce85606674ff6dd63fd17772f2f38296b36365abadf4977",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-text-prefix-control-v6-33.native.png",
+      "screenshot_sha256": "cdf526a5987453493caccf609ddb871e60a49fd9098b8ceaaa97424e2e0b66c6",
+      "native_messages": [],
+      "expected_plots": [
+        10
+      ]
+    },
+    {
+      "name": "reserved-tuple-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-tuple-v6-33.pine",
+      "source_sha256": "49a68711ca83a859d6a17a5825282a7a72435cedc0e216a3df1321eaf60a2165",
+      "native_status": "compiled_and_executed",
+      "native_row": "236 row Reserved tuple-v6 probe33 Plot 3",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "337893f4e0c5f4d45b6797a578f597d7041e72b3d2935a5630187c4727c888bd",
+      "normalized_source_sha256": "337893f4e0c5f4d45b6797a578f597d7041e72b3d2935a5630187c4727c888bd",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-tuple-v6-33.native.ax.txt",
+      "accessibility_sha256": "edff5b64a0248c268d7628158f4f95cdd016f85b135d95066aceb78816c99d8b",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-tuple-v6-33.native.png",
+      "screenshot_sha256": "7c9b221d7fdfa50e19c0dcb0ea5876863f8e10eae0f1947abb1f34afddb871a9",
+      "native_messages": [],
+      "expected_plots": [
+        3
+      ]
+    },
+    {
+      "name": "reserved-typed-var-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-typed-var-v6-33.pine",
+      "source_sha256": "65e89f48cbad7da128094367fbb4acd828906522e3e07cb477d63c6ce3d2fc59",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "c948decd4e467e2d237f924138facf71c595c0b35e2a99a6331aac8bf74222ea",
+      "normalized_source_sha256": "c948decd4e467e2d237f924138facf71c595c0b35e2a99a6331aac8bf74222ea",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-typed-var-v6-33.native.ax.txt",
+      "accessibility_sha256": "6e567c6e63bd5df86420f46687dca1d387517d16b742f0e8a96e3ac543cb3f0e",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-typed-var-v6-33.native.png",
+      "screenshot_sha256": "fbb034ccd72468c31505f672e69fb13e41af66cd41f57969ed07397dfdf19cd0",
+      "native_messages": [
+        "489 container var float text=17, Error at 3:11.",
+        "491 container var float text=17, Error at 3:11."
+      ]
+    },
+    {
+      "name": "reserved-udt-name-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-udt-name-v6-33.pine",
+      "source_sha256": "dbbe295795f44d6557eb8db393f726978614d9cbf0bdda1215b333764f870c72",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "26d28b6f35bc623d6f02a7fffcd8d298f1df95b9c6100a2ae11d563b3f059804",
+      "normalized_source_sha256": "26d28b6f35bc623d6f02a7fffcd8d298f1df95b9c6100a2ae11d563b3f059804",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-udt-name-v6-33.native.ax.txt",
+      "accessibility_sha256": "e13207cc4c61a10601a6dca8c5c95b7de39e1188bf3b103221e0a6dccf416310",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-udt-name-v6-33.native.png",
+      "screenshot_sha256": "5868ff9df7d2b223ce47771d73302e9d46e6ab982bc817940813fde4923c7376",
+      "native_messages": [
+        "490 container type text, Error at 3:6.",
+        "492 container type text, Error at 3:6."
+      ]
+    },
+    {
+      "name": "reserved-unused-local-v6-33",
+      "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-unused-local-v6-33.pine",
+      "source_sha256": "68904127d457fb0217df067dca36433eafe28028d684a4af78849a0b0cd39c14",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "5c5292685907716ecb5d83efccbbb4e7c0c5b8f7e6720eed31cb7177f3a94037",
+      "normalized_source_sha256": "5c5292685907716ecb5d83efccbbb4e7c0c5b8f7e6720eed31cb7177f3a94037",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-unused-local-v6-33.native.ax.txt",
+      "accessibility_sha256": "0fa9c077a5fcb06c487d8f17a61ea219777e3715d7ac4c7c51b3efe025563426",
+      "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-unused-local-v6-33.native.png",
+      "screenshot_sha256": "dde01b1f2f5312d4176567b5b043a9cf8d10b85361be71cf3474098f7808a2e0",
+      "native_messages": [
+        "489 container  text=11, Error at 4:5.",
+        "491 container  text=11, Error at 4:5."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+//@version=6
+indicator("body-contrast-unknown-unused-v6-46")
+f(x)=>missingBuiltin46(x)
+plot(1)

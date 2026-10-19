@@ -1,0 +1,7 @@
+//@version=5
+indicator("request-point-field-read-v5-43")
+p=chart.point.from_index(1,10)
+p.price:=20
+r=request.security(syminfo.tickerid,timeframe.period,p.price)
+plot(r)
+plot(p.price)

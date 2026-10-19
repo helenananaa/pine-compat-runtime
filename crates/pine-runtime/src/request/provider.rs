@@ -201,6 +201,11 @@ impl RequestEnvironment {
         self.provider.as_ref()
     }
 
+    pub(crate) fn with_data_provider(mut self, provider: Arc<dyn RequestDataProvider>) -> Self {
+        self.provider = provider;
+        self
+    }
+
     #[must_use]
     pub fn with_currency_rates(mut self, provider: Arc<dyn CurrencyRateProvider>) -> Self {
         self.currency_rates = provider;

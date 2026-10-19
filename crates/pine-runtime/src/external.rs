@@ -128,10 +128,10 @@ impl HistoricalRuntime<'_> {
                 )
                 .map_err(|err| external_error(err.to_string()))?;
         }
-        self.request_environment = crate::RequestEnvironment::new(
-            self.request_environment.chart().clone(),
-            std::sync::Arc::new(provider),
-        );
+        self.request_environment = self
+            .request_environment
+            .clone()
+            .with_data_provider(std::sync::Arc::new(provider));
         self.request_cache.clear();
         self.request_evaluations.clear();
         Ok(())
@@ -154,6 +154,22 @@ impl HistoricalRuntime<'_> {
                 "external feedback must be bound to a fresh runtime",
             ));
         }
+        self.validate_external_feedback(&frames, passes.as_deref())?;
+        self.external_execution = Some(ExternalExecution {
+            frames,
+            passes,
+            active_pass: None,
+            intents: vec![],
+            error: None,
+        });
+        Ok(self)
+    }
+
+    fn validate_external_feedback(
+        &self,
+        frames: &[ExternalAccountFrame],
+        passes: Option<&[Vec<ExternalPass>]>,
+    ) -> Result<(), RuntimeError> {
         let settings = self.program.strategy_settings;
         if self.program.script_mode != ScriptMode::Strategy
             || settings.calc_on_order_fills != passes.is_some()
@@ -179,7 +195,7 @@ impl HistoricalRuntime<'_> {
             {
                 return Err(external_error("invalid execution pass count"));
             }
-            for (group_index, (group, frame)) in groups.iter().zip(&frames).enumerate() {
+            for (group_index, (group, frame)) in groups.iter().zip(frames).enumerate() {
                 if group_index + 1 < groups.len() && !group.last().unwrap().confirmed {
                     return Err(external_error("only the final bar may be unconfirmed"));
                 }
@@ -203,10 +219,13 @@ impl HistoricalRuntime<'_> {
                 }
             }
         }
-        for frame in frames
-            .iter()
-            .chain(passes.iter().flatten().flatten().map(|pass| &pass.account))
-        {
+        for frame in frames.iter().chain(
+            passes
+                .iter()
+                .flat_map(|groups| groups.iter())
+                .flatten()
+                .map(|pass| &pass.account),
+        ) {
             if [
                 frame.position_size,
                 frame.equity,
@@ -224,14 +243,76 @@ impl HistoricalRuntime<'_> {
                 return Err(external_error("invalid account feedback"));
             }
         }
-        self.external_execution = Some(ExternalExecution {
-            frames,
-            passes,
-            active_pass: None,
-            intents: vec![],
-            error: None,
-        });
-        Ok(self)
+        Ok(())
+    }
+
+    /// Append authoritative feedback and execute only newly discovered bars.
+    /// The caller must rebase corrections and changes to the request environment.
+    /// Dataset-end builtins follow streaming append semantics, not retroactive replay.
+    /// Empty appends leave state unchanged. Consume any previously bound feedback
+    /// before appending. Preflight rejections preserve state; execution errors
+    /// after feedback is added poison the runtime.
+    pub fn append_external_bars(
+        &mut self,
+        bars: &[crate::Bar],
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+    ) -> Result<(), RuntimeError> {
+        self.ensure_execution_ready()?;
+        let state = self
+            .external_execution
+            .as_ref()
+            .ok_or_else(|| external_error("external mode is not active"))?;
+        if bars.is_empty() && frames.is_empty() && passes.as_ref().is_none_or(Vec::is_empty) {
+            return Ok(());
+        }
+        if frames.len() != bars.len()
+            || frames
+                .iter()
+                .zip(bars)
+                .any(|(frame, bar)| frame.time != bar.time)
+        {
+            return Err(external_error("feedback time/count mismatch"));
+        }
+        if bars.windows(2).any(|pair| pair[1].time <= pair[0].time)
+            || bars
+                .first()
+                .is_some_and(|bar| self.previous_bar_time.is_some_and(|time| bar.time <= time))
+        {
+            return Err(external_error(
+                "append requires strictly increasing bar times; rebase corrections",
+            ));
+        }
+        if state.frames.len() != self.bars {
+            return Err(external_error(
+                "execute pending feedback before appending new feedback",
+            ));
+        }
+        self.validate_external_feedback(&frames, passes.as_deref())?;
+        let state = self
+            .external_execution
+            .as_mut()
+            .ok_or_else(|| external_error("external mode is not active"))?;
+        if state
+            .passes
+            .as_ref()
+            .and_then(|groups| groups.last())
+            .and_then(|group| group.last())
+            .is_some_and(|pass| !pass.confirmed)
+        {
+            return Err(external_error(
+                "rebase an unconfirmed final bar before appending",
+            ));
+        }
+        state.frames.extend(frames);
+        if let (Some(previous), Some(appended)) = (&mut state.passes, passes) {
+            previous.extend(appended);
+        }
+        let result = self.append_bars(bars);
+        if result.is_err() {
+            self.execution_failed = true;
+        }
+        result
     }
 
     pub fn external_intents(&self) -> Result<&[ExternalOrderIntent], RuntimeError> {

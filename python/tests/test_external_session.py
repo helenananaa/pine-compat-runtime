@@ -187,7 +187,6 @@ plot(syminfo.timezone == "America/New_York" ? 1 : 0)
     'indicator("not a strategy")',
     'strategy("ticks", calc_on_every_tick=true)',
     'strategy("fees", commission_type=strategy.commission.percent, commission_value=1)',
-    'strategy("equity sizing", default_qty_type=strategy.percent_of_equity, default_qty_value=10)',
 ])
 def test_session_rejects_native_execution_settings(declaration):
     program = pine_compat.compile_script('//@version=6\n' + declaration + '\nplot(close)')

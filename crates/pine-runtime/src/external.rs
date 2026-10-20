@@ -238,13 +238,9 @@ impl HistoricalRuntime<'_> {
             || settings.use_bar_magnifier
             || settings.slippage_ticks != 0.0
             || settings.commission.is_some()
-            || !matches!(
-                settings.default_qty,
-                Some(StrategyDefaultQuantity::Fixed(_))
-            )
         {
             return Err(external_error(
-                "external execution requires fixed quantities, no native costs, and explicit host opt-in for closing ticks",
+                "external execution requires supported scheduling, no native costs, and explicit host opt-in for closing ticks",
             ));
         }
         if let Some(contexts) = contexts {
@@ -618,11 +614,20 @@ impl HistoricalRuntime<'_> {
                 }
                 None => None,
             };
-            let qty =
-                explicit_qty.unwrap_or_else(|| match self.program.strategy_settings.default_qty {
+            let qty = match explicit_qty {
+                Some(qty) => qty,
+                None => match self.program.strategy_settings.default_qty {
                     Some(StrategyDefaultQuantity::Fixed(qty)) => qty,
-                    _ => unreachable!(),
-                });
+                    _ => {
+                        return Err(external_error(
+                            "external default sizing requires fixed quantities; cash/equity sizing has not been negotiated",
+                        ));
+                    }
+                },
+            };
+            if qty == 0.0 {
+                return Ok(PineValue::Void);
+            }
             if !qty.is_finite() || qty <= 0.0 {
                 return Err(external_error("quantity must be positive and finite"));
             }

@@ -50,14 +50,38 @@ module. WASM exports `externalOrderSchemaVersion()` as schema metadata; this
 does not add a WASM external-account execution API. Package version remains
 `0.3.2`; identify new wheels by source revision and hash. Tests cover external
 batch/append equality and preservation of the caller's account authority.
-Order comments/alert metadata, zero-quantity no-op parity, and non-fixed default
-quantity modes still require additional external-profile work.
+Order comments/alert metadata and non-fixed default quantity execution still
+require additional external-profile work.
+
+Development source also permits explicit non-na quantities when the strategy
+declares cash/equity defaults: the explicit value overrides the declaration.
+Zero explicit quantities and zero fixed defaults are no-ops and emit no intent,
+including no replacement or cancellation of an earlier same-ID intent. Negative
+and nonfinite quantities remain errors. If an executed entry/order actually
+needs a cash/equity default (omitted/na `qty`), it rejects with an explicit
+unnegotiated default-sizing error. Merely declaring an unused default does not
+require a sizing provider. Batch and incremental evaluation use the same rules;
+an execution error still poisons incremental sessions.
+
+These fixes do not add a fill-time sizing contract or change the order wire
+schema. They are core-only until a host's admission and worker build adopt them.
+Tests: `crates/pine-runtime/tests/external_quantity_overrides.rs` and
+`python/tests/test_external_quantity_overrides.py`. The explicit-quantity
+precedence follows TradingView's [position-sizing documentation](https://www.tradingview.com/pine-script-docs/concepts/strategies/#position-sizing);
+local tests are not captured official broker-output comparisons.
+
+The 2026-10-20 focused checkpoint passed 33 Rust external/session/quantity
+checks and 164 Python checks against a freshly built, isolated Windows wheel.
+Wheel SHA256: `317eb3bd9047f83b9412786856b7dc0aa8d01860b500120c8c9a924d1424e439`.
+The retained reproduction had three failing Rust cases before the repair.
+Receipts and the wheel remain in `.local/host-completion/default-quantity-overrides/`.
 
 Intents preserve quantities, prices, distances, IDs, direction and bar_index;
 order expressions execute once. The result preserves declared pyramiding.
 The host owns admission, replacements, OCO cancellation, tick conversion,
 entry allocation and fills. Native commission, slippage, magnifier, default on-close
-execution, every-tick recalculation and non-fixed default quantities reject.
+execution and every-tick recalculation reject. Non-fixed default quantities
+reject when an order needs them rather than substituting a signal-close estimate.
 This is a specific external profile, not native broker parity.
 
 ## Declarative risk configuration (development)

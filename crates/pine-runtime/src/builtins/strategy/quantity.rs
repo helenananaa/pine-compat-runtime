@@ -4,7 +4,7 @@ use crate::builtins::args::call_arg_expr;
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
 
 impl HistoricalRuntime<'_> {
-    pub(super) fn default_order_qty(
+    pub(crate) fn default_order_qty(
         &self,
         equity: f64,
         close: f64,
@@ -59,7 +59,7 @@ impl HistoricalRuntime<'_> {
         Ok(qty)
     }
 
-    pub(super) fn eval_strategy_default_entry_qty(
+    pub(crate) fn eval_strategy_default_entry_qty(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
@@ -84,7 +84,11 @@ impl HistoricalRuntime<'_> {
         {
             return Ok(PineValue::Float(0.0));
         }
-        let equity = self.strategy_broker.equity_value(bar.close);
+        let equity = if self.external_execution.is_some() {
+            self.external_sizing_equity()?
+        } else {
+            self.strategy_broker.equity_value(bar.close)
+        };
         Ok(self
             .default_order_qty(equity, fill_price, true, false)?
             .map_or(PineValue::Na, PineValue::Float))

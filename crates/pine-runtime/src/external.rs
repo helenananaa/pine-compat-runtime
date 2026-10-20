@@ -2,11 +2,14 @@
 use crate::builtins::args::call_arg_expr;
 use crate::external_schedule::{ExternalBarState, ExternalPassContext};
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
-use pine_ir::{HirCallArg, ScriptMode, StrategyDefaultQuantity};
+use pine_ir::{HirCallArg, ScriptMode};
 use serde::{Deserialize, Serialize};
+
+mod sizing;
 
 pub const EXTERNAL_ORDER_SCHEMA_VERSION: u32 = 2;
 pub const EXTERNAL_CLOSING_TICK_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_SIZING_SCHEMA_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ExternalExecutionOptions {
@@ -520,6 +523,9 @@ impl HistoricalRuntime<'_> {
         callee: &str,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
+        if callee == "strategy.default_entry_qty" {
+            return self.eval_strategy_default_entry_qty(args);
+        }
         if callee.starts_with("strategy.risk.") {
             return if self
                 .external_execution
@@ -599,37 +605,9 @@ impl HistoricalRuntime<'_> {
                 PineValue::String(value) if value == "strategy.short" => "short",
                 _ => return Err(external_error("invalid direction")),
             };
-            let explicit_qty = match call_arg_expr(args, 2, "qty") {
-                Some(expr) => {
-                    let value = self.eval_expr(expr)?;
-                    if value.is_na() {
-                        None
-                    } else {
-                        Some(
-                            value
-                                .as_f64()
-                                .ok_or_else(|| external_error("quantity must be numeric"))?,
-                        )
-                    }
-                }
-                None => None,
-            };
-            let qty = match explicit_qty {
-                Some(qty) => qty,
-                None => match self.program.strategy_settings.default_qty {
-                    Some(StrategyDefaultQuantity::Fixed(qty)) => qty,
-                    _ => {
-                        return Err(external_error(
-                            "external default sizing requires fixed quantities; cash/equity sizing has not been negotiated",
-                        ));
-                    }
-                },
-            };
+            let qty = self.external_order_quantity(args, direction == "long")?;
             if qty == 0.0 {
                 return Ok(PineValue::Void);
-            }
-            if !qty.is_finite() || qty <= 0.0 {
-                return Err(external_error("quantity must be positive and finite"));
             }
             (Some(direction.to_string()), Some(qty))
         } else {

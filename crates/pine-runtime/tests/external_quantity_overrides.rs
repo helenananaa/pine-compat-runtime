@@ -103,7 +103,7 @@ fn zero_explicit_and_default_quantities_emit_no_order_or_cancellation() {
 }
 
 #[test]
-fn unnegotiated_cash_and_equity_defaults_still_reject_when_actually_needed() {
+fn omitted_and_na_quantities_use_cash_and_authoritative_equity_defaults() {
     for kind in ["cash", "percent_of_equity"] {
         for command in ["entry", "order"] {
             for quantity in ["", ",qty=na"] {
@@ -113,17 +113,9 @@ fn unnegotiated_cash_and_equity_defaults_still_reject_when_actually_needed() {
                 let mut runtime = HistoricalRuntime::new(&hir)
                     .with_external_accounts(vec![account(0)])
                     .unwrap();
-                let error = runtime.append_bar(bar(0)).unwrap_err();
-                assert!(
-                    error.message.contains("E_EXTERNAL_UNSUPPORTED"),
-                    "{}",
-                    error.message
-                );
-                assert!(
-                    error.message.contains("default sizing"),
-                    "{}",
-                    error.message
-                );
+                runtime.append_bar(bar(0)).unwrap();
+                let expected = if kind == "cash" { 2.5 } else { 25.0 };
+                assert_eq!(runtime.external_intents().unwrap()[0].qty, Some(expected));
             }
         }
     }

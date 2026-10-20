@@ -10,8 +10,9 @@ mod error;
 mod external;
 mod external_schedule;
 pub use external::{
-    EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_SCHEMA_VERSION, ExternalAccountFrame,
-    ExternalExecutionOptions, ExternalOrderIntent, ExternalPass,
+    EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_SCHEMA_VERSION,
+    EXTERNAL_SIZING_SCHEMA_VERSION, ExternalAccountFrame, ExternalExecutionOptions,
+    ExternalOrderIntent, ExternalPass,
 };
 pub use external_schedule::{
     EXTERNAL_SCHEDULE_SCHEMA_VERSION, ExternalBarState, ExternalEvaluationTrigger,
@@ -34,9 +35,10 @@ pub use bar::{Bar, BarUpdate, BarUpdateKind, RealtimeUpdateContext};
 pub use error::RuntimeError;
 pub use host_requirements::{
     AccountInputContract, ChartInputContract, ChartInputDefaults, CurrencyArgument,
-    CurrencyRateInputContract, CurrencyRateRequirement, ExecutionInputContract,
-    HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements, HostSourceLocation,
-    RequestArgument, RequestRequirement, host_requirements, host_requirements_json,
+    CurrencyRateInputContract, CurrencyRateRequirement, DefaultQuantityInputContract,
+    ExecutionInputContract, HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements,
+    HostSourceLocation, RequestArgument, RequestRequirement, host_requirements,
+    host_requirements_json,
 };
 pub use input_metadata::{
     InputCall, STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION, StrategyRiskConfiguration,

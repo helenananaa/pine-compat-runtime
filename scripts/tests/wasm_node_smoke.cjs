@@ -11,6 +11,7 @@ if (process.argv.length !== 3) {
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
 assert.equal(pine.externalScheduleSchemaVersion(), 1);
+assert.equal(pine.externalSizingSchemaVersion(), 1);
 require('./wasm_closeout_regressions.cjs')(path.resolve(process.argv[2]));
 require('./wasm_bool_control_defaults.cjs')(process.argv[2]);
 require('./wasm_reserved_identifiers.cjs')(process.argv[2]);

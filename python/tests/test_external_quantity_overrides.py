@@ -66,15 +66,16 @@ strategy.order("O",strategy.long,qty=na)
 @pytest.mark.parametrize("kind", ["cash", "percent_of_equity"])
 @pytest.mark.parametrize("command", ["entry", "order"])
 @pytest.mark.parametrize("quantity", ["", ",qty=na"])
-def test_unnegotiated_nonfixed_defaults_fail_when_needed(kind, command, quantity):
+def test_nonfixed_defaults_use_authoritative_equity_in_batch_and_append(kind, command, quantity):
     program = pine_compat.compile_script(f'//@version=6\nstrategy("Default",default_qty_type=strategy.{kind},default_qty_value=25)\nstrategy.{command}("L",strategy.long{quantity})')
-    with pytest.raises(ValueError, match="E_EXTERNAL_UNSUPPORTED: external default sizing"):
-        program.run_external(BARS, ACCOUNTS)
+    expected = [2.5, 2.5] if kind == "cash" else [25, 30]
+    result = program.run_external(BARS, ACCOUNTS)
+    assert [row["qty"] for row in result["intents"]] == expected
     session = program.external_session()
-    with pytest.raises(ValueError, match="E_EXTERNAL_UNSUPPORTED: external default sizing"):
-        session.append(BARS, ACCOUNTS)
-    with pytest.raises(ValueError, match="POISONED"):
-        session.append([], [])
+    for i in range(2):
+        actual = session.append(BARS[i:i+1], ACCOUNTS[i:i+1])
+        assert actual == program.run_external(BARS[:i+1], ACCOUNTS[:i+1])
+    assert actual == result
 
 
 @pytest.mark.parametrize("command", ["entry", "order"])

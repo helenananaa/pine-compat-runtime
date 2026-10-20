@@ -4,7 +4,9 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use pine_ir::{HirExpr, HirExprKind, HirLiteral, HirProgram, ScriptMode, SymbolId};
+use pine_ir::{
+    HirExpr, HirExprKind, HirLiteral, HirProgram, ScriptMode, StrategyDefaultQuantity, SymbolId,
+};
 use serde::Serialize;
 
 mod currency;
@@ -83,7 +85,16 @@ pub struct AccountInputContract {
     pub declared_currency: Option<&'static str>,
     pub point_value: u32,
     pub currency_conversion: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_quantity: Option<DefaultQuantityInputContract>,
     pub unsupported_profiles: Vec<&'static str>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DefaultQuantityInputContract {
+    pub kind: &'static str,
+    /// Shortest decimal representation of the compiled declaration value.
+    pub value: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -298,6 +309,17 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
             declared_currency: program.strategy_settings.account_currency,
             point_value: 1,
             currency_conversion: true,
+            default_quantity: program.strategy_settings.default_qty.map(|quantity| {
+                let (kind, value) = match quantity {
+                    StrategyDefaultQuantity::Fixed(value) => ("fixed", value),
+                    StrategyDefaultQuantity::Cash(value) => ("cash", value),
+                    StrategyDefaultQuantity::PercentOfEquity(value) => ("percent_of_equity", value),
+                };
+                DefaultQuantityInputContract {
+                    kind,
+                    value: value.to_string(),
+                }
+            }),
             unsupported_profiles: vec!["nonUnitContractMultiplier", "nonstandardChartBroker"],
         }),
         currency_rates: needs_currency.then_some(CurrencyRateInputContract {

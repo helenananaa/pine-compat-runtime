@@ -349,6 +349,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
         pine_runtime::EXTERNAL_ORDER_SCHEMA_VERSION,
     )?;
     module.add(
+        "EXTERNAL_SIZING_SCHEMA_VERSION",
+        pine_runtime::EXTERNAL_SIZING_SCHEMA_VERSION,
+    )?;
+    module.add(
         "SYMBOL_METADATA_SCHEMA_VERSION",
         pine_runtime::SYMBOL_METADATA_SCHEMA_VERSION,
     )?;

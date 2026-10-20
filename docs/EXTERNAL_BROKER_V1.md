@@ -26,7 +26,7 @@ and order arguments raise `E_EXTERNAL_UNSUPPORTED`.
 
 ## Supported order subset
 
-- Fixed-quantity `strategy.entry`, optionally with absolute limit/stop.
+- `strategy.entry` with explicit or supported default quantity, optionally with absolute limit/stop.
   Both prices describe a stop-limit order.
 - `strategy.close` with optional qty or qty_percent, and `close_all`.
 - `strategy.exit` with optional from_entry, absolute limit/stop, positive
@@ -50,21 +50,17 @@ module. WASM exports `externalOrderSchemaVersion()` as schema metadata; this
 does not add a WASM external-account execution API. Package version remains
 `0.3.2`; identify new wheels by source revision and hash. Tests cover external
 batch/append equality and preservation of the caller's account authority.
-Order comments/alert metadata and non-fixed default quantity execution still
-require additional external-profile work.
+Order comments/alert metadata still require additional external-profile work.
 
 Development source also permits explicit non-na quantities when the strategy
 declares cash/equity defaults: the explicit value overrides the declaration.
 Zero explicit quantities and zero fixed defaults are no-ops and emit no intent,
 including no replacement or cancellation of an earlier same-ID intent. Negative
-and nonfinite quantities remain errors. If an executed entry/order actually
-needs a cash/equity default (omitted/na `qty`), it rejects with an explicit
-unnegotiated default-sizing error. Merely declaring an unused default does not
-require a sizing provider. Batch and incremental evaluation use the same rules;
+and nonfinite quantities remain errors. Batch and incremental evaluation use the same rules;
 an execution error still poisons incremental sessions.
 
-These fixes do not add a fill-time sizing contract or change the order wire
-schema. They are core-only until a host's admission and worker build adopt them.
+These fixes do not change the order wire schema. A host must adopt the matching
+capability in its admission and worker build before enabling defaults.
 Tests: `crates/pine-runtime/tests/external_quantity_overrides.rs` and
 `python/tests/test_external_quantity_overrides.py`. The explicit-quantity
 precedence follows TradingView's [position-sizing documentation](https://www.tradingview.com/pine-script-docs/concepts/strategies/#position-sizing);
@@ -76,12 +72,53 @@ Wheel SHA256: `317eb3bd9047f83b9412786856b7dc0aa8d01860b500120c8c9a924d1424e439`
 The retained reproduction had three failing Rust cases before the repair.
 Receipts and the wheel remain in `.local/host-completion/default-quantity-overrides/`.
 
+## Authoritative default sizing (development)
+
+`EXTERNAL_SIZING_SCHEMA_VERSION == 1` adds cash and percent-of-equity defaults
+for omitted/na entry/order quantities and `strategy.default_entry_qty(fill_price)`.
+Rust and Python export the constant; WASM exports `externalSizingSchemaVersion()`
+as capability metadata only. The Host-requirements schema remains 3, with an
+additive `account.defaultQuantity` containing `kind` (`fixed`, `cash`, or
+`percent_of_equity`) and the compiled numeric `value` as a decimal string.
+Hosts can freeze this declaration without executing the strategy.
+
+Sizing reads equity from the authoritative account of the active execution
+pass, or the current bar frame without explicit passes. The script's declared
+initial capital never replaces that feedback. An explicit non-na quantity
+still overrides defaults. Quantities follow the configured chart decimal grid;
+negative values reject before truncation, and zero emits no intent. Negative
+equity with a positive percentage budget and positive price rejects using the
+existing native rule. Account expressions inside requested contexts remain
+unsupported by semantic admission.
+
+Entry/order defaults use the placement bar's close, matching this runtime's
+native broker semantics even if the next fill gaps. The public default-quantity
+query instead uses its supplied fill price. Both use the shared native formula,
+currency-rate metadata and quantity rounding. This does not introduce future
+fill-price knowledge, Host execution costs into the formula, nonunit point
+values, or new order-account matching. Hosts retain fee/slippage/margin/fill
+authority. The currently supported external profile still rejects native
+commission/slippage declarations. These tests establish local/native agreement,
+not newly captured TradingView broker-output equivalence.
+
+The 2026-10-20 default-sizing checkpoint passed all 7,929 Rust workspace tests,
+zero ignored, and all 1,838 checks against a freshly built Windows wheel
+(including 216 focused checks).
+The focused checks cover placement/fill gaps, explicit override, na/zero,
+quantity grids, active-pass equity, FX input, batch/append equality, requested
+account admission and poisoned-session errors. Clippy passed across all targets.
+Wheel SHA256: `b1e0cac313b461874d702583948809f5c3fb0c72e086841ed1ecd341f3db49a4`.
+All 172 tooling checks, source structure/host-parity guards, formatting and
+generated WASM/Node smoke also passed. The first manual Node invocation used
+a relative module path that a nested require could not resolve; the retained
+absolute-path rerun passed without rebuilding or changing source. Evidence and
+artifacts remain under `.local/host-completion/default-sizing/`.
+
 Intents preserve quantities, prices, distances, IDs, direction and bar_index;
 order expressions execute once. The result preserves declared pyramiding.
 The host owns admission, replacements, OCO cancellation, tick conversion,
 entry allocation and fills. Native commission, slippage, magnifier, default on-close
-execution and every-tick recalculation reject. Non-fixed default quantities
-reject when an order needs them rather than substituting a signal-close estimate.
+execution and every-tick recalculation reject without their separate contracts.
 This is a specific external profile, not native broker parity.
 
 ## Declarative risk configuration (development)

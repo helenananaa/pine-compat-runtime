@@ -3,6 +3,8 @@ use std::collections::BTreeSet;
 use super::pending_entries::{PendingEntryDirection, PendingEntryKind};
 use super::types::StrategyCommandOrigin;
 
+mod registration;
+
 /// Broker policy configured by `strategy.risk.*` calls. 22b accepts
 /// `strategy.risk.allow_entry_in`; 22c accepts `strategy.risk.max_position_size`;
 /// 22d accepts `strategy.risk.max_drawdown`. 22e owns the intraday window key
@@ -24,6 +26,15 @@ pub(crate) struct StrategyRiskRules {
     pub max_intraday_filled_orders_alert_message: Option<String>,
     pub max_cons_loss_days: Option<u32>,
     pub max_cons_loss_days_alert_message: Option<String>,
+    drawdown_limits: Vec<RiskStopLimit>,
+    intraday_loss_limits: Vec<RiskStopLimit>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct RiskStopLimit {
+    value: f64,
+    value_type: RiskDrawdownType,
+    alert_message: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,6 +58,7 @@ pub(crate) enum RiskEntryDirection {
     Long,
     Short,
     All,
+    Neither,
 }
 
 impl RiskEntryDirection {
@@ -174,6 +186,11 @@ impl super::BrokerState {
         self.risk_rules.max_drawdown = Some(value);
         self.risk_rules.max_drawdown_type = Some(kind);
         self.risk_rules.max_drawdown_alert_message = alert_message;
+        self.risk_rules.drawdown_limits = vec![RiskStopLimit {
+            value,
+            value_type: kind,
+            alert_message: self.risk_rules.max_drawdown_alert_message.clone(),
+        }];
     }
 
     pub(crate) fn set_max_position_size(&mut self, contracts: f64) {
@@ -208,6 +225,11 @@ impl super::BrokerState {
         self.risk_rules.max_intraday_loss = Some(value);
         self.risk_rules.max_intraday_loss_type = Some(kind);
         self.risk_rules.max_intraday_loss_alert_message = alert_message;
+        self.risk_rules.intraday_loss_limits = vec![RiskStopLimit {
+            value,
+            value_type: kind,
+            alert_message: self.risk_rules.max_intraday_loss_alert_message.clone(),
+        }];
     }
 
     pub(crate) fn set_max_intraday_filled_orders(
@@ -250,6 +272,14 @@ impl super::BrokerState {
                 if max_drawdown.is_some() && self.risk_rules.max_drawdown_type.is_none() {
                     self.risk_rules.max_drawdown_type = Some(RiskDrawdownType::Cash);
                 }
+                self.risk_rules.drawdown_limits = max_drawdown
+                    .map(|value| RiskStopLimit {
+                        value,
+                        value_type: self.risk_rules.max_drawdown_type.unwrap(),
+                        alert_message: self.risk_rules.max_drawdown_alert_message.clone(),
+                    })
+                    .into_iter()
+                    .collect();
             }
             RiskRuleKind::MaxIntradayLoss => self.risk_rules.max_intraday_loss = max_intraday_loss,
             RiskRuleKind::MaxPositionSize => {
@@ -301,6 +331,15 @@ impl super::BrokerState {
             }
             (RiskEntryDirection::Short, PendingEntryDirection::Long) => {
                 if self.position_size < 0.0 {
+                    EntryDirectionAdmission::CloseOnly
+                } else {
+                    EntryDirectionAdmission::Reject
+                }
+            }
+            (RiskEntryDirection::Neither, direction) => {
+                if matches!(direction, PendingEntryDirection::Short) && self.position_size > 0.0
+                    || matches!(direction, PendingEntryDirection::Long) && self.position_size < 0.0
+                {
                     EntryDirectionAdmission::CloseOnly
                 } else {
                     EntryDirectionAdmission::Reject
@@ -423,14 +462,9 @@ impl super::BrokerState {
         self.max_drawdown().max(mark_drawdown)
     }
 
-    fn max_drawdown_rule_tripped(&self, mark: f64) -> bool {
-        let Some(limit) = self.risk_rules.max_drawdown else {
-            return false;
-        };
-        let Some(kind) = self.risk_rules.max_drawdown_type else {
-            return false;
-        };
-        match kind {
+    fn max_drawdown_rule_tripped(&self, mark: f64, rule: &RiskStopLimit) -> bool {
+        let limit = rule.value;
+        match rule.value_type {
             RiskDrawdownType::Cash => self.current_risk_drawdown_amount(mark) >= limit,
             RiskDrawdownType::PercentOfEquity => {
                 let peak = self.peak_equity_for_drawdown();
@@ -467,12 +501,18 @@ impl super::BrokerState {
         if self.risk_state.blocked_order_placement {
             return;
         }
-        if !self.max_drawdown_rule_tripped(mark) {
+        let Some(rule) = self
+            .risk_rules
+            .drawdown_limits
+            .iter()
+            .find(|rule| self.max_drawdown_rule_tripped(mark, rule))
+        else {
             return;
-        }
+        };
+        let alert_message = rule.alert_message.clone();
         self.enforce_risk_stop(
             RiskRuleKind::MaxDrawdown,
-            self.risk_rules.max_drawdown_alert_message.clone(),
+            alert_message,
             bar_index,
             time,
             mark,
@@ -505,14 +545,9 @@ impl super::BrokerState {
         Some((baseline - equity).max(0.0))
     }
 
-    fn max_intraday_loss_rule_tripped(&self, mark: f64) -> bool {
-        let Some(limit) = self.risk_rules.max_intraday_loss else {
-            return false;
-        };
-        let Some(kind) = self.risk_rules.max_intraday_loss_type else {
-            return false;
-        };
-        match kind {
+    fn max_intraday_loss_rule_tripped(&self, mark: f64, rule: &RiskStopLimit) -> bool {
+        let limit = rule.value;
+        match rule.value_type {
             RiskDrawdownType::Cash => self
                 .current_intraday_loss(mark)
                 .is_some_and(|loss| loss >= limit),
@@ -538,12 +573,18 @@ impl super::BrokerState {
             return;
         }
         self.bump_intraday_equity_max(mark);
-        if !self.max_intraday_loss_rule_tripped(mark) {
+        let Some(rule) = self
+            .risk_rules
+            .intraday_loss_limits
+            .iter()
+            .find(|rule| self.max_intraday_loss_rule_tripped(mark, rule))
+        else {
             return;
-        }
+        };
+        let alert_message = rule.alert_message.clone();
         self.enforce_risk_stop(
             RiskRuleKind::MaxIntradayLoss,
-            self.risk_rules.max_intraday_loss_alert_message.clone(),
+            alert_message,
             bar_index,
             time,
             mark,

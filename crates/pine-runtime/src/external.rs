@@ -206,10 +206,10 @@ impl HistoricalRuntime<'_> {
             ));
         }
         self.validate_external_feedback(&frames, passes.as_deref(), contexts.as_deref(), options)?;
-        let configuration = crate::strategy_risk_configuration(
+        let configuration = crate::strategy_risk_configuration_with_environment(
             &self.program,
             &self.input_overrides,
-            self.request_environment.chart(),
+            &self.request_environment,
         );
         if !configuration.rules.is_empty()
             && (!options.risk_rules || !configuration.unresolved_call_site_ids.is_empty())

@@ -485,6 +485,16 @@ optional seed-only `magnifier_bars`.
 Internal broker state keeps `StrategyRiskRules` configuration separate from
 `StrategyRiskState` tripped/window state, with hooks before order admission,
 after fill, at intraday-window reset, and before forced close.
+Native execution resolves risk declarations before its first market observation,
+independently of statement order and branch execution. Input overrides and chart
+metadata are bound before resolution. Repeated numeric rules retain the strictest
+limit; cash and percentage rules remain independent rather than comparing unlike
+units. Direction declarations intersect their permitted directions. Threshold
+alerts retain the selected declaration's message. Unresolved or side-effecting
+arguments fail with `E_NATIVE_RISK_UNSUPPORTED` before any native order executes;
+they are never silently ignored. The current positive-limit/immutable-expression
+profile is unchanged. External execution still delegates enforcement to its Host.
+See [native risk registration](NATIVE_RISK_REGISTRATION.md).
 Intraday windows are keyed from host-neutral bar timestamps and the chart
 timeframe already available to the runtime: UTC day of `time` when the chart
 timeframe is at or below 1D, and the bar timestamp itself when the timeframe
@@ -512,7 +522,7 @@ bars keep the baseline and counters; calendar gaps reset only if the selected wi
 constants and rewrites later `strategy.entry` admission: allowed directions
 keep current open, add, and reversal behavior; a disallowed opposite entry
 against an open allowed position flattens without opening prohibited
-exposure; a disallowed opposite entry while flat is a no-op; last call wins;
+exposure; a disallowed opposite entry while flat is a no-op;
 pending opposite `strategy.entry` intents are cancelled while flat or
 converted to market close-only against an open allowed position.
 `strategy.order` is not bound by this rule.

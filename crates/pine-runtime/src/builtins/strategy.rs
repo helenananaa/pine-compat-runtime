@@ -68,6 +68,11 @@ impl<'a> HistoricalRuntime<'a> {
         if self.external_execution.is_some() && callee.starts_with("strategy.") {
             return Some(self.eval_external_call(callee, args));
         }
+        // Risk calls are declarations, including calls in skipped branches.
+        // Registration already resolved their arguments without user effects.
+        if self.native_risk_initialized && callee.starts_with("strategy.risk.") {
+            return Some(Ok(PineValue::Void));
+        }
         Some(match callee {
             "strategy.convert_to_account" | "strategy.convert_to_symbol" => {
                 self.eval_strategy_currency_conversion(callee, args)

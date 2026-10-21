@@ -219,6 +219,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) pending_alert_events: Vec<(AlertEvent, bool)>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
+    pub(crate) native_risk_initialized: bool,
     // Historical OHLC remains visible during fill callbacks, but account values
     // and immediate closes are marked at the current broker execution tick.
     pub(crate) strategy_fill_mark: Option<f64>,
@@ -533,6 +534,7 @@ impl<'a> HistoricalRuntime<'a> {
             pending_alert_events: Vec::new(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
+            native_risk_initialized: false,
             strategy_position_size_at_script_pass: Default::default(),
             strategy_position_size_history_depth,
             strategy_position_size_history_origin: 0,
@@ -922,6 +924,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.reset_execution_budget();
         }
         let result = self.resource_budget.check().and_then(|()| {
+            self.initialize_native_risk()?;
             // Native broker sizing/accounting uses 1 before an explicitly
             // supplied pair has historical quotes. Explicit conversion queries
             // still return na in this warmup interval. An absent pair is an

@@ -17,8 +17,11 @@ pub(crate) fn risk_configuration(
 ) -> PyResult<Py<PyAny>> {
     let environment = parse_request_environment(request_bars, chart_symbol, chart_timeframe)?;
     let overrides = parse_input_overrides(input_overrides, &program.hir)?;
-    let value =
-        pine_runtime::strategy_risk_configuration(&program.hir, &overrides, environment.chart());
+    let value = pine_runtime::strategy_risk_configuration_with_environment(
+        &program.hir,
+        &overrides,
+        &environment,
+    );
     Ok(PyModule::import(py, "json")?
         .call_method1(
             "loads",

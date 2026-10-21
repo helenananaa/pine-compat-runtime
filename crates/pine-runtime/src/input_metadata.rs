@@ -5,9 +5,10 @@ use crate::PineValue;
 mod bindings;
 mod constant;
 mod risk;
+pub(crate) use risk::native_risk_configuration;
 pub use risk::{
     STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION, StrategyRiskConfiguration, StrategyRiskRule,
-    strategy_risk_configuration,
+    strategy_risk_configuration, strategy_risk_configuration_with_environment,
 };
 
 pub(crate) fn constant_string(program: &HirProgram, expr: &HirExpr) -> Option<String> {

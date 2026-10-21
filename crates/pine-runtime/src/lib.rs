@@ -43,6 +43,7 @@ pub use host_requirements::{
 pub use input_metadata::{
     InputCall, STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION, StrategyRiskConfiguration,
     StrategyRiskRule, input_calls, strategy_risk_configuration,
+    strategy_risk_configuration_with_environment,
 };
 pub use magnifier::{
     MAGNIFIER_SCHEMA_VERSION, MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback,

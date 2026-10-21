@@ -344,6 +344,12 @@ revision. They do not change the existing runtime output schema.
 
 ## External execution
 
+- `E_NATIVE_RISK_UNSUPPORTED`: a native risk declaration cannot be resolved in
+  the supported immutable scalar/positive-limit profile. Registration does not
+  execute user side effects or disregard rules in unexecuted branches. The
+  historical instance is poisoned by this execution failure; rebuild it with
+  supported inputs. External Host negotiation keeps its separate diagnostics.
+
 - `E_EXTERNAL_FEEDBACK_COUNT`: account frames do not match the supplied bar count.
 - `E_EXTERNAL_UNSUPPORTED`: external mode rejects an unsupported strategy setting,
   account field, order argument or malformed account/pass state. No native broker

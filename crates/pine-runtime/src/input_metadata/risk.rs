@@ -1,5 +1,5 @@
 //! Declarative risk configuration discovered independently of branch execution.
-use crate::{ChartContext, InputOverrides, PineValue};
+use crate::{ChartContext, InputOverrides, NoRequestDataProvider, PineValue, RequestEnvironment};
 use pine_ir::{HirExprKind, HirProgram};
 use serde::Serialize;
 
@@ -29,8 +29,9 @@ pub struct StrategyRiskRule {
     pub resolved: bool,
 }
 
-/// Resolve immutable scalar settings without executing branches, loops, orders,
-/// requests or user side effects. Every physical call remains in the result;
+/// Resolve immutable scalar settings without executing original program scope,
+/// orders, requests or user side effects. Pure local scalar loops are bounded.
+/// Every physical call remains in the result;
 /// hosts must apply all rules, including multiple calls of the same kind.
 #[must_use]
 pub fn strategy_risk_configuration(
@@ -38,9 +39,43 @@ pub fn strategy_risk_configuration(
     overrides: &InputOverrides,
     chart: &ChartContext,
 ) -> StrategyRiskConfiguration {
+    let environment =
+        RequestEnvironment::new(chart.clone(), std::sync::Arc::new(NoRequestDataProvider));
+    strategy_risk_configuration_with_environment(program, overrides, &environment)
+}
+
+/// Resolve with the same chart/calendar context used for execution. No request
+/// streams or market observations are evaluated during discovery.
+#[must_use]
+pub fn strategy_risk_configuration_with_environment(
+    program: &HirProgram,
+    overrides: &InputOverrides,
+    environment: &RequestEnvironment,
+) -> StrategyRiskConfiguration {
+    resolve_configuration(program, overrides, environment, None)
+}
+
+pub(crate) fn native_risk_configuration(
+    program: &HirProgram,
+    overrides: &InputOverrides,
+    environment: &RequestEnvironment,
+    limits: crate::ExecutionLimits,
+) -> StrategyRiskConfiguration {
+    resolve_configuration(program, overrides, environment, Some(limits))
+}
+
+fn resolve_configuration(
+    program: &HirProgram,
+    overrides: &InputOverrides,
+    environment: &RequestEnvironment,
+    limits: Option<crate::ExecutionLimits>,
+) -> StrategyRiskConfiguration {
     let minimal = super::constant::minimal_program(program.language_version);
     let mut evaluator =
-        super::constant::ConstEvaluator::for_risk(program, &minimal, overrides, chart);
+        super::constant::ConstEvaluator::for_risk(program, &minimal, overrides, environment);
+    if let Some(limits) = limits {
+        evaluator = evaluator.with_limits(limits);
+    }
     let mut rules = Vec::new();
     crate::runtime::hir_walk::statements(&program.statements, &mut |expr| {
         let HirExprKind::Call {

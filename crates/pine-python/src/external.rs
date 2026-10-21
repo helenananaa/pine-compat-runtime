@@ -8,6 +8,39 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyModule};
 
+pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
+    for (name, version) in [
+        ("EXTERNAL_CLOCK_SCHEMA_VERSION", 1),
+        (
+            "EXTERNAL_SCHEDULE_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION,
+        ),
+        (
+            "STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION",
+            pine_runtime::STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION,
+        ),
+        (
+            "EXTERNAL_CLOSING_TICK_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_CLOSING_TICK_SCHEMA_VERSION,
+        ),
+        (
+            "EXTERNAL_ORDER_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_ORDER_SCHEMA_VERSION,
+        ),
+        (
+            "EXTERNAL_SIZING_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_SIZING_SCHEMA_VERSION,
+        ),
+        (
+            "EXTERNAL_ORDER_METADATA_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_ORDER_METADATA_SCHEMA_VERSION,
+        ),
+    ] {
+        module.add(name, version)?;
+    }
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run(
     program: &PyProgram,
@@ -23,6 +56,7 @@ pub(crate) fn run(
     closing_ticks: bool,
     risk_rules: bool,
     execution_schedule: Option<&Bound<'_, PyAny>>,
+    order_metadata: bool,
 ) -> PyResult<Py<PyAny>> {
     let bars = parse_bars(bars)?;
     let execution_times = parse_execution_times(execution_times)?;
@@ -53,6 +87,7 @@ pub(crate) fn run(
     let options = pine_runtime::ExternalExecutionOptions {
         closing_ticks,
         risk_rules,
+        order_metadata,
     };
     let mut runtime = match schedule {
         Some(schedule) => runtime.with_external_schedule(frames, schedule, options),
@@ -126,6 +161,7 @@ impl ExternalSession {
         closing_ticks: bool,
         risk_rules: bool,
         scheduled: bool,
+        order_metadata: bool,
     ) -> PyResult<Self> {
         let runtime = HistoricalRuntime::from_prepared_with_request_environment_and_input_overrides(
             &program.hir,
@@ -135,6 +171,7 @@ impl ExternalSession {
         let options = pine_runtime::ExternalExecutionOptions {
             closing_ticks,
             risk_rules,
+            order_metadata,
         };
         let runtime = if scheduled {
             runtime.with_external_schedule(vec![], vec![], options)

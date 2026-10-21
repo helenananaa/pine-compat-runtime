@@ -50,7 +50,8 @@ module. WASM exports `externalOrderSchemaVersion()` as schema metadata; this
 does not add a WASM external-account execution API. Package version remains
 `0.3.2`; identify new wheels by source revision and hash. Tests cover external
 batch/append equality and preservation of the caller's account authority.
-Order comments/alert metadata still require additional external-profile work.
+Order comments/alert metadata require the separately negotiated development
+contract below; they are not enabled by the order schema alone.
 
 Development source also permits explicit non-na quantities when the strategy
 declares cash/equity defaults: the explicit value overrides the declaration.
@@ -71,6 +72,41 @@ checks and 164 Python checks against a freshly built, isolated Windows wheel.
 Wheel SHA256: `317eb3bd9047f83b9412786856b7dc0aa8d01860b500120c8c9a924d1424e439`.
 The retained reproduction had three failing Rust cases before the repair.
 Receipts and the wheel remain in `.local/host-completion/default-quantity-overrides/`.
+
+## Evaluated order annotations (development)
+
+Source work adds `EXTERNAL_ORDER_METADATA_SCHEMA_VERSION == 1`. Rust callers
+enable `ExternalExecutionOptions.order_metadata`; Python uses the keyword-only
+`order_metadata=True` on `run_external` or `external_session`. It defaults to
+false. Executed annotation arguments reject without opt-in, so updating a core
+wheel cannot make an older Host silently discard annotations. A false legacy
+`when` does not evaluate annotations. Immediate-order matching remains outside
+this contract and rejects independently.
+
+With opt-in, entry/order/close/close_all preserve evaluated `comment`,
+`alert_message` and `disable_alert`. Exit additionally preserves
+`comment_profit`, `comment_loss`, `comment_trailing`, `alert_profit`,
+`alert_loss` and `alert_trailing`. The optional intent `metadata` object contains
+non-na string fields and a boolean `disable_alert`; empty strings remain
+distinct from absent fields. Entirely default metadata is omitted, preserving
+the previous wire for unannotated orders. Native annotation evaluators are
+shared; expressions execute once. Template-like text remains literal here.
+
+The concrete Host must bind metadata to the accepted order, retain it across
+replacement/partial fills/recovery, select the actual exit leg's value with
+generic fallback, and apply `disable_alert` to order-fill alert records without
+dropping comments or financial fills. The core never fabricates Host fills,
+chooses a future fill leg or performs external delivery. WASM exports
+`externalOrderMetadataSchemaVersion()` as metadata only, without an external
+account executor. On 2026-10-21, the focused Rust gate passed 14 external
+metadata/default/session checks. A freshly built Windows wheel passed all 1,863
+Python tests, including 25 metadata cases. Workspace/all-target Clippy,
+formatting, source structure, host-parity guards and generated WASM/Node smoke
+also passed. These are core/binding checks, separate from the preceding
+default-sizing checkpoint's full Rust workspace result. The first focused
+metadata test exposed a normalized exit-slot admission error; its fix preserves
+the unsupported exit OCA-name boundary. Logs, diagnostic HIR and artifacts are
+retained under `.local/host-completion/order-metadata/`.
 
 ## Authoritative default sizing (development)
 

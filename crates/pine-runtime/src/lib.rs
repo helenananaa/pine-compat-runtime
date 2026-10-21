@@ -10,9 +10,9 @@ mod error;
 mod external;
 mod external_schedule;
 pub use external::{
-    EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_SCHEMA_VERSION,
-    EXTERNAL_SIZING_SCHEMA_VERSION, ExternalAccountFrame, ExternalExecutionOptions,
-    ExternalOrderIntent, ExternalPass,
+    EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_METADATA_SCHEMA_VERSION,
+    EXTERNAL_ORDER_SCHEMA_VERSION, EXTERNAL_SIZING_SCHEMA_VERSION, ExternalAccountFrame,
+    ExternalExecutionOptions, ExternalOrderIntent, ExternalOrderMetadata, ExternalPass,
 };
 pub use external_schedule::{
     EXTERNAL_SCHEDULE_SCHEMA_VERSION, ExternalBarState, ExternalEvaluationTrigger,

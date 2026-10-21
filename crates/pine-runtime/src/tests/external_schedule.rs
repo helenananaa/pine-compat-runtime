@@ -274,6 +274,7 @@ fn scheduled_closing_fills_keep_immutable_bar_and_clock_guards() {
     let options = ExternalExecutionOptions {
         closing_ticks: true,
         risk_rules: false,
+        ..Default::default()
     };
     let mut valid = HistoricalRuntime::new(&hir)
         .with_external_schedule(vec![frame(0, 0.0)], vec![group.clone()], options)

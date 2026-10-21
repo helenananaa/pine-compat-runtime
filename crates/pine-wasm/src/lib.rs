@@ -62,6 +62,11 @@ pub fn package_version() -> String {
     env!("CARGO_PKG_VERSION").to_owned()
 }
 
+#[wasm_bindgen(js_name = externalOrderMetadataSchemaVersion)]
+pub fn external_order_metadata_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_ORDER_METADATA_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = compileScript)]
 pub fn compile_script(source: &str) -> Result<WasmProgram, JsValue> {
     compile_program(analysis_input(source)).map_err(|err| JsValue::from_str(&err))

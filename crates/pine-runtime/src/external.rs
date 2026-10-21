@@ -5,16 +5,20 @@ use crate::{HistoricalRuntime, PineValue, RuntimeError};
 use pine_ir::{HirCallArg, ScriptMode};
 use serde::{Deserialize, Serialize};
 
+mod metadata;
 mod sizing;
+pub use metadata::ExternalOrderMetadata;
 
 pub const EXTERNAL_ORDER_SCHEMA_VERSION: u32 = 2;
 pub const EXTERNAL_CLOSING_TICK_SCHEMA_VERSION: u32 = 1;
 pub const EXTERNAL_SIZING_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_ORDER_METADATA_SCHEMA_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ExternalExecutionOptions {
     pub closing_ticks: bool,
     pub risk_rules: bool,
+    pub order_metadata: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -80,6 +84,8 @@ pub struct ExternalOrderIntent {
     pub oca_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub oca_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<ExternalOrderMetadata>,
 }
 
 #[derive(Debug, Clone)]
@@ -546,8 +552,18 @@ impl HistoricalRuntime<'_> {
                 "stop",
                 "oca_name",
                 "oca_type",
+                "comment",
+                "alert_message",
+                "disable_alert",
             ],
-            "strategy.close" => &["id", "qty", "qty_percent"],
+            "strategy.close" => &[
+                "id",
+                "qty",
+                "qty_percent",
+                "comment",
+                "alert_message",
+                "disable_alert",
+            ],
             "strategy.exit" => &[
                 "id",
                 "from_entry",
@@ -560,20 +576,36 @@ impl HistoricalRuntime<'_> {
                 "trail_offset",
                 "qty",
                 "qty_percent",
+                "oca_name",
+                "comment",
+                "comment_profit",
+                "comment_loss",
+                "comment_trailing",
+                "alert_message",
+                "alert_profit",
+                "alert_loss",
+                "alert_trailing",
+                "disable_alert",
             ],
             "strategy.cancel" => &["id"],
             "strategy.cancel_all" => &[],
-            "strategy.close_all" => &[],
+            "strategy.close_all" => &["comment", "alert_message", "disable_alert"],
             _ => return Err(external_error(format!("order API {callee}"))),
         };
         for (index, arg) in args.iter().enumerate() {
             if arg.name.as_deref() == Some(pine_ir::OMITTED_BUILTIN_ARG) {
                 continue;
             }
-            if arg.name.as_deref().map_or(index >= names.len(), |name| {
-                !names.contains(&name) && name != "when"
-            }) {
-                return Err(external_error("unsupported external order argument"));
+            if (callee == "strategy.exit"
+                && (arg.name.as_deref() == Some("oca_name") || (arg.name.is_none() && index == 11)))
+                || arg.name.as_deref().map_or(index >= names.len(), |name| {
+                    !names.contains(&name) && name != "when"
+                })
+            {
+                return Err(external_error(format!(
+                    "unsupported external order argument {} at position {index} for {callee}",
+                    arg.name.as_deref().unwrap_or("<positional>")
+                )));
             }
         }
         if matches!(
@@ -595,7 +627,7 @@ impl HistoricalRuntime<'_> {
             }
         };
         let opening = matches!(callee, "strategy.entry" | "strategy.order");
-        let (direction, qty) = if opening {
+        let (direction, qty, metadata) = if opening {
             let value = self.eval_expr(
                 call_arg_expr(args, 1, "direction")
                     .ok_or_else(|| external_error("direction required"))?,
@@ -605,13 +637,14 @@ impl HistoricalRuntime<'_> {
                 PineValue::String(value) if value == "strategy.short" => "short",
                 _ => return Err(external_error("invalid direction")),
             };
+            let metadata = self.external_order_metadata(callee, args)?;
             let qty = self.external_order_quantity(args, direction == "long")?;
             if qty == 0.0 {
                 return Ok(PineValue::Void);
             }
-            (Some(direction.to_string()), Some(qty))
+            (Some(direction.to_string()), Some(qty), metadata)
         } else {
-            (None, None)
+            (None, None, self.external_order_metadata(callee, args)?)
         };
         let mut numbers = [None; 9];
         for (slot, name) in [
@@ -731,6 +764,7 @@ impl HistoricalRuntime<'_> {
             trail_offset: numbers[8],
             oca_name,
             oca_type,
+            metadata,
         });
         Ok(PineValue::Void)
     }

@@ -19,10 +19,10 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) -> Option<Vec<CallArg>> {
         let legacy = self.legacy.dialect() <= crate::PineDialect::V4;
-        if !matches!(
+        if !(matches!(
             name,
             "strategy.exit" | "strategy.close" | "strategy.close_all"
-        ) && !(legacy && matches!(name, "strategy.entry" | "strategy.order"))
+        ) || legacy && matches!(name, "strategy.entry" | "strategy.order"))
         {
             return None;
         }

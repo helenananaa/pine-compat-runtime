@@ -339,8 +339,8 @@ impl<'a> HistoricalRuntime<'a> {
             let start = values.partition_point(|(time, _)| *time < current_time);
             let end = values.partition_point(|(time, _)| *time < chart_close);
             let samples = (start..end).map(|index| values[index].1.clone()).collect();
-            if !self.request_evaluations.contains_key(&cache_key)
-                && !(self.context_windows.prepared && values.is_empty())
+            if !(self.request_evaluations.contains_key(&cache_key)
+                || self.context_windows.prepared && values.is_empty())
             {
                 self.request_cache.insert(cache_key.clone(), values);
             }
@@ -692,9 +692,9 @@ impl<'a> HistoricalRuntime<'a> {
                 include_forming,
                 RequestMergeClock::new(&self.request_environment, &key),
             )?;
-            if !include_forming
-                && !self.request_evaluations.contains_key(&cache_key)
-                && !(self.context_windows.prepared && requested_values.is_empty())
+            if !(include_forming
+                || self.request_evaluations.contains_key(&cache_key)
+                || self.context_windows.prepared && requested_values.is_empty())
             {
                 self.request_cache
                     .insert(cache_key.clone(), requested_values);

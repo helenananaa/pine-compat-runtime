@@ -213,14 +213,13 @@ impl HistoricalRuntime<'_> {
         while let Some((value, retain_contents)) = pending.pop() {
             match value {
                 IntrabarReference::Point(id)
-                    if seen.insert((if retain_contents { 7 } else { 8 }, id)) =>
+                    if seen.insert((if retain_contents { 7 } else { 8 }, id))
+                        && (retain_contents || !self.object_store.contains_key(&id)) =>
                 {
-                    if retain_contents || !self.object_store.contains_key(&id) {
-                        self.object_store
-                            .copy_entry_from(&previous.object_store, id);
-                        self.object_varip_fields
-                            .copy_entry_from(&previous.object_varip_fields, id);
-                    }
+                    self.object_store
+                        .copy_entry_from(&previous.object_store, id);
+                    self.object_varip_fields
+                        .copy_entry_from(&previous.object_varip_fields, id);
                 }
                 IntrabarReference::Object(id)
                     if seen.insert((if retain_contents { 0 } else { 9 }, id)) =>

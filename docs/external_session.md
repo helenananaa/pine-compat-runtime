@@ -75,6 +75,16 @@ for prefix-stable series/TA/state and authoritative feedback, fill passes,
 independent sessions, correction rejection, and poisoned-session behavior.
 Rust API regressions are in `crates/pine-runtime/tests/external_session.rs`.
 
+The Rust runtime and Python `ExternalSession` expose
+`failed_request_context()` after an evaluation failure. It returns the exact
+`(symbol, timeframe)` of a missing requested provider, including a miss reached
+inside a nested requested expression. Other failures return `None`; a user
+`runtime.error()` containing the same diagnostic text remains an ordinary script
+failure. This read-only status leaves the session poisoned. A host that supplies
+the missing dataset must discard its entire tentative execution and construct a
+fresh evaluator against the amended immutable input plan. Reading this status
+does not authorize a retry on the failed runtime or revise committed decisions.
+
 On 2026-10-19 the explicit-clock update passed the complete Windows
 `scripts/verify.ps1` gate with Rust 1.97.1, Python 3.12.7 and Node 22.14.0:
 7,901 Rust tests, 1,686 tests against a freshly built and installed Python wheel,

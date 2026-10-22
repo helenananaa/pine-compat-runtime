@@ -217,6 +217,9 @@ impl<'a> HistoricalRuntime<'a> {
                 &tuple_dependencies,
             );
             self.accept_execution_budget(&runtime);
+            if result.is_err() {
+                self.failed_request_context = runtime.failed_request_context.clone();
+            }
             let value = result?;
             if terminal {
                 last = Some((bar.time, value));

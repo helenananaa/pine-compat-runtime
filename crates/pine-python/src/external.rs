@@ -409,6 +409,13 @@ impl ExternalSession {
         .map_err(|error| PyValueError::new_err(error.message))
     }
 
+    /// Typed provider failure is readable without unpoisoning the session.
+    fn failed_request_context(&self) -> Option<(String, String)> {
+        self.runtime
+            .failed_request_context()
+            .map(|(symbol, timeframe)| (symbol.to_owned(), timeframe.to_owned()))
+    }
+
     /// Control state is readable even after an interrupted observation.
     fn window_status(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let raw = serde_json::to_string(&self.runtime.external_window_feedback_status())

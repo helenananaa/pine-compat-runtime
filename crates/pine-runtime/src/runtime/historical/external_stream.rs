@@ -4,6 +4,16 @@ use crate::external::{ExternalOpenBar, external_error};
 use crate::{ExternalBarState, ExternalScheduledPass};
 
 impl HistoricalRuntime<'_> {
+    /// A typed provider miss from the failed evaluation, never inferred from
+    /// user-controlled error text. Reading this does not unpoison execution.
+    #[must_use]
+    pub fn failed_request_context(&self) -> Option<(&str, &str)> {
+        self.execution_failed.then_some(())?;
+        self.failed_request_context
+            .as_ref()
+            .map(|key| (key.symbol(), key.timeframe().value()))
+    }
+
     /// Plan a known historical dataset without inventing future account frames
     /// or executing Pine. The returned input skip applies before the first bar.
     pub fn initialize_external_stream_dataset(
@@ -110,6 +120,7 @@ impl HistoricalRuntime<'_> {
         pass: ExternalScheduledPass,
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
+        self.failed_request_context = None;
         let state = self
             .external_execution
             .as_ref()

@@ -125,6 +125,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) static_requests: crate::builtins::static_requests::StaticRequests,
     pub(crate) context_windows: super::context_windows::ContextWindows,
     pub(crate) request_window_history: KnownRequestedTimes,
+    pub(crate) failed_request_context: Option<RequestKey>,
     pub(crate) external_window_feedback:
         Option<external_window_feedback::ExternalWindowFeedback<'a>>,
     pub(crate) request_feed: crate::request::RequestFeed,
@@ -459,6 +460,7 @@ impl<'a> HistoricalRuntime<'a> {
             request_environment,
             context_windows: super::context_windows::ContextWindows::default(),
             request_window_history: Arc::default(),
+            failed_request_context: None,
             external_window_feedback: None,
             request_feed: crate::request::RequestFeed::default(),
             historical_dynamic_request_contexts: HashSet::new(),

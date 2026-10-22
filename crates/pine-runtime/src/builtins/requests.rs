@@ -571,6 +571,9 @@ impl<'a> HistoricalRuntime<'a> {
                     &tuple_dependencies,
                 );
                 self.accept_execution_budget(&runtime);
+                if result.is_err() {
+                    self.failed_request_context = runtime.failed_request_context.clone();
+                }
                 let value = result?;
                 self.replace_requested_valuewhen_values(0, runtime.valuewhen_retained_values())?;
                 self.bounded_same_context_evaluations.insert(key, runtime);
@@ -791,7 +794,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn resolved_request_bars_from(
-        &self,
+        &mut self,
         key: &RequestKey,
         start: usize,
     ) -> Result<Vec<Bar>, RuntimeError> {
@@ -799,7 +802,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn resolved_request_bars_range(
-        &self,
+        &mut self,
         key: &RequestKey,
         start: usize,
         end: usize,
@@ -815,6 +818,7 @@ impl<'a> HistoricalRuntime<'a> {
             Ok(bars) => bars,
             Err(RequestDataError::MissingData { symbol, timeframe }) => {
                 if !self.request_feed.contains(key) {
+                    self.failed_request_context = Some(key.clone());
                     return Err(RuntimeError {
                         message: RequestDataError::MissingData { symbol, timeframe }.to_string(),
                     });
@@ -834,6 +838,7 @@ impl<'a> HistoricalRuntime<'a> {
         // External execution can receive a known stream with no closed bars yet.
         // Missing keys still fail above; empty visible history aligns to na.
         if bars.is_empty() && self.external_execution.is_none() && !key.is_event_chart() {
+            self.failed_request_context = Some(key.clone());
             return Err(RuntimeError {
                 message: RequestDataError::MissingData {
                     symbol: key.symbol().to_owned(),
@@ -879,6 +884,9 @@ impl<'a> HistoricalRuntime<'a> {
             // Requested history is part of this chart execution's work. Do
             // not grant each requested bar a fresh chart-sized allowance.
             self.accept_execution_budget(&runtime);
+            if result.is_err() {
+                self.failed_request_context = runtime.failed_request_context.clone();
+            }
             values.push((bar.time, result?));
         }
         self.legacy_security_repaint_warnings

@@ -99,6 +99,32 @@ def test_realtime_batch_chart_boundaries_match_native_observation_control():
     assert [p["values"] for p in actual["output"]["plots"]]==[p["values"] for p in expected["plots"]]
 
 
+@pytest.mark.parametrize("every_tick",[False,True])
+def test_repeated_closing_feedback_matches_complete_schedule_without_weakening_first_fill_admission(every_tick):
+    source=f'//@version=6\nstrategy("closing chain",calc_on_every_tick={str(every_tick).lower()},calc_on_order_fills=true,process_orders_on_close=true)\nvarip int n=0\nn+=1\nplot(n)\nplot(strategy.position_size)'
+    bars,_,groups=data("realtime")
+    first=deepcopy(groups[0][-1])
+    first["context"]["is_new"]=True
+    schedule=[first]
+    for index in range(16):
+        closing=deepcopy(first)
+        closing["context"].update(trigger="closing_fill",is_new=False)
+        closing["evaluation"]["account"]["position_size"]=index%2
+        schedule.append(closing)
+    program=pine_compat.compile_script(source)
+    session=program.external_session(scheduled=True,closing_ticks=True)
+    session.begin_bar(bars[0],bar_state="realtime")
+    before=session.snapshot()
+    with pytest.raises(ValueError,match="invalid scheduled execution context"):
+        session.observe(schedule[1])
+    assert session.snapshot()==before
+    for item in schedule: session.observe(item,snapshot=False)
+    session.commit_bar(snapshot=False)
+    expected=program.run_external(bars[:1],[schedule[-1]["evaluation"]["account"]],execution_schedule=[schedule],closing_ticks=True)
+    assert session.snapshot()==expected
+    assert [plot["values"] for plot in expected["output"]["plots"]]==[[17],[1]]
+
+
 @pytest.mark.parametrize("count",[1,2])
 def test_known_historical_plan_keeps_endpoint_and_window_without_future_account_frames(count):
     source=f'//@version=6\nstrategy("planned",calc_on_every_history_tick=true,calc_bars_count={count})\nvarip int n=0\nn+=1\nplot(n)\nplot(bar_index)\nplot(last_bar_index)\nplot(barstate.islast?1:0)\nplot(last_bar_time)\nplot(close)'

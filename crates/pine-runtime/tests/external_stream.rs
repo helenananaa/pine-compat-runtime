@@ -442,6 +442,9 @@ fn market_confirmation_keeps_the_bar_open_for_explicit_closing_fill_feedback() {
         assert!(stream.observe_external_bar(invalid).is_err());
         assert_eq!(public_runtime_result_json(&stream.result()), before);
         stream.observe_external_bar(closing.clone()).unwrap();
+        let mut closing_again = closing.clone();
+        closing_again.evaluation.account = account(canonical, 0.0);
+        stream.observe_external_bar(closing_again.clone()).unwrap();
         stream.commit_external_bar().unwrap();
         let values: Vec<_> = stream
             .result()
@@ -449,11 +452,11 @@ fn market_confirmation_keeps_the_bar_open_for_explicit_closing_fill_feedback() {
             .iter()
             .map(|p| p.values[0].as_f64())
             .collect();
-        assert_eq!(values, [Some(1.0), Some(2.0), Some(1.0), Some(100.0)]);
+        assert_eq!(values, [Some(1.0), Some(3.0), Some(0.0), Some(100.0)]);
         let mut complete = HistoricalRuntime::new(&hir)
             .with_external_schedule(
-                vec![closing.evaluation.account.clone()],
-                vec![vec![first.clone(), closing]],
+                vec![closing_again.evaluation.account.clone()],
+                vec![vec![first.clone(), closing, closing_again]],
                 options,
             )
             .unwrap();

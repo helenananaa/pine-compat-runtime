@@ -145,7 +145,14 @@ impl HistoricalRuntime<'_> {
                     .unwrap()
                     .clone(),
             );
-            contexts.push(*state.contexts.as_ref().unwrap()[self.bars].last().unwrap());
+            let mut previous = *state.contexts.as_ref().unwrap()[self.bars].last().unwrap();
+            if previous.trigger == crate::ExternalEvaluationTrigger::ClosingFill {
+                // The prior closing fill was already validated against its own
+                // predecessor. In this bounded pair it is the confirmed anchor,
+                // rather than a new first closing fill without a predecessor.
+                previous.trigger = crate::ExternalEvaluationTrigger::BarClose;
+            }
+            contexts.push(previous);
         }
         pair.push(pass.evaluation.clone());
         contexts.push(pass.context);

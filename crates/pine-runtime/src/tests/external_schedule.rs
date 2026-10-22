@@ -278,9 +278,9 @@ fn historical_tick_context_cannot_be_downgraded_or_admit_future_requested_observ
     future.evaluation.request_updates = Some(vec![ObservedRequestUpdate {
         symbol: "OTHER".to_owned(),
         timeframe: "1".to_owned(),
-        bar: row(0, 12.0),
+        bar: row(60000, 12.0),
         kind: BarUpdateKind::Confirmed,
-        available_at_ms: 59999,
+        available_at_ms: 119999,
     }]);
     assert!(
         HistoricalRuntime::new(&hir)
@@ -294,7 +294,9 @@ fn historical_tick_context_cannot_be_downgraded_or_admit_future_requested_observ
             .message
             .contains("availability")
     );
-    future.evaluation.event_time_ms = 59999;
+    // The current historical chart close is visible even at the first vertex.
+    future.evaluation.request_updates.as_mut().unwrap()[0].bar = row(0, 12.0);
+    future.evaluation.request_updates.as_mut().unwrap()[0].available_at_ms = 59999;
     assert!(
         HistoricalRuntime::new(&hir)
             .with_external_schedule(

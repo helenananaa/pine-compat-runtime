@@ -332,6 +332,10 @@ fn run_script(
 
 #[pymodule]
 fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
+    module.add(
+        "REALTIME_REQUEST_FEED_SCHEMA_VERSION",
+        pine_runtime::REALTIME_REQUEST_FEED_SCHEMA_VERSION,
+    )?;
     module.add("__version__", env!("CARGO_PKG_VERSION"))?;
     module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;

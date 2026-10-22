@@ -14,6 +14,7 @@ assert.equal(pine.externalScheduleSchemaVersion(), 1);
 assert.equal(pine.externalSizingSchemaVersion(), 1);
 assert.equal(pine.externalOrderMetadataSchemaVersion(), 1);
 require('./wasm_history_ticks.cjs')(process.argv[2]);
+require('./wasm_realtime_request_feed.cjs')(process.argv[2]);
 require('./wasm_closeout_regressions.cjs')(path.resolve(process.argv[2]));
 require('./wasm_bool_control_defaults.cjs')(process.argv[2]);
 require('./wasm_reserved_identifiers.cjs')(process.argv[2]);

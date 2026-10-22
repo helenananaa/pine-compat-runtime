@@ -19,6 +19,11 @@ pub fn realtime_session_schema_version() -> u32 {
     REALTIME_SESSION_SCHEMA_VERSION
 }
 
+#[wasm_bindgen(js_name = realtimeRequestFeedSchemaVersion)]
+pub fn realtime_request_feed_schema_version() -> u32 {
+    pine_runtime::REALTIME_REQUEST_FEED_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = runtimeChangesSchemaVersion)]
 pub fn runtime_changes_schema_version() -> u32 {
     pine_runtime::PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION
@@ -220,6 +225,30 @@ impl WasmRealtimeSession {
             Some(changes) => Ok(public_runtime_changes_json(changes)),
             None => Ok("null".to_owned()),
         }
+    }
+
+    pub(crate) fn apply_request_feed_updates_json(&mut self, updates: &str) -> Result<(), String> {
+        self.require_seeded()?;
+        let updates: Vec<pine_runtime::RequestFeedUpdate> =
+            serde_json::from_str(updates).map_err(|error| error.to_string())?;
+        self.runtime
+            .apply_request_feed_updates(&updates)
+            .map_err(|error| error.message)
+    }
+
+    pub(crate) fn request_bar_close_json(
+        &self,
+        symbol: &str,
+        timeframe: &str,
+        open_time: &str,
+    ) -> Result<String, String> {
+        let timeframe = RequestTimeframe::parse(timeframe).map_err(|error| error.to_string())?;
+        let open_time =
+            serde_json::from_str::<i64>(open_time).map_err(|error| error.to_string())?;
+        self.runtime
+            .request_bar_close(&RequestKey::new(symbol, timeframe), open_time)
+            .map(|close| close.to_string())
+            .map_err(|error| error.message)
     }
 }
 
@@ -428,6 +457,23 @@ impl WasmRealtimeSession {
     ) -> Result<String, JsValue> {
         self.apply_request_update(symbol, timeframe, bar_json, false)
             .map_err(|err| JsValue::from_str(&err))
+    }
+
+    #[wasm_bindgen(js_name = applyRequestFeedUpdates)]
+    pub fn apply_request_feed_updates(&mut self, updates_json: &str) -> Result<(), JsValue> {
+        self.apply_request_feed_updates_json(updates_json)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    #[wasm_bindgen(js_name = requestBarClose)]
+    pub fn request_bar_close(
+        &self,
+        symbol: &str,
+        timeframe: &str,
+        open_time_json: &str,
+    ) -> Result<String, JsValue> {
+        self.request_bar_close_json(symbol, timeframe, open_time_json)
+            .map_err(|error| JsValue::from_str(&error))
     }
 
     #[wasm_bindgen(js_name = replica)]

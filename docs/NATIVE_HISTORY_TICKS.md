@@ -23,8 +23,9 @@ Observation passes have a separate 100,000-per-bar limit and do not spend the
 fill-loop guardrail. Legacy feedback groups retain their existing 65-pass limit.
 Tick groups require the script's matching calculation flag. Historical tick
 contexts cannot be downgraded to bar-close/fill contexts, and requested-data
-updates obey each observation's event clock. Existing full historical fill
-contexts retain their canonical-close clock. Both bindings expose the additive
+updates use the canonical chart-close clock for historical contexts, including
+synthetic vertices. Realtime contexts retain each observation's event clock.
+Both bindings expose the additive
 capability and observation limit. Batch/append scheduling does not by itself
 qualify a persistent same-bar streaming lifecycle.
 
@@ -66,6 +67,18 @@ Regression controls cover all five OHLCV fields, both history-flag settings,
 batch/append reconstruction and rejected-input retry. Candidate-01 remains
 preserved with its confirmed failure; candidate-02 qualifies the repaired source.
 These observations do not qualify arbitrary realtime orders or exchange feeds.
+
+The additional `history-mtf-02` reference retains twelve observations from three
+completed 10-minute bars. Chart prices vary across their four synthetic vertices,
+while same-symbol lower-timeframe scalars, foreign same/higher-timeframe scalars
+and foreign lower-timeframe array lengths remain canonical within each bar.
+An incomplete current bar is retained separately and excluded from assertions.
+This exposed a distinct external-update guard mismatch: historical ticks used
+the synthetic event timestamp instead of the canonical chart close. The guard
+now uses canonical visibility for historical contexts and actual event times
+for realtime contexts. Rust and installed Python controls compare streamed
+requested values against independent native historical execution and retain
+future-bar/realtime rejection and atomic retry tests.
 
 Official semantics were reviewed against the current [declaration statements](https://www.tradingview.com/pine-script-docs/language/declaration-statements/),
 [execution model](https://www.tradingview.com/pine-script-docs/language/execution-model/)

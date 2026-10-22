@@ -255,6 +255,102 @@ fn rejected_stream_input_preserves_observations_and_can_be_retried() {
 }
 
 #[test]
+fn historical_requested_contexts_match_native_values_at_every_synthetic_vertex() {
+    let source = "//@version=6\nstrategy(\"requested vertices\",calc_on_every_history_tick=true)\nvarip int n=0\nn+=1\nx=request.security(\"B\",\"1\",close)\nvarip array<float> seen=array.new_float(4,na)\narray.set(seen,(n-1)%4,x)\nplot(array.get(seen,0))\nplot(array.get(seen,1))\nplot(array.get(seen,2))\nplot(array.get(seen,3))";
+    let hir = program(source);
+    let tf = RequestTimeframe::parse("1").unwrap();
+    let environment = |data| {
+        RequestEnvironment::new(
+            ChartContext::new("A", tf.clone()),
+            Arc::new(
+                InMemoryRequestDataProvider::from_streams([(
+                    RequestKey::new("B", tf.clone()),
+                    data,
+                )])
+                .unwrap(),
+            ),
+        )
+    };
+    let (bars, _, groups) = inputs(ExternalBarState::Historical);
+    let requested = vec![bar(0, 100.0), bar(60000, 200.0)];
+    let mut native =
+        HistoricalRuntime::with_request_environment(&hir, environment(requested.clone()));
+    let mut stream = HistoricalRuntime::with_request_environment(&hir, environment(vec![]))
+        .with_external_schedule(vec![], vec![], ExternalExecutionOptions::default())
+        .unwrap();
+    assert_eq!(stream.initialize_external_stream_dataset(&bars).unwrap(), 0);
+    for (index, (canonical, passes)) in bars.iter().zip(groups).enumerate() {
+        native.append_bar(*canonical).unwrap();
+        stream
+            .begin_external_bar(*canonical, ExternalBarState::Historical)
+            .unwrap();
+        for (ordinal, mut pass) in passes.into_iter().enumerate() {
+            pass.evaluation.request_updates = Some(if ordinal == 0 {
+                vec![ObservedRequestUpdate {
+                    symbol: "B".to_owned(),
+                    timeframe: "1".to_owned(),
+                    bar: requested[index],
+                    kind: pine_runtime::BarUpdateKind::Confirmed,
+                    available_at_ms: canonical.time + 59999,
+                }]
+            } else {
+                vec![]
+            });
+            stream.observe_external_bar(pass).unwrap();
+        }
+        stream.commit_external_bar().unwrap();
+    }
+    assert_eq!(stream.result().plots, native.result().plots);
+    for plot in &stream.result().plots {
+        assert_eq!(
+            plot.values
+                .iter()
+                .map(|value| value.as_f64())
+                .collect::<Vec<_>>(),
+            vec![Some(100.0), Some(200.0)]
+        );
+    }
+}
+
+#[test]
+fn historical_reveal_rejects_later_chart_data_and_realtime_keeps_observation_time() {
+    let hir = program(
+        "//@version=6\nstrategy(\"clock guards\",calc_on_every_history_tick=true,calc_on_every_tick=true)\nplot(request.security(\"B\",\"1\",close))",
+    );
+    let tf = RequestTimeframe::parse("1").unwrap();
+    for state in [ExternalBarState::Historical, ExternalBarState::Realtime] {
+        let provider =
+            InMemoryRequestDataProvider::from_streams([(RequestKey::new("B", tf.clone()), vec![])])
+                .unwrap();
+        let mut stream = HistoricalRuntime::with_request_environment(
+            &hir,
+            RequestEnvironment::new(ChartContext::new("A", tf.clone()), Arc::new(provider)),
+        )
+        .with_external_schedule(vec![], vec![], ExternalExecutionOptions::default())
+        .unwrap();
+        let (bars, _, mut groups) = inputs(state);
+        stream.begin_external_bar(bars[0], state).unwrap();
+        let before = public_runtime_result_json(&stream.result());
+        let mut pass = groups.remove(0).remove(0);
+        let requested_time = if state == ExternalBarState::Historical {
+            60000
+        } else {
+            0
+        };
+        pass.evaluation.request_updates = Some(vec![ObservedRequestUpdate {
+            symbol: "B".to_owned(),
+            timeframe: "1".to_owned(),
+            bar: bar(requested_time, 100.0),
+            kind: pine_runtime::BarUpdateKind::Confirmed,
+            available_at_ms: requested_time + 59999,
+        }]);
+        assert!(stream.observe_external_bar(pass).is_err());
+        assert_eq!(public_runtime_result_json(&stream.result()), before);
+        assert!(!stream.is_execution_poisoned());
+    }
+}
+
+#[test]
 fn observed_request_transactions_between_passes_are_not_reapplied_by_pair_validation() {
     let hir = program(
         "//@version=6\nstrategy(\"feed\",calc_on_every_tick=true)\nvarip int n=0\nn+=1\nplot(n)\nplot(request.security(\"B\",\"1\",close))",

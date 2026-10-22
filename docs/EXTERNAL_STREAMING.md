@@ -17,6 +17,14 @@ headers contain the current observed tuple. Realtime last-bar metadata advances
 with each observed chart bar; a complete batch does not expose a later chart
 boundary early. Static request roots also follow the observed realtime tuple.
 
+Historical requested updates may reveal data through the canonical chart close
+at every synthetic vertex. This preserves ordinary historical merge semantics,
+including completed lower-timeframe arrays, while chart/account observations
+remain progressive. Data beyond that chart boundary is rejected. Realtime
+updates remain limited to the actual observation time. Bounded fresh TradingView
+samples cover completed bars with same/lower/higher requested contexts; they do
+not qualify arbitrary feeds or scripts.
+
 Ordinary variables, referenced heaps, TA and price flow roll back between
 observations; varip persists. Market confirmation does not end the input group:
 explicit closing-fill feedback can still arrive before the host commits. The

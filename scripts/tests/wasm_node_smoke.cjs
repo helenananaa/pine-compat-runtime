@@ -76,7 +76,7 @@ require('./wasm_alert_templates.cjs')(process.argv[2]);
 for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript', 'packageVersion']) {
   assert.equal(typeof pine[name], 'function', `missing Wasm export ${name}`);
 }
-assert.equal(pine.packageVersion(), '0.3.2');
+assert.equal(pine.packageVersion(), '0.3.3');
 
 const source = '//@version=6\nindicator("node smoke")\nplot(close * 2)\n';
 const bars = [

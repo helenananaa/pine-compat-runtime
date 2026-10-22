@@ -387,7 +387,11 @@ impl super::BrokerState {
         if room <= 0.0 {
             None
         } else if qty.is_finite() && qty > 0.0 {
-            Some(qty.min(room))
+            Some(if qty > room {
+                self.quantity_rules.explicit_quantity(room)
+            } else {
+                qty
+            })
         } else {
             Some(qty)
         }

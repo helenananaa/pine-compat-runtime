@@ -24,8 +24,10 @@ impl HistoricalRuntime<'_> {
         } else {
             close
         };
-        let price = price * self.strategy_broker.quote_to_account_rate();
-        let scale = self.request_environment.chart().configured_quantity_scale();
+        let price = price
+            * self.request_environment.chart().point_value()
+            * self.strategy_broker.quote_to_account_rate();
+        let scale = self.request_environment.chart().quantity_rules();
         let qty = match self.program.strategy_settings.default_qty {
             Some(StrategyDefaultQuantity::PercentOfEquity(percent))
                 if equity.is_finite() && price.is_finite() && price != 0.0 =>

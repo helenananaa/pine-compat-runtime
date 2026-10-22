@@ -48,7 +48,7 @@ impl HistoricalRuntime<'_> {
             }
             crate::strategy::explicit_quantity_on_chart_grid(
                 quantity,
-                self.request_environment.chart().configured_quantity_scale(),
+                self.request_environment.chart().quantity_rules(),
             )
         } else {
             let bar = self

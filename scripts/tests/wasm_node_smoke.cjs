@@ -105,7 +105,7 @@ assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
 const requirements = JSON.parse(program.hostRequirements());
-assert.equal(requirements.schemaVersion, 3);
+assert.equal(requirements.schemaVersion, 4);
 {
   const mergeProgram=pine.compileScript('//@version=6\nindicator("merge inventory")\ng=barmerge.gaps_on\nplot(request.security("OTHER","M",close,gaps=g,lookahead=barmerge.lookahead_on))\n');
   const report=JSON.parse(mergeProgram.hostRequirements());
@@ -513,7 +513,7 @@ for (const newline of ['\n', '\r\n']) {
   compiled.free();
 }
 
-for (const pointValue of [0, -1, 0.5, 5, 1.0000000001, true, null, '1']) {
+for (const pointValue of [0, -1, true, null, '1']) {
   assert.throws(() => pine.runScriptCsvWithRequestBars(source, bars, JSON.stringify({$chart: {pointValue}})), /pointValue/);
 }
 
@@ -1190,10 +1190,6 @@ plot(close)
   }
 }
 
-console.log(
-  'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
-);
-
 // Method object writes and Pine extend values survive the public WASM routes.
 {
   const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,10,10,10,10,1\n120000,10,10,10,10,1\n';
@@ -1247,3 +1243,14 @@ plot(extend.right=="r"?1:0)
     assert.throws(()=>pine.runScriptCsv(invalid,csv),/invalid extend value/);
   }
 }
+
+// Contract metadata is a capability separate from the package version.
+assert.equal(pine.contractMetadataSchemaVersion(), 1);
+for (const pointValue of [0.01, 0.5, 5, 50]) {
+  const pointSource = '//@version=6\nindicator("Contract metadata")\nplot(syminfo.pointvalue)\nplot(syminfo.mincontract)';
+  const output = JSON.parse(pine.runScriptCsvWithRequestBars(pointSource, bars,
+    JSON.stringify({$chart:{pointValue,quantityStep:'0.25',minContract:'2'}})));
+  assert.equal(output.plots[0].values[0], pointValue);
+  assert.equal(output.plots[1].values[0], 2);
+}
+console.log('wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions');

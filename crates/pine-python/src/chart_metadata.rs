@@ -13,17 +13,21 @@ pub(crate) fn parse_chart_metadata(
         .cast::<PyDict>()
         .map_err(|_| PyValueError::new_err("$chart must be a dict with minMove and priceScale"))?;
     let has_quantity_precision = grid.contains("quantityPrecision")?;
+    let has_quantity_step = grid.contains("quantityStep")?;
+    let has_min_contract = grid.contains("minContract")?;
     let has_point_value = grid.contains("pointValue")?;
     let has_currency = grid.contains("currency")?;
     if grid.len()
         != 2 + usize::from(has_quantity_precision)
+            + usize::from(has_quantity_step)
+            + usize::from(has_min_contract)
             + usize::from(has_point_value)
             + usize::from(has_currency)
         || !grid.contains("minMove")?
         || !grid.contains("priceScale")?
     {
         return Err(PyValueError::new_err(
-            "$chart requires minMove and priceScale, optionally quantityPrecision, pointValue and currency; use chart_symbol/chart_timeframe for identity",
+            "$chart requires minMove and priceScale, optionally quantityPrecision, quantityStep, minContract, pointValue and currency; use chart_symbol/chart_timeframe for identity",
         ));
     }
     let integer = |key: &str| -> PyResult<u32> {
@@ -74,6 +78,24 @@ pub(crate) fn parse_chart_metadata(
         chart = chart
             .with_quantity_precision(precision)
             .map_err(PyValueError::new_err)?;
+    }
+    for (key, present) in [
+        ("quantityStep", has_quantity_step),
+        ("minContract", has_min_contract),
+    ] {
+        if present {
+            let value = grid
+                .get_item(key)?
+                .expect("checked key")
+                .extract::<String>()
+                .map_err(|_| PyValueError::new_err(format!("{key} must be a decimal string")))?;
+            chart = if key == "quantityStep" {
+                chart.with_quantity_step(&value)
+            } else {
+                chart.with_min_contract(&value)
+            }
+            .map_err(|error| PyValueError::new_err(format!("{key}: {error}")))?;
+        }
     }
     Ok(chart)
 }

@@ -13,6 +13,8 @@ struct Metadata {
     min_move: u32,
     price_scale: u32,
     quantity_precision: Option<u32>,
+    quantity_step: Option<String>,
+    min_contract: Option<String>,
     point_value: Option<f64>,
     currency: Option<String>,
 }
@@ -38,6 +40,16 @@ pub fn symbol_contexts_from_json(json: &str) -> Result<Vec<ChartContext>, String
             }
             if let Some(value) = metadata.point_value {
                 chart = chart.with_point_value(value).map_err(str::to_owned)?;
+            }
+            if let Some(value) = metadata.quantity_step {
+                chart = chart
+                    .with_quantity_step(&value)
+                    .map_err(|error| format!("quantityStep: {error}"))?;
+            }
+            if let Some(value) = metadata.min_contract {
+                chart = chart
+                    .with_min_contract(&value)
+                    .map_err(|error| format!("minContract: {error}"))?;
             }
             if let Some(currency) = metadata.currency {
                 chart = chart.with_currency(currency).map_err(str::to_owned)?;

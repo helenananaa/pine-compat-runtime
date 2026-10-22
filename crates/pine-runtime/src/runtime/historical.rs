@@ -414,8 +414,8 @@ impl<'a> HistoricalRuntime<'a> {
             strategy_settings.margin_short,
             program.strategy_settings.pyramiding_limit,
         )
-        .with_quantity_scale(request_environment.chart().quantity_scale())
-        .with_configured_quantity_scale(request_environment.chart().configured_quantity_scale())
+        .with_point_value(request_environment.chart().point_value())
+        .with_quantity_rules(request_environment.chart().quantity_rules())
         .with_price_tick(request_environment.chart().min_tick())
         .with_close_entries_rule(program.strategy_settings.close_entries_rule)
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);

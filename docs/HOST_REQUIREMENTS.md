@@ -25,7 +25,7 @@ pine-compat requirements script.pine --library-source Author/Library/1=library.p
 ```
 
 An unsupported script returns a nonzero status with the existing analysis JSON
-diagnostics on stderr. A valid report on stdout uses its own schema version 3;
+diagnostics on stderr. A valid report on stdout uses its own schema version 4;
 it is separate from analysis schema 5 and the current runtime result schema 9.
 
 Python uses the compiled program, including libraries supplied to compilation:
@@ -45,8 +45,11 @@ program.free();
 
 ## Contract and interpretation
 
-Local batch 31 adds schema 3 currency-rate discovery. Strategies expose
-host-supplied account conversion with unit point value; `currencyRates` reports
+Schema 4 adds linear contract metadata discovery and distinguishes the default
+point value from the host's configured multiplier. See
+[LINEAR_CONTRACT_METADATA.md](LINEAR_CONTRACT_METADATA.md) for exact decimal
+quantity steps and independent minima. Schema 3 added currency-rate discovery.
+Strategies expose host-supplied account conversion; `currencyRates` reports
 pair selectors, effective-time policy and missing-input behavior. Historical
 and realtime queries use the chart-bar opening context. Currency names in Pine
 are case insensitive; provider keys are uppercase. No data acquisition is
@@ -76,10 +79,11 @@ external-input obligations merely because their text appears in a library.
 | --- | --- |
 | `chart.bars` | Supply standard OHLCV chart bars through the chosen execution API. |
 | `chart.priceGrid` | Supply positive integer minMove/priceScale for the intended instrument; no exchange lookup occurs. |
-| `chart.quantityPrecision` | Decimal-power minimum-contract profile, integer precision 0 through 9. This is not arbitrary lot-step rounding. |
+| `chart.quantityPrecision` | Legacy decimal-power quantity profile, integer precision 0 through 9. |
+| `chart.quantityStep`, `chart.minContract` | Optional exact decimal increment and independent minimum, advertised by contract metadata schema 1. |
 | `chart.symbolMetadata` | Metadata names read by the executable HIR. Other context-dependent behavior, such as broker fills and chart time boundaries, can still need chart context without a direct metadata read. |
 | `chart.defaults` | Actual synthetic chart symbol/timeframe/grid/quantity defaults, fixed currency/timezone/point value, and explicit absence of symbol lookup. These are defaults, not inferred metadata for the supplied bars. |
-| `account` | Null for indicators. Strategies disclose linear accounting with host-supplied currency conversion and unit point value; nonunit contract multipliers and nonstandard-chart broker profiles remain unsupported. |
+| `account` | Null for indicators. Strategies disclose linear accounting with host-supplied multiplier and currency conversion. `defaultPointValue` is the synthetic fallback; inverse contracts and nonstandard-chart broker profiles remain unsupported. |
 | `currencyRates` | Optional effective daily currency input contract with account-conversion and request pair selectors. An unsupplied foreign pair is an input error. |
 | `execution.clock` | `explicitTimestampWhenEvaluated` means a reached `timenow` read needs an explicit host execution timestamp. `notUsed` means the inventory found no read. A skipped branch does not become a runtime requirement. |
 | `execution.realtimeUpdates` | The host supplies ordered forming replacements and confirmations; the core implements their state semantics. Rust/Python also accept an optional opening-update marker for attachment to an already open bar; omission retains first-observation inference. This is not a scheduler or market feed. |
@@ -151,19 +155,13 @@ silently import an external request with a caller-origin span.
 
 ## Explicit point-value validation
 
-The host may declare `pointValue` explicitly: Rust
-`ChartContext::with_point_value(1.0)`, CLI `--chart-point-value 1`, or
-Python/WASM `$chart.pointValue = 1`. Python retains required minMove/priceScale.
-The accepted unit value preserves all existing prices, quantities, fees and
-accounting. Omission retains the unit default. Non-unit values, non-finite
-numbers and invalid types fail configuration parsing before Pine execution,
-with an explicit pointValue/unsupported-contract-multiplier error.
-
-This validates the supported profile; it does not implement contract multipliers
-or infer currencies/inverse-contract accounting from a symbol name. Quantity
-precision and point value describe different properties: fractional quantity
-precision remains supported with unit point value. No numerical tolerances,
-conditional execution rules or optional data fallbacks change.
+The host may declare a finite positive linear `pointValue` explicitly through
+Rust `ChartContext::with_point_value`, CLI `--chart-point-value`, or Python/WASM
+`$chart.pointValue`. Python retains required minMove/priceScale. Omission retains
+the unit default. Invalid/nonfinite/zero/negative inputs fail before execution.
+Metadata is never inferred from a symbol name. Quantity precision, increment,
+minimum and contract value remain separate properties; see the contract document
+above for valuation, bounded transport and current qualification limits.
 
 ## Host integration sequence
 
@@ -185,7 +183,7 @@ Defaults (synthetic, not inferred from a symbol name):
 - chart symbol `NASDAQ:AAPL`, timeframe `1`, minMove 1, priceScale 100,
   quantityPrecision 0, currency `USD`, point value `1`, timezone `Etc/UTC`;
 - indicator reports have a null account contract; strategies disclose
-  linear accounting with unit point value and host-supplied foreign rates when needed;
+  linear accounting with host-supplied point value and foreign rates when needed;
 - drawing objects use the existing 50-default / 500-max (100 for polylines)
   oldest-active eviction; series history is capped at 1,000,000 committed
   values; `while` loops stop at 100,000 iterations; arrays at 100,000
@@ -197,11 +195,12 @@ manylinux2014 `manylinux_2_17_x86_64` candidate wheel. The latter passed auditwh
 and 715 installed Python tests; see CANDIDATE_ACCEPTANCE.md for evidence.
 macOS, musllinux, ARM, and free-threaded CPython are out of this matrix.
 
-Current local account/data range: standard candles, host-supplied price grid,
-unit point value and explicit effective currency rates for foreign pairs.
-Nonunit contract multipliers and nonstandard charts remain unsupported and
-fail closed. Historical rc.1 release evidence above remains limited to its
-original same-currency profile.
+Current development account/data range: standard candles, host-supplied price
+grid, positive linear point value, bounded decimal quantity rules and explicit
+effective currency rates for foreign pairs. Inverse contracts and nonstandard
+charts remain unsupported. Historical rc.1 release evidence above remains
+limited to its original same-currency/unit-point profile; current contract
+candidate evidence is tracked separately.
 
 Dynamic input limits: `input.*` overrides apply to compiled call-site IDs from
 the current compilation. Runtime-expression request arguments stay unresolved

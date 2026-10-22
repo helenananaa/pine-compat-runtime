@@ -337,6 +337,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     external::register_schemas(module)?;
     module.add(
+        "CONTRACT_METADATA_SCHEMA_VERSION",
+        pine_runtime::CONTRACT_METADATA_SCHEMA_VERSION,
+    )?;
+    module.add(
         "SYMBOL_METADATA_SCHEMA_VERSION",
         pine_runtime::SYMBOL_METADATA_SCHEMA_VERSION,
     )?;

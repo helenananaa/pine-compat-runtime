@@ -22,7 +22,7 @@ fn snapshot(signed_size: f64) -> PositionSnapshot {
     PositionSnapshot {
         signed_size,
         avg_price: 100.0,
-        quote_to_account_rate: 1.0,
+        point_to_account_value: 1.0,
     }
 }
 

@@ -389,11 +389,18 @@ impl<'a> HistoricalRuntime<'a> {
         let qty = if explicit_qty.is_some() {
             crate::strategy::explicit_quantity_on_chart_grid(
                 qty,
-                self.request_environment.chart().configured_quantity_scale(),
+                self.request_environment.chart().quantity_rules(),
             )
         } else {
             qty
         };
+        if !qty.is_finite() {
+            return Err(RuntimeError {
+                message:
+                    "strategy.entry quantity is not representable on the supplied quantity grid"
+                        .to_owned(),
+            });
+        }
         // A positive explicit request can truncate to zero opening contracts.
         // Keep it pending: an opposite position still contributes the closing
         // transaction when this entry becomes eligible to fill.
@@ -532,11 +539,18 @@ impl<'a> HistoricalRuntime<'a> {
         let qty = if explicit_qty.is_some() {
             crate::strategy::explicit_quantity_on_chart_grid(
                 qty,
-                self.request_environment.chart().configured_quantity_scale(),
+                self.request_environment.chart().quantity_rules(),
             )
         } else {
             qty
         };
+        if !qty.is_finite() {
+            return Err(RuntimeError {
+                message:
+                    "strategy.order quantity is not representable on the supplied quantity grid"
+                        .to_owned(),
+            });
+        }
         if qty == 0.0 {
             return Ok(PineValue::Void);
         }

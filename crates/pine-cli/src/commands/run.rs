@@ -548,6 +548,17 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     .with_quantity_precision(precision)
                     .map_err(str::to_owned)?;
             }
+            "--chart-quantity-step" | "--chart-min-contract" => {
+                let key = args[index].as_str();
+                index += 1;
+                let value = args.get(index).ok_or_else(usage)?;
+                options.chart_context = if key == "--chart-quantity-step" {
+                    options.chart_context.with_quantity_step(value)
+                } else {
+                    options.chart_context.with_min_contract(value)
+                }
+                .map_err(str::to_owned)?;
+            }
             "--chart-point-value" => {
                 index += 1;
                 let value = args

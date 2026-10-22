@@ -13,9 +13,9 @@ fn closed_trade_profit_percent(
     qty: f64,
     entry_commission: f64,
     profit: f64,
-    rate: f64,
+    point_to_account_value: f64,
 ) -> f64 {
-    let denominator = entry_price * qty.abs() * rate + entry_commission;
+    let denominator = entry_price * qty.abs() * point_to_account_value + entry_commission;
     if !profit.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
         return 0.0;
     }
@@ -92,7 +92,7 @@ impl BrokerState {
                 fill.qty.signum(),
                 fill.entry_fill.entry_commission / quantity,
                 (fill.exit_price, fill.exit_price),
-                self.quote_to_account_rate,
+                self.contract_point_value_to_account(),
             );
         }
         self.record_window_realized_pnl(fill.profit);
@@ -118,7 +118,7 @@ impl BrokerState {
                 fill.qty,
                 fill.entry_fill.entry_commission,
                 fill.profit,
-                self.quote_to_account_rate,
+                self.contract_point_value_to_account(),
             ),
             max_runup: extrema.runup * quantity,
             max_runup_percent: extrema.runup_percent,

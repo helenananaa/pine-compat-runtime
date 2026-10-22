@@ -22,7 +22,7 @@ impl BrokerState {
         let snapshot = PositionSnapshot {
             signed_size: self.position_size,
             avg_price: self.avg_price,
-            quote_to_account_rate: self.quote_to_account_rate,
+            point_to_account_value: self.contract_point_value_to_account(),
         };
         let request = FillRequest {
             order_key: InternalOrderKey(0),
@@ -55,7 +55,7 @@ impl BrokerState {
                 true
             }
             Err(FillCalcError::NotSameSide) => {
-                self.cash -= self.account_value(signed_quantity * fill_price) + entry_commission;
+                self.cash -= self.contract_value(signed_quantity * fill_price) + entry_commission;
                 self.record_open_fill(
                     fill,
                     fill_price,
@@ -238,7 +238,7 @@ impl BrokerState {
         let snapshot = PositionSnapshot {
             signed_size: self.position_size,
             avg_price: self.avg_price,
-            quote_to_account_rate: self.quote_to_account_rate,
+            point_to_account_value: self.contract_point_value_to_account(),
         };
         let split = match super::fill_transition::split_fill_quantities(
             snapshot.signed_size,
@@ -300,7 +300,7 @@ impl BrokerState {
         let close_commission = transition.commission - open_commission;
         let open_cash = match transition.opened_trade.as_ref() {
             Some(opened) => {
-                -(self.account_value(
+                -(self.contract_value(
                     opened.direction.signed_quantity(opened.quantity) * opened.price,
                 ) + opened.commission)
             }
@@ -325,7 +325,8 @@ impl BrokerState {
                 };
                 let commission = allocation.entry_commission + allocated_exit;
                 let signed_qty = allocation.direction.signed_quantity(allocation.quantity);
-                let profit = self.account_value((fill_price - allocation.entry_price) * signed_qty)
+                let profit = self
+                    .contract_value((fill_price - allocation.entry_price) * signed_qty)
                     - commission;
                 closed_entry_commission += allocation.entry_commission;
                 self.record_closed_trade_fill(ClosedTradeFill {

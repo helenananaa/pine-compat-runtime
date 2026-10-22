@@ -86,15 +86,16 @@ pub use output::strategy_alert_templates::{
 };
 pub use output::view::*;
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
+pub(crate) use request::QuantityRules;
 pub(crate) use request::RequestCacheKey;
 pub use request::{
     BAR_CALENDAR_SCHEMA_VERSION, BarCalendar, BarCalendarError, BarCalendarRegistry,
-    BarTimeInterval, CURRENCY_RATE_SCHEMA_VERSION, ChartContext, CurrencyRateError,
-    CurrencyRateFrame, CurrencyRateProvider, InMemoryCurrencyRateProvider,
-    InMemoryRequestDataProvider, NoCurrencyRateProvider, NoRequestDataProvider, RequestDataError,
-    RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
-    SYMBOL_METADATA_SCHEMA_VERSION, bar_calendars_from_json, currency_rates_from_json,
-    symbol_contexts_from_json, validate_requested_bars,
+    BarTimeInterval, CONTRACT_METADATA_SCHEMA_VERSION, CURRENCY_RATE_SCHEMA_VERSION, ChartContext,
+    CurrencyRateError, CurrencyRateFrame, CurrencyRateProvider, InMemoryCurrencyRateProvider,
+    InMemoryRequestDataProvider, NoCurrencyRateProvider, NoRequestDataProvider, QuantityStep,
+    RequestDataError, RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe,
+    RequestTimeframeError, SYMBOL_METADATA_SCHEMA_VERSION, bar_calendars_from_json,
+    currency_rates_from_json, symbol_contexts_from_json, validate_requested_bars,
 };
 pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::HistoricalDataset;

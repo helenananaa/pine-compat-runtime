@@ -5064,6 +5064,42 @@ fn reservation_resolver_clamps_fixed_quantity_to_available_quantity() {
 }
 
 #[test]
+fn exact_grid_keeps_requested_exit_quantity_separate_from_reserved_remainder() {
+    let mut broker = broker_with_long_entry();
+    broker.quantity_rules =
+        crate::ChartContext::new("A", crate::RequestTimeframe::parse("1").unwrap())
+            .with_quantity_step(".25")
+            .unwrap()
+            .quantity_rules();
+
+    assert_eq!(
+        broker.resolve_exit_quantity_request_for_available(
+            ExitQuantityRequest::Fixed(1.49),
+            2.,
+            0.75,
+        ),
+        Some((PendingExitQuantity::Fixed(1.25), 0.75)),
+    );
+    assert_eq!(
+        broker.resolve_exit_quantity_request_for_available(
+            ExitQuantityRequest::Percent(75.),
+            2.,
+            0.75,
+        ),
+        Some((PendingExitQuantity::Fixed(1.5), 0.75)),
+    );
+    assert_eq!(
+        broker.resolve_exit_quantity_request_for_available(
+            ExitQuantityRequest::Percent(150.),
+            2.,
+            2.,
+        ),
+        Some((PendingExitQuantity::Fixed(3.), 2.)),
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn reservation_resolver_clamps_percent_quantity_to_available_quantity() {
     let mut broker = broker_with_long_entry();
 

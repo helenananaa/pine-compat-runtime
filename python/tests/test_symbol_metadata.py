@@ -95,7 +95,7 @@ plot(request.security("B","2",syminfo.mintick))
 @pytest.mark.parametrize("metadata", [[], {"": {"minMove": 1, "priceScale": 4}},
     {"B": {"minMove": True, "priceScale": 4}}, {"B": {"minMove": 0, "priceScale": 4}},
     {"B": {"minMove": 1, "priceScale": 4, "typo": 3}},
-    {"B": {"minMove": 1, "priceScale": 4, "pointValue": 2}},
+    {"B": {"minMove": 1, "priceScale": 4, "pointValue": 0}},
     {"B": {"minMove": 1, "priceScale": 4, "quantityPrecision": 10}},
     {"B": {"minMove": 1, "priceScale": 4, "currency": "eur"}}])
 def test_invalid_symbol_metadata_is_rejected_before_execution(metadata):

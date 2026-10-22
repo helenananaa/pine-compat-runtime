@@ -12,6 +12,23 @@ impl HistoricalRuntime<'_> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<usize, RuntimeError> {
+        self.prepare_context_windows_policy(bars, execution_times, true)
+    }
+
+    pub(crate) fn prepare_context_windows_without_discovery(
+        &mut self,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<usize, RuntimeError> {
+        self.prepare_context_windows_policy(bars, execution_times, false)
+    }
+
+    fn prepare_context_windows_policy(
+        &mut self,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+        allow_discovery: bool,
+    ) -> Result<usize, RuntimeError> {
         if self.bars != 0 || self.context_windows.prepared {
             return Ok(0);
         }
@@ -117,6 +134,9 @@ impl HistoricalRuntime<'_> {
                 }
                 pending.remove(&call.id);
             }
+        }
+        if !allow_discovery && !pending.is_empty() {
+            return Err(RuntimeError { message: "external streaming dataset requires statically resolved request windows; dynamic discovery needs observed account feedback".to_owned() });
         }
         // Discovery uses disposable Pine/broker/output state. Preserve context
         // reservations across restarts, never partially executed Pine state.

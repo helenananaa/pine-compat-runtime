@@ -93,6 +93,13 @@ pub struct ExternalOrderIntent {
     pub metadata: Option<ExternalOrderMetadata>,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ExternalOpenBar {
+    pub canonical: crate::Bar,
+    pub bar_state: ExternalBarState,
+    pub started: bool,
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct ExternalExecution {
     pub options: ExternalExecutionOptions,
@@ -100,6 +107,7 @@ pub(crate) struct ExternalExecution {
     pub passes: Option<Vec<Vec<ExternalPass>>>,
     pub contexts: Option<Vec<Vec<ExternalPassContext>>>,
     pub active_pass: Option<(usize, ExternalPass)>,
+    pub stream: Option<ExternalOpenBar>,
     pub intents: Vec<ExternalOrderIntent>,
     pub error: Option<String>,
     pub risk_configuration: Option<crate::StrategyRiskConfiguration>,
@@ -233,6 +241,7 @@ impl HistoricalRuntime<'_> {
             passes,
             contexts,
             active_pass: None,
+            stream: None,
             intents: vec![],
             error: None,
             risk_configuration: (!configuration.rules.is_empty()).then_some(configuration),
@@ -241,7 +250,18 @@ impl HistoricalRuntime<'_> {
         Ok(self)
     }
 
-    fn validate_external_feedback(
+    pub(crate) fn validate_external_feedback(
+        &self,
+        frames: &[ExternalAccountFrame],
+        passes: Option<&[Vec<ExternalPass>]>,
+        contexts: Option<&[Vec<ExternalPassContext>]>,
+        options: ExternalExecutionOptions,
+    ) -> Result<(), RuntimeError> {
+        self.validate_external_feedback_shape(frames, passes, contexts, options)?;
+        self.validate_external_request_transcript(passes, contexts)
+    }
+
+    pub(crate) fn validate_external_feedback_shape(
         &self,
         frames: &[ExternalAccountFrame],
         passes: Option<&[Vec<ExternalPass>]>,
@@ -266,7 +286,6 @@ impl HistoricalRuntime<'_> {
         if let Some(contexts) = contexts {
             self.validate_external_schedule(frames, passes, contexts, options)?;
         }
-        self.validate_external_request_transcript(passes, contexts)?;
         if let Some(groups) = &passes {
             let limit = if contexts.is_some()
                 && (settings.calc_on_every_tick || settings.calc_on_every_history_tick)
@@ -385,6 +404,11 @@ impl HistoricalRuntime<'_> {
             .external_execution
             .as_ref()
             .ok_or_else(|| external_error("external mode is not active"))?;
+        if state.stream.is_some() {
+            return Err(external_error(
+                "commit the open external bar before appending",
+            ));
+        }
         if state.contexts.is_some() != contexts.is_some() {
             return Err(external_error("external schedule mode changed"));
         }

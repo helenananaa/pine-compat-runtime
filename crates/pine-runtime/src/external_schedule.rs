@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 pub const EXTERNAL_SCHEDULE_SCHEMA_VERSION: u32 = 1;
 pub const EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_STREAM_SCHEMA_VERSION: u32 = 1;
 pub const MAX_STRATEGY_OBSERVATIONS_PER_BAR: u32 = 100_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]

@@ -195,7 +195,7 @@ impl HistoricalRuntime<'_> {
         Ok(())
     }
 
-    pub(super) fn validate_external_request_transcript(
+    pub(crate) fn validate_external_request_transcript(
         &self,
         passes: Option<&[Vec<super::ExternalPass>]>,
         contexts: Option<&[Vec<crate::ExternalPassContext>]>,

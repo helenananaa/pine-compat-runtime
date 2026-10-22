@@ -1,0 +1,58 @@
+# External per-observation execution
+
+`EXTERNAL_STREAM_SCHEMA_VERSION=1` adds a persistent same-bar lifecycle in Rust
+and Python. The runtime evaluates only newly submitted observations. The
+embedding host remains responsible for orders, matching, accounts, event clocks
+and recording the input transcript. No concrete host service is part of Core.
+
+Create a scheduled external evaluator, open a chart bar, submit its scheduled
+observations, then commit its history once. Rust exposes `begin_external_bar`,
+`observe_external_bar` and `commit_external_bar`; Python `ExternalSession`
+exposes `begin_bar`, `observe` and `commit_bar`. Bar and event times use Core
+milliseconds. Each observation carries its actual account and explicit context.
+
+Historical opening headers contain canonical OHLCV. Historical observations stay
+inside that envelope and the confirmed observation equals it. Realtime opening
+headers contain the current observed tuple. Realtime last-bar metadata advances
+with each observed chart bar; a complete batch does not expose a later chart
+boundary early. Static request roots also follow the observed realtime tuple.
+
+Ordinary variables, referenced heaps, TA and price flow roll back between
+observations; varip persists. Market confirmation does not end the input group:
+explicit closing-fill feedback can still arrive before the host commits. The
+commit stores Pine series once. It does not perform Host matching or synthesize
+account feedback. Existing observation/pass and fill-loop budgets still apply.
+
+For a known historical dataset, Rust
+`initialize_external_stream_dataset` or Python `initialize_history` plans its
+endpoint and static request windows before any chart execution. It returns the
+input prefix skip; subsequent cursor and intent indices are relative to the
+retained dataset. No future account frames are supplied or invented. Invalid
+planning input preserves the original evaluator. Unresolved dynamic window
+discovery is rejected: its observed-feedback/rebase path still needs host
+integration, rather than running a disposable native broker as a substitute.
+
+Python observations return only newly emitted intents with `intent_base`,
+`bar_cursor`, `bar_open` and `stream_schema`. `snapshot=False` omits the full plot
+snapshot. `commit_bar(snapshot=False)` returns its cursor/empty intent delta.
+`snapshot()` explicitly retrieves complete output; `include_intents=False`
+avoids resending previous intents. These controls bound per-message history
+serialization; they do not themselves qualify long-session memory or latency.
+
+Invalid begin/observation/commit input is retryable. Execution failures poison
+the evaluator and keep the failure state for inspection; Python refuses further
+output snapshots. Legacy append keeps its existing failure policy. An append
+attempt while a streaming bar is open is rejected before entering that route.
+Committed bars can still use the legacy append API. A new evaluator reconstructs
+from a host-recorded transcript; no external broker settlement is repeated by
+Core. Recording, restart coordination and durable ledger recovery remain host
+responsibilities.
+
+Development checks cover complete/streamed equivalence, rollback, arrays,
+authoritative feedback, closing fills, requested transactions between passes,
+clone continuation, rejected-input retry, execution failure and 2,048
+observations. Independent generic realtime controls expose and lock the repaired
+last-bar boundary behavior. Rust/Python targeted receipts do not substitute for
+the combined full gate, application clock drivers, resource qualification or a
+packaged application. The WASM surface exposes the capability number; its
+existing JavaScript binding still has no external-account session API.

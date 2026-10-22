@@ -11,6 +11,7 @@ if (process.argv.length !== 3) {
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
 assert.equal(pine.externalScheduleSchemaVersion(), 1);
+assert.equal(pine.externalStreamSchemaVersion(), 1);
 assert.equal(pine.externalSizingSchemaVersion(), 1);
 assert.equal(pine.externalOrderMetadataSchemaVersion(), 1);
 require('./wasm_history_ticks.cjs')(process.argv[2]);

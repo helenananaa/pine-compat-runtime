@@ -20,6 +20,10 @@ pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
             pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION,
         ),
         (
+            "EXTERNAL_STREAM_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_STREAM_SCHEMA_VERSION,
+        ),
+        (
             "EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION",
             pine_runtime::EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION,
         ),
@@ -207,6 +211,68 @@ impl ExternalSession {
             scheduled,
         })
     }
+    fn ensure_usable(&self) -> PyResult<()> {
+        if self.failed || self.runtime.is_execution_poisoned() {
+            return Err(PyValueError::new_err(
+                "E_RUNTIME_POISONED: external session failed; create a new session",
+            ));
+        }
+        Ok(())
+    }
+    fn render_result(
+        &mut self,
+        py: Python<'_>,
+        intent_base: Option<usize>,
+        include_output: bool,
+    ) -> PyResult<Py<PyAny>> {
+        let json = PyModule::import(py, "json")?;
+        let result = PyDict::new(py);
+        if let Some(configuration) = self.runtime.external_risk_configuration() {
+            result.set_item(
+                "risk_rules",
+                json.call_method1(
+                    "loads",
+                    (serde_json::to_string(configuration)
+                        .map_err(|err| PyValueError::new_err(err.to_string()))?,),
+                )?,
+            )?;
+        }
+        result.set_item("protocol", "external-broker/1")?;
+        result.set_item("pyramiding", self.pyramiding)?;
+        let intents = self.runtime.external_intents().map_err(|err| {
+            self.failed = true;
+            PyValueError::new_err(err.message)
+        })?;
+        let base = intent_base.unwrap_or(0);
+        if base > intents.len() {
+            return Err(PyValueError::new_err(
+                "external intent cursor exceeds output",
+            ));
+        }
+        if let Some(base) = intent_base {
+            result.set_item("intent_base", base)?;
+            result.set_item("bar_cursor", self.cursor)?;
+            result.set_item("bar_open", self.runtime.external_bar_open())?;
+            result.set_item(
+                "stream_schema",
+                pine_runtime::EXTERNAL_STREAM_SCHEMA_VERSION,
+            )?;
+        }
+        result.set_item(
+            "intents",
+            json.call_method1(
+                "loads",
+                (serde_json::to_string(&intents[base..])
+                    .map_err(|err| PyValueError::new_err(err.to_string()))?,),
+            )?,
+        )?;
+        if include_output {
+            let mut output = self.runtime.result_view();
+            output.strategy = None;
+            result.set_item("output", runtime_result_view_to_py(py, &output)?)?;
+        }
+        Ok(result.into_any().unbind())
+    }
 }
 #[pymethods]
 impl ExternalSession {
@@ -254,6 +320,11 @@ impl ExternalSession {
                 "E_RUNTIME_POISONED: external session failed; create a new session",
             ));
         }
+        if self.runtime.external_bar_open() {
+            return Err(PyValueError::new_err(
+                "commit the open external bar before appending",
+            ));
+        }
         let bars = parse_bars(bars)?;
         let execution_times = parse_execution_times(execution_times)?;
         let json = PyModule::import(py, "json")?;
@@ -292,36 +363,95 @@ impl ExternalSession {
             return Err(PyValueError::new_err(err.message));
         }
         self.cursor += bars.len();
-        let result = PyDict::new(py);
-        if let Some(configuration) = self.runtime.external_risk_configuration() {
-            result.set_item(
-                "risk_rules",
-                json.call_method1(
-                    "loads",
-                    (serde_json::to_string(configuration)
-                        .map_err(|err| PyValueError::new_err(err.to_string()))?,),
-                )?,
-            )?;
-        }
-        result.set_item("protocol", "external-broker/1")?;
-        result.set_item("pyramiding", self.pyramiding)?;
-        let intents = self.runtime.external_intents().map_err(|err| {
-            self.failed = true;
-            PyValueError::new_err(err.message)
-        })?;
-        result.set_item(
-            "intents",
-            json.call_method1(
-                "loads",
-                (serde_json::to_string(intents)
-                    .map_err(|err| PyValueError::new_err(err.to_string()))?,),
-            )?,
-        )?;
-        let mut output = self.runtime.result_view();
-        output.strategy = None;
-        result.set_item("output", runtime_result_view_to_py(py, &output)?)?;
-        Ok(result.into_any().unbind())
+        self.render_result(py, None, true)
     }
+    fn initialize_history(&mut self, py: Python<'_>, bars: &Bound<'_, PyAny>) -> PyResult<usize> {
+        self.ensure_usable()?;
+        let bars = parse_bars(bars)?;
+        py.detach(|| self.runtime.initialize_external_stream_dataset(&bars))
+            .map_err(|error| PyValueError::new_err(error.message))
+    }
+
+    #[pyo3(signature=(bar, *, bar_state))]
+    fn begin_bar(
+        &mut self,
+        py: Python<'_>,
+        bar: &Bound<'_, PyAny>,
+        bar_state: &str,
+    ) -> PyResult<()> {
+        self.ensure_usable()?;
+        let bar = crate::parse_bar(bar)?;
+        let state = match bar_state {
+            "historical" => pine_runtime::ExternalBarState::Historical,
+            "realtime" => pine_runtime::ExternalBarState::Realtime,
+            _ => {
+                return Err(PyValueError::new_err(
+                    "exact historical or realtime bar state required",
+                ));
+            }
+        };
+        py.detach(|| self.runtime.begin_external_bar(bar, state))
+            .map_err(|error| PyValueError::new_err(error.message))
+    }
+
+    #[pyo3(signature=(observation, *, snapshot=true))]
+    fn observe(
+        &mut self,
+        py: Python<'_>,
+        observation: &Bound<'_, PyAny>,
+        snapshot: bool,
+    ) -> PyResult<Py<PyAny>> {
+        self.ensure_usable()?;
+        let raw: String = PyModule::import(py, "json")?
+            .call_method1("dumps", (observation,))?
+            .extract()?;
+        let pass: pine_runtime::ExternalScheduledPass =
+            serde_json::from_str(&raw).map_err(|error| PyValueError::new_err(error.to_string()))?;
+        let base = self
+            .runtime
+            .external_intents()
+            .map_err(|error| PyValueError::new_err(error.message))?
+            .len();
+        py.detach(|| self.runtime.observe_external_bar(pass))
+            .map_err(|error| PyValueError::new_err(error.message))?;
+        self.render_result(py, Some(base), snapshot)
+    }
+
+    #[pyo3(signature=(*, snapshot=true))]
+    fn commit_bar(&mut self, py: Python<'_>, snapshot: bool) -> PyResult<Py<PyAny>> {
+        self.ensure_usable()?;
+        py.detach(|| self.runtime.commit_external_bar())
+            .map_err(|error| PyValueError::new_err(error.message))?;
+        self.cursor += 1;
+        let base = self
+            .runtime
+            .external_intents()
+            .map_err(|error| PyValueError::new_err(error.message))?
+            .len();
+        self.render_result(py, Some(base), snapshot)
+    }
+
+    #[pyo3(signature=(*, include_intents=true))]
+    fn snapshot(&mut self, py: Python<'_>, include_intents: bool) -> PyResult<Py<PyAny>> {
+        self.ensure_usable()?;
+        let base = if include_intents {
+            None
+        } else {
+            Some(
+                self.runtime
+                    .external_intents()
+                    .map_err(|error| PyValueError::new_err(error.message))?
+                    .len(),
+            )
+        };
+        self.render_result(py, base, true)
+    }
+
+    #[getter]
+    fn bar_open(&self) -> bool {
+        self.runtime.external_bar_open()
+    }
+
     #[getter]
     fn cursor(&self) -> usize {
         self.cursor

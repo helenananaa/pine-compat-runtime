@@ -33,6 +33,14 @@ impl HistoricalRuntime<'_> {
         // execution window before any series, bar indices or strategy state
         // are created. Later incremental appends extend that window normally.
         let skip = self.prepare_context_windows(bars, execution_times)?;
+        self.finish_historical_dataset_plan(bars, skip)
+    }
+
+    pub(crate) fn finish_historical_dataset_plan(
+        &mut self,
+        bars: &[Bar],
+        skip: usize,
+    ) -> Result<(usize, Option<usize>), RuntimeError> {
         let bars = &bars[skip..];
         if self.program.script_mode == ScriptMode::Strategy {
             self.session_windows

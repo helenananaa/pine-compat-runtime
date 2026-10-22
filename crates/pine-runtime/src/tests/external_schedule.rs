@@ -99,6 +99,52 @@ fn scheduled_historical_fills_separate_script_confirmation_from_commit() {
 }
 
 #[test]
+fn explicit_history_ticks_use_historical_state_and_only_final_market_commit() {
+    let hir = compiled(
+        "//@version=6\nstrategy(\"history ticks\",calc_on_every_history_tick=true)\nvar int ordinary=0\nvarip int count=0\nvarip int confirms=0\nordinary+=1\ncount+=1\nconfirms:=confirms*10+(barstate.isconfirmed and barstate.isnew?1:0)\nplot(ordinary)\nplot(count)\nplot(confirms)\nplot(close)\nif strategy.position_size==0\n    strategy.entry(\"L\",strategy.long,qty=1)",
+    );
+    let mut schedule = Vec::new();
+    for (index, close) in [10.0, 12.0, 9.0, 11.0].into_iter().enumerate() {
+        let mut item = pass(
+            row(0, close),
+            if index == 1 { 1.0 } else { 0.0 },
+            index == 3,
+            ExternalBarState::Historical,
+            ExternalEvaluationTrigger::HistoricalTick,
+            true,
+        );
+        item.evaluation.event_time_ms = index as i64;
+        item.evaluation.bar.volume = 25.0 * (index + 1) as f64;
+        schedule.push(item);
+    }
+    assert!(
+        HistoricalRuntime::new(&hir)
+            .with_external_accounts(vec![frame(0, 0.0)])
+            .is_err()
+    );
+    let mut runtime = HistoricalRuntime::new(&hir)
+        .with_external_schedule(
+            vec![frame(0, 0.0)],
+            vec![schedule],
+            ExternalExecutionOptions::default(),
+        )
+        .unwrap();
+    runtime.append_bar(row(0, 11.0)).unwrap();
+    for (plot, expected) in runtime.result().plots.iter().zip([1.0, 4.0, 1111.0, 11.0]) {
+        assert_eq!(plot.values[0].as_f64(), Some(expected));
+    }
+    assert_eq!(
+        runtime
+            .external_intents()
+            .unwrap()
+            .iter()
+            .map(|intent| intent.pass_index)
+            .collect::<Vec<_>>(),
+        [Some(0), Some(2), Some(3)]
+    );
+}
+
+#[test]
 fn scheduled_realtime_ticks_without_fill_recalculation_rollback_and_keep_varip() {
     let hir = compiled(
         "strategy(\"ticks\",calc_on_every_tick=true)\nvar int ordinary=0\nvarip float prices=0\nvarip int news=0\nvarip int lasts=0\nordinary+=1\nprices:=prices*100+close\nnews:=news*10+(barstate.isnew?1:0)\nlasts:=lasts*10+(barstate.islast?1:0)\nplot(ordinary)\nplot(prices)\nplot(news)\nplot(lasts)\nplot(barstate.ishistory?1:0)\nplot(barstate.isrealtime?1:0)\nplot(barstate.isconfirmed?1:0)",
@@ -148,6 +194,137 @@ fn scheduled_realtime_ticks_without_fill_recalculation_rollback_and_keep_varip()
     {
         assert_eq!(plot.values[0].as_f64(), Some(expected));
     }
+}
+
+#[test]
+fn explicit_tick_groups_can_exceed_fill_callback_limits_with_bounded_observations() {
+    for historical in [true, false] {
+        let flag = if historical {
+            "calc_on_every_history_tick"
+        } else {
+            "calc_on_every_tick"
+        };
+        let hir = compiled(&format!(
+            "//@version=6\nstrategy(\"many ticks\",{flag}=true)\nvarip int count=0\ncount+=1\nplot(count)"
+        ));
+        let group = (0..2048)
+            .map(|index| {
+                let mut item = pass(
+                    row(0, 11.0),
+                    0.0,
+                    index == 2047,
+                    if historical {
+                        ExternalBarState::Historical
+                    } else {
+                        ExternalBarState::Realtime
+                    },
+                    if historical {
+                        ExternalEvaluationTrigger::HistoricalTick
+                    } else {
+                        ExternalEvaluationTrigger::RealtimeTick
+                    },
+                    historical || index == 0,
+                );
+                item.evaluation.event_time_ms = index;
+                item
+            })
+            .collect();
+        let mut runtime = HistoricalRuntime::new(&hir)
+            .with_external_schedule(
+                vec![frame(0, 0.0)],
+                vec![group],
+                ExternalExecutionOptions::default(),
+            )
+            .unwrap();
+        runtime.append_bar(row(0, 11.0)).unwrap();
+        assert_eq!(runtime.result().plots[0].values[0].as_f64(), Some(2048.0));
+        assert_eq!(runtime.profile().strategy_max_passes_on_bar, 2048);
+    }
+}
+
+#[test]
+fn historical_tick_context_cannot_be_downgraded_or_admit_future_requested_observations() {
+    let hir = compiled(
+        "//@version=6\nstrategy(\"tick admission\",calc_on_every_history_tick=true,calc_on_order_fills=true)\nplot(close)",
+    );
+    let valid = pass(
+        row(0, 11.0),
+        0.0,
+        true,
+        ExternalBarState::Historical,
+        ExternalEvaluationTrigger::HistoricalTick,
+        true,
+    );
+    for trigger in [
+        ExternalEvaluationTrigger::BarClose,
+        ExternalEvaluationTrigger::OrderFill,
+        ExternalEvaluationTrigger::RealtimeTick,
+        ExternalEvaluationTrigger::ClosingFill,
+    ] {
+        let mut invalid = valid.clone();
+        invalid.context.trigger = trigger;
+        assert!(
+            HistoricalRuntime::new(&hir)
+                .with_external_schedule(
+                    vec![frame(0, 0.0)],
+                    vec![vec![invalid]],
+                    ExternalExecutionOptions::default()
+                )
+                .is_err()
+        );
+    }
+    let mut future = valid.clone();
+    future.evaluation.event_time_ms = 0;
+    future.evaluation.request_updates = Some(vec![ObservedRequestUpdate {
+        symbol: "OTHER".to_owned(),
+        timeframe: "1".to_owned(),
+        bar: row(0, 12.0),
+        kind: BarUpdateKind::Confirmed,
+        available_at_ms: 59999,
+    }]);
+    assert!(
+        HistoricalRuntime::new(&hir)
+            .with_external_schedule(
+                vec![frame(0, 0.0)],
+                vec![vec![future.clone()]],
+                ExternalExecutionOptions::default()
+            )
+            .err()
+            .unwrap()
+            .message
+            .contains("availability")
+    );
+    future.evaluation.event_time_ms = 59999;
+    assert!(
+        HistoricalRuntime::new(&hir)
+            .with_external_schedule(
+                vec![frame(0, 0.0)],
+                vec![vec![future]],
+                ExternalExecutionOptions::default()
+            )
+            .is_ok()
+    );
+    let mut invalid = valid.clone();
+    invalid.context.is_new = false;
+    assert!(
+        HistoricalRuntime::new(&hir)
+            .with_external_schedule(
+                vec![frame(0, 0.0)],
+                vec![vec![invalid]],
+                ExternalExecutionOptions::default()
+            )
+            .is_err()
+    );
+    let plain = compiled("//@version=6\nstrategy(\"no history ticks\")\nplot(close)");
+    assert!(
+        HistoricalRuntime::new(&plain)
+            .with_external_schedule(
+                vec![frame(0, 0.0)],
+                vec![vec![valid]],
+                ExternalExecutionOptions::default()
+            )
+            .is_err()
+    );
 }
 
 #[test]

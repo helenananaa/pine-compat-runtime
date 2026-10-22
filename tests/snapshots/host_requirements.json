@@ -44,6 +44,7 @@
     "clock": "explicitTimestampWhenEvaluated",
     "realtimeUpdates": "hostOrderedFormingReplacementAndConfirmation",
     "calcOnEveryTick": true,
+    "calcOnEveryHistoryTick": false,
     "calcOnOrderFills": false,
     "processOrdersOnClose": false,
     "magnifier": "historicalIntrabarsOrReportedStandardOhlcFallback",

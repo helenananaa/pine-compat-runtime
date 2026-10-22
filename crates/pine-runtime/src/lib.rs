@@ -17,8 +17,9 @@ pub use external::{
     ObservedRequestUpdate,
 };
 pub use external_schedule::{
-    EXTERNAL_SCHEDULE_SCHEMA_VERSION, ExternalBarState, ExternalEvaluationTrigger,
-    ExternalPassContext, ExternalScheduledPass,
+    EXTERNAL_SCHEDULE_SCHEMA_VERSION, EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION, ExternalBarState,
+    ExternalEvaluationTrigger, ExternalPassContext, ExternalScheduledPass,
+    MAX_STRATEGY_OBSERVATIONS_PER_BAR,
 };
 mod host_requirements;
 mod input_metadata;

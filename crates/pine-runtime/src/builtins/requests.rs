@@ -239,7 +239,10 @@ impl<'a> HistoricalRuntime<'a> {
             );
         }
         let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
-        if symbol == chart.symbol() && requested_timeframe == chart_timeframe {
+        if symbol == chart.symbol()
+            && requested_timeframe == chart_timeframe
+            && !self.historical_tick_context_active
+        {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
                     message: "request.security_lower_tf bounded equal-timeframe history requires a known historical dataset end"
@@ -512,7 +515,10 @@ impl<'a> HistoricalRuntime<'a> {
             return self.eval_expr(expression);
         }
         let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
-        if symbol == chart_symbol && requested_timeframe == chart_timeframe {
+        if symbol == chart_symbol
+            && requested_timeframe == chart_timeframe
+            && !self.historical_tick_context_active
+        {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
                     message: "request.security bounded equal-timeframe history requires a known historical dataset end"
@@ -798,6 +804,13 @@ impl<'a> HistoricalRuntime<'a> {
         start: usize,
         end: usize,
     ) -> Result<Vec<Bar>, RuntimeError> {
+        if self.program.strategy_settings.calc_on_every_history_tick
+            && let Some(bars) = self.static_requests.canonical_chart_bars(key)
+        {
+            return Ok((start..end.min(bars.len()))
+                .filter_map(|index| bars.get(index).copied())
+                .collect());
+        }
         let provider_bars = match self.request_environment.provider().bars(key) {
             Ok(bars) => bars,
             Err(RequestDataError::MissingData { symbol, timeframe }) => {

@@ -252,7 +252,8 @@ impl HistoricalRuntime<'_> {
         if self.program.script_mode != ScriptMode::Strategy
             || (contexts.is_none()
                 && (settings.calc_on_order_fills != passes.is_some()
-                    || settings.calc_on_every_tick))
+                    || settings.calc_on_every_tick
+                    || settings.calc_on_every_history_tick))
             || (settings.process_orders_on_close && !options.closing_ticks)
             || settings.use_bar_magnifier
             || settings.slippage_ticks != 0.0
@@ -267,10 +268,17 @@ impl HistoricalRuntime<'_> {
         }
         self.validate_external_request_transcript(passes, contexts)?;
         if let Some(groups) = &passes {
+            let limit = if contexts.is_some()
+                && (settings.calc_on_every_tick || settings.calc_on_every_history_tick)
+            {
+                crate::MAX_STRATEGY_OBSERVATIONS_PER_BAR as usize
+            } else {
+                65
+            };
             if groups.len() != frames.len()
                 || groups
                     .iter()
-                    .any(|group| group.is_empty() || group.len() > 65)
+                    .any(|group| group.is_empty() || group.len() > limit)
             {
                 return Err(external_error("invalid execution pass count"));
             }

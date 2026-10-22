@@ -4,6 +4,8 @@ use crate::{ExternalAccountFrame, HistoricalRuntime, RuntimeError};
 use serde::{Deserialize, Serialize};
 
 pub const EXTERNAL_SCHEDULE_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION: u32 = 1;
+pub const MAX_STRATEGY_OBSERVATIONS_PER_BAR: u32 = 100_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -19,6 +21,7 @@ pub enum ExternalEvaluationTrigger {
     OrderFill,
     ClosingFill,
     RealtimeTick,
+    HistoricalTick,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -114,11 +117,18 @@ impl HistoricalRuntime<'_> {
                     || (context.bar_state == ExternalBarState::Realtime
                         && index > 0
                         && context.is_new)
+                    || (settings.calc_on_every_history_tick
+                        && context.bar_state == ExternalBarState::Historical
+                        && context.trigger != ExternalEvaluationTrigger::HistoricalTick)
                     || match context.trigger {
                         ExternalEvaluationTrigger::OrderFill => !settings.calc_on_order_fills,
                         ExternalEvaluationTrigger::RealtimeTick => {
                             context.bar_state != ExternalBarState::Realtime
                                 || !settings.calc_on_every_tick
+                        }
+                        ExternalEvaluationTrigger::HistoricalTick => {
+                            context.bar_state != ExternalBarState::Historical
+                                || !settings.calc_on_every_history_tick
                         }
                         ExternalEvaluationTrigger::BarClose => !pass.confirmed,
                         ExternalEvaluationTrigger::ClosingFill => {

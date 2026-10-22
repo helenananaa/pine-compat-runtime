@@ -108,6 +108,7 @@ pub struct ExecutionInputContract {
     pub clock: &'static str,
     pub realtime_updates: &'static str,
     pub calc_on_every_tick: bool,
+    pub calc_on_every_history_tick: bool,
     pub calc_on_order_fills: bool,
     pub process_orders_on_close: bool,
     pub magnifier: &'static str,
@@ -349,6 +350,8 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
             },
             realtime_updates: "hostOrderedFormingReplacementAndConfirmation",
             calc_on_every_tick: strategy && program.strategy_settings.calc_on_every_tick,
+            calc_on_every_history_tick: strategy
+                && program.strategy_settings.calc_on_every_history_tick,
             calc_on_order_fills: strategy && program.strategy_settings.calc_on_order_fills,
             process_orders_on_close: strategy && program.strategy_settings.process_orders_on_close,
             magnifier: if strategy && program.strategy_settings.use_bar_magnifier {

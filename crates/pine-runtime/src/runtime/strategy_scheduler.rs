@@ -65,6 +65,7 @@ pub(crate) struct StrategySchedulerState {
     recalculation_passes: usize,
     max_passes_on_bar: u32,
     current_bar_script_passes: u32,
+    current_bar_observation_passes: u32,
 }
 
 impl Default for StrategySchedulerState {
@@ -74,6 +75,13 @@ impl Default for StrategySchedulerState {
 }
 
 impl StrategySchedulerState {
+    pub(crate) fn last_host_bar(&self) -> Option<Bar> {
+        self.last_host_bar
+    }
+
+    pub(crate) fn set_last_host_bar(&mut self, bar: Option<Bar>) {
+        self.last_host_bar = bar;
+    }
     pub(crate) fn new() -> Self {
         Self::with_max_recalculation_passes(DEFAULT_MAX_RECALCULATION_PASSES)
     }
@@ -89,6 +97,7 @@ impl StrategySchedulerState {
             recalculation_passes: 0,
             max_passes_on_bar: 0,
             current_bar_script_passes: 0,
+            current_bar_observation_passes: 0,
         }
     }
 
@@ -120,6 +129,7 @@ impl StrategySchedulerState {
         self.identity.pass = 0;
         self.path_cursor = None;
         self.current_bar_script_passes = 0;
+        self.current_bar_observation_passes = 0;
     }
 
     #[cfg(test)]
@@ -190,7 +200,8 @@ impl StrategySchedulerState {
             return Ok(());
         }
 
-        let extra_pass = self.current_bar_script_passes;
+        let extra_pass = self.current_bar_script_passes - self.current_bar_observation_passes
+            + u32::from(self.current_bar_observation_passes > 0);
         if extra_pass > self.max_recalculation_passes {
             return Err(RuntimeError {
                 message: format!(
@@ -204,14 +215,33 @@ impl StrategySchedulerState {
             });
         }
 
-        self.identity.pass = extra_pass;
+        self.record_extra_pass();
+        Ok(())
+    }
+
+    pub(crate) fn begin_observation_pass(&mut self) -> Result<(), RuntimeError> {
+        if self.current_bar_observation_passes >= crate::MAX_STRATEGY_OBSERVATIONS_PER_BAR {
+            return Err(RuntimeError {
+                message: "strategy observation pass limit exceeded".to_owned(),
+            });
+        }
+        if self.current_bar_script_passes == 0 {
+            self.begin_script_pass()?;
+        } else {
+            self.record_extra_pass();
+        }
+        self.current_bar_observation_passes += 1;
+        Ok(())
+    }
+
+    fn record_extra_pass(&mut self) {
+        self.identity.pass = self.current_bar_script_passes;
         self.identity.phase = StrategyBarPhase::ScriptStatements;
         self.identity.fill_step = None;
         self.current_bar_script_passes += 1;
         self.script_passes += 1;
         self.recalculation_passes += 1;
         self.max_passes_on_bar = self.max_passes_on_bar.max(self.current_bar_script_passes);
-        Ok(())
     }
 }
 
@@ -857,6 +887,40 @@ mod tests {
         );
         assert_eq!(scheduler.identity.bar_index, 3);
         assert_eq!(scheduler.identity.pass, 0);
+    }
+
+    #[test]
+    fn observed_ticks_do_not_spend_fill_loop_budget_and_remain_bounded() {
+        let mut scheduler = StrategySchedulerState::with_max_recalculation_passes(3);
+        scheduler.begin_bar(0);
+        for _ in 0..2000 {
+            scheduler.begin_observation_pass().unwrap();
+        }
+        for _ in 0..3 {
+            scheduler.begin_script_pass().unwrap();
+        }
+        assert!(
+            scheduler
+                .begin_script_pass()
+                .unwrap_err()
+                .message
+                .contains("recalculation pass limit")
+        );
+        scheduler.begin_bar(1);
+        for _ in 0..crate::MAX_STRATEGY_OBSERVATIONS_PER_BAR {
+            scheduler.begin_observation_pass().unwrap();
+        }
+        assert!(
+            scheduler
+                .begin_observation_pass()
+                .unwrap_err()
+                .message
+                .contains("observation pass limit")
+        );
+        assert_eq!(
+            scheduler.identity.pass,
+            crate::MAX_STRATEGY_OBSERVATIONS_PER_BAR - 1
+        );
     }
 
     #[test]

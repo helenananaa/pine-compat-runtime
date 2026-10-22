@@ -243,6 +243,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstBool,
         optional: true,
     },
+    BuiltinParam {
+        name: "calc_on_every_history_tick",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

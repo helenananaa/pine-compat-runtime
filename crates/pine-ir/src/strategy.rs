@@ -68,6 +68,7 @@ pub struct StrategySettings {
     pub process_orders_on_close: bool,
     pub calc_on_order_fills: bool,
     pub calc_on_every_tick: bool,
+    pub calc_on_every_history_tick: bool,
     pub use_bar_magnifier: bool,
 }
 
@@ -87,6 +88,7 @@ impl Default for StrategySettings {
             process_orders_on_close: false,
             calc_on_order_fills: false,
             calc_on_every_tick: false,
+            calc_on_every_history_tick: false,
             use_bar_magnifier: false,
         }
     }

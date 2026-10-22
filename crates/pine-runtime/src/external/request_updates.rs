@@ -269,7 +269,10 @@ impl HistoricalRuntime<'_> {
         // Historical fill timestamps describe an interpolation path, while
         // Pine sees the completed canonical historical bar on every pass.
         // Realtime and legacy observed-print passes retain their event clock.
-        if context.is_some_and(|context| context.bar_state == crate::ExternalBarState::Historical) {
+        if context.is_some_and(|context| {
+            context.bar_state == crate::ExternalBarState::Historical
+                && context.trigger != crate::ExternalEvaluationTrigger::HistoricalTick
+        }) {
             self.request_environment
                 .chart_close(pass.bar.time)
                 .map(|close| close.saturating_sub(1))

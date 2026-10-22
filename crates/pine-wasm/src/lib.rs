@@ -37,6 +37,16 @@ pub fn external_schedule_schema_version() -> u32 {
     pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION
 }
 
+#[wasm_bindgen(js_name = externalTickScheduleSchemaVersion)]
+pub fn external_tick_schedule_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = maxStrategyObservationsPerBar)]
+pub fn max_strategy_observations_per_bar() -> u32 {
+    pine_runtime::MAX_STRATEGY_OBSERVATIONS_PER_BAR
+}
+
 #[wasm_bindgen(js_name = contractMetadataSchemaVersion)]
 pub fn contract_metadata_schema_version() -> u32 {
     pine_runtime::CONTRACT_METADATA_SCHEMA_VERSION

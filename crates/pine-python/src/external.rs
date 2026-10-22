@@ -20,6 +20,14 @@ pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
             pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION,
         ),
         (
+            "EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION,
+        ),
+        (
+            "MAX_STRATEGY_OBSERVATIONS_PER_BAR",
+            pine_runtime::MAX_STRATEGY_OBSERVATIONS_PER_BAR,
+        ),
+        (
             "STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION",
             pine_runtime::STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION,
         ),

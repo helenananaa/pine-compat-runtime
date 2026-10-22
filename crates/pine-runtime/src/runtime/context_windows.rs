@@ -43,14 +43,26 @@ impl Window {
         if let Some(origin) = self.origin {
             return bars.partition_point(|bar| bar.time < origin);
         }
-        let count = self.count.map(|count| bars.len().saturating_sub(count));
-        let since = self.since.map(|time| {
+        let start = self.initial_start(bars.len(), |time| {
             bars.partition_point(|bar| bar.time <= time)
-                .saturating_sub(1)
         });
-        let start = count.into_iter().chain(since).min().unwrap_or(0);
         self.origin = bars.get(start).map(|bar| bar.time);
         start
+    }
+
+    fn initial_start(&self, available: usize, at_or_before: impl FnOnce(i64) -> usize) -> usize {
+        let count = self.count.map(|count| available.saturating_sub(count));
+        let since = self.since.map(|time| at_or_before(time).saturating_sub(1));
+        count.into_iter().chain(since).min().unwrap_or(0)
+    }
+
+    fn anchor_times(&mut self, times: &[i64]) {
+        if !self.unbounded && self.origin.is_none() && !times.is_empty() {
+            let start = self.initial_start(times.len(), |time| {
+                times.partition_point(|stamp| *stamp <= time)
+            });
+            self.origin = times.get(start).copied();
+        }
     }
 }
 
@@ -204,5 +216,11 @@ impl ContextWindows {
         Arc::make_mut(&mut self.windows)
             .get_mut(key)
             .map_or(0, |window| window.start(bars))
+    }
+
+    pub(crate) fn anchor_known_history(&mut self, key: &RequestKey, times: &[i64]) {
+        if let Some(window) = Arc::make_mut(&mut self.windows).get_mut(key) {
+            window.anchor_times(times);
+        }
     }
 }

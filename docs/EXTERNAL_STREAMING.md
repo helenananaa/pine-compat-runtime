@@ -25,6 +25,19 @@ updates remain limited to the actual observation time. Bounded fresh TradingView
 samples cover completed bars with same/lower/higher requested contexts; they do
 not qualify arbitrary feeds or scripts.
 
+Known requested calculation windows have a separate metadata input. Rust's
+`initialize_external_stream_dataset_with_requested_history` and Python's
+`initialize_history(..., requested_history=...)` accept exact symbol/timeframe
+keys and ordered `times_ms` arrays. They anchor initial requested windows to
+the full known endpoint rather than the first observed provider prefix. No
+prices, account frames or Pine executions are supplied by these headers. Active
+providers still receive only causally available updates. Nested requested
+evaluators retain the same header plan. Duplicate keys, unordered times and
+conflicting root metadata reject atomically. Python and WASM expose requested
+window-plan schema 1; the existing JS binding still has no external-account
+session API. Dynamic historical discovery still needs observed-feedback/rebase
+coordination and is not enabled by this metadata-only capability.
+
 Ordinary variables, referenced heaps, TA and price flow roll back between
 observations; varip persists. Market confirmation does not end the input group:
 explicit closing-fill feedback can still arrive before the host commits. The

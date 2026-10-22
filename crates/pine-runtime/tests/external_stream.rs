@@ -1,8 +1,9 @@
 use pine_runtime::{
     Bar, BarUpdate, ChartContext, ExternalAccountFrame, ExternalBarState,
     ExternalEvaluationTrigger, ExternalExecutionOptions, ExternalPass, ExternalPassContext,
-    ExternalScheduledPass, HistoricalRuntime, InMemoryRequestDataProvider, ObservedRequestUpdate,
-    RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe, public_runtime_result_json,
+    ExternalRequestWindowHistory, ExternalScheduledPass, HistoricalRuntime,
+    InMemoryRequestDataProvider, ObservedRequestUpdate, RealtimeRuntime, RequestEnvironment,
+    RequestKey, RequestTimeframe, public_runtime_result_json,
 };
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
@@ -310,6 +311,81 @@ fn historical_requested_contexts_match_native_values_at_every_synthetic_vertex()
             vec![Some(100.0), Some(200.0)]
         );
     }
+}
+
+#[test]
+fn requested_window_time_metadata_anchors_selection_without_populating_the_provider() {
+    let hir = program(
+        "//@version=6\nstrategy(\"known requested window\",calc_on_every_history_tick=true)\nplot(request.security(\"B\",\"1\",ta.cum(close),calc_bars_count=1))",
+    );
+    let tf = RequestTimeframe::parse("1").unwrap();
+    let environment = |rows| {
+        RequestEnvironment::new(
+            ChartContext::new("A", tf.clone()),
+            Arc::new(
+                InMemoryRequestDataProvider::from_streams([(
+                    RequestKey::new("B", tf.clone()),
+                    rows,
+                )])
+                .unwrap(),
+            ),
+        )
+    };
+    let requested = vec![bar(0, 100.0), bar(60000, 200.0)];
+    let (bars, _, groups) = inputs(ExternalBarState::Historical);
+    let mut native =
+        HistoricalRuntime::with_request_environment(&hir, environment(requested.clone()));
+    native.append_bars(&bars).unwrap();
+    let mut stream = HistoricalRuntime::with_request_environment(&hir, environment(vec![]))
+        .with_external_schedule(vec![], vec![], ExternalExecutionOptions::default())
+        .unwrap();
+    let mut history = ExternalRequestWindowHistory {
+        symbol: "B".into(),
+        timeframe: "1".into(),
+        times_ms: vec![0, 0],
+    };
+    assert!(
+        stream
+            .initialize_external_stream_dataset_with_requested_history(&bars, &[history.clone()])
+            .is_err()
+    );
+    history.times_ms = vec![0, 60000];
+    assert_eq!(
+        stream
+            .initialize_external_stream_dataset_with_requested_history(&bars, &[history])
+            .unwrap(),
+        0
+    );
+    assert!(stream.result().plots.is_empty());
+    for (index, (canonical, group)) in bars.iter().zip(groups).enumerate() {
+        stream
+            .begin_external_bar(*canonical, ExternalBarState::Historical)
+            .unwrap();
+        for (ordinal, mut observation) in group.into_iter().enumerate() {
+            observation.evaluation.request_updates = Some(if ordinal == 0 {
+                vec![ObservedRequestUpdate {
+                    symbol: "B".into(),
+                    timeframe: "1".into(),
+                    bar: requested[index],
+                    kind: pine_runtime::BarUpdateKind::Confirmed,
+                    available_at_ms: canonical.time + 59999,
+                }]
+            } else {
+                vec![]
+            });
+            stream.observe_external_bar(observation).unwrap();
+        }
+        stream.commit_external_bar().unwrap();
+    }
+    assert_eq!(stream.result().plots, native.result().plots);
+    assert_eq!(
+        stream.result().plots[0]
+            .values
+            .iter()
+            .map(|value| value.as_f64())
+            .collect::<Vec<_>>(),
+        [None, Some(200.0)]
+    );
 }
 
 #[test]

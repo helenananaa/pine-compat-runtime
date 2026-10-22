@@ -12,9 +12,9 @@ mod external_schedule;
 pub use external::{
     EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_METADATA_SCHEMA_VERSION,
     EXTERNAL_ORDER_SCHEMA_VERSION, EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION,
-    EXTERNAL_SIZING_SCHEMA_VERSION, ExternalAccountFrame, ExternalExecutionOptions,
-    ExternalOrderIntent, ExternalOrderMetadata, ExternalPass, ExternalRequestStream,
-    ObservedRequestUpdate,
+    EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION, EXTERNAL_SIZING_SCHEMA_VERSION,
+    ExternalAccountFrame, ExternalExecutionOptions, ExternalOrderIntent, ExternalOrderMetadata,
+    ExternalPass, ExternalRequestStream, ExternalRequestWindowHistory, ObservedRequestUpdate,
 };
 pub use external_schedule::{
     EXTERNAL_SCHEDULE_SCHEMA_VERSION, EXTERNAL_STREAM_SCHEMA_VERSION,

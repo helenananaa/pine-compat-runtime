@@ -21,6 +21,7 @@ use crate::*;
 mod bar_evaluation;
 mod checkpoint;
 mod collections;
+mod external_request_windows;
 mod external_stream;
 mod history_ticks;
 mod price_flow;
@@ -121,6 +122,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) static_requests: crate::builtins::static_requests::StaticRequests,
     pub(crate) context_windows: super::context_windows::ContextWindows,
+    pub(crate) request_window_history: Arc<HashMap<crate::RequestKey, Arc<[i64]>>>,
     pub(crate) request_feed: crate::request::RequestFeed,
     pub(crate) historical_dynamic_request_contexts: HashSet<RequestCacheKey>,
     pub(crate) request_cache: HashMap<
@@ -452,6 +454,7 @@ impl<'a> HistoricalRuntime<'a> {
             ),
             request_environment,
             context_windows: super::context_windows::ContextWindows::default(),
+            request_window_history: Arc::default(),
             request_feed: crate::request::RequestFeed::default(),
             historical_dynamic_request_contexts: HashSet::new(),
             request_cache: HashMap::new(),
@@ -694,6 +697,7 @@ impl<'a> HistoricalRuntime<'a> {
         let mut runtime =
             Self::with_runtime_program(self.program.clone(), self.request_environment.clone());
         runtime.input_overrides = self.input_overrides.clone();
+        runtime.request_window_history = self.request_window_history.clone();
         runtime.magnifier_input = self.magnifier_input.clone();
         runtime.session_windows = self.session_windows.clone();
         runtime.request_feed = self.request_feed.clone();

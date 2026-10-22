@@ -58,6 +58,17 @@ pub struct ExternalRequestStream {
     pub bars: Vec<crate::Bar>,
 }
 
+/// Known initial requested endpoints, without future prices or account state.
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExternalRequestWindowHistory {
+    pub symbol: String,
+    pub timeframe: String,
+    pub times_ms: Vec<i64>,
+}
+
+pub const EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION: u32 = 1;
+
 #[derive(Debug, Clone, Serialize)]
 pub struct ExternalOrderIntent {
     pub bar_index: usize,

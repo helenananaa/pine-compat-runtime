@@ -24,6 +24,10 @@ pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
             pine_runtime::EXTERNAL_STREAM_SCHEMA_VERSION,
         ),
         (
+            "EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION,
+        ),
+        (
             "EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION",
             pine_runtime::EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION,
         ),
@@ -365,11 +369,33 @@ impl ExternalSession {
         self.cursor += bars.len();
         self.render_result(py, None, true)
     }
-    fn initialize_history(&mut self, py: Python<'_>, bars: &Bound<'_, PyAny>) -> PyResult<usize> {
+    #[pyo3(signature=(bars, *, requested_history=None))]
+    fn initialize_history(
+        &mut self,
+        py: Python<'_>,
+        bars: &Bound<'_, PyAny>,
+        requested_history: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<usize> {
         self.ensure_usable()?;
         let bars = parse_bars(bars)?;
-        py.detach(|| self.runtime.initialize_external_stream_dataset(&bars))
-            .map_err(|error| PyValueError::new_err(error.message))
+        let requested = requested_history
+            .map(
+                |value| -> PyResult<Vec<pine_runtime::ExternalRequestWindowHistory>> {
+                    let raw: String = PyModule::import(py, "json")?
+                        .call_method1("dumps", (value,))?
+                        .extract()?;
+                    serde_json::from_str(&raw)
+                        .map_err(|error| PyValueError::new_err(error.to_string()))
+                },
+            )
+            .transpose()?;
+        py.detach(|| match requested {
+            Some(requested) => self
+                .runtime
+                .initialize_external_stream_dataset_with_requested_history(&bars, &requested),
+            None => self.runtime.initialize_external_stream_dataset(&bars),
+        })
+        .map_err(|error| PyValueError::new_err(error.message))
     }
 
     #[pyo3(signature=(bar, *, bar_state))]

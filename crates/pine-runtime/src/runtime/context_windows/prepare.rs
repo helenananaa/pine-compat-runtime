@@ -241,7 +241,11 @@ impl HistoricalRuntime<'_> {
         {
             return Ok(true);
         }
-        self.context_windows.register_call(id, key, count, &[]);
+        self.context_windows
+            .register_call(id, key.clone(), count, &[]);
+        if let Some(times) = self.request_window_history.get(&key) {
+            self.context_windows.anchor_known_history(&key, times);
+        }
         if self.context_windows.restart {
             // Consumed exclusively by prepare_context_windows; never exposed by
             // the public historical iterator or returned as a Pine error.

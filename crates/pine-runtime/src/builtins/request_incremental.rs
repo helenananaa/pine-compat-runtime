@@ -114,18 +114,22 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let window_start = if self.context_windows.prepared {
             match self.context_windows.anchored_origin(key) {
-                Some(origin) => origin.map_or(0, |time| {
-                    canonical.as_ref().map_or_else(
-                        || {
-                            self.request_feed.resolved_before(
-                                key,
-                                provider_bars,
-                                include_forming,
-                                time,
-                            )
-                        },
-                        |bars| bars.partition_point(|bar| bar.time < time),
-                    )
+                Some(origin) => origin.map_or(0, |(time, offset)| {
+                    canonical
+                        .as_ref()
+                        .map_or_else(
+                            || {
+                                self.request_feed.resolved_before(
+                                    key,
+                                    provider_bars,
+                                    include_forming,
+                                    time,
+                                )
+                            },
+                            |bars| bars.partition_point(|bar| bar.time < time),
+                        )
+                        .saturating_add(offset)
+                        .min(total)
                 }),
                 None => {
                     let bars = self.resolved_request_bars_from(key, 0)?;

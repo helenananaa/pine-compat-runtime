@@ -195,6 +195,7 @@ impl RequestFeed {
             .get(&key)
             .and_then(|stream| stream.confirmed.last().map(|bar| bar.time))
             .or(provider_last);
+        let event_rows = key.is_event_chart();
         let stream = self.streams.entry(key).or_default();
         match update.kind {
             BarUpdateKind::Historical => {
@@ -203,10 +204,17 @@ impl RequestFeed {
                         time: update.bar.time,
                     });
                 }
-                append_confirmed(&mut stream.confirmed, update.bar, last_confirmed)
+                append_confirmed(
+                    &mut stream.confirmed,
+                    update.bar,
+                    last_confirmed,
+                    event_rows,
+                )
             }
-            BarUpdateKind::Forming => apply_forming(stream, update.bar, last_confirmed),
-            BarUpdateKind::Confirmed => apply_confirmed(stream, update.bar, last_confirmed),
+            BarUpdateKind::Forming => apply_forming(stream, update.bar, last_confirmed, event_rows),
+            BarUpdateKind::Confirmed => {
+                apply_confirmed(stream, update.bar, last_confirmed, event_rows)
+            }
         }
     }
 }
@@ -215,9 +223,10 @@ fn append_confirmed(
     confirmed: &mut AppendHistory<Bar>,
     bar: Bar,
     last_confirmed: Option<i64>,
+    event_rows: bool,
 ) -> Result<(), RequestFeedError> {
     if let Some(last) = last_confirmed {
-        if bar.time == last {
+        if bar.time == last && !event_rows {
             return Err(RequestFeedError::DuplicateBars { time: bar.time });
         }
         if bar.time < last {
@@ -235,9 +244,10 @@ fn apply_forming(
     stream: &mut RequestStream,
     bar: Bar,
     last_confirmed: Option<i64>,
+    event_rows: bool,
 ) -> Result<(), RequestFeedError> {
     if let Some(last) = last_confirmed
-        && bar.time <= last
+        && (bar.time < last || (bar.time == last && !event_rows))
     {
         return Err(RequestFeedError::Stale {
             time: bar.time,
@@ -260,6 +270,7 @@ fn apply_confirmed(
     stream: &mut RequestStream,
     bar: Bar,
     last_confirmed: Option<i64>,
+    event_rows: bool,
 ) -> Result<(), RequestFeedError> {
     if let Some(forming) = stream.forming {
         if forming.time != bar.time {
@@ -269,9 +280,9 @@ fn apply_confirmed(
             });
         }
         stream.forming = None;
-        return append_confirmed(&mut stream.confirmed, bar, last_confirmed);
+        return append_confirmed(&mut stream.confirmed, bar, last_confirmed, event_rows);
     }
-    append_confirmed(&mut stream.confirmed, bar, last_confirmed)
+    append_confirmed(&mut stream.confirmed, bar, last_confirmed, event_rows)
 }
 
 impl RequestFeedError {

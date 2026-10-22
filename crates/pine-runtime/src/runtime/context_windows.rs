@@ -21,7 +21,9 @@ struct Window {
     since: Option<i64>,
     unbounded: bool,
     inherits_chart: bool,
-    origin: Option<i64>,
+    // Timestamp plus row offset within its equal-time cohort. A bounded event
+    // window may start in the middle of several bricks sharing one source time.
+    origin: Option<(i64, usize)>,
 }
 
 impl Window {
@@ -40,13 +42,18 @@ impl Window {
         if self.unbounded || bars.is_empty() {
             return 0;
         }
-        if let Some(origin) = self.origin {
-            return bars.partition_point(|bar| bar.time < origin);
+        if let Some((time, offset)) = self.origin {
+            return (bars.partition_point(|bar| bar.time < time) + offset).min(bars.len());
         }
         let start = self.initial_start(bars.len(), |time| {
             bars.partition_point(|bar| bar.time <= time)
         });
-        self.origin = bars.get(start).map(|bar| bar.time);
+        self.origin = bars.get(start).map(|bar| {
+            (
+                bar.time,
+                start - bars.partition_point(|item| item.time < bar.time),
+            )
+        });
         start
     }
 
@@ -61,7 +68,9 @@ impl Window {
             let start = self.initial_start(times.len(), |time| {
                 times.partition_point(|stamp| *stamp <= time)
             });
-            self.origin = times.get(start).copied();
+            self.origin = times
+                .get(start)
+                .map(|time| (*time, start - times.partition_point(|stamp| stamp < time)));
         }
     }
 }
@@ -139,7 +148,9 @@ impl ContextWindows {
         } else {
             let caller = self.scope.as_ref().and_then(|key| self.windows.get(key));
             Window {
-                since: caller.map_or(self.root_since, |window| window.origin.or(window.since)),
+                since: caller.map_or(self.root_since, |window| {
+                    window.origin.map(|(time, _)| time).or(window.since)
+                }),
                 unbounded: caller.map_or(self.root_count.is_none(), |window| window.unbounded),
                 inherits_chart: self.scope.is_none(),
                 ..Window::default()
@@ -194,9 +205,9 @@ impl ContextWindows {
         self.restart = false;
     }
 
-    pub(crate) fn anchored_origin(&self, key: &RequestKey) -> Option<Option<i64>> {
+    pub(crate) fn anchored_origin(&self, key: &RequestKey) -> Option<Option<(i64, usize)>> {
         if self.root.as_ref() == Some(key) {
-            return Some(self.root_since);
+            return Some(self.root_since.map(|time| (time, 0)));
         }
         self.windows.get(key).and_then(|window| {
             if window.unbounded {

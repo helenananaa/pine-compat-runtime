@@ -32,13 +32,19 @@ impl HistoricalRuntime<'_> {
                 || history.symbol.trim() != history.symbol
                 || history.timeframe.is_empty()
                 || history.timeframe.trim() != history.timeframe
-                || history.times_ms.windows(2).any(|pair| pair[1] <= pair[0])
             {
                 return Err(external_error("invalid requested window history"));
             }
             let timeframe = RequestTimeframe::parse(&history.timeframe)
                 .map_err(|error| external_error(error.to_string()))?;
             let key = RequestKey::new(&history.symbol, timeframe);
+            if history
+                .times_ms
+                .windows(2)
+                .any(|pair| pair[1] < pair[0] || (pair[1] == pair[0] && !key.is_event_chart()))
+            {
+                return Err(external_error("invalid requested window history"));
+            }
             if key.symbol() == chart.symbol()
                 && key.timeframe() == chart.timeframe()
                 && !history

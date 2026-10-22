@@ -16,6 +16,18 @@ pub const EXTERNAL_ORDER_SCHEMA_VERSION: u32 = 2;
 pub const EXTERNAL_CLOSING_TICK_SCHEMA_VERSION: u32 = 1;
 pub const EXTERNAL_SIZING_SCHEMA_VERSION: u32 = 1;
 pub const EXTERNAL_ORDER_METADATA_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_WINDOW_FEEDBACK_SCHEMA_VERSION: u32 = 1;
+
+/// Control state for historical windows discovered from actual observations.
+/// A required rebase invalidates the entire tentative execution, including
+/// intents already emitted. It does not authorize recovery from Pine errors.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct ExternalWindowFeedbackStatus {
+    pub schema_version: u32,
+    pub requires_discovery: bool,
+    pub rebase_required: bool,
+    pub input_skip: usize,
+}
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ExternalExecutionOptions {
@@ -411,6 +423,11 @@ impl HistoricalRuntime<'_> {
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
+        if self.external_window_feedback.is_some() {
+            return Err(external_error(
+                "observed window feedback requires begin/observe/commit streaming",
+            ));
+        }
         let state = self
             .external_execution
             .as_ref()

@@ -62,6 +62,11 @@ pub fn external_request_window_plan_schema_version() -> u32 {
     pine_runtime::EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION
 }
 
+#[wasm_bindgen(js_name = externalWindowFeedbackSchemaVersion)]
+pub fn external_window_feedback_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_WINDOW_FEEDBACK_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = externalClosingTickSchemaVersion)]
 pub fn external_closing_tick_schema_version() -> u32 {
     pine_runtime::EXTERNAL_CLOSING_TICK_SCHEMA_VERSION

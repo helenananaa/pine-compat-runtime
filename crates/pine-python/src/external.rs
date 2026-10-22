@@ -28,6 +28,10 @@ pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
             pine_runtime::EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION,
         ),
         (
+            "EXTERNAL_WINDOW_FEEDBACK_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_WINDOW_FEEDBACK_SCHEMA_VERSION,
+        ),
+        (
             "EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION",
             pine_runtime::EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION,
         ),
@@ -369,12 +373,13 @@ impl ExternalSession {
         self.cursor += bars.len();
         self.render_result(py, None, true)
     }
-    #[pyo3(signature=(bars, *, requested_history=None))]
+    #[pyo3(signature=(bars, *, requested_history=None, observed_feedback=false))]
     fn initialize_history(
         &mut self,
         py: Python<'_>,
         bars: &Bound<'_, PyAny>,
         requested_history: Option<&Bound<'_, PyAny>>,
+        observed_feedback: bool,
     ) -> PyResult<usize> {
         self.ensure_usable()?;
         let bars = parse_bars(bars)?;
@@ -390,12 +395,39 @@ impl ExternalSession {
             )
             .transpose()?;
         py.detach(|| match requested {
+            requested if observed_feedback => self
+                .runtime
+                .initialize_external_stream_dataset_with_observed_feedback(
+                    &bars,
+                    requested.as_deref().unwrap_or(&[]),
+                ),
             Some(requested) => self
                 .runtime
                 .initialize_external_stream_dataset_with_requested_history(&bars, &requested),
             None => self.runtime.initialize_external_stream_dataset(&bars),
         })
         .map_err(|error| PyValueError::new_err(error.message))
+    }
+
+    /// Control state is readable even after an interrupted observation.
+    fn window_status(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let raw = serde_json::to_string(&self.runtime.external_window_feedback_status())
+            .map_err(|error| PyValueError::new_err(error.to_string()))?;
+        Ok(PyModule::import(py, "json")?
+            .call_method1("loads", (raw,))?
+            .unbind())
+    }
+
+    #[pyo3(signature=(*, seal=false))]
+    fn rebase_window(&mut self, py: Python<'_>, seal: bool) -> PyResult<usize> {
+        if self.failed {
+            self.ensure_usable()?;
+        }
+        let skip = py
+            .detach(|| self.runtime.rebase_external_stream_window(seal))
+            .map_err(|error| PyValueError::new_err(error.message))?;
+        self.cursor = 0;
+        Ok(skip)
     }
 
     #[pyo3(signature=(bar, *, bar_state))]

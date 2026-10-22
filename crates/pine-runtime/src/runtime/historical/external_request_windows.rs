@@ -12,6 +12,19 @@ impl HistoricalRuntime<'_> {
         requested: &[ExternalRequestWindowHistory],
     ) -> Result<usize, RuntimeError> {
         self.ensure_execution_ready()?;
+        let histories = self.parse_requested_window_history(bars, requested)?;
+        let mut candidate = self.clone();
+        candidate.request_window_history = histories;
+        let skip = candidate.initialize_external_stream_dataset(bars)?;
+        *self = candidate;
+        Ok(skip)
+    }
+
+    pub(super) fn parse_requested_window_history(
+        &self,
+        bars: &[Bar],
+        requested: &[ExternalRequestWindowHistory],
+    ) -> Result<KnownRequestedTimes, RuntimeError> {
         let mut histories = HashMap::new();
         let chart = self.request_environment.chart();
         for history in requested {
@@ -45,10 +58,6 @@ impl HistoricalRuntime<'_> {
                 return Err(external_error("duplicate requested window history"));
             }
         }
-        let mut candidate = self.clone();
-        candidate.request_window_history = Arc::new(histories);
-        let skip = candidate.initialize_external_stream_dataset(bars)?;
-        *self = candidate;
-        Ok(skip)
+        Ok(Arc::new(histories))
     }
 }

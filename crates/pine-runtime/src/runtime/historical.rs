@@ -23,12 +23,14 @@ mod checkpoint;
 mod collections;
 mod external_request_windows;
 mod external_stream;
+mod external_window_feedback;
 mod history_ticks;
 mod price_flow;
 mod ta_state;
 pub(crate) use collections::CollectionCheckpoint;
 use price_flow::PriceFlowCheckpoint;
 pub(crate) use ta_state::{CrossCallState, TaRollbackState};
+type KnownRequestedTimes = Arc<HashMap<crate::RequestKey, Arc<[i64]>>>;
 
 #[derive(Clone)]
 pub(crate) enum RuntimeProgram<'a> {
@@ -122,7 +124,9 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) static_requests: crate::builtins::static_requests::StaticRequests,
     pub(crate) context_windows: super::context_windows::ContextWindows,
-    pub(crate) request_window_history: Arc<HashMap<crate::RequestKey, Arc<[i64]>>>,
+    pub(crate) request_window_history: KnownRequestedTimes,
+    pub(crate) external_window_feedback:
+        Option<external_window_feedback::ExternalWindowFeedback<'a>>,
     pub(crate) request_feed: crate::request::RequestFeed,
     pub(crate) historical_dynamic_request_contexts: HashSet<RequestCacheKey>,
     pub(crate) request_cache: HashMap<
@@ -455,6 +459,7 @@ impl<'a> HistoricalRuntime<'a> {
             request_environment,
             context_windows: super::context_windows::ContextWindows::default(),
             request_window_history: Arc::default(),
+            external_window_feedback: None,
             request_feed: crate::request::RequestFeed::default(),
             historical_dynamic_request_contexts: HashSet::new(),
             request_cache: HashMap::new(),
@@ -872,6 +877,11 @@ impl<'a> HistoricalRuntime<'a> {
         is_new_bar: bool,
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
+        if self.external_window_feedback.is_some() {
+            return Err(crate::external::external_error(
+                "observed window feedback requires begin/observe/commit streaming",
+            ));
+        }
         self.append_bar_with_budget(bar, update_kind, is_new_bar, execution_time, true)
     }
 

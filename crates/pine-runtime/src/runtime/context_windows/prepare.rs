@@ -6,13 +6,20 @@ use crate::{Bar, HistoricalRuntime, PineValue, RequestKey, RequestTimeframe, Run
 use pine_ir::{CallSiteId, HirExpr, HirExprKind, Qualifier, SymbolId};
 use std::collections::HashSet;
 
+#[derive(Clone, Copy, PartialEq)]
+enum Preparation {
+    Native,
+    StaticOnly,
+    Observed,
+}
+
 impl HistoricalRuntime<'_> {
     pub(crate) fn prepare_context_windows(
         &mut self,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<usize, RuntimeError> {
-        self.prepare_context_windows_policy(bars, execution_times, true)
+        self.prepare_context_windows_policy(bars, execution_times, Preparation::Native)
     }
 
     pub(crate) fn prepare_context_windows_without_discovery(
@@ -20,14 +27,21 @@ impl HistoricalRuntime<'_> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<usize, RuntimeError> {
-        self.prepare_context_windows_policy(bars, execution_times, false)
+        self.prepare_context_windows_policy(bars, execution_times, Preparation::StaticOnly)
+    }
+
+    pub(crate) fn prepare_context_windows_for_observed_feedback(
+        &mut self,
+        bars: &[Bar],
+    ) -> Result<usize, RuntimeError> {
+        self.prepare_context_windows_policy(bars, None, Preparation::Observed)
     }
 
     fn prepare_context_windows_policy(
         &mut self,
         bars: &[Bar],
         execution_times: Option<&[i64]>,
-        allow_discovery: bool,
+        preparation: Preparation,
     ) -> Result<usize, RuntimeError> {
         if self.bars != 0 || self.context_windows.prepared {
             return Ok(0);
@@ -40,7 +54,11 @@ impl HistoricalRuntime<'_> {
             self.program.calc_bars_count,
         );
         if bars.is_empty() || !self.metadata.context_windows.has_window_demands() {
-            return Ok(windows.initial_skip(bars.len()));
+            let skip = windows.initial_skip(bars.len());
+            if preparation == Preparation::Observed {
+                self.context_windows = windows;
+            }
+            return Ok(skip);
         }
         windows.prepared = true;
         windows.set_dataset(bars);
@@ -135,8 +153,14 @@ impl HistoricalRuntime<'_> {
                 pending.remove(&call.id);
             }
         }
-        if !allow_discovery && !pending.is_empty() {
+        if preparation == Preparation::StaticOnly && !pending.is_empty() {
             return Err(RuntimeError { message: "external streaming dataset requires statically resolved request windows; dynamic discovery needs observed account feedback".to_owned() });
+        }
+        if preparation == Preparation::Observed {
+            windows.discovering = !pending.is_empty();
+            let skip = windows.initial_skip(bars.len());
+            self.context_windows = windows;
+            return Ok(skip);
         }
         // Discovery uses disposable Pine/broker/output state. Preserve context
         // reservations across restarts, never partially executed Pine state.
@@ -247,8 +271,8 @@ impl HistoricalRuntime<'_> {
             self.context_windows.anchor_known_history(&key, times);
         }
         if self.context_windows.restart {
-            // Consumed exclusively by prepare_context_windows; never exposed by
-            // the public historical iterator or returned as a Pine error.
+            // Native discovery consumes this internally. Observed discovery
+            // exposes a typed control status and requires a complete rebase.
             return Err(RuntimeError {
                 message: "initial context window changed".to_owned(),
             });

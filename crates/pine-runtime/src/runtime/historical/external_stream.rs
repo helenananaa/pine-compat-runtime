@@ -10,6 +10,20 @@ impl HistoricalRuntime<'_> {
         &mut self,
         bars: &[Bar],
     ) -> Result<usize, RuntimeError> {
+        self.validate_external_stream_dataset(bars)?;
+        let mut candidate = self.clone();
+        let external = candidate.external_execution.take();
+        let skip = candidate.prepare_context_windows_without_discovery(bars, None)?;
+        candidate.finish_historical_dataset_plan(bars, skip)?;
+        candidate.external_execution = external;
+        *self = candidate;
+        Ok(skip)
+    }
+
+    pub(super) fn validate_external_stream_dataset(
+        &self,
+        bars: &[Bar],
+    ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
         let state = self
             .external_execution
@@ -35,13 +49,7 @@ impl HistoricalRuntime<'_> {
                 "external dataset planning requires a fresh scheduled runtime and ordered canonical bars",
             ));
         }
-        let mut candidate = self.clone();
-        let external = candidate.external_execution.take();
-        let skip = candidate.prepare_context_windows_without_discovery(bars, None)?;
-        candidate.finish_historical_dataset_plan(bars, skip)?;
-        candidate.external_execution = external;
-        *self = candidate;
-        Ok(skip)
+        Ok(())
     }
 
     /// Open one chart bar. Historical callers supply its canonical OHLCV;
@@ -52,6 +60,7 @@ impl HistoricalRuntime<'_> {
         bar_state: ExternalBarState,
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
+        self.validate_external_window_bar(canonical, bar_state)?;
         let state = self
             .external_execution
             .as_ref()

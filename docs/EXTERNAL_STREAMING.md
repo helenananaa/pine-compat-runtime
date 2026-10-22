@@ -38,6 +38,29 @@ window-plan schema 1; the existing JS binding still has no external-account
 session API. Dynamic historical discovery still needs observed-feedback/rebase
 coordination and is not enabled by this metadata-only capability.
 
+Observed window feedback is a separate opt-in capability (schema 1). Rust
+`initialize_external_stream_dataset_with_observed_feedback` and Python
+`initialize_history(..., observed_feedback=True)` resolve static reservations
+without running Pine or fabricating account frames. `window_status()` reports
+whether an actual-observation discovery pass is required. A window change
+interrupts the current execution; status remains readable and
+`rebase_window(seal=False)` resets the entire tentative Pine state and initial
+requested feed while retaining observed context reservations. All tentative
+intents and Host matching state must be discarded by the caller. No failed
+observation's partial intents may be settled.
+
+After a complete, uninterrupted pass over the exact planned historical rows,
+`rebase_window(seal=True)` starts a fresh final execution with the discovered
+plan. The host must complete discovery before publishing durable prefixes.
+Partial passes and ordinary script failures cannot be sealed or reset. Later
+window drift still interrupts and requires discovery again. This opt-in mode
+uses begin/observe/commit exclusively; legacy batch appends are rejected.
+Core owns only reservations, control status and deterministic reset. It never
+replays a Host ledger, performs matching, or supplies future account feedback.
+Host orchestration, recovery journals, attempt limits, deadlines and resource
+qualification are separate responsibilities. WASM exposes the capability number
+but still has no JS external-account session API.
+
 Ordinary variables, referenced heaps, TA and price flow roll back between
 observations; varip persists. Market confirmation does not end the input group:
 explicit closing-fill feedback can still arrive before the host commits. The

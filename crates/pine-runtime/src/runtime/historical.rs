@@ -628,7 +628,10 @@ impl<'a> HistoricalRuntime<'a> {
         self.request_feed
             .apply(key.clone(), update, provider_last)
             .map_err(crate::request::RequestFeedError::runtime_error)?;
-        self.invalidate_request_cache(&key);
+        // A fallback cached for another context may contain a nested request to
+        // this stream. Direct incremental checkpoints exclude nested expressions
+        // and remain reusable; fallback snapshots must be rebuilt transitively.
+        self.request_cache.clear();
         Ok(())
     }
 
@@ -640,13 +643,6 @@ impl<'a> HistoricalRuntime<'a> {
                 message: error.to_string(),
             }),
         }
-    }
-
-    fn invalidate_request_cache(&mut self, key: &RequestKey) {
-        let symbol = key.symbol();
-        let timeframe = key.timeframe().value();
-        self.request_cache
-            .retain(|cache_key, _| cache_key.context() != (symbol, timeframe));
     }
 
     /// Validate the complete chart range before using the one-bar streaming API.

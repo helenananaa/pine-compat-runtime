@@ -56,6 +56,7 @@ fn closing_ticks_are_explicit_and_allow_only_immutable_confirmed_market_state() 
         event_time_ms: 59_999,
         confirmed: true,
         request_data: None,
+        request_updates: None,
     };
     let mut second = first.clone();
     second.account.position_size = 2.0;
@@ -150,6 +151,7 @@ fn empty_append_is_a_noop_for_fill_pass_sessions() {
                 event_time_ms: 1,
                 confirmed: false,
                 request_data: None,
+                request_updates: None,
             }]]),
         )
         .unwrap();

@@ -419,6 +419,71 @@ mod tests {
     }
 
     #[test]
+    fn external_observed_growth_replays_only_the_terminal_requested_bar_and_new_tail() {
+        let analysis = analyze_source(&SourceFile::new(
+            "observed-growth",
+            "//@version=6\nstrategy(\"growth\")\nplot(request.security(\"B\",\"1\",ta.cum(close)))",
+        ));
+        assert!(analysis.diagnostics.is_empty());
+        let hir = analysis.hir.unwrap();
+        let timeframe = RequestTimeframe::parse("1").unwrap();
+        let provider = InMemoryRequestDataProvider::from_streams([(
+            RequestKey::new("B", timeframe.clone()),
+            vec![],
+        )])
+        .unwrap();
+        let environment =
+            RequestEnvironment::new(ChartContext::new("A", timeframe), Arc::new(provider));
+        let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment)
+            .with_external_accounts(vec![])
+            .unwrap();
+        let mut replayed = 0;
+        for index in 0..512 {
+            let observed = (index + 1) * 60_000 - 1;
+            runtime
+                .apply_external_request_updates(
+                    &[crate::ObservedRequestUpdate {
+                        symbol: "B".into(),
+                        timeframe: "1".into(),
+                        bar: bar(index * 60_000, (index + 1) as f64),
+                        kind: BarUpdateKind::Confirmed,
+                        available_at_ms: observed,
+                    }],
+                    observed,
+                )
+                .unwrap();
+            runtime
+                .append_external_bars(
+                    &[bar(index * 60_000, 1.0)],
+                    vec![crate::ExternalAccountFrame {
+                        time: index * 60_000,
+                        position_size: 0.0,
+                        position_avg_price: None,
+                        equity: 1000.0,
+                        initial_capital: 1000.0,
+                        netprofit: 0.0,
+                        openprofit: 0.0,
+                    }],
+                    None,
+                )
+                .unwrap();
+            assert_eq!(runtime.request_evaluations.len(), 1);
+            let saved = runtime.request_evaluations.values().next().unwrap();
+            assert!(saved.replayed_bars <= 2);
+            replayed += saved.replayed_bars;
+            assert_eq!(
+                runtime.result().plots[0]
+                    .values
+                    .last()
+                    .and_then(PineValue::as_f64),
+                Some(((index + 1) * (index + 2) / 2) as f64)
+            );
+        }
+        assert_eq!(replayed, 1023);
+        assert!(runtime.request_cache.is_empty());
+    }
+
+    #[test]
     fn historical_prefix_matches_complete_provider_replay_with_irregular_closes() {
         for timeframe in ["1", "11"] {
             for gaps in ["gaps_on", "gaps_off"] {

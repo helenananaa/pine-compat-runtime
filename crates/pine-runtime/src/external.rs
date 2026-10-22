@@ -6,8 +6,11 @@ use pine_ir::{HirCallArg, ScriptMode};
 use serde::{Deserialize, Serialize};
 
 mod metadata;
+mod request_updates;
 mod sizing;
 pub use metadata::ExternalOrderMetadata;
+use request_updates::ExternalRequestState;
+pub use request_updates::{EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION, ObservedRequestUpdate};
 
 pub const EXTERNAL_ORDER_SCHEMA_VERSION: u32 = 2;
 pub const EXTERNAL_CLOSING_TICK_SCHEMA_VERSION: u32 = 1;
@@ -43,6 +46,8 @@ pub struct ExternalPass {
     pub confirmed: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub request_data: Option<Vec<ExternalRequestStream>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_updates: Option<Vec<ObservedRequestUpdate>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -98,6 +103,7 @@ pub(crate) struct ExternalExecution {
     pub intents: Vec<ExternalOrderIntent>,
     pub error: Option<String>,
     pub risk_configuration: Option<crate::StrategyRiskConfiguration>,
+    pub request_state: ExternalRequestState,
 }
 
 pub(crate) fn external_error(message: impl Into<String>) -> RuntimeError {
@@ -111,8 +117,8 @@ impl HistoricalRuntime<'_> {
         if skip == 0 {
             return Ok(());
         }
-        if let Some(state) = &mut self.external_execution {
-            if state.frames.len() < skip
+        if let Some(state) = &self.external_execution
+            && (state.frames.len() < skip
                 || state
                     .passes
                     .as_ref()
@@ -120,12 +126,14 @@ impl HistoricalRuntime<'_> {
                 || state
                     .contexts
                     .as_ref()
-                    .is_some_and(|groups| groups.len() < skip)
-            {
-                return Err(external_error(
-                    "missing feedback for the historical execution window",
-                ));
-            }
+                    .is_some_and(|groups| groups.len() < skip))
+        {
+            return Err(external_error(
+                "missing feedback for the historical execution window",
+            ));
+        }
+        self.prepare_external_request_window(skip)?;
+        if let Some(state) = &mut self.external_execution {
             state.frames.drain(..skip);
             if let Some(groups) = &mut state.passes {
                 groups.drain(..skip);
@@ -138,6 +146,7 @@ impl HistoricalRuntime<'_> {
     }
 
     pub(crate) fn bind_external_request_data(&mut self) -> Result<(), RuntimeError> {
+        self.bind_external_request_updates()?;
         let Some(streams) = self
             .external_execution
             .as_ref()
@@ -227,6 +236,7 @@ impl HistoricalRuntime<'_> {
             intents: vec![],
             error: None,
             risk_configuration: (!configuration.rules.is_empty()).then_some(configuration),
+            request_state: ExternalRequestState::default(),
         });
         Ok(self)
     }
@@ -255,6 +265,7 @@ impl HistoricalRuntime<'_> {
         if let Some(contexts) = contexts {
             self.validate_external_schedule(frames, passes, contexts, options)?;
         }
+        self.validate_external_request_transcript(passes, contexts)?;
         if let Some(groups) = &passes {
             if groups.len() != frames.len()
                 || groups
@@ -278,7 +289,11 @@ impl HistoricalRuntime<'_> {
                                     || !pass.confirmed
                                     || group[index - 1].bar != pass.bar
                                     || group[index - 1].event_time_ms != pass.event_time_ms
-                                    || group[index - 1].request_data != pass.request_data))
+                                    || group[index - 1].request_data != pass.request_data
+                                    || pass
+                                        .request_updates
+                                        .as_ref()
+                                        .is_some_and(|updates| !updates.is_empty())))
                                 || group[index - 1].event_time_ms > pass.event_time_ms))
                         || [bar.open, bar.high, bar.low, bar.close, bar.volume]
                             .iter()
@@ -375,6 +390,25 @@ impl HistoricalRuntime<'_> {
                 .any(|(frame, bar)| frame.time != bar.time)
         {
             return Err(external_error("feedback time/count mismatch"));
+        }
+        if passes.is_none()
+            && let Some(mut clock) = state.request_state.observed_at
+        {
+            for (index, bar) in bars.iter().enumerate() {
+                let observed_at = match execution_times.and_then(|times| times.get(index)) {
+                    Some(time) => *time,
+                    None => self
+                        .request_environment
+                        .chart_close(bar.time)?
+                        .saturating_sub(1),
+                };
+                if observed_at < clock {
+                    return Err(external_error(
+                        "chart observation precedes requested-data availability",
+                    ));
+                }
+                clock = observed_at;
+            }
         }
         if bars.windows(2).any(|pair| pair[1].time <= pair[0].time)
             || bars

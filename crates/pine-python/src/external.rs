@@ -6,11 +6,15 @@ use crate::{
 use pine_runtime::HistoricalRuntime;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyDict, PyModule};
+use pyo3::types::{PyAny, PyBool, PyDict, PyInt, PyModule};
 
 pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
     for (name, version) in [
         ("EXTERNAL_CLOCK_SCHEMA_VERSION", 1),
+        (
+            "EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION",
+            pine_runtime::EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION,
+        ),
         (
             "EXTERNAL_SCHEDULE_SCHEMA_VERSION",
             pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION,
@@ -198,6 +202,35 @@ impl ExternalSession {
 }
 #[pymethods]
 impl ExternalSession {
+    /// Feed-only transaction; invalid input does not poison the session.
+    fn apply_request_updates(
+        &mut self,
+        py: Python<'_>,
+        updates: &Bound<'_, PyAny>,
+        observed_at_ms: &Bound<'_, PyAny>,
+    ) -> PyResult<()> {
+        if self.failed {
+            return Err(PyValueError::new_err(
+                "E_RUNTIME_POISONED: external session failed; create a new session",
+            ));
+        }
+        if !observed_at_ms.is_instance_of::<PyInt>() || observed_at_ms.is_instance_of::<PyBool>() {
+            return Err(PyValueError::new_err(
+                "requested-data observation clock must be an integer millisecond timestamp",
+            ));
+        }
+        let observed_at_ms = observed_at_ms.extract::<i64>()?;
+        let json = PyModule::import(py, "json")?;
+        let raw: String = json.call_method1("dumps", (updates,))?.extract()?;
+        let updates: Vec<pine_runtime::ObservedRequestUpdate> =
+            serde_json::from_str(&raw).map_err(|error| PyValueError::new_err(error.to_string()))?;
+        py.detach(|| {
+            self.runtime
+                .apply_external_request_updates(&updates, observed_at_ms)
+        })
+        .map_err(|error| PyValueError::new_err(error.message))
+    }
+
     #[pyo3(signature=(bars, accounts, execution_passes=None, execution_times=None, *, execution_schedule=None))]
     fn append(
         &mut self,

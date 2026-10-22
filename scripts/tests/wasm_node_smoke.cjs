@@ -1253,4 +1253,23 @@ for (const pointValue of [0.01, 0.5, 5, 50]) {
   assert.equal(output.plots[0].values[0], pointValue);
   assert.equal(output.plots[1].values[0], 2);
 }
+// A changed inner feed also invalidates fallback values cached by an outer request.
+{
+  const compiled = pine.compileScript('//@version=6\nindicator("nested feed")\nplot(request.security("C","1",request.security("B","1",close)))');
+  const bar = (index, value) => ({time:index*60000,open:value,high:value,low:value,close:value,volume:1});
+  const session = compiled.realtimeSessionWithRequestBars(JSON.stringify({
+    'B:1':[bar(0,100)], 'C:1':[bar(0,1),bar(1,1)]
+  }));
+  session.seed('time,open,high,low,close,volume\n0,1,1,1,1,1\n');
+  const replica = session.replica();
+  assert.equal(session.applyRequestConfirmed('B','1',JSON.stringify(bar(1,200))), 'null');
+  replica.apply(session.applyConfirmed(JSON.stringify(bar(1,1))));
+  assert.deepEqual(JSON.parse(session.result()).plots[0].values,[100,200]);
+  assert.equal(replica.result(),session.result());
+  const before=session.result(), revision=session.revision;
+  assert.throws(()=>session.applyRequestConfirmed('B','1',JSON.stringify(bar(1,999))),/E_REQUEST_FEED_TIME/);
+  assert.equal(session.result(),before);
+  assert.equal(session.revision,revision);
+  replica.free(); session.free(); compiled.free();
+}
 console.log('wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions');

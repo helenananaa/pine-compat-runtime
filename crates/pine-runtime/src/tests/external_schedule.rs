@@ -48,6 +48,7 @@ fn pass(
             event_time_ms: bar.time + bar.close as i64,
             confirmed: commit,
             request_data: None,
+            request_updates: None,
         },
         context: ExternalPassContext {
             bar_state: state,

@@ -11,6 +11,7 @@ pub(crate) struct ExternalWindowFeedback<'a> {
     dataset: Arc<[Bar]>,
     input_skip: usize,
     requires_discovery: bool,
+    bar_state: ExternalBarState,
 }
 
 impl HistoricalRuntime<'_> {
@@ -23,6 +24,26 @@ impl HistoricalRuntime<'_> {
         bars: &[Bar],
         requested: &[ExternalRequestWindowHistory],
     ) -> Result<usize, RuntimeError> {
+        self.initialize_external_window_feedback(bars, requested, ExternalBarState::Historical)
+    }
+
+    /// Reserve known request endpoints while chart values and bounds remain
+    /// observation-driven. Frozen chart rows validate closes, never supply
+    /// requested canonical chart prices to a forming realtime observation.
+    pub fn initialize_external_realtime_dataset_with_observed_feedback(
+        &mut self,
+        bars: &[Bar],
+        requested: &[ExternalRequestWindowHistory],
+    ) -> Result<usize, RuntimeError> {
+        self.initialize_external_window_feedback(bars, requested, ExternalBarState::Realtime)
+    }
+
+    fn initialize_external_window_feedback(
+        &mut self,
+        bars: &[Bar],
+        requested: &[ExternalRequestWindowHistory],
+        bar_state: ExternalBarState,
+    ) -> Result<usize, RuntimeError> {
         self.validate_external_stream_dataset(bars)?;
         let histories = self.parse_requested_window_history(bars, requested)?;
         let mut candidate = self.clone();
@@ -31,13 +52,14 @@ impl HistoricalRuntime<'_> {
         let skip = candidate.prepare_context_windows_for_observed_feedback(bars)?;
         let requires_discovery = candidate.context_windows.discovering;
         let external = candidate.external_execution.take();
-        candidate.finish_historical_dataset_plan(bars, skip)?;
+        candidate.finish_external_window_plan(bars, skip, bar_state)?;
         candidate.external_execution = external;
         candidate.external_window_feedback = Some(ExternalWindowFeedback {
             seed,
             dataset: Arc::from(bars),
             input_skip: skip,
             requires_discovery,
+            bar_state,
         });
         *self = candidate;
         Ok(skip)
@@ -82,7 +104,7 @@ impl HistoricalRuntime<'_> {
             .context_windows
             .initial_skip(feedback.dataset.len());
         let external = candidate.external_execution.take();
-        candidate.finish_historical_dataset_plan(&feedback.dataset, skip)?;
+        candidate.finish_external_window_plan(&feedback.dataset, skip, feedback.bar_state)?;
         candidate.external_execution = external;
         next_feedback.input_skip = skip;
         next_feedback.requires_discovery = (next_feedback.requires_discovery || required) && !seal;
@@ -98,7 +120,17 @@ impl HistoricalRuntime<'_> {
     ) -> Result<(), RuntimeError> {
         if let Some(feedback) = &self.external_window_feedback {
             if let Some(expected) = feedback.dataset.get(feedback.input_skip + self.bars) {
-                if state != ExternalBarState::Historical || canonical != *expected {
+                let valid_bar = match feedback.bar_state {
+                    ExternalBarState::Historical => canonical == *expected,
+                    ExternalBarState::Realtime => {
+                        canonical.time == expected.time
+                            && canonical.open == expected.open
+                            && canonical.high <= expected.high
+                            && canonical.low >= expected.low
+                            && canonical.volume <= expected.volume
+                    }
+                };
+                if state != feedback.bar_state || !valid_bar {
                     return Err(external_error(
                         "observed window execution differs from planned history",
                     ));
@@ -106,6 +138,46 @@ impl HistoricalRuntime<'_> {
             } else if feedback.requires_discovery {
                 return Err(external_error(
                     "seal the complete observed window before extending history",
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn finish_external_window_plan(
+        &mut self,
+        bars: &[Bar],
+        skip: usize,
+        state: ExternalBarState,
+    ) -> Result<(), RuntimeError> {
+        if state == ExternalBarState::Historical {
+            self.finish_historical_dataset_plan(bars, skip)?;
+        } else {
+            // Do not extend static canonical requests or fix a future chart
+            // endpoint. Normal realtime evaluation owns those visible values.
+            self.prepare_external_window(skip)?;
+        }
+        Ok(())
+    }
+
+    pub(super) fn validate_external_window_observation(
+        &self,
+        pass: &crate::ExternalScheduledPass,
+    ) -> Result<(), RuntimeError> {
+        if let Some(feedback) = &self.external_window_feedback
+            && feedback.bar_state == ExternalBarState::Realtime
+            && let Some(expected) = feedback.dataset.get(feedback.input_skip + self.bars)
+        {
+            let bar = pass.evaluation.bar;
+            if bar.time != expected.time
+                || bar.open != expected.open
+                || bar.high > expected.high
+                || bar.low < expected.low
+                || bar.volume > expected.volume
+                || (pass.evaluation.confirmed && bar != *expected)
+            {
+                return Err(external_error(
+                    "realtime observation differs from frozen dataset",
                 ));
             }
         }

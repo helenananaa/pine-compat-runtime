@@ -409,6 +409,32 @@ impl ExternalSession {
         .map_err(|error| PyValueError::new_err(error.message))
     }
 
+    #[pyo3(signature=(bars, *, requested_history=None))]
+    fn initialize_realtime_history(
+        &mut self,
+        py: Python<'_>,
+        bars: &Bound<'_, PyAny>,
+        requested_history: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<usize> {
+        self.ensure_usable()?;
+        let bars = parse_bars(bars)?;
+        let requested: Vec<pine_runtime::ExternalRequestWindowHistory> = match requested_history {
+            Some(value) => {
+                let raw: String = PyModule::import(py, "json")?
+                    .call_method1("dumps", (value,))?
+                    .extract()?;
+                serde_json::from_str(&raw)
+                    .map_err(|error| PyValueError::new_err(error.to_string()))?
+            }
+            None => Vec::new(),
+        };
+        py.detach(|| {
+            self.runtime
+                .initialize_external_realtime_dataset_with_observed_feedback(&bars, &requested)
+        })
+        .map_err(|error| PyValueError::new_err(error.message))
+    }
+
     /// Typed provider failure is readable without unpoisoning the session.
     fn failed_request_context(&self) -> Option<(String, String)> {
         self.runtime

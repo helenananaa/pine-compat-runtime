@@ -41,6 +41,7 @@ impl HistoricalRuntime<'_> {
             .ok_or_else(|| external_error("external mode is not active"))?;
         if self.bars != 0
             || self.historical_end.is_some()
+            || self.external_window_feedback.is_some()
             || state.stream.is_some()
             || !state.frames.is_empty()
             || state
@@ -121,6 +122,7 @@ impl HistoricalRuntime<'_> {
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
         self.failed_request_context = None;
+        self.validate_external_window_observation(&pass)?;
         let state = self
             .external_execution
             .as_ref()

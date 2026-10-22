@@ -85,6 +85,21 @@ the missing dataset must discard its entire tentative execution and construct a
 fresh evaluator against the amended immutable input plan. Reading this status
 does not authorize a retry on the failed runtime or revise committed decisions.
 
+`ExternalSession.initialize_realtime_history(bars, requested_history=None)`
+reserves initially known request endpoints with observed window feedback, while
+keeping chart values and chart bounds observation-driven. Supply completed
+canonical rows solely for window selection and input validation. Unlike
+`initialize_history`, this mode never preloads canonical chart prices into static
+requests or exposes the final chart endpoint to earlier realtime observations.
+`begin_bar(..., bar_state="realtime")` accepts partial tuples within the frozen
+OHLCV bounds; each confirmed tuple must exactly match its planned canonical row.
+Validation errors before execution leave the observation retryable. Initialization
+is allowed once on a fresh scheduled session. Rebase discards tentative evaluator
+state; hosts must also discard the corresponding account ledger and decisions.
+Seal a complete stable pass before extending beyond the known rows. Dynamic
+request contexts first encountered on realtime bars retain the existing rejection
+policy; endpoint metadata does not count as historical script execution.
+
 On 2026-10-19 the explicit-clock update passed the complete Windows
 `scripts/verify.ps1` gate with Rust 1.97.1, Python 3.12.7 and Node 22.14.0:
 7,901 Rust tests, 1,686 tests against a freshly built and installed Python wheel,

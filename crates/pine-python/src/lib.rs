@@ -337,6 +337,7 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
         pine_runtime::REALTIME_REQUEST_FEED_SCHEMA_VERSION,
     )?;
     module.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    module.add("EVENT_REQUEST_SERIES_CONTRACT", "renko-event-rows/1")?;
     module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     external::register_schemas(module)?;

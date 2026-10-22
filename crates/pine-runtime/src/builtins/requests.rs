@@ -833,7 +833,7 @@ impl<'a> HistoricalRuntime<'a> {
                 .resolved_range(key, provider_bars, include_forming, start, end);
         // External execution can receive a known stream with no closed bars yet.
         // Missing keys still fail above; empty visible history aligns to na.
-        if bars.is_empty() && self.external_execution.is_none() {
+        if bars.is_empty() && self.external_execution.is_none() && !key.is_event_chart() {
             return Err(RuntimeError {
                 message: RequestDataError::MissingData {
                     symbol: key.symbol().to_owned(),

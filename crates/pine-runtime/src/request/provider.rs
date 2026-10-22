@@ -34,6 +34,21 @@ impl RequestKey {
     pub fn timeframe(&self) -> &RequestTimeframe {
         &self.timeframe
     }
+
+    /// Renko event rows are ordered by ordinal and can share a source time.
+    /// Ordinary requested contexts continue to require unique timestamps.
+    #[must_use]
+    pub fn is_event_chart(&self) -> bool {
+        serde_json::from_str::<serde_json::Value>(&self.symbol)
+            .ok()
+            .is_some_and(|value| {
+                value.get("chart").and_then(serde_json::Value::as_str) == Some("renko")
+                    && value
+                        .get("symbol")
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|symbol| !symbol.is_empty())
+            })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -130,7 +145,18 @@ impl InMemoryRequestDataProvider {
     }
 
     pub fn insert(&mut self, key: RequestKey, bars: Vec<Bar>) -> Result<(), RequestDataError> {
-        validate_requested_bars(&bars)?;
+        if key.is_event_chart() {
+            for pair in bars.windows(2) {
+                if pair[1].time < pair[0].time {
+                    return Err(RequestDataError::UnsortedBars {
+                        previous_time: pair[0].time,
+                        time: pair[1].time,
+                    });
+                }
+            }
+        } else {
+            validate_requested_bars(&bars)?;
+        }
         if self.streams.contains_key(&key) {
             return Err(RequestDataError::DuplicateKey {
                 symbol: key.symbol().to_owned(),

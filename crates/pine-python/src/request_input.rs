@@ -1,5 +1,5 @@
 //! Python request streams and host-supplied chart input metadata.
-use crate::{chart_metadata, parse_bars, parse_chart_context, parse_request_key};
+use crate::{chart_metadata, parse_bar, parse_chart_context, parse_request_key};
 use pine_runtime::{InMemoryRequestDataProvider, RequestEnvironment};
 use pyo3::{
     exceptions::PyValueError,
@@ -55,7 +55,13 @@ pub(super) fn parse_request_environment(
             continue;
         }
         let request_key = parse_request_key(&key)?;
-        streams.push((request_key, parse_bars(&value)?));
+        // Provider validation owns context-specific ordering. Renko bricks
+        // preserve their row ordinals even when a source timestamp repeats.
+        let mut bars = Vec::new();
+        for item in value.try_iter()? {
+            bars.push(parse_bar(&item?)?);
+        }
+        streams.push((request_key, bars));
     }
     let provider = InMemoryRequestDataProvider::from_streams(streams)
         .map_err(|err| PyValueError::new_err(err.to_string()))?;

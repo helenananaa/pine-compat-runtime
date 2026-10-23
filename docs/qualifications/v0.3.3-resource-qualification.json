@@ -1,0 +1,480 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "sourceCommit": "28f54b97a37422eef5357832bd73fb189b988d85",
+  "freshTrials": 216,
+  "fullSourceCi": {
+    "id": 39887494700,
+    "name": "CI",
+    "path": ".github/workflows/ci.yml",
+    "head_sha": "28f54b97a37422eef5357832bd73fb189b988d85",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/helenananaa/pine-compat-runtime/actions/runs/39887494700",
+    "repository": "helenananaa/pine-compat-runtime"
+  },
+  "environmentObservation": {
+    "observedUtc": "2026-10-23T03:07:00.3108831Z",
+    "sourceCommit": "28f54b97a37422eef5357832bd73fb189b988d85",
+    "timing": "Observed during the Linux sequence after Windows surfaces; not a premeasurement capture",
+    "windows": {
+      "cpu": {
+        "Name": "13th Gen Intel(R) Core(TM) i9-13900HX",
+        "NumberOfCores": 24,
+        "NumberOfLogicalProcessors": 32
+      },
+      "physicalMemoryBytes": 68441346048
+    },
+    "linux": {
+      "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-alas-redroid+-x86_64-with-glibc2.35",
+      "cpuModel": "13th Gen Intel(R) Core(TM) i9-13900HX",
+      "logicalProcessors": 32,
+      "guestMemoryTotalBytes": 63192936448
+    },
+    "scope": "Read-only static hardware and guest limits; per-surface OS/runtime/toolchain evidence remains in actual receipts and build provenance"
+  },
+  "environmentObservationSha256": "18406a7c74f423f4c6e71ab9a0b8c614090b172f1ce3c9f1b2a81fe5fe2f4329",
+  "crossSurfaceMismatchGroups": 0,
+  "budgetAndExecutionFailures": [],
+  "unverified": [],
+  "resourcePlatforms": [
+    "Windows",
+    "Linux"
+  ],
+  "resourceSurfaces": [
+    "rust",
+    "python",
+    "wasm"
+  ],
+  "macOSBoundary": "Installed-wheel compatibility tested in CI; no macOS resource measurement",
+  "pythonWheelHashes": {
+    "windows-x86_64": "d465365c6ea6e2cd7a25e61ef68d5abcf26440f01881435a214f440e83b7903d",
+    "macos-arm64": "e2859501e22f7741fa04448c0deb001623b40ee33fe82082084af40801c1a090",
+    "macos-x86_64": "45f4732129fa7400f5fcca7af623c0021910eb6d26fe00e424e31fafccd1c987",
+    "linux-x86_64": "84a6a71482be461caf0be618726e05d941d726a006bc71492fc9ae6b742b1f35"
+  },
+  "producerWorkflowRun": 39887494678,
+  "frozenPlanSha256": "2a8a0a71d0baf4e12db524861ed00a82f415a4f2aa518a63b1eb9de68a463c6d",
+  "frozenBudgetSha256": "ddd393487903a5b96b8edb30d6e998c992bb3e4f34c171832deead3b482da780",
+  "fullAuditSha256": "e7fb3fb3a4a9f13eb954b9b5b2c08e979efa175c46321ba7e4a44ee0def63d5c",
+  "workloads": {
+    "scripts": [
+      "rsi-default",
+      "rsi-alternate",
+      "pivot-original"
+    ],
+    "historyBars": [
+      1024,
+      16384,
+      100000
+    ],
+    "tailBars": [
+      128,
+      128,
+      10000
+    ],
+    "independentSessionCounts": [
+      1,
+      4
+    ],
+    "repetitions": 2,
+    "scheduling": "Independent sessions interleaved in one process; no parallel-throughput claim"
+  },
+  "surfaces": {
+    "Windows/rust": {
+      "freshTrials": 36,
+      "receiptSha256": "e80592703c9a246ae53a0485d226d01d06274d4413577fc7c5cfe5b42491f3f4",
+      "metrics": {
+        "append": {
+          "maxTrialP95Ms": 0.1451,
+          "maxObservedMs": 1.1746
+        },
+        "compile": {
+          "maxTrialP95Ms": 7.869599999999999,
+          "maxObservedMs": 7.869599999999999
+        },
+        "confirmation": {
+          "maxTrialP95Ms": 0.2886,
+          "maxObservedMs": 3.3841
+        },
+        "forming": {
+          "maxTrialP95Ms": 0.208,
+          "maxObservedMs": 1.4266
+        },
+        "replacement": {
+          "maxTrialP95Ms": 0.251,
+          "maxObservedMs": 0.7146
+        },
+        "replica": {
+          "maxTrialP95Ms": 0.036199999999999996,
+          "maxObservedMs": 59.8627
+        },
+        "sameContextAppend": {
+          "maxTrialP95Ms": 0.1854,
+          "maxObservedMs": 1.7699
+        },
+        "seed": {
+          "maxTrialP95Ms": 10978.7822,
+          "maxObservedMs": 10978.7822
+        },
+        "serialization": {
+          "maxTrialP95Ms": 252.60909999999998,
+          "maxObservedMs": 252.60909999999998
+        },
+        "snapshot": {
+          "maxTrialP95Ms": 134.4575,
+          "maxObservedMs": 134.4575
+        },
+        "request": {
+          "maxTrialP95Ms": 0.1743,
+          "maxObservedMs": 0.6738999999999999
+        }
+      },
+      "runtimeVersions": {
+        "controllerPython": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+        "localRustAndWasmCompiler": "rustc 1.95.0 (59807616e 2026-04-14)"
+      },
+      "platform": "Windows-10-10.0.26200-SP0",
+      "singleSessionPeakRssBytes": 415182848,
+      "fourSessionPeakRssBytes": 1076793344,
+      "maxTailGrowthRatio": 2.622680412371134,
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "db8eeffdff4c57700bd353d864479f6628e6624d071aafac35ce1ab99961c36c",
+        "wasm/pine_wasm_bg.wasm": "0313eb309d55b3b1465fb479c6d81cc1d69abcf1b4756dbfb6fc464598a0fa5c",
+        "wheels/pine_compat_runtime-0.3.3-cp310-abi3-win_amd64.whl": "d465365c6ea6e2cd7a25e61ef68d5abcf26440f01881435a214f440e83b7903d",
+        "resource-probe.exe": "b135ad43555799ffd266bffedc874acc59490a7d97a6ce4a239ea5b14b5357a7"
+      },
+      "memoryBoundary": "Process-wide peak including input conversion and verification; not retained runtime allocations"
+    },
+    "Windows/python": {
+      "freshTrials": 36,
+      "receiptSha256": "42eae436320667d5885d3ce70fe8c610e1e830914ffd61cc1bc8cbc897a7a011",
+      "metrics": {
+        "compile": {
+          "maxTrialP95Ms": 8.1368,
+          "maxObservedMs": 8.1368
+        },
+        "seed": {
+          "maxTrialP95Ms": 13382.298,
+          "maxObservedMs": 13382.298
+        },
+        "forming": {
+          "maxTrialP95Ms": 0.2596,
+          "maxObservedMs": 1.3613
+        },
+        "replica": {
+          "maxTrialP95Ms": 0.0929,
+          "maxObservedMs": 50.8315
+        },
+        "replacement": {
+          "maxTrialP95Ms": 0.2665,
+          "maxObservedMs": 1.1353
+        },
+        "confirmation": {
+          "maxTrialP95Ms": 0.2802,
+          "maxObservedMs": 3.096
+        },
+        "snapshot": {
+          "maxTrialP95Ms": 316.0871,
+          "maxObservedMs": 316.0871
+        },
+        "serialization": {
+          "maxTrialP95Ms": 3944.2642,
+          "maxObservedMs": 3944.2642
+        },
+        "request": {
+          "maxTrialP95Ms": 0.1879,
+          "maxObservedMs": 0.7607
+        }
+      },
+      "runtimeVersions": {
+        "controllerPython": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+        "localRustAndWasmCompiler": "rustc 1.95.0 (59807616e 2026-04-14)"
+      },
+      "platform": "Windows-10-10.0.26200-SP0",
+      "singleSessionPeakRssBytes": 437428224,
+      "fourSessionPeakRssBytes": 1155096576,
+      "maxTailGrowthRatio": 2.7501858736059477,
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "db8eeffdff4c57700bd353d864479f6628e6624d071aafac35ce1ab99961c36c",
+        "wasm/pine_wasm_bg.wasm": "0313eb309d55b3b1465fb479c6d81cc1d69abcf1b4756dbfb6fc464598a0fa5c",
+        "wheels/pine_compat_runtime-0.3.3-cp310-abi3-win_amd64.whl": "d465365c6ea6e2cd7a25e61ef68d5abcf26440f01881435a214f440e83b7903d",
+        "resource-probe.exe": "b135ad43555799ffd266bffedc874acc59490a7d97a6ce4a239ea5b14b5357a7"
+      },
+      "memoryBoundary": "Process-wide peak including input conversion and verification; not retained runtime allocations"
+    },
+    "Windows/wasm": {
+      "freshTrials": 36,
+      "receiptSha256": "5b371b6ac925e02b544324c416e11ab917c49ca801a0cd94e2bf69562f0b6817",
+      "metrics": {
+        "compile": {
+          "maxTrialP95Ms": 73.9982,
+          "maxObservedMs": 73.9982
+        },
+        "seed": {
+          "maxTrialP95Ms": 22310.199,
+          "maxObservedMs": 22310.199
+        },
+        "forming": {
+          "maxTrialP95Ms": 0.31199999999807915,
+          "maxObservedMs": 30.38640000000305
+        },
+        "replica": {
+          "maxTrialP95Ms": 0.13130000000819564,
+          "maxObservedMs": 339.74929999999586
+        },
+        "replacement": {
+          "maxTrialP95Ms": 0.3274999999994179,
+          "maxObservedMs": 3.7244000000000597
+        },
+        "confirmation": {
+          "maxTrialP95Ms": 0.3510000000023865,
+          "maxObservedMs": 27.107800000005227
+        },
+        "snapshot": {
+          "maxTrialP95Ms": 539.6101000000781,
+          "maxObservedMs": 539.6101000000781
+        },
+        "serialization": {
+          "maxTrialP95Ms": 39.347499999945285,
+          "maxObservedMs": 39.347499999945285
+        },
+        "request": {
+          "maxTrialP95Ms": 0.26890000000094005,
+          "maxObservedMs": 2.4757999999992535
+        }
+      },
+      "runtimeVersions": {
+        "controllerPython": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+        "localRustAndWasmCompiler": "rustc 1.95.0 (59807616e 2026-04-14)",
+        "javascript": {
+          "node": "22.23.4",
+          "v8": "12.4.254.21-node.57",
+          "arch": "x64",
+          "platform": "win32"
+        }
+      },
+      "platform": "Windows-10-10.0.26200-SP0",
+      "singleSessionPeakRssBytes": 418942976,
+      "fourSessionPeakRssBytes": 1099255808,
+      "maxTailGrowthRatio": 2.0979925144391567,
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "db8eeffdff4c57700bd353d864479f6628e6624d071aafac35ce1ab99961c36c",
+        "wasm/pine_wasm_bg.wasm": "0313eb309d55b3b1465fb479c6d81cc1d69abcf1b4756dbfb6fc464598a0fa5c",
+        "wheels/pine_compat_runtime-0.3.3-cp310-abi3-win_amd64.whl": "d465365c6ea6e2cd7a25e61ef68d5abcf26440f01881435a214f440e83b7903d",
+        "resource-probe.exe": "b135ad43555799ffd266bffedc874acc59490a7d97a6ce4a239ea5b14b5357a7"
+      },
+      "memoryBoundary": "Process-wide peak including input conversion and verification; not retained runtime allocations"
+    },
+    "Linux/rust": {
+      "freshTrials": 36,
+      "receiptSha256": "61b8b43d7c211221950daab32c21e08c00537b27084de137c20c5fe70e485f46",
+      "metrics": {
+        "append": {
+          "maxTrialP95Ms": 0.105007,
+          "maxObservedMs": 0.833746
+        },
+        "compile": {
+          "maxTrialP95Ms": 56.71535,
+          "maxObservedMs": 56.71535
+        },
+        "confirmation": {
+          "maxTrialP95Ms": 0.189025,
+          "maxObservedMs": 4.408152
+        },
+        "forming": {
+          "maxTrialP95Ms": 0.152471,
+          "maxObservedMs": 3.420972
+        },
+        "replacement": {
+          "maxTrialP95Ms": 0.162296,
+          "maxObservedMs": 3.702275
+        },
+        "replica": {
+          "maxTrialP95Ms": 0.018539999999999997,
+          "maxObservedMs": 58.588935
+        },
+        "sameContextAppend": {
+          "maxTrialP95Ms": 0.122426,
+          "maxObservedMs": 2.896625
+        },
+        "seed": {
+          "maxTrialP95Ms": 5938.009235,
+          "maxObservedMs": 5938.009235
+        },
+        "serialization": {
+          "maxTrialP95Ms": 551.018613,
+          "maxObservedMs": 551.018613
+        },
+        "snapshot": {
+          "maxTrialP95Ms": 75.361861,
+          "maxObservedMs": 75.361861
+        },
+        "request": {
+          "maxTrialP95Ms": 0.11769600000000001,
+          "maxObservedMs": 1.71706
+        }
+      },
+      "runtimeVersions": {
+        "controllerPython": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+        "localRustAndWasmCompiler": "rustc 1.95.0 (59807616e 2026-04-14)"
+      },
+      "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-alas-redroid+-x86_64-with-glibc2.35",
+      "singleSessionPeakRssBytes": 430751744,
+      "fourSessionPeakRssBytes": 1297154048,
+      "maxTailGrowthRatio": 2.0326457783170366,
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "db8eeffdff4c57700bd353d864479f6628e6624d071aafac35ce1ab99961c36c",
+        "wasm/pine_wasm_bg.wasm": "1a33cde00417934ed45b51498c7c09723acb79d4e8faa27b64febe36f70d9853",
+        "wheels/pine_compat_runtime-0.3.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl": "84a6a71482be461caf0be618726e05d941d726a006bc71492fc9ae6b742b1f35",
+        "resource-probe": "2fe753654cdf636d5efdc0f2b08bdcb2a7e07093e6597a55a739c97d9a439952"
+      },
+      "memoryBoundary": "Process-wide peak including input conversion and verification; not retained runtime allocations"
+    },
+    "Linux/python": {
+      "freshTrials": 36,
+      "receiptSha256": "89dbed1fb371c49f488671b9f78ca094857c61564e1df193b095583a51a1ddb7",
+      "metrics": {
+        "compile": {
+          "maxTrialP95Ms": 56.340682,
+          "maxObservedMs": 56.340682
+        },
+        "seed": {
+          "maxTrialP95Ms": 5993.009318,
+          "maxObservedMs": 5993.009318
+        },
+        "forming": {
+          "maxTrialP95Ms": 0.135943,
+          "maxObservedMs": 2.957978
+        },
+        "replica": {
+          "maxTrialP95Ms": 0.049857,
+          "maxObservedMs": 58.751098
+        },
+        "replacement": {
+          "maxTrialP95Ms": 0.143079,
+          "maxObservedMs": 3.874918
+        },
+        "confirmation": {
+          "maxTrialP95Ms": 0.164786,
+          "maxObservedMs": 3.995413
+        },
+        "snapshot": {
+          "maxTrialP95Ms": 174.72655,
+          "maxObservedMs": 174.72655
+        },
+        "serialization": {
+          "maxTrialP95Ms": 5539.203916,
+          "maxObservedMs": 5539.203916
+        },
+        "request": {
+          "maxTrialP95Ms": 0.125614,
+          "maxObservedMs": 0.801812
+        }
+      },
+      "runtimeVersions": {
+        "controllerPython": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+        "localRustAndWasmCompiler": "rustc 1.95.0 (59807616e 2026-04-14)"
+      },
+      "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-alas-redroid+-x86_64-with-glibc2.35",
+      "singleSessionPeakRssBytes": 477310976,
+      "fourSessionPeakRssBytes": 1336143872,
+      "maxTailGrowthRatio": 1.9585475199821416,
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "db8eeffdff4c57700bd353d864479f6628e6624d071aafac35ce1ab99961c36c",
+        "wasm/pine_wasm_bg.wasm": "1a33cde00417934ed45b51498c7c09723acb79d4e8faa27b64febe36f70d9853",
+        "wheels/pine_compat_runtime-0.3.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl": "84a6a71482be461caf0be618726e05d941d726a006bc71492fc9ae6b742b1f35",
+        "resource-probe": "2fe753654cdf636d5efdc0f2b08bdcb2a7e07093e6597a55a739c97d9a439952"
+      },
+      "memoryBoundary": "Process-wide peak including input conversion and verification; not retained runtime allocations"
+    },
+    "Linux/wasm": {
+      "freshTrials": 36,
+      "receiptSha256": "5664e06f03d849829c2e5216f116d329ec03aba9586c02aca7d5833f44bd82a0",
+      "metrics": {
+        "compile": {
+          "maxTrialP95Ms": 56.61269999999999,
+          "maxObservedMs": 56.61269999999999
+        },
+        "seed": {
+          "maxTrialP95Ms": 8183.055509999998,
+          "maxObservedMs": 8183.055509999998
+        },
+        "forming": {
+          "maxTrialP95Ms": 0.21161899999998468,
+          "maxObservedMs": 7.206143999999767
+        },
+        "replica": {
+          "maxTrialP95Ms": 0.1074869999999919,
+          "maxObservedMs": 103.7501830000001
+        },
+        "replacement": {
+          "maxTrialP95Ms": 0.31623000000001866,
+          "maxObservedMs": 3.1948249999999234
+        },
+        "confirmation": {
+          "maxTrialP95Ms": 0.22926000000001068,
+          "maxObservedMs": 12.978864999997313
+        },
+        "snapshot": {
+          "maxTrialP95Ms": 336.04992900010257,
+          "maxObservedMs": 336.04992900010257
+        },
+        "serialization": {
+          "maxTrialP95Ms": 1305.099125000168,
+          "maxObservedMs": 1305.099125000168
+        },
+        "request": {
+          "maxTrialP95Ms": 0.1402079999999728,
+          "maxObservedMs": 0.9234129999995275
+        }
+      },
+      "runtimeVersions": {
+        "controllerPython": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+        "localRustAndWasmCompiler": "rustc 1.95.0 (59807616e 2026-04-14)",
+        "javascript": {
+          "node": "24.22.1",
+          "v8": "13.6.233.17-node.58",
+          "arch": "x64",
+          "platform": "linux"
+        }
+      },
+      "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-alas-redroid+-x86_64-with-glibc2.35",
+      "singleSessionPeakRssBytes": 482668544,
+      "fourSessionPeakRssBytes": 1223532544,
+      "maxTailGrowthRatio": 1.192170244022709,
+      "artifactHashes": {
+        "wasm/pine_wasm.js": "db8eeffdff4c57700bd353d864479f6628e6624d071aafac35ce1ab99961c36c",
+        "wasm/pine_wasm_bg.wasm": "1a33cde00417934ed45b51498c7c09723acb79d4e8faa27b64febe36f70d9853",
+        "wheels/pine_compat_runtime-0.3.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl": "84a6a71482be461caf0be618726e05d941d726a006bc71492fc9ae6b742b1f35",
+        "resource-probe": "2fe753654cdf636d5efdc0f2b08bdcb2a7e07093e6597a55a739c97d9a439952"
+      },
+      "memoryBoundary": "Process-wide peak including input conversion and verification; not retained runtime allocations"
+    }
+  },
+  "budgets": {
+    "compileMaxSeconds": 15,
+    "historicalSeedMaxSecondsPerSession": 120,
+    "appendP95Ms": 5,
+    "formingP95Ms": 5,
+    "replacementP95Ms": 5,
+    "confirmationP95Ms": 5,
+    "requestUpdateP95Ms": 5,
+    "replicaApplyP95Ms": 1,
+    "fullSnapshotAndSerializationMaxSecondsPerSession": 10,
+    "peakRssBytesPerSingleSessionProcess": 536870912,
+    "peakRssBytesPerFourSessionProcess": 2147483648,
+    "maxP50TailGrowthRatio1024To100000": 4
+  },
+  "compatibility": {
+    "installedPythonCasesPerPlatform": 2029,
+    "platforms": [
+      "linux-x86_64",
+      "macos-arm64",
+      "macos-x86_64",
+      "windows-x86_64"
+    ],
+    "boundary": "Native GitHub CI compatibility at producer commit, separately from local resource measurement"
+  },
+  "boundary": "Finite frozen synthetic offline workload only; no indefinite-session, host-application, arbitrary Pine/TradingView equivalence or connected-market qualification"
+}

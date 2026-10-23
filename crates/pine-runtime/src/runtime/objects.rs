@@ -171,6 +171,17 @@ impl HistoricalRuntime<'_> {
         previous: &Self,
         roots: Vec<PineValue>,
     ) -> Result<(), RuntimeError> {
+        self.seed_intrabar_objects_from_checkpoint(
+            &super::historical::CollectionCheckpoint::capture(previous),
+            roots,
+        )
+    }
+
+    pub(crate) fn seed_intrabar_objects_from_checkpoint(
+        &mut self,
+        previous: &super::historical::CollectionCheckpoint,
+        roots: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
         let has_retained_objects = self.object_varip_ids.len()>0 || roots.iter().any(|value| {
             value.can_reference_collection() && !matches!(value,PineValue::Array(id) if scalar_array_kind(self.array_kinds.get(id)))
         });
@@ -256,7 +267,7 @@ impl HistoricalRuntime<'_> {
                     if seen.insert((if retain_contents { 1 } else { 4 }, id)) =>
                 {
                     if retain_contents {
-                        self.seed_intrabar_array_from(previous, id);
+                        self.seed_intrabar_array_from_checkpoint(previous, id);
                     }
                     if let Some(slice) = self.array_slices.get(&id) {
                         pending.push((IntrabarReference::Array(slice.parent_id), retain_contents));
@@ -277,7 +288,7 @@ impl HistoricalRuntime<'_> {
                     if seen.insert((if retain_contents { 2 } else { 5 }, id)) =>
                 {
                     if retain_contents {
-                        self.seed_intrabar_map_from(previous, id);
+                        self.seed_intrabar_map_from_checkpoint(previous, id);
                     }
                     if let Some(map) = self.map_store.get(&id) {
                         for (key, value) in &map.entries {
@@ -290,7 +301,7 @@ impl HistoricalRuntime<'_> {
                     if seen.insert((if retain_contents { 3 } else { 6 }, id)) =>
                 {
                     if retain_contents {
-                        self.seed_intrabar_matrix_from(previous, id);
+                        self.seed_intrabar_matrix_from_checkpoint(previous, id);
                     }
                     if let Some(matrix) = self.matrix_store.get(&id) {
                         for value in &matrix.values {

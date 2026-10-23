@@ -253,6 +253,25 @@ impl WasmProgram {
         pine_runtime::host_requirements_json(&self.hir)
     }
 
+    #[wasm_bindgen(js_name = strategyRiskConfiguration)]
+    pub fn strategy_risk_configuration(
+        &self,
+        input_overrides_json: &str,
+        request_bars_json: &str,
+    ) -> Result<String, JsValue> {
+        let overrides = input_overrides_from_json(input_overrides_json, &self.hir)
+            .map_err(|err| JsValue::from_str(&err))?;
+        let environment = request_environment_and_execution_times_from_json(request_bars_json)
+            .map_err(|err| JsValue::from_str(&err))?
+            .environment;
+        serde_json::to_string(&pine_runtime::strategy_risk_configuration(
+            &self.hir,
+            &overrides,
+            environment.chart(),
+        ))
+        .map_err(|err| JsValue::from_str(&err.to_string()))
+    }
+
     #[wasm_bindgen(js_name = runCsv)]
     pub fn run_csv(&self, bars_csv: &str) -> Result<String, JsValue> {
         self.run_csv_internal(bars_csv)

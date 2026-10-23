@@ -115,14 +115,14 @@ impl BrokerState {
         Self {
             initial_capital,
             quote_to_account_rate: 1.0,
+            point_value: 1.0,
             commission,
             pyramiding_limit,
             close_entries_rule: StrategyCloseEntriesRule::Fifo,
             margin_long,
             margin_short,
             open_entry_commission: 0.0,
-            quantity_scale: 1,
-            configured_quantity_scale: None,
+            quantity_rules: crate::QuantityRules::default(),
             price_tick: None,
             slippage_price_offset,
             limit_verification_price_offset,
@@ -184,14 +184,14 @@ impl BrokerState {
         self
     }
 
-    pub(crate) fn with_quantity_scale(mut self, scale: u32) -> Self {
-        debug_assert!(scale > 0);
-        self.quantity_scale = scale;
+    pub(crate) fn with_point_value(mut self, value: f64) -> Self {
+        debug_assert!(value.is_finite() && value > 0.0);
+        self.point_value = value;
         self
     }
 
-    pub(crate) fn with_configured_quantity_scale(mut self, scale: Option<u32>) -> Self {
-        self.configured_quantity_scale = scale;
+    pub(crate) fn with_quantity_rules(mut self, rules: crate::QuantityRules) -> Self {
+        self.quantity_rules = rules;
         self
     }
 
@@ -206,7 +206,7 @@ impl BrokerState {
             Some(StrategyCommission::CashPerContract(value)) => qty * value,
             Some(StrategyCommission::CashPerOrder(value)) => value,
             Some(StrategyCommission::Percent(value)) => {
-                self.account_value(qty * price * (value / 100.0))
+                self.contract_value(qty * price * (value / 100.0))
             }
             None => 0.0,
         }

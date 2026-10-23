@@ -1,5 +1,5 @@
 //! Python request streams and host-supplied chart input metadata.
-use crate::{chart_metadata, parse_bars, parse_chart_context, parse_request_key};
+use crate::{chart_metadata, parse_bar, parse_chart_context, parse_request_key};
 use pine_runtime::{InMemoryRequestDataProvider, RequestEnvironment};
 use pyo3::{
     exceptions::PyValueError,
@@ -22,8 +22,16 @@ pub(super) fn parse_request_environment(
     let mut streams = Vec::with_capacity(dict.len());
     let mut calendars = None;
     let mut currency_rates = None;
+    let mut symbol_contexts = Vec::new();
     for (key, value) in dict {
         let key: String = key.extract()?;
+        if key == "$symbolMetadata" {
+            let json = PyModule::import(value.py(), "json")?;
+            let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
+            symbol_contexts =
+                pine_runtime::symbol_contexts_from_json(&raw).map_err(PyValueError::new_err)?;
+            continue;
+        }
         if key == "$currencyRates" {
             let json = PyModule::import(value.py(), "json")?;
             let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
@@ -47,11 +55,19 @@ pub(super) fn parse_request_environment(
             continue;
         }
         let request_key = parse_request_key(&key)?;
-        streams.push((request_key, parse_bars(&value)?));
+        // Provider validation owns context-specific ordering. Renko bricks
+        // preserve their row ordinals even when a source timestamp repeats.
+        let mut bars = Vec::new();
+        for item in value.try_iter()? {
+            bars.push(parse_bar(&item?)?);
+        }
+        streams.push((request_key, bars));
     }
     let provider = InMemoryRequestDataProvider::from_streams(streams)
         .map_err(|err| PyValueError::new_err(err.to_string()))?;
-    let environment = RequestEnvironment::new(chart, std::sync::Arc::new(provider));
+    let environment = RequestEnvironment::new(chart, std::sync::Arc::new(provider))
+        .with_symbol_contexts(symbol_contexts)
+        .map_err(PyValueError::new_err)?;
     let environment = match calendars {
         Some(calendars) => environment.with_bar_calendars(std::sync::Arc::new(calendars)),
         None => environment,

@@ -83,24 +83,53 @@ impl<'a> HistoricalRuntime<'a> {
                 .evaluate_requested_values(&bars[start..], expression, environment)
                 .map(AppendHistory::from_values);
         }
-        let provider_bars = match environment.provider().bars(key) {
-            Ok(bars) => bars,
-            Err(RequestDataError::MissingData { .. }) => &[],
-            Err(error) => {
-                return Err(RuntimeError {
-                    message: error.to_string(),
-                });
+        let canonical = self
+            .program
+            .strategy_settings
+            .calc_on_every_history_tick
+            .then(|| self.static_requests.canonical_chart_bars(key))
+            .flatten()
+            .cloned();
+        let provider_bars = if canonical.is_some() {
+            &[]
+        } else {
+            match environment.provider().bars(key) {
+                Ok(bars) => bars,
+                Err(RequestDataError::MissingData { .. }) => &[],
+                Err(error) => {
+                    return Err(RuntimeError {
+                        message: error.to_string(),
+                    });
+                }
             }
         };
-        let provider_len = provider_bars.len();
-        let total = self
-            .request_feed
-            .resolved_len(key, provider_len, include_forming);
+        let provider_len = canonical
+            .as_ref()
+            .map_or(provider_bars.len(), AppendHistory::len);
+        let total = if canonical.is_some() {
+            provider_len
+        } else {
+            self.request_feed
+                .resolved_len(key, provider_len, include_forming)
+        };
         let window_start = if self.context_windows.prepared {
             match self.context_windows.anchored_origin(key) {
-                Some(origin) => origin.map_or(0, |time| {
-                    self.request_feed
-                        .resolved_before(key, provider_bars, include_forming, time)
+                Some(origin) => origin.map_or(0, |(time, offset)| {
+                    canonical
+                        .as_ref()
+                        .map_or_else(
+                            || {
+                                self.request_feed.resolved_before(
+                                    key,
+                                    provider_bars,
+                                    include_forming,
+                                    time,
+                                )
+                            },
+                            |bars| bars.partition_point(|bar| bar.time < time),
+                        )
+                        .saturating_add(offset)
+                        .min(total)
                 }),
                 None => {
                     let bars = self.resolved_request_bars_from(key, 0)?;
@@ -120,9 +149,15 @@ impl<'a> HistoricalRuntime<'a> {
         // Endpoint-independent expressions only need the chart's visible
         // prefix. Retain one successor to establish shortened/irregular closes
         // during alignment; its value cannot cross the merge time boundary.
-        let count = self
-            .request_feed
-            .resolved_before(key, provider_bars, include_forming, horizon)
+        let count = canonical
+            .as_ref()
+            .map_or_else(
+                || {
+                    self.request_feed
+                        .resolved_before(key, provider_bars, include_forming, horizon)
+                },
+                |bars| bars.partition_point(|bar| bar.time < horizon),
+            )
             .saturating_add(1)
             .min(total)
             .saturating_sub(window_start);
@@ -182,6 +217,9 @@ impl<'a> HistoricalRuntime<'a> {
                 &tuple_dependencies,
             );
             self.accept_execution_budget(&runtime);
+            if result.is_err() {
+                self.failed_request_context = runtime.failed_request_context.clone();
+            }
             let value = result?;
             if terminal {
                 last = Some((bar.time, value));
@@ -416,6 +454,167 @@ mod tests {
             close,
             volume: 1.0,
         }
+    }
+
+    #[test]
+    fn realtime_static_root_refresh_retains_direct_requested_checkpoints() {
+        use crate::{
+            ExternalAccountFrame, ExternalBarState, ExternalEvaluationTrigger,
+            ExternalExecutionOptions, ExternalPass, ExternalPassContext, ExternalScheduledPass,
+        };
+        let analysis = analyze_source(&SourceFile::new(
+            "static-root-checkpoint",
+            r#"//@version=6
+strategy("Static root checkpoint",calc_on_every_tick=true,dynamic_requests=false)
+plot(request.security("B","1",ta.sma(close,2)))
+x=request.security(syminfo.tickerid,timeframe.period,close)
+plot(request.security("B","1",x))
+"#,
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.unwrap();
+        let tf = RequestTimeframe::parse("1").unwrap();
+        let provider = InMemoryRequestDataProvider::from_streams([(
+            crate::RequestKey::new("B", tf.clone()),
+            (0..64)
+                .map(|index| bar(index * 60_000, (index + 1) as f64))
+                .collect(),
+        )])
+        .unwrap();
+        let environment = RequestEnvironment::new(ChartContext::new("A", tf), Arc::new(provider));
+        let time = 20 * 60_000;
+        let account = ExternalAccountFrame {
+            time,
+            position_size: 0.0,
+            position_avg_price: None,
+            equity: 1000.0,
+            initial_capital: 1000.0,
+            netprofit: 0.0,
+            openprofit: 0.0,
+        };
+        let group = [10.0, 11.0, 12.0]
+            .into_iter()
+            .enumerate()
+            .map(|(index, close)| ExternalScheduledPass {
+                evaluation: ExternalPass {
+                    bar: Bar {
+                        time,
+                        open: 10.0,
+                        high: close,
+                        low: 10.0,
+                        close,
+                        volume: 100.0,
+                    },
+                    account: account.clone(),
+                    event_time_ms: time + 59999 * index as i64 / 2,
+                    confirmed: index == 2,
+                    request_data: None,
+                    request_updates: None,
+                },
+                context: ExternalPassContext {
+                    bar_state: ExternalBarState::Realtime,
+                    trigger: if index == 2 {
+                        ExternalEvaluationTrigger::BarClose
+                    } else {
+                        ExternalEvaluationTrigger::RealtimeTick
+                    },
+                    is_new: index == 0,
+                },
+            })
+            .collect();
+        let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment)
+            .with_external_schedule(
+                vec![account],
+                vec![group],
+                ExternalExecutionOptions::default(),
+            )
+            .unwrap();
+        runtime
+            .append_bar(Bar {
+                time,
+                open: 10.0,
+                high: 12.0,
+                low: 10.0,
+                close: 12.0,
+                volume: 100.0,
+            })
+            .unwrap();
+        assert_eq!(runtime.request_evaluations.len(), 1);
+        let cached = runtime.request_evaluations.values().next().unwrap();
+        assert_eq!(
+            cached.replayed_bars, 1,
+            "refresh must not rebuild the 22-bar direct requested prefix"
+        );
+        assert_eq!(runtime.result().plots[1].values[0].as_f64(), Some(12.0));
+    }
+
+    #[test]
+    fn external_observed_growth_replays_only_the_terminal_requested_bar_and_new_tail() {
+        let analysis = analyze_source(&SourceFile::new(
+            "observed-growth",
+            "//@version=6\nstrategy(\"growth\")\nplot(request.security(\"B\",\"1\",ta.cum(close)))",
+        ));
+        assert!(analysis.diagnostics.is_empty());
+        let hir = analysis.hir.unwrap();
+        let timeframe = RequestTimeframe::parse("1").unwrap();
+        let provider = InMemoryRequestDataProvider::from_streams([(
+            RequestKey::new("B", timeframe.clone()),
+            vec![],
+        )])
+        .unwrap();
+        let environment =
+            RequestEnvironment::new(ChartContext::new("A", timeframe), Arc::new(provider));
+        let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment)
+            .with_external_accounts(vec![])
+            .unwrap();
+        let mut replayed = 0;
+        for index in 0..512 {
+            let observed = (index + 1) * 60_000 - 1;
+            runtime
+                .apply_external_request_updates(
+                    &[crate::ObservedRequestUpdate {
+                        symbol: "B".into(),
+                        timeframe: "1".into(),
+                        bar: bar(index * 60_000, (index + 1) as f64),
+                        kind: BarUpdateKind::Confirmed,
+                        available_at_ms: observed,
+                    }],
+                    observed,
+                )
+                .unwrap();
+            runtime
+                .append_external_bars(
+                    &[bar(index * 60_000, 1.0)],
+                    vec![crate::ExternalAccountFrame {
+                        time: index * 60_000,
+                        position_size: 0.0,
+                        position_avg_price: None,
+                        equity: 1000.0,
+                        initial_capital: 1000.0,
+                        netprofit: 0.0,
+                        openprofit: 0.0,
+                    }],
+                    None,
+                )
+                .unwrap();
+            assert_eq!(runtime.request_evaluations.len(), 1);
+            let saved = runtime.request_evaluations.values().next().unwrap();
+            assert!(saved.replayed_bars <= 2);
+            replayed += saved.replayed_bars;
+            assert_eq!(
+                runtime.result().plots[0]
+                    .values
+                    .last()
+                    .and_then(PineValue::as_f64),
+                Some(((index + 1) * (index + 2) / 2) as f64)
+            );
+        }
+        assert_eq!(replayed, 1023);
+        assert!(runtime.request_cache.is_empty());
     }
 
     #[test]

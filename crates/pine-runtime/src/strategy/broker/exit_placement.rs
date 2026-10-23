@@ -259,7 +259,10 @@ impl BrokerState {
                     });
                     return None;
                 }
-                Some((PendingExitQuantity::Fixed(qty), qty.min(available_quantity)))
+                let qty = self.quantity_rules.explicit_quantity(qty);
+                let reserved = self.quantity_rules.reduction(qty, available_quantity);
+                (qty.is_finite() && qty > 0. && reserved.is_finite() && reserved > 0.)
+                    .then_some((PendingExitQuantity::Fixed(qty), reserved))
             }
             ExitQuantityRequest::Percent(qty_percent) => {
                 if !qty_percent.is_finite() || qty_percent <= 0.0 {
@@ -270,11 +273,12 @@ impl BrokerState {
                     });
                     return None;
                 }
-                let requested_quantity = target_quantity * qty_percent / 100.0;
-                Some((
-                    PendingExitQuantity::Fixed(requested_quantity),
-                    requested_quantity.min(available_quantity),
-                ))
+                let quantity = self
+                    .quantity_rules
+                    .explicit_quantity(target_quantity * qty_percent / 100.0);
+                let reserved = self.quantity_rules.reduction(quantity, available_quantity);
+                (quantity.is_finite() && quantity > 0. && reserved.is_finite() && reserved > 0.)
+                    .then_some((PendingExitQuantity::Fixed(quantity), reserved))
             }
         }
     }

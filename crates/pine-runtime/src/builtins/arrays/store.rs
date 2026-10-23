@@ -63,17 +63,6 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    pub(crate) fn copy_array_user_type_metadata_from(
-        &mut self,
-        previous: &Self,
-        source_id: u32,
-        target_id: u32,
-    ) {
-        if let Some(type_name) = previous.array_user_types.get(&source_id).cloned() {
-            self.array_user_types.insert(target_id, type_name);
-        }
-    }
-
     pub(crate) fn new_array_from_values_with_user_type_metadata(
         &mut self,
         source_id: u32,

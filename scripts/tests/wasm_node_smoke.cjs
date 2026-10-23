@@ -10,6 +10,15 @@ if (process.argv.length !== 3) {
 // Requiring wasm-bindgen's Node target synchronously instantiates the real
 // WebAssembly.Module and wires its generated JS ABI adapters.
 const pine = require(path.resolve(process.argv[2]));
+assert.equal(pine.externalScheduleSchemaVersion(), 1);
+assert.equal(pine.externalStreamSchemaVersion(), 1);
+assert.equal(pine.externalRequestWindowPlanSchemaVersion(), 1);
+assert.equal(pine.externalWindowFeedbackSchemaVersion(), 1);
+assert.equal(pine.externalSizingSchemaVersion(), 1);
+assert.equal(pine.externalOrderMetadataSchemaVersion(), 1);
+require('./wasm_history_ticks.cjs')(process.argv[2]);
+require('./wasm_realtime_request_feed.cjs')(process.argv[2]);
+require('./wasm_snapshot_chunks.cjs')(process.argv[2]);
 require('./wasm_closeout_regressions.cjs')(path.resolve(process.argv[2]));
 require('./wasm_bool_control_defaults.cjs')(process.argv[2]);
 require('./wasm_reserved_identifiers.cjs')(process.argv[2]);
@@ -68,7 +77,7 @@ require('./wasm_alert_templates.cjs')(process.argv[2]);
 for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript', 'packageVersion']) {
   assert.equal(typeof pine[name], 'function', `missing Wasm export ${name}`);
 }
-assert.equal(pine.packageVersion(), '0.3.2');
+assert.equal(pine.packageVersion(), '0.3.3');
 
 const source = '//@version=6\nindicator("node smoke")\nplot(close * 2)\n';
 const bars = [
@@ -102,7 +111,7 @@ assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
 const requirements = JSON.parse(program.hostRequirements());
-assert.equal(requirements.schemaVersion, 3);
+assert.equal(requirements.schemaVersion, 4);
 {
   const mergeProgram=pine.compileScript('//@version=6\nindicator("merge inventory")\ng=barmerge.gaps_on\nplot(request.security("OTHER","M",close,gaps=g,lookahead=barmerge.lookahead_on))\n');
   const report=JSON.parse(mergeProgram.hostRequirements());
@@ -510,7 +519,7 @@ for (const newline of ['\n', '\r\n']) {
   compiled.free();
 }
 
-for (const pointValue of [0, -1, 0.5, 5, 1.0000000001, true, null, '1']) {
+for (const pointValue of [0, -1, true, null, '1']) {
   assert.throws(() => pine.runScriptCsvWithRequestBars(source, bars, JSON.stringify({$chart: {pointValue}})), /pointValue/);
 }
 
@@ -1187,10 +1196,6 @@ plot(close)
   }
 }
 
-console.log(
-  'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
-);
-
 // Method object writes and Pine extend values survive the public WASM routes.
 {
   const csv='time,open,high,low,close,volume\n0,10,10,10,10,1\n60000,10,10,10,10,1\n120000,10,10,10,10,1\n';
@@ -1244,3 +1249,33 @@ plot(extend.right=="r"?1:0)
     assert.throws(()=>pine.runScriptCsv(invalid,csv),/invalid extend value/);
   }
 }
+
+// Contract metadata is a capability separate from the package version.
+assert.equal(pine.contractMetadataSchemaVersion(), 1);
+for (const pointValue of [0.01, 0.5, 5, 50]) {
+  const pointSource = '//@version=6\nindicator("Contract metadata")\nplot(syminfo.pointvalue)\nplot(syminfo.mincontract)';
+  const output = JSON.parse(pine.runScriptCsvWithRequestBars(pointSource, bars,
+    JSON.stringify({$chart:{pointValue,quantityStep:'0.25',minContract:'2'}})));
+  assert.equal(output.plots[0].values[0], pointValue);
+  assert.equal(output.plots[1].values[0], 2);
+}
+// A changed inner feed also invalidates fallback values cached by an outer request.
+{
+  const compiled = pine.compileScript('//@version=6\nindicator("nested feed")\nplot(request.security("C","1",request.security("B","1",close)))');
+  const bar = (index, value) => ({time:index*60000,open:value,high:value,low:value,close:value,volume:1});
+  const session = compiled.realtimeSessionWithRequestBars(JSON.stringify({
+    'B:1':[bar(0,100)], 'C:1':[bar(0,1),bar(1,1)]
+  }));
+  session.seed('time,open,high,low,close,volume\n0,1,1,1,1,1\n');
+  const replica = session.replica();
+  assert.equal(session.applyRequestConfirmed('B','1',JSON.stringify(bar(1,200))), 'null');
+  replica.apply(session.applyConfirmed(JSON.stringify(bar(1,1))));
+  assert.deepEqual(JSON.parse(session.result()).plots[0].values,[100,200]);
+  assert.equal(replica.result(),session.result());
+  const before=session.result(), revision=session.revision;
+  assert.throws(()=>session.applyRequestConfirmed('B','1',JSON.stringify(bar(1,999))),/E_REQUEST_FEED_TIME/);
+  assert.equal(session.result(),before);
+  assert.equal(session.revision,revision);
+  replica.free(); session.free(); compiled.free();
+}
+console.log('wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions');

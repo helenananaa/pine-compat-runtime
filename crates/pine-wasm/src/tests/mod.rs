@@ -1,11 +1,31 @@
 use super::*;
+
+#[test]
+fn external_order_contract_version_is_exported() {
+    assert_eq!(external_order_schema_version(), 2);
+    assert_eq!(external_closing_tick_schema_version(), 1);
+    assert_eq!(strategy_risk_configuration_schema_version(), 1);
+}
+
+#[test]
+fn risk_configuration_resolves_context_and_keeps_unexecuted_calls() {
+    let program = compile_script("//@version=6\nstrategy(\"Risk\")\nif false\n    strategy.risk.max_position_size(syminfo.mintick*8)").unwrap();
+    let value: serde_json::Value = serde_json::from_str(
+        &program
+            .strategy_risk_configuration("{}", r#"{"$chart":{"minMove":1,"priceScale":4}}"#)
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(value["rules"][0]["value"], 2.0);
+    assert_eq!(value["unresolvedCallSiteIds"], serde_json::json!([]));
+}
 use pine_runtime::PUBLIC_RUNTIME_SCHEMA_VERSION;
 use pine_sema::PUBLIC_ANALYSIS_SCHEMA_VERSION;
 use std::{collections::HashMap, env, fs, path::PathBuf};
 
 #[test]
 fn package_version_is_the_coordinated_prerelease_identity() {
-    assert_eq!(package_version(), "0.3.2");
+    assert_eq!(package_version(), "0.3.3");
 }
 
 #[test]
@@ -3327,6 +3347,20 @@ fn quantity_precision_fixture_matches_cli_contract() {
     )
     .expect("fractional margin should run");
     assert_snapshot("runtime_quantity_precision.json", &output);
+}
+
+#[test]
+fn requested_symbol_metadata_reaches_wasm_execution() {
+    let output = run_script_csv_with_request_bars_internal(
+        "//@version=6\nindicator(\"metadata\")\nplot(request.security(\"B\",\"1\",syminfo.mintick))",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n60000,1,1,1,1,1\n",
+        r#"{"$chart":{"symbol":"A","timeframe":"1","minMove":1,"priceScale":10},"$symbolMetadata":{"B":{"minMove":1,"priceScale":4}},"B:1":[{"time":0,"open":1,"high":1,"low":1,"close":1,"volume":1},{"time":60000,"open":1,"high":1,"low":1,"close":1,"volume":1}]}"#,
+    ).unwrap();
+    let output: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(
+        output["plots"][0]["values"],
+        serde_json::json!([0.25, 0.25])
+    );
 }
 
 #[test]

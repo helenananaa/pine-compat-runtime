@@ -19,6 +19,11 @@ pub fn realtime_session_schema_version() -> u32 {
     REALTIME_SESSION_SCHEMA_VERSION
 }
 
+#[wasm_bindgen(js_name = realtimeRequestFeedSchemaVersion)]
+pub fn realtime_request_feed_schema_version() -> u32 {
+    pine_runtime::REALTIME_REQUEST_FEED_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = runtimeChangesSchemaVersion)]
 pub fn runtime_changes_schema_version() -> u32 {
     pine_runtime::PUBLIC_RUNTIME_CHANGES_SCHEMA_VERSION
@@ -220,6 +225,30 @@ impl WasmRealtimeSession {
             Some(changes) => Ok(public_runtime_changes_json(changes)),
             None => Ok("null".to_owned()),
         }
+    }
+
+    pub(crate) fn apply_request_feed_updates_json(&mut self, updates: &str) -> Result<(), String> {
+        self.require_seeded()?;
+        let updates: Vec<pine_runtime::RequestFeedUpdate> =
+            serde_json::from_str(updates).map_err(|error| error.to_string())?;
+        self.runtime
+            .apply_request_feed_updates(&updates)
+            .map_err(|error| error.message)
+    }
+
+    pub(crate) fn request_bar_close_json(
+        &self,
+        symbol: &str,
+        timeframe: &str,
+        open_time: &str,
+    ) -> Result<String, String> {
+        let timeframe = RequestTimeframe::parse(timeframe).map_err(|error| error.to_string())?;
+        let open_time =
+            serde_json::from_str::<i64>(open_time).map_err(|error| error.to_string())?;
+        self.runtime
+            .request_bar_close(&RequestKey::new(symbol, timeframe), open_time)
+            .map(|close| close.to_string())
+            .map_err(|error| error.message)
     }
 }
 
@@ -430,6 +459,23 @@ impl WasmRealtimeSession {
             .map_err(|err| JsValue::from_str(&err))
     }
 
+    #[wasm_bindgen(js_name = applyRequestFeedUpdates)]
+    pub fn apply_request_feed_updates(&mut self, updates_json: &str) -> Result<(), JsValue> {
+        self.apply_request_feed_updates_json(updates_json)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    #[wasm_bindgen(js_name = requestBarClose)]
+    pub fn request_bar_close(
+        &self,
+        symbol: &str,
+        timeframe: &str,
+        open_time_json: &str,
+    ) -> Result<String, JsValue> {
+        self.request_bar_close_json(symbol, timeframe, open_time_json)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
     #[wasm_bindgen(js_name = replica)]
     pub fn replica(&self) -> WasmRuntimeReplica {
         WasmRuntimeReplica {
@@ -472,6 +518,20 @@ impl WasmRealtimeSession {
     #[wasm_bindgen(js_name = result)]
     pub fn result(&self) -> String {
         crate::snapshot::result_view_snapshot_json(&self.runtime.result_view())
+    }
+
+    /// Total top-level and strategy diagnostics in the current complete result.
+    #[wasm_bindgen(getter, js_name = resultDiagnosticCount)]
+    pub fn result_diagnostic_count(&self) -> usize {
+        crate::snapshot_writer::diagnostic_count(&self.runtime.result_view())
+    }
+
+    /// Capture complete public UTF-8 JSON in an independent, consuming reader.
+    /// The session may continue while the caller pulls the captured byte blocks.
+    #[wasm_bindgen(js_name = resultChunks)]
+    pub fn result_chunks(&self) -> Result<crate::SnapshotChunks, JsValue> {
+        crate::snapshot_writer::snapshot_chunks(&self.runtime.result_view())
+            .map_err(|error| JsValue::from_str(&error))
     }
 
     #[wasm_bindgen(js_name = confirmedResult)]
@@ -549,6 +609,25 @@ impl WasmRuntimeReplica {
     #[wasm_bindgen]
     pub fn result(&self) -> String {
         crate::snapshot::borrowed_snapshot_json(self.inner.result())
+    }
+
+    #[wasm_bindgen(getter, js_name = resultDiagnosticCount)]
+    pub fn result_diagnostic_count(&self) -> usize {
+        crate::snapshot_writer::diagnostic_count(&self.inner.result().view())
+    }
+
+    /// Capture complete JSON without consuming this replica.
+    #[wasm_bindgen(js_name = resultChunks)]
+    pub fn result_chunks(&self) -> Result<crate::SnapshotChunks, JsValue> {
+        crate::snapshot_writer::snapshot_chunks(&self.inner.result().view())
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    /// Consume this replica and return a reader owning its complete JSON bytes.
+    #[wasm_bindgen(js_name = intoResultChunks)]
+    pub fn into_result_chunks(self) -> Result<crate::SnapshotChunks, JsValue> {
+        crate::snapshot_writer::snapshot_chunks(&self.inner.result().view())
+            .map_err(|error| JsValue::from_str(&error))
     }
 
     /// Finalize this replica and return its complete output. The JavaScript

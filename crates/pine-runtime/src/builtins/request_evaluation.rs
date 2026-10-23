@@ -14,6 +14,7 @@ impl HistoricalRuntime<'_> {
         runtime.request_feed = self.request_feed.clone();
         runtime.static_requests = self.static_requests.for_requested_context();
         runtime.context_windows = self.context_windows.clone();
+        runtime.request_window_history = self.request_window_history.clone();
         let chart = runtime.request_environment.chart();
         runtime.context_windows.enter_scope(crate::RequestKey::new(
             chart.symbol(),

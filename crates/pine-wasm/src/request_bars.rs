@@ -32,6 +32,11 @@ pub(crate) fn request_environment_and_execution_times_from_json(
         "request bars must be a JSON object mapping SYMBOL:TIMEFRAME to bar arrays".to_owned()
     })?;
     let chart = parse_chart_context(object.get("$chart"))?;
+    let symbol_contexts = object
+        .get("$symbolMetadata")
+        .map(|value| pine_runtime::symbol_contexts_from_json(&value.to_string()))
+        .transpose()?
+        .unwrap_or_default();
     let calendars = object
         .get("$barCalendars")
         .map(|value| {
@@ -54,6 +59,7 @@ pub(crate) fn request_environment_and_execution_times_from_json(
         if matches!(
             key.as_str(),
             "$chart"
+                | "$symbolMetadata"
                 | "$executionTimes"
                 | "$magnifier"
                 | "$sessionWindows"
@@ -72,6 +78,7 @@ pub(crate) fn request_environment_and_execution_times_from_json(
             InMemoryRequestDataProvider::from_streams(streams).map_err(|err| err.to_string())?;
         RequestEnvironment::new(chart, Arc::new(provider))
     };
+    let environment = environment.with_symbol_contexts(symbol_contexts)?;
     let environment = match calendars {
         Some(calendars) => environment.with_bar_calendars(Arc::new(calendars)),
         None => environment,
@@ -142,6 +149,8 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
                 | "minMove"
                 | "priceScale"
                 | "quantityPrecision"
+                | "quantityStep"
+                | "minContract"
                 | "pointValue"
                 | "currency"
         )
@@ -169,6 +178,19 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
         chart = chart
             .with_quantity_precision(precision)
             .map_err(str::to_owned)?;
+    }
+    for key in ["quantityStep", "minContract"] {
+        if let Some(value) = object.get(key) {
+            let value = value
+                .as_str()
+                .ok_or_else(|| format!("$chart.{key} must be a decimal string"))?;
+            chart = if key == "quantityStep" {
+                chart.with_quantity_step(value)
+            } else {
+                chart.with_min_contract(value)
+            }
+            .map_err(|error| format!("{key}: {error}"))?;
+        }
     }
     if object.contains_key("minMove") || object.contains_key("priceScale") {
         let integer = |key: &str| -> Result<u32, String> {
@@ -206,23 +228,41 @@ mod price_grid_tests {
     use super::*;
 
     #[test]
+    fn symbol_metadata_is_shared_with_nested_request_environments() {
+        let env = request_environment_from_json(
+            r#"{
+            "$chart":{"symbol":"A","minMove":1,"priceScale":10},
+            "$symbolMetadata":{"B":{"minMove":1,"priceScale":4,"currency":"EUR"}}
+        }"#,
+        )
+        .unwrap();
+        // Runtime execution is covered below; malformed registry values use
+        // the same host-neutral parser as Python.
+        assert_eq!(env.chart().min_tick(), 0.1);
+        for value in [
+            "[]",
+            r#"{"B":{"minMove":true,"priceScale":4}}"#,
+            r#"{"B":{"minMove":1,"priceScale":4,"pointValue":0}}"#,
+        ] {
+            assert!(
+                request_environment_from_json(&format!(r#"{{"$symbolMetadata":{value}}}"#))
+                    .is_err()
+            );
+        }
+    }
+
+    #[test]
     fn explicit_point_value_validates_the_supported_profile() {
-        for value in ["1", "1.0"] {
+        for value in ["1", "1.0", "0.01", "0.5", "5", "50"] {
             let environment =
                 request_environment_from_json(&format!(r#"{{"$chart":{{"pointValue":{value}}}}}"#))
                     .unwrap();
-            assert_eq!(environment.chart().point_value(), 1.0);
+            assert_eq!(
+                environment.chart().point_value(),
+                value.parse::<f64>().unwrap()
+            );
         }
-        for value in [
-            "0",
-            "-1",
-            "0.5",
-            "5",
-            "1.0000000001",
-            "true",
-            "null",
-            "\"1\"",
-        ] {
+        for value in ["0", "-1", "true", "null", "\"1\""] {
             assert!(
                 request_environment_from_json(&format!(r#"{{"$chart":{{"pointValue":{value}}}}}"#))
                     .err()

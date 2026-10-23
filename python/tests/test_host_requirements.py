@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_modern_request_options_are_not_reported_as_implicit_defaults():
     program = pine_compat.compile_script('//@version=6\nindicator("merge")\ng=barmerge.gaps_on\nplot(request.security("OTHER","M",close,gaps=g,lookahead=barmerge.lookahead_on))\n')
     report = program.host_requirements()
-    assert report["schemaVersion"] == 3
+    assert report["schemaVersion"] == 4
     assert report["requests"][0]["gaps"] == "gapsOn"
     assert report["requests"][0]["lookahead"] == "lookaheadOn"
     assert report["requests"][0]["timeframeRelation"] == "sameOrLowerOrHigher"

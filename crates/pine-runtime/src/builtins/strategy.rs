@@ -68,6 +68,11 @@ impl<'a> HistoricalRuntime<'a> {
         if self.external_execution.is_some() && callee.starts_with("strategy.") {
             return Some(self.eval_external_call(callee, args));
         }
+        // Risk calls are declarations, including calls in skipped branches.
+        // Registration already resolved their arguments without user effects.
+        if self.native_risk_initialized && callee.starts_with("strategy.risk.") {
+            return Some(Ok(PineValue::Void));
+        }
         Some(match callee {
             "strategy.convert_to_account" | "strategy.convert_to_symbol" => {
                 self.eval_strategy_currency_conversion(callee, args)
@@ -384,11 +389,18 @@ impl<'a> HistoricalRuntime<'a> {
         let qty = if explicit_qty.is_some() {
             crate::strategy::explicit_quantity_on_chart_grid(
                 qty,
-                self.request_environment.chart().configured_quantity_scale(),
+                self.request_environment.chart().quantity_rules(),
             )
         } else {
             qty
         };
+        if !qty.is_finite() {
+            return Err(RuntimeError {
+                message:
+                    "strategy.entry quantity is not representable on the supplied quantity grid"
+                        .to_owned(),
+            });
+        }
         // A positive explicit request can truncate to zero opening contracts.
         // Keep it pending: an opposite position still contributes the closing
         // transaction when this entry becomes eligible to fill.
@@ -527,11 +539,18 @@ impl<'a> HistoricalRuntime<'a> {
         let qty = if explicit_qty.is_some() {
             crate::strategy::explicit_quantity_on_chart_grid(
                 qty,
-                self.request_environment.chart().configured_quantity_scale(),
+                self.request_environment.chart().quantity_rules(),
             )
         } else {
             qty
         };
+        if !qty.is_finite() {
+            return Err(RuntimeError {
+                message:
+                    "strategy.order quantity is not representable on the supplied quantity grid"
+                        .to_owned(),
+            });
+        }
         if qty == 0.0 {
             return Ok(PineValue::Void);
         }

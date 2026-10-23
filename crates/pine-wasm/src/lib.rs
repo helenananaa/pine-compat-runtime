@@ -9,6 +9,8 @@ mod realtime;
 mod request_bars;
 mod run;
 mod snapshot;
+mod snapshot_writer;
+pub use snapshot_writer::SnapshotChunks;
 mod strategy_alerts;
 #[cfg(test)]
 use analysis_json::json_escape;
@@ -32,9 +34,69 @@ pub(crate) use run::{
     run_script_csv_with_request_bars_internal,
 };
 
+#[wasm_bindgen(js_name = externalScheduleSchemaVersion)]
+pub fn external_schedule_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_SCHEDULE_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = externalTickScheduleSchemaVersion)]
+pub fn external_tick_schedule_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = maxStrategyObservationsPerBar)]
+pub fn max_strategy_observations_per_bar() -> u32 {
+    pine_runtime::MAX_STRATEGY_OBSERVATIONS_PER_BAR
+}
+
+#[wasm_bindgen(js_name = contractMetadataSchemaVersion)]
+pub fn contract_metadata_schema_version() -> u32 {
+    pine_runtime::CONTRACT_METADATA_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = externalStreamSchemaVersion)]
+pub fn external_stream_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_STREAM_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = externalRequestWindowPlanSchemaVersion)]
+pub fn external_request_window_plan_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = externalWindowFeedbackSchemaVersion)]
+pub fn external_window_feedback_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_WINDOW_FEEDBACK_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = externalClosingTickSchemaVersion)]
+pub fn external_closing_tick_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_CLOSING_TICK_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = strategyRiskConfigurationSchemaVersion)]
+pub fn strategy_risk_configuration_schema_version() -> u32 {
+    pine_runtime::STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = externalOrderSchemaVersion)]
+pub fn external_order_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_ORDER_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = externalSizingSchemaVersion)]
+pub fn external_sizing_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_SIZING_SCHEMA_VERSION
+}
+
 #[wasm_bindgen(js_name = packageVersion)]
 pub fn package_version() -> String {
     env!("CARGO_PKG_VERSION").to_owned()
+}
+
+#[wasm_bindgen(js_name = externalOrderMetadataSchemaVersion)]
+pub fn external_order_metadata_schema_version() -> u32 {
+    pine_runtime::EXTERNAL_ORDER_METADATA_SCHEMA_VERSION
 }
 
 #[wasm_bindgen(js_name = compileScript)]

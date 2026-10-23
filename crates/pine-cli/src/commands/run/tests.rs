@@ -112,12 +112,19 @@ fn candidate_macd_batch_incremental_and_realtime_history_match() {
 }
 
 #[test]
-fn explicit_point_value_cli_rejects_unsupported_or_invalid_profiles() {
-    for value in ["0", "-1", "0.5", "5", "1.0000000001", "NaN", "inf", "true"] {
+fn explicit_point_value_cli_validates_positive_finite_contract_values() {
+    for value in ["0", "-1", "NaN", "inf", "true"] {
         let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", value].map(str::to_owned);
         assert!(
             parse_options(&args).unwrap_err().contains("pointValue"),
             "{value}"
+        );
+    }
+    for value in ["0.01", "0.5", "5", "50"] {
+        let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", value].map(str::to_owned);
+        assert_eq!(
+            parse_options(&args).unwrap().chart_context.point_value(),
+            value.parse::<f64>().unwrap()
         );
     }
     let args = ["a.pine", "--bars", "a.csv", "--chart-point-value", "1.0"].map(str::to_owned);

@@ -18,8 +18,19 @@ use super::plot_history::{
 };
 use crate::*;
 
+mod bar_evaluation;
+mod checkpoint;
+mod collections;
+mod external_request_windows;
+mod external_stream;
+mod external_window_feedback;
+mod history_ticks;
+mod price_flow;
 mod ta_state;
+pub(crate) use collections::CollectionCheckpoint;
+use price_flow::PriceFlowCheckpoint;
 pub(crate) use ta_state::{CrossCallState, TaRollbackState};
+type KnownRequestedTimes = Arc<HashMap<crate::RequestKey, Arc<[i64]>>>;
 
 #[derive(Clone)]
 pub(crate) enum RuntimeProgram<'a> {
@@ -82,6 +93,8 @@ struct StrategyEvalCheckpoint {
     current_series: HashMap<SeriesId, PineValue>,
     active_series: HashSet<SeriesId>,
     var_store: HashMap<VarSlotId, PineValue>,
+    collections: CollectionCheckpoint,
+    price_flow: Option<PriceFlowCheckpoint>,
 }
 
 #[derive(Clone)]
@@ -101,6 +114,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
     pub(crate) current_bar: Option<Bar>,
+    pub(crate) historical_tick_context_active: bool,
     pub(crate) current_execution_time: Option<i64>,
     pub(crate) last_bar_index: Option<usize>,
     pub(crate) last_bar_time: Option<i64>,
@@ -110,6 +124,10 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) static_requests: crate::builtins::static_requests::StaticRequests,
     pub(crate) context_windows: super::context_windows::ContextWindows,
+    pub(crate) request_window_history: KnownRequestedTimes,
+    pub(crate) failed_request_context: Option<RequestKey>,
+    pub(crate) external_window_feedback:
+        Option<external_window_feedback::ExternalWindowFeedback<'a>>,
     pub(crate) request_feed: crate::request::RequestFeed,
     pub(crate) historical_dynamic_request_contexts: HashSet<RequestCacheKey>,
     pub(crate) request_cache: HashMap<
@@ -212,6 +230,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) pending_alert_events: Vec<(AlertEvent, bool)>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
+    pub(crate) native_risk_initialized: bool,
     // Historical OHLC remains visible during fill callbacks, but account values
     // and immediate closes are marked at the current broker execution tick.
     pub(crate) strategy_fill_mark: Option<f64>,
@@ -406,11 +425,14 @@ impl<'a> HistoricalRuntime<'a> {
             strategy_settings.margin_short,
             program.strategy_settings.pyramiding_limit,
         )
-        .with_quantity_scale(request_environment.chart().quantity_scale())
-        .with_configured_quantity_scale(request_environment.chart().configured_quantity_scale())
+        .with_point_value(request_environment.chart().point_value())
+        .with_quantity_rules(request_environment.chart().quantity_rules())
         .with_price_tick(request_environment.chart().min_tick())
         .with_close_entries_rule(program.strategy_settings.close_entries_rule)
-        .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
+        .with_calc_on_order_fills(
+            program.strategy_settings.calc_on_order_fills
+                || program.strategy_settings.calc_on_every_history_tick,
+        );
         Self {
             program,
             metadata: Arc::clone(&metadata),
@@ -424,6 +446,7 @@ impl<'a> HistoricalRuntime<'a> {
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
             current_bar: None,
+            historical_tick_context_active: false,
             current_execution_time: None,
             last_bar_index: None,
             last_bar_time: None,
@@ -436,6 +459,9 @@ impl<'a> HistoricalRuntime<'a> {
             ),
             request_environment,
             context_windows: super::context_windows::ContextWindows::default(),
+            request_window_history: Arc::default(),
+            failed_request_context: None,
+            external_window_feedback: None,
             request_feed: crate::request::RequestFeed::default(),
             historical_dynamic_request_contexts: HashSet::new(),
             request_cache: HashMap::new(),
@@ -526,6 +552,7 @@ impl<'a> HistoricalRuntime<'a> {
             pending_alert_events: Vec::new(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
+            native_risk_initialized: false,
             strategy_position_size_at_script_pass: Default::default(),
             strategy_position_size_history_depth,
             strategy_position_size_history_origin: 0,
@@ -619,7 +646,10 @@ impl<'a> HistoricalRuntime<'a> {
         self.request_feed
             .apply(key.clone(), update, provider_last)
             .map_err(crate::request::RequestFeedError::runtime_error)?;
-        self.invalidate_request_cache(&key);
+        // A fallback cached for another context may contain a nested request to
+        // this stream. Direct incremental checkpoints exclude nested expressions
+        // and remain reusable; fallback snapshots must be rebuilt transitively.
+        self.request_cache.clear();
         Ok(())
     }
 
@@ -631,13 +661,6 @@ impl<'a> HistoricalRuntime<'a> {
                 message: error.to_string(),
             }),
         }
-    }
-
-    fn invalidate_request_cache(&mut self, key: &RequestKey) {
-        let symbol = key.symbol();
-        let timeframe = key.timeframe().value();
-        self.request_cache
-            .retain(|cache_key, _| cache_key.context() != (symbol, timeframe));
     }
 
     /// Validate the complete chart range before using the one-bar streaming API.
@@ -681,6 +704,7 @@ impl<'a> HistoricalRuntime<'a> {
         let mut runtime =
             Self::with_runtime_program(self.program.clone(), self.request_environment.clone());
         runtime.input_overrides = self.input_overrides.clone();
+        runtime.request_window_history = self.request_window_history.clone();
         runtime.magnifier_input = self.magnifier_input.clone();
         runtime.session_windows = self.session_windows.clone();
         runtime.request_feed = self.request_feed.clone();
@@ -855,6 +879,11 @@ impl<'a> HistoricalRuntime<'a> {
         is_new_bar: bool,
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
+        if self.external_window_feedback.is_some() {
+            return Err(crate::external::external_error(
+                "observed window feedback requires begin/observe/commit streaming",
+            ));
+        }
         self.append_bar_with_budget(bar, update_kind, is_new_bar, execution_time, true)
     }
 
@@ -880,6 +909,15 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
         let account_rate = self.account_currency_rate_for_bar(&bar, update_kind, execution_time)?;
+        if self
+            .external_execution
+            .as_ref()
+            .is_some_and(|state| state.stream.is_some())
+        {
+            return Err(crate::external::external_error(
+                "commit the open external bar before appending",
+            ));
+        }
         let bar_index = self.bars;
         if let Some(external) = &self.external_execution
             && external
@@ -915,6 +953,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.reset_execution_budget();
         }
         let result = self.resource_budget.check().and_then(|()| {
+            self.initialize_native_risk()?;
             // Native broker sizing/accounting uses 1 before an explicitly
             // supplied pair has historical quotes. Explicit conversion queries
             // still return na in this warmup interval. An absent pair is an
@@ -942,6 +981,12 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
+    /// Distinguish retryable input rejection from a failed Pine execution.
+    #[must_use]
+    pub fn is_execution_poisoned(&self) -> bool {
+        self.execution_failed
+    }
+
     fn execute_bar_with_context(
         &mut self,
         bar: Bar,
@@ -950,121 +995,75 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
-        self.current_bar_update_kind = update_kind;
-        self.current_bar_is_new = is_new_bar;
-        self.current_bar = Some(bar);
-        if self
-            .static_requests
-            .observe_bar(bar_index, bar, update_kind)
-        {
-            self.request_cache.clear();
-            self.request_evaluations.clear();
-        }
-        self.current_execution_time = execution_time;
-        self.first_bar_close.get_or_insert(bar.close);
-        self.chart_visible_left_time.get_or_insert(bar.time);
-        if self.historical_end.is_none()
-            || matches!(
-                self.current_bar_update_kind,
-                BarUpdateKind::Forming | BarUpdateKind::Confirmed
-            )
-        {
-            self.last_bar_index = Some(bar_index);
-            self.last_bar_time = Some(bar.time);
-            self.chart_visible_right_time = Some(bar.time);
-        }
-        self.series_store.set_current_bar(bar_index);
-        self.current_symbols.clear();
-        self.current_series.clear();
-        self.alert_once_per_bar_calls.clear();
-        if self.program.script_mode == ScriptMode::Strategy {
-            self.strategy_scheduler.begin_bar(bar_index);
-        }
-        self.set_builtin_symbols(&bar, bar_index)?;
-        // Evaluation checkpoints are only consumed by fill-triggered re-execution.
-        // Single-pass strategies keep live state and need no clone/restore cycle.
-        if self.program.script_mode == ScriptMode::Strategy
-            && self.program.strategy_settings.calc_on_order_fills
-        {
-            self.snapshot_strategy_eval_checkpoint();
-        }
-        let passes_before_tick = self.strategy_scheduler.script_passes();
-        if self.external_execution.is_none() {
-            self.run_pre_script_strategy_phases(bar_index, bar)?;
-        }
-        let skip_normal_strategy_pass = self.program.script_mode == ScriptMode::Strategy
-            && ((update_kind == BarUpdateKind::Forming
+        let history_ticks =
+            self.prepare_bar_evaluation(bar, update_kind, is_new_bar, execution_time)?;
+        if history_ticks {
+            self.run_native_history_ticks(bar_index, bar)?;
+        } else {
+            let passes_before_tick = self.strategy_scheduler.script_passes();
+            if self.external_execution.is_none() {
+                self.run_pre_script_strategy_phases(bar_index, bar)?;
+            }
+            let skip_normal_strategy_pass = self.program.script_mode == ScriptMode::Strategy
+                && ((update_kind == BarUpdateKind::Forming
                 && !self.program.strategy_settings.calc_on_every_tick)
                 // A realtime observation with fills has already executed the
                 // strategy. Do not execute it again for the same feed update.
                 // Historical path ticks retain their separate closing pass.
                 || (update_kind != BarUpdateKind::Historical
                     && self.strategy_scheduler.script_passes() > passes_before_tick));
-        if skip_normal_strategy_pass
-            && self.strategy_scheduler.script_passes() == passes_before_tick
-        {
-            self.strategy_broker.record_equity(bar_index, bar.close);
-            self.strategy_eval_checkpoint = None;
-            self.current_bar_update_kind = BarUpdateKind::Historical;
-            self.current_bar_is_new = true;
-            self.current_bar = None;
-            self.current_execution_time = None;
-            return Ok(());
-        }
-        if self.program.script_mode == ScriptMode::Strategy {
-            self.trace_strategy_phase(
-                crate::runtime::strategy_scheduler::StrategyBarPhase::BuiltinRefresh,
-            );
-            if !skip_normal_strategy_pass {
-                let passes = self
-                    .external_execution
-                    .as_ref()
-                    .and_then(|state| state.passes.as_ref())
-                    .map(|groups| groups[bar_index].clone());
-                if let Some(passes) = passes {
-                    for (index, pass) in passes.into_iter().enumerate() {
-                        self.current_bar = Some(pass.bar);
-                        self.current_execution_time = Some(pass.event_time_ms);
-                        self.external_execution.as_mut().unwrap().active_pass = Some((index, pass));
-                        self.run_strategy_script_pass()?;
-                    }
-                } else {
-                    let filled = self.run_strategy_script_pass()?;
-                    // An immediate close placed by the regular historical closing
-                    // pass fills now, but does not introduce another script pass.
-                    // Intrabar fill callbacks and realtime observations keep their
-                    // own recalculation paths.
-                    if update_kind != BarUpdateKind::Historical {
-                        self.recalculate_after_fill(filled, bar.close)?;
+            if skip_normal_strategy_pass
+                && self.strategy_scheduler.script_passes() == passes_before_tick
+            {
+                self.strategy_broker.record_equity(bar_index, bar.close);
+                self.strategy_eval_checkpoint = None;
+                self.current_bar_update_kind = BarUpdateKind::Historical;
+                self.current_bar_is_new = true;
+                self.current_bar = None;
+                self.current_execution_time = None;
+                return Ok(());
+            }
+            if self.program.script_mode == ScriptMode::Strategy {
+                self.trace_strategy_phase(
+                    crate::runtime::strategy_scheduler::StrategyBarPhase::BuiltinRefresh,
+                );
+                if !skip_normal_strategy_pass {
+                    let passes = self
+                        .external_execution
+                        .as_ref()
+                        .and_then(|state| state.passes.as_ref())
+                        .map(|groups| groups[bar_index].clone());
+                    if let Some(passes) = passes {
+                        for (index, pass) in passes.into_iter().enumerate() {
+                            let context = self
+                                .external_execution
+                                .as_ref()
+                                .and_then(|state| state.contexts.as_ref())
+                                .and_then(|groups| groups.get(bar_index))
+                                .and_then(|group| group.get(index))
+                                .copied();
+                            self.run_external_scheduled_pass(index, pass, context)?;
+                        }
+                    } else {
+                        let filled = self.run_strategy_script_pass()?;
+                        // An immediate close placed by the regular historical closing
+                        // pass fills now, but does not introduce another script pass.
+                        // Intrabar fill callbacks and realtime observations keep their
+                        // own recalculation paths.
+                        if update_kind != BarUpdateKind::Historical {
+                            self.recalculate_after_fill(filled, bar.close)?;
+                        }
                     }
                 }
+            } else {
+                self.run_program_statements()?;
             }
-        } else {
-            self.run_program_statements()?;
-        }
 
-        if self.external_execution.is_none() {
-            self.run_post_script_strategy_phases(bar_index, bar)?;
+            if self.external_execution.is_none() {
+                self.run_post_script_strategy_phases(bar_index, bar)?;
+            }
         }
-        if self.program.script_mode == ScriptMode::Strategy {
-            self.trace_strategy_phase(
-                crate::runtime::strategy_scheduler::StrategyBarPhase::OutputCommit,
-            );
-        }
-        self.strategy_eval_checkpoint = None;
-        self.finalize_series_outputs();
-        self.commit_current_series()?;
-        if let Some(state) = &mut self.external_execution {
-            state.active_pass = None;
-        }
-        self.previous_bar_time = Some(bar.time);
-        self.bars += 1;
-        self.collect_temporary_collections();
-        self.current_bar_update_kind = BarUpdateKind::Historical;
-        self.current_bar_is_new = true;
-        self.current_bar = None;
-        self.current_execution_time = None;
-        Ok(())
+        self.commit_bar_evaluation(bar)
     }
 
     #[must_use]
@@ -1177,56 +1176,41 @@ impl<'a> HistoricalRuntime<'a> {
         diagnostics
     }
 
-    fn snapshot_strategy_eval_checkpoint(&mut self) {
-        self.strategy_eval_checkpoint = Some(StrategyEvalCheckpoint {
-            ta_state: self.ta_state.clone(),
-            valuewhen_local_values: self.valuewhen_budget.local_values,
-            current_symbols: self.current_symbols.clone(),
-            current_series: self.current_series.clone(),
-            active_series: self.active_series.clone(),
-            var_store: self.var_store.clone(),
-        });
-    }
-
-    fn restore_strategy_eval_checkpoint(&mut self) {
-        let Some(checkpoint) = self.strategy_eval_checkpoint.as_ref() else {
-            return;
-        };
-        self.ta_state.restore_from(&checkpoint.ta_state);
-        self.valuewhen_budget.local_values = checkpoint.valuewhen_local_values;
-        self.current_symbols.clone_from(&checkpoint.current_symbols);
-        self.current_series.clone_from(&checkpoint.current_series);
-        self.active_series.clone_from(&checkpoint.active_series);
-        // Historical fill recalculations rerun the script from the previous
-        // committed bar. Ordinary `var` assignments from an earlier pass of
-        // this bar must be discarded; `varip` deliberately survives passes.
-        for slot in self
-            .program
-            .symbols
-            .iter()
-            .filter(|symbol| symbol.persistence == PersistenceKind::Var)
-            .filter_map(|symbol| symbol.var_slot_id)
-        {
-            if let Some(value) = checkpoint.var_store.get(&slot) {
-                self.var_store.insert(slot, value.clone());
-            } else {
-                self.var_store.remove(&slot);
-            }
-        }
-    }
-
     fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {
         let before = self.strategy_broker.public_fill_event_count();
-        self.restore_strategy_eval_checkpoint();
+        self.restore_strategy_eval_checkpoint()?;
         self.bind_external_request_data()?;
-        if self
-            .external_execution
-            .as_ref()
-            .is_some_and(|state| state.active_pass.is_some())
+        if (self.program.strategy_settings.calc_on_every_history_tick
+            && self.current_bar_update_kind == BarUpdateKind::Historical)
+            || self
+                .external_execution
+                .as_ref()
+                .is_some_and(|state| state.active_pass.is_some())
         {
             self.set_builtin_symbols(&self.current_bar.unwrap(), self.bars)?;
         }
-        self.strategy_scheduler.begin_script_pass()?;
+        let observation = self.historical_tick_context_active
+            || self
+                .external_execution
+                .as_ref()
+                .and_then(|state| {
+                    let (index, _) = state.active_pass.as_ref()?;
+                    state.contexts.as_ref()?.get(self.bars)?.get(*index)
+                })
+                .is_some_and(|context| {
+                    context.bar_state == crate::ExternalBarState::Realtime
+                        && self.program.strategy_settings.calc_on_every_tick
+                        && matches!(
+                            context.trigger,
+                            crate::ExternalEvaluationTrigger::RealtimeTick
+                                | crate::ExternalEvaluationTrigger::BarClose
+                        )
+                });
+        if observation {
+            self.strategy_scheduler.begin_observation_pass()?;
+        } else {
+            self.strategy_scheduler.begin_script_pass()?;
+        }
         let position_size = self
             .external_value("strategy.position_size")
             .and_then(|value| value.as_f64())

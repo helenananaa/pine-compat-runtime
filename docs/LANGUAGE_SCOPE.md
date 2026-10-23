@@ -257,7 +257,8 @@ Phase 1 executable subset:
   open, add, and reversal behavior; a disallowed opposite `strategy.entry`
   against an open allowed position flattens without opening prohibited
   exposure; a disallowed opposite `strategy.entry` while flat is a no-op;
-  last call wins; pending opposite `strategy.entry` intents are cancelled
+  declarations apply before the first native observation and intersect allowed
+  directions; pending opposite `strategy.entry` intents are cancelled
   while flat or converted to market close-only against an open allowed
   position; `strategy.order` is not bound by this rule
 - `strategy.risk.max_position_size(contracts)` in strategy-mode scripts only

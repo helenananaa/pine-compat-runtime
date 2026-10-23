@@ -239,7 +239,10 @@ impl<'a> HistoricalRuntime<'a> {
             );
         }
         let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
-        if symbol == chart.symbol() && requested_timeframe == chart_timeframe {
+        if symbol == chart.symbol()
+            && requested_timeframe == chart_timeframe
+            && !self.historical_tick_context_active
+        {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
                     message: "request.security_lower_tf bounded equal-timeframe history requires a known historical dataset end"
@@ -286,11 +289,9 @@ impl<'a> HistoricalRuntime<'a> {
                     vec![],
                 );
             };
-            let requested_chart = if key.symbol() == chart.symbol() {
-                chart.clone().with_timeframe(requested_timeframe)
-            } else {
-                ChartContext::new(&symbol, requested_timeframe)
-            };
+            let requested_chart = self
+                .request_environment
+                .requested_chart(&symbol, requested_timeframe);
             let environment = self.request_environment.for_chart(requested_chart);
             let include_forming = self.request_feed.has_forming(&key);
             let values = if let Some(count) = calc_bars_count {
@@ -317,11 +318,9 @@ impl<'a> HistoricalRuntime<'a> {
             return self.lower_tf_arrays_from_samples(scalar_kind, tuple_kinds.as_deref(), samples);
         }
         if !self.request_cache.contains_key(&cache_key) {
-            let requested_chart = if key.symbol() == chart.symbol() {
-                chart.clone().with_timeframe(requested_timeframe)
-            } else {
-                ChartContext::new(&symbol, requested_timeframe)
-            };
+            let requested_chart = self
+                .request_environment
+                .requested_chart(&symbol, requested_timeframe);
             let environment = self.request_environment.for_chart(requested_chart);
             let values = if let Some(count) = calc_bars_count {
                 let bars = self.resolved_request_bars_from(&key, 0)?;
@@ -516,7 +515,10 @@ impl<'a> HistoricalRuntime<'a> {
             return self.eval_expr(expression);
         }
         let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
-        if symbol == chart_symbol && requested_timeframe == chart_timeframe {
+        if symbol == chart_symbol
+            && requested_timeframe == chart_timeframe
+            && !self.historical_tick_context_active
+        {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
                     message: "request.security bounded equal-timeframe history requires a known historical dataset end"
@@ -569,6 +571,9 @@ impl<'a> HistoricalRuntime<'a> {
                     &tuple_dependencies,
                 );
                 self.accept_execution_budget(&runtime);
+                if result.is_err() {
+                    self.failed_request_context = runtime.failed_request_context.clone();
+                }
                 let value = result?;
                 self.replace_requested_valuewhen_values(0, runtime.valuewhen_retained_values())?;
                 self.bounded_same_context_evaluations.insert(key, runtime);
@@ -665,14 +670,9 @@ impl<'a> HistoricalRuntime<'a> {
         let include_forming = self.current_bar_update_kind != BarUpdateKind::Historical
             && self.request_feed.has_forming(&key);
         if include_forming || !self.request_cache.contains_key(&cache_key) {
-            let requested_chart = if key.symbol() == self.request_environment.chart().symbol() {
-                self.request_environment
-                    .chart()
-                    .clone()
-                    .with_timeframe(requested_timeframe.clone())
-            } else {
-                ChartContext::new(key.symbol(), requested_timeframe.clone())
-            };
+            let requested_chart = self
+                .request_environment
+                .requested_chart(key.symbol(), requested_timeframe.clone());
             let requested_environment = self.request_environment.for_chart(requested_chart);
             let requested_values = if let Some(count) = calc_bars_count {
                 let bars = self.resolved_request_bars_from(&key, 0)?;
@@ -755,14 +755,9 @@ impl<'a> HistoricalRuntime<'a> {
                     .to_owned(),
             });
         };
-        let requested_chart = if key.symbol() == self.request_environment.chart().symbol() {
-            self.request_environment
-                .chart()
-                .clone()
-                .with_timeframe(key.timeframe().clone())
-        } else {
-            ChartContext::new(key.symbol(), key.timeframe().clone())
-        };
+        let requested_chart = self
+            .request_environment
+            .requested_chart(key.symbol(), key.timeframe().clone());
         let requested_environment = self.request_environment.for_chart(requested_chart);
         let include_forming = self.request_feed.has_forming(key);
         let values = if let Some(count) = calc_bars_count {
@@ -799,7 +794,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn resolved_request_bars_from(
-        &self,
+        &mut self,
         key: &RequestKey,
         start: usize,
     ) -> Result<Vec<Bar>, RuntimeError> {
@@ -807,15 +802,23 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn resolved_request_bars_range(
-        &self,
+        &mut self,
         key: &RequestKey,
         start: usize,
         end: usize,
     ) -> Result<Vec<Bar>, RuntimeError> {
+        if self.program.strategy_settings.calc_on_every_history_tick
+            && let Some(bars) = self.static_requests.canonical_chart_bars(key)
+        {
+            return Ok((start..end.min(bars.len()))
+                .filter_map(|index| bars.get(index).copied())
+                .collect());
+        }
         let provider_bars = match self.request_environment.provider().bars(key) {
             Ok(bars) => bars,
             Err(RequestDataError::MissingData { symbol, timeframe }) => {
                 if !self.request_feed.contains(key) {
+                    self.failed_request_context = Some(key.clone());
                     return Err(RuntimeError {
                         message: RequestDataError::MissingData { symbol, timeframe }.to_string(),
                     });
@@ -834,7 +837,8 @@ impl<'a> HistoricalRuntime<'a> {
                 .resolved_range(key, provider_bars, include_forming, start, end);
         // External execution can receive a known stream with no closed bars yet.
         // Missing keys still fail above; empty visible history aligns to na.
-        if bars.is_empty() && self.external_execution.is_none() {
+        if bars.is_empty() && self.external_execution.is_none() && !key.is_event_chart() {
+            self.failed_request_context = Some(key.clone());
             return Err(RuntimeError {
                 message: RequestDataError::MissingData {
                     symbol: key.symbol().to_owned(),
@@ -880,6 +884,9 @@ impl<'a> HistoricalRuntime<'a> {
             // Requested history is part of this chart execution's work. Do
             // not grant each requested bar a fresh chart-sized allowance.
             self.accept_execution_budget(&runtime);
+            if result.is_err() {
+                self.failed_request_context = runtime.failed_request_context.clone();
+            }
             values.push((bar.time, result?));
         }
         self.legacy_security_repaint_warnings

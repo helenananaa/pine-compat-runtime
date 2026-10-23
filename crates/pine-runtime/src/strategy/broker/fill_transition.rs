@@ -29,7 +29,7 @@ pub(super) struct FillRequest {
 pub(super) struct PositionSnapshot {
     pub(super) signed_size: f64,
     pub(super) avg_price: f64,
-    pub(super) quote_to_account_rate: f64,
+    pub(super) point_to_account_value: f64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -101,7 +101,7 @@ fn validate_inputs(
     if !snapshot.signed_size.is_finite() || !snapshot.avg_price.is_finite() {
         return Err(FillCalcError::NonFinitePosition);
     }
-    if !snapshot.quote_to_account_rate.is_finite() || snapshot.quote_to_account_rate <= 0.0 {
+    if !snapshot.point_to_account_value.is_finite() || snapshot.point_to_account_value <= 0.0 {
         return Err(FillCalcError::InvalidConversionRate);
     }
     Ok(())
@@ -238,7 +238,7 @@ pub(super) fn calculate_same_side_addition(
             split.open_quantity,
             fill_price,
             entry_commission,
-            snapshot.quote_to_account_rate,
+            snapshot.point_to_account_value,
         ),
         realized_profit: 0.0,
         commission: entry_commission,
@@ -274,7 +274,7 @@ pub(super) fn calculate_reduce_only(
             &allocations,
             fill_price,
             filled_exit_commission,
-            snapshot.quote_to_account_rate,
+            snapshot.point_to_account_value,
         ),
         closed_allocations: allocations,
         opened_trade: None,
@@ -287,7 +287,7 @@ pub(super) fn calculate_reduce_only(
             close_quantity,
             fill_price,
             filled_exit_commission,
-            snapshot.quote_to_account_rate,
+            snapshot.point_to_account_value,
         ),
         commission: filled_exit_commission,
         routable: true,
@@ -323,13 +323,13 @@ pub(super) fn calculate_netting_transition(
             split.close_quantity,
             fill_price,
             close_commission,
-            snapshot.quote_to_account_rate,
+            snapshot.point_to_account_value,
         );
         realized_profit = realized_from_allocations(
             &allocations,
             fill_price,
             close_commission,
-            snapshot.quote_to_account_rate,
+            snapshot.point_to_account_value,
         );
     }
     let opened_trade = split.open_direction.map(|open_direction| {
@@ -338,7 +338,7 @@ pub(super) fn calculate_netting_transition(
             split.open_quantity,
             fill_price,
             open_commission,
-            snapshot.quote_to_account_rate,
+            snapshot.point_to_account_value,
         );
         OpenedExposure {
             direction: open_direction,
@@ -383,7 +383,7 @@ mod tests {
         PositionSnapshot {
             signed_size,
             avg_price,
-            quote_to_account_rate: 1.0,
+            point_to_account_value: 1.0,
         }
     }
 

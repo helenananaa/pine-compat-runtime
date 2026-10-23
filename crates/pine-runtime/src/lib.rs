@@ -8,7 +8,20 @@ mod bar;
 mod builtins;
 mod error;
 mod external;
-pub use external::{ExternalAccountFrame, ExternalOrderIntent, ExternalPass};
+mod external_schedule;
+pub use external::{
+    EXTERNAL_CLOSING_TICK_SCHEMA_VERSION, EXTERNAL_ORDER_METADATA_SCHEMA_VERSION,
+    EXTERNAL_ORDER_SCHEMA_VERSION, EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION,
+    EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION, EXTERNAL_SIZING_SCHEMA_VERSION,
+    EXTERNAL_WINDOW_FEEDBACK_SCHEMA_VERSION, ExternalAccountFrame, ExternalExecutionOptions,
+    ExternalOrderIntent, ExternalOrderMetadata, ExternalPass, ExternalRequestStream,
+    ExternalRequestWindowHistory, ExternalWindowFeedbackStatus, ObservedRequestUpdate,
+};
+pub use external_schedule::{
+    EXTERNAL_SCHEDULE_SCHEMA_VERSION, EXTERNAL_STREAM_SCHEMA_VERSION,
+    EXTERNAL_TICK_SCHEDULE_SCHEMA_VERSION, ExternalBarState, ExternalEvaluationTrigger,
+    ExternalPassContext, ExternalScheduledPass, MAX_STRATEGY_OBSERVATIONS_PER_BAR,
+};
 mod host_requirements;
 mod input_metadata;
 mod magnifier;
@@ -26,11 +39,16 @@ pub use bar::{Bar, BarUpdate, BarUpdateKind, RealtimeUpdateContext};
 pub use error::RuntimeError;
 pub use host_requirements::{
     AccountInputContract, ChartInputContract, ChartInputDefaults, CurrencyArgument,
-    CurrencyRateInputContract, CurrencyRateRequirement, ExecutionInputContract,
-    HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements, HostSourceLocation,
-    RequestArgument, RequestRequirement, host_requirements, host_requirements_json,
+    CurrencyRateInputContract, CurrencyRateRequirement, DefaultQuantityInputContract,
+    ExecutionInputContract, HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements,
+    HostSourceLocation, RequestArgument, RequestRequirement, host_requirements,
+    host_requirements_json,
 };
-pub use input_metadata::{InputCall, input_calls};
+pub use input_metadata::{
+    InputCall, STRATEGY_RISK_CONFIGURATION_SCHEMA_VERSION, StrategyRiskConfiguration,
+    StrategyRiskRule, input_calls, strategy_risk_configuration,
+    strategy_risk_configuration_with_environment,
+};
 pub use magnifier::{
     MAGNIFIER_SCHEMA_VERSION, MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback,
     MagnifierHostTicks, MagnifierInput, MagnifierInputError, MagnifierTickSource,
@@ -72,14 +90,16 @@ pub use output::strategy_alert_templates::{
 };
 pub use output::view::*;
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
+pub(crate) use request::QuantityRules;
 pub(crate) use request::RequestCacheKey;
 pub use request::{
     BAR_CALENDAR_SCHEMA_VERSION, BarCalendar, BarCalendarError, BarCalendarRegistry,
-    BarTimeInterval, CURRENCY_RATE_SCHEMA_VERSION, ChartContext, CurrencyRateError,
-    CurrencyRateFrame, CurrencyRateProvider, InMemoryCurrencyRateProvider,
-    InMemoryRequestDataProvider, NoCurrencyRateProvider, NoRequestDataProvider, RequestDataError,
-    RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
-    bar_calendars_from_json, currency_rates_from_json, validate_requested_bars,
+    BarTimeInterval, CONTRACT_METADATA_SCHEMA_VERSION, CURRENCY_RATE_SCHEMA_VERSION, ChartContext,
+    CurrencyRateError, CurrencyRateFrame, CurrencyRateProvider, InMemoryCurrencyRateProvider,
+    InMemoryRequestDataProvider, NoCurrencyRateProvider, NoRequestDataProvider, QuantityStep,
+    RequestDataError, RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe,
+    RequestTimeframeError, SYMBOL_METADATA_SCHEMA_VERSION, bar_calendars_from_json,
+    currency_rates_from_json, symbol_contexts_from_json, validate_requested_bars,
 };
 pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::HistoricalDataset;
@@ -95,7 +115,9 @@ pub use runtime::historical::{
     run_historical_with_request_environment_and_input_overrides,
     run_historical_with_request_environment_and_input_overrides_and_execution_times,
 };
-pub use runtime::realtime::RealtimeRuntime;
+pub use runtime::realtime::{
+    REALTIME_REQUEST_FEED_SCHEMA_VERSION, RealtimeRuntime, RequestFeedUpdate,
+};
 pub use runtime::resource_limits::ResourceLimits;
 pub use runtime::valuewhen_limits::ValueWhenLimits;
 pub use series::SeriesStore;

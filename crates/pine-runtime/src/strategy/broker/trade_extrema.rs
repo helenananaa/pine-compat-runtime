@@ -1,5 +1,5 @@
 /// Account-currency extrema per remaining contract, frozen at observation time.
-/// The entry fee stays in account units when the conversion rate changes.
+/// Entry fees remain in account units when the FX component changes.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub(super) struct TradeExtrema {
     pub(super) runup: f64,
@@ -15,14 +15,15 @@ impl TradeExtrema {
         signed_unit: f64,
         entry_fee_per_unit: f64,
         range: (f64, f64),
-        rate: f64,
+        point_to_account_value: f64,
     ) {
-        let denominator = entry_price * rate + entry_fee_per_unit;
+        let denominator = entry_price * point_to_account_value + entry_fee_per_unit;
         for price in [range.0, range.1] {
             if !price.is_finite() {
                 continue;
             }
-            let profit = (price - entry_price) * signed_unit * rate - entry_fee_per_unit;
+            let profit =
+                (price - entry_price) * signed_unit * point_to_account_value - entry_fee_per_unit;
             self.runup = self.runup.max(profit);
             self.drawdown = self.drawdown.max(-profit);
             if denominator.is_finite() && denominator > 0.0 {

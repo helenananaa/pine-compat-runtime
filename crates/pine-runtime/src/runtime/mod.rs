@@ -19,6 +19,7 @@ pub(crate) mod hir_walk;
 pub(crate) mod history;
 pub(crate) mod id_store;
 mod metadata;
+mod native_risk;
 mod prepared_program;
 pub use prepared_program::PreparedProgram;
 mod objects;

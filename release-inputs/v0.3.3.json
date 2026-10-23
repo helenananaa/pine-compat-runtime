@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "tag": "v0.3.3",
+  "repository": "helenananaa/pine-compat-runtime",
+  "sourceCommit": "28f54b97a37422eef5357832bd73fb189b988d85",
+  "workflowRun": 39887494678,
+  "wheels": {
+    "windows-x86_64": {
+      "artifactName": "wheel-windows-x86_64",
+      "artifactId": 12473192888,
+      "archiveSha256": "9fe4cdbc680a354af02b0e2852b2b13016885cd19ea744719b89454c35678fe0",
+      "filename": "pine_compat_runtime-0.3.3-cp310-abi3-win_amd64.whl",
+      "sha256": "d465365c6ea6e2cd7a25e61ef68d5abcf26440f01881435a214f440e83b7903d",
+      "size": 4577738,
+      "native": {
+        "pine_compat/pine_compat.pyd": "973d03e34fefa09c324cbfa3f82bfb374d7ced058f4a826d4a04fb0de0ef0b65"
+      }
+    },
+    "macos-arm64": {
+      "artifactName": "wheel-macos-arm64",
+      "artifactId": 12473621473,
+      "archiveSha256": "584373e19d991ec1c3aea2ae83fc63071c550b5235927d3cf2e5d2fa63274174",
+      "filename": "pine_compat_runtime-0.3.3-cp310-abi3-macosx_11_0_arm64.whl",
+      "sha256": "e2859501e22f7741fa04448c0deb001623b40ee33fe82082084af40801c1a090",
+      "size": 4331838,
+      "native": {
+        "pine_compat/pine_compat.abi3.so": "13e58d4f87b4004b74c6f8c5643f5b071c0784e2a875cc6498d129da4eedd4e2"
+      }
+    },
+    "macos-x86_64": {
+      "artifactName": "wheel-macos-x86_64",
+      "artifactId": 12473562285,
+      "archiveSha256": "b2561155675bb0f092cc4b97c7b9cc0880342cbb8bfbf27d3685a3e72c65aa37",
+      "filename": "pine_compat_runtime-0.3.3-cp310-abi3-macosx_10_12_x86_64.whl",
+      "sha256": "45f4732129fa7400f5fcca7af623c0021910eb6d26fe00e424e31fafccd1c987",
+      "size": 4596890,
+      "native": {
+        "pine_compat/pine_compat.abi3.so": "8bd0087654a9c60fbbda5946628d118276d7693262c4f349edfb394fc5a8a7ba"
+      }
+    },
+    "linux-x86_64": {
+      "artifactName": "wheel-linux-x86_64",
+      "artifactId": 12473376726,
+      "archiveSha256": "0d18a5fc915e096184bb476e69d8afe9202d4e35fec8be06ecaa974460e15997",
+      "filename": "pine_compat_runtime-0.3.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "sha256": "84a6a71482be461caf0be618726e05d941d726a006bc71492fc9ae6b742b1f35",
+      "size": 4687582,
+      "native": {
+        "pine_compat/pine_compat.abi3.so": "f087c023510e4764c575e2a344cfb72765df7c13dcbe62107450adf77e9c63c0"
+      }
+    }
+  },
+  "resourceQualification": {
+    "path": "docs/qualifications/v0.3.3-resource-qualification.json",
+    "sha256": "abad404aa88cb697d4c552641c0431c804fd682a15fd237e938f7e07fe899ed5"
+  }
+}

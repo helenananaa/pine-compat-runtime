@@ -61,6 +61,10 @@ try {
     assert.equal(report.metadata.path,path.basename(reportPath)+'.metadata.json');
     const metadata=read(resolveReference(reportPath,report.metadata));
     assert.equal(metadata.resourceMetadataVersion,1);
+    assert.equal(metadata.runtime.node,process.versions.node);
+    assert.equal(metadata.runtime.v8,process.versions.v8);
+    assert.equal(metadata.runtime.arch,process.arch);
+    assert.equal(metadata.snapshotEncoding,'owned-chunk-reader/1; snapshot excludes measured sink IO; serialization is measured sink IO');
     assert.equal(metadata.resultCount,count);
     assert.equal(metadata.confirmedBars,bars.length);
     assert.equal(metadata.historicalAppend,report.historicalAppend);

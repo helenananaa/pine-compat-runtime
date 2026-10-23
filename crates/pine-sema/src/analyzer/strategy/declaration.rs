@@ -32,6 +32,19 @@ impl Analyzer {
         let mut commission_value = None;
 
         for (index, arg) in args.iter().enumerate() {
+            if arg.name.is_none()
+                && signature
+                    .params
+                    .get(index)
+                    .is_some_and(|param| param.name == "calc_on_every_history_tick")
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`strategy` argument `calc_on_every_history_tick` must be named",
+                    arg.span,
+                ));
+                continue;
+            }
             let Some(name) = arg.name.as_deref().or_else(|| {
                 [
                     "title",
@@ -317,6 +330,15 @@ impl Analyzer {
                 "calc_on_every_tick" => {
                     if let Some(value) = self.known_const_bool_payload_value(&arg.value) {
                         self.strategy_settings.calc_on_every_tick = value;
+                    }
+                }
+                "calc_on_every_history_tick" => {
+                    if self.legacy.dialect().version() < 6 {
+                        self.reject_unavailable_legacy_builtin(name, 6, arg.span);
+                        continue;
+                    }
+                    if let Some(value) = self.known_const_bool_payload_value(&arg.value) {
+                        self.strategy_settings.calc_on_every_history_tick = value;
                     }
                 }
                 "use_bar_magnifier" => {

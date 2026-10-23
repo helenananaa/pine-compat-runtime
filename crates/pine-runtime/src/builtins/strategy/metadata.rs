@@ -5,14 +5,14 @@ use crate::strategy::{StrategyExitMetadata, StrategyOrderMetadata};
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
 
 impl<'a> HistoricalRuntime<'a> {
-    pub(super) fn eval_strategy_order_metadata(
+    pub(crate) fn eval_strategy_order_metadata(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<StrategyOrderMetadata, RuntimeError> {
         self.eval_strategy_close_metadata(args, 7)
     }
 
-    pub(super) fn eval_strategy_entry_metadata(
+    pub(crate) fn eval_strategy_entry_metadata(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<StrategyOrderMetadata, RuntimeError> {
@@ -23,7 +23,7 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
-    pub(super) fn eval_strategy_close_metadata(
+    pub(crate) fn eval_strategy_close_metadata(
         &mut self,
         args: &[HirCallArg],
         comment_index: usize,
@@ -39,7 +39,7 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
-    pub(super) fn eval_strategy_exit_metadata(
+    pub(crate) fn eval_strategy_exit_metadata(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<StrategyExitMetadata, RuntimeError> {

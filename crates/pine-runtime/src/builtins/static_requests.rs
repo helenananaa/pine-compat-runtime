@@ -23,6 +23,17 @@ pub(crate) struct StaticRequests {
 }
 
 impl StaticRequests {
+    pub(crate) fn canonical_chart_bars(
+        &self,
+        key: &crate::RequestKey,
+    ) -> Option<&AppendHistory<Bar>> {
+        if self.root_update_kind != Some(BarUpdateKind::Historical) {
+            return None;
+        }
+        let chart = self.environment.as_ref()?.chart();
+        (key.symbol() == chart.symbol() && key.timeframe() == chart.timeframe())
+            .then_some(&self.chart_bars)
+    }
     pub(crate) fn new(enabled: bool, environment: RequestEnvironment) -> Self {
         Self {
             environment: enabled.then_some(environment),
@@ -69,6 +80,25 @@ impl StaticRequests {
         false
     }
 
+    /// Explicit realtime passes share one chart bar but replace its visible
+    /// tail. Keep closed bars, hide not-yet-observed future chart bars, and
+    /// invalidate lifted values even if only execution state changed.
+    pub(crate) fn observe_execution_bar(
+        &mut self,
+        index: usize,
+        bar: Bar,
+        kind: BarUpdateKind,
+    ) -> bool {
+        if self.environment.is_none() || self.requested || kind == BarUpdateKind::Historical {
+            return false;
+        }
+        self.root_update_kind = Some(kind);
+        self.chart_bars.truncate(index);
+        self.chart_bars.push(bar);
+        self.values.clear();
+        true
+    }
+
     pub(crate) fn finish_dataset(&mut self, committed: usize) -> bool {
         if !self.requested && self.chart_bars.len() > committed {
             self.chart_bars.truncate(committed);
@@ -84,6 +114,19 @@ pub(crate) fn is_security(name: &str) -> bool {
 }
 
 pub(crate) fn needs_chart_history(program: &HirProgram) -> bool {
+    if program.strategy_settings.calc_on_every_history_tick {
+        let mut needed = false;
+        hir_walk::statements_and_bindings(
+            &program.statements,
+            &mut |expr| {
+                if let HirExprKind::Call { callee, .. } = &expr.kind {
+                    needed |= is_security(callee) || callee == "request.security_lower_tf";
+                }
+            },
+            &mut |_| {},
+        );
+        return needed;
+    }
     if program.dynamic_requests {
         return false;
     }

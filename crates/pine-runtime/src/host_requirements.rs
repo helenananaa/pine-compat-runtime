@@ -4,7 +4,9 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use pine_ir::{HirExpr, HirExprKind, HirLiteral, HirProgram, ScriptMode, SymbolId};
+use pine_ir::{
+    HirExpr, HirExprKind, HirLiteral, HirProgram, ScriptMode, StrategyDefaultQuantity, SymbolId,
+};
 use serde::Serialize;
 
 mod currency;
@@ -12,7 +14,7 @@ mod merge;
 mod walk;
 pub use currency::{CurrencyArgument, CurrencyRateInputContract, CurrencyRateRequirement};
 
-pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 3;
+pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 4;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,6 +57,9 @@ pub struct ChartInputContract {
     pub price_grid: &'static str,
     pub bar_calendars: &'static str,
     pub quantity_precision: &'static str,
+    pub contract_metadata_schema_version: u32,
+    pub quantity_step: &'static str,
+    pub min_contract: &'static str,
     pub symbol_metadata: Vec<String>,
     pub defaults: ChartInputDefaults,
 }
@@ -81,9 +86,20 @@ pub struct AccountInputContract {
     /// A different account currency requires host-supplied effective rates.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub declared_currency: Option<&'static str>,
-    pub point_value: u32,
+    /// Synthetic fallback only; actual contract valuation comes from metadata.
+    pub default_point_value: u32,
+    pub contract_metadata_schema_version: u32,
     pub currency_conversion: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_quantity: Option<DefaultQuantityInputContract>,
     pub unsupported_profiles: Vec<&'static str>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DefaultQuantityInputContract {
+    pub kind: &'static str,
+    /// Shortest decimal representation of the compiled declaration value.
+    pub value: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -92,6 +108,7 @@ pub struct ExecutionInputContract {
     pub clock: &'static str,
     pub realtime_updates: &'static str,
     pub calc_on_every_tick: bool,
+    pub calc_on_every_history_tick: bool,
     pub calc_on_order_fills: bool,
     pub process_orders_on_close: bool,
     pub magnifier: &'static str,
@@ -279,6 +296,9 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
             price_grid: "positiveIntegerMinMoveAndPriceScale",
             bar_calendars: "continuousUtcDefaultOrHostSuppliedTradingIntervalsV1",
             quantity_precision: "decimalPowerZeroThroughNine",
+            contract_metadata_schema_version: crate::CONTRACT_METADATA_SCHEMA_VERSION,
+            quantity_step: "optionalExactPositiveDecimalString",
+            min_contract: "optionalPositiveDecimalMinimumIndependentOfStep",
             symbol_metadata: metadata.into_iter().collect(),
             defaults: ChartInputDefaults {
                 symbol: defaults.symbol().to_owned(),
@@ -294,11 +314,23 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
             },
         },
         account: strategy.then_some(AccountInputContract {
-            profile: "linearUnitPointValueWithHostCurrencyRates",
+            profile: "linearHostPointValueWithHostCurrencyRates",
             declared_currency: program.strategy_settings.account_currency,
-            point_value: 1,
+            default_point_value: 1,
+            contract_metadata_schema_version: crate::CONTRACT_METADATA_SCHEMA_VERSION,
             currency_conversion: true,
-            unsupported_profiles: vec!["nonUnitContractMultiplier", "nonstandardChartBroker"],
+            default_quantity: program.strategy_settings.default_qty.map(|quantity| {
+                let (kind, value) = match quantity {
+                    StrategyDefaultQuantity::Fixed(value) => ("fixed", value),
+                    StrategyDefaultQuantity::Cash(value) => ("cash", value),
+                    StrategyDefaultQuantity::PercentOfEquity(value) => ("percent_of_equity", value),
+                };
+                DefaultQuantityInputContract {
+                    kind,
+                    value: value.to_string(),
+                }
+            }),
+            unsupported_profiles: vec!["inverseContractAccounting", "nonstandardChartBroker"],
         }),
         currency_rates: needs_currency.then_some(CurrencyRateInputContract {
             schema_version: crate::CURRENCY_RATE_SCHEMA_VERSION,
@@ -318,6 +350,8 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
             },
             realtime_updates: "hostOrderedFormingReplacementAndConfirmation",
             calc_on_every_tick: strategy && program.strategy_settings.calc_on_every_tick,
+            calc_on_every_history_tick: strategy
+                && program.strategy_settings.calc_on_every_history_tick,
             calc_on_order_fills: strategy && program.strategy_settings.calc_on_order_fills,
             process_orders_on_close: strategy && program.strategy_settings.process_orders_on_close,
             magnifier: if strategy && program.strategy_settings.use_bar_magnifier {

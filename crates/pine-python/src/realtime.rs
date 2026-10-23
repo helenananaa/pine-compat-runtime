@@ -373,6 +373,37 @@ impl PyRealtimeSession {
         self.apply_request_update(py, symbol, timeframe, bar, false)
     }
 
+    /// Apply provider updates without running Pine. The next chart observation
+    /// decides when the host's combined input is evaluated.
+    fn apply_request_feed_updates(
+        &mut self,
+        py: Python<'_>,
+        updates: &Bound<'_, PyAny>,
+    ) -> PyResult<()> {
+        self.require_seeded()?;
+        let raw: String = PyModule::import(py, "json")?
+            .call_method1("dumps", (updates,))?
+            .extract()?;
+        let updates: Vec<pine_runtime::RequestFeedUpdate> =
+            serde_json::from_str(&raw).map_err(|error| PyValueError::new_err(error.to_string()))?;
+        py.detach(|| self.runtime.apply_request_feed_updates(&updates))
+            .map_err(|error| PyValueError::new_err(error.message))
+    }
+
+    fn request_bar_close(
+        &self,
+        symbol: &str,
+        timeframe: &str,
+        open_time: &Bound<'_, PyAny>,
+    ) -> PyResult<i64> {
+        let timeframe = RequestTimeframe::parse(timeframe)
+            .map_err(|error| PyValueError::new_err(error.to_string()))?;
+        let open_time = execution_timestamp(Some(open_time))?.expect("timestamp supplied");
+        self.runtime
+            .request_bar_close(&RequestKey::new(symbol, timeframe), open_time)
+            .map_err(|error| PyValueError::new_err(error.message))
+    }
+
     fn replica(&self, py: Python<'_>) -> crate::replica::PyRuntimeReplica {
         crate::replica::PyRuntimeReplica {
             inner: py.detach(|| self.runtime.replica()),

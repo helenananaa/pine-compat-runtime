@@ -1,8 +1,10 @@
 use pine_ir::HirProgram;
 
+mod request_feed;
 mod resource_limits;
 mod time_protocol;
 mod without_output;
+pub use request_feed::{REALTIME_REQUEST_FEED_SCHEMA_VERSION, RequestFeedUpdate};
 
 use super::streaming::OutputCursor;
 use crate::*;

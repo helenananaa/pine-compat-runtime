@@ -21,6 +21,33 @@ def test_external_feedback_drives_interpreter_and_has_no_native_account():
     assert result["output"]["plots"][0]["values"] == [1000, 1000, 1000]
 
 
+@pytest.mark.parametrize('prices', ['', ',limit=11', ',stop=9', ',limit=11,stop=9'])
+@pytest.mark.parametrize('oca', ['none','cancel','reduce'])
+def test_generic_order_and_entry_oca_survive_external_append(prices,oca):
+    source = f'''//@version=6
+strategy("Orders",pyramiding=1)
+strategy.order("S",strategy.short,qty=3{prices},oca_name="g",oca_type=strategy.oca.{oca})
+strategy.entry("L",strategy.long,qty=2,oca_name="g",oca_type=strategy.oca.{oca})
+plot(strategy.position_size)
+'''
+    program = pine_compat.compile_script(source)
+    session = program.external_session()
+    for i in range(len(BARS)):
+        actual = session.append(BARS[i:i+1], ACCOUNTS[i:i+1])
+        assert actual == program.run_external(BARS[:i+1],ACCOUNTS[:i+1])
+    assert pine_compat.EXTERNAL_ORDER_SCHEMA_VERSION == 2
+    assert all(row['qty'] == (3 if row['action'] == 'order' else 2) for row in actual['intents'])
+    assert all(row['oca_name'] == 'g' and row['oca_type'] == oca for row in actual['intents'])
+    assert actual['output']['plots'][0]['values'] == [0,1,0]
+    assert 'strategy' not in actual['output']
+
+
+@pytest.mark.parametrize('command',['order','entry'])
+def test_na_order_quantity_uses_declared_fixed_default(command):
+    program = pine_compat.compile_script(f'//@version=6\nstrategy("Default",default_qty_value=7)\nstrategy.{command}("L",strategy.long,qty=na)')
+    assert program.run_external(BARS[:1],ACCOUNTS[:1])['intents'][0]['qty'] == 7
+
+
 @pytest.mark.parametrize("source", [SOURCE.replace('strategy("External")', 'strategy("External", calc_on_order_fills=true)'),
                                     SOURCE.replace('strategy.entry("L", strategy.long)', 'strategy.entry("L", strategy.long, comment="unsupported")'),
                                     SOURCE.replace('strategy.position_size', 'strategy.wintrades')])

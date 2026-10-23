@@ -343,7 +343,10 @@ fn explicit_quantity_grid_respects_host_precision_and_unconfigured_profile() {
         (1e12, Some(1_000_000), 1e12),
     ] {
         assert_eq!(
-            crate::strategy::explicit_quantity_on_chart_grid(qty, scale),
+            crate::strategy::explicit_quantity_on_chart_grid(
+                qty,
+                crate::QuantityRules::legacy(scale)
+            ),
             expected,
             "qty={qty}, scale={scale:?}"
         );

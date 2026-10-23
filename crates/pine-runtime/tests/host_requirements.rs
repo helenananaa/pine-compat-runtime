@@ -8,7 +8,7 @@ fn modern_merge_options_and_calendar_relation_are_reported_without_execution() {
         "//@version=6\nindicator(\"merge inventory\")\ng=barmerge.gaps_on\na=g\nplot(request.security(\"OTHER\",\"M\",close,gaps=a,lookahead=barmerge.lookahead_on))\nplot(request.security(\"OTHER\",\"M\",close))\n",
     );
     let report = host_requirements(&hir);
-    assert_eq!(report.schema_version, 3);
+    assert_eq!(report.schema_version, 4);
     assert_eq!(report.requests[0].gaps, "gapsOn");
     assert_eq!(report.requests[0].lookahead, "lookaheadOn");
     assert_eq!(report.requests[0].timeframe_relation, "sameOrLowerOrHigher");
@@ -47,7 +47,7 @@ fn currency_inventory_exposes_pair_selectors_and_account_conversion_without_mark
         "//@version=6\nstrategy(\"rates\",currency=currency.EUR)\nplot(request.currency_rate(syminfo.currency,strategy.account_currency))\n",
     );
     let report = host_requirements(&hir);
-    assert_eq!(report.schema_version, 3);
+    assert_eq!(report.schema_version, 4);
     let account = report.account.unwrap();
     assert!(account.currency_conversion);
     assert!(
@@ -136,7 +136,7 @@ fn strategy_inventory_exposes_optional_fallbacks_and_account_limits() {
         "//@version=6\nstrategy(\"host\",use_bar_magnifier=true,calc_on_every_tick=true,calc_on_order_fills=true,process_orders_on_close=true)\nstrategy.risk.max_intraday_loss(10,strategy.percent_of_equity)\nplot(syminfo.mincontract)\n",
     );
     let report = host_requirements(&hir);
-    assert_eq!(report.account.unwrap().point_value, 1);
+    assert_eq!(report.account.unwrap().default_point_value, 1);
     assert_eq!(
         report.execution.magnifier,
         "historicalIntrabarsOrReportedStandardOhlcFallback"

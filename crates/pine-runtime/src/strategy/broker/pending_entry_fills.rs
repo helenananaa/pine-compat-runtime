@@ -392,9 +392,9 @@ impl BrokerState {
             pending_entry.quantity = super::super::percent_of_equity_order_qty(
                 equity,
                 percent,
-                execution_price,
+                self.contract_value(execution_price),
                 self.commission,
-                self.configured_quantity_scale,
+                self.quantity_rules,
             );
         }
         if !pending_entry.enforce_pyramiding {

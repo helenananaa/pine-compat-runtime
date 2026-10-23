@@ -317,9 +317,10 @@ impl Analyzer {
                         });
                     }
                     return self.dynamic_requests
-                        && (matches!(&args[0].value.without_groups().kind,
-                            ExprKind::Literal(Literal::String(symbol)) if symbol.is_empty())
-                            || expr_name(&args[0].value).as_deref() == Some("syminfo.tickerid"))
+                        && (matches!(
+                            &args[0].value.without_groups().kind,
+                            ExprKind::Literal(Literal::String(_))
+                        ) || expr_name(&args[0].value).as_deref() == Some("syminfo.tickerid"))
                         && (matches!(
                             &args[1].value.without_groups().kind,
                             ExprKind::Literal(Literal::String(_))

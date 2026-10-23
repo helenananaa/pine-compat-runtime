@@ -1,9 +1,40 @@
-//! Host-neutral BAR_CLOSE intent evaluation with authoritative account feedback.
-//! V1 deliberately excludes native fills and fill-triggered/realtime recalculation.
+//! Host-neutral order intents with authoritative account and scheduled-pass feedback.
 use crate::builtins::args::call_arg_expr;
+use crate::external_schedule::{ExternalBarState, ExternalPassContext};
 use crate::{HistoricalRuntime, PineValue, RuntimeError};
-use pine_ir::{HirCallArg, ScriptMode, StrategyDefaultQuantity};
+use pine_ir::{HirCallArg, ScriptMode};
 use serde::{Deserialize, Serialize};
+
+mod metadata;
+mod request_updates;
+mod sizing;
+pub use metadata::ExternalOrderMetadata;
+use request_updates::ExternalRequestState;
+pub use request_updates::{EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION, ObservedRequestUpdate};
+
+pub const EXTERNAL_ORDER_SCHEMA_VERSION: u32 = 2;
+pub const EXTERNAL_CLOSING_TICK_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_SIZING_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_ORDER_METADATA_SCHEMA_VERSION: u32 = 1;
+pub const EXTERNAL_WINDOW_FEEDBACK_SCHEMA_VERSION: u32 = 1;
+
+/// Control state for historical windows discovered from actual observations.
+/// A required rebase invalidates the entire tentative execution, including
+/// intents already emitted. It does not authorize recovery from Pine errors.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct ExternalWindowFeedbackStatus {
+    pub schema_version: u32,
+    pub requires_discovery: bool,
+    pub rebase_required: bool,
+    pub input_skip: usize,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ExternalExecutionOptions {
+    pub closing_ticks: bool,
+    pub risk_rules: bool,
+    pub order_metadata: bool,
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -27,15 +58,28 @@ pub struct ExternalPass {
     pub confirmed: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub request_data: Option<Vec<ExternalRequestStream>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request_updates: Option<Vec<ObservedRequestUpdate>>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalRequestStream {
     pub symbol: String,
     pub timeframe: String,
     pub bars: Vec<crate::Bar>,
 }
+
+/// Known initial requested endpoints, without future prices or account state.
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExternalRequestWindowHistory {
+    pub symbol: String,
+    pub timeframe: String,
+    pub times_ms: Vec<i64>,
+}
+
+pub const EXTERNAL_REQUEST_WINDOW_PLAN_SCHEMA_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ExternalOrderIntent {
@@ -64,15 +108,33 @@ pub struct ExternalOrderIntent {
     pub trail_points: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trail_offset: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub oca_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub oca_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<ExternalOrderMetadata>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ExternalOpenBar {
+    pub canonical: crate::Bar,
+    pub bar_state: ExternalBarState,
+    pub started: bool,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExternalExecution {
+    pub options: ExternalExecutionOptions,
     pub frames: Vec<ExternalAccountFrame>,
     pub passes: Option<Vec<Vec<ExternalPass>>>,
+    pub contexts: Option<Vec<Vec<ExternalPassContext>>>,
     pub active_pass: Option<(usize, ExternalPass)>,
+    pub stream: Option<ExternalOpenBar>,
     pub intents: Vec<ExternalOrderIntent>,
     pub error: Option<String>,
+    pub risk_configuration: Option<crate::StrategyRiskConfiguration>,
+    pub request_state: ExternalRequestState,
 }
 
 pub(crate) fn external_error(message: impl Into<String>) -> RuntimeError {
@@ -86,19 +148,28 @@ impl HistoricalRuntime<'_> {
         if skip == 0 {
             return Ok(());
         }
-        if let Some(state) = &mut self.external_execution {
-            if state.frames.len() < skip
+        if let Some(state) = &self.external_execution
+            && (state.frames.len() < skip
                 || state
                     .passes
                     .as_ref()
                     .is_some_and(|groups| groups.len() < skip)
-            {
-                return Err(external_error(
-                    "missing feedback for the historical execution window",
-                ));
-            }
+                || state
+                    .contexts
+                    .as_ref()
+                    .is_some_and(|groups| groups.len() < skip))
+        {
+            return Err(external_error(
+                "missing feedback for the historical execution window",
+            ));
+        }
+        self.prepare_external_request_window(skip)?;
+        if let Some(state) = &mut self.external_execution {
             state.frames.drain(..skip);
             if let Some(groups) = &mut state.passes {
+                groups.drain(..skip);
+            }
+            if let Some(groups) = &mut state.contexts {
                 groups.drain(..skip);
             }
         }
@@ -106,6 +177,7 @@ impl HistoricalRuntime<'_> {
     }
 
     pub(crate) fn bind_external_request_data(&mut self) -> Result<(), RuntimeError> {
+        self.bind_external_request_updates()?;
         let Some(streams) = self
             .external_execution
             .as_ref()
@@ -145,53 +217,110 @@ impl HistoricalRuntime<'_> {
     }
 
     pub fn with_external_accounts_and_passes(
+        self,
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+    ) -> Result<Self, RuntimeError> {
+        self.with_external_accounts_and_options(frames, passes, ExternalExecutionOptions::default())
+    }
+
+    pub fn with_external_accounts_and_options(
+        self,
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+        options: ExternalExecutionOptions,
+    ) -> Result<Self, RuntimeError> {
+        self.with_external_feedback(frames, passes, None, options)
+    }
+
+    pub(crate) fn with_external_feedback(
         mut self,
         frames: Vec<ExternalAccountFrame>,
         passes: Option<Vec<Vec<ExternalPass>>>,
+        contexts: Option<Vec<Vec<ExternalPassContext>>>,
+        options: ExternalExecutionOptions,
     ) -> Result<Self, RuntimeError> {
         if self.bars != 0 || self.execution_failed || self.external_execution.is_some() {
             return Err(external_error(
                 "external feedback must be bound to a fresh runtime",
             ));
         }
-        self.validate_external_feedback(&frames, passes.as_deref())?;
+        self.validate_external_feedback(&frames, passes.as_deref(), contexts.as_deref(), options)?;
+        let configuration = crate::strategy_risk_configuration_with_environment(
+            &self.program,
+            &self.input_overrides,
+            &self.request_environment,
+        );
+        if !configuration.rules.is_empty()
+            && (!options.risk_rules || !configuration.unresolved_call_site_ids.is_empty())
+        {
+            return Err(external_error(
+                "risk rules require explicit host enforcement and fully resolved configuration",
+            ));
+        }
         self.external_execution = Some(ExternalExecution {
+            options,
             frames,
             passes,
+            contexts,
             active_pass: None,
+            stream: None,
             intents: vec![],
             error: None,
+            risk_configuration: (!configuration.rules.is_empty()).then_some(configuration),
+            request_state: ExternalRequestState::default(),
         });
         Ok(self)
     }
 
-    fn validate_external_feedback(
+    pub(crate) fn validate_external_feedback(
         &self,
         frames: &[ExternalAccountFrame],
         passes: Option<&[Vec<ExternalPass>]>,
+        contexts: Option<&[Vec<ExternalPassContext>]>,
+        options: ExternalExecutionOptions,
+    ) -> Result<(), RuntimeError> {
+        self.validate_external_feedback_shape(frames, passes, contexts, options)?;
+        self.validate_external_request_transcript(passes, contexts)
+    }
+
+    pub(crate) fn validate_external_feedback_shape(
+        &self,
+        frames: &[ExternalAccountFrame],
+        passes: Option<&[Vec<ExternalPass>]>,
+        contexts: Option<&[Vec<ExternalPassContext>]>,
+        options: ExternalExecutionOptions,
     ) -> Result<(), RuntimeError> {
         let settings = self.program.strategy_settings;
         if self.program.script_mode != ScriptMode::Strategy
-            || settings.calc_on_order_fills != passes.is_some()
-            || settings.calc_on_every_tick
-            || settings.process_orders_on_close
+            || (contexts.is_none()
+                && (settings.calc_on_order_fills != passes.is_some()
+                    || settings.calc_on_every_tick
+                    || settings.calc_on_every_history_tick))
+            || (settings.process_orders_on_close && !options.closing_ticks)
             || settings.use_bar_magnifier
             || settings.slippage_ticks != 0.0
             || settings.commission.is_some()
-            || !matches!(
-                settings.default_qty,
-                Some(StrategyDefaultQuantity::Fixed(_))
-            )
         {
             return Err(external_error(
-                "V1 requires a bar-close, next-event, fixed-quantity strategy without native execution settings",
+                "external execution requires supported scheduling, no native costs, and explicit host opt-in for closing ticks",
             ));
         }
+        if let Some(contexts) = contexts {
+            self.validate_external_schedule(frames, passes, contexts, options)?;
+        }
         if let Some(groups) = &passes {
+            let limit = if contexts.is_some()
+                && (settings.calc_on_every_tick || settings.calc_on_every_history_tick)
+            {
+                crate::MAX_STRATEGY_OBSERVATIONS_PER_BAR as usize
+            } else {
+                65
+            };
             if groups.len() != frames.len()
                 || groups
                     .iter()
-                    .any(|group| group.is_empty() || group.len() > 65)
+                    .any(|group| group.is_empty() || group.len() > limit)
             {
                 return Err(external_error("invalid execution pass count"));
             }
@@ -205,7 +334,16 @@ impl HistoricalRuntime<'_> {
                         || bar.time != frame.time
                         || pass.event_time_ms < bar.time
                         || (index > 0
-                            && (group[index - 1].confirmed
+                            && ((group[index - 1].confirmed
+                                && (!settings.process_orders_on_close
+                                    || !pass.confirmed
+                                    || group[index - 1].bar != pass.bar
+                                    || group[index - 1].event_time_ms != pass.event_time_ms
+                                    || group[index - 1].request_data != pass.request_data
+                                    || pass
+                                        .request_updates
+                                        .as_ref()
+                                        .is_some_and(|updates| !updates.is_empty())))
                                 || group[index - 1].event_time_ms > pass.event_time_ms))
                         || [bar.open, bar.high, bar.low, bar.close, bar.volume]
                             .iter()
@@ -258,11 +396,50 @@ impl HistoricalRuntime<'_> {
         frames: Vec<ExternalAccountFrame>,
         passes: Option<Vec<Vec<ExternalPass>>>,
     ) -> Result<(), RuntimeError> {
+        self.append_external_bars_inner(bars, frames, passes, None, None)
+    }
+
+    /// Append authoritative feedback with one host execution timestamp per bar.
+    /// Scheduled fill passes retain their own explicit event timestamps.
+    pub fn append_external_bars_with_execution_times(
+        &mut self,
+        bars: &[crate::Bar],
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+        execution_times: &[i64],
+    ) -> Result<(), RuntimeError> {
+        if execution_times.len() != bars.len() {
+            return Err(external_error("execution timestamp count must match bars"));
+        }
+        self.append_external_bars_inner(bars, frames, passes, None, Some(execution_times))
+    }
+
+    pub(crate) fn append_external_bars_inner(
+        &mut self,
+        bars: &[crate::Bar],
+        frames: Vec<ExternalAccountFrame>,
+        passes: Option<Vec<Vec<ExternalPass>>>,
+        contexts: Option<Vec<Vec<ExternalPassContext>>>,
+        execution_times: Option<&[i64]>,
+    ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
+        if self.external_window_feedback.is_some() {
+            return Err(external_error(
+                "observed window feedback requires begin/observe/commit streaming",
+            ));
+        }
         let state = self
             .external_execution
             .as_ref()
             .ok_or_else(|| external_error("external mode is not active"))?;
+        if state.stream.is_some() {
+            return Err(external_error(
+                "commit the open external bar before appending",
+            ));
+        }
+        if state.contexts.is_some() != contexts.is_some() {
+            return Err(external_error("external schedule mode changed"));
+        }
         if bars.is_empty() && frames.is_empty() && passes.as_ref().is_none_or(Vec::is_empty) {
             return Ok(());
         }
@@ -273,6 +450,25 @@ impl HistoricalRuntime<'_> {
                 .any(|(frame, bar)| frame.time != bar.time)
         {
             return Err(external_error("feedback time/count mismatch"));
+        }
+        if passes.is_none()
+            && let Some(mut clock) = state.request_state.observed_at
+        {
+            for (index, bar) in bars.iter().enumerate() {
+                let observed_at = match execution_times.and_then(|times| times.get(index)) {
+                    Some(time) => *time,
+                    None => self
+                        .request_environment
+                        .chart_close(bar.time)?
+                        .saturating_sub(1),
+                };
+                if observed_at < clock {
+                    return Err(external_error(
+                        "chart observation precedes requested-data availability",
+                    ));
+                }
+                clock = observed_at;
+            }
         }
         if bars.windows(2).any(|pair| pair[1].time <= pair[0].time)
             || bars
@@ -288,7 +484,12 @@ impl HistoricalRuntime<'_> {
                 "execute pending feedback before appending new feedback",
             ));
         }
-        self.validate_external_feedback(&frames, passes.as_deref())?;
+        self.validate_external_feedback(
+            &frames,
+            passes.as_deref(),
+            contexts.as_deref(),
+            state.options,
+        )?;
         let state = self
             .external_execution
             .as_mut()
@@ -308,7 +509,13 @@ impl HistoricalRuntime<'_> {
         if let (Some(previous), Some(appended)) = (&mut state.passes, passes) {
             previous.extend(appended);
         }
-        let result = self.append_bars(bars);
+        if let (Some(previous), Some(appended)) = (&mut state.contexts, contexts) {
+            previous.extend(appended);
+        }
+        let result = match execution_times {
+            Some(times) => self.append_bars_with_execution_times(bars, times),
+            None => self.append_bars(bars),
+        };
         if result.is_err() {
             self.execution_failed = true;
         }
@@ -326,16 +533,57 @@ impl HistoricalRuntime<'_> {
         Ok(&state.intents)
     }
 
+    pub fn external_risk_configuration(&self) -> Option<&crate::StrategyRiskConfiguration> {
+        self.external_execution
+            .as_ref()
+            .and_then(|state| state.risk_configuration.as_ref())
+    }
+
     pub(crate) fn external_value(&mut self, name: &str) -> Option<PineValue> {
         let state = self.external_execution.as_mut()?;
         if let Some((index, pass)) = &state.active_pass {
-            match name {
-                "barstate.isconfirmed" => return Some(PineValue::Bool(pass.confirmed)),
-                "barstate.isnew" => return Some(PineValue::Bool(*index == 0)),
-                "barstate.islastconfirmedhistory" if !pass.confirmed => {
-                    return Some(PineValue::Bool(false));
+            if let Some(context) = state
+                .contexts
+                .as_ref()
+                .and_then(|groups| groups.get(self.bars))
+                .and_then(|group| group.get(*index))
+            {
+                let historical = context.bar_state == ExternalBarState::Historical;
+                match name {
+                    "barstate.ishistory" => return Some(PineValue::Bool(historical)),
+                    "barstate.isrealtime" => return Some(PineValue::Bool(!historical)),
+                    "barstate.isconfirmed" => {
+                        return Some(PineValue::Bool(historical || pass.confirmed));
+                    }
+                    "barstate.isnew" => return Some(PineValue::Bool(context.is_new)),
+                    "barstate.islast" if !historical => return Some(PineValue::Bool(true)),
+                    "barstate.islastconfirmedhistory"
+                        if historical
+                            && state
+                                .contexts
+                                .as_ref()
+                                .and_then(|groups| groups.get(self.bars + 1))
+                                .and_then(|group| group.first())
+                                .is_some_and(|next| {
+                                    next.bar_state == ExternalBarState::Realtime
+                                }) =>
+                    {
+                        return Some(PineValue::Bool(true));
+                    }
+                    "barstate.islastconfirmedhistory" if !historical => {
+                        return Some(PineValue::Bool(false));
+                    }
+                    _ => {}
                 }
-                _ => {}
+            } else {
+                match name {
+                    "barstate.isconfirmed" => return Some(PineValue::Bool(pass.confirmed)),
+                    "barstate.isnew" => return Some(PineValue::Bool(*index == 0)),
+                    "barstate.islastconfirmedhistory" if !pass.confirmed => {
+                        return Some(PineValue::Bool(false));
+                    }
+                    _ => {}
+                }
             }
         }
         if !name.starts_with("strategy.") {
@@ -375,9 +623,41 @@ impl HistoricalRuntime<'_> {
         callee: &str,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
+        if callee == "strategy.default_entry_qty" {
+            return self.eval_strategy_default_entry_qty(args);
+        }
+        if callee.starts_with("strategy.risk.") {
+            return if self
+                .external_execution
+                .as_ref()
+                .is_some_and(|state| state.options.risk_rules)
+            {
+                Ok(PineValue::Void)
+            } else {
+                Err(external_error("host risk enforcement was not negotiated"))
+            };
+        }
         let names: &[&str] = match callee {
-            "strategy.entry" => &["id", "direction", "qty", "limit", "stop"],
-            "strategy.close" => &["id", "qty", "qty_percent"],
+            "strategy.entry" | "strategy.order" => &[
+                "id",
+                "direction",
+                "qty",
+                "limit",
+                "stop",
+                "oca_name",
+                "oca_type",
+                "comment",
+                "alert_message",
+                "disable_alert",
+            ],
+            "strategy.close" => &[
+                "id",
+                "qty",
+                "qty_percent",
+                "comment",
+                "alert_message",
+                "disable_alert",
+            ],
             "strategy.exit" => &[
                 "id",
                 "from_entry",
@@ -390,20 +670,36 @@ impl HistoricalRuntime<'_> {
                 "trail_offset",
                 "qty",
                 "qty_percent",
+                "oca_name",
+                "comment",
+                "comment_profit",
+                "comment_loss",
+                "comment_trailing",
+                "alert_message",
+                "alert_profit",
+                "alert_loss",
+                "alert_trailing",
+                "disable_alert",
             ],
             "strategy.cancel" => &["id"],
             "strategy.cancel_all" => &[],
-            "strategy.close_all" => &[],
+            "strategy.close_all" => &["comment", "alert_message", "disable_alert"],
             _ => return Err(external_error(format!("order API {callee}"))),
         };
         for (index, arg) in args.iter().enumerate() {
             if arg.name.as_deref() == Some(pine_ir::OMITTED_BUILTIN_ARG) {
                 continue;
             }
-            if arg.name.as_deref().map_or(index >= names.len(), |name| {
-                !names.contains(&name) && name != "when"
-            }) {
-                return Err(external_error("unsupported external order argument"));
+            if (callee == "strategy.exit"
+                && (arg.name.as_deref() == Some("oca_name") || (arg.name.is_none() && index == 11)))
+                || arg.name.as_deref().map_or(index >= names.len(), |name| {
+                    !names.contains(&name) && name != "when"
+                })
+            {
+                return Err(external_error(format!(
+                    "unsupported external order argument {} at position {index} for {callee}",
+                    arg.name.as_deref().unwrap_or("<positional>")
+                )));
             }
         }
         if matches!(
@@ -424,7 +720,8 @@ impl HistoricalRuntime<'_> {
                 _ => return Err(external_error("id must be a nonempty string")),
             }
         };
-        let (direction, qty) = if callee == "strategy.entry" {
+        let opening = matches!(callee, "strategy.entry" | "strategy.order");
+        let (direction, qty, metadata) = if opening {
             let value = self.eval_expr(
                 call_arg_expr(args, 1, "direction")
                     .ok_or_else(|| external_error("direction required"))?,
@@ -434,22 +731,14 @@ impl HistoricalRuntime<'_> {
                 PineValue::String(value) if value == "strategy.short" => "short",
                 _ => return Err(external_error("invalid direction")),
             };
-            let qty = match call_arg_expr(args, 2, "qty") {
-                Some(expr) => self
-                    .eval_expr(expr)?
-                    .as_f64()
-                    .ok_or_else(|| external_error("quantity must be numeric"))?,
-                None => match self.program.strategy_settings.default_qty {
-                    Some(StrategyDefaultQuantity::Fixed(qty)) => qty,
-                    _ => unreachable!(),
-                },
-            };
-            if !qty.is_finite() || qty <= 0.0 {
-                return Err(external_error("quantity must be positive and finite"));
+            let metadata = self.external_order_metadata(callee, args)?;
+            let qty = self.external_order_quantity(args, direction == "long")?;
+            if qty == 0.0 {
+                return Ok(PineValue::Void);
             }
-            (Some(direction.to_string()), Some(qty))
+            (Some(direction.to_string()), Some(qty), metadata)
         } else {
-            (None, None)
+            (None, None, self.external_order_metadata(callee, args)?)
         };
         let mut numbers = [None; 9];
         for (slot, name) in [
@@ -467,13 +756,13 @@ impl HistoricalRuntime<'_> {
         .enumerate()
         {
             // Entry quantity has already been evaluated exactly once above.
-            if callee == "strategy.entry" && *name == "qty" {
+            if opening && *name == "qty" {
                 continue;
             }
             let position = match (callee, *name) {
-                ("strategy.entry", "limit") => 3,
-                ("strategy.entry", "stop") => 4,
-                ("strategy.entry", "qty") => 2,
+                ("strategy.entry" | "strategy.order", "limit") => 3,
+                ("strategy.entry" | "strategy.order", "stop") => 4,
+                ("strategy.entry" | "strategy.order", "qty") => 2,
                 ("strategy.close", "qty") => 1,
                 ("strategy.close", "qty_percent") => 2,
                 ("strategy.exit", "stop") => 2,
@@ -529,6 +818,27 @@ impl HistoricalRuntime<'_> {
         } else {
             None
         };
+        let mut oca_name = None;
+        let mut oca_type = None;
+        if opening {
+            if let Some(expr) = call_arg_expr(args, 5, "oca_name") {
+                oca_name = Some(match self.eval_expr(expr)? {
+                    PineValue::String(value) => value,
+                    _ => return Err(external_error("oca_name must be a string")),
+                });
+            }
+            if let Some(expr) = call_arg_expr(args, 6, "oca_type") {
+                oca_type = Some(match self.eval_expr(expr)? {
+                    PineValue::String(value) => match value.as_str() {
+                        "strategy.oca.none" => "none".to_owned(),
+                        "strategy.oca.cancel" => "cancel".to_owned(),
+                        "strategy.oca.reduce" => "reduce".to_owned(),
+                        _ => return Err(external_error("invalid OCA type")),
+                    },
+                    _ => return Err(external_error("invalid OCA type")),
+                });
+            }
+        }
         let state = self.external_execution.as_mut().unwrap();
         state.intents.push(ExternalOrderIntent {
             bar_index: self.bars,
@@ -546,6 +856,9 @@ impl HistoricalRuntime<'_> {
             trail_price: numbers[6],
             trail_points: numbers[7],
             trail_offset: numbers[8],
+            oca_name,
+            oca_type,
+            metadata,
         });
         Ok(PineValue::Void)
     }

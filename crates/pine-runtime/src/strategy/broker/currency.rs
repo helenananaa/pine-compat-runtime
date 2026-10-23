@@ -13,7 +13,7 @@ impl BrokerState {
             // position notional as a foreign cash asset. Rebase the accounting
             // cash leg so an unchanged instrument price cannot create FX P/L.
             self.cash = self.initial_capital + self.net_profit()
-                - self.position_size * self.avg_price * rate;
+                - self.position_size * self.avg_price * self.point_value * rate;
             self.quote_to_account_rate = rate;
         }
         Ok(())
@@ -23,7 +23,12 @@ impl BrokerState {
         self.quote_to_account_rate
     }
 
-    pub(super) fn account_value(&self, quote_value: f64) -> f64 {
-        quote_value * self.quote_to_account_rate
+    /// Account currency represented by one price point of one contract.
+    pub(super) fn contract_point_value_to_account(&self) -> f64 {
+        self.point_value * self.quote_to_account_rate
+    }
+
+    pub(super) fn contract_value(&self, price_quantity: f64) -> f64 {
+        price_quantity * self.contract_point_value_to_account()
     }
 }

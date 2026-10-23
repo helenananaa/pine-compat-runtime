@@ -25,7 +25,7 @@ impl BrokerState {
 
     pub(crate) fn record_equity(&mut self, bar_index: usize, close: f64) {
         let close = self.mark_price(close);
-        let market_value = self.account_value(self.position_size * close);
+        let market_value = self.contract_value(self.position_size * close);
         let equity = self.cash + market_value;
         let net_profit = normalize_zero(equity - self.initial_capital);
         let snapshot = StrategyEquitySnapshot {
@@ -51,7 +51,7 @@ impl BrokerState {
             return;
         }
         self.trade_ledger
-            .update_extremes(high, low, self.quote_to_account_rate);
+            .update_extremes(high, low, self.contract_point_value_to_account());
         if self.open_trade_count() == 1 {
             if high.is_finite() {
                 self.open_trade_max_high = Some(
@@ -72,7 +72,7 @@ impl BrokerState {
     pub(crate) fn open_profit(&self, close: f64) -> f64 {
         let close = self.mark_price(close);
         if self.position_size != 0.0 {
-            normalize_zero(self.account_value((close - self.avg_price) * self.position_size))
+            normalize_zero(self.contract_value((close - self.avg_price) * self.position_size))
         } else {
             0.0
         }
@@ -138,7 +138,7 @@ impl BrokerState {
         };
         let ratio = self.margin_ratio_for_direction(direction)?;
         Some(normalize_zero(
-            self.account_value(self.position_size.abs() * price * ratio),
+            self.contract_value(self.position_size.abs() * price * ratio),
         ))
     }
 
@@ -152,7 +152,7 @@ impl BrokerState {
             if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
                 return None;
             }
-            let denominator = self.account_value(self.position_size * (1.0 - margin_ratio));
+            let denominator = self.contract_value(self.position_size * (1.0 - margin_ratio));
             if !denominator.is_finite() || denominator == 0.0 {
                 return None;
             }
@@ -166,7 +166,7 @@ impl BrokerState {
         if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
             return None;
         }
-        let denominator = self.account_value(self.position_size.abs() * (1.0 + margin_ratio));
+        let denominator = self.contract_value(self.position_size.abs() * (1.0 + margin_ratio));
         if !denominator.is_finite() || denominator == 0.0 {
             return None;
         }
@@ -183,7 +183,7 @@ impl BrokerState {
         let Some(ratio) = self.margin_ratio_for_direction(TradeDirection::Long) else {
             return true;
         };
-        let required_margin = self.account_value(qty * fill_price * ratio);
+        let required_margin = self.contract_value(qty * fill_price * ratio);
         required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
     }
 
@@ -192,7 +192,7 @@ impl BrokerState {
         let Some(ratio) = self.margin_ratio_for_direction(TradeDirection::Short) else {
             return true;
         };
-        let required_margin = self.account_value(qty * fill_price * ratio);
+        let required_margin = self.contract_value(qty * fill_price * ratio);
         required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
     }
 
@@ -377,7 +377,7 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         let close = self.mark_price(close);
-        normalize_zero(self.cash + self.account_value(self.position_size * close))
+        normalize_zero(self.cash + self.contract_value(self.position_size * close))
     }
 
     fn initial_capital_percent(&self, value: f64) -> f64 {
@@ -555,7 +555,7 @@ impl BrokerState {
         let close = self.mark_price(close);
         self.open_trade_at(trade_num).map(|trade| {
             normalize_zero(
-                self.account_value(
+                self.contract_value(
                     (close - trade.entry_price) * trade.direction.signed_quantity(trade.quantity),
                 ) - trade.entry_commission
                     - self.exit_commission_for_fill(trade.quantity, close),
@@ -568,7 +568,7 @@ impl BrokerState {
         let trade = self.open_trade_at(trade_num)?;
         let amount = self.open_trade_profit(trade_num, close)?;
         let capital =
-            self.account_value(trade.entry_price * trade.quantity) + trade.entry_commission;
+            self.contract_value(trade.entry_price * trade.quantity) + trade.entry_commission;
         if !amount.is_finite() || !capital.is_finite() || capital <= 0.0 {
             return None;
         }
@@ -636,16 +636,14 @@ impl super::BrokerState {
                 return None;
             }
             let margin_required =
-                self.account_value(self.position_size * current_price * margin_ratio);
+                self.contract_value(self.position_size * current_price * margin_ratio);
             let available_funds = self.equity_value(current_price) - margin_required;
             if !available_funds.is_finite() || available_funds >= 0.0 {
                 return None;
             }
-            let cover_amount =
-                ((available_funds / margin_ratio / self.account_value(current_price))
-                    * f64::from(self.quantity_scale))
-                .trunc()
-                    / f64::from(self.quantity_scale);
+            let cover_amount = self
+                .quantity_rules
+                .margin_cover(available_funds / margin_ratio / self.contract_value(current_price));
             let qty = (cover_amount * 4.0).abs().min(self.position_size);
             return (qty.is_finite() && qty > 0.0).then_some(qty);
         }
@@ -659,11 +657,9 @@ impl super::BrokerState {
             if !available_funds.is_finite() || available_funds >= 0.0 {
                 return None;
             }
-            let cover_amount =
-                ((available_funds / margin_ratio / self.account_value(current_price))
-                    * f64::from(self.quantity_scale))
-                .trunc()
-                    / f64::from(self.quantity_scale);
+            let cover_amount = self
+                .quantity_rules
+                .margin_cover(available_funds / margin_ratio / self.contract_value(current_price));
             let qty = (cover_amount * 4.0).abs().min(self.position_size.abs());
             return (qty.is_finite() && qty > 0.0).then_some(qty);
         }

@@ -10,16 +10,22 @@ use pine_ir::{
 use crate::runtime::expressions::{eval_binary_with_semantics, eval_literal, eval_unary};
 use crate::{ExecutionLimits, HistoricalRuntime, PineValue};
 
+mod risk_expression;
+
 const MAX_DEPTH: usize = 64;
 const MAX_STEPS: u64 = 16_384;
 
 pub(super) struct ConstEvaluator<'a> {
+    program: &'a HirProgram,
     initializers: HashMap<SymbolId, &'a HirExpr>,
     cached: HashMap<SymbolId, PineValue>,
     visiting: HashSet<SymbolId>,
     minimal: &'a HirProgram,
     runtime: Option<HistoricalRuntime<'a>>,
     remaining: u64,
+    max_steps: u64,
+    max_loop_iterations: u64,
+    risk_context: Option<(&'a crate::InputOverrides, &'a crate::RequestEnvironment)>,
 }
 
 impl<'a> ConstEvaluator<'a> {
@@ -33,17 +39,48 @@ impl<'a> ConstEvaluator<'a> {
         let mut initializers = super::bindings::initializers(program);
         initializers.retain(|symbol, _| constants.contains(symbol));
         Self {
+            program,
             initializers,
             cached: HashMap::new(),
             visiting: HashSet::new(),
             minimal,
             runtime: None,
             remaining: MAX_STEPS,
+            max_steps: MAX_STEPS,
+            max_loop_iterations: 0,
+            risk_context: None,
         }
     }
 
+    pub(super) fn for_risk(
+        program: &'a HirProgram,
+        minimal: &'a HirProgram,
+        overrides: &'a crate::InputOverrides,
+        environment: &'a crate::RequestEnvironment,
+    ) -> Self {
+        let mut value = Self::new(program, minimal);
+        let simple: HashSet<_> = program
+            .symbols
+            .iter()
+            .filter(|symbol| symbol.pine_type.qualifier != Qualifier::Series)
+            .map(|symbol| symbol.id)
+            .collect();
+        value.initializers = super::bindings::initializers(program);
+        value.initializers.retain(|id, _| simple.contains(id));
+        value.risk_context = Some((overrides, environment));
+        value.max_loop_iterations = MAX_STEPS;
+        value
+    }
+
+    pub(super) fn with_limits(mut self, limits: ExecutionLimits) -> Self {
+        self.max_steps = limits.max_steps_per_bar;
+        self.max_loop_iterations = limits.max_loop_iterations_per_bar;
+        self.remaining = self.max_steps;
+        self
+    }
+
     pub(super) fn value(&mut self, expr: &HirExpr) -> Option<PineValue> {
-        self.remaining = MAX_STEPS;
+        self.remaining = self.max_steps;
         self.eval(expr, 0)
     }
 
@@ -82,6 +119,13 @@ impl<'a> ConstEvaluator<'a> {
             HirExprKind::Builtin(name) => {
                 if name == "na" {
                     return Some(PineValue::Na);
+                }
+                if self.risk_context.is_some()
+                    && (name.starts_with("syminfo.") || name.starts_with("timeframe."))
+                    && expr.pine_type.qualifier != Qualifier::Series
+                {
+                    let value = self.scalar_runtime().eval_builtin_value(name);
+                    return (!matches!(value, PineValue::Void)).then_some(value);
                 }
                 let value = crate::builtins::variables::eval_static_builtin_value(name);
                 (!matches!(value, PineValue::Void)).then_some(value)
@@ -132,6 +176,13 @@ impl<'a> ConstEvaluator<'a> {
                 call_site_id,
                 args,
             } => {
+                if let Some((overrides, _)) = self.risk_context
+                    && (callee == "input" || callee.starts_with("input."))
+                {
+                    return overrides.get(*call_site_id).cloned().or_else(|| {
+                        super::input_arg(args, 0, "defval").and_then(|expr| self.eval(expr, next))
+                    });
+                }
                 let mut literals = Vec::with_capacity(args.len());
                 for arg in args {
                     let value = self.eval(&arg.value, next)?;
@@ -140,7 +191,9 @@ impl<'a> ConstEvaluator<'a> {
                         value: literal_expr(&arg.value, value)?,
                     });
                 }
-                if !pure_call(callee, &literals) {
+                if !(pure_call(callee, &literals)
+                    || self.risk_context.is_some() && risk_expression::contextual_call(callee))
+                {
                     return None;
                 }
                 let call = HirExpr {
@@ -152,18 +205,55 @@ impl<'a> ConstEvaluator<'a> {
                         args: literals,
                     },
                 };
-                let runtime = self.runtime.get_or_insert_with(|| {
-                    HistoricalRuntime::new(self.minimal).with_execution_limits(ExecutionLimits {
-                        max_steps_per_bar: MAX_STEPS,
-                        max_loop_iterations_per_bar: 0,
-                    })
-                });
+                let runtime = self.scalar_runtime();
                 runtime.reset_execution_budget();
                 runtime.eval_expr(&call).ok()
+            }
+            HirExprKind::Block { .. } | HirExprKind::For { .. } | HirExprKind::While { .. }
+                if self.risk_context.is_some() =>
+            {
+                self.risk_scalar_flow(expr, next)
+            }
+            HirExprKind::Switch { selector, arms } if self.risk_context.is_some() => {
+                let selector = match selector {
+                    Some(expr) => Some(self.eval(expr, next)?),
+                    None => None,
+                };
+                for arm in arms {
+                    let matches = match &arm.condition {
+                        None => true,
+                        Some(condition) => {
+                            let value = self.eval(condition, next)?;
+                            selector.as_ref().map_or_else(
+                                || value.is_condition_true(),
+                                |selector| selector == &value,
+                            )
+                        }
+                    };
+                    if matches {
+                        return self.eval(&arm.result, next);
+                    }
+                }
+                Some(PineValue::Na)
             }
             // HIR supplied by callers may contain arbitrary execution nodes.
             _ => None,
         }
+    }
+
+    fn scalar_runtime(&mut self) -> &mut HistoricalRuntime<'a> {
+        let environment = self
+            .risk_context
+            .map(|(_, environment)| environment.clone())
+            .unwrap_or_default();
+        let max_steps = self.max_steps;
+        self.runtime.get_or_insert_with(|| {
+            HistoricalRuntime::with_request_environment(self.minimal, environment)
+                .with_execution_limits(ExecutionLimits {
+                    max_steps_per_bar: max_steps,
+                    max_loop_iterations_per_bar: 0,
+                })
+        })
     }
 }
 
@@ -371,5 +461,40 @@ pub(super) fn minimal_program(language_version: Option<u16>) -> HirProgram {
         history: HirHistoryRequirements::default(),
         series_history: Vec::new(),
         execution_scoped_series: Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn constant_boolean_identity_keeps_runtime_condition_semantics() {
+        let program = minimal_program(Some(6));
+        let literal = |kind, value| HirExpr {
+            kind: HirExprKind::Literal(value),
+            series_id: None,
+            pine_type: pine_ir::PineType::new(Qualifier::Const, kind),
+        };
+        let condition = literal(pine_ir::ValueKind::Bool, HirLiteral::Bool(false));
+        let expr = HirExpr {
+            pine_type: pine_ir::PineType::new(Qualifier::Const, pine_ir::ValueKind::Int),
+            series_id: None,
+            kind: HirExprKind::Ternary {
+                condition: Box::new(HirExpr {
+                    pine_type: condition.pine_type,
+                    series_id: None,
+                    kind: HirExprKind::Unary {
+                        op: pine_ir::HirUnaryOp::ConstantBoolIdentity(Some(7)),
+                        expr: Box::new(condition),
+                    },
+                }),
+                then_expr: Box::new(literal(pine_ir::ValueKind::Int, HirLiteral::Int(9))),
+                else_expr: Box::new(literal(pine_ir::ValueKind::Int, HirLiteral::Int(2))),
+            },
+        };
+        assert_eq!(
+            ConstEvaluator::new(&program, &program).value(&expr),
+            Some(PineValue::Int(9))
+        );
     }
 }

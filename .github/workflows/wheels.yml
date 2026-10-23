@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: wheels-${{ github.ref }}
@@ -49,6 +50,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Compare release inputs with the already qualified producer snapshot.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v6
         with:
@@ -57,7 +61,34 @@ jobs:
       - name: Install test tooling
         run: python -m pip install --upgrade pip pytest
 
+      - name: Select qualified release artifacts
+        id: promotion
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/promote_qualified_wheels.py select
+          --check-pull-request
+          --platform "${{ matrix.label }}"
+
+      - name: Download qualified wheel
+        if: steps.promotion.outputs.enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.promotion.outputs.artifact_id }}
+          run-id: ${{ steps.promotion.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: dist
+          merge-multiple: true
+
+      - name: Verify qualified wheel bytes
+        if: steps.promotion.outputs.enabled == 'true'
+        run: >-
+          python scripts/promote_qualified_wheels.py verify
+          --tag "${{ steps.promotion.outputs.tag }}"
+          --platform "${{ matrix.label }}"
+
       - name: Build wheel
+        if: steps.promotion.outputs.enabled != 'true'
         uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           command: build
@@ -100,6 +131,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v4
         with:
@@ -113,6 +146,9 @@ jobs:
         run: |
           python3 -m pip install -r scripts/requirements-release.txt
           python3 scripts/build_wheel_manifest.py --dist dist --tag "$GITHUB_REF_NAME" --commit "$GITHUB_SHA" --expected-wheel-count 4
+
+      - name: Record qualified artifact provenance
+        run: python3 scripts/promote_qualified_wheels.py record
 
       - name: Publish release assets
         env:

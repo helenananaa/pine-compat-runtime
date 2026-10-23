@@ -3,6 +3,41 @@ import pine_compat
 from test_external_broker import BARS, ACCOUNTS, SOURCE
 
 
+def test_explicit_execution_clock_matches_batch_and_is_independent_of_bar_open():
+    source = SOURCE + '\nplot(timenow)\nif timenow > 100000\n    strategy.close_all()'
+    program = pine_compat.compile_script(source)
+    clocks = [59999, 119999, 179999]
+    session = program.external_session()
+    assert pine_compat.EXTERNAL_CLOCK_SCHEMA_VERSION == 1
+    for i in range(len(BARS)):
+        result = session.append(BARS[i:i+1], ACCOUNTS[i:i+1], execution_times=clocks[i:i+1])
+        assert result == program.run_external(BARS[:i+1], ACCOUNTS[:i+1], execution_times=clocks[:i+1])
+    assert result['output']['plots'][-1]['values'] == clocks
+    assert 'strategy' not in result['output']
+    assert session.append([], [], execution_times=[]) == result
+
+
+@pytest.mark.parametrize('clocks', [[True], [1.5], ['1']])
+def test_external_clock_rejects_non_integer_timestamps_before_execution(clocks):
+    program = pine_compat.compile_script(SOURCE + '\nplot(timenow)')
+    session = program.external_session()
+    with pytest.raises(ValueError):
+        session.append(BARS[:1], ACCOUNTS[:1], execution_times=clocks)
+    assert session.cursor == 0
+    assert session.append(BARS[:1], ACCOUNTS[:1], execution_times=[59999]) == program.run_external(
+        BARS[:1], ACCOUNTS[:1], execution_times=[59999])
+
+
+def test_scheduled_fill_passes_keep_their_own_clock():
+    source = SOURCE.replace('strategy("External")', 'strategy("External", calc_on_order_fills=true)') + '\nplot(timenow)'
+    program = pine_compat.compile_script(source)
+    groups = [[dict(bar=bar, account=account, event_time_ms=bar['time']+1, confirmed=True)] for bar, account in zip(BARS, ACCOUNTS)]
+    expected = program.run_external(BARS, ACCOUNTS, execution_passes=groups)
+    assert program.run_external(BARS, ACCOUNTS, execution_passes=groups, execution_times=[1000]*3) == expected
+    session = program.external_session()
+    assert session.append(BARS, ACCOUNTS, execution_passes=groups, execution_times=[1000]*3) == expected
+
+
 def test_append_matches_batch_with_series_arrays_ta_and_authoritative_feedback():
     source = SOURCE + "\nvar float total = 0\ntotal += strategy.position_size\nplot(total)\nplot(ta.sma(close, 2))\nplot(strategy.position_size[1])\nvar values = array.new_float()\narray.push(values, strategy.position_size)\nplot(array.sum(values))\n"
     program = pine_compat.compile_script(source)
@@ -152,7 +187,6 @@ plot(syminfo.timezone == "America/New_York" ? 1 : 0)
     'indicator("not a strategy")',
     'strategy("ticks", calc_on_every_tick=true)',
     'strategy("fees", commission_type=strategy.commission.percent, commission_value=1)',
-    'strategy("equity sizing", default_qty_type=strategy.percent_of_equity, default_qty_value=10)',
 ])
 def test_session_rejects_native_execution_settings(declaration):
     program = pine_compat.compile_script('//@version=6\n' + declaration + '\nplot(close)')

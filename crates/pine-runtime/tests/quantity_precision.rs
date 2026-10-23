@@ -3,7 +3,7 @@ use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
 #[test]
-fn explicit_point_value_accepts_only_the_existing_unit_profile() {
+fn explicit_point_value_accepts_positive_finite_contract_values() {
     let chart = ChartContext::default()
         .with_price_grid(1, 10)
         .unwrap()
@@ -11,22 +11,19 @@ fn explicit_point_value_accepts_only_the_existing_unit_profile() {
         .unwrap();
     assert_eq!(chart.clone().with_point_value(1.0).unwrap(), chart);
     assert_eq!(chart.point_value(), 1.0);
-    for value in [
-        0.0,
-        -1.0,
-        0.5,
-        5.0,
-        1.0000000001,
-        f64::NAN,
-        f64::INFINITY,
-        f64::NEG_INFINITY,
-    ] {
+    for value in [0.01, 0.5, 5.0, 50.0, 1.0000000001] {
+        assert_eq!(
+            chart.clone().with_point_value(value).unwrap().point_value(),
+            value
+        );
+    }
+    for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
         assert!(
             chart
                 .clone()
                 .with_point_value(value)
                 .unwrap_err()
-                .contains("non-unit contract multipliers")
+                .contains("positive and finite")
         );
     }
 }

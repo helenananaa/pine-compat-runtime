@@ -20,7 +20,14 @@ function shift(b, i) {
   return {...b,open:b.open+d,high:b.high+d,low:b.low+d,close:b.close+d};
 }
 const columns = ['time','open','high','low','close','volume'];
-const csv = bars => columns.join(',')+'\n'+bars.map(b=>columns.map(k=>b[k]).join(',')).join('\n')+'\n';
+const csv = bars => {
+  const blocks=[columns.join(',')];
+  if(bars.length===0)blocks.push('');
+  for(let start=0;start<bars.length;start+=1024) {
+    blocks.push(bars.slice(start,start+1024).map(b=>columns.map(k=>b[k]).join(',')).join('\n'));
+  }
+  return blocks.join('\n')+'\n';
+};
 // Inspect only diagnostic arrays. The full public String is spooled and audited
 // separately, so verification need not materialize a second JavaScript forest.
 function valueEnd(source, start) {
@@ -84,8 +91,46 @@ function writeString(file, text) {
     }
   } finally {fs.closeSync(fd);}
 }
+// Keep the full output, but do not retain two whole encoded public Strings in
+// V8 while exporting the independent replica and session. File IO is observed
+// while consuming independent snapshot blocks and split from total export time.
+function writeSnapshot(file, owner, method, target, exportKey, writeKey) {
+  assert.equal(owner.resultDiagnosticCount,0,'runtime result has diagnostics');
+  let ioMs=0,written=0,fd,snapshot;
+  const started=performance.now();
+  function io(fn) {
+    const before=performance.now();
+    try{return fn();}finally{ioMs+=performance.now()-before;}
+  }
+  try {
+    fd=io(()=>fs.openSync(file,'w'));
+    snapshot=owner[method]();
+    const count=snapshot.byteLength;
+    const buffer=new Uint8Array(65536);
+    for(let length;(length=snapshot.readInto(buffer))!==0;) {
+      assert(length>0&&length<=buffer.byteLength);
+      io(()=>{
+        for(let offset=0;offset<length;) {
+          const size=fs.writeSync(fd,buffer,offset,length-offset);
+          assert(size>0);offset+=size;
+        }
+      });
+      written+=length;
+    }
+    assert.equal(count,written,'incomplete chunked snapshot');
+  } finally {
+    if(snapshot!==undefined)snapshot.free();
+    if(fd!==undefined)io(()=>fs.closeSync(fd));
+  }
+  const elapsed=performance.now()-started;
+  assert(elapsed>=ioMs);
+  (target[exportKey]??=[]).push(elapsed-ioMs);
+  (target[writeKey]??=[]).push(ioMs);
+  return written;
+}
 const program = timed('compile', ()=>pine.compileScript(p.source));
 const sessions=[],replicas=[];
+const expectedCount=p.bars.length+p.tail.length;
 for(let i=0;i<count;i++) {
   const request = Object.fromEntries(Object.entries(p.request).map(([k,v])=>[k,k==='$chart'?v:v.map(b=>shift(b,i))]));
   const session=program.realtimeSessionWithRequestBarsAndInputOverrides(JSON.stringify(request),JSON.stringify(p.overrides));
@@ -93,6 +138,7 @@ for(let i=0;i<count;i++) {
   timed('seed',()=>session.seed(input)); sessions.push(session);
   replicas.push(timedOverhead('replicaSnapshot',()=>session.replica()));
 }
+p.source=null;p.bars=null;p.tail=null;p.request=null;p.overrides=null;
 for(let n=0;n<p.events.length;n++) {
   const event=p.events[n];
   for(let i=0;i<count;i++) {
@@ -103,11 +149,11 @@ for(let n=0;n<p.events.length;n++) {
     if(changes!=='null')timed('replica',()=>replicas[i].apply(changes));
     assert.equal(session.confirmedBars,before+Number(event.kind==='confirmed'));
   }
+  p.events[n]=null;
   if(n%1024===0)process.stderr.write(`events ${n}/${p.events.length}\n`);
 }
 const results=[];
 const parts=process.argv[5]+'.parts';fs.mkdirSync(parts,{recursive:true});
-const expectedCount=p.bars.length+p.tail.length;
 p=null;
 function sameFiles(first,second) {
   const left=fs.openSync(first,'r'),right=fs.openSync(second,'r');
@@ -121,17 +167,13 @@ function sameFiles(first,second) {
   } finally {fs.closeSync(left);fs.closeSync(right);}
 }
 for(let i=0;i<count;i++) {
-  let encoded=timedOverhead('replicaExport',()=>replicas[i].intoResult());
-  timedOverhead('replicaWrite',()=>writeString(path.join(parts,`replica-${i}.json`),encoded));
-  encoded=null;
+  writeSnapshot(path.join(parts,`replica-${i}.json`),replicas[i],'intoResultChunks',
+    overheadMetrics,'replicaExport','replicaWrite');
   replicas[i]=null;
 }
 for(let i=0;i<count;i++) {
-  let encoded;
-  timed('snapshot',()=>{encoded=sessions[i].result();assertDiagnostics(encoded);});
   const file=path.join(parts,`live-${i}.json`);
-  timed('serialization',()=>writeString(file,encoded));
-  encoded=null;
+  writeSnapshot(file,sessions[i],'resultChunks',metrics,'snapshot','serialization');
   timedOverhead('comparison',()=>assert(sameFiles(file,path.join(parts,`replica-${i}.json`)),'complete replica output differs'));
   assert.equal(sessions[i].confirmedBars,expectedCount);
   if(i>0)timedOverhead('comparison',()=>assert(!sameFiles(results[0],file),'independent streams must produce distinct outputs'));
@@ -145,5 +187,7 @@ timedOverhead('reportWrite',()=>writeString(reportPath,JSON.stringify({resourceR
   metadata:{path:relativePath(reportPath+'.metadata.json')},
   results:results.map(file=>({path:relativePath(file)})),confirmedBars:expectedCount,historicalAppend})));
 writeString(reportPath+'.metadata.json',JSON.stringify({resourceMetadataVersion:1,metrics,overheadMetrics,
+  runtime:{node:process.versions.node,v8:process.versions.v8,executable:process.execPath,arch:process.arch,platform:process.platform},
+  snapshotEncoding:'owned-chunk-reader/1; snapshot excludes measured sink IO; serialization is measured sink IO',
   resultCount:count,confirmedBars:expectedCount,
   historicalAppend}));

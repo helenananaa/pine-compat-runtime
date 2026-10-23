@@ -9,6 +9,8 @@ mod realtime;
 mod request_bars;
 mod run;
 mod snapshot;
+mod snapshot_writer;
+pub use snapshot_writer::SnapshotChunks;
 mod strategy_alerts;
 #[cfg(test)]
 use analysis_json::json_escape;

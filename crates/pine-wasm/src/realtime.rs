@@ -520,6 +520,20 @@ impl WasmRealtimeSession {
         crate::snapshot::result_view_snapshot_json(&self.runtime.result_view())
     }
 
+    /// Total top-level and strategy diagnostics in the current complete result.
+    #[wasm_bindgen(getter, js_name = resultDiagnosticCount)]
+    pub fn result_diagnostic_count(&self) -> usize {
+        crate::snapshot_writer::diagnostic_count(&self.runtime.result_view())
+    }
+
+    /// Capture complete public UTF-8 JSON in an independent, consuming reader.
+    /// The session may continue while the caller pulls the captured byte blocks.
+    #[wasm_bindgen(js_name = resultChunks)]
+    pub fn result_chunks(&self) -> Result<crate::SnapshotChunks, JsValue> {
+        crate::snapshot_writer::snapshot_chunks(&self.runtime.result_view())
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
     #[wasm_bindgen(js_name = confirmedResult)]
     pub fn confirmed_result(&self) -> String {
         crate::snapshot::result_view_snapshot_json(&self.runtime.confirmed_result_view())
@@ -595,6 +609,25 @@ impl WasmRuntimeReplica {
     #[wasm_bindgen]
     pub fn result(&self) -> String {
         crate::snapshot::borrowed_snapshot_json(self.inner.result())
+    }
+
+    #[wasm_bindgen(getter, js_name = resultDiagnosticCount)]
+    pub fn result_diagnostic_count(&self) -> usize {
+        crate::snapshot_writer::diagnostic_count(&self.inner.result().view())
+    }
+
+    /// Capture complete JSON without consuming this replica.
+    #[wasm_bindgen(js_name = resultChunks)]
+    pub fn result_chunks(&self) -> Result<crate::SnapshotChunks, JsValue> {
+        crate::snapshot_writer::snapshot_chunks(&self.inner.result().view())
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    /// Consume this replica and return a reader owning its complete JSON bytes.
+    #[wasm_bindgen(js_name = intoResultChunks)]
+    pub fn into_result_chunks(self) -> Result<crate::SnapshotChunks, JsValue> {
+        crate::snapshot_writer::snapshot_chunks(&self.inner.result().view())
+            .map_err(|error| JsValue::from_str(&error))
     }
 
     /// Finalize this replica and return its complete output. The JavaScript

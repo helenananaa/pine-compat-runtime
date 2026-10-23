@@ -1,0 +1,7 @@
+//@version=3
+study("Codex legacy alias v3 oracle",overlay=true)
+plot(swma(close),"swma")
+plot(wpr(14),"wpr")
+plot(tsi(close,13,25),"tsi")
+plot(tan(0.5),"tan")
+plot(percentile_nearest_rank(close,14,25),"percentile")

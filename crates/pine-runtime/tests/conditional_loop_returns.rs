@@ -60,3 +60,47 @@ fn bar() -> Bar {
         volume: 1.,
     }
 }
+
+#[test]
+fn missing_boolean_control_results_use_versioned_defaults() {
+    for (native_source, bool_checks) in [
+        (
+            include_str!("../../../tests/fixtures/runtime/bool_control_defaults_v6.pine"),
+            4,
+        ),
+        (
+            include_str!("../../../tests/fixtures/runtime/bool_control_functions_history_v6.pine"),
+            6,
+        ),
+    ] {
+        for version in [5, 6] {
+            let source = native_source.replace("version=6", &format!("version={version}"));
+            let analysis = analyze_source(&SourceFile::new("bool-defaults.pine", source));
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{:?}",
+                analysis.diagnostics
+            );
+            let bars = [
+                bar(),
+                Bar {
+                    time: 60000,
+                    ..bar()
+                },
+            ];
+            let result = run_historical(&analysis.hir.unwrap(), &bars).unwrap();
+            let expected_bool = if version == 6 { 1. } else { 0. };
+            for (index, plot) in result.plots.iter().enumerate() {
+                let expected = if index < bool_checks {
+                    expected_bool
+                } else {
+                    1.
+                };
+                assert_eq!(
+                    plot.values.iter().map(|v| v.as_f64()).collect::<Vec<_>>(),
+                    vec![Some(expected); 2]
+                );
+            }
+        }
+    }
+}

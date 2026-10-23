@@ -1,0 +1,24 @@
+{
+  "name": "body-transitive-method-direct-form-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-method-direct-form-v5-46.pine",
+  "source_sha256": "216f3515db31c98ac21753daa8c4a5e1b47c07a1a228d53439dab22d4439e737",
+  "version": 5,
+  "kind": "direct-form",
+  "expected_values": [
+    1
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "226 row body-transitive-method-direct-form-v5-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1ff4394b129b94c02f3f8a5a240c109503b537f7ba1f6faac904bd86732ba365",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-direct-form-v5-46.native.ax.txt",
+  "accessibility_sha256": "bce923ad0f6e792aa65637539a7359585ac926ac0dd50a5d6421d3301fa1872f",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-direct-form-v5-46.native.png",
+  "screenshot_sha256": "5cfc0abae24156f218738e17a8df0ba7922bf9b5fb11da4e1e92be8054af9cef",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

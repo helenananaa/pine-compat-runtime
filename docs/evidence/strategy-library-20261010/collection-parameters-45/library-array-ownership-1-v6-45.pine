@@ -1,0 +1,6 @@
+//@version=6
+library("ArrayOwnershipCase1Batch45")
+export f(array<int> values) =>
+    for i = 0 to 2
+        array.push(values, i)
+    values

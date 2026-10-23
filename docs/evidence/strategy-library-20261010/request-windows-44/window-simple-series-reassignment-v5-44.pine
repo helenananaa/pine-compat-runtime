@@ -1,0 +1,9 @@
+//@version=5
+indicator("window-simple-series-reassignment-v5-44",dynamic_requests=true)
+simple int x=1
+x:=bar_index
+var count=0
+count+=1
+plot(bar_index)
+plot(x)
+plot(count)

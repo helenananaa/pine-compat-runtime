@@ -47,8 +47,6 @@ const LINE_STYLES: &[&str] = &[
 
 const BOX_BORDER_STYLES: &[&str] = &["line.style_solid", "line.style_dotted", "line.style_dashed"];
 
-const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
-
 const PLOT_STYLES: &[&str] = &[
     "plot.style_line",
     "plot.style_stepline",
@@ -154,7 +152,6 @@ impl Analyzer {
             }
             "line.new" => {
                 self.validate_label_string_arg(signature, args, 4, "xloc", LINE_XLOCS);
-                self.validate_label_string_arg(signature, args, 5, "extend", LINE_EXTENDS);
                 self.validate_label_string_arg(signature, args, 7, "style", LINE_STYLES);
             }
             "box.new" => {
@@ -165,7 +162,6 @@ impl Analyzer {
                     "border_style",
                     BOX_BORDER_STYLES,
                 );
-                self.validate_label_string_arg(signature, args, 7, "extend", LINE_EXTENDS);
                 self.validate_label_string_arg(signature, args, 8, "xloc", BOX_XLOCS);
                 self.validate_text_size_arg(signature, args, 11, "text_size");
                 self.validate_label_string_arg(signature, args, 13, "text_halign", TEXT_HALIGNS);
@@ -183,14 +179,8 @@ impl Analyzer {
             "line.set_style" => {
                 self.validate_drawing_enum_string_arg(signature, args, 1, "style", LINE_STYLES);
             }
-            "line.set_extend" => {
-                self.validate_drawing_enum_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
-            }
             "line.set_xloc" => {
                 self.validate_label_string_arg(signature, args, 3, "xloc", LINE_XLOCS);
-            }
-            "box.set_extend" => {
-                self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
             }
             "box.set_xloc" => {
                 self.validate_label_string_arg(signature, args, 3, "xloc", BOX_XLOCS);

@@ -1,0 +1,5 @@
+//@version=6
+indicator("extend-na-setter-v6-40")
+line item=na
+line.set_extend(item,"bogus")
+plot(1)

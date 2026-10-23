@@ -1,0 +1,6 @@
+//@version=6
+indicator("table-quota-per-bar-v6-36",precision=0)
+t=table.new(position.bottom_right,60,100)
+if barstate.islast
+    table.cell(t,59,99,"last")
+plot(1,title="executed")

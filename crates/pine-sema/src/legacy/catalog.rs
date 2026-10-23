@@ -1,6 +1,6 @@
 use super::PineDialect;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 38;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 40;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -68,6 +68,27 @@ const fn exact_symbol(
         min_version,
         max_version,
         kind: LegacyRuleKind::ExactSymbolAlias,
+        support: LegacyRuleSupport::Supported,
+    }
+}
+
+const fn exact_function(source_name: &'static str, canonical_name: &'static str) -> LegacyRule {
+    let min_version = match source_name.as_bytes() {
+        b"cum" | b"roc" | b"sar" | b"sin" | b"dev" | b"correlation" | b"cog" | b"percentrank"
+        | b"lowestbars" | b"highestbars" => PineDialect::V1,
+        b"percentile_linear_interpolation"
+        | b"percentile_nearest_rank"
+        | b"swma"
+        | b"tan"
+        | b"tsi" => PineDialect::V3,
+        _ => PineDialect::V4,
+    };
+    LegacyRule {
+        source_name,
+        canonical_name: Some(canonical_name),
+        min_version,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     }
 }
@@ -185,6 +206,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("bbw", "ta.bbw"),
     LegacyRule {
         source_name: "bgcolor",
         canonical_name: Some("bgcolor"),
@@ -197,7 +219,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         source_name: "bgcolor",
         canonical_name: Some("bgcolor"),
         min_version: PineDialect::V4,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V5,
         kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::Supported,
     },
@@ -234,6 +256,8 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    exact_function("cmo", "ta.cmo"),
+    exact_function("cog", "ta.cog"),
     LegacyRule {
         source_name: "color",
         canonical_name: Some("color.new"),
@@ -248,10 +272,11 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    exact_function("correlation", "ta.correlation"),
     LegacyRule {
         source_name: "cos",
         canonical_name: Some("math.cos"),
-        min_version: PineDialect::V3,
+        min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
@@ -286,12 +311,15 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("cum", "ta.cum"),
     exact_symbol(
         "dashed",
         "hline.style_dashed",
         PineDialect::V1,
         PineDialect::V3,
     ),
+    exact_function("dev", "ta.dev"),
+    exact_function("dmi", "ta.dmi"),
     exact_symbol(
         "dotted",
         "hline.style_dotted",
@@ -372,6 +400,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("highestbars", "ta.highestbars"),
     exact_symbol(
         "histogram",
         "plot.style_histogram",
@@ -574,6 +603,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    exact_function("kc", "ta.kc"),
     exact_symbol(
         "label.style_labeldown",
         "label.style_label_down",
@@ -626,6 +656,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("lowestbars", "ta.lowestbars"),
     LegacyRule {
         source_name: "macd",
         canonical_name: Some("ta.macd"),
@@ -686,6 +717,12 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
     },
     exact_symbol("olive", "color.olive", PineDialect::V1, PineDialect::V3),
     exact_symbol("orange", "color.orange", PineDialect::V1, PineDialect::V3),
+    exact_function(
+        "percentile_linear_interpolation",
+        "ta.percentile_linear_interpolation",
+    ),
+    exact_function("percentile_nearest_rank", "ta.percentile_nearest_rank"),
+    exact_function("percentrank", "ta.percentrank"),
     exact_symbol(
         "period",
         "timeframe.period",
@@ -744,7 +781,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         source_name: "plotarrow",
         canonical_name: Some("plotarrow"),
         min_version: PineDialect::V4,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V5,
         kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::Supported,
     },
@@ -792,7 +829,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         source_name: "plotchar",
         canonical_name: Some("plotchar"),
         min_version: PineDialect::V4,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V5,
         kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::Supported,
     },
@@ -808,7 +845,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         source_name: "plotshape",
         canonical_name: Some("plotshape"),
         min_version: PineDialect::V4,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V5,
         kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::Supported,
     },
@@ -821,6 +858,8 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         support: LegacyRuleSupport::Supported,
     },
     exact_symbol("purple", "color.purple", PineDialect::V1, PineDialect::V3),
+    exact_symbol("pvt", "ta.pvt", PineDialect::V4, PineDialect::V4),
+    exact_function("random", "math.random"),
     exact_symbol("red", "color.red", PineDialect::V1, PineDialect::V3),
     focused_input_constant(
         "resolution",
@@ -844,6 +883,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("roc", "ta.roc"),
     LegacyRule {
         source_name: "round",
         canonical_name: Some("math.round"),
@@ -860,6 +900,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::FocusedCall,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("sar", "ta.sar"),
     exact_symbol(
         "saturday",
         "dayofweek.saturday",
@@ -884,6 +925,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         support: LegacyRuleSupport::Supported,
     },
     exact_symbol("silver", "color.silver", PineDialect::V1, PineDialect::V3),
+    exact_function("sin", "math.sin"),
     LegacyRule {
         source_name: "sma",
         canonical_name: Some("ta.sma"),
@@ -968,7 +1010,10 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    exact_function("supertrend", "ta.supertrend"),
+    exact_function("swma", "ta.swma"),
     focused_input_constant("symbol", "input.symbol", PineDialect::V1, PineDialect::V3),
+    exact_function("tan", "math.tan"),
     exact_symbol("teal", "color.teal", PineDialect::V1, PineDialect::V3),
     exact_symbol(
         "thursday",
@@ -983,6 +1028,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    exact_function("tonumber", "str.tonumber"),
     LegacyRule {
         source_name: "tostring",
         canonical_name: Some("str.tostring"),
@@ -1000,6 +1046,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("tsi", "ta.tsi"),
     exact_symbol(
         "tuesday",
         "dayofweek.tuesday",
@@ -1046,6 +1093,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
+    exact_function("wpr", "ta.wpr"),
     exact_symbol("yellow", "color.yellow", PineDialect::V1, PineDialect::V3),
 ];
 
@@ -1080,8 +1128,10 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
             )));
         }
         if rule.max_version > PineDialect::V4
-            && !(rule.source_name == "plot"
-                && rule.kind == LegacyRuleKind::FocusedOutput
+            && !(matches!(
+                rule.source_name,
+                "plot" | "bgcolor" | "plotshape" | "plotchar" | "plotarrow"
+            ) && rule.kind == LegacyRuleKind::FocusedOutput
                 && rule.max_version == PineDialect::V5)
         {
             errors.push(CatalogValidationError(format!(

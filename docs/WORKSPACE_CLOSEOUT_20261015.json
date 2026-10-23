@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-15",
+  "status": "passed",
+  "scope": "Close out the existing working tree with reproducible runtime repairs and local commits",
+  "branch": "codex/strategy-library-compat-20261010",
+  "source_base_commit_at_build": "28ecae3c645e9269e2099d27cc9abbb1f52ee9ea",
+  "validation_platform": "Windows x86_64 MSVC; real wasm32 module instantiated in Node",
+  "publication_performed": false,
+  "release_cli": {
+    "path": "target\\strategy-gap-closeout-final-20261015\\pine-compat.exe",
+    "sha256": "8e8b6f2f8bdb8f57de4f1d7cba478e00402d82f35117370c4f7e8c76235c1460",
+    "crate_and_manifest_inputs": 688,
+    "inputs_unchanged": true
+  },
+  "final_input_freeze": {
+    "path": "target\\closeout-20261015\\production-final-freeze.json",
+    "file_count": 6252,
+    "sha256": "4c109a0aca92944a01634ed16441b5dd35453d9ac3a3318982cd65e3382eb2ad",
+    "changed_after_validation": []
+  },
+  "verification": {
+    "status": "passed",
+    "exit_code": 0,
+    "rust_passed": 7746,
+    "rust_failed": 0,
+    "rust_ignored": 0,
+    "rust_groups": 125,
+    "python_passed": 947,
+    "script_tests": 172,
+    "fmt": "passed",
+    "clippy_all_targets_deny_warnings": "passed",
+    "structure": "passed",
+    "wasm_node": "passed",
+    "host_parity": "passed",
+    "log_sha256": "dacefe4dae85491d0775d705c5721ce606224d2aa0b5d8350924de7c4c6855d4"
+  },
+  "corpus": {
+    "source_set_equal": true,
+    "unique_sources": 7255,
+    "chart_bars": 512,
+    "runtime_timeout_seconds": 8,
+    "compile_accepted": 6089,
+    "prior_status": {
+      "missing_request_input": 633,
+      "runtime_passed": 5309,
+      "analysis_rejected": 1166,
+      "missing_execution_clock": 79,
+      "currency_configuration_or_conversion": 49,
+      "runtime_rejected_other": 19
+    },
+    "current_status": {
+      "missing_request_input": 633,
+      "runtime_passed": 5309,
+      "analysis_rejected": 1166,
+      "missing_execution_clock": 79,
+      "currency_configuration_or_conversion": 49,
+      "runtime_rejected_other": 19
+    },
+    "newly_accepted": [],
+    "newly_rejected": [],
+    "newly_runtime_passed": [],
+    "previously_runtime_passed_now_rejected": [],
+    "status_changes": []
+  },
+  "original_source_integrity": {
+    "original_paths_checked": 7576,
+    "changed_or_missing": [],
+    "status": "passed"
+  },
+  "controlled_replays": {
+    "status": "passed",
+    "list_cases": 235,
+    "total_including_gap_rsi_fill": 238,
+    "list_statuses": {
+      "passed": 205,
+      "failed": 6,
+      "host_intrabar_feed_required": 14,
+      "explicit_invalid_source_runtime_guard": 4,
+      "analysis_rejected": 6
+    },
+    "positive_executions_including_gap": 206,
+    "key_output_differences": [],
+    "groups": {
+      "named-results": {
+        "cases": 5,
+        "prior_statuses": {
+          "passed": 5
+        },
+        "current_statuses": {
+          "passed": 5
+        },
+        "source_unchanged": true
+      },
+      "complex-request-results": {
+        "cases": 26,
+        "prior_statuses": {
+          "passed": 26
+        },
+        "current_statuses": {
+          "passed": 26
+        },
+        "source_unchanged": true
+      },
+      "additional-original-results": {
+        "cases": 10,
+        "prior_statuses": {
+          "failed": 6,
+          "passed": 4
+        },
+        "current_statuses": {
+          "failed": 6,
+          "passed": 4
+        },
+        "source_unchanged": true
+      },
+      "native-calendar-results": {
+        "cases": 16,
+        "prior_statuses": {
+          "passed": 16
+        },
+        "current_statuses": {
+          "passed": 16
+        },
+        "source_unchanged": true
+      },
+      "native-clock-results": {
+        "cases": 7,
+        "prior_statuses": {
+          "passed": 7
+        },
+        "current_statuses": {
+          "passed": 7
+        },
+        "source_unchanged": true
+      },
+      "native-virtual-results": {
+        "cases": 56,
+        "prior_statuses": {
+          "passed": 42,
+          "host_intrabar_feed_required": 14
+        },
+        "current_statuses": {
+          "passed": 42,
+          "host_intrabar_feed_required": 14
+        },
+        "source_unchanged": true
+      },
+      "native-lower-calendar-results": {
+        "cases": 4,
+        "prior_statuses": {
+          "passed": 4
+        },
+        "current_statuses": {
+          "passed": 4
+        },
+        "source_unchanged": true
+      },
+      "native-compact-results": {
+        "cases": 16,
+        "prior_statuses": {
+          "passed": 12,
+          "explicit_invalid_source_runtime_guard": 4
+        },
+        "current_statuses": {
+          "passed": 12,
+          "explicit_invalid_source_runtime_guard": 4
+        },
+        "source_unchanged": true
+      },
+      "native-output-results": {
+        "cases": 18,
+        "prior_statuses": {
+          "passed": 16,
+          "analysis_rejected": 2
+        },
+        "current_statuses": {
+          "passed": 16,
+          "analysis_rejected": 2
+        },
+        "source_unchanged": true
+      },
+      "native-ternary-results": {
+        "cases": 18,
+        "prior_statuses": {
+          "passed": 16,
+          "analysis_rejected": 2
+        },
+        "current_statuses": {
+          "passed": 16,
+          "analysis_rejected": 2
+        },
+        "source_unchanged": true
+      },
+      "native-alert-results": {
+        "cases": 12,
+        "prior_statuses": {
+          "passed": 12
+        },
+        "current_statuses": {
+          "passed": 12
+        },
+        "source_unchanged": true
+      },
+      "native-template-results": {
+        "cases": 12,
+        "prior_statuses": {
+          "passed": 12
+        },
+        "current_statuses": {
+          "passed": 12
+        },
+        "source_unchanged": true
+      },
+      "psar-original-results": {
+        "cases": 8,
+        "prior_statuses": {
+          "passed": 8
+        },
+        "current_statuses": {
+          "passed": 8
+        },
+        "source_unchanged": true
+      },
+      "morning-scalp-results": {
+        "cases": 4,
+        "prior_statuses": {
+          "passed": 4
+        },
+        "current_statuses": {
+          "passed": 4
+        },
+        "source_unchanged": true
+      },
+      "unblocked-original-results": {
+        "cases": 2,
+        "prior_statuses": {
+          "passed": 2
+        },
+        "current_statuses": {
+          "passed": 2
+        },
+        "source_unchanged": true
+      },
+      "newly-hosted-original-results": {
+        "cases": 5,
+        "prior_statuses": {
+          "passed": 5
+        },
+        "current_statuses": {
+          "passed": 5
+        },
+        "source_unchanged": true
+      },
+      "new-transparency-hosted-results": {
+        "cases": 12,
+        "prior_statuses": {
+          "passed": 12
+        },
+        "current_statuses": {
+          "passed": 12
+        },
+        "source_unchanged": true
+      },
+      "new-ternary-hosted-results": {
+        "cases": 2,
+        "prior_statuses": {
+          "passed": 2
+        },
+        "current_statuses": {
+          "passed": 2
+        },
+        "source_unchanged": true
+      },
+      "native-guard-results": {
+        "cases": 2,
+        "prior_statuses": {
+          "analysis_rejected": 2
+        },
+        "current_statuses": {
+          "analysis_rejected": 2
+        },
+        "source_unchanged": true
+      }
+    },
+    "resumed_after_missing_target_runner": true,
+    "initial_bundle_exit_code": 2,
+    "resume_exit_code": 0,
+    "prior_runtime_results_copied": false
+  },
+  "receipts": {
+    "target\\closeout-20261015\\verify-final.log": "dacefe4dae85491d0775d705c5721ce606224d2aa0b5d8350924de7c4c6855d4",
+    "target\\strategy-gap-closeout-final-20261015\\comparison.json": "51b04d0b6525860961c1ca4f5ef9a5167b0d4fed50dca5d46d94f65fd7e826b8",
+    "target\\strategy-gap-closeout-final-20261015\\execution-summary.json": "493099a1d7a1f6b5fdbb485dce73105c01f51b1dcbbbe9b85a718e7a13cfe0e8",
+    "target\\strategy-gap-closeout-final-20261015\\resumed-controls.json": "25d9dccd747ff8bca2eca3a221faeefa5d3894380a5b4d491088a52581a0c5be",
+    "target\\strategy-gap-closeout-final-20261015\\source-integrity.json": "8971005c20576bb304cf17c84d6ee2464cd633e794151b30547373d5a8448994"
+  },
+  "retained_intermediate_evidence": [
+    "target/closeout-20261015/verify-initial.log",
+    "target/closeout-20261015/verify-before-final-reservation.log",
+    "target/closeout-20261015/strategy-mixed-before.log",
+    "target/strategy-gap-closeout-20261015/initial-interruption.json",
+    "target/strategy-gap-closeout-final-20261015/controls-initial.log",
+    "target/strategy-gap-closeout-final-20261015/unblocked_original_runs-initial.log"
+  ],
+  "git_preparation": {
+    "stale_empty_index_lock_last_written": "2026-10-12",
+    "active_git_processes_when_checked": 0,
+    "preserved_lock": "target/closeout-20261015/stale-index-20261012.lock"
+  },
+  "qualification_limits": [
+    "Default corpus runs use synthetic 512-bar inputs; controlled host-input runs are separate",
+    "Native market, profit, complete trade/equity ledger and notification delivery parity remain unqualified",
+    "Historical FX/accounting remains future core work; market data, exact libraries and ordered forming feeds remain explicit host inputs",
+    "Historical host-interface resource measurements retain their 0.3.1 pin and notEvaluated acceptance status",
+    "No fresh Linux/macOS or full resource-matrix qualification is claimed"
+  ]
+}

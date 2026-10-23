@@ -1,0 +1,15 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v6-fill-transparency-negative-24.pine",
+    "source_sha256": "dcc6ac676eb6546cc59924b7ecc5cc216d58769e27daf5f7774c170b681d56e4",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v6-fill-transparency-negative-24.png",
+    "screenshot_sha256": "bbb56d2d633eac09fac1d60d2ed68f7bca6d01d29dcc7938ab3bb53b492b3e2d",
+    "pine_version": 6,
+    "native_status": "analysis_rejected",
+    "native_error": "fill has no argument transp CE10120",
+    "status": "confirmed_existing_version_guard",
+    "captured_date": "2026-10-12",
+    "scope": "Full local analysis already rejects fill.transp via drawing_options.rs; signature-only suspicion disproved. No missing capability or new production repair required.",
+    "official_documentation": "https://www.tradingview.com/pine-script-docs/migration-guides/to-pine-version-6/"
+  }
+]

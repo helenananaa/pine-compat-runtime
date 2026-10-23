@@ -1,0 +1,40 @@
+//@version=6
+indicator("Constant conditional matrix 32",precision=0)
+a=if false
+    true
+b=if false
+    false
+c=if true
+    true
+d=if true
+    false
+f(x)=>
+    if x
+        true
+k=false
+e=if k
+    true
+i=input.bool(false)
+j=if i
+    true
+z=if bar_index<0
+    true
+n=if false
+    42
+s=if false
+    "yes"
+x=if false
+    true
+else
+    false
+plot(a?1:0,title="literal false true")
+plot(b?1:0,title="literal false false")
+plot(c?1:0,title="literal true true")
+plot(d?1:0,title="literal true false")
+plot(f(false)?1:0,title="function false")
+plot(e?1:0,title="const variable false")
+plot(j?1:0,title="input false")
+plot(z?1:0,title="series false")
+plot(n,title="int false")
+plot(s=="yes"?1:0,title="string false")
+plot(x?1:0,title="explicit else false")

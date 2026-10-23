@@ -1,0 +1,20 @@
+{
+  "name": "method-udt-simple-param-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-simple-param-v6-38.pine",
+  "source_sha256": "ab88e4fdd7159bce7d643bb70952c1c3bd2797b8abff560aed9cb0f4e946f643",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    7
+  ],
+  "native_row": "319 row method-udt-simple-param-v6-38 Plot 7.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c66718b3a660e444963c3a1b9848c8b31a6deb1dcf7a351a39666289d718ad08",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-simple-param-v6-38.native.ax.txt",
+  "accessibility_sha256": "783826a73ff56d6b4feb2fb499f4946631f2aa0a237bd1de7eb1cf6a15400766",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-simple-param-v6-38.native.png",
+  "screenshot_sha256": "2435082742b882f3fc251b5b4cbacf12e41cfab9f276d27b1f4fb3f5ff6be9c9",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "47df67caad67886823f6422343ca93d0e05f1fad3a8bed1bbecedfde70c5ebd4"
+}

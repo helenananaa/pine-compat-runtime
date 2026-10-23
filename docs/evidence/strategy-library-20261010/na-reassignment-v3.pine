@@ -1,0 +1,5 @@
+//@version=3
+study("Codex na inference v3 oracle",overlay=true)
+x=na
+x:=close
+plot(x,"na reassigned")

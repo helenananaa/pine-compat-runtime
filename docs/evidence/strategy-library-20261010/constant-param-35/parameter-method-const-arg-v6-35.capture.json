@@ -1,0 +1,17 @@
+{
+  "name": "parameter-method-const-arg-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-arg-v6-35.pine",
+  "source_sha256": "ab3d6d8437e2756bf78a8e9b056b7b4b323f552380721d507a4e0208fc03c45f",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    12
+  ],
+  "native_row": "238 row parameter-method-const-arg-v6-35 sum 12",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "ab3d6d8437e2756bf78a8e9b056b7b4b323f552380721d507a4e0208fc03c45f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-arg-v6-35.native.ax.txt",
+  "accessibility_sha256": "41e27b653718a8813a87b50432ce17d5041ea33978e14ff2d97e206b1414db1a",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-arg-v6-35.native.png",
+  "screenshot_sha256": "41d9bc4596255d7c4271a94234fceb828d544bc0db9c74810879ddafaa86fb0d"
+}

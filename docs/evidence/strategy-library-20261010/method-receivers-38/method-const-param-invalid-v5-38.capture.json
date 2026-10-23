@@ -1,0 +1,18 @@
+{
+  "name": "method-const-param-invalid-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-param-invalid-v5-38.pine",
+  "source_sha256": "eddbc0bb34f04c730db8aadbda9f68200e917a9ae86fb8d654ea5f65001568cb",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot call 'plus38' with argument 'extra'='bar_index'. An argument of 'series int' type was used but a 'const int' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "aa5732b4d58bb012020055c2e542c737c8ef90cf6fe9756e224a87dccc510737",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-param-invalid-v5-38.native.ax.txt",
+  "accessibility_sha256": "5636991b6e724d40689baf7c7001fb3d9f5580d8dd395676f688374352f47b77",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-param-invalid-v5-38.native.png",
+  "screenshot_sha256": "94a745f9e71b924ec4a77e6567c41f103fb747bfc2c94a4ef43f6e95d55d4db6",
+  "qualification_scope": "candidate_method_control",
+  "native_values": null,
+  "discovery_record_sha256": "e4eb976294ad156039686610986f3f73702b0c0ede3226ad0dd53cd331d71147"
+}

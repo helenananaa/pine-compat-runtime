@@ -1,0 +1,6 @@
+//@version=6
+indicator("method-simple-param-v6-38")
+method plus38(float self,simple int extra)=>self+extra
+x=10.0
+i=input.int(2)
+plot(x.plus38(i))

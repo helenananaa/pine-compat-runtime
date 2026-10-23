@@ -1,0 +1,24 @@
+{
+  "name": "legacy-unsupported_map_clear_udf-45",
+  "version": 6,
+  "scenario": "legacy-fixture-admission",
+  "source": "E:\\projects\\pine-interpreter\\tests\\fixtures\\sema\\unsupported_map_clear_udf.pine",
+  "source_sha256": "76e35039607220a75a2328967334a7cf5aceba69b6d3a133dfb33c7cccebb563",
+  "local_three_bar_values": [
+    0
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "239 row Unsupported map clear udf Plot 0.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "76e35039607220a75a2328967334a7cf5aceba69b6d3a133dfb33c7cccebb563",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/legacy-unsupported_map_clear_udf-45.native.ax.txt",
+  "accessibility_sha256": "a574e472ba750a84f0f64999e95e311d13eae567ce6e1677ce86f27159535a2c",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/legacy-unsupported_map_clear_udf-45.native.png",
+  "screenshot_sha256": "b1236ad91e8af085a67d7c995af5d2003365f4f89d0f36306f680d6c056243f3",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

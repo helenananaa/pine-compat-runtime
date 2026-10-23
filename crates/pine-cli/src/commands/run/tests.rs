@@ -1,6 +1,65 @@
 use super::*;
 
 #[test]
+fn bar_calendar_file_drives_all_cli_run_modes() {
+    let base = std::env::temp_dir().join(format!("pine-cli-calendar-{}", std::process::id()));
+    fs::create_dir_all(&base).unwrap();
+    let script = base.join("calendar.pine");
+    let bars = base.join("bars.csv");
+    let calendar = base.join("calendar.json");
+    let open: i64 = 1_791_466_200_000;
+    let close = open + 23_400_000;
+    fs::write(
+        &script,
+        "//@version=6\nindicator(\"calendar\")\nplot(time_close-time)\nplot(hour)\n",
+    )
+    .unwrap();
+    fs::write(
+        &bars,
+        format!("time,open,high,low,close,volume\n{open},10,10,10,10,1\n"),
+    )
+    .unwrap();
+    let input = serde_json::json!({"schemaVersion":1,"symbols":[{"symbol":"NASDAQ:AAPL","timezone":"America/New_York","timeframes":[{"timeframe":"D","intervals":[{"open":open,"close":close,"tradingDay":open.div_euclid(86_400_000)*86_400_000}]}]}]});
+    fs::write(&calendar, input.to_string()).unwrap();
+    let args = vec![
+        script.display().to_string(),
+        "--bars".into(),
+        bars.display().to_string(),
+        "--chart-symbol".into(),
+        "NASDAQ:AAPL".into(),
+        "--chart-timeframe".into(),
+        "D".into(),
+        "--bar-calendars".into(),
+        calendar.display().to_string(),
+    ];
+    let options = parse_options(&args).unwrap();
+    for mode in [
+        ExecutionMode::Batch,
+        ExecutionMode::Incremental,
+        ExecutionMode::RealtimeHistory,
+        ExecutionMode::RealtimeForming,
+    ] {
+        let output: serde_json::Value =
+            serde_json::from_str(&run_json_with_options_in_mode(&options, mode).unwrap()).unwrap();
+        assert_eq!(
+            output["plots"][0]["values"],
+            serde_json::json!([23_400_000])
+        );
+        assert_eq!(output["plots"][1]["values"], serde_json::json!([9]));
+    }
+    fs::write(&calendar, r#"{"schemaVersion":2,"symbols":[]}"#).unwrap();
+    assert!(
+        run_json_with_options(&options)
+            .unwrap_err()
+            .contains("schema version")
+    );
+    for path in [script, bars, calendar] {
+        fs::remove_file(path).unwrap();
+    }
+    let _ = fs::remove_dir(base);
+}
+
+#[test]
 fn realtime_cli_seeds_the_known_historical_boundary() {
     let options = parse_options(&[
         workspace_path("tests/fixtures/runtime/history_boundary_guard.pine"),
@@ -30,6 +89,8 @@ fn candidate_macd_batch_incremental_and_realtime_history_match() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -223,6 +284,8 @@ fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_rese
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -237,6 +300,8 @@ fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_rese
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -251,6 +316,8 @@ fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_rese
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -300,6 +367,8 @@ fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -314,6 +383,8 @@ fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -535,7 +606,7 @@ fn rejects_mixed_strategy_alert_rendering_options() {
 #[test]
 fn chart_timeframe_sets_main_period_without_request_bars() {
     let chart = ChartContext::new("COINBASE:BTCUSD", RequestTimeframe::parse("1D").unwrap());
-    let environment = request_environment_from_specs(&[], chart).unwrap();
+    let environment = request_environment_from_specs(&[], chart, None).unwrap();
     assert_eq!(
         environment.main_timeframe(),
         &RequestTimeframe::parse("1D").unwrap()
@@ -554,7 +625,7 @@ fn builds_request_environment_from_csv_specs() {
     let spec = parse_request_bars_spec(&format!("NYSE:IBM:1={}", path.display()))
         .expect("request bars spec");
 
-    let environment = request_environment_from_specs(&[spec], ChartContext::default())
+    let environment = request_environment_from_specs(&[spec], ChartContext::default(), None)
         .expect("request environment from CSV");
     let bars = environment
         .provider()
@@ -577,10 +648,11 @@ fn duplicate_request_bars_keys_fail() {
     let second = parse_request_bars_spec(&format!("NYSE:IBM:1={}", path.display()))
         .expect("second request bars spec");
 
-    let error = match request_environment_from_specs(&[first, second], ChartContext::default()) {
-        Ok(_) => panic!("duplicate request bars should fail"),
-        Err(error) => error,
-    };
+    let error =
+        match request_environment_from_specs(&[first, second], ChartContext::default(), None) {
+            Ok(_) => panic!("duplicate request bars should fail"),
+            Err(error) => error,
+        };
 
     assert!(error.contains("duplicate request data for symbol `NYSE:IBM` timeframe `1`"));
     let _ = fs::remove_file(path);
@@ -615,6 +687,8 @@ fn runs_timenow_with_explicit_execution_times_in_normal_and_profile_modes() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -703,6 +777,8 @@ fn cli_timenow_fails_closed_when_execution_times_are_missing_or_misaligned() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -770,6 +846,8 @@ bgcolor(shade)
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: input_override_specs,
         strategy_alert_template: None,
@@ -809,6 +887,8 @@ bgcolor(shade)
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: vec![
             parse_input_override_spec(&format!("{}=1", input_ids["Length"]))
@@ -872,6 +952,8 @@ plot(color.t(shade))
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: vec![
             parse_input_override_spec(&format!("{}=true", input_ids["Text true"]))
@@ -1030,6 +1112,8 @@ fn runs_v4_legacy_input_overrides_through_cli_host() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: vec![
             parse_input_override_spec(&format!("{}=1", input_ids["Length"]))
@@ -1059,6 +1143,8 @@ fn profiled_run_reports_max_bars_back_without_retention_misses() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1085,6 +1171,8 @@ fn profiled_run_reports_max_bars_back_retention_misses() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1111,6 +1199,8 @@ fn profiled_run_reports_udf_max_bars_back_retention_misses() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1151,6 +1241,8 @@ fn assert_profile_series_max_bars_back_miss_with_libraries(
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources,
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1181,6 +1273,8 @@ fn profiled_run_reports_effective_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1210,6 +1304,8 @@ fn profiled_run_reports_expression_source_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1240,6 +1336,8 @@ fn profiled_run_reports_alias_expression_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1270,6 +1368,8 @@ fn profiled_run_reports_ternary_expression_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1300,6 +1400,8 @@ fn profiled_run_reports_qualified_builtin_ternary_series_max_bars_back_diagnosti
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1330,6 +1432,8 @@ fn profiled_run_reports_pure_math_call_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1360,6 +1464,8 @@ fn profiled_run_reports_named_pure_math_call_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1390,6 +1496,8 @@ fn profiled_run_reports_numeric_cast_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1456,6 +1564,8 @@ fn profiled_run_reports_udf_length_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1486,6 +1596,8 @@ fn profiled_run_reports_block_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1516,6 +1628,8 @@ fn profiled_run_reports_switch_block_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1546,6 +1660,8 @@ fn profiled_run_reports_statement_switch_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1576,6 +1692,8 @@ fn profiled_run_reports_expression_block_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1606,6 +1724,8 @@ fn profiled_run_reports_tuple_switch_expression_block_series_max_bars_back_diagn
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1636,6 +1756,8 @@ fn profiled_run_reports_if_expression_block_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1666,6 +1788,8 @@ fn profiled_run_reports_tuple_if_expression_block_series_max_bars_back_diagnosti
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1696,6 +1820,8 @@ fn profiled_run_reports_call_argument_block_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1726,6 +1852,8 @@ fn profiled_run_reports_block_result_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1756,6 +1884,8 @@ fn profiled_run_reports_loop_result_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1786,6 +1916,8 @@ fn profiled_run_reports_for_in_result_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1816,6 +1948,8 @@ fn profiled_run_reports_for_statement_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1846,6 +1980,8 @@ fn profiled_run_reports_for_in_statement_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1876,6 +2012,8 @@ fn profiled_run_reports_while_result_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -1906,6 +2044,8 @@ fn profiled_run_reports_while_statement_series_max_bars_back_diagnostic() {
         chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -2011,6 +2151,8 @@ fn runs_request_bars_integration_fixture() {
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         request_bars: vec![
             parse_request_bars_spec(&format!(
@@ -2570,6 +2712,8 @@ fn runs_legacy_v4_security_provider_fixture() {
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         request_bars: vec![
             parse_request_bars_spec(&format!(
@@ -2609,6 +2753,8 @@ fn legacy_v4_security_cli_missing_provider_error_is_source_spanned() {
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         request_bars: Vec::new(),
         input_overrides: Vec::new(),
@@ -2634,6 +2780,8 @@ fn runs_imported_function_with_library_source_integration_fixture() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: vec![LibrarySourceSpec {
             key: "user/lib/1".to_owned(),
             path: workspace_path("tests/fixtures/libraries/import_lib.pine"),
@@ -2671,6 +2819,8 @@ fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -2701,6 +2851,8 @@ fn run_output_renders_strategy_order_alert_template() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: Some(StrategyAlertTemplateOptions {
@@ -2726,6 +2878,8 @@ fn run_output_rejects_unknown_strategy_order_alert_placeholder() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: Some(StrategyAlertTemplateOptions {
@@ -2751,6 +2905,8 @@ fn run_output_renders_strategy_running_alert() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -2781,6 +2937,8 @@ fn run_output_rejects_unknown_strategy_running_alert_placeholder() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -2811,6 +2969,8 @@ fn run_json_keeps_strategy_alert_template_output_out_of_default_json() {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,

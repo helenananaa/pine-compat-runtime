@@ -1,0 +1,22 @@
+{
+  "name": "bool-return-constant-original-recheck32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-return-constant-original-recheck32.pine",
+  "source_sha256": "fd64e07eff06d9df27cd3598c83f9abb0039635fd484c78743adb34da7bfd642",
+  "native_status": "compiled_and_executed",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "75e9f6db4162ae9a0ffff58bad4cd4f6b3510d3f95b65c761360a5bf6b268f2c",
+  "normalized_source_sha256": "75e9f6db4162ae9a0ffff58bad4cd4f6b3510d3f95b65c761360a5bf6b268f2c",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-return-constant-original-recheck32.native.ax.txt",
+  "accessibility_sha256": "4f4cbc1d290e569b014f0b8bb98c863e77f92a3c24eb0b81f1926e5387d521c5",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-return-constant-original-recheck32.native.png",
+  "screenshot_sha256": "04e18f60cede10b6ae1fb31baabdacca4c01c0933573504af81aa6c8f8962cd8",
+  "native_values": [
+    1,
+    1,
+    0
+  ],
+  "status": "confirmed_native_constant_condition_difference_after_cursor_refresh",
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

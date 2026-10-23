@@ -1,0 +1,13 @@
+//@version=5
+indicator("Codex source input request oracle",overlay=true)
+a=input(hl2,"Generic source")
+b=input.source(hl2,"Typed source")
+x=request.security(syminfo.tickerid,"12M",a)
+y=request.security(syminfo.tickerid,"12M",b)
+z=request.security(syminfo.tickerid,"12M",hl2)
+var t=table.new(position.top_right,2,2,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,str.tostring(a),text_color=color.white)
+    table.cell(t,1,0,str.tostring(x),text_color=color.white)
+    table.cell(t,0,1,str.tostring(y),text_color=color.white)
+    table.cell(t,1,1,str.tostring(z),text_color=color.white)

@@ -1,0 +1,52 @@
+{
+  "v4": {
+    "order": {
+      "directions": [
+        "true",
+        "false"
+      ],
+      "qty": [
+        1,
+        2
+      ],
+      "finalPosition": -1,
+      "closedTrades": 1
+    },
+    "clear": {
+      "acceptedPositionalArities": [
+        3,
+        4
+      ]
+    },
+    "screenshot": "order-table-defaults-v4.png"
+  },
+  "v6": {
+    "clear": {
+      "acceptedCalls": [
+        "table.clear(t,0,0)",
+        "table.clear(t,1,1,2)",
+        "table.clear(t,0,1,end_row=2)"
+      ],
+      "remainingCoordinates": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ]
+      ]
+    },
+    "screenshot": "table-defaults-v6.png"
+  },
+  "scope": "Native public minimal compile and observed final outputs; not full-library trade parity."
+}

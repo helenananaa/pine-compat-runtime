@@ -1,0 +1,5 @@
+//@version=5
+indicator("alert-frequency-series-invalid-v5-39")
+frequency=bar_index%2==0?alert.freq_all:alert.freq_once_per_bar
+alert("bounded frequency admission probe",frequency)
+plot(1)

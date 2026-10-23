@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-promotion-v6-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-promotion-v6-34.pine",
+  "source_sha256": "fe02835090bc53b95eac69c388b7951a79d2464fb5c6e8fc0b4f1d99b3eb03c7",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Missing bool promotion v6 probe34 missing versus series 1 missing versus input 1 missing versus simple 1 missing and series true 0 missing or series false 0 and series equality 0 or series equality 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "fe02835090bc53b95eac69c388b7951a79d2464fb5c6e8fc0b4f1d99b3eb03c7",
+  "normalized_source_sha256": "fe02835090bc53b95eac69c388b7951a79d2464fb5c6e8fc0b4f1d99b3eb03c7",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-promotion-v6-34.native.ax.txt",
+  "accessibility_sha256": "cf86ae43d08ee3eee6188c54376d0eac5214891736e961cdeb1907e5d5834962",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-promotion-v6-34.native.png",
+  "screenshot_sha256": "0748c4ec35af498f0be46c68bfc330644c0e558fe275053d2f4fe3c74a2a06f1"
+}

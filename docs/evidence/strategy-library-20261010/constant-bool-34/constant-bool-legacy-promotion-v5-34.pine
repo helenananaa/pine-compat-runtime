@@ -1,0 +1,37 @@
+//@version=5
+indicator("Legacy bool missing and promotion probe34",precision=0)
+a=if false
+    true
+b=if true
+    false
+fp(x)=>
+    if x
+        true
+fq(x)=>
+    localBool=if x
+        true
+    localBool
+p=fp(false)
+q=fq(false)
+seriesFalse=bar_index<0
+inputFalse=input.bool(false)
+simpleFalse=syminfo.type=="never-a-symbol-type"
+plot(na(a)?1:0,title="global na")
+plot(na(p)?1:0,title="direct parameter na")
+plot(na(q)?1:0,title="local parameter na")
+plot(p==false?1:0,title="direct equals false")
+plot(q==false?1:0,title="local equals false")
+plot(p==q?1:0,title="cross parameter equality")
+plot(p==p?1:0,title="direct self")
+plot(q==q?1:0,title="local self")
+plot(str.tostring(p)==str.tostring(q)?1:0,title="same string representation")
+plot(a==seriesFalse?1:0,title="global na versus series")
+plot(a==inputFalse?1:0,title="global na versus input")
+plot(a==simpleFalse?1:0,title="global na versus simple")
+plot(p==seriesFalse?1:0,title="direct na versus series")
+plot(q==seriesFalse?1:0,title="local na versus series")
+plot(b==seriesFalse?1:0,title="boxed false versus series")
+plot(b==inputFalse?1:0,title="boxed false versus input")
+plot(b==simpleFalse?1:0,title="boxed false versus simple")
+plot(b and (bar_index>=0)?1:0,title="boxed false and series true")
+plot(b or (bar_index<0)?1:0,title="boxed false or series false")

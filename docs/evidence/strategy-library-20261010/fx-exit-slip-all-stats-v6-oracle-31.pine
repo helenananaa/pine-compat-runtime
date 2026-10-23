@@ -1,0 +1,20 @@
+//@version=6
+strategy("Exit slipped full stats 31",initial_capital=10000,commission_type=strategy.commission.percent,commission_value=1,slippage=100000,margin_long=0,margin_short=0,precision=8)
+if time==1577836800000
+    strategy.entry("L",strategy.long,qty=0.01)
+if time==1577923200000
+    strategy.close("L")
+snap=time==1578009600000
+plot(ta.valuewhen(snap,strategy.closedtrades,0),title="count")
+plot(ta.valuewhen(snap,strategy.closedtrades.entry_price(0),0),title="entry")
+plot(ta.valuewhen(snap,strategy.closedtrades.exit_price(0),0),title="exit")
+plot(ta.valuewhen(snap,strategy.closedtrades.commission(0),0),title="fee")
+plot(ta.valuewhen(snap,strategy.closedtrades.profit(0),0),title="profit")
+plot(ta.valuewhen(snap,strategy.closedtrades.max_runup(0),0),title="runup")
+plot(ta.valuewhen(snap,strategy.closedtrades.max_drawdown(0),0),title="drawdown")
+plot(ta.valuewhen(snap,strategy.closedtrades.max_runup_percent(0),0),title="runupPct")
+plot(ta.valuewhen(snap,strategy.closedtrades.max_drawdown_percent(0),0),title="drawdownPct")
+plot(ta.valuewhen(snap,strategy.max_runup,0),title="strategyRunup")
+plot(ta.valuewhen(snap,strategy.max_drawdown,0),title="strategyDrawdown")
+plot(ta.valuewhen(snap,strategy.max_runup_percent,0),title="strategyRunupPct")
+plot(ta.valuewhen(snap,strategy.max_drawdown_percent,0),title="strategyDrawdownPct")

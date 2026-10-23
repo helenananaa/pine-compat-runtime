@@ -216,10 +216,10 @@ impl<'a> HistoricalRuntime<'a> {
             if let Some(key_arg) = crate::builtins::args::positional_arg(args, 1) {
                 let _ = self.eval_expr(&key_arg.value)?;
             }
-            return Ok(PineValue::Void);
+            return Ok(PineValue::Na);
         };
         let Some(storage) = self.map_store.get(&id) else {
-            return Ok(PineValue::Void);
+            return Ok(PineValue::Na);
         };
         let key_kind = storage.key_kind;
         let key = self.eval_map_key(&args[1], key_kind)?;
@@ -238,10 +238,12 @@ impl<'a> HistoricalRuntime<'a> {
         if !self.record_collection_bytes(copied) {
             return Err(self.resource_budget.collection_error());
         }
-        if let (Some(storage), Some(lookup)) = (self.map_store.get_mut(&id), lookup) {
-            storage.entries.remove_with_lookup(lookup);
-        }
-        Ok(PineValue::Void)
+        let removed = if let (Some(storage), Some(lookup)) = (self.map_store.get_mut(&id), lookup) {
+            storage.entries.remove_with_lookup(lookup)
+        } else {
+            None
+        };
+        Ok(removed.unwrap_or(PineValue::Na))
     }
 
     fn eval_map_copy(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {

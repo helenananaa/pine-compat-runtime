@@ -1,0 +1,7 @@
+//@version=6
+indicator("body-contrast-global-after-unused-v6-46")
+f(map<string,float> v)=>
+    v.put("x",later46)
+    v.size()
+later46=2.0
+plot(1)

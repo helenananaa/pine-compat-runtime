@@ -1,11 +1,11 @@
 //@version=6
 indicator("Unsupported str case trim simple return qualifier")
 
-text = timeframe.period
+note = timeframe.period
 
-upper_text = str.upper(text)
-lower_text = str.lower(text)
-trimmed_text = str.trim(text)
+upper_text = str.upper(note)
+lower_text = str.lower(note)
+trimmed_text = str.trim(note)
 
 upper_length = str.length(upper_text)
 lower_length = str.length(lower_text)

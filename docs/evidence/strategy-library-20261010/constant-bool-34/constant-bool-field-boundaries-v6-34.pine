@@ -1,0 +1,16 @@
+//@version=6
+indicator("Bool typed field boundaries v6 probe34",precision=0)
+type Holder
+    bool flag
+a=if false
+    true
+x=Holder.new(true)
+x.flag:=a
+items=array.from(Holder.new(true))
+array.get(items,0).flag:=a
+f(c)=>
+    if c
+        true
+plot(x.flag?1:0,title="ordinary field")
+plot(array.get(items,0).flag?1:0,title="array field")
+plot(f(false)==false?1:0,title="parameter missing equals false")

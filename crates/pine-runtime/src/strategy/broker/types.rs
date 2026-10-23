@@ -97,10 +97,13 @@ pub(super) enum EntryPyramidingMode {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct ClosedTradeMetrics {
+    pub(super) quote_to_account_rate: f64,
     pub(super) commission: f64,
     pub(super) profit_percent: f64,
     pub(super) max_runup: f64,
+    pub(super) max_runup_percent: f64,
     pub(super) max_drawdown: f64,
+    pub(super) max_drawdown_percent: f64,
     pub(super) entry_comment: Option<String>,
     pub(super) exit_comment: Option<String>,
     pub(super) close_metadata: StrategyOrderMetadata,

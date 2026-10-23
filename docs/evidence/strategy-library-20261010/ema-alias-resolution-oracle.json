@@ -1,0 +1,68 @@
+{
+  "status": "native_observed",
+  "probes": [
+    {
+      "source": "low-scanner-boundary-v4.pine",
+      "source_sha256": "34933ce68a7a236d592943c42ce0b2e07e2c4b03709cfc0ddd471a72cda17a23",
+      "screenshot": "low-scanner-boundary-v4.png"
+    },
+    {
+      "source": "ema-fractional-length-v4.pine",
+      "source_sha256": "82c51e4a9af624c301bdad5867f0774411016f4e4d7019158fb55c29b133d2f0",
+      "screenshot": "ema-fractional-length-v4.png"
+    },
+    {
+      "source": "ema-explicit-float-v4-rejected.pine",
+      "source_sha256": "22a5aaaa8f63be9c3669e471c5fe3554b7e2bf699c7d5e800ee1885b5783cdac",
+      "screenshot": "ema-explicit-float-v4-rejected.png"
+    },
+    {
+      "source": "ema-alias-length-v4.pine",
+      "source_sha256": "3f5e5a3cbf88956ddd7cc4b629d7cdc8b6d66dcd4cc5655300a91912f7fd30e6",
+      "screenshot": "ema-alias-length-v4.png"
+    },
+    {
+      "source": "ema-alias-length-v5.pine",
+      "source_sha256": "5decd9d24569954bfa658dbc9faed15882a8ede6cb008e487e5ec731eb127634",
+      "screenshot": "ema-alias-length-v5.png"
+    },
+    {
+      "source": "ema-integral-product-v6.pine",
+      "source_sha256": "0e31791965140229b60c43e470a3bb7996144d37b2682f00c494a1fd52a01f6f",
+      "screenshot": "ema-integral-product-v6.png"
+    },
+    {
+      "source": "ema-fractional-alias-v6.pine",
+      "source_sha256": "707a6d3ed131fa7d8855e764f2444c099457ba86df492045e2d35b2cec863f93",
+      "screenshot": "ema-fractional-alias-v6.png"
+    },
+    {
+      "source": "ema-float-operand-v6-rejected.pine",
+      "source_sha256": "dc3393f1bec6d19d875afd37278cb26b57958becea61fa4ff863ed06365c5f66",
+      "screenshot": "ema-float-operand-v6-rejected.png"
+    },
+    {
+      "source": "ema-fractional-alias-v5.pine",
+      "source_sha256": "42d55a3b03eca1830e277a5746483b737728bcd6796fdd7fa9b0d56593898acd",
+      "screenshot": "ema-fractional-alias-v5.png"
+    }
+  ],
+  "observations": [
+    "v4 resolution named options compiled and selected 60",
+    "v4 n=19 quotient 9.50, EMA quotient equals EMA int",
+    "v4 input(2.8) EMA length rejected as input float",
+    "v4 n/2*2 alias 19, EMA alias equals EMA(19), differs EMA(18)",
+    "v5 and v6 integer-arithmetic aliases compiled, including fractional n/2",
+    "v6 explicit n/2.0 EMA length rejected as input float",
+    "v5 fractional alias 9.50 EMA equals int(alias) control"
+  ],
+  "cleanup": {
+    "original_strategy_present": true,
+    "temporary_indicator_absent": true,
+    "chart_interval": "1M",
+    "saved": false,
+    "published": false,
+    "agent_tab_closed": true
+  },
+  "limits": "Controlled native semantic probes; no full original-trade or EMA seeding parity qualification"
+}

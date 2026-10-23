@@ -1,0 +1,8 @@
+//@version=6
+indicator("window-foreign-default-script-small-v6-44",dynamic_requests=true,calc_bars_count=2)
+a=request.security(syminfo.tickerid,"W",bar_index)
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(count)

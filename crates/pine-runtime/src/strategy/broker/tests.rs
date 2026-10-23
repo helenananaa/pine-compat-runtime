@@ -224,6 +224,8 @@ fn pending_entry_ids(broker: &BrokerState) -> Vec<&str> {
 fn trailing_price_trigger(activation_price: f64, offset_price_distance: f64) -> PendingExitTrigger {
     PendingExitTrigger::Trailing(PendingTrailingExit {
         spec: PendingTrailingSpec {
+            fixed_stop: None,
+            fixed_limit: None,
             activation: PendingTrailingActivation::Price(activation_price),
             offset_price_distance,
         },
@@ -238,6 +240,8 @@ fn trailing_points_trigger(
 ) -> PendingExitTrigger {
     PendingExitTrigger::Trailing(PendingTrailingExit {
         spec: PendingTrailingSpec {
+            fixed_stop: None,
+            fixed_limit: None,
             activation: PendingTrailingActivation::Points {
                 ticks,
                 price: activation_price,
@@ -251,6 +255,8 @@ fn trailing_points_trigger(
 fn trailing_price_exit(activation_price: f64, offset_price_distance: f64) -> PendingTrailingExit {
     PendingTrailingExit {
         spec: PendingTrailingSpec {
+            fixed_stop: None,
+            fixed_limit: None,
             activation: PendingTrailingActivation::Price(activation_price),
             offset_price_distance,
         },
@@ -300,6 +306,7 @@ fn ledger_open_trade_with_direction(
     let entry_bar_index = entry_price as usize;
     let entry_time = (entry_price as i64) * 10;
     OpenTrade {
+        extrema: Default::default(),
         key: 0,
         id: id.to_owned(),
         direction,
@@ -1536,6 +1543,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
         ledger.allocate_exit_fifo(None, 2.25),
         vec![
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 0,
                 trade_key: 0,
                 entry_id: "A".to_owned(),
@@ -1548,6 +1556,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
                 entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 1,
                 trade_key: 1,
                 entry_id: "B".to_owned(),
@@ -1616,6 +1625,7 @@ fn trade_ledger_allocates_specific_open_trade_key() {
     assert_eq!(
         allocations,
         vec![TradeAllocation {
+            extrema: Default::default(),
             trade_index: 1,
             trade_key: 1,
             entry_id: "A".to_owned(),
@@ -1719,6 +1729,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
         ledger.allocate_exit_fifo(Some("A"), 2.5),
         vec![
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 0,
                 trade_key: 0,
                 entry_id: "A".to_owned(),
@@ -1731,6 +1742,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
                 entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 2,
                 trade_key: 2,
                 entry_id: "A".to_owned(),
@@ -1757,6 +1769,7 @@ fn trade_ledger_allocates_any_rule_by_exact_entry_id_in_ledger_order() {
         ledger.allocate_exit_any_for_entry("target", 3.5),
         vec![
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 1,
                 trade_key: 1,
                 entry_id: "target".to_owned(),
@@ -1769,6 +1782,7 @@ fn trade_ledger_allocates_any_rule_by_exact_entry_id_in_ledger_order() {
                 entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
+                extrema: Default::default(),
                 trade_index: 2,
                 trade_key: 2,
                 entry_id: "target".to_owned(),
@@ -2667,6 +2681,8 @@ fn trailing_update_helper_activates_without_fill_candidate() {
         trailing.evaluate_update(110.0, 100.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(105.0),
                 offset_price_distance: 2.0,
             },
@@ -2702,6 +2718,8 @@ fn trailing_update_helper_ratchets_upward_only() {
         trailing.evaluate_update(113.0, 109.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(105.0),
                 offset_price_distance: 2.0,
             },
@@ -2722,6 +2740,8 @@ fn trailing_update_helper_inverts_short_activation_fill_and_ratchet() {
         trailing.evaluate_update_for(TradeDirection::Short, 100.0, 89.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(90.0),
                 offset_price_distance: 10.0,
             },
@@ -2746,6 +2766,8 @@ fn trailing_update_helper_inverts_short_activation_fill_and_ratchet() {
         active.evaluate_update_for(TradeDirection::Short, 98.0, 85.0),
         PendingTrailingUpdate::Persist(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Price(90.0),
                 offset_price_distance: 10.0,
             },
@@ -4504,6 +4526,8 @@ fn pending_market_entry_resolves_trail_points_attachment_after_fill() {
         broker.pending_exit().unwrap().trigger,
         PendingExitTrigger::Trailing(PendingTrailingExit {
             spec: PendingTrailingSpec {
+                fixed_stop: None,
+                fixed_limit: None,
                 activation: PendingTrailingActivation::Points {
                     ticks: 10.0,
                     price: 105.0,
@@ -4747,6 +4771,7 @@ fn open_trade_fields_read_trade_ledger_entries() {
     let mut first = ledger_open_trade("A", 1.0, 100.0, 2.0);
     first.max_high = Some(112.0);
     first.min_low = Some(95.0);
+    first.extrema.observe(100.0, 1.0, 2.0, (112.0, 95.0), 1.0);
     broker.trade_ledger.append_long(first);
     broker
         .trade_ledger
@@ -4759,8 +4784,8 @@ fn open_trade_fields_read_trade_ledger_entries() {
     assert_eq!(broker.open_trade_size(0), Some(1.0));
     assert_eq!(broker.open_trade_profit(0, 112.0), Some(10.0));
     assert_eq!(broker.open_trade_commission(0), Some(2.0));
-    assert_eq!(broker.open_trade_max_runup(0), Some(12.0));
-    assert_eq!(broker.open_trade_max_drawdown(0), Some(5.0));
+    assert_eq!(broker.open_trade_max_runup(0), Some(10.0));
+    assert_eq!(broker.open_trade_max_drawdown(0), Some(7.0));
 
     assert_eq!(broker.open_trade_entry_price(1), Some(110.0));
     assert_eq!(broker.open_trade_entry_id(1), Some("B"));
@@ -6542,6 +6567,8 @@ fn unchanged_repeated_trailing_preserves_active_state() {
             target_trade_key: None,
             trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
                 spec: PendingTrailingSpec {
+                    fixed_stop: None,
+                    fixed_limit: None,
                     activation: PendingTrailingActivation::Price(105.0),
                     offset_price_distance: 2.0,
                 },

@@ -7,10 +7,12 @@ use std::collections::{BTreeSet, HashMap};
 use pine_ir::{HirExpr, HirExprKind, HirLiteral, HirProgram, ScriptMode, SymbolId};
 use serde::Serialize;
 
+mod currency;
 mod merge;
 mod walk;
+pub use currency::{CurrencyArgument, CurrencyRateInputContract, CurrencyRateRequirement};
 
-pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 2;
+pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -19,6 +21,8 @@ pub struct HostRequirements {
     pub discovery: &'static str,
     pub chart: ChartInputContract,
     pub account: Option<AccountInputContract>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub currency_rates: Option<CurrencyRateInputContract>,
     pub execution: ExecutionInputContract,
     pub requests: Vec<RequestRequirement>,
     pub input_call_site_ids: Vec<u32>,
@@ -49,6 +53,7 @@ pub struct HostSourceLocation {
 pub struct ChartInputContract {
     pub bars: &'static str,
     pub price_grid: &'static str,
+    pub bar_calendars: &'static str,
     pub quantity_precision: &'static str,
     pub symbol_metadata: Vec<String>,
     pub defaults: ChartInputDefaults,
@@ -73,7 +78,7 @@ pub struct ChartInputDefaults {
 #[serde(rename_all = "camelCase")]
 pub struct AccountInputContract {
     pub profile: &'static str,
-    /// An explicit strategy currency must equal the host chart's quote currency.
+    /// A different account currency requires host-supplied effective rates.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub declared_currency: Option<&'static str>,
     pub point_value: u32,
@@ -128,6 +133,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
     let defaults = crate::ChartContext::default();
     let initializers = crate::builtins::requests::request_dependency_initializers(program);
     let mut requests = Vec::new();
+    let mut currency_requests = Vec::new();
     let mut metadata = BTreeSet::new();
     let mut input_ids = BTreeSet::new();
     let mut clock = false;
@@ -151,12 +157,33 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         if callee == "input" || callee.starts_with("input.") {
             input_ids.insert(call_site_id.0);
         }
+        if callee == "alertcondition"
+            && let Some(message) = crate::builtins::args::call_arg_expr(args, 2, "message")
+        {
+            clock |= crate::input_metadata::constant_string(program, message)
+                .is_none_or(|message| message.contains("{{timenow}}"));
+        }
         session_windows |= matches!(
             callee.as_str(),
             "strategy.risk.max_intraday_loss"
                 | "strategy.risk.max_intraday_filled_orders"
                 | "strategy.risk.max_cons_loss_days"
         );
+        if callee == "request.currency_rate" {
+            currency_requests.push(CurrencyRateRequirement {
+                call_site_id: call_site_id.0,
+                from: currency::argument(
+                    program,
+                    &symbol_names,
+                    crate::builtins::args::call_arg_expr(args, 0, "from"),
+                ),
+                to: currency::argument(
+                    program,
+                    &symbol_names,
+                    crate::builtins::args::call_arg_expr(args, 1, "to"),
+                ),
+            });
+        }
         if matches!(
             callee.as_str(),
             "request.security" | "request.security_lower_tf"
@@ -214,6 +241,8 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
     });
     requests.sort_by_key(|request| request.call_site_id);
     requests.dedup();
+    currency_requests.sort_by_key(|request| request.call_site_id);
+    currency_requests.dedup();
     let source_locations: HashMap<_, _> = program
         .call_site_sources
         .iter()
@@ -223,6 +252,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         .iter()
         .copied()
         .chain(requests.iter().map(|request| request.call_site_id))
+        .chain(currency_requests.iter().map(|request| request.call_site_id))
         .collect();
     let call_sites = required_calls
         .into_iter()
@@ -239,12 +269,15 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         })
         .collect();
     let strategy = program.script_mode == ScriptMode::Strategy;
+    let needs_currency = !currency_requests.is_empty()
+        || (strategy && program.strategy_settings.account_currency.is_some());
     HostRequirements {
         schema_version: HOST_REQUIREMENTS_SCHEMA_VERSION,
         discovery: "conservativeExecutableHirInventory",
         chart: ChartInputContract {
             bars: "hostSuppliedStandardOhlcv",
             price_grid: "positiveIntegerMinMoveAndPriceScale",
+            bar_calendars: "continuousUtcDefaultOrHostSuppliedTradingIntervalsV1",
             quantity_precision: "decimalPowerZeroThroughNine",
             symbol_metadata: metadata.into_iter().collect(),
             defaults: ChartInputDefaults {
@@ -261,15 +294,21 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
             },
         },
         account: strategy.then_some(AccountInputContract {
-            profile: "linearUnitPointValueSameCurrency",
+            profile: "linearUnitPointValueWithHostCurrencyRates",
             declared_currency: program.strategy_settings.account_currency,
             point_value: 1,
-            currency_conversion: false,
-            unsupported_profiles: vec![
-                "foreignCurrencyConversion",
-                "nonUnitContractMultiplier",
-                "nonstandardChartBroker",
-            ],
+            currency_conversion: true,
+            unsupported_profiles: vec!["nonUnitContractMultiplier", "nonstandardChartBroker"],
+        }),
+        currency_rates: needs_currency.then_some(CurrencyRateInputContract {
+            schema_version: crate::CURRENCY_RATE_SCHEMA_VERSION,
+            profile: "hostSuppliedEffectiveCurrencyRates",
+            account_conversion: "chartQuoteToDeclaredAccountWhenDifferent",
+            historical_reference: "chartBarOpenWithHostResolvedEffectiveDailyRates",
+            realtime_reference: "chartBarOpenWithHostResolvedEffectiveDailyRates",
+            missing_pair: "explicitInputErrorDistinctFromHostResolvedUnavailablePair",
+            before_first_rate: "naForConversionQueriesIdentityForBrokerSizingAndAccounting",
+            requests: currency_requests,
         }),
         execution: ExecutionInputContract {
             clock: if clock {

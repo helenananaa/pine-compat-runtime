@@ -1,0 +1,19 @@
+{
+  "name": "original-unsupported_recursive_tuple_declarations-46",
+  "source": "E:\\projects\\pine-interpreter\\tests\\fixtures\\sema\\unsupported_recursive_tuple_declarations.pine",
+  "source_sha256": "9863aee274045b9fa3dddf66bab5241e8a9fb17ef4a44aa021f4b7990e6d0688",
+  "kind": "unchanged-original-fixture",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Could not find function or function reference 'direct' (CE10271)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "9863aee274045b9fa3dddf66bab5241e8a9fb17ef4a44aa021f4b7990e6d0688",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-unsupported_recursive_tuple_declarations-46.native.ax.txt",
+  "accessibility_sha256": "ba50942adef0ea92ab0510404edf987bb01127147611ecea0476d14f9d796489",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-unsupported_recursive_tuple_declarations-46.native.png",
+  "screenshot_sha256": "3ba25a7d009d8087c871e97bb8a7d73081e9506dd0c965c4c8c945a954deac0e",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

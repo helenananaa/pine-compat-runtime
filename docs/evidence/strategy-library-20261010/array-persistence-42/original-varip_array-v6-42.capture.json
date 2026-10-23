@@ -1,0 +1,71 @@
+{
+  "name": "original-varip_array-v6-42",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\original-varip_array-v6-42.pine",
+  "source_sha256": "d87b41b0e29cf4d972ce23c6947d4893b8a09d25f62c11c59ce5a76029982565",
+  "parent_fixture": "tests\\fixtures\\runtime\\varip_array.pine",
+  "parent_fixture_sha256": "c55fbb2ac4e028d55f3b5c216510a4c7d0d3a58074926acbe86d04c152a51910",
+  "transforms": "Version selection only; original fixture unchanged.",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3412,
+    3414,
+    3412,
+    3412,
+    3412,
+    3413,
+    3413,
+    3414,
+    3412
+  ],
+  "native_relations": [
+    [
+      "offset",
+      1,
+      0,
+      2
+    ],
+    [
+      "eq",
+      2,
+      0
+    ],
+    [
+      "eq",
+      3,
+      0
+    ],
+    [
+      "eq",
+      4,
+      0
+    ],
+    [
+      "offset",
+      5,
+      0,
+      1
+    ],
+    [
+      "eq",
+      6,
+      5
+    ],
+    [
+      "offset",
+      7,
+      5,
+      1
+    ]
+  ],
+  "native_row": "241 row varip array Plot 3,412.00 Plot 3,414.00 Plot 3,412.00 Plot 3,412.00 Plot 3,412.00 Plot 3,413.00 Plot 3,413.00 Plot 3,414.00 Plot 3,412.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d87b41b0e29cf4d972ce23c6947d4893b8a09d25f62c11c59ce5a76029982565",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-varip_array-v6-42.native.ax.txt",
+  "accessibility_sha256": "84cefb87e19f6c7f6c9351cd122e76a72c17023f85ef083d946af9aa99c6de10",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-varip_array-v6-42.native.png",
+  "screenshot_sha256": "d8fd8591e6912ee419fc3ce3135a3c1d69b4c6f8cba2c2d9f5ca91a73940408f",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

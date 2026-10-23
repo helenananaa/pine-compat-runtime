@@ -12,6 +12,7 @@ pub(super) enum PendingExitTrigger {
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum DeferredRelativeExitTrigger {
+    Combined(super::combined_exits::CombinedExitSpec),
     ProfitTicks {
         ticks: f64,
         mintick: f64,
@@ -46,7 +47,7 @@ pub(super) enum PendingExitQuantity {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(super) enum ExitQuantityRequest {
+pub(crate) enum ExitQuantityRequest {
     Full,
     Fixed(f64),
     Percent(f64),
@@ -74,6 +75,8 @@ pub(super) struct PendingTrailingExit {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct PendingTrailingSpec {
+    pub(super) fixed_stop: Option<f64>,
+    pub(super) fixed_limit: Option<f64>,
     pub(super) activation: PendingTrailingActivation,
     pub(super) offset_price_distance: f64,
 }
@@ -195,6 +198,8 @@ impl PendingExitTrigger {
             Self::Trailing(trailing) => {
                 trailing.spec.activation.price().is_finite()
                     && trailing.spec.offset_price_distance.is_finite()
+                    && trailing.spec.fixed_stop.is_none_or(f64::is_finite)
+                    && trailing.spec.fixed_limit.is_none_or(f64::is_finite)
             }
         }
     }

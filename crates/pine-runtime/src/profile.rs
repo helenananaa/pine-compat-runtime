@@ -23,6 +23,8 @@ pub struct RuntimeProfile {
     pub request_cache_contexts: usize,
     pub request_cache_values: usize,
     pub request_cache_value_capacity: usize,
+    pub static_request_chart_bars: usize,
+    pub static_request_chart_bar_capacity: usize,
     pub symbol_slots: usize,
     pub symbol_capacity: usize,
     pub current_series_slots: usize,

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Table defaults oracle 15", overlay=true)
+var t=table.new(position.middle_center,3,3)
+if barstate.islast
+    for c=0 to 2
+        for r=0 to 2
+            table.cell(t,c,r,str.tostring(c)+":"+str.tostring(r),bgcolor=color.blue,text_color=color.white)
+    table.clear(t,0,0)
+    table.clear(t,1,1,2)
+    table.clear(t,0,1,end_row=2)
+plot(close)

@@ -1,0 +1,25 @@
+//@version=5
+indicator("request-point-series-week-v5-43")
+p=chart.point.from_index(bar_index,bar_index)
+f(chart.point v)=>
+    v.price+=5
+    v.price
+before=p.price
+r=request.security(syminfo.tickerid,"W",f(p))
+requested_index=request.security(syminfo.tickerid,"W",bar_index)
+varip float first_after=na
+varip float second_after=na
+varip bool first_r_na=false
+if bar_index==0
+    first_after:=p.price
+    first_r_na:=na(r)
+if bar_index==1
+    second_after:=p.price
+plot(before)
+plot(r)
+plot(p.price)
+plot(requested_index)
+plot(bar_index)
+plot(first_after)
+plot(second_after)
+plot(first_r_na?1:0)

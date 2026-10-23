@@ -1,0 +1,271 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-transparency-oracle-23.pine",
+    "source_sha256": "dfd3bd931aa84ad40087e78944830f8c199911c29e3d9621e6a09827eeada25e",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-transparency-oracle-23.png",
+    "screenshot_sha256": "f0792f8d84f832c9ae6250fe96da0bc91d0cbdaf93589e08a8e0681b00b7d1a2",
+    "pine_version": 5,
+    "native_status": "compiled_and_executed",
+    "native_plot_values": [
+      1,
+      1
+    ],
+    "local_analysis": {
+      "schemaVersion": 6,
+      "languageVersion": 5,
+      "languageVersionOrigin": "explicit",
+      "dialect": "v5",
+      "scriptMode": "indicator",
+      "executable": false,
+      "diagnostics": [
+        {
+          "code": "E_CALL_ARG_NAME",
+          "severity": "error",
+          "message": "`bgcolor` has no argument named `transp`",
+          "span": {
+            "start": 84,
+            "end": 93,
+            "line": 3,
+            "column": 21
+          }
+        },
+        {
+          "code": "E_CALL_ARG_NAME",
+          "severity": "error",
+          "message": "`plotshape` has no argument named `transp`",
+          "span": {
+            "start": 127,
+            "end": 136,
+            "line": 4,
+            "column": 33
+          }
+        }
+      ],
+      "inputs": [],
+      "compatibility": {
+        "supported": [
+          {
+            "feature": "indicator",
+            "span": {
+              "start": 13,
+              "end": 22,
+              "line": 2,
+              "column": 1
+            }
+          },
+          {
+            "feature": "color.green",
+            "span": {
+              "start": 72,
+              "end": 83,
+              "line": 3,
+              "column": 9
+            }
+          },
+          {
+            "feature": "bgcolor",
+            "span": {
+              "start": 64,
+              "end": 71,
+              "line": 3,
+              "column": 1
+            }
+          },
+          {
+            "feature": "color.blue",
+            "span": {
+              "start": 116,
+              "end": 126,
+              "line": 4,
+              "column": 22
+            }
+          },
+          {
+            "feature": "plotshape",
+            "span": {
+              "start": 95,
+              "end": 104,
+              "line": 4,
+              "column": 1
+            }
+          },
+          {
+            "feature": "plot",
+            "span": {
+              "start": 152,
+              "end": 156,
+              "line": 5,
+              "column": 1
+            }
+          }
+        ],
+        "unsupported": [],
+        "legacyTranslations": [],
+        "legacyEmulations": []
+      }
+    },
+    "tested_cli_sha256": "5007e9276ff7428f853dcc73c8e3ed1f97254d93a07048810650bc5e380b92fc",
+    "scope": "Native v5 bgcolor/plotshape named transp is accepted and executes; v6 rejects it. Native v5 barcolor named transp also rejects in a separate exploratory probe. This is not evidence that all output functions or all transparency argument types are accepted. Alpha channel numeric parity remains unqualified."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v6-transparency-negative-oracle-23.pine",
+    "source_sha256": "6857cbbde7230e85a5a4a04e3181eedaa68bde7aa249b4fb64f05480175cb9aa",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v6-transparency-negative-oracle-23.png",
+    "screenshot_sha256": "b93cb1ffd76c86537e506158590dc7c8b1c328f512d22f2121be4a0dfcf2ef08",
+    "pine_version": 6,
+    "native_status": "analysis_rejected",
+    "native_plot_values": null,
+    "local_analysis": {
+      "schemaVersion": 6,
+      "languageVersion": 6,
+      "languageVersionOrigin": "explicit",
+      "dialect": "v6",
+      "scriptMode": "indicator",
+      "executable": false,
+      "diagnostics": [
+        {
+          "code": "E_CALL_ARG_NAME",
+          "severity": "error",
+          "message": "`bgcolor` has no argument named `transp`",
+          "span": {
+            "start": 94,
+            "end": 103,
+            "line": 3,
+            "column": 21
+          }
+        },
+        {
+          "code": "E_CALL_ARG_NAME",
+          "severity": "error",
+          "message": "`plotshape` has no argument named `transp`",
+          "span": {
+            "start": 137,
+            "end": 146,
+            "line": 4,
+            "column": 33
+          }
+        }
+      ],
+      "inputs": [],
+      "compatibility": {
+        "supported": [
+          {
+            "feature": "indicator",
+            "span": {
+              "start": 13,
+              "end": 22,
+              "line": 2,
+              "column": 1
+            }
+          },
+          {
+            "feature": "color.green",
+            "span": {
+              "start": 82,
+              "end": 93,
+              "line": 3,
+              "column": 9
+            }
+          },
+          {
+            "feature": "bgcolor",
+            "span": {
+              "start": 74,
+              "end": 81,
+              "line": 3,
+              "column": 1
+            }
+          },
+          {
+            "feature": "color.blue",
+            "span": {
+              "start": 126,
+              "end": 136,
+              "line": 4,
+              "column": 22
+            }
+          },
+          {
+            "feature": "plotshape",
+            "span": {
+              "start": 105,
+              "end": 114,
+              "line": 4,
+              "column": 1
+            }
+          },
+          {
+            "feature": "plot",
+            "span": {
+              "start": 162,
+              "end": 166,
+              "line": 5,
+              "column": 1
+            }
+          }
+        ],
+        "unsupported": [],
+        "legacyTranslations": [],
+        "legacyEmulations": []
+      }
+    },
+    "tested_cli_sha256": "5007e9276ff7428f853dcc73c8e3ed1f97254d93a07048810650bc5e380b92fc",
+    "scope": "Native v5 bgcolor/plotshape named transp is accepted and executes; v6 rejects it. Native v5 barcolor named transp also rejects in a separate exploratory probe. This is not evidence that all output functions or all transparency argument types are accepted. Alpha channel numeric parity remains unqualified."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-transparency-modern-oracle-23.pine",
+    "source_sha256": "d5a7fbfffbd4025d518db3a8a9887bffd50ca4e70871dc83365d0cb636fa4ef7",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-transparency-modern-oracle-23.png",
+    "screenshot_sha256": "cfa584f0d0a92443cab67f07566996ef5f68c17e89e35187ffc96e7b0e7d2424",
+    "pine_version": 5,
+    "captured_date": "2026-10-12",
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1,
+      1,
+      1,
+      1,
+      2
+    ],
+    "scope": "bgcolor,plotshape,plotchar,plotarrow,plot,fill named transp accepted with input int and modern display/force_overlay. Native rendered alpha numeric parity not yet qualified."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-transparency-series-negative-23.pine",
+    "source_sha256": "73632c0c6a9dbdf5f388e7a81367a3c774424ae5998b991383b7b4b6a7bc2f68",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-transparency-series-negative-23.png",
+    "screenshot_sha256": "2136fcfa18ca8d6a89afdb31024a097fb7309440ce7bbf11169e868739a675ec",
+    "pine_version": 5,
+    "captured_date": "2026-10-12",
+    "native_status": "analysis_rejected",
+    "native_values": null,
+    "scope": "Native bgcolor transp rejects series int; input int required."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v6-output-overlay-oracle-23.pine",
+    "source_sha256": "794b218ecd5180aed2ab10e721ce17bd771abcc1310ee489ea84efb34d3cfbfd",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v6-output-overlay-oracle-23.png",
+    "screenshot_sha256": "fdd889044a9d9f9d59043f8d8877128fe343575abc8e4c55348e6550bc493d17",
+    "pine_version": 6,
+    "captured_date": "2026-10-12",
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1,
+      1
+    ],
+    "scope": "bgcolor/plotchar force_overlay accepted and rendered on main chart without transp."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-duplicate-transparency-oracle-23.pine",
+    "source_sha256": "3e4c8b781580a54a9ab98836ba7eb62f29973b428644c0c85dbd6fd772918613",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\v5-duplicate-transparency-oracle-23.png",
+    "screenshot_sha256": "0308734b87a0bd13183e9654b35db58fafe49d1357a55e05fdbf68c999bc7c56",
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1,
+      1
+    ],
+    "pine_version": 5,
+    "captured_date": "2026-10-12",
+    "scope": "Official v5 plotshape accepts repeated identical literal transp=0. Probe title says negative because initial expectation was wrong; actual native output proves acceptance. Ambiguous duplicates remain outside qualification."
+  }
+]

@@ -1,0 +1,5 @@
+//@version=6
+indicator("qualifier-method-ema-v6-39")
+method average39(int self)=>ta.ema(close,self)
+x=3
+plot(x.average39()==ta.ema(close,3)?1:0)

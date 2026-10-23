@@ -1,0 +1,26 @@
+{
+  "name": "array-udt-field-alias-v5-42",
+  "version": 5,
+  "scenario": "array-udt-field-alias",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-udt-field-alias-v5-42.pine",
+  "source_sha256": "2314e32d90bd918402d380090de4b9abf785edf0487ab7233302f2bb320f2026",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3350,
+    1,
+    0
+  ],
+  "native_marker_suffix": [
+    0
+  ],
+  "native_row": "241 row array-udt-field-alias-v5-42 Plot 3,350.00 Plot 1.00 Plot 0.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "49f939c4bb573f0ca316d1f647423177dee1ccc3b69606cd4a4f3f15a01b06aa",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-udt-field-alias-v5-42.native.ax.txt",
+  "accessibility_sha256": "cff2b679f63aa1e4ce52025eee3c19492544e5c18e97b8880266aee19903e559",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-udt-field-alias-v5-42.native.png",
+  "screenshot_sha256": "5c86963441a89567f24d9116770aba8ccb717973bf92fe18fc025e07e395fc8b",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

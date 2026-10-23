@@ -1,0 +1,9 @@
+//@version=6
+indicator("extend-point-overloads-v6-40")
+a=chart.point.from_index(0,2)
+b=chart.point.from_index(1,1)
+value=input.string("b")
+item=line.new(a,b,extend=value)
+boxItem=box.new(a,b,extend=value)
+plot(line.get_x2(item))
+plot(box.get_right(boxItem))

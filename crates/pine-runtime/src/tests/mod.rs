@@ -12,6 +12,7 @@ mod builtins_ta_conditionals;
 mod builtins_ta_extremes;
 mod builtins_ta_flow;
 mod builtins_time;
+mod calendar_clock;
 mod drawing_indexes;
 mod execution_clock;
 mod external;
@@ -31,6 +32,7 @@ mod runtime_control_flow;
 mod runtime_core;
 mod runtime_history;
 mod strategy;
+mod strategy_library_compat;
 mod strategy_margin_admission;
 mod strategy_native_defaults;
 mod strategy_regressions;
@@ -112,3 +114,5 @@ fn assert_na_prefix(actual: &[PineValue], count: usize) {
         );
     }
 }
+
+mod virtual_session;

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Reserved text v5 probe33",precision=0)
+text=7
+plot(text)

@@ -1,0 +1,26 @@
+{
+  "name": "request-matrix-write-v6-43",
+  "version": 6,
+  "scenario": "matrix-write",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-matrix-write-v6-43.pine",
+  "source_sha256": "79d0ddb844f0f5ac13513c00283be23c2e7d78d34a2227a3abaa0b547a530666",
+  "historical_expected": [
+    15,
+    15
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "242 row request-matrix-write-v6-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "79d0ddb844f0f5ac13513c00283be23c2e7d78d34a2227a3abaa0b547a530666",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-matrix-write-v6-43.native.ax.txt",
+  "accessibility_sha256": "7633347c765de6a08c18a812914f70f5f9a699b2e678a5c3fa5fdbfdcec33b70",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-matrix-write-v6-43.native.png",
+  "screenshot_sha256": "77fcf20f669938442b9725894e2789251398d44d72df3928ae958a8e9213fe60",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

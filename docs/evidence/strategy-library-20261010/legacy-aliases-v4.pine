@@ -1,0 +1,10 @@
+//@version=4
+study("Codex legacy alias v4 oracle",overlay=true)
+plot(swma(close),"swma")
+plot(wpr(14),"wpr")
+[s,d]=supertrend(3,10)
+plot(s,"supertrend")
+plot(tsi(close,13,25),"tsi")
+plot(tonumber("2.5"),"tonumber")
+plot(tan(0.5),"tan")
+plot(percentile_nearest_rank(close,14,25),"percentile")

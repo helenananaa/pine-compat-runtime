@@ -2,6 +2,14 @@ use super::RuntimeSnapshotFixture;
 
 pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
+        "runtime_bool_control_functions_history_v6.json",
+        "tests/fixtures/runtime/bool_control_functions_history_v6.pine",
+    ),
+    (
+        "runtime_bool_control_defaults_v6.json",
+        "tests/fixtures/runtime/bool_control_defaults_v6.pine",
+    ),
+    (
         "runtime_library_declaration_forms.json",
         "tests/fixtures/runtime/library_declaration_forms.pine",
     ),
@@ -735,6 +743,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_currency_constants.json",
         "tests/fixtures/runtime/currency_constants.pine",
+    ),
+    (
+        "runtime_request_currency_rate_identity.json",
+        "tests/fixtures/runtime/request_currency_rate_identity.pine",
     ),
     (
         "runtime_alertcondition.json",

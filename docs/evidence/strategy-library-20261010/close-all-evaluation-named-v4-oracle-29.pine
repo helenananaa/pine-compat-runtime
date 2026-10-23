@@ -1,0 +1,12 @@
+//@version=4
+strategy("Close all evaluation named v4 29",precision=0)
+var a=array.new_int(1,0)
+b()=>
+    array.set(a,0,array.get(a,0)*10+3)
+    false
+s(x)=>
+    array.set(a,0,array.get(a,0)*10+x)
+    tostring(x)
+if bar_index==0
+    strategy.close_all(alert_message=s(1),comment=s(2),when=b())
+plot(array.get(a,0),title="order")

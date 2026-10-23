@@ -1,9 +1,8 @@
+mod bindings;
+
 use std::collections::HashSet;
 
 use crate::analyzer::functions::contains_output_or_declaration_call;
-use crate::analyzer::user_types::{
-    UserTypeArrayElementInference, classify_user_type_array_element_names,
-};
 use crate::prelude::*;
 use crate::source_graph::{SourceContextId, SourceId};
 
@@ -24,10 +23,14 @@ impl Analyzer {
         let (_, method_name) = postfix_call_result_method_parts(callee, args)?;
         let receiver = args.first()?;
         let receiver_type = arg_types.first().copied().flatten()?;
-        if receiver_type.kind != ValueKind::UserType {
+        let receiver_type_name = self.method_receiver_key(&receiver.value, receiver_type)?;
+        if receiver_type.kind != ValueKind::UserType
+            && !self
+                .methods
+                .contains_key(&(receiver_type_name.clone(), method_name.to_owned()))
+        {
             return None;
         }
-        let receiver_type_name = self.user_type_name_of_expr(&receiver.value)?;
         self.analyze_user_method_call_with_receiver(
             MethodCallReceiver {
                 type_name: receiver_type_name,
@@ -46,6 +49,14 @@ impl Analyzer {
             let StmtKind::Method(method) = &statement.kind else {
                 continue;
             };
+            if self.legacy.dialect() < crate::PineDialect::V5 {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_METHOD_VERSION",
+                    "user-defined methods require Pine v5 or later",
+                    statement.span,
+                ));
+                continue;
+            }
             let Some(receiver) = method.params.first() else {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_PARAM",
@@ -54,7 +65,10 @@ impl Analyzer {
                 ));
                 continue;
             };
-            if !self.user_types.contains_key(&receiver.type_name) && receiver.type_name != "color" {
+            let receiver_name = Self::method_type_key(&receiver.type_name);
+            if !self.user_types.contains_key(receiver_name)
+                && !Self::builtin_method_receiver_declaration(receiver_name)
+            {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_RECEIVER_TYPE",
                     format!(
@@ -65,7 +79,12 @@ impl Analyzer {
                 ));
                 continue;
             }
-            let key = (receiver.type_name.clone(), method.name.clone());
+            let Some(receiver_binding) =
+                self.function_param_type(&receiver.type_name, receiver.span)
+            else {
+                continue;
+            };
+            let key = (receiver_name.to_owned(), method.name.clone());
             if self.methods.contains_key(&key) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_DUPLICATE",
@@ -94,20 +113,22 @@ impl Analyzer {
                     continue;
                 }
                 names.push(param.name.clone());
-                let (pine_type, user_type_name) = if param.type_name.is_empty() {
-                    (UNKNOWN, None)
+                let binding = if param.type_name.is_empty() {
+                    None
                 } else {
-                    let Some(resolved) = self.method_param_type(&param.type_name, param.span)
+                    let Some(resolved) =
+                        self.method_parameter_binding(&param.type_name, param.span)
                     else {
                         valid = false;
                         continue;
                     };
-                    resolved
+                    Some(resolved)
                 };
                 params.push(MethodParamInfo {
                     name: param.name.clone(),
-                    pine_type,
-                    user_type_name,
+                    pine_type: binding.as_ref().map_or(UNKNOWN, |b| b.pine_type),
+                    user_type_name: binding.as_ref().and_then(|b| b.user_type_name.clone()),
+                    binding,
                 });
             }
             if !valid {
@@ -118,8 +139,9 @@ impl Analyzer {
                 MethodInfo {
                     source_id: SourceId::root(),
                     source_context_id: SourceContextId::root(),
-                    receiver_type: receiver.type_name.clone(),
+                    receiver_type: receiver_name.to_owned(),
                     receiver_name: receiver.name.clone(),
+                    receiver_binding: Some(receiver_binding),
                     params,
                     body: method.body.clone(),
                     span: statement.span,
@@ -139,13 +161,11 @@ impl Analyzer {
     ) -> Option<Option<PineType>> {
         let receiver_symbol = self.scope.resolve(receiver_name)?;
         let receiver = MethodCallReceiver {
-            type_name: self
-                .symbol_user_types
-                .get(&receiver_symbol.id)
-                .cloned()
-                .or_else(|| {
-                    (receiver_symbol.pine_type.kind == ValueKind::Color).then(|| "color".to_owned())
-                })?,
+            type_name: self.named_method_receiver_key(
+                receiver_name,
+                span,
+                receiver_symbol.pine_type,
+            )?,
             pine_type: receiver_symbol.pine_type,
             span,
         };
@@ -246,19 +266,52 @@ impl Analyzer {
             span: method.span,
         });
         self.scope.push_scope();
+        let receiver_type = method
+            .receiver_binding
+            .as_ref()
+            .map_or(receiver.pine_type, |binding| {
+                binding.bound_type(receiver.pine_type)
+            });
+        if let Some(binding) = &method.receiver_binding
+            && !can_assign(binding.pine_type, receiver.pine_type)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_METHOD_ARG_TYPE",
+                format!(
+                    "cannot pass {} to method receiver `{}` of type {}",
+                    pine_type_name(receiver.pine_type),
+                    method.receiver_name,
+                    pine_type_name(binding.pine_type)
+                ),
+                receiver.span,
+            ));
+        }
         let receiver_symbol =
-            self.define_local_symbol(&method.receiver_name, receiver.pine_type, None, false);
+            self.define_local_symbol(&method.receiver_name, receiver_type, None, false);
         if receiver.pine_type.kind == ValueKind::UserType {
             self.mark_symbol_user_type(receiver_symbol, method.receiver_type.clone());
         }
+        if receiver_type.kind == ValueKind::UserTypeArray
+            && let Some(name) = method
+                .receiver_binding
+                .as_ref()
+                .and_then(|b| b.user_type_name.clone())
+        {
+            self.mark_symbol_user_type_array(receiver_symbol, name);
+        }
 
+        if let Some(info) = method.receiver_binding.as_ref().and_then(|b| b.map_type) {
+            self.mark_symbol_map(receiver_symbol, info);
+        }
         let mut param_symbols = std::collections::HashSet::from([receiver_symbol.id]);
         let mut resolved_arg_types = vec![None; method.params.len()];
         let mut resolved_arg_user_types = vec![None; method.params.len()];
         let mut resolved_arg_user_type_arrays = vec![None; method.params.len()];
+        let mut resolved_arg_map_infos = vec![None; method.params.len()];
         let mut resolved_arg_const_switch_keys = vec![None; method.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
+            resolved_arg_map_infos[param_index] = self.map_type_of_expr(&args[arg_index].value);
             resolved_arg_user_types[param_index] = args
                 .get(arg_index)
                 .and_then(|arg| self.user_type_name_of_expr(&arg.value));
@@ -270,29 +323,52 @@ impl Analyzer {
                 .and_then(|arg| self.known_const_switch_key(&arg.value));
         }
         let mut param_const_switch_keys = std::collections::HashMap::new();
-        for (param, (((arg_type, arg_user_type), arg_user_type_array), arg_const_switch_key)) in
-            method.params.iter().zip(
-                resolved_arg_types
-                    .into_iter()
-                    .zip(resolved_arg_user_types)
-                    .zip(resolved_arg_user_type_arrays)
-                    .zip(resolved_arg_const_switch_keys),
-            )
-        {
+        for (
+            param,
+            (
+                (((arg_type, arg_user_type), arg_user_type_array), arg_const_switch_key),
+                arg_map_info,
+            ),
+        ) in method.params.iter().zip(
+            resolved_arg_types
+                .into_iter()
+                .zip(resolved_arg_user_types)
+                .zip(resolved_arg_user_type_arrays)
+                .zip(resolved_arg_const_switch_keys)
+                .zip(resolved_arg_map_infos),
+        ) {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
-            let symbol = self.define_local_symbol(&param.name, arg_type, None, false);
+            let symbol =
+                self.define_local_symbol(&param.name, param.bound_type(arg_type), None, false);
             param_symbols.insert(symbol.id);
             if let Some(key) = arg_const_switch_key.as_ref() {
                 self.record_symbol_const_switch_key(symbol, key);
             }
-            if param.pine_type != UNKNOWN && !can_assign(param.pine_type, arg_type) {
+            if param.pine_type != UNKNOWN
+                && !param.binding.as_ref().map_or_else(
+                    || can_assign(param.pine_type, arg_type),
+                    |b| b.accepts_argument(arg_type, arg_map_info),
+                )
+            {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_ARG_TYPE",
                     format!(
                         "cannot pass {} to method parameter `{}` of type {}",
                         pine_type_name(arg_type),
                         param.name,
-                        value_kind_name(param.pine_type.kind)
+                        if param
+                            .binding
+                            .as_ref()
+                            .is_some_and(|binding| binding.explicit_series
+                                || binding.explicit_simple
+                                || (binding.enforce_qualifier
+                                    && binding.pine_type.qualifier == Qualifier::Simple)
+                                || binding.pine_type.qualifier == Qualifier::Const)
+                        {
+                            pine_type_name(param.pine_type)
+                        } else {
+                            value_kind_name(param.pine_type.kind).to_owned()
+                        }
                     ),
                     receiver.span,
                 ));
@@ -331,6 +407,14 @@ impl Analyzer {
             }
             if let Some(type_name) = arg_user_type_array {
                 self.mark_symbol_user_type_array(symbol, type_name);
+            }
+            if let Some(info) = param
+                .binding
+                .as_ref()
+                .and_then(|b| b.map_type)
+                .or(arg_map_info)
+            {
+                self.mark_symbol_map(symbol, info);
             }
             if let Some(key) = arg_const_switch_key {
                 param_const_switch_keys.insert(param.name.clone(), key);
@@ -561,71 +645,5 @@ impl Analyzer {
             &args[1..],
             &arg_types[1..],
         )
-    }
-
-    fn method_param_type(&mut self, name: &str, span: Span) -> Option<(PineType, Option<String>)> {
-        let kind = match name {
-            _ if name.starts_with("array<") && name.ends_with('>') => {
-                let element_type = &name["array<".len()..name.len() - 1];
-                if let Some(kind) = array_kind_from_element_type_name(element_type) {
-                    return Some((PineType::new(Qualifier::Series, kind), None));
-                } else if matches!(
-                    classify_user_type_array_element_names(
-                        &self.user_types,
-                        &[element_type.to_owned()]
-                    ),
-                    Some(UserTypeArrayElementInference::SameLocal(_))
-                ) || self
-                    .imported_user_types
-                    .get(element_type)
-                    .is_some_and(|_| self.imported_user_type_array_is_supported(element_type))
-                {
-                    return Some((
-                        PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
-                        Some(element_type.to_owned()),
-                    ));
-                } else {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_METHOD_PARAM",
-                        format!("unsupported or unknown method parameter type `{name}`"),
-                        span,
-                    ));
-                    return None;
-                }
-            }
-            "int" => ValueKind::Int,
-            "float" => ValueKind::Float,
-            "bool" => ValueKind::Bool,
-            "string" => ValueKind::String,
-            "color" => ValueKind::Color,
-            "label" => ValueKind::Label,
-            "line" => ValueKind::Line,
-            "linefill" => ValueKind::LineFill,
-            "polyline" => ValueKind::Polyline,
-            "box" => ValueKind::Box,
-            "table" => ValueKind::Table,
-            "chart.point" => ValueKind::ChartPoint,
-            _ if self.user_types.contains_key(name) => {
-                return Some((
-                    PineType::new(Qualifier::Series, ValueKind::UserType),
-                    Some(name.to_owned()),
-                ));
-            }
-            _ if self.imported_user_types.contains_key(name) => {
-                return Some((
-                    PineType::new(Qualifier::Series, ValueKind::UserType),
-                    Some(name.to_owned()),
-                ));
-            }
-            _ => {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_METHOD_PARAM",
-                    format!("unsupported or unknown method parameter type `{name}`"),
-                    span,
-                ));
-                return None;
-            }
-        };
-        Some((PineType::new(Qualifier::Series, kind), None))
     }
 }

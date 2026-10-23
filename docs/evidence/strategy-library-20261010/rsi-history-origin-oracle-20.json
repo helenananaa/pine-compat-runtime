@@ -1,0 +1,39 @@
+{
+  "status": "same_failure_date_confirmed",
+  "source_sha256": "6ec508cf269852b7d819c1fdcc78b9ecd1d63385c1fe00f401c367969a966d29",
+  "source_unchanged": true,
+  "tested_cli_sha256": "85a46055f3753eb6a6311563752209eb09b60a4de682ae579b559daca2101b9e",
+  "bars_sha256": "bd0604abeb6ed2411b9c8f7c54a58ff170ef484f1b366b0350cb1937c6a95c81",
+  "chart_currency": "USDT",
+  "explicit_account_currency": null,
+  "native_history_first_ms": 1502928000000,
+  "local_history_first_ms": 1506816000000,
+  "native_failure_bar": 995,
+  "local_failure_bar": 950,
+  "native_failure_time_ms": 1588896000000,
+  "local_failure_time_ms": 1588896000000,
+  "local_error": "runtime failed: `strategy.entry` invalid `qty` value (NaN) on bar 950: expected a positive number no greater than 1000000000000\n",
+  "official_v4_default_account_currency": "USDT",
+  "default_currency_implemented": true,
+  "scope": "Same stop date is established. Index difference is 45 omitted early daily bars; full ledger/equity numeric parity and equivalent warmup data remain unqualified. No FX input is needed for this unchanged default-currency source on USDT chart.",
+  "rsi-history-origin-oracle-20": {
+    "pine": {
+      "path": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\rsi-history-origin-oracle-20.pine",
+      "sha256": "84dacf9253419d706504568974abd035c179bca9aa9c9c081a4b94c03e53fddb"
+    },
+    "png": {
+      "path": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\rsi-history-origin-oracle-20.png",
+      "sha256": "3a446fd9c2eb26e7f613cf0e5d16193795dfee948d1c446075d60efad6c7050c"
+    }
+  },
+  "default-currency-v4-oracle-20": {
+    "pine": {
+      "path": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\default-currency-v4-oracle-20.pine",
+      "sha256": "3d7c6b06a56848bc10924f13be50f81897a0e6657941c6d0f21d09ea6ed0e594"
+    },
+    "png": {
+      "path": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\default-currency-v4-oracle-20.png",
+      "sha256": "6183d2ee7ab5f7291707d80ff3a969d148fe2e00b459273f73f24e5c1663bffc"
+    }
+  }
+}

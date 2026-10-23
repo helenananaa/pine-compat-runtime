@@ -1,0 +1,10 @@
+//@version=5
+indicator("V5 transparency modern oracle 23",precision=0)
+t=input.int(40)
+bgcolor(color.green,transp=t,force_overlay=true)
+plotshape(true,color=color.blue,transp=30,display=display.all,force_overlay=true,title="shape")
+plotchar(true,color=color.red,transp=20,force_overlay=true,title="char")
+plotarrow(1,colorup=color.blue,colordown=color.red,transp=10,force_overlay=true,title="arrow")
+p=plot(1,color=color.blue,transp=50,force_overlay=true,title="line")
+q=plot(2,force_overlay=true,title="line2")
+fill(p,q,color=color.green,transp=60,title="fill")

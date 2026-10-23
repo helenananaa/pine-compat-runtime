@@ -1,0 +1,37 @@
+{
+  "name": "point-history-fixture-control-v5-guarded-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-history-fixture-control-v5-guarded-41.pine",
+  "source_sha256": "a5094e0060569fa5f1d092418e7c855969985452f01e546c204cde3dc8af23ca",
+  "parent_fixture": "E:\\projects\\pine-interpreter\\tests\\fixtures\\runtime\\chart_point_history.pine",
+  "parent_fixture_sha256": "b2e162c1434ad1071bf4824c9c98744d2021578daa2d50f6c75b9300e69ce82f",
+  "qualification_scope": "history_fixture_suffix_relations",
+  "native_marker_suffix": [
+    1,
+    1,
+    1
+  ],
+  "transforms": "Version/title selection; bounded cyclic index/price inputs; append three non-mutating identity relation plots. Original fixture bytes unchanged. Guard appended first-bar point dereference; initial research error retained separately.",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0,
+    0,
+    0,
+    11,
+    702,
+    702,
+    1,
+    1,
+    1
+  ],
+  "native_row": "235 row point-history-fixture-control-v5-guarded-41 Plot 0.00 Plot 0.00 Plot 0.00 Plot 11.00 Plot 702.00 Plot 702.00 Plot 1.00 Plot 1.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "52dd3f8205e8f340e9222a9b38bfacb334ce8ed625a2458b7a018eb0214d4a17",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-history-fixture-control-v5-guarded-41.native.ax.txt",
+  "accessibility_sha256": "b9fa0cf534c6c04ae3c665f5f8b7295929f48ccdf22c21a591f58d9aac24dbea",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-history-fixture-control-v5-guarded-41.native.png",
+  "screenshot_sha256": "8ecfd16cc35d031a9b59ee4db1c3196ad0b5b917b53930d4ed2b4538c83ba631",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

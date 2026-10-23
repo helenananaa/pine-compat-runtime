@@ -1,0 +1,17 @@
+//@version=6
+indicator("Virtual session oracle 20",overlay=false)
+f() =>
+    [dayofmonth,na(time("1","1500-1600","America/New_York"))?999:time("1","1500-1600","America/New_York")-time,na(time_close("1","1500-1600","America/New_York"))?999:time_close("1","1500-1600","America/New_York")-time,time("1","0930-0945","America/New_York",timeframe_bars_back=-1)-time,time_close("1","0930-0945","America/New_York",timeframe_bars_back=-1)-time,time("1","0930-0945","America/New_York",timeframe_bars_back=16)-time,time("1","0930-0945","America/New_York",timeframe_bars_back=-16)-time,time("1","1500-1600","America/New_York",timeframe_bars_back=-1)-time,time_close("1","1500-1600","America/New_York",timeframe_bars_back=-1)-time,time("1","24x7","America/New_York")-time,time_close("1","24x7","America/New_York")-time,time("1","0930-0945:23456","America/New_York",timeframe_bars_back=-16)-time]
+[a,b,c,d,e,f1,g,h,i,j,k,l]=request.security("NASDAQ:AAPL","D",f())
+plot(a,title="day")
+plot(b,title="afternoonOpenZero")
+plot(c,title="afternoonCloseZero")
+plot(d,title="morningFuture1Open")
+plot(e,title="morningFuture1Close")
+plot(f1,title="morningBack16")
+plot(g,title="morningFuture16")
+plot(h,title="afternoonFuture1Open")
+plot(i,title="afternoonFuture1Close")
+plot(j,title="allDayOpen")
+plot(k,title="allDayClose")
+plot(l,title="weekdayFuture16")

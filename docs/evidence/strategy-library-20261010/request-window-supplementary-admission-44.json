@@ -1,0 +1,55 @@
+{
+  "scope": "Same identifier sources observed first on the minute chart, then on daily chart for exact local dataset parity. The minute observations are retained verbatim and excluded from passing window control totals.",
+  "records": [
+    {
+      "name": "window-simple-identifier-v5-44",
+      "version": 5,
+      "scenario": "simple-identifier",
+      "source": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v5-44.pine",
+      "source_sha256": "74ee7b9b98e1aa38d38ab02ead4bfa78f9dfd7d5d0b93f20d34cb03b74c8f2f6",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        29497,
+        2,
+        29498
+      ],
+      "native_row": "228 row window-simple-identifier-v5-44 Plot 29,497.00 Plot 2.00 Plot 29,498.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "74ee7b9b98e1aa38d38ab02ead4bfa78f9dfd7d5d0b93f20d34cb03b74c8f2f6",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v5-44.native.ax.txt",
+      "accessibility_sha256": "4a1cabe96500451556be1f3b6a976590eea0634cfdf3d2ddebb9c510b7352f5e",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v5-44.native.png",
+      "screenshot_sha256": "b00161c0e84f33fd59a12763ac23e4bffe92cb5ac4bd28162926b1f788a4d1bf",
+      "chart_ui_context": "166 image Chart for BINANCE:BTCUSDT, 1 minute",
+      "scope": "Controlled initial complete-dataset context windows and explicit simple declaration semantics. Original source bytes retained. Flat-price controls do not claim original strategy, exchange-close or complete live-update equivalence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v5-44.capture.json",
+      "raw_capture_sha256": "aabdf0508386571a75a26249728bf5b57879f4dcc6c0629a6a73f7eccb597130"
+    },
+    {
+      "name": "window-simple-identifier-v6-44",
+      "version": 6,
+      "scenario": "simple-identifier",
+      "source": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v6-44.pine",
+      "source_sha256": "49a0114f17eb1448dec4201f21dad8f3a0e89e69a164fe9fd463d2d32dbb0c5c",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        29497,
+        2,
+        29498
+      ],
+      "native_row": "228 row window-simple-identifier-v6-44 Plot 29,497.00 Plot 2.00 Plot 29,498.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "49a0114f17eb1448dec4201f21dad8f3a0e89e69a164fe9fd463d2d32dbb0c5c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v6-44.native.ax.txt",
+      "accessibility_sha256": "98f47bbff3ac751cd1f4f04d29a5b849b5be787dfc8d78003b715b830b30d317",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v6-44.native.png",
+      "screenshot_sha256": "12c781ba59aa5fe6d1e1120541f6bd464e92e813cdb7ec754bf21488c4934b1f",
+      "chart_ui_context": "166 image Chart for BINANCE:BTCUSDT, 1 minute",
+      "scope": "Controlled initial complete-dataset context windows and explicit simple declaration semantics. Original source bytes retained. Flat-price controls do not claim original strategy, exchange-close or complete live-update equivalence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-windows-44/window-simple-identifier-v6-44.capture.json",
+      "raw_capture_sha256": "a5f5de8292c0181381556a9d8f3d5766d55c4b5b551075a13f2147bf8520ef14"
+    }
+  ]
+}

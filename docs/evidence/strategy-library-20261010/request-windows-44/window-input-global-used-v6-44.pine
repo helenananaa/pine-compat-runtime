@@ -1,0 +1,10 @@
+//@version=6
+indicator("window-input-global-used-v6-44",dynamic_requests=true)
+enabled=input.bool(true,"input-global-used-44")
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2)
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(enabled?1:0)
+plot(count)

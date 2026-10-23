@@ -1,0 +1,4 @@
+//@version=5
+indicator("point-undefined-read-v5-41")
+chart.point p=na
+plot(p.price)

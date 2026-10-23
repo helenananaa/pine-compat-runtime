@@ -1,0 +1,15 @@
+{
+  "name": "const-selected-if-bool-v5-35",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research35-20261017\\const-selected-if-bool-v5-35.pine",
+  "source_sha256": "06c429e184e11b07e4d929e909e0b1f1cb74b6829a16b800041fec6ce5e4f3cd",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row const-selected-if-bool-v5-35 condition 0 equals false 1 false payload 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "06c429e184e11b07e4d929e909e0b1f1cb74b6829a16b800041fec6ce5e4f3cd",
+  "normalized_source_sha256": "06c429e184e11b07e4d929e909e0b1f1cb74b6829a16b800041fec6ce5e4f3cd",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/const-selected-if-bool-v5-35.native.ax.txt",
+  "accessibility_sha256": "6a3e7cddd1be0efa584dcd3d41cdff15d28dba8a475641d12827b05a339a8d5c",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/const-selected-if-bool-v5-35.native.png",
+  "screenshot_sha256": "6ba1aee0ccf83351506b7f3e4b30a5f1035211f59872894366cbe777f5e3f354"
+}

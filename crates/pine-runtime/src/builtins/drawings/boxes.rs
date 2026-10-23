@@ -11,7 +11,10 @@ impl<'a> HistoricalRuntime<'a> {
             return self.eval_box_new_from_points(args, PineValue::Na);
         }
         let left = self.eval_required_box_arg(args, 0, "left")?;
-        if matches!(left, PineValue::ChartPoint(_)) {
+        if matches!(left, PineValue::ChartPoint(_))
+            || box_call_arg_expr(args, 0, "left")
+                .is_some_and(|arg| arg.pine_type.kind == pine_ir::ValueKind::ChartPoint)
+        {
             return self.eval_box_new_from_points(args, left);
         }
         let top = self.eval_required_box_arg(args, 1, "top")?;
@@ -22,7 +25,10 @@ impl<'a> HistoricalRuntime<'a> {
         let border_width =
             self.eval_box_option_value(args, 5, "border_width", PineValue::Int(1))?;
         let border_style = self.eval_box_option(args, 6, "border_style", "line.style_solid")?;
-        let extend = self.eval_box_option(args, 7, "extend", "extend.none")?;
+        let extend = super::extend::normalize_extend(
+            self.eval_box_option(args, 7, "extend", "n")?,
+            "box.new",
+        )?;
         let xloc = self.eval_box_option(args, 8, "xloc", "xloc.bar_index")?;
         let bg_color =
             self.eval_box_option_value(args, 9, "bgcolor", PineValue::Color(0x2196F3))?;
@@ -78,7 +84,7 @@ impl<'a> HistoricalRuntime<'a> {
         let border_width =
             self.eval_box_option_value(args, 3, "border_width", PineValue::Int(1))?;
         let border_style = self.eval_box_option(args, 4, "border_style", "line.style_solid")?;
-        let extend = self.eval_box_option(args, 5, "extend", "extend.none")?;
+        let extend = self.eval_box_option(args, 5, "extend", "n")?;
         let xloc = self.eval_box_option(args, 6, "xloc", "xloc.bar_index")?;
         let bg_color =
             self.eval_box_option_value(args, 7, "bgcolor", PineValue::Color(0x2196F3))?;
@@ -95,6 +101,9 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_box_option_value(args, 15, "force_overlay", PineValue::Bool(false))?;
         let text_formatting =
             self.eval_box_text_formatting_option_value(args, 16, "text_formatting")?;
+        crate::builtins::chart_points::require_defined_point(&top_left)?;
+        crate::builtins::chart_points::require_defined_point(&bottom_right)?;
+        let extend = super::extend::normalize_extend(extend, "box.new")?;
         let Some((left, top)) = box_point_coordinates(top_left, &xloc) else {
             return Ok(PineValue::Na);
         };
@@ -224,6 +233,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_box_id_arg(args)?;
         let point = self.eval_required_box_arg(args, 1, "point")?;
+        crate::builtins::chart_points::require_defined_point(&point)?;
         self.mutate_box(id, |snapshot| {
             if let Some((x, y)) = box_point_coordinates(point, &snapshot.xloc) {
                 snapshot.left = x;
@@ -251,6 +261,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_box_id_arg(args)?;
         let point = self.eval_required_box_arg(args, 1, "point")?;
+        crate::builtins::chart_points::require_defined_point(&point)?;
         self.mutate_box(id, |snapshot| {
             if let Some((x, y)) = box_point_coordinates(point, &snapshot.xloc) {
                 snapshot.right = x;
@@ -309,6 +320,10 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_box_id_arg(args)?;
         let extend = self.eval_required_box_arg(args, 1, "extend")?;
+        if id.is_none() {
+            return Ok(PineValue::Void);
+        }
+        let extend = super::extend::normalize_extend(extend, "box.set_extend")?;
         self.mutate_box(id, |snapshot| {
             snapshot.extend = extend;
         })
@@ -569,7 +584,8 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("box call missing {name} argument"),
             });
         };
-        self.eval_expr(arg)
+        let value = self.eval_expr(arg)?;
+        self.materialize_chart_point(value)
     }
 
     fn eval_box_text_formatting_arg(

@@ -1,0 +1,26 @@
+{
+  "name": "array-transient-alias-v6-42",
+  "version": 6,
+  "scenario": "array-transient-alias",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-transient-alias-v6-42.pine",
+  "source_sha256": "7ff98ffc0d4d6a3955125e4114c391f06bf57657eef5b0831a51fb73955eb31c",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    3422,
+    3422
+  ],
+  "native_marker_prefix": [
+    1
+  ],
+  "native_row": "241 row array-transient-alias-v6-42 Plot 1.00 Plot 3,422.00 Plot 3,422.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "fb31901d192e2bf6a8a605a6f640fad7c9c3566a093d8ae085f42c00c6847644",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-transient-alias-v6-42.native.ax.txt",
+  "accessibility_sha256": "545ee86f2a6fdf54fc2a24e588b1686be684b1eae0d98081b745c72f4043254f",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-transient-alias-v6-42.native.png",
+  "screenshot_sha256": "72be445993a063f75fb401de63594da540f6d2d7042a87a7be6f031c8330413d",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

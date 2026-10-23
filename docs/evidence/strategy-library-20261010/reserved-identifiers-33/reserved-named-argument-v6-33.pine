@@ -1,0 +1,4 @@
+//@version=6
+indicator("Reserved named-argument-v6 probe33",precision=0)
+var label myLabel=label.new(bar_index,close,text="text")
+plot(label.get_text(myLabel)=="text"?1:0)

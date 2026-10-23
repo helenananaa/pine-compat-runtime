@@ -1,0 +1,6 @@
+//@version=6
+indicator("body-boundary-method-wrong-value-v6-46")
+method wrong(array<float> self)=>
+    self.push("bad")
+    self.size()
+plot(1)

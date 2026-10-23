@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported array join table")
 values = array.new_table()
-text = array.join(values)
+note = array.join(values)
 plot(close)

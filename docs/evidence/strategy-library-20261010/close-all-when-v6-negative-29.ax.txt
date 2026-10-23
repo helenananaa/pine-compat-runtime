@@ -1,0 +1,305 @@
+Browser tab: 8, Title: "BTCUSDT 81,963.10 ▼ −0.34% 裸K", URL: "https://www.tradingview.com/chart/wf5lRGkJ/".
+0 AXWebArea BTCUSDT 81,963.10 ▼ −0.34% 裸K, URL: tradingview.com/chart/wf5lRGkJ/
+	1 container
+		2 container
+			3 pop up button Logged in as lingeyon Active layout: 裸K
+			4 text 11
+			5 toolbar
+				6 container
+					7 button BTCUSDT, Help: Symbol search, ID: header-toolbar-symbol-search
+					8 button Description: Switch data type, ID: header-toolbar-switch-data-type
+					9 pop up button Description: Compare symbols, ID: header-toolbar-compare
+					10 container header-toolbar-intervals
+						11 radio button Description: 1 minute, Value: 0
+							12 container
+								13 text 1 m
+						14 radio button Description: 3 minutes, Value: 0
+							15 container
+								16 text 3 m
+						17 radio button Description: 5 minutes, Value: 0
+							18 container
+								19 text 5 m
+						20 radio button Description: 10 minutes, Value: 0
+							21 container
+								22 text 10 m
+						23 radio button Description: 15 minutes, Value: 0
+							24 container
+								25 text 15 m
+						26 radio button Description: 30 minutes, Value: 0
+							27 container
+								28 text 30 m
+						29 radio button Description: 45 minutes, Value: 0
+							30 container
+								31 text 45 m
+						32 radio button Description: 90 minutes, Value: 0
+							33 container
+								34 text 90 m
+						35 radio button Description: 1 hour, Value: 0
+							36 container
+								37 text 1 h
+						38 radio button Description: 2 hours, Value: 0
+							39 container
+								40 text 2 h
+						41 radio button Description: 4 hours, Value: 0
+							42 container
+								43 text 4 h
+						44 radio button Description: 6 hours, Value: 0
+							45 container
+								46 text 6 h
+						47 radio button Description: 8 hours, Value: 0
+							48 container
+								49 text 8 h
+						50 radio button Description: 12 hours, Value: 0
+							51 container
+								52 text 12 h
+						53 radio button Description: 1 day, Value: 0
+							54 text D
+						55 radio button Description: 1 week, Value: 0
+							56 text W
+						57 radio button Description: 1 month, Value: 1
+							58 text M
+						59 pop up button Chart interval
+					60 pop up button Candles
+					61 container header-toolbar-indicators
+						62 button Indicators, metrics, and strategies
+						63 pop up button Favorite indicators
+					64 pop up button Indicator templates
+					65 button Description: Create alert, ID: header-toolbar-alerts
+					66 checkbox Description: Bar replay, Value: 0, ID: header-toolbar-replay
+					67 container header-toolbar-undo-redo
+						68 button Undo update 7M boundary oracle 20260923 script
+					69 pop up button Description: Layout setup, ID: header-toolbar-layouts
+					70 container header-toolbar-save-load
+						71 button Save all charts for all symbols and intervals on your layout
+							72 text 裸K
+							73 text Save
+						74 pop up button Manage layouts
+					75 button Description: Quick search, ID: header-toolbar-quick-search
+					76 button Description: Settings, ID: header-toolbar-properties
+					77 button Description: Fullscreen mode, ID: header-toolbar-fullscreen
+					78 pop up button Take a snapshot
+				79 pop up button Share your idea with the trade community
+				80 container
+					81 button Trade
+						82 text Trade
+			83 toolbar drawing-toolbar
+				84 container
+					85 container
+						86 button Cross
+						87 checkbox Description: Cursors, Value: 1
+					88 container
+						89 button Trendline
+						90 checkbox Description: Trend tools, Value: 0
+					91 container
+						92 button Fib retracement
+						93 checkbox Description: Gann and Fibonacci tools, Value: 0
+					94 container
+						95 button XABCD pattern
+						96 checkbox Description: Patterns, Value: 0
+					97 container
+						98 button Long position
+						99 checkbox Description: Forecasting and measurement tools, Value: 0
+					100 container
+						101 button Brush
+						102 checkbox Description: Geometric shapes, Value: 0
+					103 container
+						104 button Text
+						105 checkbox Description: Annotation tools, Value: 0
+					106 container
+						107 button Icon
+						108 checkbox Description: Icons, Value: 0
+					109 button Measure
+					110 button Zoom in
+					111 container
+						112 checkbox Description: Magnet mode snaps drawings placed near price bars to the closest OHLC value, Value: 0
+						113 checkbox Description: Magnets, Value: 0
+					114 checkbox Description: Keep drawing, Value: 0
+					115 container
+						116 checkbox Description: Lock drawings and indicators, Value: 0
+						117 checkbox Description: Lock options, Value: 0
+					118 container
+						119 checkbox Description: Hide all drawings, Value: 0
+						120 checkbox Description: Hide options, Value: 0
+					121 container
+						122 checkbox Description: New drawings will not be synced, Value: 0
+						123 checkbox Description: Sync drawings options, Value: 0
+					124 container
+						125 button Remove objects
+						126 button Remove options
+			127 container Chart #1
+				128 container
+					129 toolbar
+						130 container Change symbol
+							131 container
+								132 image
+								133 text B
+							134 button Change symbol
+						135 container
+							136 button Flag symbol
+							137 button More
+								138 image
+						139 button Market open
+						140 container
+							141 text C 81,963.10 −1,660.50 (−1.99%) Vol 232.85 K
+					142 container
+						143 text 81,963.10 SELL
+						144 text 0.01
+						145 text 81,963.11 BUY
+					146 container
+						147 button Hide indicator legend
+						148 toolbar
+							149 container
+								150 text CA_-_RSI_Bol_Strat_1.1
+								151 text 6
+								152 text 200
+							153 container
+								154 button Hide
+									155 image
+								156 button Settings
+									157 image
+								158 button Remove
+									159 image
+								160 button More
+									161 image
+					162 image Chart for BINANCE:BTCUSDT, 1 month
+				563 toolbar
+					564 text 7M boundary oracle 20260923
+					565 container
+						566 button Hide
+							567 image
+						568 button Settings
+							569 image
+						570 button Remove
+							571 image
+						572 button More
+							573 image
+					579 button Compilation error: CE10120 · Active strategy · Opened in Pine Editor
+			175 toolbar
+				176 pop up button Date Range
+				177 button Timezone
+					178 text 21:39:55 UTC+8
+			179 container
+				180 toolbar
+					181 checkbox Description: Watchlist, details, and news, Value: 0
+					182 checkbox Description: Alerts, Value: 0
+					183 checkbox Description: Object tree and data window, Value: 1
+					184 checkbox Description: AI Copilot, Value: 0
+					185 checkbox Description: Screeners, Value: 0
+					186 checkbox Description: Pine Editor, Value: 1
+					187 checkbox Description: Calendars, Value: 0
+					188 checkbox Description: Community, Value: 0
+					189 checkbox Description: Notifications, Value: 0
+					190 checkbox Description: Chats, Value: 0
+					191 pop up button Products
+					192 checkbox Description: Help Center, Value: 0
+				193 container
+					194 tab group
+						195 tab (selectable, settable, boolean) Object tree, Value: 0, ID: object_tree
+						196 tab (selected, settable, boolean) Data window, Value: 1, ID: data-window
+					197 container
+						198 table
+							199 container
+								200 text Date
+								201 text Thu 01 Oct '26
+							202 row BTCUSDT · 1M · Binance Open 83,623.59 High 87,220.00 Low 79,800.00 Close 81,963.10 Change −1,660.50 (−1.99%) Vol 232.85 K Last day change −282.83 (−0.34%)
+								203 text BTCUSDT · 1M · Binance
+								204 toolbar
+									205 button Hide data
+								206 text Open
+								207 text 83,623.59
+								208 text High
+								209 text 87,220.00
+								210 text Low
+								211 text 79,800.00
+								212 text Close
+								213 text 81,963.10
+								214 text Change
+								215 text −1,660.50 (−1.99%)
+								216 text Vol
+								217 text 232.85 K
+								218 text Last day change
+								219 text −282.83 (−0.34%)
+							220 row CA_-_RSI_Bol_Strat_1.1 (6, 200)
+								221 text CA_-_RSI_Bol_Strat_1.1 (6, 200)
+								222 toolbar
+									223 button Hide data
+							224 row 7M boundary oracle 20260923
+								225 text 7M boundary oracle 20260923
+								226 toolbar
+									227 button Hide data
+			228 toolbar footer-chart-panel
+				229 container
+					230 button Close strategy report
+						231 text 7M boundary oracle 20260923
+					232 pop up button (collapsed) Description: Open context menu, ID: :ru:, Secondary Actions: Expand
+				233 button Collapse panel
+				234 button Maximize panel
+			235 container bottom-area
+				308 container
+					309 tab group report-tabs
+						310 tab (selectable, settable, boolean) Value: 0, ID: Strategy report
+						311 tab (selected, settable, boolean) Value: 1, ID: List of Trades
+					312 container
+						313 button (collapsed) Description: Aug 1, 2017 — Oct 1, 2026, Secondary Actions: Expand
+					314 container
+						315 button Settings
+					316 container
+						317 button Add alert
+					318 text Trades are required to see strategy report
+					319 text This strategy hasn't made any trades with current settings. Try changing the symbol, timeframe, initial capital, or order size.
+					574 container
+						575 text Caution!
+						576 container
+							577 text The "strategy.close_all" function does not have an argument with the name "when"
+						578 button Close
+			253 container Trading panel
+		254 container
+			255 button Move split-view to overlay
+			256 text Pine Editor
+			257 button Collapse panel
+			258 button Fullscreen mode
+			259 button Close
+			260 container pine-editor-dialog
+				261 pop up button (collapsed) Untitled script, ID: :r14:, Secondary Actions: Expand
+					262 heading Untitled script, Value: 2
+						263 text Untitled script
+				264 button Save script
+				265 button Publish script, Help: Share your script with community
+				266 container
+					267 pop up button (collapsed) Description: More, ID: :r18:, Secondary Actions: Expand
+				268 container
+					269 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+strategy("Close all named when guard v6 29")
+strategy.close_all(when=false)
+
+					580 container
+						581 container
+							582 text  ∙ 1 of 1 problem
+						583 toolbar
+							584 button Go to Next Problem (Error, Warning, Info) (Alt+F8)
+								585 text 
+							586 button Go to Previous Problem (Error, Warning, Info) (Shift+Alt+F8)
+								587 text 
+							588 button Close
+								589 text 
+						590 container strategy.close_all(when=false), Error at 3:20. 
+							591 container
+								592 container strategy.close_all(when=false), Error at 3:20. 
+									593 container
+										594 text The "strategy.close_all" function does not have an argument with the name "when" (CE10120)
+				284 container
+					285 button
+					286 button Line 1, Col 1
+						287 text Line
+						288 text 1
+						289 text , 
+						290 text Col
+						291 text 1
+					292 link Description: Pine Script® v6, Help: Open Pine Reference, Value: tradingview.com/pine-script-reference/v6
+		595 container common-tooltip-wrapper
+			596 container
+				597 text Update on chart Ctrl + ↵
+
+The focused UI element is 269 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+strategy("Close all named when guard v6 29")
+strategy.close_all(when=false)

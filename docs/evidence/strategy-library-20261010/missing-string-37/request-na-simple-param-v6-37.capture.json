@@ -1,0 +1,19 @@
+{
+  "name": "request-na-simple-param-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-simple-param-v6-37.pine",
+  "source_sha256": "2e0258799c803e97ef554350f23522688877399fa41b2443e867af8845d7ff22",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "240 row request-na-simple-param-v6-37 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2e0258799c803e97ef554350f23522688877399fa41b2443e867af8845d7ff22",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-simple-param-v6-37.native.ax.txt",
+  "accessibility_sha256": "723873384bcce8d2f7fc0794ea9cac3aecfd0c524dd53ce04ed71694531c9d26",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-simple-param-v6-37.native.png",
+  "screenshot_sha256": "0c2490aed6315b205e1d1019981cb2d4698d9181a4eded9b8830a286c2bccd19",
+  "scope": "Follow-up native v6 simple-param admission; str.length(typed string na) is not na",
+  "qualification_scope": "candidate_bounded_control"
+}

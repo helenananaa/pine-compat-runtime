@@ -1,0 +1,3 @@
+//@version=5
+strategy("Modern direction condition guard 27")
+plot(strategy.long ? 1 : 0)

@@ -1,0 +1,9 @@
+//@version=1
+study("Codex duplicate input v1 oracle",overlay=true)
+a=input(2,defval=1,title="A")
+b=input(2,defval=3,title="B")
+c=input(1,title="First title",title="Second title")
+plot(a,title="A value")
+plot(b,title="B value")
+plot(c,title="C value")
+plot(cos(0.5),title="cos")

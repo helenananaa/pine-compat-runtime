@@ -1,0 +1,17 @@
+{
+  "name": "parameter-method-const-receiver-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-receiver-v6-35.pine",
+  "source_sha256": "cb89d5b8dda73290f72891f5d52fc5877b1d5c59495b1985917ea477b0ffbb63",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2
+  ],
+  "native_row": "238 row parameter-method-const-receiver-v6-35 receiver 2",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "cb89d5b8dda73290f72891f5d52fc5877b1d5c59495b1985917ea477b0ffbb63",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-receiver-v6-35.native.ax.txt",
+  "accessibility_sha256": "8206c17eb4cf9b2c8cf7f1027ddec06af63ec8921e6579b0eb370dcf1e6d80ed",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-method-const-receiver-v6-35.native.png",
+  "screenshot_sha256": "a7b076005418acaa4c95bfe2bc7ccd122df689ad098cd43d2a48b23305d39bc3"
+}

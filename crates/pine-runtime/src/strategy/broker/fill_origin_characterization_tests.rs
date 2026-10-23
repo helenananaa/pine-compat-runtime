@@ -88,6 +88,7 @@ fn characterization_same_side_open_applies_transition_cash_once() {
     let snapshot = PositionSnapshot {
         signed_size: broker.position_size,
         avg_price: broker.avg_price,
+        quote_to_account_rate: 1.0,
     };
     let expected = calculate_same_side_addition(
         &snapshot,
@@ -143,6 +144,7 @@ fn characterization_reduce_only_applies_shared_reduction_cash() {
     let snapshot = PositionSnapshot {
         signed_size: broker.position_size,
         avg_price: broker.avg_price,
+        quote_to_account_rate: 1.0,
     };
     let allocations = broker.trade_ledger.allocate_exit_fifo(None, 1.0);
     let expected = calculate_reduce_only(

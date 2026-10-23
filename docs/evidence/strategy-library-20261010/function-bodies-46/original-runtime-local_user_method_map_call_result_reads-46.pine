@@ -1,0 +1,100 @@
+//@version=6
+indicator("Local user-method map call-result reads")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => string_float
+
+method exposeBlock(Anchor self) =>
+    made = string_float.copy()
+    made
+
+method exposeFresh(Anchor self) => map.new<int, string>()
+
+method exposeBoolColor(Anchor self) => bool_color
+
+method exposeColorBool(Anchor self) => color_bool
+
+method exposeIf(Anchor self, bool use_other) =>
+    if use_other
+        string_float_other
+    else
+        string_float.copy()
+
+method exposeNested(Anchor self) => self.exposeBlock()
+
+string_float = map.new<string, float>()
+string_float.put("open", 1.5)
+string_float.put("close", 2.5)
+
+string_float_other = map.new<string, float>()
+string_float_other.put("open", 8.0)
+string_float_other.put("close", 9.0)
+string_float_other.put("merged", 10.0)
+
+bool_color = map.new<bool, color>()
+bool_color.put(true, color.red)
+bool_color_other = map.new<bool, color>()
+bool_color_other.put(false, color.white)
+bool_color_other.put(true, color.red)
+
+color_bool = map.new<color, bool>()
+color_bool.put(color.blue, true)
+color_bool_other = map.new<color, bool>()
+color_bool_other.put(color.red, true)
+color_bool_other.put(color.blue, true)
+
+int_string_other = map.new<int, string>()
+int_string_other.put(1, "one")
+
+anchor = Anchor.new(1)
+copied = anchor.expose().copy()
+copied.put("copy", 9.0)
+
+plot(anchor.expose().size(), "size")
+plot(anchor.expose().get("open"), "get")
+plot(anchor.expose().contains("close") ? 1 : 0, "contains")
+plot(anchor.expose().copy().get("close"), "copy_chain")
+plot(na(string_float.get("copy")) ? 1 : 0, "source_independent")
+plot(copied.get("copy"), "copy_independent")
+plot(anchor.exposeFresh().size(), "fresh")
+plot(anchor.exposeBoolColor().get(true) == color.red ? 1 : 0, "bool_color")
+plot(anchor.exposeColorBool().get(color.blue) ? 1 : 0, "color_bool")
+plot(anchor.exposeBlock().get("close"), "block_return")
+plot(anchor.exposeNested().get("open"), "nested_return")
+plot(anchor.exposeIf(use_other=true).get("open"), "named_control_flow")
+plot(Anchor.expose(anchor).get("open"), "qualified_method")
+plot(Anchor.new(2).expose().get("close"), "constructor_receiver")
+plot(anchor.expose().copy().copy().get("open"), "nested_copy")
+plot(anchor.expose().keys().first() == "open" ? 1 : 0, "keys_first")
+plot(anchor.expose().copy().keys().copy().last() == "close" ? 1 : 0, "keys_copy_last")
+plot(anchor.expose().values().first(), "values_first")
+plot(anchor.expose().copy().values().copy().last(), "values_copy_last")
+
+anchor.expose().put("open", 4.5)
+anchor.expose().put("extra", 6.5)
+anchor.exposeBoolColor().put(false, color.blue)
+anchor.exposeColorBool().put(color.red, false)
+anchor.exposeFresh().put(1, "one")
+plot(string_float.size() == 3 and string_float.get("open") == 4.5 and string_float.get("extra") == 6.5 and string_float.keys().last() == "extra" and bool_color.get(false) == color.blue and not color_bool.get(color.red) ? 1 : 0, "call_result_put_method_alias_replace_insert")
+
+anchor.expose().remove("open")
+anchor.expose().remove("missing")
+anchor.exposeBoolColor().remove(true)
+anchor.exposeColorBool().remove(color.blue)
+anchor.exposeFresh().remove(1)
+plot(string_float.size() == 2 and string_float.keys().first() == "close" and string_float.keys().last() == "extra" and bool_color.size() == 1 and bool_color.contains(false) and color_bool.size() == 1 and color_bool.contains(color.red) ? 1 : 0, "call_result_remove_method_alias_existing_missing_order")
+
+anchor.expose().put_all(string_float_other)
+anchor.exposeBoolColor().put_all(bool_color_other)
+anchor.exposeColorBool().put_all(color_bool_other)
+anchor.expose().put_all(string_float)
+anchor.exposeFresh().put_all(int_string_other)
+plot(string_float.size() == 4 and string_float.keys().get(0) == "close" and string_float.keys().get(1) == "extra" and string_float.keys().get(2) == "open" and string_float.keys().get(3) == "merged" and string_float.get("close") == 9.0 and bool_color.size() == 2 and bool_color.get(false) == color.white and color_bool.size() == 2 and color_bool.get(color.red) ? 1 : 0, "call_result_put_all_method_alias_replace_append_self_order")
+
+anchor.expose().clear()
+anchor.exposeBoolColor().clear()
+anchor.exposeColorBool().clear()
+anchor.exposeFresh().clear()
+plot(string_float.size() == 0 and bool_color.size() == 0 and color_bool.size() == 0 ? 1 : 0, "call_result_clear_method_alias")

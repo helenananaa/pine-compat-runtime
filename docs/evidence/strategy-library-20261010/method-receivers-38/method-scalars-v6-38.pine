@@ -1,0 +1,17 @@
+//@version=6
+indicator("method-scalars-v6-38")
+method plus38(float self, float extra)=>self+extra
+method keep38(int self)=>self
+method flip38(bool self)=>not self
+method append38(string self,string extra)=>self+extra
+method alpha38(color self)=>color.t(self)
+x=10.0
+i=2
+b=true
+s="ab"
+c=color.new(color.red,25)
+plot(x.plus38(2.0))
+plot(i.keep38())
+plot(b.flip38()?1:0)
+plot(str.length(s.append38("c")))
+plot(c.alpha38())

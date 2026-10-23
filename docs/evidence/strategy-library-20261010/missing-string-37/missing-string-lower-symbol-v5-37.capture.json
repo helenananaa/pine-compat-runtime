@@ -1,0 +1,19 @@
+{
+  "name": "missing-string-lower-symbol-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-lower-symbol-v5-37.pine",
+  "source_sha256": "14f222099fcf6b495eba13838cc70d1052cd4baf64f9cef3e48dd09ba8feb93e",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "251 row missing-string-lower-symbol-v5-37 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "14f222099fcf6b495eba13838cc70d1052cd4baf64f9cef3e48dd09ba8feb93e",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-lower-symbol-v5-37.native.ax.txt",
+  "accessibility_sha256": "89eb831204bd73bc899d3f3cbf83172e6d7b1af6c0635f97ca63c90404b425e2",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-lower-symbol-v5-37.native.png",
+  "screenshot_sha256": "cf95c2c587aaa58837b0070bdcc18f13c193e21710c313a06bb994d02db658d4",
+  "scope": "v5 security_lower_tf missing symbol inherits current chart symbol; confirmed previous array has one element",
+  "qualification_scope": "candidate_bounded_control"
+}

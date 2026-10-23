@@ -1,0 +1,11 @@
+//@version=5
+indicator("window-series-before-foreign-v5-44",dynamic_requests=true)
+s=bar_index%2==0?"NASDAQ:AAPL":syminfo.tickerid
+a=request.security(s,timeframe.period,bar_index,calc_bars_count=2)
+b=request.security(syminfo.tickerid,"W",bar_index)
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(b)
+plot(count)

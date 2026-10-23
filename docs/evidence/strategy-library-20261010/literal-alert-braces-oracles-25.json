@@ -1,0 +1,41 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\literal-alert-braces-v4-oracle-25.pine",
+    "source_sha256": "cecdb506a72c49d1e95396b36877e919997d5fabcbf414ba1cbd78da9f169fca",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\literal-alert-braces-v4-oracle-25.png",
+    "screenshot_sha256": "b1f0c9a8340d824852d6f368e115f74568602c49e651860f577d44653afa3bff",
+    "pine_version": 4,
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1
+    ],
+    "captured_date": "2026-10-12",
+    "scope": "Native compile acceptance and executed chart marker only. No native alert delivery or live notification payload qualification."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\literal-alert-braces-v5-oracle-25.pine",
+    "source_sha256": "80d2e4746a6bb85219562ccafe024eea783071c51b25ad68f50ae75ab3787350",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\literal-alert-braces-v5-oracle-25.png",
+    "screenshot_sha256": "38daa9e221c94e870e82eb9c1a71ddfe849511811171d4c683f0b51eb2f84667",
+    "pine_version": 5,
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1
+    ],
+    "captured_date": "2026-10-12",
+    "scope": "Native compile acceptance and executed chart marker only. No native alert delivery or live notification payload qualification."
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\literal-alert-braces-v6-oracle-25.pine",
+    "source_sha256": "47b62dbb91d079f555a07eb41e2b7f6f4e4634936fd1e2ca1a75a070fe798495",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\literal-alert-braces-v6-oracle-25.png",
+    "screenshot_sha256": "12f2b400280669ec093d67bdddf6bb14380e1eea16cf510ed758200673dbf86d",
+    "pine_version": 6,
+    "native_status": "compiled_and_executed",
+    "native_values": [
+      1
+    ],
+    "captured_date": "2026-10-12",
+    "scope": "Native compile acceptance and executed chart marker only. No native alert delivery or live notification payload qualification."
+  }
+]

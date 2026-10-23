@@ -1,7 +1,7 @@
 //@version=6
 indicator("Supported str.length input return qualifier")
 
-text = input.string("ABCDE", "Text")
-length = str.length(text)
+note = input.string("ABCDE", "Text")
+length = str.length(note)
 
 plot(close, show_last=length)

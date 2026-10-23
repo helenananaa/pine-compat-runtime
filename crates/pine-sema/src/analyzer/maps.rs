@@ -176,7 +176,7 @@ impl Analyzer {
 
     fn map_branch_result_info(&self, branch: &[Stmt]) -> MapResultInfo {
         let Some(last) = branch.last() else {
-            return MapResultInfo::Unknown;
+            return MapResultInfo::Na;
         };
         match &last.kind {
             StmtKind::Expr(expr) => self.map_result_info(expr),

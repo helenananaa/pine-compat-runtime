@@ -1,0 +1,6 @@
+//@version=6
+indicator("method-series-body-invalid-v6-38")
+f(simple int x)=>x
+method keep38(series int self)=>f(self)
+x=2
+plot(x.keep38())

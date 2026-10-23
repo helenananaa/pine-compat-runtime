@@ -1,0 +1,24 @@
+//@version=6
+indicator("window-expression-state-current-v6-44",dynamic_requests=true)
+f()=>
+    var n=0
+    n+=1
+    [n,bar_index]
+[a,ai]=request.security(syminfo.tickerid,timeframe.period,f(),calc_bars_count=2)
+[b,bi]=request.security(syminfo.tickerid,timeframe.period,f(),calc_bars_count=100)
+var float first_a=na
+var float second_a=na
+if bar_index==0
+    first_a:=a
+if bar_index==1
+    second_a:=a
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(ai)
+plot(b)
+plot(bi)
+plot(na(first_a)?-1:first_a)
+plot(na(second_a)?-1:second_a)
+plot(count)

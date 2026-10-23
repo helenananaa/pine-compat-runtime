@@ -1,0 +1,13 @@
+//@version=6
+indicator("v6-typed-na-comparison-37",precision=0)
+float x=na
+string s=na
+plot(x==close?1:0)
+plot(close==float(na)?1:0)
+plot(s==string(na)?1:0)
+plot(na(s)?1:0)
+plot(str.length(na))
+plot(na(str.upper(na))?1:0)
+plot(na(str.lower(na))?1:0)
+plot(str.trim(na)==""?1:0)
+plot(na(str.length(na)) and na(str.upper(na)) and na(str.lower(na)) ? 1 : 0)

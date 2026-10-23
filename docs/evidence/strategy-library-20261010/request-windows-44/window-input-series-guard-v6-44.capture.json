@@ -1,0 +1,23 @@
+{
+  "name": "window-input-series-guard-v6-44",
+  "version": 6,
+  "scenario": "input-series-guard",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-input-series-guard-v6-44.pine",
+  "source_sha256": "2d1e14e0277d7bd4c7dd3d97815e9d634cd2cbe9e9ad7ba145e8f910cb1420c0",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    -1,
+    2
+  ],
+  "native_row": "621 row window-input-series-guard-v6-44 Plot 1.00 Plot −1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2d1e14e0277d7bd4c7dd3d97815e9d634cd2cbe9e9ad7ba145e8f910cb1420c0",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-series-guard-v6-44.native.ax.txt",
+  "accessibility_sha256": "1ab8a75496455041e21fa5e13bcbfb08e5bc18628f9b49288517348eb399ffd3",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-input-series-guard-v6-44.native.png",
+  "screenshot_sha256": "0cf1996596d98387e6ca4d4afdf7aac751f58697b0b26cbfd489a2659ebdab60",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

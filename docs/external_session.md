@@ -1,0 +1,68 @@
+# Incremental external evaluation
+
+The Python `Program.external_session(...)` API retains interpreter state between
+strictly forward batches. It uses authoritative account frames supplied by the
+caller and does not run the native broker. This is an unreleased addition to the
+development branch; package metadata remains aligned with main. Identify local
+wheels by source revision or artifact hash rather than package version alone.
+
+```python
+program = pine_compat.compile_script(source)
+session = program.external_session(
+    input_overrides=None, chart_symbol="EXCHANGE:SYMBOL", chart_timeframe="1",
+    request_bars=None,
+)
+result = session.append(new_bars, matching_account_frames)
+assert session.cursor == len(new_bars)
+```
+
+`result` uses the existing `external-broker/1` envelope: protocol, pyramiding,
+intents, and output. Intents and graphics remain cumulative snapshots. Only the
+new batch executes. Base request inputs and input overrides are frozen at
+construction. Explicit `execution_passes` request-data snapshots replace only
+the supplied request streams; chart metadata, calendars and currency rates remain
+bound to the session. Sessions are independently owned, process-local and nonpersistent.
+Create a new session to replay corrections or changed inputs. An append rejected
+by the core or failing during execution poisons the Python session, preventing
+use of partially advanced state. Argument decoding errors raised before entering
+the core leave the session unchanged and may be corrected and retried.
+
+`append(..., execution_passes=groups)` supports the existing fill-recalculation
+contract. Each bar requires matching account feedback; appended timestamps must
+increase strictly. An unconfirmed final pass must be replaced by a fresh replay
+before another bar can append. Empty appends return the current snapshot, even
+for fill-pass sessions, without requiring an empty `execution_passes` argument.
+
+Streaming dataset endpoints are not retrospective prefix replay. A script using
+`barstate.islast`, `last_bar_index`, visible chart bounds, or initial-window
+selection can produce different historical values when the whole dataset is
+replayed with a new endpoint. Hosts preserving full-prefix semantics must detect
+those dependencies and rebase instead of silently switching their meaning.
+`Program.calculation_bars_count` exposes the declared positive initial window (or
+None). It describes the declaration, not an effective window resolved from all
+request contexts. The first batch supplies the complete initially known dataset;
+initial-window selection slices chart bars and account feedback together once.
+Later appends retain that origin. The cursor counts chart bars from successful
+appends, including the initial skipped prefix, while output and intent indices
+count executed bars.
+
+Rust hosts bind an empty feedback vector with `with_external_accounts` (or
+`with_external_accounts_and_passes` for fill passes), then call
+`append_external_bars`. If feedback was already bound for batch execution, consume
+it before appending more. Rust preflight validation failures leave state unchanged;
+execution failures after binding the new feedback poison the runtime.
+
+Validation lives in `python/tests/test_external_session.py`: batch equivalence
+for prefix-stable series/TA/state and authoritative feedback, fill passes,
+independent sessions, correction rejection, and poisoned-session behavior.
+Rust API regressions are in `crates/pine-runtime/tests/external_session.rs`.
+
+On 2026-10-19 the complete Windows `scripts/verify.ps1 -Python python` gate passed
+with Rust 1.97.1, Python 3.12.7 and Node 22.14.0: 7,900 Rust tests, 1,681 tests
+against a freshly built and installed Python wheel, generated WASM/Node execution,
+formatting, Clippy, source structure and host parity checks. Tooling ran 172 tests:
+171 passed and the optional archived Linux 0.3.0rc1 wheel-tag check was skipped
+because that historical artifact is not retained in this worktree. The focused
+external-broker/session Python suite passed all 36 cases before the full gate.
+These are controlled runtime and binding checks, not release or host-deployment
+qualification.

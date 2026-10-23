@@ -1,0 +1,34 @@
+{
+  "name": "constant-bool-selected-input-v5-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-selected-input-v5-32.pine",
+  "source_sha256": "3e9be70e6f997393cccd9c8f5a9ee11358e9772f51ac758489077f85b4cac86a",
+  "native_status": "compiled_and_executed",
+  "native_row": "247 row Selected bool qualifiers v5 probe32 input body condition 0 input body equal false 1 series body condition 0 series body equal false 1 var const branch 1 var branch equal false 0",
+  "cursor_refreshed": true,
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "05813ab81e360f630557a611745962dad6994987aff90ce840254e8cc8048993",
+  "editor_source_sha256": "05813ab81e360f630557a611745962dad6994987aff90ce840254e8cc8048993",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-selected-input-v5-32.native.png",
+  "screenshot_sha256": "3b6263c32d5b732d678ef57d65df0bcf12dbca7d0fb132a11d68f7832312ba38",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-selected-input-v5-32.native.ax.txt",
+  "accessibility_sha256": "2a39face65b09a79eee55d0065867b187aea51774783c528ce14be8b38649a57",
+  "native_values": [
+    0.0,
+    1.0,
+    0.0,
+    1.0,
+    1.0,
+    0.0
+  ],
+  "labels": [
+    "input body condition",
+    "input body equal false",
+    "series body condition",
+    "series body equal false",
+    "var const branch",
+    "var branch equal false"
+  ],
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

@@ -1,0 +1,4 @@
+//@version=5
+indicator("alert-domain-invalid-literal-v5-39")
+alert("probe","invalid")
+plot(1)

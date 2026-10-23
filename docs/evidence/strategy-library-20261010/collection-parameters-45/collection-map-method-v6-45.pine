@@ -1,0 +1,9 @@
+//@version=6
+indicator("collection-map-method-v6-45")
+method bump(map<string,float> v)=>
+    v.put("x",v.get("x")+5)
+    v.get("x")
+values=map.new<string,float>()
+values.put("x",10)
+plot(values.bump())
+plot(values.get("x"))

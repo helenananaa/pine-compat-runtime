@@ -1,0 +1,17 @@
+//@version=4
+strategy("Legacy direction bool 27", precision=0)
+longValue = strategy.long
+shortValue = strategy.short
+f(x) => x
+plot(longValue ? 1 : 0, title="long true")
+plot(shortValue ? 1 : 0, title="short false")
+plot(longValue == true ? 1 : 0, title="long equals true")
+plot(shortValue == false ? 1 : 0, title="short equals false")
+plot(f(strategy.long) ? 1 : 0, title="function bool")
+if bar_index == 0
+    strategy.entry("L", longValue, qty=1)
+if bar_index == 2
+    strategy.close("L", shortValue)
+if bar_index == 3
+    strategy.close("L", longValue)
+plot(strategy.position_size, title="position")

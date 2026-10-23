@@ -1,0 +1,64 @@
+{
+  "name": "original-user_type_array_varip-v6-42",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\original-user_type_array_varip-v6-42.pine",
+  "source_sha256": "4a47a84a1dbdd62c9265ac1e0b451d0acfdbcdf8ccfe77df8e2dd17d435d96b5",
+  "parent_fixture": "tests\\fixtures\\runtime\\user_type_array_varip.pine",
+  "parent_fixture_sha256": "e977c0555a7481e6ee5b2db9167e3aa8f7596a3c86be58e3202c1228427b1a5c",
+  "transforms": "Version selection only; original fixture unchanged.",
+  "plot_titles": [
+    "points_size",
+    "first_x",
+    "last_x",
+    "copied_size",
+    "copy_last_x",
+    "wrapper_points_size",
+    "wrapper_first_x",
+    "wrapper_last_x",
+    "new_wrapper_points_size",
+    "new_wrapper_first_x",
+    "new_wrapper_last_x"
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3372,
+    4285.08,
+    81720.42,
+    3373,
+    81730.42,
+    3373,
+    4385.08,
+    81830.42,
+    3373,
+    4485.08,
+    81930.42
+  ],
+  "native_relations": [
+    [
+      "offset",
+      3,
+      0,
+      1
+    ],
+    [
+      "eq",
+      5,
+      3
+    ],
+    [
+      "eq",
+      8,
+      3
+    ]
+  ],
+  "native_row": "241 row User type array varip points_size 3,372.00 first_x 4,285.08 last_x 81,720.42 copied_size 3,373.00 copy_last_x 81,730.42 wrapper_points_size 3,373.00 wrapper_first_x 4,385.08 wrapper_last_x 81,830.42 new_wrapper_points_size 3,373.00 new_wrapper_first_x 4,485.08 new_wrapper_last_x 81,930.42",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4a47a84a1dbdd62c9265ac1e0b451d0acfdbcdf8ccfe77df8e2dd17d435d96b5",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-user_type_array_varip-v6-42.native.ax.txt",
+  "accessibility_sha256": "ddb7b3e1c6d0f78b1aa4892ebe9f7b6cf13305f0f003636200362b7be05456c9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/original-user_type_array_varip-v6-42.native.png",
+  "screenshot_sha256": "841ef7e9e8e7fa44c382b4a22fd5d0975b62465cb47467de685fd29cb5afc7a6",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-series-simple-guard-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-series-simple-guard-v6-37.pine",
+  "source_sha256": "4bae38b6cef820825e355ca976f29df8aed547f45fdd66dde381a8e1fd77eed8",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of \"series string\" type was used but a \"simple string\" is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4bae38b6cef820825e355ca976f29df8aed547f45fdd66dde381a8e1fd77eed8",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-series-simple-guard-v6-37.native.ax.txt",
+  "accessibility_sha256": "6b202373291f539e9d31f0ed0fa2a1f92e4bce51f07c77448bb0c374e073602e",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-series-simple-guard-v6-37.native.png",
+  "screenshot_sha256": "304f11680ca90ac028f16beb0c8f05074c9d2efc327a61ec16fd1e7c6ddd508d",
+  "scope": "v6 chart-derived reassignment keeps series restrictions on simple string parameters",
+  "qualification_scope": "candidate_bounded_control"
+}

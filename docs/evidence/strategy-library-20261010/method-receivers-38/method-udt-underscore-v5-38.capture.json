@@ -1,0 +1,18 @@
+{
+  "name": "method-udt-underscore-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-underscore-v5-38.pine",
+  "source_sha256": "0bdee9ec67ee103d41a90011596c75316237ac41631f1ea649ab7ba58fc44f70",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "The '<_0>' argument is not used. The first method argument should be used.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e4b4367794c2c7afe4888447b3c30469d720f6266b4cc3f949c269dc50b10ecb",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-underscore-v5-38.native.ax.txt",
+  "accessibility_sha256": "308827f0f9c46b598648cce371b48fcc72de87ee0eb6820a5758d4605f3ffdbc",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-underscore-v5-38.native.png",
+  "screenshot_sha256": "513350bb64d18b6d38d9571eb0841770c7ffd1138c712683b41a1ba5558200b9",
+  "qualification_scope": "unqualified_receiver_use_analysis",
+  "native_values": null,
+  "discovery_record_sha256": "a6b33dd27fbe7b6301b45ba6e6111449ccdae979937edf812a4b8e095a45ab94"
+}

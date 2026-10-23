@@ -1,0 +1,28 @@
+//@version=6
+indicator("Bool function transport probe32",precision=0)
+a=if false
+    true
+direct()=>
+    if false
+        true
+alias()=>a
+localAlias()=>
+    localBool=if false
+        true
+    localBool
+globalCondition()=>a?1:0
+argCondition(x)=>x?1:0
+nested()=>direct()
+logicalReturn()=>a or false
+ternaryReturn()=>true?a:a
+plot(direct()?1:0,title="direct missing")
+plot(alias()?1:0,title="global alias return")
+plot(localAlias()?1:0,title="local alias return")
+plot(globalCondition(),title="global condition")
+plot(argCondition(a),title="argument condition")
+plot(nested()?1:0,title="nested direct")
+plot(logicalReturn()?1:0,title="logical return")
+plot(ternaryReturn()?1:0,title="ternary return")
+plot(direct()==true?1:0,title="direct equal true")
+plot(alias()==false?1:0,title="alias equal false")
+plot(logicalReturn()==true?1:0,title="logical equal true")

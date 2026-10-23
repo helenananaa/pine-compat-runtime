@@ -1,0 +1,23 @@
+{
+  "name": "window-guard-never-v6-44",
+  "version": 6,
+  "scenario": "guard-never",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-guard-never-v6-44.pine",
+  "source_sha256": "4fe4cd990bd9ce8975910bfdb2483f723ffa165b1ca4bb493d92998678cf746b",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    -1,
+    2
+  ],
+  "native_row": "239 row window-guard-never-v6-44 Plot 1.00 Plot −1.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4fe4cd990bd9ce8975910bfdb2483f723ffa165b1ca4bb493d92998678cf746b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-guard-never-v6-44.native.ax.txt",
+  "accessibility_sha256": "de3f9001f2aef5119c1897d191988fac2f2dd037dac0de35be9c14090df405cc",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-guard-never-v6-44.native.png",
+  "screenshot_sha256": "06edd9132d68fc4503804f33b6733836b6749b235b2005fa7dd005494c846b5a",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

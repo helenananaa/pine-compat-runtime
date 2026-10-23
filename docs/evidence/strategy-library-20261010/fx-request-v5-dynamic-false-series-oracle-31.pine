@@ -1,0 +1,4 @@
+//@version=5
+indicator("fx-request-v5-dynamic-false-series",dynamic_requests=false)
+from=bar_index%2==0?"USD":"EUR"
+plot(request.currency_rate(from,from,bar_index%2==0))

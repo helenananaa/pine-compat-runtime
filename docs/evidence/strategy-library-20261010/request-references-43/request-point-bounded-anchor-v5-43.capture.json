@@ -1,0 +1,28 @@
+{
+  "name": "request-point-bounded-anchor-v5-43",
+  "version": 5,
+  "scenario": "bounded-anchor",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-bounded-anchor-v5-43.pine",
+  "source_sha256": "65518fc323fd2b43873c54e789cb10ad3e43a62d9d624327bc119432b87e2742",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3349,
+    3354,
+    3354,
+    3349,
+    3349,
+    3349,
+    5,
+    0
+  ],
+  "native_row": "240 row request-point-bounded-anchor-v5-43 Plot 3,349.00 Plot 3,354.00 Plot 3,354.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00 Plot 5.00 Plot 0.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4842b76f2fb0c4ba5e6157668f8f1b56332d020f699e59082cda19b58f0ad40c",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-bounded-anchor-v5-43.native.ax.txt",
+  "accessibility_sha256": "e6304fefe8b8d4bb4d635fe3bdeb28efdfb5e10043baa6f257c053b5b682f5b6",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-bounded-anchor-v5-43.native.png",
+  "screenshot_sha256": "de5a7f2dc7267b8f519a481dbe7265f6f7e0c0bc81b6138dd22593fd572caff4",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

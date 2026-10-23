@@ -1,0 +1,15 @@
+{
+  "name": "parameter-const-version-v3-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-version-v3-35.pine",
+  "source_sha256": "2bc6e707bc233d0a15648759a7efe83fed19f293880f039f893367a11aa09411",
+  "library": false,
+  "native_status": "analysis_rejected",
+  "native_error": "syntax error at input 'bool'",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2bc6e707bc233d0a15648759a7efe83fed19f293880f039f893367a11aa09411",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-version-v3-35.native.ax.txt",
+  "accessibility_sha256": "07c0ff8e68ddda4f4ff867819cdfd1cd0112c13e15076621445b0234fe34326c",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-version-v3-35.native.png",
+  "screenshot_sha256": "72b43ea362db0c37ed69093bf25c88d429fd6ce7cec72e821e009bf29797c141"
+}

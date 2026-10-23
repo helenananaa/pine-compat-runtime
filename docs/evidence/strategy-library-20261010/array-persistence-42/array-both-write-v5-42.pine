@@ -1,0 +1,25 @@
+//@version=5
+indicator("array-both-write-v5-42")
+var a=array.new_int()
+var b=a
+a.push(1)
+b.push(2)
+var p=chart.point.from_index(1,0)
+var q=p
+p.price:=bar_index
+varip int ah=0
+varip int bh=0
+varip float ph=0
+varip float qh=0
+varip int indexh=0
+if barstate.ishistory
+    ah:=a.size()
+    bh:=b.size()
+    ph:=p.price
+    qh:=q.price
+    indexh:=bar_index
+plot(ah)
+plot(bh)
+plot(ph)
+plot(qh)
+plot(indexh)

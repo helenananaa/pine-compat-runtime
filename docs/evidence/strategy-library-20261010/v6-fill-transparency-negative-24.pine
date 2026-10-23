@@ -1,0 +1,5 @@
+//@version=6
+indicator("V6 fill transparency negative 24")
+p=plot(1)
+q=plot(2)
+fill(p,q,color=color.green,transp=60)

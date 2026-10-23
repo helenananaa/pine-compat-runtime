@@ -568,6 +568,8 @@ fn varip_scalar_fixture_persists_intrabar_state_between_forming_updates() {
 
 #[test]
 fn chart_point_varip_fixture_persists_intrabar_value_between_forming_updates() {
+    // Native point aliases retain identity through variable history; prior reads
+    // see current field mutations, while already emitted numeric plots stay fixed.
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/chart_point_varip.pine");
 
     let result = runtime
@@ -587,8 +589,8 @@ fn chart_point_varip_fixture_persists_intrabar_value_between_forming_updates() {
     assert_values(&result.plots[1].values, &[2.0, 3.0]);
     assert_values(&result.plots[2].values, &[0.0, 0.0]);
     assert_values(&result.plots[3].values, &[0.0, 0.0]);
-    assert_values(&result.plots[4].values, &[-1.0, 2.0]);
-    assert_values(&result.plots[5].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 3.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 3.0]);
 
     let result = runtime
         .update(BarUpdate::forming(at_time(60000, bar(3.0))))
@@ -597,8 +599,8 @@ fn chart_point_varip_fixture_persists_intrabar_value_between_forming_updates() {
     assert_values(&result.plots[1].values, &[2.0, 4.0]);
     assert_values(&result.plots[2].values, &[0.0, 0.0]);
     assert_values(&result.plots[3].values, &[0.0, 0.0]);
-    assert_values(&result.plots[4].values, &[-1.0, 2.0]);
-    assert_values(&result.plots[5].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 4.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 4.0]);
 
     let result = runtime
         .update(BarUpdate::confirmed(at_time(60000, bar(4.0))))
@@ -607,8 +609,8 @@ fn chart_point_varip_fixture_persists_intrabar_value_between_forming_updates() {
     assert_values(&result.plots[1].values, &[2.0, 5.0]);
     assert_values(&result.plots[2].values, &[0.0, 0.0]);
     assert_values(&result.plots[3].values, &[0.0, 0.0]);
-    assert_values(&result.plots[4].values, &[-1.0, 2.0]);
-    assert_values(&result.plots[5].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 5.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 5.0]);
 
     let result = runtime
         .update(BarUpdate::forming(at_time(120000, bar(5.0))))
@@ -617,8 +619,8 @@ fn chart_point_varip_fixture_persists_intrabar_value_between_forming_updates() {
     assert_values(&result.plots[1].values, &[2.0, 5.0, 6.0]);
     assert_values(&result.plots[2].values, &[0.0, 0.0, 0.0]);
     assert_values(&result.plots[3].values, &[0.0, 0.0, 0.0]);
-    assert_values(&result.plots[4].values, &[-1.0, 2.0, 5.0]);
-    assert_values(&result.plots[5].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 5.0, 6.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 5.0, 6.0]);
 }
 
 #[test]

@@ -1,0 +1,6 @@
+//@version=3
+study("Codex legacy candidate oracle",overlay=true)
+f(x)=>x+1
+plot(f(input(2,"Wrapped input")),"wrapped input")
+plot(percentile_nearest_rank(close,14,25),"nearest percentile")
+plot(percentile_linear_interpolation(close,14,25),"linear percentile")

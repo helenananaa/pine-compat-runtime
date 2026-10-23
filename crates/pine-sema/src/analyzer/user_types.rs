@@ -80,13 +80,30 @@ impl Analyzer {
         })
     }
     pub(crate) fn local_user_type_has_scalar_tree_fields(&self, type_name: &str) -> bool {
+        if self.declaration_validation && self.user_types.contains_key(type_name) {
+            return true;
+        }
         self.local_user_type_scalar_tree_fields_are_supported(type_name, &mut HashSet::new())
     }
     pub(crate) fn local_user_type_array_is_supported(&self, type_name: &str) -> bool {
         matches!(
-            classify_user_type_array_element_names(&self.user_types, &[type_name.to_owned()]),
+            self.classify_declared_user_type_array_names(&[type_name.to_owned()]),
             Some(UserTypeArrayElementInference::SameLocal(_))
         )
+    }
+
+    pub(crate) fn classify_declared_user_type_array_names(
+        &self,
+        names: &[String],
+    ) -> Option<UserTypeArrayElementInference> {
+        if self.declaration_validation
+            && let Some(name) = names.first()
+            && self.user_types.contains_key(name)
+            && names.iter().all(|other| other == name)
+        {
+            return Some(UserTypeArrayElementInference::SameLocal(name.clone()));
+        }
+        classify_user_type_array_element_names(&self.user_types, names)
     }
 
     pub(crate) fn local_user_type_history_is_supported(&self, type_name: &str) -> bool {
@@ -115,6 +132,7 @@ impl Analyzer {
                         | ValueKind::Bool
                         | ValueKind::String
                         | ValueKind::Color
+                        | ValueKind::ChartPoint
                 )
             }
         });
@@ -543,7 +561,7 @@ impl Analyzer {
 
     fn user_type_array_branch_result_name(&self, branch: &[Stmt]) -> UserTypeArrayResultName {
         let Some(last) = branch.last() else {
-            return UserTypeArrayResultName::Unknown;
+            return UserTypeArrayResultName::Na;
         };
         match &last.kind {
             StmtKind::Expr(expr) => self.user_type_array_result_name(expr),

@@ -1,0 +1,19 @@
+{
+  "name": "v6-literal-na-guard-gt-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-gt-37.pine",
+  "source_sha256": "b296072bf3bc01154b77e240cacd7aeb73daf9e431a4b16030a9025023e8b135",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "251 row v6-literal-na-guard-gt-37 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b296072bf3bc01154b77e240cacd7aeb73daf9e431a4b16030a9025023e8b135",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-gt-37.native.ax.txt",
+  "accessibility_sha256": "8f07761df15dd336667157a62443df7195d5716a69ae7bd7b073504455c9b984",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-gt-37.native.png",
+  "screenshot_sha256": "632dde27a0b7851d6fb7f253be477aa965378e9f9897dfb50540471c585995c7",
+  "scope": "v6 relational greater-than with bare na is legal and evaluates false; do not apply equality rejection to relational operators",
+  "qualification_scope": "candidate_bounded_control"
+}

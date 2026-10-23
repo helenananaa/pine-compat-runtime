@@ -1,0 +1,22 @@
+{
+  "name": "request-point-field-read-v5-43",
+  "version": 5,
+  "scenario": "point-field-read",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-field-read-v5-43.pine",
+  "source_sha256": "59538dbfe04e44d9f561803d8c11f56e73bb3fce72094c64733f15119dbfe1a4",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    20,
+    20
+  ],
+  "native_row": "240 row request-point-field-read-v5-43 Plot 20.00 Plot 20.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "759f95715f6d715d577070ed44233a5c9e2c7e49e09bd4c18735f582ef8b7c9c",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-field-read-v5-43.native.ax.txt",
+  "accessibility_sha256": "728d1744b7a380ce0f87e80ccd7a31b5402a5c1166a7cc278b62afb09ac7e397",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-field-read-v5-43.native.png",
+  "screenshot_sha256": "0c8b1b8dca82a4272b192b197833c766a3143c8275e3d0132bfe01fd9eef5a52",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

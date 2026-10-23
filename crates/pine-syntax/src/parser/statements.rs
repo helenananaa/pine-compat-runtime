@@ -73,6 +73,9 @@ impl Parser {
         {
             self.bump();
             Some(DeclMode::Const)
+        } else if self.source_version >= 5 && self.simple_qualified_declaration_follows() {
+            self.bump();
+            Some(DeclMode::Simple)
         } else if self.at(TokenKind::Var) {
             self.bump();
             Some(DeclMode::Var)
@@ -84,6 +87,7 @@ impl Parser {
         };
 
         if let Some((declared_type, name, start)) = self.try_parse_typed_decl_name() {
+            self.reject_reserved_binding(&name, self.previous().span);
             self.expect(TokenKind::Eq, "expected `=` in variable declaration")?;
             let value = self.parse_expr(0)?;
             return Some(Stmt {
@@ -97,8 +101,16 @@ impl Parser {
             });
         }
 
-        if mode == Some(DeclMode::Const) {
-            self.error_here("E_PARSE_DECL", "`const` requires a typed declaration");
+        if matches!(mode, Some(DeclMode::Const | DeclMode::Simple)) {
+            let keyword = if mode == Some(DeclMode::Const) {
+                "const"
+            } else {
+                "simple"
+            };
+            self.error_here(
+                "E_PARSE_DECL",
+                &format!("`{keyword}` requires a typed declaration"),
+            );
             return None;
         }
 
@@ -109,6 +121,7 @@ impl Parser {
             }
 
             if self.nth_at(1, TokenKind::Eq) || mode.is_some() {
+                self.reject_reserved_binding(&name, start);
                 self.bump();
                 self.expect(TokenKind::Eq, "expected `=` in variable declaration")?;
                 let value = self.parse_expr(0)?;
@@ -159,6 +172,8 @@ impl Parser {
             }
 
             if let Some(colon_eq_offset) = self.nested_field_reassign_colon_eq_offset() {
+                let compound_op = self.compound_assignment_op(colon_eq_offset);
+                let field_span = start.merge(self.tokens[self.pos + colon_eq_offset - 1].span);
                 let mut path = (2..colon_eq_offset)
                     .step_by(2)
                     .filter_map(|offset| {
@@ -173,7 +188,23 @@ impl Parser {
                 for _ in 0..=colon_eq_offset {
                     self.bump();
                 }
-                let value = self.parse_expr(0)?;
+                let mut value = self.parse_expr(0)?;
+                if let Some(op) = compound_op {
+                    let mut parts = vec![name.clone()];
+                    parts.extend(path.iter().cloned());
+                    parts.push(field.clone());
+                    value = Expr {
+                        span: start.merge(value.span),
+                        kind: ExprKind::Binary {
+                            op,
+                            left: Box::new(Expr {
+                                span: field_span,
+                                kind: ExprKind::QualifiedName(parts),
+                            }),
+                            right: Box::new(value),
+                        },
+                    };
+                }
                 return Some(Stmt {
                     span: start.merge(value.span),
                     kind: StmtKind::FieldReassign {
@@ -307,6 +338,7 @@ impl Parser {
         loop {
             match self.current().kind.clone() {
                 TokenKind::Identifier(name) => {
+                    self.reject_reserved_destructuring_binding(&name, self.current().span);
                     names.push(name);
                     self.bump();
                 }
@@ -445,6 +477,7 @@ impl Parser {
     pub(super) fn parse_for_counter(&mut self) -> Option<String> {
         match self.current().kind.clone() {
             TokenKind::Identifier(name) => {
+                self.reject_reserved_destructuring_binding(&name, self.current().span);
                 self.bump();
                 Some(name)
             }
@@ -469,6 +502,11 @@ impl Parser {
         start: Span,
         counter: String,
     ) -> Option<ForParts> {
+        // `parse_for_counter` already checks the `in` grammar keyword for
+        // both range and for-in forms.
+        if counter != "in" {
+            self.reject_reserved_binding(&counter, self.previous().span);
+        }
         self.expect(TokenKind::Eq, "expected `=` after loop counter")?;
         let from = self.parse_expr(0)?;
         self.expect(TokenKind::To, "expected `to` in for loop")?;
@@ -533,6 +571,7 @@ impl Parser {
         let TokenKind::Identifier(name) = self.current().kind.clone() else {
             return None;
         };
+        self.reject_reserved_binding(&name, start);
         self.bump();
         self.expect(TokenKind::LParen, "expected `(` after function name")?;
         let mut params = Vec::new();
@@ -555,16 +594,7 @@ impl Parser {
 
         self.expect(TokenKind::RParen, "expected `)` after function parameters")?;
         self.expect(TokenKind::Arrow, "expected `=>` in function declaration")?;
-        let (body, span) = if self.at(TokenKind::Newline) {
-            self.bump();
-            let block = self.parse_indented_block()?;
-            let span = block.last().map_or(start, |statement| statement.span);
-            (FunctionBody::Block(block), span)
-        } else {
-            let body = self.parse_expr(0)?;
-            let span = body.span;
-            (FunctionBody::Expr(body), span)
-        };
+        let (body, span) = self.parse_function_body(start)?;
 
         Some(Stmt {
             span: start.merge(span),
@@ -572,8 +602,33 @@ impl Parser {
         })
     }
 
+    pub(super) fn parse_function_body(&mut self, start: Span) -> Option<(FunctionBody, Span)> {
+        if self.at(TokenKind::Newline) {
+            self.bump();
+            let block = self.parse_indented_block()?;
+            let span = block.last().map_or(start, |statement| statement.span);
+            Some((FunctionBody::Block(block), span))
+        } else {
+            let mut block = vec![self.parse_stmt()?];
+            while self.at(TokenKind::Comma) {
+                self.bump();
+                block.push(self.parse_stmt()?);
+            }
+            let span = block.last()?.span;
+            if block.len() == 1 && matches!(block[0].kind, StmtKind::Expr(_)) {
+                let StmtKind::Expr(expr) = block.pop()?.kind else {
+                    unreachable!()
+                };
+                Some((FunctionBody::Expr(expr), span))
+            } else {
+                Some((FunctionBody::Block(block), span))
+            }
+        }
+    }
+
     pub(super) fn parse_function_param(&mut self) -> Option<FunctionParam> {
         let mut param = self.parse_function_param_head()?;
+        self.reject_reserved_binding(&param.name, self.previous().span);
         if self.at(TokenKind::Eq) {
             if self.source_version < 5 {
                 self.error_here(
@@ -596,23 +651,26 @@ impl Parser {
         };
         let start = self.current().span;
 
-        if first == "series" && self.source_version >= 5 {
+        if matches!(first.as_str(), "series" | "const") && self.source_version >= 5 {
             self.bump();
             if matches!(&self.current().kind, TokenKind::Identifier(name)
                 if matches!(name.as_str(), "series" | "simple" | "const" | "input"))
             {
-                self.error_here("E_PARSE_FUNCTION", "expected type after `series`");
+                self.error_here(
+                    "E_PARSE_FUNCTION",
+                    &format!("expected type after `{first}`"),
+                );
                 return None;
             }
             let mut param = self.parse_function_param_head()?;
             let Some(type_name) = param.type_name else {
                 self.error_here(
                     "E_PARSE_FUNCTION",
-                    "expected typed parameter after `series`",
+                    &format!("expected typed parameter after `{first}`"),
                 );
                 return None;
             };
-            param.type_name = Some(format!("series {type_name}"));
+            param.type_name = Some(format!("{first} {type_name}"));
             param.span = start.merge(param.span);
             return Some(param);
         }
@@ -620,82 +678,38 @@ impl Parser {
         // Keep the qualifier in the type spelling: removing it would let a
         // constant argument silently weaken an explicitly series or simple parameter.
         if first == "simple" && self.source_version >= 5 {
-            let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 1)?.kind.clone()
-            else {
+            self.bump();
+            if let Some(mut param) = self.collection_parameter_head() {
+                param.type_name = Some(format!("simple {}", param.type_name?));
+                param.span = start.merge(param.span);
+                return Some(param);
+            }
+            let TokenKind::Identifier(type_name) = self.current().kind.clone() else {
                 return None;
             };
             if !matches!(
                 type_name.as_str(),
                 "int" | "float" | "bool" | "string" | "color"
             ) {
-                self.error_here(
-                    "E_PARSE_FUNCTION",
-                    &format!("expected scalar type after `{first}`"),
-                );
+                self.error_here("E_PARSE_FUNCTION", "expected scalar type after `simple`");
                 return None;
             }
-            let TokenKind::Identifier(name) = self.tokens.get(self.pos + 2)?.kind.clone() else {
+            self.bump();
+            let TokenKind::Identifier(name) = self.current().kind.clone() else {
                 return None;
             };
-            let end = self.tokens.get(self.pos + 2)?.span;
-            for _ in 0..3 {
-                self.bump();
-            }
+            let end = self.current().span;
+            self.bump();
             return Some(FunctionParam {
                 default_value: None,
-                type_name: Some(format!("{first} {type_name}")),
+                type_name: Some(format!("simple {type_name}")),
                 name,
                 span: start.merge(end),
             });
         }
 
-        if first == "array" && self.nth_at(1, TokenKind::Lt) {
-            if self.nth_at(3, TokenKind::Gt) {
-                let TokenKind::Identifier(element_type) =
-                    self.tokens.get(self.pos + 2)?.kind.clone()
-                else {
-                    return None;
-                };
-                let TokenKind::Identifier(name) = self.tokens.get(self.pos + 4)?.kind.clone()
-                else {
-                    return None;
-                };
-                let end = self.tokens.get(self.pos + 4)?.span;
-                for _ in 0..5 {
-                    self.bump();
-                }
-                return Some(FunctionParam {
-                    default_value: None,
-                    type_name: Some(format!("array<{element_type}>")),
-                    name,
-                    span: start.merge(end),
-                });
-            }
-
-            if self.nth_at(3, TokenKind::Dot) && self.nth_at(5, TokenKind::Gt) {
-                let TokenKind::Identifier(namespace) = self.tokens.get(self.pos + 2)?.kind.clone()
-                else {
-                    return None;
-                };
-                let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 4)?.kind.clone()
-                else {
-                    return None;
-                };
-                let TokenKind::Identifier(name) = self.tokens.get(self.pos + 6)?.kind.clone()
-                else {
-                    return None;
-                };
-                let end = self.tokens.get(self.pos + 6)?.span;
-                for _ in 0..7 {
-                    self.bump();
-                }
-                return Some(FunctionParam {
-                    default_value: None,
-                    type_name: Some(format!("array<{namespace}.{type_name}>")),
-                    name,
-                    span: start.merge(end),
-                });
-            }
+        if let Some(param) = self.collection_parameter_head() {
+            return Some(param);
         }
 
         if self.nth_at(1, TokenKind::LBracket) && self.nth_at(2, TokenKind::RBracket) {
@@ -814,7 +828,7 @@ impl Parser {
         Some(statements)
     }
 
-    fn compound_assignment_op(&self, offset: usize) -> Option<BinaryOp> {
+    pub(super) fn compound_assignment_op(&self, offset: usize) -> Option<BinaryOp> {
         match self.tokens.get(self.pos + offset)?.kind {
             TokenKind::PlusEq => Some(BinaryOp::Add),
             TokenKind::MinusEq => Some(BinaryOp::Sub),
@@ -879,5 +893,19 @@ impl Parser {
         }
 
         false
+    }
+    // `simple` remains usable as a variable, function, namespace or type name.
+    // Consume the qualifier only when a complete typed declaration follows it.
+    fn simple_qualified_declaration_follows(&mut self) -> bool {
+        if !matches!(&self.current().kind, TokenKind::Identifier(name) if name == "simple")
+            || !self.nth_is_identifier(1)
+        {
+            return false;
+        }
+        let start = self.pos;
+        self.bump();
+        let typed = self.try_parse_typed_decl_name().is_some();
+        self.pos = start;
+        typed
     }
 }

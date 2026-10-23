@@ -1,0 +1,9 @@
+//@version=6
+indicator("request-global-matrix-v6-43")
+values=matrix.new<float>(1,1,10)
+f()=>
+    values.set(0,0,values.get(0,0)+5)
+    values.get(0,0)
+a=request.security(syminfo.tickerid,timeframe.period,f())
+plot(a)
+plot(values.get(0,0))

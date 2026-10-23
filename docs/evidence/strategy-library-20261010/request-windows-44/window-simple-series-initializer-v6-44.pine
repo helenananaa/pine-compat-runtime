@@ -1,0 +1,8 @@
+//@version=6
+indicator("window-simple-series-initializer-v6-44",dynamic_requests=true)
+simple int x=bar_index
+var count=0
+count+=1
+plot(bar_index)
+plot(x)
+plot(count)

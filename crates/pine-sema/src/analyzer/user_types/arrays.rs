@@ -9,7 +9,7 @@ use crate::analyzer::calls::{
 use crate::analyzer::context::Analyzer;
 use crate::prelude::pine_type_name;
 
-use super::{UserTypeArrayElementInference, classify_user_type_array_element_names};
+use super::UserTypeArrayElementInference;
 
 impl Analyzer {
     pub(crate) fn array_from_user_type_element_inference(
@@ -36,9 +36,7 @@ impl Analyzer {
             return None;
         }
 
-        if let Some(inference) =
-            classify_user_type_array_element_names(&self.user_types, &type_names)
-        {
+        if let Some(inference) = self.classify_declared_user_type_array_names(&type_names) {
             return Some(inference);
         }
 
@@ -70,7 +68,7 @@ impl Analyzer {
             ));
         }
 
-        match classify_user_type_array_element_names(&self.user_types, &[type_name.to_owned()]) {
+        match self.classify_declared_user_type_array_names(&[type_name.to_owned()]) {
             Some(UserTypeArrayElementInference::SameLocal(_)) => {}
             Some(UserTypeArrayElementInference::UnsupportedFieldType(_)) => {
                 self.diagnostics.push(Diagnostic::error(

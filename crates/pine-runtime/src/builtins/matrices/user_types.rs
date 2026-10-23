@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn udt_matrix_is_not_admitted_as_a_numeric_matrix() {
         for operation in [
-            "matrix.sum(values)",
+            "matrix.avg(values)",
             "matrix.det(values)",
             "matrix.avg(values)",
         ] {

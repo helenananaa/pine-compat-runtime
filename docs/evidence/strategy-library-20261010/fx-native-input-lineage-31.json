@@ -1,0 +1,61 @@
+{
+  "source": "I:\\sys\\\u4e0b\u8f7d\\BINANCE_BTCUSDT, 1D (28).csv",
+  "sha256": "6191cf6798fe13982f400a747e3006eddf4614607486a65fab7c633a00af5808",
+  "rows": 2514,
+  "columns": [
+    "time",
+    "open",
+    "high",
+    "low",
+    "close",
+    "Bollinger Bands SMA Basis Line",
+    "Bollinger Bands Upper Line",
+    "Bollinger Bands Lower Line",
+    "USDT_EUR",
+    "EUR_USDT"
+  ],
+  "rate_columns": [
+    "USDT_EUR",
+    "EUR_USDT"
+  ],
+  "first_time": "1575072000",
+  "last_time": "1792195200",
+  "first_rates": {
+    "USDT_EUR": "",
+    "EUR_USDT": ""
+  },
+  "missing_rate_rows": 35,
+  "anchors": [
+    {
+      "time": "1577923200",
+      "open": "7200.77",
+      "close": "6965.71",
+      "USDT_EUR": "0.8874",
+      "EUR_USDT": ""
+    },
+    {
+      "time": "1578614400",
+      "open": "7817.74",
+      "close": "8197.02",
+      "USDT_EUR": "0.898",
+      "EUR_USDT": "1.1094"
+    },
+    {
+      "time": "1578700800",
+      "open": "8198.86",
+      "close": "8020.01",
+      "USDT_EUR": "0.9",
+      "EUR_USDT": "1.1138"
+    }
+  ],
+  "frozen_export": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-native-full-export-31.csv",
+  "frozen_export_sha256": "6191cf6798fe13982f400a747e3006eddf4614607486a65fab7c633a00af5808",
+  "native_probe_count": 29,
+  "rejected_hypotheses": [
+    "Higher-timeframe rates sampled at chart close: native historical W/M showed chart open instead.",
+    "Realtime higher-timeframe rates sampled at execution time: native forming W/M showed chart open instead.",
+    "Closed extrema revalued using exit FX: native showed per-observation FX and entry commissions."
+  ],
+  "ui_validation": "Some data-window values stayed cached after a source update. The open-extrema probe was recaptured after clicking the chart to refresh the cursor values; only the final 28 values are used. Clipboard sentinel plus full source equality checked. All accepted numeric oracles are independently replayed against the matching inputs.",
+  "browser_input_repair": "ControlOrMeta shortcuts occasionally produced partial editor replacement. Final submissions use explicit Control+A/V, copy back the entire source before compile, then verify native output. Source-mismatched attempts were rejected."
+}

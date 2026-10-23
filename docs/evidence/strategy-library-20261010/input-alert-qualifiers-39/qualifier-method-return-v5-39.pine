@@ -1,0 +1,6 @@
+//@version=5
+indicator("qualifier-method-return-v5-39")
+method identity39(string self)=>self
+freq=input.string(alert.freq_all)
+alert("qualifier probe",freq.identity39())
+plot(1)

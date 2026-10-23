@@ -1,0 +1,14 @@
+{
+  "name": "constant-bool-field-boundaries-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-field-boundaries-v5-34.pine",
+  "source_sha256": "732c156454b59a483040a155ac89e9571f3f6f01101f14271fa0c965fc83fa91",
+  "native_status": "analysis_rejected",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "732c156454b59a483040a155ac89e9571f3f6f01101f14271fa0c965fc83fa91",
+  "normalized_source_sha256": "732c156454b59a483040a155ac89e9571f3f6f01101f14271fa0c965fc83fa91",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-field-boundaries-v5-34.native.ax.txt",
+  "accessibility_sha256": "65a0c36a5348ab2b09bbb42d359ecab1bbc3fe14bee5fb9cc4ded5e03363ee21",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-field-boundaries-v5-34.native.png",
+  "screenshot_sha256": "0220bce24c985fccfca3846f4a28b988acb0722e10a5ec04c1009d0bf7e3cac0"
+}

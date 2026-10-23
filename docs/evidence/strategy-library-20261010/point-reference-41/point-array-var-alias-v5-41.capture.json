@@ -1,0 +1,30 @@
+{
+  "name": "point-array-var-alias-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-array-var-alias-v5-41.pine",
+  "source_sha256": "eb8988cafcbc3871e075c1092ccb6a485639ee8f30ee7daf4f8a2cfc94cdac92",
+  "qualification_scope": "intrabar_retention_frontier",
+  "native_relation": "ordinary_point_binding",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    33,
+    1,
+    1,
+    1
+  ],
+  "native_marker_suffix": [
+    1,
+    1,
+    1
+  ],
+  "native_row": "235 row point-array-var-alias-v5-41 Plot 33.00 Plot 1.00 Plot 1.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d3f688ed7f78891f2944bfe753273d5ac8a9bf63c4ea00cf1dd0f2307d1d01e6",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-array-var-alias-v5-41.native.ax.txt",
+  "accessibility_sha256": "02d0f31ca8b3855019c66b26e5e5824a6fb61d9f7c520cb364d7f17a12a745f4",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-array-var-alias-v5-41.native.png",
+  "screenshot_sha256": "5b84f5aea9e98fd39d9754f5fa0767a876d184184dd689e339b42fe48b3550f9",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

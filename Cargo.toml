@@ -19,6 +19,13 @@ license = "MIT"
 repository = "https://github.com/helenananaa/pine-compat-runtime"
 rust-version = "1.95"
 
+[profile.dev]
+# Keep file/line backtraces without full type and variable debug information.
+debug = "line-tables-only"
+
+[profile.test]
+debug = "line-tables-only"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

@@ -1,0 +1,26 @@
+{
+  "name": "request-array-write-v5-43",
+  "version": 5,
+  "scenario": "array-write",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-array-write-v5-43.pine",
+  "source_sha256": "144815ed0ca799db335da9dea5be86a3f5c3fde94d9542e6970a22313011757d",
+  "historical_expected": [
+    15,
+    15
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "242 row request-array-write-v5-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "144815ed0ca799db335da9dea5be86a3f5c3fde94d9542e6970a22313011757d",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-array-write-v5-43.native.ax.txt",
+  "accessibility_sha256": "d025145a011ee07cce090e287a9adb29700f47cbb4dda299a4f3e31445d8aa33",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-array-write-v5-43.native.png",
+  "screenshot_sha256": "3aa5484a1f3b22899936c9cb2412cc6b6c073ccf88bf49cd240e6bf5dc3ff6dc",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

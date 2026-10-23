@@ -1,0 +1,15 @@
+//@version=5
+indicator("array-forming-reassign-v5-42")
+var a=array.new_int()
+varip b=array.new_int()
+varip int ticks=0
+if barstate.isrealtime
+    ticks+=1
+    if ticks==1
+        b:=a
+    a.push(1)
+    b.push(2)
+plot(ticks)
+plot(a.size())
+plot(b.size())
+plot(barstate.isrealtime and ticks>=2 and a.size()==1 and b.size()==ticks+1?1:0)

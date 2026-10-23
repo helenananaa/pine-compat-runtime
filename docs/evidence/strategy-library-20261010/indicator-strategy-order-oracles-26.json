@@ -1,0 +1,20 @@
+[
+  {
+    "version": 4,
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\indicator-strategy-order-v4-negative-26.pine",
+    "source_sha256": "f37ed4e6a62d19c72440f3d31992e09cf43954c179d18348e243923e91b2f156",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\indicator-strategy-order-v4-negative-26.png",
+    "screenshot_sha256": "cce99687b2f0cf2c5780460402cadb16896c662b73fced2791bb8dd88f7cde35",
+    "native_error": "You cannot use strategy functions (strategy.entry) in study script. Please replace 'study' with 'strategy'.",
+    "scope": "Native compilation rejection of minimal indicator/study strategy.entry; no order execution or blanket invalid-source classification."
+  },
+  {
+    "version": 5,
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\indicator-strategy-order-v5-negative-26.pine",
+    "source_sha256": "8f346b2b71c39ce942865c6dce6bd04e89c79bd381bbf93f3a0d1841b4a73e29",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\indicator-strategy-order-v5-negative-26.png",
+    "screenshot_sha256": "9d9be95a1a4a8d499c36e4989cad56fef3c298cac795c3c52f17ec1a3d8cf1e0",
+    "native_error": "You cannot use strategy functions (strategy.entry) in indicator script. Please replace 'indicator' with 'strategy'.",
+    "scope": "Native compilation rejection of minimal indicator/study strategy.entry; no order execution or blanket invalid-source classification."
+  }
+]

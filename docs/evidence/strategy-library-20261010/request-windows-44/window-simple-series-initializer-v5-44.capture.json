@@ -1,0 +1,19 @@
+{
+  "name": "window-simple-series-initializer-v5-44",
+  "version": 5,
+  "scenario": "simple-series-initializer",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-simple-series-initializer-v5-44.pine",
+  "source_sha256": "bdb91c0c73edb0fb196d9ca3f3f17708d4b4e99cf0f979fec14462e045f82fa5",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "A variable declared with the 'simple' keyword cannot accept values of the 'series int' form.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "bdb91c0c73edb0fb196d9ca3f3f17708d4b4e99cf0f979fec14462e045f82fa5",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-series-initializer-v5-44.native.ax.txt",
+  "accessibility_sha256": "392e0d4a0691a0cb61a020705c9d9e3c3c76c2cd92e01f48435aa24598f2a4e7",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-series-initializer-v5-44.native.png",
+  "screenshot_sha256": "fba6b1ff302a73145e82a475f026dd870210f1bf33a36bd3fa4e484c96b5430d",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,12 @@
+{
+  "version": 5,
+  "symbol": "BINANCE:BTCUSDT",
+  "chart": "1M",
+  "officialResults": {
+    "functionLoopReturn": 6,
+    "ifAssignmentReturn": 7,
+    "missingElseReturn": null,
+    "loopAssignmentReturn": 10
+  },
+  "scope": "Minimal official Pine language oracle; not whole strategy trade parity"
+}

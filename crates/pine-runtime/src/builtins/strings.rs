@@ -972,11 +972,18 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
-            return Ok(PineValue::Na);
-        };
-
-        Ok(PineValue::Int(value.chars().count() as i64))
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::String(value) => PineValue::Int(value.chars().count() as i64),
+            PineValue::Na
+                if self
+                    .program
+                    .language_version
+                    .is_some_and(|version| version >= 5) =>
+            {
+                PineValue::Int(0)
+            }
+            _ => PineValue::Na,
+        })
     }
 
     pub(crate) fn eval_str_case(
@@ -1277,11 +1284,11 @@ impl<'a> HistoricalRuntime<'a> {
         let timezone = if let Some(arg) = crate::builtins::args::positional_arg(args, 2) {
             match self.eval_expr(&arg.value)? {
                 PineValue::String(timezone) => timezone,
-                PineValue::Na => "UTC".to_owned(),
+                PineValue::Na => self.request_environment.chart_timezone().to_owned(),
                 _ => return Ok(PineValue::Na),
             }
         } else {
-            "UTC".to_owned()
+            self.request_environment.chart_timezone().to_owned()
         };
         let datetime = utc_datetime_from_millis(timestamp).map_err(|_| RuntimeError {
             message: format!("str.format_time timestamp is out of range: {timestamp}"),

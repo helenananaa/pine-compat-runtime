@@ -1,0 +1,26 @@
+{
+  "name": "point-varip-escape-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-varip-escape-v5-41.pine",
+  "source_sha256": "37e717ffad33803001de27317faf7b1aae304bdf52d781a82cce99c632e2ffcc",
+  "qualification_scope": "intrabar_relation",
+  "native_relation": "ordinary_after_escape",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    130,
+    1
+  ],
+  "native_marker_suffix": [
+    1
+  ],
+  "native_row": "235 row point-varip-escape-v5-41 Plot 130.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b735266d2057807fee5473f3f54c60d19939c49249262911b0413877f8fc4637",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-varip-escape-v5-41.native.ax.txt",
+  "accessibility_sha256": "5d5198d1e9248d3a5cad9fbd88c20d4877330b1a9ea0c49621e6e46ce67b391f",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-varip-escape-v5-41.native.png",
+  "screenshot_sha256": "e22724837765a0794ed4cdd09727f32ddf033af8827152817ac80084aead9522",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,22 @@
+//@version=1
+study("Legacy direction truth v1 matrix 28",precision=0)
+l=strategy.long
+s=strategy.short
+plot((l) ? 1 : 0,title="P0")
+plot((s) ? 1 : 0,title="P1")
+plot((l == true) ? 1 : 0,title="P2")
+plot((l == false) ? 1 : 0,title="P3")
+plot((s == true) ? 1 : 0,title="P4")
+plot((s == false) ? 1 : 0,title="P5")
+plot((l == l) ? 1 : 0,title="P6")
+plot((s == s) ? 1 : 0,title="P7")
+plot((l == s) ? 1 : 0,title="P8")
+plot((l != s) ? 1 : 0,title="P9")
+plot((not l) ? 1 : 0,title="P10")
+plot((not s) ? 1 : 0,title="P11")
+plot((l and true) ? 1 : 0,title="P12")
+plot((s and true) ? 1 : 0,title="P13")
+plot((l or false) ? 1 : 0,title="P14")
+plot((s or false) ? 1 : 0,title="P15")
+plot((iff(l,true,false)) ? 1 : 0,title="P16")
+plot((iff(s,true,false)) ? 1 : 0,title="P17")

@@ -1,0 +1,10 @@
+//@version=5
+indicator("window-input-pure-count-v5-44",dynamic_requests=true)
+f(simple int n)=>n+1
+n=input.int(1)
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=f(n))
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(count)

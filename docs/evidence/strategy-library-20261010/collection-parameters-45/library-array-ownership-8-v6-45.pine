@@ -1,0 +1,8 @@
+//@version=6
+library("ArrayOwnershipCase8Batch45")
+export f(array<float> values) =>
+    var local = array.new<float>()
+    array.push(local,1)
+    if true
+        local := values
+    1

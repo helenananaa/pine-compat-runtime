@@ -57,7 +57,6 @@ fn malformed_collection_fields_and_qualifiers_remain_errors() {
         "type Buffer\n    array<float data\n",
         "type Buffer\n    array<float>\n",
         "f(series series int x) => x\n",
-        "f(simple array<float> x) => x\n",
         "x=false\nswitch\n    true => x := true false => 0\n",
     ] {
         let parsed = parse_source(&SourceFile::new(
@@ -68,5 +67,22 @@ fn malformed_collection_fields_and_qualifiers_remain_errors() {
             !parsed.diagnostics.is_empty(),
             "unexpected acceptance: {body}"
         );
+    }
+}
+
+#[test]
+fn simple_collection_reference_parameters_are_well_formed() {
+    for version in [5, 6] {
+        for ty in ["array<float>", "matrix<float>", "map<string,float>"] {
+            let parsed = parse_source(&SourceFile::new(
+                "references.pine",
+                format!("//@version={version}\nf(simple {ty} value)=>value\n"),
+            ));
+            assert!(
+                parsed.diagnostics.is_empty(),
+                "{ty}: {:?}",
+                parsed.diagnostics
+            );
+        }
     }
 }

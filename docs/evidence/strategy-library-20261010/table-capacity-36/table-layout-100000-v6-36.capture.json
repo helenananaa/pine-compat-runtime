@@ -1,0 +1,16 @@
+{
+  "name": "table-layout-100000-v6-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-100000-v6-36.pine",
+  "source_sha256": "1bbf260b044f80542bc5412ad2685a5ce832aa9ceef1e03fdc282f29de15e4f5",
+  "native_status": "analysis_or_runtime_rejected",
+  "native_error": "Too many table cells.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1bbf260b044f80542bc5412ad2685a5ce832aa9ceef1e03fdc282f29de15e4f5",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-100000-v6-36.native.ax.txt",
+  "accessibility_sha256": "c3c1ea7e1c10faa4962a2b501f5d7e738be9099e92f45cbc869a6a77e31e56a5",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-100000-v6-36.native.png",
+  "screenshot_sha256": "b4863f9c2d2bc512cca67110062a7bf433b88b3a7d49db4aad2b1bc3f36144e2",
+  "scope": "Native v6 rejects100000 declared slots at table.new on bar0, before cell writes.",
+  "qualification_scope": "candidate_table_control"
+}

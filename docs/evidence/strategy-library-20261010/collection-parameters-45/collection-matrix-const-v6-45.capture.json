@@ -1,0 +1,22 @@
+{
+  "name": "collection-matrix-const-v6-45",
+  "version": 6,
+  "scenario": "matrix-const",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-matrix-const-v6-45.pine",
+  "source_sha256": "f46e079b48f5f0092de400f2a2903a4841f0ef9e4035dfa0dd9e7892705974a6",
+  "expected_values": null,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    10
+  ],
+  "native_row": "239 row collection-matrix-const-v6-45 Plot 10.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6d694abc004835468ab8cccb3a4be01efb889869a49d7ed1ac7ace3beb07057f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-const-v6-45.native.ax.txt",
+  "accessibility_sha256": "0b643d52dd0d5b7e17ef12b20b1add3d4cfee3beaf2a16c7b6205ca78bd11b8d",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-const-v6-45.native.png",
+  "screenshot_sha256": "1ca641f6cac5e17c933e122ef9f3bfb87e05162f4329271cd63c3b299f639898",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

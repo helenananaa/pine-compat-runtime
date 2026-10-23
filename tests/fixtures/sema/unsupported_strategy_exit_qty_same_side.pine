@@ -1,4 +1,0 @@
-//@version=5
-strategy("Unsupported strategy exit quantity same side")
-strategy.entry("L", strategy.long, qty=2)
-strategy.exit("XL", "L", stop=low, loss=5, qty=1)

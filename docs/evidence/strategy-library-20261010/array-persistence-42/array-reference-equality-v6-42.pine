@@ -1,0 +1,5 @@
+//@version=6
+indicator("array-reference-equality-v6-42")
+var a=array.from(1)
+var b=a
+plot(a==b?1:0)

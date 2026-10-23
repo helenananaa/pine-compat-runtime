@@ -1,0 +1,21 @@
+{
+  "name": "request-point-rebound-v6-43",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-rebound-v6-43.pine",
+  "source_sha256": "81afa2d1574078e11c9d2dfb905f53f5a35e5049b679916a14622819020fd753",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    25,
+    25
+  ],
+  "native_row": "238 row request-point-rebound-v6-43 Plot 25.00 Plot 25.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "392b3ba92b11f0dc0d3a8ca53667fadd6c3d74e26cbea2c00c990fdeae67ad9c",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-rebound-v6-43.native.ax.txt",
+  "accessibility_sha256": "0b655511056b9da958a19d5578d753929cf3b385e23847bbbad5437fd71c40d7",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-rebound-v6-43.native.png",
+  "screenshot_sha256": "7c7a959a4b8843eba1a89100333506c27c149dcbb6b3dde0c8701a1f14181af9",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

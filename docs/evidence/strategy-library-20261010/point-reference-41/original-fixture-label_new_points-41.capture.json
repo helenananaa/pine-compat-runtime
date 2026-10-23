@@ -1,0 +1,20 @@
+{
+  "name": "original-fixture-label_new_points-41",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\original-fixture-label_new_points-41.pine",
+  "source_sha256": "257548b606e31980ec56df9edf6df1006b35f67c6236ed52ce576b173f6d4a9b",
+  "parent_fixture": "tests/fixtures/runtime/label_new_points.pine",
+  "parent_fixture_sha256": "257548b606e31980ec56df9edf6df1006b35f67c6236ed52ce576b173f6d4a9b",
+  "qualification_scope": "obsolete_positive_fixture_native_rejection",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 3: Cannot access the 'index' field of an undefined object. The object is 'na'. at  #main () : 10",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "257548b606e31980ec56df9edf6df1006b35f67c6236ed52ce576b173f6d4a9b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/original-fixture-label_new_points-41.native.ax.txt",
+  "accessibility_sha256": "3b4612d80ff944ae92557d11a163ce86962f5961d171a0e155b21ee248f9a1ac",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/original-fixture-label_new_points-41.native.png",
+  "screenshot_sha256": "6ac6cb3ecc8fce361c93d1bcad6f1f6439b7abdc1d51bd37165d96e98201680f",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

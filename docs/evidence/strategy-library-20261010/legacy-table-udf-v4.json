@@ -1,0 +1,17 @@
+{
+  "version": 4,
+  "url": "https://www.tradingview.com/chart/wf5lRGkJ/",
+  "source": "legacy-table-udf-v4.pine",
+  "screenshot": "legacy-table-udf-v4.png",
+  "chart_symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "status": "compiled_and_executed",
+  "observed_cells": [
+    "v4 UDF",
+    "setter"
+  ],
+  "source_sha256": "23f459cf3bb0d2f91b3afa0513f86709516af34777a633ef7cd145a60bc45879",
+  "screenshot_sha256": "22be664d0157b21ac6591656881be1ab752a4407a43cd45c4f9dfc5104201b57",
+  "cleanup": "Own indicator removed; fresh DOM confirmed own legend absent and original CA strategy/monthly timeframe present; test tab closed.",
+  "scope": "Controlled unsaved legality and table identity/mutation proof; not broad native drawing, history or strategy parity."
+}

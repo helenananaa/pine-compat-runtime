@@ -58,6 +58,8 @@ struct RunOptions {
     chart_context: ChartContext,
     profile: bool,
     request_bars: Vec<RequestBarsSpec>,
+    bar_calendars_path: Option<String>,
+    currency_rates_path: Option<String>,
     library_sources: Vec<LibrarySourceSpec>,
     input_overrides: Vec<InputOverrideSpec>,
     strategy_alert_template: Option<StrategyAlertTemplateOptions>,
@@ -162,8 +164,7 @@ fn run_profiled_json_with_options_in_mode(
     let bars_text = fs::read_to_string(&options.bars_path)
         .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
     let bars = parse_bars_csv(&bars_text)?;
-    let request_environment =
-        request_environment_from_specs(&options.request_bars, options.chart_context.clone())?;
+    let request_environment = request_environment_from_options(options)?;
     let input_calls = input_calls(&hir)
         .into_iter()
         .map(|input| (input.call_site_id, input))
@@ -219,8 +220,7 @@ fn run_result_with_options_in_mode(
     let bars_text = fs::read_to_string(&options.bars_path)
         .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
     let bars = parse_bars_csv(&bars_text)?;
-    let request_environment =
-        request_environment_from_specs(&options.request_bars, options.chart_context.clone())?;
+    let request_environment = request_environment_from_options(options)?;
     let input_calls = input_calls(&hir)
         .into_iter()
         .map(|input| (input.call_site_id, input))
@@ -271,8 +271,7 @@ fn run_non_batch_with_options(
     let bars_text = fs::read_to_string(&options.bars_path)
         .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
     let bars = parse_bars_csv(&bars_text)?;
-    let request_environment =
-        request_environment_from_specs(&options.request_bars, options.chart_context.clone())?;
+    let request_environment = request_environment_from_options(options)?;
     let input_calls = input_calls(&hir)
         .into_iter()
         .map(|input| (input.call_site_id, input))
@@ -454,6 +453,8 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
+        bar_calendars_path: None,
+        currency_rates_path: None,
         library_sources: Vec::new(),
         input_overrides: Vec::new(),
         strategy_alert_template: None,
@@ -620,6 +621,20 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                 };
                 strategy_alert_index = Some(parse_strategy_alert_index(value)?);
             }
+            "--bar-calendars" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                options.bar_calendars_path = Some(value.clone());
+            }
+            "--currency-rates" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                options.currency_rates_path = Some(value.clone());
+            }
             "--request-bars" => {
                 index += 1;
                 let Some(value) = args.get(index) else {
@@ -760,23 +775,49 @@ fn parse_request_bars_spec(spec: &str) -> Result<RequestBarsSpec, String> {
 fn request_environment_from_specs(
     specs: &[RequestBarsSpec],
     chart_context: ChartContext,
+    calendars_path: Option<&str>,
 ) -> Result<RequestEnvironment, String> {
-    if specs.is_empty() {
-        return Ok(RequestEnvironment::new(
-            chart_context,
-            Arc::new(NoRequestDataProvider),
-        ));
+    let environment = if specs.is_empty() {
+        RequestEnvironment::new(chart_context, Arc::new(NoRequestDataProvider))
+    } else {
+        let mut streams = Vec::with_capacity(specs.len());
+        for spec in specs {
+            let text = fs::read_to_string(&spec.path)
+                .map_err(|err| format!("failed to read {}: {err}", spec.path))?;
+            streams.push((spec.key.clone(), parse_bars_csv(&text)?));
+        }
+        let provider =
+            InMemoryRequestDataProvider::from_streams(streams).map_err(|err| err.to_string())?;
+        RequestEnvironment::new(chart_context, Arc::new(provider))
+    };
+    match calendars_path {
+        Some(path) => {
+            let json =
+                fs::read_to_string(path).map_err(|err| format!("failed to read {path}: {err}"))?;
+            let calendars =
+                pine_runtime::bar_calendars_from_json(&json).map_err(|err| err.to_string())?;
+            Ok(environment.with_bar_calendars(Arc::new(calendars)))
+        }
+        None => Ok(environment),
     }
+}
 
-    let mut streams = Vec::with_capacity(specs.len());
-    for spec in specs {
-        let text = fs::read_to_string(&spec.path)
-            .map_err(|err| format!("failed to read {}: {err}", spec.path))?;
-        streams.push((spec.key.clone(), parse_bars_csv(&text)?));
+fn request_environment_from_options(options: &RunOptions) -> Result<RequestEnvironment, String> {
+    let environment = request_environment_from_specs(
+        &options.request_bars,
+        options.chart_context.clone(),
+        options.bar_calendars_path.as_deref(),
+    )?;
+    match &options.currency_rates_path {
+        Some(path) => {
+            let text = fs::read_to_string(path)
+                .map_err(|error| format!("failed to read {path}: {error}"))?;
+            let rates =
+                pine_runtime::currency_rates_from_json(&text).map_err(|error| error.to_string())?;
+            Ok(environment.with_currency_rates(Arc::new(rates)))
+        }
+        None => Ok(environment),
     }
-    let provider =
-        InMemoryRequestDataProvider::from_streams(streams).map_err(|err| err.to_string())?;
-    Ok(RequestEnvironment::new(chart_context, Arc::new(provider)))
 }
 
 fn magnifier_input_from_path(path: Option<&str>) -> Result<Option<MagnifierInput>, String> {

@@ -48,7 +48,7 @@ impl<'a> ConstEvaluator<'a> {
     }
 
     pub(super) fn metadata_value(&mut self, expr: &HirExpr) -> Option<PineValue> {
-        let value = self.value(expr)?;
+        let value = self.value(expr)?.materialize_boolean();
         // Keep the public color input convention (a string accepted by color
         // overrides), while evaluating colors internally with runtime semantics.
         if let PineValue::Color(color) = value {
@@ -109,7 +109,7 @@ impl<'a> ConstEvaluator<'a> {
                 let v6 = self.minimal.language_version.is_some_and(|v| v >= 6);
                 if v6
                     && ((*op == HirBinaryOp::And && left == PineValue::Bool(false))
-                        || (*op == HirBinaryOp::Or && left == PineValue::Bool(true)))
+                        || (*op == HirBinaryOp::Or && left.is_condition_true()))
                 {
                     return Some(left);
                 }
@@ -121,7 +121,9 @@ impl<'a> ConstEvaluator<'a> {
                 then_expr,
                 else_expr,
             } => match self.eval(condition, next)? {
-                PineValue::Bool(true) => self.eval(then_expr, next),
+                PineValue::Bool(true) | PineValue::ConstantBool { .. } => {
+                    self.eval(then_expr, next)
+                }
                 PineValue::Bool(false) | PineValue::Na => self.eval(else_expr, next),
                 _ => None,
             },
@@ -166,6 +168,20 @@ impl<'a> ConstEvaluator<'a> {
 }
 
 fn literal_expr(original: &HirExpr, value: PineValue) -> Option<HirExpr> {
+    if let PineValue::ConstantBool { value, identity } = value {
+        return Some(HirExpr {
+            kind: HirExprKind::Unary {
+                op: pine_ir::HirUnaryOp::ConstantBoolIdentity(identity),
+                expr: Box::new(HirExpr {
+                    kind: HirExprKind::Literal(HirLiteral::Bool(value)),
+                    series_id: None,
+                    pine_type: original.pine_type,
+                }),
+            },
+            series_id: None,
+            pine_type: original.pine_type,
+        });
+    }
     if matches!(value, PineValue::Na) {
         return Some(HirExpr {
             kind: HirExprKind::Builtin("na".to_owned()),
@@ -336,6 +352,7 @@ fn formatting_output_is_bounded(args: &[HirCallArg], template: bool) -> bool {
 pub(super) fn minimal_program(language_version: Option<u16>) -> HirProgram {
     HirProgram {
         language_version,
+        dynamic_requests: language_version.is_some_and(|version| version >= 6),
         script_mode: ScriptMode::Indicator,
         timenow_symbol: None,
         strategy_settings: StrategySettings::default(),

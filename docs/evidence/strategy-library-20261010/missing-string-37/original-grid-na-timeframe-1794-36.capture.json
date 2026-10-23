@@ -1,0 +1,16 @@
+{
+  "name": "original-grid-na-timeframe-1794-36",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/original-grid-na-timeframe-1794-36.pine",
+  "source_sha256": "38f5a38b01fb0fd6c3d5695a63c15597c34a9d0841606bad719f3a51ef9cf479",
+  "native_status": "compiled_and_executed",
+  "native_row": "240 row Grid (Long, Allowed, 0, 0, 0, Close All, Right, 0, 0.01, 50, Grid - reentry, ---, 500, 0.05, 250, 0.5, 4, 0.01, 100, 10, 500, 500, 3, 50, 0.1, 30, 500, 500, 20, 3, Current, Current, ---, ---, 100, Current, Current, ---, ---, 0.6, 1, 10, 2, 14, 50, 3, 6, 9, 0.85, 6, 10, 10, 25, 1, 100, 25, 10, 20, 10, 20, 2, 20, 2, 2, 0, 14, 50, 2, 5, 10, 10, 25, 1, 100, 25, 10, 20, 9, 0.85, 6, 10, 20, 2) position_avg_price 83,010.96",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1794a817731346151db65f392a57d77b176e1b59c12c89489a2266b233cf59c0",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/original-grid-na-timeframe-1794-36.native.ax.txt",
+  "accessibility_sha256": "b0f3ff9f545816f3301b87598739cb7d4ad1370fcbb533606adb8534a16be617",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/original-grid-na-timeframe-1794-36.native.png",
+  "screenshot_sha256": "5a401def32ecd64c77de6956809852db4c94b3ba1222da83f2e87cd9b893e2a4",
+  "scope": "Native succeeds with unchanged default Grid Tool source and report showing1376 trades. Follow-up evidence only: no na-timeframe repair in frozen batch36 and no complete trade-ledger/profit comparison.",
+  "qualification_scope": "native_original_success_only_ledger_unqualified"
+}

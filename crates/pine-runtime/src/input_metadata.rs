@@ -5,6 +5,14 @@ use crate::PineValue;
 mod bindings;
 mod constant;
 
+pub(crate) fn constant_string(program: &HirProgram, expr: &HirExpr) -> Option<String> {
+    let minimal = constant::minimal_program(program.language_version);
+    match constant::ConstEvaluator::new(program, &minimal).value(expr)? {
+        PineValue::String(value) => Some(value),
+        _ => None,
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct InputCall {
     pub call_site_id: u32,
@@ -30,6 +38,7 @@ pub fn input_calls(program: &HirProgram) -> Vec<InputCall> {
     let minimal = constant::minimal_program(program.language_version);
     let mut evaluator = constant::ConstEvaluator::new(program, &minimal);
     let mut calls = Vec::new();
+    let mut seen = std::collections::HashSet::new();
     crate::runtime::hir_walk::statements(&program.statements, &mut |expr| {
         let HirExprKind::Call {
             callee,
@@ -39,7 +48,7 @@ pub fn input_calls(program: &HirProgram) -> Vec<InputCall> {
         else {
             return;
         };
-        if !is_input_call(callee) {
+        if !is_input_call(callee) || !seen.insert(*call_site_id) {
             return;
         }
         let is_source = callee == "input.source"

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Compact date oracle 22",precision=0)
+plot(timestamp("15Aug 2022 14:00 +0000"),title="start")
+plot(timestamp("15Aug 2022 20:00 +0000"),title="end")
+plot(timestamp("15Aug 2022 14:00 +0530"),title="offset")
+plot(timestamp("15 Aug 2022 14:00 +0530"),title="spacedOffset")
+plot(timestamp("15Aug 2022 14:00 GMT+0530"),title="gmtOffset")
+plot(timestamp("2022-08-15T14:00:00+05:30"),title="isoOffset")

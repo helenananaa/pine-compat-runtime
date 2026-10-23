@@ -42,5 +42,13 @@ impl std::iter::FusedIterator for HistoricalDataset<'_, '_, '_> {}
 impl Drop for HistoricalDataset<'_, '_, '_> {
     fn drop(&mut self) {
         self.runtime.historical_end = self.previous_historical_end;
+        if self
+            .runtime
+            .static_requests
+            .finish_dataset(self.runtime.bars)
+        {
+            self.runtime.request_cache.clear();
+            self.runtime.request_evaluations.clear();
+        }
     }
 }

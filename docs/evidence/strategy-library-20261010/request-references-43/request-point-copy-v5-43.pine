@@ -1,0 +1,11 @@
+//@version=5
+indicator("request-point-copy-v5-43")
+p=chart.point.from_index(1,10)
+q=p.copy()
+f(chart.point v)=>
+    v.price+=5
+    v.price
+a=request.security(syminfo.tickerid,timeframe.period,f(q))
+plot(a)
+plot(p.price)
+plot(q.price)

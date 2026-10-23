@@ -1,0 +1,43 @@
+//@version=5
+indicator("array-history-persistence-alias-v5-42")
+varip a=array.new_int()
+var b=a
+var c=array.new_int()
+varip d=c
+varip e=array.new_int()
+varip f=e
+var g=array.new_int()
+var h=g
+a.push(1)
+c.push(1)
+e.push(1)
+g.push(1)
+varip int ah=-1
+varip int bh=-1
+varip int ch=-1
+varip int dh=-1
+varip int eh=-1
+varip int fh=-1
+varip int gh=-1
+varip int hh=-1
+if barstate.ishistory
+    ah:=a.size()
+    bh:=b.size()
+    ch:=c.size()
+    dh:=d.size()
+    eh:=e.size()
+    fh:=f.size()
+    gh:=g.size()
+    hh:=h.size()
+plot(ah)
+plot(bh)
+plot(ch)
+plot(dh)
+plot(eh)
+plot(fh)
+plot(gh)
+plot(hh)
+plot(bh==ah?1:0)
+plot(dh==ch?1:0)
+plot(fh==eh?1:0)
+plot(hh==gh?1:0)

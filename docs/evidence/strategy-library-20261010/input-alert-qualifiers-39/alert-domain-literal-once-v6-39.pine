@@ -1,0 +1,4 @@
+//@version=6
+indicator("alert-domain-literal-once-v6-39")
+alert("probe","once_per_bar")
+plot(1)

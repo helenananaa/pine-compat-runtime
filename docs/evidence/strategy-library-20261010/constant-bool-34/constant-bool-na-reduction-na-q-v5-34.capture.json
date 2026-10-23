@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-na-reduction-na-q-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-na-reduction-na-q-v5-34.pine",
+  "source_sha256": "cf58e2e06eec46dbd7ed643c5b92df6852058cf97db8b6fd8b16f99626b42229",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool NA reduction na-q probe34 cross equality 0 observe q na 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "cf58e2e06eec46dbd7ed643c5b92df6852058cf97db8b6fd8b16f99626b42229",
+  "normalized_source_sha256": "cf58e2e06eec46dbd7ed643c5b92df6852058cf97db8b6fd8b16f99626b42229",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-na-q-v5-34.native.ax.txt",
+  "accessibility_sha256": "561446483b9c6aa85ecc67569bc984b973e44744edad695da655e4e787f30dac",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-na-q-v5-34.native.png",
+  "screenshot_sha256": "a3eb351f4d587c2f507679101beee97c81d0a7af659db92fcd61df2cf03c5656"
+}

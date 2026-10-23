@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-containers-valid-v6-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-containers-valid-v6-32.pine",
+  "source_sha256": "966623879542482e7a3ca077b00a7deadfb698e6cd1accbc92992debd983f321",
+  "native_status": "analysis_rejected",
+  "error": "text cannot be used as a variable or function name (CE10150)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "ebaf633936b33c292965776c7a0208cafff49f21421403200a6e22e7fe70b52f",
+  "normalized_source_sha256": "ebaf633936b33c292965776c7a0208cafff49f21421403200a6e22e7fe70b52f",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-containers-valid-v6-32.rejected.png",
+  "screenshot_sha256": "78c540586d30b6f55c64a341ce53e60972b3a6cbd0ce7681f0323d3a9b1c1bb6",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-containers-valid-v6-32.rejected.ax.txt",
+  "accessibility_sha256": "e7f2adaaaf7e3a134572a50fb91a424798492313d7cca31c08ae648c9261d642"
+}

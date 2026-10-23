@@ -1,0 +1,4 @@
+//@version=5
+indicator("qualifier-true-gate-const-v5-39")
+average39(int length,enabled)=>enabled?ta.ema(close,length):close
+plot(average39(3,true)==ta.ema(close,3)?1:0)

@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-field-boundaries-valid-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-field-boundaries-valid-v5-34.pine",
+  "source_sha256": "b328a566a089e2631e1ab0aaebe340599b0ef471cbbdc13d722ea74b8bec1b8a",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Valid bool typed field boundaries v5 probe34 ordinary field 0 array field 0 parameter missing equals false 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "b328a566a089e2631e1ab0aaebe340599b0ef471cbbdc13d722ea74b8bec1b8a",
+  "normalized_source_sha256": "b328a566a089e2631e1ab0aaebe340599b0ef471cbbdc13d722ea74b8bec1b8a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-field-boundaries-valid-v5-34.native.ax.txt",
+  "accessibility_sha256": "291f759fb8894b204ac11c5051e2f6be4cfefc2b3797752af066f6d6758a4095",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-field-boundaries-valid-v5-34.native.png",
+  "screenshot_sha256": "5a303d907a6beb4eb8c9038ada588584bb0327f8da99ae20b9bb87cb6dcce788"
+}

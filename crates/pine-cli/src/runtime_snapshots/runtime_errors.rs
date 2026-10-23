@@ -605,7 +605,7 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     ),
     (
         "tests/fixtures/regressions/table_new_cell_limit.pine",
-        "table cell count cannot exceed 1000",
+        "table cell count cannot exceed 10000",
     ),
     (
         "tests/fixtures/regressions/table_new_positive_dimensions.pine",
@@ -692,10 +692,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `0,-1`",
     ),
     (
-        "tests/fixtures/regressions/table_cell_set_text_missing_cell.pine",
-        "table cell `0,0` has not been populated",
-    ),
-    (
         "tests/fixtures/regressions/table_cell_set_text_coordinate_bounds.pine",
         "table cell coordinate out of bounds `2,0`",
     ),
@@ -710,10 +706,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/table_cell_set_text_coordinate_row_negative.pine",
         "table cell coordinate out of bounds `0,-1`",
-    ),
-    (
-        "tests/fixtures/regressions/table_cell_set_bgcolor_missing_cell.pine",
-        "table cell `0,0` has not been populated",
     ),
     (
         "tests/fixtures/regressions/table_cell_set_bgcolor_coordinate_bounds.pine",
@@ -732,10 +724,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `0,-1`",
     ),
     (
-        "tests/fixtures/regressions/table_cell_set_text_color_missing_cell.pine",
-        "table cell `0,0` has not been populated",
-    ),
-    (
         "tests/fixtures/regressions/table_cell_set_text_color_coordinate_bounds.pine",
         "table cell coordinate out of bounds `2,0`",
     ),
@@ -750,10 +738,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/table_cell_set_text_color_coordinate_row_negative.pine",
         "table cell coordinate out of bounds `0,-1`",
-    ),
-    (
-        "tests/fixtures/regressions/table_cell_set_width_missing_cell.pine",
-        "table cell `0,0` has not been populated",
     ),
     (
         "tests/fixtures/regressions/table_cell_set_width_coordinate_bounds.pine",
@@ -772,10 +756,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `0,-1`",
     ),
     (
-        "tests/fixtures/regressions/table_cell_set_height_missing_cell.pine",
-        "table cell `0,0` has not been populated",
-    ),
-    (
         "tests/fixtures/regressions/table_cell_set_height_coordinate_bounds.pine",
         "table cell coordinate out of bounds `2,0`",
     ),
@@ -790,10 +770,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/table_cell_set_height_coordinate_row_negative.pine",
         "table cell coordinate out of bounds `0,-1`",
-    ),
-    (
-        "tests/fixtures/regressions/table_cell_set_text_size_missing_cell.pine",
-        "table cell `0,0` has not been populated",
     ),
     (
         "tests/fixtures/regressions/table_cell_set_text_size_coordinate_bounds.pine",
@@ -812,10 +788,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `0,-1`",
     ),
     (
-        "tests/fixtures/regressions/table_cell_set_text_halign_missing_cell.pine",
-        "table cell `0,0` has not been populated",
-    ),
-    (
         "tests/fixtures/regressions/table_cell_set_text_halign_coordinate_bounds.pine",
         "table cell coordinate out of bounds `2,0`",
     ),
@@ -830,10 +802,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/table_cell_set_text_halign_coordinate_row_negative.pine",
         "table cell coordinate out of bounds `0,-1`",
-    ),
-    (
-        "tests/fixtures/regressions/table_cell_set_text_valign_missing_cell.pine",
-        "table cell `0,0` has not been populated",
     ),
     (
         "tests/fixtures/regressions/table_cell_set_text_valign_coordinate_bounds.pine",
@@ -852,10 +820,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `0,-1`",
     ),
     (
-        "tests/fixtures/regressions/table_cell_set_text_wrap_missing_cell.pine",
-        "table cell `0,0` has not been populated",
-    ),
-    (
         "tests/fixtures/regressions/table_cell_set_text_wrap_coordinate_bounds.pine",
         "table cell coordinate out of bounds `2,0`",
     ),
@@ -870,10 +834,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/table_cell_set_text_wrap_coordinate_row_negative.pine",
         "table cell coordinate out of bounds `0,-1`",
-    ),
-    (
-        "tests/fixtures/regressions/table_cell_set_tooltip_missing_cell.pine",
-        "table cell `0,0` has not been populated",
     ),
     (
         "tests/fixtures/regressions/table_cell_set_tooltip_coordinate_bounds.pine",
@@ -892,10 +852,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `0,-1`",
     ),
     (
-        "tests/fixtures/regressions/table_cell_set_text_font_family_missing_cell.pine",
-        "table cell `0,0` has not been populated",
-    ),
-    (
         "tests/fixtures/regressions/table_cell_set_text_font_family_coordinate_bounds.pine",
         "table cell coordinate out of bounds `2,0`",
     ),
@@ -910,10 +866,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/table_cell_set_text_font_family_coordinate_row_negative.pine",
         "table cell coordinate out of bounds `0,-1`",
-    ),
-    (
-        "tests/fixtures/regressions/table_cell_set_text_formatting_missing_cell.pine",
-        "table cell `0,0` has not been populated",
     ),
     (
         "tests/fixtures/regressions/table_cell_set_text_formatting_coordinate_bounds.pine",

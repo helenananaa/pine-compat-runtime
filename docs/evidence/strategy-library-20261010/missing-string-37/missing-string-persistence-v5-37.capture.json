@@ -1,0 +1,20 @@
+{
+  "name": "missing-string-persistence-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-persistence-v5-37.pine",
+  "source_sha256": "b5b6c61d551fbb46dd0910e1574fcf31af3e9f41d196187293621c2989b31918",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1
+  ],
+  "native_row": "251 row missing-string-persistence-v5-37 Plot 1 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b5b6c61d551fbb46dd0910e1574fcf31af3e9f41d196187293621c2989b31918",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-persistence-v5-37.native.ax.txt",
+  "accessibility_sha256": "f89ba41e3d805d5002a786d3d1aa311b55196626907dacd418523d6b38ddaf99",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-persistence-v5-37.native.png",
+  "screenshot_sha256": "d38ce467ec0f03b1ff82832e7a8534352b62f9fe7b5842d637b0eb51e67fc3bc",
+  "scope": "v5 immutable var and varip missing-string bindings admit simple parameters and keep missing identity",
+  "qualification_scope": "candidate_bounded_control"
+}

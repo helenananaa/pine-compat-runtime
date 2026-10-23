@@ -1,0 +1,20 @@
+{
+  "name": "missing-string-symbol-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-symbol-v6-37.pine",
+  "source_sha256": "4caabc76403c79e405b186d83265bc7d4006d2579d4dff8284d24d7404ba3d34",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "251 row missing-string-symbol-v6-37 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4caabc76403c79e405b186d83265bc7d4006d2579d4dff8284d24d7404ba3d34",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-symbol-v6-37.native.ax.txt",
+  "accessibility_sha256": "b61c37c09a3bebb7c5369641f1a2f9f250430c349a69342fe3ab0a97aa4c187a",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-symbol-v6-37.native.png",
+  "screenshot_sha256": "64d566ed36cec5ce6971a243cc1f1b028d253723127a727b8aa8c3707c496849",
+  "scope": "v6 request.security missing symbol inherits current chart symbol",
+  "qualification_scope": "candidate_bounded_control"
+}

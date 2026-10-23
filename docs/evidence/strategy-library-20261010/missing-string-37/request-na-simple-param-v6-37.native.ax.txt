@@ -1,0 +1,478 @@
+Browser tab: 2, Title: "BTCUSDT 81,571.43 ▼ −0.05% 裸K", URL: "https://www.tradingview.com/chart/wf5lRGkJ/".
+0 AXWebArea BTCUSDT 81,571.43 ▼ −0.05% 裸K, URL: tradingview.com/chart/wf5lRGkJ/
+	1 container
+		2 container
+			3 pop up button Logged in as lingeyon Active layout: 裸K
+			4 text 11
+			5 toolbar
+				6 container
+					7 button BTCUSDT, Help: Symbol search, ID: header-toolbar-symbol-search
+					8 button Description: Switch data type, ID: header-toolbar-switch-data-type
+					9 pop up button Description: Compare symbols, ID: header-toolbar-compare
+					10 container header-toolbar-intervals
+						11 radio button Description: 1 minute, Value: 0
+							12 container
+								13 text 1 m
+						14 radio button Description: 3 minutes, Value: 0
+							15 container
+								16 text 3 m
+						17 radio button Description: 5 minutes, Value: 0
+							18 container
+								19 text 5 m
+						20 radio button Description: 10 minutes, Value: 0
+							21 container
+								22 text 10 m
+						23 radio button Description: 15 minutes, Value: 0
+							24 container
+								25 text 15 m
+						26 radio button Description: 30 minutes, Value: 0
+							27 container
+								28 text 30 m
+						29 radio button Description: 45 minutes, Value: 0
+							30 container
+								31 text 45 m
+						32 radio button Description: 90 minutes, Value: 0
+							33 container
+								34 text 90 m
+						35 radio button Description: 1 hour, Value: 0
+							36 container
+								37 text 1 h
+						38 radio button Description: 2 hours, Value: 0
+							39 container
+								40 text 2 h
+						41 radio button Description: 4 hours, Value: 0
+							42 container
+								43 text 4 h
+						44 radio button Description: 6 hours, Value: 0
+							45 container
+								46 text 6 h
+						47 radio button Description: 8 hours, Value: 0
+							48 container
+								49 text 8 h
+						50 radio button Description: 12 hours, Value: 0
+							51 container
+								52 text 12 h
+						53 radio button Description: 1 day, Value: 1
+							54 text D
+						55 radio button Description: 1 week, Value: 0
+							56 text W
+						57 radio button Description: 1 month, Value: 0
+							58 text M
+						59 pop up button Chart interval
+					60 pop up button Candles
+					61 container header-toolbar-indicators
+						62 button Indicators, metrics, and strategies
+						63 pop up button Favorite indicators
+					64 pop up button Indicator templates
+					65 button Description: Create alert, ID: header-toolbar-alerts
+					66 checkbox Description: Bar replay, Value: 0, ID: header-toolbar-replay
+					67 container header-toolbar-undo-redo
+						68 button Undo update request-na-simple-param-v6-37 script
+					69 pop up button Description: Layout setup, ID: header-toolbar-layouts
+					70 container header-toolbar-save-load
+						71 button Save all charts for all symbols and intervals on your layout
+							72 text 裸K
+							73 text Save
+						74 pop up button Manage layouts
+					75 button Description: Quick search, ID: header-toolbar-quick-search
+					76 button Description: Settings, ID: header-toolbar-properties
+					77 button Description: Fullscreen mode, ID: header-toolbar-fullscreen
+					78 pop up button Take a snapshot
+				79 pop up button Share your idea with the trade community
+				80 container
+					81 button Trade
+						82 text Trade
+			83 toolbar drawing-toolbar
+				84 container
+					85 container
+						86 button Cross
+						87 checkbox Description: Cursors, Value: 1
+					88 container
+						89 button Trendline
+						90 checkbox Description: Trend tools, Value: 0
+					91 container
+						92 button Fib retracement
+						93 checkbox Description: Gann and Fibonacci tools, Value: 0
+					94 container
+						95 button XABCD pattern
+						96 checkbox Description: Patterns, Value: 0
+					97 container
+						98 button Long position
+						99 checkbox Description: Forecasting and measurement tools, Value: 0
+					100 container
+						101 button Brush
+						102 checkbox Description: Geometric shapes, Value: 0
+					103 container
+						104 button Text
+						105 checkbox Description: Annotation tools, Value: 0
+					106 container
+						107 button Icon
+						108 checkbox Description: Icons, Value: 0
+					109 button Measure
+					110 button Zoom in
+					111 container
+						112 checkbox Description: Magnet mode snaps drawings placed near price bars to the closest OHLC value, Value: 0
+						113 checkbox Description: Magnets, Value: 0
+					114 checkbox Description: Keep drawing, Value: 0
+					115 container
+						116 checkbox Description: Lock drawings and indicators, Value: 0
+						117 checkbox Description: Lock options, Value: 0
+					118 container
+						119 checkbox Description: Hide all drawings, Value: 0
+						120 checkbox Description: Hide options, Value: 0
+					121 container
+						122 checkbox Description: New drawings will not be synced, Value: 0
+						123 checkbox Description: Sync drawings options, Value: 0
+					124 container
+						125 button Remove objects
+						126 button Remove options
+			127 container Chart #1
+				128 container
+					129 toolbar
+						130 container Change symbol
+							131 container
+								132 image
+								133 text B
+							134 button Change symbol
+						135 container
+							136 button Flag symbol
+							137 button More
+								138 image
+						139 button Market open
+						140 container
+							141 text C 81,571.43 −44.21 (−0.05%) Vol 3.06 K
+					142 container
+						143 text 81,571.43 SELL
+						144 text 0.01
+						145 text 81,571.44 BUY
+					146 container
+						147 button Hide indicator legend
+						148 toolbar
+							149 container
+								150 text CA_-_RSI_Bol_Strat_1.1
+								151 text 6
+								152 text 200
+							153 container
+								154 button Hide
+									155 image
+								156 button Settings
+									157 image
+								158 button Remove
+									159 image
+								160 button More
+									161 image
+							524 button Active strategy
+							163 container
+								164 text 72,398.44
+								165 text 88,379.84
+								166 text 56,417.04
+					167 image Chart for BINANCE:BTCUSDT, 1 day
+				728 toolbar
+					729 text request-na-simple-param-v6-37
+					730 container
+						731 button Hide
+							732 image
+						733 button Settings
+							734 image
+						735 button Remove
+							736 image
+						737 button More
+							738 image
+					739 button Opened in Pine Editor
+					740 text 0
+			185 toolbar
+				186 pop up button Date Range
+				187 button Timezone
+					188 text 19:41:07 UTC+8
+			189 container
+				190 toolbar
+					191 checkbox Description: Watchlist, details, and news, Value: 0
+					192 checkbox Description: Alerts, Value: 0
+					193 checkbox Description: Object tree and data window, Value: 1
+					194 checkbox Description: AI Copilot, Value: 0
+					195 checkbox Description: Screeners, Value: 0
+					196 checkbox Description: Pine Editor, Value: 1
+					197 checkbox Description: Calendars, Value: 0
+					198 checkbox Description: Community, Value: 0
+					199 checkbox Description: Notifications, Value: 0
+					200 checkbox Description: Chats, Value: 0
+					201 pop up button Products
+					202 checkbox Description: Help Center, Value: 0
+				203 container
+					204 tab group
+						205 tab (selectable, settable, boolean) Object tree, Value: 0, ID: object_tree
+						206 tab (selected, settable, boolean) Data window, Value: 1, ID: data-window
+					207 container
+						208 table
+							209 container
+								210 text Date
+								211 text Sat 17 Oct '26
+							212 row BTCUSDT · 1D · Binance Open 81,615.91 High 81,770.01 Low 81,416.00 Close 81,571.43 Change −44.21 (−0.05%) Vol 3.06 K Last day change −44.20 (−0.05%)
+								213 text BTCUSDT · 1D · Binance
+								214 toolbar
+									215 button Hide data
+								216 text Open
+								217 text 81,615.91
+								218 text High
+								219 text 81,770.01
+								220 text Low
+								221 text 81,416.00
+								222 text Close
+								223 text 81,571.43
+								224 text Change
+								225 text −44.21 (−0.05%)
+								226 text Vol
+								227 text 3.06 K
+								228 text Last day change
+								229 text −44.20 (−0.05%)
+							230 row CA_-_RSI_Bol_Strat_1.1 (6, 200) Bollinger Bands SMA Basis Line 72,398.44 Bollinger Bands Upper Line 88,379.84 Bollinger Bands Lower Line 56,417.04
+								231 text CA_-_RSI_Bol_Strat_1.1 (6, 200)
+								232 toolbar
+									233 button Hide data
+								234 text Bollinger Bands SMA Basis Line
+								235 text 72,398.44
+								236 text Bollinger Bands Upper Line
+								237 text 88,379.84
+								238 text Bollinger Bands Lower Line
+								239 text 56,417.04
+							240 row request-na-simple-param-v6-37 Plot 0
+								241 text request-na-simple-param-v6-37
+								242 toolbar
+									243 button Hide data
+								741 text Plot
+								742 text 0
+			254 toolbar footer-chart-panel
+				255 container
+					256 button Close strategy report
+						257 text CA_-_RSI_Bol_Strat_1.1
+					258 pop up button (collapsed) Description: Open context menu, ID: :r1c:, Secondary Actions: Expand
+				259 button Collapse panel
+				260 button Maximize panel
+			261 container bottom-area
+				537 container
+					538 tab group report-tabs
+						539 tab (selectable, settable, boolean) Value: 0, ID: Strategy report
+						540 tab (selected, settable, boolean) Value: 1, ID: List of Trades
+					541 container
+						542 button (collapsed) Description: Aug 17, 2017 — Oct 17, 2026, Secondary Actions: Expand
+					543 container
+						544 button Settings
+					545 container
+						546 button Add alert
+					547 text List of trades
+					548 button Download .csv
+					549 pop up button (collapsed) Description: Column setup, ID: :rgm:, Secondary Actions: Expand
+					550 container
+						551 table
+							552 row
+								553 cell
+									554 container
+										555 text Trade number 
+								556 cell
+									557 text Type
+								558 cell
+									559 text Date and time
+								560 cell
+									561 text Signal
+								562 cell
+									563 text Price
+								564 cell
+									565 text Size
+								566 cell
+									567 text Net PnL
+								568 cell
+									569 text Return
+							570 row
+								599 cell
+									600 container
+										601 text 5 Long
+								571 cell
+									572 button Show on chart
+									573 button Show on chart
+								602 cell
+									603 text Exit
+									604 text Entry
+								605 cell
+									606 text Open
+									607 text Dec 21, 2025
+								608 cell
+									609 text Open
+									610 text RSI_BB_L
+								611 cell
+									612 text —
+									613 text 88,360.91
+									614 text USDT
+								615 cell
+									616 text 1
+									617 container
+										618 text 88.36 K USDT
+								619 cell
+									620 text −6,789.47
+									621 text USDT
+								622 cell
+									623 text —
+							574 row
+								624 cell
+									625 container
+										626 text 4 Short
+								575 cell
+									576 button Show on chart
+									577 button Show on chart
+								627 cell
+									628 text Exit
+									629 text Entry
+								630 cell
+									631 text Dec 21, 2025
+									632 text Aug 12, 2020
+								633 cell
+									634 text RSI_BB_L
+									635 text RSI_BB_S
+								636 cell
+									637 container
+										638 text 88,360.91 USDT
+									639 text 11,392.09
+									640 text USDT
+								641 cell
+									642 text 1
+									643 container
+										644 text 11.39 K USDT
+								645 cell
+									646 text −76,968.82
+									647 text USDT
+								648 cell
+									649 text −675.63%
+							578 row
+								650 cell
+									651 container
+										652 text 3 Long
+								579 cell
+									580 button Show on chart
+									581 button Show on chart
+								653 cell
+									654 text Exit
+									655 text Entry
+								656 cell
+									657 text Aug 12, 2020
+									658 text Mar 20, 2020
+								659 cell
+									660 text RSI_BB_S
+									661 text RSI_BB_L
+								662 cell
+									663 container
+										664 text 11,392.09 USDT
+									665 text 6,162.05
+									666 text USDT
+								667 cell
+									668 text 1
+									669 container
+										670 text 6.16 K USDT
+								671 cell
+									672 text +5,230.04
+									673 text USDT
+								674 cell
+									675 text +84.88%
+							582 row
+								676 cell
+									677 container
+										678 text 2 Short
+								583 cell
+									584 button Show on chart
+									585 button Show on chart
+								679 cell
+									680 text Exit
+									681 text Entry
+								682 cell
+									683 text Mar 20, 2020
+									684 text Jun 12, 2019
+								685 cell
+									686 text RSI_BB_L
+									687 text RSI_BB_S
+								688 cell
+									689 container
+										690 text 6,162.05 USDT
+									691 text 7,884.90
+									692 text USDT
+								693 cell
+									694 text 1
+									695 container
+										696 text 7.88 K USDT
+								697 cell
+									698 text +1,722.85
+									699 text USDT
+								700 cell
+									701 text +21.85%
+							586 row
+								702 cell
+									703 container
+										704 text 1 Long
+								587 cell
+									588 button Show on chart
+									589 button Show on chart
+								705 cell
+									706 text Exit
+									707 text Entry
+								708 cell
+									709 text Jun 12, 2019
+									710 text Dec 27, 2018
+								711 cell
+									712 text RSI_BB_S
+									713 text RSI_BB_L
+								714 cell
+									715 container
+										716 text 7,884.90 USDT
+									717 text 3,777.74
+									718 text USDT
+								719 cell
+									720 text 1
+									721 container
+										722 text 3.78 K USDT
+								723 cell
+									724 text +4,107.16
+									725 text USDT
+								726 cell
+									727 text +108.72%
+					590 container
+						591 text Caution!
+						592 container
+							593 text Some features may be unavailable. To ensure the most accurate calculations, upgrade to the latest Pine Script® version.
+						594 button Close
+			449 container Trading panel
+		450 container
+			451 button Move split-view to overlay
+			452 text Pine Editor
+			453 button Collapse panel
+			454 button Fullscreen mode
+			455 button Close
+			456 container pine-editor-dialog
+				457 pop up button (collapsed) Untitled script, ID: :rm:, Secondary Actions: Expand
+					458 heading Untitled script, Value: 2
+						459 text Untitled script
+				743 button (disabled) Update on chart
+				461 button Save script
+				462 button Publish script, Help: Share your script with community
+				463 container
+					464 pop up button (collapsed) Description: More, ID: :rq:, Secondary Actions: Expand
+				465 container
+					466 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+indicator("request-na-simple-param-v6-37",precision=0)
+string missing=na
+f(simple string x)=>str.length(x)
+plot(na(f(missing))?1:0)
+
+				467 container
+					468 button
+					469 button Line 1, Col 1
+						470 text Line
+						471 text 1
+						472 text , 
+						473 text Col
+						474 text 1
+					475 link Description: Pine Script® v6, Help: Open Pine Reference, Value: tradingview.com/pine-script-reference/v6
+		522 container common-tooltip-wrapper
+			523 text Runtime error: RE10106 · Opened in Pine Editor
+
+The focused UI element is 466 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+indicator("request-na-simple-param-v6-37",precision=0)
+string missing=na
+f(simple string x)=>str.length(x)
+plot(na(f(missing))?1:0)

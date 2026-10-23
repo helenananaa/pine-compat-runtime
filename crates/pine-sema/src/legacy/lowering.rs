@@ -23,7 +23,7 @@ struct LegacyUseKey {
     span_end: usize,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub(crate) struct LegacyLoweringPlan {
     calls: HashMap<LegacyUseKey, &'static str>,
     call_lowerings: HashMap<LegacyUseKey, LegacyCallLowering>,

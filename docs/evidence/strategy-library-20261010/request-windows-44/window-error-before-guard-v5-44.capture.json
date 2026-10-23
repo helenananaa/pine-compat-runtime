@@ -1,0 +1,19 @@
+{
+  "name": "window-error-before-guard-v5-44",
+  "version": 5,
+  "scenario": "error-before-guard",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-error-before-guard-v5-44.pine",
+  "source_sha256": "07368f109a9d90f8762cf109eba6884df144afb3ec7d730664be2a7c397a12eb",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 5: before context request",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "07368f109a9d90f8762cf109eba6884df144afb3ec7d730664be2a7c397a12eb",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-error-before-guard-v5-44.native.ax.txt",
+  "accessibility_sha256": "36e85c67febae3e2e1cd1d0381c16dd18b8c1a8be306e754a3a36293c1fbadef",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-error-before-guard-v5-44.native.png",
+  "screenshot_sha256": "fde4e8030fc94707880b8f01ed12576f7e746c9050a36e42b9259f49b97149ff",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

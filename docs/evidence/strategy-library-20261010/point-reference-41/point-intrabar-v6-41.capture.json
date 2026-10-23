@@ -1,0 +1,24 @@
+{
+  "name": "point-intrabar-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-intrabar-v6-41.pine",
+  "source_sha256": "52d35f38999008508d26817473d3394e765d093160ac4add9df13222722ad280",
+  "qualification_scope": "intrabar_relation",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    38,
+    1,
+    38,
+    38
+  ],
+  "native_row": "478 row point-intrabar-v6-41 Plot 38.00 Plot 1.00 Plot 38.00 Plot 38.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "eb8e760c018305eb0b65ce66a819091f10d8c3783313e8fba235e4cdc8c447d2",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-intrabar-v6-41.native.ax.txt",
+  "accessibility_sha256": "f62b21f157e50d204e4c567e5ee3a40443c98675182cd87dd88650296132dc35",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-intrabar-v6-41.native.png",
+  "screenshot_sha256": "4c3f390988188fa1d95ed380037643215f3738050a3b76477ba42632ebe11482",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

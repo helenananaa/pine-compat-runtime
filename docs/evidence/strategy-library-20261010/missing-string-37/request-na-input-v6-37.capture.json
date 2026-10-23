@@ -1,0 +1,20 @@
+{
+  "name": "request-na-input-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-input-v6-37.pine",
+  "source_sha256": "7c9222c4706c1da67ca1a49710d767752ef5bd2eeed58ee6c7391c12ab0f47b2",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "240 row request-na-input-v6-37 (Current) Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "7c9222c4706c1da67ca1a49710d767752ef5bd2eeed58ee6c7391c12ab0f47b2",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-input-v6-37.native.ax.txt",
+  "accessibility_sha256": "2cb0b34e9813e6673956b97d3885a43ee25ec82ecf2b0937b2b1e1faa1a1bebd",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-input-v6-37.native.png",
+  "screenshot_sha256": "370c8a5bd1b01b993b950f53b397c29addac0a367827bf9e6eefc0aafa15d666",
+  "scope": "Follow-up only: v6 input-string ternary na resolves current chart timeframe",
+  "qualification_scope": "candidate_bounded_control"
+}

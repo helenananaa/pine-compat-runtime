@@ -1,0 +1,5 @@
+//@version=6
+indicator("missing-string-symbol-v6-37",precision=0)
+v=request.security(na,"",close)
+plot(v==close?1:0)
+plot(na(v)?1:0)

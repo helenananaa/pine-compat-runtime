@@ -1,0 +1,24 @@
+{
+  "name": "body-transitive-method-called-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-transitive-method-called-v5-46.pine",
+  "source_sha256": "2ad3502beaa36def8ea57b436ef5e07a81440f42ee3557f30d3b04bd2b4162f0",
+  "version": 5,
+  "kind": "called",
+  "expected_values": [
+    3
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3
+  ],
+  "native_row": "226 row body-transitive-method-called-v5-46 Plot 3.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "eb82502ea7935d8c3cd968c6e18eea0446400e7d81cfab2caa52d37b3b3b3530",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-called-v5-46.native.ax.txt",
+  "accessibility_sha256": "b0ec697d6bc781594c3b116f2d514424909133949be588342a0118df07f955b3",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-transitive-method-called-v5-46.native.png",
+  "screenshot_sha256": "f6a65eb3926dff35874abdd3a88b210b8495eb1c7b6e33f904d6917cc1787248",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

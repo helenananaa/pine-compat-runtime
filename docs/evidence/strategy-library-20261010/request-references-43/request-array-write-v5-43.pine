@@ -1,0 +1,9 @@
+//@version=5
+indicator("request-array-write-v5-43")
+values=array.from(10.0)
+f(array<float> v)=>
+    v.set(0,v.get(0)+5)
+    v.get(0)
+a=request.security(syminfo.tickerid,timeframe.period,f(values))
+plot(a)
+plot(values.get(0))

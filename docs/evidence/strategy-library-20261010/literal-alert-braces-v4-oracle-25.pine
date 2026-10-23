@@ -1,0 +1,8 @@
+//@version=4
+study("Literal alert braces oracle 25",precision=0)
+s="{{ticker}}|{{close}}|{{unknown}}|{{"
+alias=s
+alert(alias,alert.freq_all)
+alert(s+"x",alert.freq_once_per_bar)
+alertcondition(true,"{{ticker}}|{{unknown}}|{{","C={{close}}")
+plot(1,title="compiled")

@@ -2,5 +2,5 @@
 indicator("Unsupported matrix<string> sum")
 
 values = matrix.new<string>(1, 1, "x")
-total = matrix.sum(values)
+total = matrix.sum(values, 1)
 plot(total)

@@ -1,0 +1,17 @@
+{
+  "import": "jason5480/time_filters/1",
+  "version": 5,
+  "officialUnusedImportProbe": "compiled_and_ran",
+  "exportsShownByEditor": [
+    "is_in_date_range",
+    "is_in_session"
+  ],
+  "sourceAcquisition": "not_obtained_from_removed_publication",
+  "publicationJumpResult": "Publication has ghosted - post is not here anymore",
+  "originalMainImportUses": 2,
+  "scope": "Official availability/metadata evidence only. No substitute library source supplied and unchanged QFL runtime remains pending exact host library input.",
+  "originalMainImportedCalls": [
+    "tif.is_in_date_range",
+    "tif.is_in_session"
+  ]
+}

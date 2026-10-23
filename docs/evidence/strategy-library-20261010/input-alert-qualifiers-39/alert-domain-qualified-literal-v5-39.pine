@@ -1,0 +1,4 @@
+//@version=5
+indicator("alert-domain-qualified-literal-v5-39")
+alert("probe","alert.freq_all")
+plot(1)

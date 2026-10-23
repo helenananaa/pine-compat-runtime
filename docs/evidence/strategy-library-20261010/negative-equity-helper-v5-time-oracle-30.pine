@@ -1,0 +1,8 @@
+//@version=5
+strategy("Negative equity helper v5 30",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0,precision=8)
+if time==1550448000000
+    strategy.entry("S",strategy.short,qty=1)
+plot(ta.valuewhen(bar_index==0,time,0),title="origin")
+plot(ta.valuewhen(time==1588896000000,strategy.equity,0),title="equity1000")
+plot(ta.valuewhen(time==1588896000000,strategy.default_entry_qty(100),0),title="qty1000")
+plot(ta.valuewhen(time==1588896000000,strategy.position_size,0),title="position1000")

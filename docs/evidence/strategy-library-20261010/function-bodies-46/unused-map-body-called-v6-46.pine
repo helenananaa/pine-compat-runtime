@@ -1,0 +1,7 @@
+//@version=6
+indicator("unused-map-body-called-v6-46")
+f(map<string,float> v)=>
+    v.put(1,2.0)
+    v.size()
+values=map.new<string,float>()
+plot(f(values))

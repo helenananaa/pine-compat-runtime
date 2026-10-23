@@ -1,5 +1,5 @@
 //@version=5
 indicator("String format result limit")
 values = array.new_string(14000, "x")
-text = str.format("{0}", values)
-plot(str.length(text))
+note = str.format("{0}", values)
+plot(str.length(note))

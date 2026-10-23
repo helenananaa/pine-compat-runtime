@@ -55,7 +55,7 @@ pub(crate) fn function_default_values(
 ) -> Vec<Option<Expr>> {
     params.iter().map(|param| {
         let value = param.default_value.as_ref()?;
-        let Some((normalized, value_type)) = normalize_default(value, shadowed) else {
+        let Some((normalized, value_type)) = normalize_default(value, version, shadowed) else {
             diagnostics.push(Diagnostic::error(
                 "E_FUNCTION_DEFAULT",
                 "function defaults must be scalar literals, signed numeric literals, or supported built-in variables; calculations, user variables and calls are not supported",
@@ -64,7 +64,8 @@ pub(crate) fn function_default_values(
             return None;
         };
         let explicit_simple = param.type_name.as_deref().is_some_and(|name| name.starts_with("simple "));
-        let type_name = param.type_name.as_deref().map(|name| name.strip_prefix("series ").or_else(|| name.strip_prefix("simple ")).unwrap_or(name));
+        let explicit_const = param.type_name.as_deref().is_some_and(|name| name.starts_with("const "));
+        let type_name = param.type_name.as_deref().map(|name| name.strip_prefix("series ").or_else(|| name.strip_prefix("simple ")).or_else(|| name.strip_prefix("const ")).unwrap_or(name));
         let declared_kind = match type_name {
             Some("int") => Some(ValueKind::Int),
             Some("float") => Some(ValueKind::Float),
@@ -81,7 +82,9 @@ pub(crate) fn function_default_values(
             diagnostics.push(Diagnostic::error("E_FUNCTION_DEFAULT_TYPE", "na defaults require an explicit scalar type; v6 bool defaults cannot be na", param.span));
             return None;
         }
-        let declared_qualifier = if explicit_simple {
+        let declared_qualifier = if explicit_const {
+            Qualifier::Const
+        } else if explicit_simple {
             Qualifier::Simple
         } else {
             Qualifier::Series
@@ -97,6 +100,7 @@ pub(crate) fn function_default_values(
 
 fn normalize_default(
     value: &Expr,
+    version: u16,
     shadowed: &std::collections::HashSet<String>,
 ) -> Option<(Expr, PineType)> {
     let kind = match &value.kind {
@@ -144,14 +148,28 @@ fn normalize_default(
                 return None;
             }
             let name = parts.join(".");
+            if version != 4 && matches!(name.as_str(), "strategy.long" | "strategy.short") {
+                return Some((
+                    value.clone(),
+                    PineType::new(Qualifier::Const, ValueKind::StrategyDirection),
+                ));
+            }
             if let Some(pine_type) = pine_builtins::builtin_series_value_type(&name)
                 && pine_type.qualifier != Qualifier::Const
-                && (pine_builtins::named_float_constant(&name).is_some()
-                    || pine_builtins::named_int_constant(&name).is_some())
+                && matches!(
+                    pine_type.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                )
             {
                 return Some((value.clone(), pine_type));
             }
-            if let Some(value) = pine_builtins::named_color(&name) {
+            if let Some(value) = crate::legacy::strategy_direction_bool(&name, version) {
+                Literal::Bool(value)
+            } else if let Some(value) = pine_builtins::named_color(&name) {
                 Literal::ColorHex(format!("#{value:06x}"))
             } else if let Some(value) = pine_builtins::named_int_constant(&name) {
                 Literal::Int(value)

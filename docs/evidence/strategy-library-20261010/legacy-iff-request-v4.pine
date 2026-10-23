@@ -1,0 +1,20 @@
+//@version=4
+study("Codex legacy iff request oracle",overlay=true)
+f()=>
+    pos=0.0
+    pos:=iff(close>0,nz(pos[1])+1,0)
+    pos
+g()=>
+    pos=0.0
+    pos:=close>0 ? nz(pos[1])+1 : 0
+    pos
+a=f()
+b=g()
+x=security(syminfo.tickerid,"12M",a[1])
+y=security(syminfo.tickerid,"12M",b[1])
+var t=table.new(position.top_right,2,2,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,tostring(a),text_color=color.white)
+    table.cell(t,1,0,tostring(b),text_color=color.white)
+    table.cell(t,0,1,tostring(x),text_color=color.white)
+    table.cell(t,1,1,tostring(y),text_color=color.white)

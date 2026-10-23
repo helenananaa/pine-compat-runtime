@@ -1,0 +1,213 @@
+{
+  "status": "native_observed",
+  "method": "Logged-in TradingView editor UI; unsaved controlled probes; no script publication or real transactions",
+  "scope": "Version and source-binding receipts; indicator values have chart context and display rounding. Not full native strategy trade or profitability parity.",
+  "records": [
+    {
+      "source": "legacy-percentiles-v3.pine",
+      "source_sha256": "b71ac805b04e511786d31430fbd448c7e949c84b233b5e9c36f33677c9a5a200",
+      "screenshots": [
+        "legacy-percentiles-v3.png"
+      ],
+      "observed": "v3 accepts both percentile function aliases; monthly observed values 68284.48"
+    },
+    {
+      "source": "legacy-aliases-v3.pine",
+      "source_sha256": "d869a8f40bd2682c3d521cc54184283b783103682e95f06d1491d09df8e6de62",
+      "screenshots": [
+        "legacy-aliases-v3.png"
+      ],
+      "observed": "v3 accepts swma/tsi/tan and percentile_nearest_rank"
+    },
+    {
+      "source": "legacy-aliases-v4.pine",
+      "source_sha256": "30862f44445ffde55a87c83d448f61a8ca129bcc46ce0caf3b16b27040101e35",
+      "screenshots": [
+        "legacy-aliases-v4.png"
+      ],
+      "observed": "v4 accepts swma/wpr/supertrend/tsi/tonumber/tan/percentile"
+    },
+    {
+      "source": "remaining-legacy-v4.pine",
+      "source_sha256": "36ccdf431640b2940d292598b7bdb77be93d523e2b62f7e7b9e52464db6c0051",
+      "screenshots": [
+        "remaining-legacy-v4.png"
+      ],
+      "observed": "v4 accepts random and nested direct inline input; nested result 3"
+    },
+    {
+      "source": "numeric-direction-v4.pine",
+      "source_sha256": "23ccdeb340650818be4ad384e8dd1240076b620fb7150fdb47f1eff0d10f1e69",
+      "screenshots": [
+        "numeric-direction-v4.png"
+      ],
+      "observed": "v4 entry direction 1 opens long and 0 reverses short"
+    },
+    {
+      "source": "numeric-direction-v5-rejected.pine",
+      "source_sha256": "acc091ef29890dd491ff8a4186029e580f622e7383f8ce640f4e296266a50233",
+      "screenshots": [
+        "numeric-direction-v5-rejected.png"
+      ],
+      "observed": "v5 rejects the literal numeric directions"
+    },
+    {
+      "source": "inline-input-v4.pine",
+      "source_sha256": "19044c2ec90e9077b916ef7116ec596fc4a756348a9658352926ed19a8bfd51a",
+      "screenshots": [
+        "inline-input-v4.png"
+      ],
+      "observed": "v4 accepts direct inline input as UDF argument; result 3"
+    },
+    {
+      "source": "wrapped-input-v4.pine",
+      "source_sha256": "c10d7daa52aef7aad06a8b3d95236fce2bbadc3afc7a58ca22bbd533f2c05dca",
+      "screenshots": [
+        "wrapped-input-v4.png"
+      ],
+      "observed": "v4 accepts input in arithmetic UDF argument; result 4"
+    },
+    {
+      "source": "duplicate-input-cos-v1.pine",
+      "source_sha256": "90b17fc18f17551bae513ae5a6cbaf6376ca63f2c3d0b4e0642ffb8cfe312a04",
+      "screenshots": [
+        "duplicate-input-cos-v1.png"
+      ],
+      "observed": "v1 positional default wins repeated named default; results 2/2/1; cos(.5) displayed .88"
+    },
+    {
+      "source": "duplicate-input-cos-v2.pine",
+      "source_sha256": "19145e60d75798bb93ad6ec4f59b889094221682b053d4c9e9beca44b934a8d7",
+      "screenshots": [
+        "duplicate-input-cos-v2.png"
+      ],
+      "observed": "v2 same positional-default priority and cos alias"
+    },
+    {
+      "source": "duplicate-input-cos-v3.pine",
+      "source_sha256": "79b2d13b447bd4dd9676979c1085d148ad41c1883aa847e8c1f1dcb0c7498f88",
+      "screenshots": [
+        "duplicate-input-cos-v3.png"
+      ],
+      "observed": "v3 same positional-default priority and last named title"
+    },
+    {
+      "source": "duplicate-input-v4.pine",
+      "source_sha256": "be5e3eb8e3cc91ed30ae45a8d8738ddc3c0471a9cd2c099665d3fa6093acdda4",
+      "screenshots": [
+        "duplicate-input-v4-settings.png"
+      ],
+      "observed": "v4 positional defaults 2/2, last named title Second title and group Second group"
+    },
+    {
+      "source": "named-defaults-v4.pine",
+      "source_sha256": "6f1d1406f77ada19e4f2bd457a5a1dd735e4e2241d2b8e1f7c9ae909993782ba",
+      "screenshots": [
+        "named-defaults-v4.png"
+      ],
+      "observed": "v4 pure named duplicate default takes last value 3"
+    },
+    {
+      "source": "duplicate-input-type-v4-rejected.pine",
+      "source_sha256": "942bfe6035022b9567d5feafacbd65a6d887dc27a0f00a23803fc0e7ed19e84e",
+      "screenshots": [
+        "duplicate-input-type-v4-rejected.png"
+      ],
+      "observed": "v4 rejects ignored duplicate default of incompatible string type"
+    },
+    {
+      "source": "close-positions-v4.pine",
+      "source_sha256": "70bdd6f8225e55693184075c0d9abd16a58ef0c9368d9ad9d27e54dfd35369e8",
+      "screenshots": [
+        "close-positions-v4.png"
+      ],
+      "observed": "v4 source id/when/comment/qty/qty_percent/alert_message; remaining position 1, closed trades 1"
+    },
+    {
+      "source": "close-positions-v5.pine",
+      "source_sha256": "e0e3c599d382f93c190fd452c02528aa3c19085432d4c1fe3b25bc4de6261700",
+      "screenshots": [
+        "close-positions-v5.png"
+      ],
+      "observed": "v5 accepts the same six source positions; remaining position 1, closed trades 1"
+    },
+    {
+      "source": "close-positions-v6.pine",
+      "source_sha256": "e9b7487f1058f3d58224eaf99ef1d5611d8539a8e7625dbffcdf610453ef488a",
+      "screenshots": [
+        "close-positions-v6.png"
+      ],
+      "observed": "v6 removes when; funded probe remaining position 1, closed trades 1"
+    },
+    {
+      "source": "close-v4-tail-rejected.pine",
+      "source_sha256": "f851bb9dd7f6fd4146f0b3dc54e993be02e34363e99f04f146762357bfcbe236",
+      "screenshots": [
+        "close-v4-tail-rejected.png"
+      ],
+      "observed": "v4 rejects eight source close positions"
+    },
+    {
+      "source": "tonumber-v3-rejected.pine",
+      "source_sha256": "3a6a786440bce861064b398dba328301acd5c2e45a657418a7d2e741af1c6d6d",
+      "screenshots": [
+        "tonumber-v3-rejected.png"
+      ],
+      "observed": "v3 rejects tonumber"
+    },
+    {
+      "source": "random-v3-rejected.pine",
+      "source_sha256": "78e1936ec7c4dab599ea6904a4004563ed2be40eff2aa61776d131e1ce058a2b",
+      "screenshots": [
+        "random-v3-rejected.png"
+      ],
+      "observed": "v3 rejects random"
+    },
+    {
+      "source": "supertrend-v3-rejected.pine",
+      "source_sha256": "9eb0450a184c58bde7fa2f1f6cc6ce60c239a37a38c9158bc781999670f64b26",
+      "screenshots": [
+        "supertrend-v3-rejected.png"
+      ],
+      "observed": "v3 rejects supertrend"
+    },
+    {
+      "source": "wpr-v3-rejected.pine",
+      "source_sha256": "602938a9ca5f3875ae9a901251343f87ed88c1ea47342a6d4db115d3194af26c",
+      "screenshots": [
+        "wpr-v3-rejected.png"
+      ],
+      "observed": "v3 rejects wpr"
+    },
+    {
+      "source": "na-reassignment-v3.pine",
+      "source_sha256": "11ce8bac51c17f21e3a12c1189c72278c2d57ce15588bf9b50bc6664e8fd530b",
+      "screenshots": [
+        "na-reassignment-v3.png"
+      ],
+      "observed": "v3 accepts NA initialized then assigned close; base12 already accepts with zero diagnostics; secondary NA diagnostics must be traced"
+    },
+    {
+      "source": "close-v4-seven-rejected.pine",
+      "source_sha256": "06eb899ec5e3c79f17e1342f62e1102b89089788b1ffe07eb3199c78d9a9500d",
+      "screenshots": [
+        "close-v4-seven-rejected.png"
+      ],
+      "observed": "v4 rejects the seventh close source position, confirming the six-slot boundary"
+    },
+    {
+      "source": "inline-input-v3-rejected.pine",
+      "source_sha256": "32d957071a916ec5c87d1840f6ac57a712dac96e879826f45a0c870b95b45bb7",
+      "screenshots": [],
+      "observed": "v3 rejects input directly passed to a UDF with Incorrect usage of input function; source retained, no screenshot captured"
+    }
+  ],
+  "cleanup": {
+    "temporary_tab": "3",
+    "original_chart_strategy": "CA_-_RSI_Bol_Strat_1.1",
+    "restored_interval": "1 month",
+    "temporary_probe_absent": true,
+    "preserved_original": true,
+    "saved_or_published": false
+  }
+}

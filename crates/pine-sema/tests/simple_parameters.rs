@@ -70,9 +70,15 @@ fn explicit_simple_accepts_const_input_and_simple_and_rejects_series() {
 }
 
 #[test]
-fn direct_global_input_keeps_inner_effects_and_function_bodies_rejected() {
+fn static_input_in_function_arguments_keeps_inner_effects_rejected() {
+    let analysis = analyze(6, "f(simple int n) => n\ng() => f(input.int(3))\nplot(g())");
+    assert!(analysis.hir.is_some(), "{:?}", analysis.diagnostics);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
     for body in [
-        "f(simple int n) => n\ng() => f(input.int(3))\nplot(g())",
         "f(simple int n) => n\nplot(f(input.int(3, title=str.tostring(plot(close)))))",
         "f(float n) => n\nplot(f(plot(close)))",
     ] {
@@ -131,13 +137,23 @@ fn imported_simple_parameters_and_method_qualifiers_agree_with_local_rules() {
         "method.pine",
         "//@version=6\nindicator(\"simple\")\ntype Point\n    float x\nmethod shift(Point self, simple int n) => self.x + n\nplot(close)\n",
     ));
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some(), "{:?}", analysis.diagnostics);
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|d| d.code == "E_METHOD_PARAM"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
+    );
+    let invalid = analyze_source(&SourceFile::new(
+        "method-series-argument.pine",
+        "//@version=6\nindicator(\"simple\")\ntype Point\n    float x\nmethod shift(Point self, simple int n) => self.x + n\np=Point.new(5)\nplot(p.shift(bar_index))\n",
+    ));
+    assert!(invalid.hir.is_none());
+    assert!(
+        invalid
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_METHOD_ARG_TYPE"),
+        "{:?}",
+        invalid.diagnostics
     );
 }

@@ -1,0 +1,15 @@
+//@version=5
+indicator("point-varip-ordinary-array-v5-41")
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+varip p=chart.point.from_index(1,0)
+var items=array.from(p)
+if barstate.isrealtime
+    p.price+=1
+plot(ticks)
+plot(p.price)
+plot(items.first().price)
+plot(1)

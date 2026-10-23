@@ -1,0 +1,13 @@
+//@version=5
+indicator("Bool NA reduction self-p probe34",precision=0)
+fp(x)=>
+    if x
+        true
+fq(x)=>
+    localBool=if x
+        true
+    localBool
+p=fp(false)
+q=fq(false)
+plot(p==q?1:0,title="cross equality")
+plot(p==p?1:0,title="observe p self")

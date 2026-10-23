@@ -1,0 +1,6 @@
+//@version=6
+indicator("fx-request-v6-dynamic-true-local",dynamic_requests=true)
+r=0.0
+if bar_index%2==0
+    r:=request.currency_rate("USD","USD")
+plot(r)

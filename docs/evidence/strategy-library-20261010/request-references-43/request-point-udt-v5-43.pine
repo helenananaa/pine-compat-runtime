@@ -1,0 +1,12 @@
+//@version=5
+indicator("request-point-udt-v5-43")
+type Wrap
+    chart.point point
+p=chart.point.from_index(1,10)
+w=Wrap.new(p)
+f(Wrap v)=>
+    v.point.price+=5
+    v.point.price
+r=request.security(syminfo.tickerid,timeframe.period,f(w))
+plot(r)
+plot(p.price)

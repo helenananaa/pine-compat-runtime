@@ -274,10 +274,31 @@ pub(crate) fn input_constant(source_name: &str) -> Option<LegacyInputConstant> {
 }
 
 pub(crate) fn explicit_type_expr(args: &[CallArg]) -> Option<&Expr> {
-    args.iter()
-        .find(|arg| arg.name.as_deref() == Some("type"))
-        .or_else(|| args.get(2).filter(|arg| arg.name.is_none()))
+    args.get(2)
+        .filter(|arg| arg.name.is_none())
+        .or_else(|| {
+            args.iter()
+                .rev()
+                .find(|arg| arg.name.as_deref() == Some("type"))
+        })
         .map(|arg| &arg.value)
+}
+
+fn input_validation_type(
+    kind: LegacyInputKind,
+    name: &str,
+    value: Option<PineType>,
+) -> Option<PineType> {
+    if kind == LegacyInputKind::Integer
+        && matches!(name, "minval" | "maxval" | "step")
+        && value == Some(PineType::new(Qualifier::Const, ValueKind::Float))
+    {
+        // Legacy integer bounds accepted const float, while modern input.int
+        // stays strict. Preserve the AST and adjust only the validation view.
+        Some(PineType::new(Qualifier::Const, ValueKind::Int))
+    } else {
+        value
+    }
 }
 
 pub(crate) fn bind_legacy_input_args(
@@ -288,13 +309,21 @@ pub(crate) fn bind_legacy_input_args(
 ) -> LegacyInputBinding {
     let version = dialect.version();
     let defval_index = args
-        .iter()
-        .position(|arg| arg.name.as_deref() == Some("defval"))
-        .or_else(|| args.first().filter(|arg| arg.name.is_none()).map(|_| 0));
+        .first()
+        .filter(|arg| arg.name.is_none())
+        .map(|_| 0)
+        .or_else(|| {
+            args.iter()
+                .rposition(|arg| arg.name.as_deref() == Some("defval"))
+        });
     let explicit_type_index = args
-        .iter()
-        .position(|arg| arg.name.as_deref() == Some("type"))
-        .or_else(|| args.get(2).filter(|arg| arg.name.is_none()).map(|_| 2));
+        .get(2)
+        .filter(|arg| arg.name.is_none())
+        .map(|_| 2)
+        .or_else(|| {
+            args.iter()
+                .rposition(|arg| arg.name.as_deref() == Some("type"))
+        });
 
     let kind = if let Some(type_index) = explicit_type_index {
         let Some(marker) = explicit_type_marker else {
@@ -346,9 +375,16 @@ pub(crate) fn bind_legacy_input_args(
         kind
     };
 
-    let params = kind.params(dialect);
-    let mut bound = vec![false; params.len()];
+    let mut params = kind.params(dialect).to_vec();
+    let positional_param_count = params.len();
+    // Add the confirmed named resolution-options overload without moving
+    // existing positional tooltip/inline/group metadata slots.
+    if dialect == PineDialect::V4 && kind == LegacyInputKind::Resolution {
+        params.push(InputParam::kept("options"));
+    }
+    let mut bound: Vec<Option<usize>> = vec![None; params.len()];
     let mut diagnostics = Vec::new();
+    let mut repeated_args = Vec::new();
     let mut saw_named = false;
     let mut canonical_args = Vec::with_capacity(args.len().saturating_sub(1));
     let mut canonical_arg_types = Vec::with_capacity(args.len().saturating_sub(1));
@@ -383,12 +419,12 @@ pub(crate) fn bind_legacy_input_args(
                 ));
                 continue;
             }
-            if arg_index >= params.len() {
+            if arg_index >= positional_param_count {
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARITY",
                     format!(
                         "selected Pine v{version} `input` overload expects at most {} argument(s), got {}",
-                        params.len(),
+                        positional_param_count,
                         args.len()
                     ),
                     arg.span,
@@ -399,18 +435,31 @@ pub(crate) fn bind_legacy_input_args(
         };
 
         let param = params[param_index];
-        if bound[param_index] {
-            diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_DUPLICATE",
-                format!(
-                    "`input` argument `{}` is provided more than once",
-                    param.name
-                ),
-                arg.span,
-            ));
-            continue;
+        if let Some(previous) = bound[param_index] {
+            if let Some(name) = param.canonical_name {
+                let ignored = if args[previous].name.is_none() {
+                    arg_index
+                } else {
+                    previous
+                };
+                repeated_args.push((name, ignored));
+            }
+            // A positional binding wins over named repetitions. Without a
+            // positional binding, the last named value supplies the metadata.
+            if args[previous].name.is_none() {
+                continue;
+            }
+            arg_rewrites[previous].keep = false;
+            if let Some(name) = param.canonical_name
+                && let Some(index) = canonical_args
+                    .iter()
+                    .position(|arg: &CallArg| arg.name.as_deref() == Some(name))
+            {
+                canonical_args.remove(index);
+                canonical_arg_types.remove(index);
+            }
         }
-        bound[param_index] = true;
+        bound[param_index] = Some(arg_index);
 
         let Some(canonical_name) = param.canonical_name else {
             continue;
@@ -418,19 +467,7 @@ pub(crate) fn bind_legacy_input_args(
         let mut canonical_arg = arg.clone();
         canonical_arg.name = Some(canonical_name.to_owned());
         canonical_args.push(canonical_arg);
-        let canonical_arg_type = if kind == LegacyInputKind::Integer
-            && matches!(param.name, "minval" | "maxval" | "step")
-            && arg_type.is_some_and(|pine_type| {
-                pine_type == PineType::new(Qualifier::Const, ValueKind::Float)
-            }) {
-            // Pine v4 accepted const-float bounds and steps for integer inputs.
-            // Override only the canonical validation view; the original AST
-            // expression and source span remain intact, and modern input.int
-            // calls continue to require const int.
-            Some(PineType::new(Qualifier::Const, ValueKind::Int))
-        } else {
-            *arg_type
-        };
+        let canonical_arg_type = input_validation_type(kind, param.name, *arg_type);
         canonical_arg_types.push(canonical_arg_type);
         arg_rewrites[arg_index] = LegacyCallArgRewrite {
             keep: true,
@@ -438,7 +475,23 @@ pub(crate) fn bind_legacy_input_args(
         };
     }
 
-    if !bound.first().copied().unwrap_or(false) {
+    // Even an overridden parameter must match the selected overload's type.
+    let signature = pine_builtins::get_phase_1_builtin(kind.constant().canonical_name)
+        .expect("legacy input target is registered");
+    for (name, index) in repeated_args {
+        if let Some(ty) = input_validation_type(kind, name, arg_types[index])
+            && let Some(param) = signature.params.iter().find(|param| param.name == name)
+            && !crate::types::accepts_type(param.accepts, ty)
+        {
+            diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_TYPE",
+                format!("Pine v{version} repeated `input` argument `{name}` has incompatible {:?} {:?} for the selected overload", ty.qualifier, ty.kind),
+                args[index].span,
+            ));
+        }
+    }
+
+    if bound.first().copied().flatten().is_none() {
         diagnostics.push(Diagnostic::error(
             "E_CALL_ARITY",
             format!("`input` is missing required Pine v{version} argument `defval`"),

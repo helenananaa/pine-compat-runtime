@@ -1,0 +1,3 @@
+//@version=6
+strategy("Close all named when guard v6 29")
+strategy.close_all(when=false)

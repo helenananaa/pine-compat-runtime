@@ -204,6 +204,11 @@ impl Analyzer {
             );
         }
 
+        if let Some(result) =
+            self.analyze_postfix_user_type_call_result_method(callee, args, span, &arg_types)
+        {
+            return result;
+        }
         if let Some(result) = self.analyze_array_call_result_method(callee, args, span, &arg_types)
         {
             return result;
@@ -212,11 +217,6 @@ impl Analyzer {
             return result;
         }
         if let Some(result) = self.analyze_map_call_result_method(callee, args, span, &arg_types) {
-            return result;
-        }
-        if let Some(result) =
-            self.analyze_postfix_user_type_call_result_method(callee, args, span, &arg_types)
-        {
             return result;
         }
         if let Some(result) = self.analyze_drawing_call_result_method(callee, args, &arg_types) {
@@ -283,6 +283,9 @@ impl Analyzer {
 
         if self.functions.contains_key(&name) {
             return self.analyze_udf_call(&name, callee.span, span, args, &arg_types);
+        }
+        if let Some(result) = self.analyze_plain_user_method(&name, span, args, &arg_types) {
+            return result;
         }
 
         let is_shadowed_lexical_call = matches!(callee.kind, ExprKind::Identifier(_))
@@ -408,19 +411,8 @@ impl Analyzer {
     ) -> Option<PineType> {
         self.check_feature_name(name, callee_span);
         let signature = self.select_fill_signature(signature, args, arg_types);
-        // In Pine v4 and earlier, the second positional strategy.close
-        // argument is `when`. The modern signature uses that slot for `qty`.
-        let legacy_close_args = if name == "strategy.close"
-            && self.legacy.dialect() <= crate::PineDialect::V4
-            && args.get(1).is_some_and(|arg| arg.name.is_none())
-        {
-            let mut normalized = args.to_vec();
-            normalized[1].name = Some("when".to_owned());
-            Some(normalized)
-        } else {
-            None
-        };
-        let args = legacy_close_args.as_deref().unwrap_or(args);
+        let source_args = self.normalize_strategy_source_args(name, args, arg_types);
+        let args = source_args.as_deref().unwrap_or(args);
         self.validate_script_declaration_call(name, callee_span, args);
         self.validate_strategy_order_call(name, callee_span, args);
         self.validate_strategy_value_function_call(name, callee_span);
@@ -687,6 +679,7 @@ impl Analyzer {
 
         if matches!(name, "map.put" | "map.clear" | "map.remove" | "map.put_all")
             && self.function_depth > 0
+            && !self.allows_udf_collection_mutation_side_effect(name)
         {
             self.unsupported(
                 "function_side_effect",
@@ -804,7 +797,7 @@ impl Analyzer {
             "map.get" => PineType::new(Qualifier::Series, map_info.value_kind),
             "map.contains" => PineType::new(Qualifier::Series, ValueKind::Bool),
             "map.clear" => PineType::new(Qualifier::Series, ValueKind::Void),
-            "map.remove" => PineType::new(Qualifier::Series, ValueKind::Void),
+            "map.remove" => PineType::new(Qualifier::Series, map_info.value_kind),
             "map.copy" => PineType::new(Qualifier::Simple, ValueKind::Map),
             "map.put_all" => PineType::new(Qualifier::Series, ValueKind::Void),
             "map.size" => PineType::new(Qualifier::Simple, ValueKind::Int),
@@ -845,12 +838,7 @@ impl Analyzer {
         let Some(receiver_type) = receiver_type else {
             return MethodResolution::Resolved(None);
         };
-        if receiver_type.kind == ValueKind::UserType
-            || (receiver_type.kind == ValueKind::Color
-                && self
-                    .methods
-                    .contains_key(&("color".to_owned(), method_name.to_owned())))
-        {
+        if self.has_named_user_method(receiver_name, callee.span, receiver_type, method_name) {
             return MethodResolution::Resolved(
                 self.analyze_user_method_call(
                     receiver_name,
@@ -1182,6 +1170,10 @@ impl Analyzer {
                 continue;
             };
 
+            if self.legacy_na_dynamic_request_arg(signature.name, param.name, arg_type) {
+                continue;
+            }
+
             if self.dynamic_requests
                 && matches!(
                     signature.name,
@@ -1210,10 +1202,22 @@ impl Analyzer {
 
             // In legacy Pine, strategy.long/short were boolean direction values.
             // Public v4 strategies also pass true/false directly to this slot.
-            if signature.name == "strategy.entry"
+            if matches!(signature.name, "strategy.entry" | "strategy.order")
+                && param.name == "direction"
+                && arg_type.kind == ValueKind::StrategyDirection
+            {
+                continue;
+            }
+            if matches!(signature.name, "strategy.entry" | "strategy.order")
                 && param.name == "direction"
                 && self.legacy.dialect().version() <= 4
-                && arg_type.kind == ValueKind::Bool
+                && (arg_type.kind == ValueKind::Bool
+                    || (matches!(arg_type.kind, ValueKind::Int | ValueKind::Float)
+                        && self.legacy_numeric_bool_arg(
+                            &arg.value,
+                            arg_type,
+                            Accepts::BoolCompatible,
+                        )))
             {
                 continue;
             }
@@ -1228,6 +1232,14 @@ impl Analyzer {
                 continue;
             }
 
+            if signature.name.starts_with("strategy.")
+                && param.name == "when"
+                && self.is_legacy_direction_kind(arg_type.kind)
+            {
+                // Order APIs interpret the original direction identity, unlike
+                // generic legacy boolean contexts where both tokens are truthy.
+                continue;
+            }
             if self.legacy_numeric_bool_arg(&arg.value, arg_type, param.accepts) {
                 continue;
             }

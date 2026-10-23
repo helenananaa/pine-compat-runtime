@@ -51,7 +51,7 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     (
         "runtime_map_udf_read.json",
-        "tests/fixtures/runtime/map_udf_read.pine",
+        "tests/fixtures/runtime/map_udf_read_checked_bodies_46.pine",
     ),
     (
         "runtime_local_udf_map_call_result_reads.json",
@@ -59,7 +59,7 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     (
         "runtime_local_user_method_map_call_result_reads.json",
-        "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
+        "tests/fixtures/runtime/local_user_method_map_call_result_reads_checked_bodies_46.pine",
     ),
     (
         "runtime_map_typed_declarations.json",

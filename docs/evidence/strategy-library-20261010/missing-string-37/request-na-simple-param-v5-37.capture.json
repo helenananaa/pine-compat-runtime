@@ -1,0 +1,19 @@
+{
+  "name": "request-na-simple-param-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-simple-param-v5-37.pine",
+  "source_sha256": "716843e95dd796cc8068adf4e2497cc9887fa70baab53466eedfb0c1975063af",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "240 row request-na-simple-param-v5-37 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "716843e95dd796cc8068adf4e2497cc9887fa70baab53466eedfb0c1975063af",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-simple-param-v5-37.native.ax.txt",
+  "accessibility_sha256": "11c8317ac7eea4c163d54c433acb57739cdb8d001befef7863c13486e39a8432",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-simple-param-v5-37.native.png",
+  "screenshot_sha256": "37a41e138db07472c2c3676ebf0a18c8c4c921e4996224a51755f0d37de39fcd",
+  "scope": "Follow-up native simple-param admission. na(str.length(typed-string-na)) is false; missing-string materialization needs separate value controls",
+  "qualification_scope": "candidate_bounded_control"
+}

@@ -25,7 +25,8 @@ mod value;
 pub use bar::{Bar, BarUpdate, BarUpdateKind, RealtimeUpdateContext};
 pub use error::RuntimeError;
 pub use host_requirements::{
-    AccountInputContract, ChartInputContract, ChartInputDefaults, ExecutionInputContract,
+    AccountInputContract, ChartInputContract, ChartInputDefaults, CurrencyArgument,
+    CurrencyRateInputContract, CurrencyRateRequirement, ExecutionInputContract,
     HOST_REQUIREMENTS_SCHEMA_VERSION, HostCallSite, HostRequirements, HostSourceLocation,
     RequestArgument, RequestRequirement, host_requirements, host_requirements_json,
 };
@@ -73,9 +74,12 @@ pub use output::view::*;
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
 pub(crate) use request::RequestCacheKey;
 pub use request::{
-    ChartContext, InMemoryRequestDataProvider, NoRequestDataProvider, RequestDataError,
+    BAR_CALENDAR_SCHEMA_VERSION, BarCalendar, BarCalendarError, BarCalendarRegistry,
+    BarTimeInterval, CURRENCY_RATE_SCHEMA_VERSION, ChartContext, CurrencyRateError,
+    CurrencyRateFrame, CurrencyRateProvider, InMemoryCurrencyRateProvider,
+    InMemoryRequestDataProvider, NoCurrencyRateProvider, NoRequestDataProvider, RequestDataError,
     RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
-    validate_requested_bars,
+    bar_calendars_from_json, currency_rates_from_json, validate_requested_bars,
 };
 pub use retention::{HistoryRetentionMode, OutputRetention};
 pub use runtime::HistoricalDataset;
@@ -138,7 +142,7 @@ const DEFAULT_MAX_POLYLINES: usize = 50;
 const MAX_POLYLINES: usize = 100;
 const DEFAULT_MAX_BOXES: usize = 50;
 const MAX_BOXES: usize = 500;
-const MAX_TABLE_CELLS: i64 = 1_000;
+const MAX_TABLE_CELLS: i64 = 10_000;
 const DEFAULT_CHART_TIMEFRAME: &str = "1";
 
 #[cfg(test)]

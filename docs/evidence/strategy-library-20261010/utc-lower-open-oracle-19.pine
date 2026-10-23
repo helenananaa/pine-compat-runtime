@@ -1,0 +1,9 @@
+//@version=6
+indicator("UTC lower open oracle 19",overlay=false)
+f()=>
+    [time("1",timeframe_bars_back=1)-time,time("1",timeframe_bars_back=2)-time,time("1",timeframe_bars_back=-1)-time,time("1",timeframe_bars_back=-2)-time]
+[a,b,c,d]=request.security("BINANCE:BTCUSDT","D",f())
+plot(a)
+plot(b)
+plot(c)
+plot(d)

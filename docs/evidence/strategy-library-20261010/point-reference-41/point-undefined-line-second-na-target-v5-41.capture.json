@@ -1,0 +1,18 @@
+{
+  "name": "point-undefined-line-second-na-target-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-undefined-line-second-na-target-v5-41.pine",
+  "source_sha256": "f5b6944b5691bf4299dcbdf9befe8c6e7cb97b8991cca001fe5fdcfc4c2a56df",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 0: Cannot access the 'index' field of an undefined object. The object is 'na'. at  #main () : 5",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "58aaba63fb36216ebd408bb28f2cd0c8253b985fdd1c94460e9fad03c6e7d73f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-undefined-line-second-na-target-v5-41.native.ax.txt",
+  "accessibility_sha256": "b847555692dbcf89e0f4db70f43ff1fcc9df9816d946b028e4168211a247137a",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-undefined-line-second-na-target-v5-41.native.png",
+  "screenshot_sha256": "b8a1269e427727ffcc68899f104d302eaa9feb3f28adc6788cd4d4878f964de2",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

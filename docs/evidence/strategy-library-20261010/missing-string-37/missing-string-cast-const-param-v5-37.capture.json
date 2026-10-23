@@ -1,0 +1,19 @@
+{
+  "name": "missing-string-cast-const-param-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-param-v5-37.pine",
+  "source_sha256": "e0c045a4d9ebc0ba1c346dfb1ec57e5c95d569c8d4db5e2dd8598bff2cc31c0a",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "251 row missing-string-cast-const-param-v5-37 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e0c045a4d9ebc0ba1c346dfb1ec57e5c95d569c8d4db5e2dd8598bff2cc31c0a",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-param-v5-37.native.ax.txt",
+  "accessibility_sha256": "ade644caba52d3d3756ef01809d06030d4c20696fc1c4a3e97832b15ddafd95f",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-param-v5-37.native.png",
+  "screenshot_sha256": "eae3a4b60eadb72c8566eee4e077b9b4128173ca42830637ff69784d37b84447",
+  "scope": "v5 explicit string(na) remains const and is admitted by const string parameters; distinguish it from a plain typed-na declaration",
+  "qualification_scope": "candidate_bounded_control"
+}

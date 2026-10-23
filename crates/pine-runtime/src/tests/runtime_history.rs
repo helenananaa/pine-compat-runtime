@@ -3,6 +3,108 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn numeric_history_offsets_truncate_toward_zero_across_versions() {
+    for version in [2, 3, 4, 5, 6] {
+        let declaration = if version <= 4 { "study" } else { "indicator" };
+        let input = if version <= 4 { "input" } else { "input.int" };
+        let source = SourceFile::new(
+            "numeric_history.pine",
+            format!(
+                "//@version={version}\n{declaration}(\"numeric history\")\nn={input}(19)\nplot(close[2.8])\nplot(close[-0.8])\nplot(close[n/2+1])\nplot(close[close%3+0.8])\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let bars: Vec<_> = (1..=20).map(|value| bar(value as f64)).collect();
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("numeric history");
+        assert_eq!(result.plots[0].values[..2], vec![PineValue::Na; 2]);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &(1..=18).map(|n| n as f64).collect::<Vec<_>>(),
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &(1..=20).map(|n| n as f64).collect::<Vec<_>>(),
+        );
+        assert_eq!(result.plots[2].values[..10], vec![PineValue::Na; 10]);
+        assert_values_close(
+            &result.plots[2].values[10..],
+            &(1..=10).map(|n| n as f64).collect::<Vec<_>>(),
+        );
+        for (index, value) in result.plots[3].values.iter().enumerate() {
+            let offset = (index + 1) % 3;
+            let expected = index
+                .checked_sub(offset)
+                .map_or(PineValue::Na, |n| PineValue::Float((n + 1) as f64));
+            assert_eq!(*value, expected, "v{version}, bar {index}");
+        }
+    }
+}
+
+#[test]
+fn fractional_udf_history_retains_current_call_bindings() {
+    let source = SourceFile::new(
+        "fractional_udf.pine",
+        include_str!("../../../../tests/fixtures/runtime/numeric_history_truncation.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(11.0), bar(21.0), bar(31.0), bar(41.0)],
+    )
+    .expect("runtime");
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(11.0),
+            PineValue::Float(21.0)
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(11.0),
+            PineValue::Float(21.0),
+            PineValue::Float(31.0)
+        ]
+    );
+    assert_values_close(&result.plots[2].values, &[11.0, 21.0, 31.0, 41.0]);
+}
+
+#[test]
+fn numeric_history_rejects_negative_after_truncation_and_oversized_offsets() {
+    for (offset, expected) in [("-1.8", "non-negative"), ("1e30", "too large")] {
+        let source = SourceFile::new(
+            "invalid_numeric_history.pine",
+            format!(
+                "//@version=6\nindicator(\"history\")\nn=input.float({offset})\nplot(close[n])\n"
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let error =
+            run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect_err("invalid offset");
+        assert!(error.message.contains(expected), "{}", error.message);
+    }
+}
+
+#[test]
 fn gapped_udf_parameter_history_carries_values_between_calls() {
     for version in [4, 5, 6] {
         let declaration = if version == 4 { "study" } else { "indicator" };
@@ -274,13 +376,13 @@ fn max_bars_back_pure_history_and_scalar_calls_match_all_execution_modes() {
         r#"indicator("pure history identity")
 offset = bar_index % 3
 shade = close >= open ? color.red : color.green
-text = close >= open ? "alpha" : "beta"
+note = close >= open ? "alpha" : "beta"
 lagged = close[1]
 red = color.r(shade)
 green = color.g(shade)
 blue = color.b(shade)
 transparency = color.t(shade)
-position = str.pos(text, "p")
+position = str.pos(note, "p")
 max_bars_back(lagged, 2)
 max_bars_back(red, 2)
 max_bars_back(green, 2)
@@ -292,7 +394,7 @@ plot(color.r(shade)[offset])
 plot(color.g(shade)[offset])
 plot(color.b(shade)[offset])
 plot(color.t(shade)[offset])
-plot(str.pos(text, "p")[offset])
+plot(str.pos(note, "p")[offset])
 "#,
     );
     let analysis = analyze_source(&source);

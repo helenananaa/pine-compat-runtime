@@ -1,0 +1,19 @@
+{
+  "name": "missing-string-cast-const-param-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-param-v6-37.pine",
+  "source_sha256": "44d4153cee41845208e412db78deed3a7264b8659dcd5c53fee2e7cb5ee0d568",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "251 row missing-string-cast-const-param-v6-37 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "44d4153cee41845208e412db78deed3a7264b8659dcd5c53fee2e7cb5ee0d568",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-param-v6-37.native.ax.txt",
+  "accessibility_sha256": "aaf3bbd4ad1831145045b6f81820031527e26fcac12dc7ad8a21a450672d38ec",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-param-v6-37.native.png",
+  "screenshot_sha256": "efb3fad8fbae58276019c71599afe65c1ca3f0deacdfb7e4966780bcaf854ad6",
+  "scope": "v6 explicit string(na) retains const admission and missing identity",
+  "qualification_scope": "candidate_bounded_control"
+}

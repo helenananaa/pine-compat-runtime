@@ -1,0 +1,30 @@
+pub(super) fn pure_math_call_name(name: &str) -> bool {
+    matches!(
+        name,
+        "math.abs"
+            | "math.max"
+            | "math.min"
+            | "math.avg"
+            | "math.floor"
+            | "math.ceil"
+            | "math.trunc"
+            | "math.sqrt"
+            | "math.cbrt"
+            | "math.log"
+            | "math.log10"
+            | "math.exp"
+            | "math.acos"
+            | "math.asin"
+            | "math.atan"
+            | "math.sign"
+            | "math.todegrees"
+            | "math.toradians"
+            | "math.sin"
+            | "math.cos"
+            | "math.tan"
+            | "math.pow"
+            | "math.hypot"
+            | "math.round"
+            | "math.round_to_mintick"
+    )
+}

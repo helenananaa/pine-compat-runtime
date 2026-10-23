@@ -1,0 +1,3 @@
+//@version=5
+strategy("Close all comment when v5 29")
+strategy.close_all("text",when=false)

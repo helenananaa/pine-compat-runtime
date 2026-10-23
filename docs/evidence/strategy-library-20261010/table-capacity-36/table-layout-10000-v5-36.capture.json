@@ -1,0 +1,19 @@
+{
+  "name": "table-layout-10000-v5-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-10000-v5-36.pine",
+  "source_sha256": "e8ed9d73712ac07240be771c2115d8f4a73d54c0688133fb880065d323e6e9f0",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "240 row table-layout-10000-v5-36 executed 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e8ed9d73712ac07240be771c2115d8f4a73d54c0688133fb880065d323e6e9f0",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-10000-v5-36.native.ax.txt",
+  "accessibility_sha256": "a4b9c976e77721d810f9b897097e4880a7fcd0c02c97d9fbce8f6a2c8f34276b",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-layout-10000-v5-36.native.png",
+  "screenshot_sha256": "d4ee60c84bce821789dad2969b10192ca859916af6bd0fd9a52c1ff0895cfafd",
+  "scope": "Native v5 admits10000 declared slots and one last-coordinate cell; not a fully populated10000-cell or maximum-limit claim.",
+  "qualification_scope": "candidate_table_control"
+}

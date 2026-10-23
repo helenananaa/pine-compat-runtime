@@ -533,9 +533,9 @@ array.push(values, "tail")
 array.set(values, 0, "head")
 first = array.get(values, 0)
 last = array.pop(values)
-text = str.tostring(values)
+note = str.tostring(values)
 plot(first == "head" and last == "tail" ? array.size(values) : 0)
-plot(text == "[head, seed]" ? 1 : 0)
+plot(note == "[head, seed]" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -563,9 +563,9 @@ values.push("tail")
 values.set(0, "head")
 first = values.get(0)
 last = values.pop()
-text = str.format("Values {0}", values)
+note = str.format("Values {0}", values)
 plot(first == "head" and last == "tail" ? values.size() : 0)
-plot(text == "Values [head, seed]" ? 1 : 0)
+plot(note == "Values [head, seed]" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -1289,10 +1289,10 @@ plot(branch_out)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.plots.len(), 5);
-    assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0, 8.0]);
-    assert_values_close(&result.plots[1].values, &[2.0, 4.0, 6.0, 8.0]);
+    assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0, 5.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 3.0, 4.0, 5.0]);
     assert_values_close(&result.plots[2].values, &[3.0, 4.0, 5.0, 6.0]);
-    assert_values_close(&result.plots[3].values, &[2.0, 4.0, 6.0, 8.0]);
+    assert_values_close(&result.plots[3].values, &[2.0, 3.0, 4.0, 5.0]);
     assert_values_close(&result.plots[4].values, &[0.0, 0.0, 1.0, 2.0]);
 }
 

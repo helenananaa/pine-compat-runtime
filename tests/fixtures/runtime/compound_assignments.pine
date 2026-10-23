@@ -20,8 +20,8 @@ integer -= 3
 integer *= 2
 integer %= 7
 
-text = "Pine"
-text += " Script"
+note = "Pine"
+note += " Script"
 
 missing = float(na)
 missing += 1
@@ -41,7 +41,7 @@ input_value += close
 
 plot(number == 2 ? 1 : 0)
 plot(integer == 3 ? 1 : 0)
-plot(text == "Pine Script" ? 1 : 0)
+plot(note == "Pine Script" ? 1 : 0)
 plot(na(missing) ? 1 : 0)
 plot(series_value == bar_index ? 1 : 0)
 plot(cumulative == bar_index + 1 ? 1 : 0)

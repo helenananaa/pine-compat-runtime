@@ -50,6 +50,9 @@ pub struct DrawingSettings {
 #[derive(Debug, Clone, PartialEq)]
 pub struct HirProgram {
     pub language_version: Option<u16>,
+    /// Whether requests can evaluate other requests in their requested context.
+    /// Lowered from the declaration, including version-specific defaults.
+    pub dynamic_requests: bool,
     pub script_mode: ScriptMode,
     /// Symbol bound to Pine's host-provided `timenow` execution clock, when used.
     pub timenow_symbol: Option<SymbolId>,
@@ -284,6 +287,17 @@ pub enum HirUnaryOp {
     Plus,
     Minus,
     Not,
+    /// Preserve a compiler-created boolean identity until a value boundary.
+    /// Legacy selected constants compare by payload; v6 missing constants
+    /// compare by their source identity.
+    ConstantBoolIdentity(Option<u64>),
+    /// Convert an internal constant boolean identity to its ordinary payload.
+    MaterializeBool,
+    /// Marks a boolean UDF return and its constant-materialization boundary.
+    /// Lets enclosing calls distinguish invocation results from captured constants.
+    FunctionBoolReturn {
+        materialize: bool,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

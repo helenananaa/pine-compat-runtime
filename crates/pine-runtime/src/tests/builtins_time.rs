@@ -1,6 +1,189 @@
 use pine_syntax::SourceFile;
+use std::sync::Arc;
 
 use super::*;
+
+fn run_utc_clock(text: &str, timeframe: &str, time: i64) -> RuntimeResult {
+    let analysis = analyze_source(&SourceFile::new("utc_clock.pine", text));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.unwrap();
+    let environment = RequestEnvironment::new(
+        ChartContext::new("UTC:TEST", RequestTimeframe::parse(timeframe).unwrap()),
+        Arc::new(InMemoryRequestDataProvider::new()),
+    );
+    let mut input = bar(1.0);
+    input.time = time;
+    HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[input])
+        .unwrap()
+}
+
+#[test]
+fn numeric_timestamp_evaluates_each_positional_argument_once() {
+    let result = run_utc_clock(
+        r#"//@version=6
+indicator("timestamp argument evaluation")
+var calls = array.new_int()
+part(value) =>
+    array.push(calls, value)
+    value
+plot(timestamp(part(2024), part(1), part(1), part(0), part(0), part(0)))
+plot(array.size(calls))
+"#,
+        "D",
+        1_704_067_200_000,
+    );
+    assert_eq!(result.plots[0].values, [PineValue::Int(1_704_067_200_000)]);
+    assert_eq!(result.plots[1].values, [PineValue::Int(6)]);
+}
+
+#[test]
+fn lower_intraday_closes_on_daily_weekly_monthly_charts_use_utc_daily_boundary() {
+    let text = "//@version=6\nindicator(\"lower close\")\nplot(time_close(\"1S\")-time)\nplot(time_close(\"30S\")-time)\nplot(time_close(\"1\")-time)\nplot(time_close(\"60\")-time)\nplot(time(\"1S\")-time)\nplot(time_close-time)\n";
+    for (tf, open, chart_duration) in [
+        ("D", 1_704_067_200_000, 86_400_000),
+        ("W", 1_704_067_200_000, 604_800_000),
+        ("M", 1_704_067_200_000, 2_678_400_000),
+    ] {
+        let result = run_utc_clock(text, tf, open);
+        for plot in &result.plots[..4] {
+            assert_eq!(plot.values, [PineValue::Int(86_400_000)], "{tf}");
+        }
+        assert_eq!(result.plots[4].values, [PineValue::Int(0)]);
+        assert_eq!(result.plots[5].values, [PineValue::Int(chart_duration)]);
+    }
+}
+
+#[test]
+fn lower_daily_closes_preserve_requested_offsets_before_session_clipping() {
+    let text = "//@version=6\nindicator(\"lower offsets\")\nplot(time_close(\"30S\",\"0000-0001\",\"UTC\")-time)\nplot(time_close(\"30S\",\"0000-2359\",\"UTC\")-time)\nplot(time_close(\"30S\",timeframe_bars_back=-1)-time)\nplot(time_close(\"30S\",timeframe_bars_back=1)-time)\nplot(time_close(\"30S\",bars_back=1)-time(\"\",bars_back=1))\nplot(time_close(\"30S\",\"0001-0002\",\"UTC\"))\n";
+    for tf in ["D", "W", "M"] {
+        let result = run_utc_clock(text, tf, 1_704_067_200_000);
+        let expected = [60_000, 86_340_000, 86_400_000, 0, 86_400_000];
+        for (plot, value) in result.plots.iter().zip(expected) {
+            assert_eq!(plot.values, [PineValue::Int(value)], "{tf}");
+        }
+        assert_eq!(result.plots[5].values, [PineValue::Na]);
+    }
+}
+
+#[test]
+fn lower_intraday_closes_keep_requested_granularity_and_future_limit() {
+    let result = run_utc_clock(
+        "//@version=6\nindicator(\"intraday\")\nplot(time_close(\"1S\")-time)\nplot(time_close(\"30S\")-time)\nplot(time_close(\"1\")-time)\nplot(time_close(\"1S\",timeframe_bars_back=1)-time)\nplot(time_close(\"30S\",timeframe_bars_back=-1)-time)\n",
+        "5",
+        1_704_067_200_000,
+    );
+    for (plot, value) in result.plots.iter().zip([1000, 30_000, 60_000, 0, 60_000]) {
+        assert_eq!(plot.values, [PineValue::Int(value)]);
+    }
+    for field in ["bars_back", "timeframe_bars_back"] {
+        let program = analyze_source(&SourceFile::new(
+            "bound.pine",
+            format!("//@version=6\nindicator(\"bound\")\nplot(time_close(\"1S\",{field}=-501))\n"),
+        ))
+        .hir
+        .unwrap();
+        assert!(
+            run_historical(&program, &[bar(1.0)])
+                .unwrap_err()
+                .message
+                .contains("500 future bars")
+        );
+    }
+}
+
+#[test]
+fn lower_timeframe_open_uses_supplied_chart_clock_without_requesting_prices() {
+    let source = SourceFile::new(
+        "lower_clock.pine",
+        "//@version=6\nindicator(\"clock\")\nplot(time(\"30S\"))\nplot(time(\"S\"))\nplot(time(\"30S\",\"0000-2400:1234567\",\"UTC\"))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut bars = vec![bar(1.0); 2];
+    bars[0].time = 1_791_711_000_000;
+    bars[1].time = 1_791_711_300_000;
+    let environment = RequestEnvironment::new(
+        ChartContext::new("A", RequestTimeframe::parse("5").unwrap()),
+        Arc::new(InMemoryRequestDataProvider::new()),
+    );
+    let result = HistoricalRuntime::with_request_environment(&analysis.hir.unwrap(), environment)
+        .run(&bars)
+        .unwrap();
+    for plot in result.plots {
+        assert_eq!(
+            plot.values,
+            vec![PineValue::Int(bars[0].time), PineValue::Int(bars[1].time)]
+        );
+    }
+}
+
+#[test]
+fn large_timestamp_and_month_first_date_run_through_pine() {
+    let source = SourceFile::new(
+        "timestamp_range.pine",
+        "//@version=6\nindicator(\"timestamp\")\nplot(timestamp(999999,12,31,23,59))\nplot(timestamp(\"Jan 19 2024 00:00:01\"))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap();
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(31_494_784_780_740_000)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(1_705_622_401_000)]
+    );
+}
+
+#[test]
+fn session_2400_boundaries_match_midnight_aliases_and_close_at_session_end() {
+    let source = SourceFile::new(
+        "session_2400.pine",
+        "//@version=6\nindicator(\"session\")\nplot(time(\"\",\"0000-2400:1234567\",\"UTC\"))\nplot(time(\"\",\"0000-0000:1234567\",\"UTC\"))\nplot(time(\"\",\"2400-1600:1234567\",\"UTC\"))\nplot(time(\"\",\"0000-1600:1234567\",\"UTC\"))\nplot(time_close(\"\",\"2400-1600:1234567\",\"UTC\"))\n",
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut bars = vec![bar(1.0); 3];
+    for (item, hour) in bars.iter_mut().zip([0, 15, 16]) {
+        item.time = 1_704_067_200_000 + hour * 3_600_000;
+    }
+    let environment = RequestEnvironment::new(
+        ChartContext::new("A", RequestTimeframe::parse("60").unwrap()),
+        Arc::new(InMemoryRequestDataProvider::new()),
+    );
+    let result = HistoricalRuntime::with_request_environment(&analysis.hir.unwrap(), environment)
+        .run(&bars)
+        .unwrap();
+    assert_eq!(result.plots[0].values, result.plots[1].values);
+    assert_eq!(result.plots[2].values, result.plots[3].values);
+    assert_eq!(
+        result.plots[4].values,
+        vec![
+            PineValue::Int(1_704_070_800_000),
+            PineValue::Int(1_704_124_800_000),
+            PineValue::Na
+        ]
+    );
+}
 
 #[test]
 fn timeframe_in_seconds_evaluates_series_selector_per_bar() {
@@ -1172,4 +1355,87 @@ plot(time("", "2500-2600"))
         "{}",
         error.message
     );
+}
+
+#[test]
+fn lower_daily_weekly_closes_on_month_chart_match_native_calendar_oracle() {
+    let text = r#"//@version=6
+indicator("Lower calendar close oracle 21",precision=0)
+plot(time("D")-time,title="dailyOpen")
+plot(time_close("D")-time,title="dailyClose")
+plot(time("W")-time,title="weeklyOpen")
+plot(time_close("W")-time,title="weeklyClose")
+plot(time_close("D",timeframe_bars_back=1)-time,title="previousDailyClose")
+plot(time_close("D",timeframe_bars_back=-1)-time,title="nextDailyClose")
+plot(time_close("W",timeframe_bars_back=1)-time,title="previousWeeklyClose")
+plot(time_close("W",timeframe_bars_back=-1)-time,title="nextWeeklyClose")
+plot(time_close("D","0930-0945","UTC")-time,title="shortDailyClose")
+plot(time_close("W","0930-0945","UTC")-time,title="shortWeeklyClose")
+plot(time_close("D",bars_back=1)-time,title="chartPreviousDailyClose")
+"#;
+    let result = run_utc_clock(text, "M", 1_790_812_800_000);
+    let expected = [
+        Some(0),
+        Some(86_400_000),
+        Some(-259_200_000),
+        Some(345_600_000),
+        Some(0),
+        Some(172_800_000),
+        Some(-259_200_000),
+        Some(950_400_000),
+        None,
+        Some(294_300_000),
+        Some(-2_505_600_000),
+    ];
+    for (plot, value) in result.plots.iter().zip(expected) {
+        assert_eq!(plot.values, [value.map_or(PineValue::Na, PineValue::Int)]);
+    }
+}
+
+#[test]
+fn compact_english_timestamp_dates_match_native_v5_v6_controls() {
+    let text = r#"//@version=5
+indicator("Compact date oracle 22",precision=0)
+plot(timestamp("15Aug 2022 14:00 +0000"),title="start")
+plot(timestamp("15Aug 2022 20:00 +0000"),title="end")
+plot(timestamp("15Aug 2022 14:00 +0530"),title="offset")
+plot(timestamp("15 Aug 2022 14:00 +0530"),title="spacedOffset")
+plot(timestamp("15Aug 2022 14:00 GMT+0530"),title="gmtOffset")
+plot(timestamp("2022-08-15T14:00:00+05:30"),title="isoOffset")
+plot(timestamp("1Jan 2024 05:30:01 +0530"),title="secondsOffset")
+plot(timestamp("15Aug 2022"),title="dateOnly")
+plot(timestamp("15Aug 2022 14:00:30 +0000"),title="seconds")
+plot(timestamp("15Aug 2022 14:00 -0400"),title="negativeOffset")
+plot(timestamp("15August 2022 14:00 +0000"),title="fullMonth")
+plot(timestamp("15aug 2022 14:00"),title="lowercase")
+"#;
+    for version in [5, 6] {
+        let source = SourceFile::new(
+            "compact_dates.pine",
+            text.replace("version=5", &format!("version={version}")),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let result = run_historical(&analysis.hir.unwrap(), &[bar(1.0)]).unwrap();
+        for (plot, expected) in result.plots.iter().zip([
+            1660572000000,
+            1660593600000,
+            1660572000000,
+            1660552200000,
+            1660572000000,
+            1660552200000,
+            1704087001000,
+            1660521600000,
+            1660572030000,
+            1660572000000,
+            1660572000000,
+            1660572000000,
+        ]) {
+            assert_eq!(plot.values, [PineValue::Int(expected)]);
+        }
+    }
 }

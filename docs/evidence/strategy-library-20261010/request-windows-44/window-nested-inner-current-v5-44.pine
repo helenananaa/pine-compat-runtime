@@ -1,0 +1,8 @@
+//@version=5
+indicator("window-nested-inner-current-v5-44",dynamic_requests=true)
+a=request.security(syminfo.tickerid,"W",request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2))
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(count)

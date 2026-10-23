@@ -9128,7 +9128,7 @@ plot(strategy.default_entry_qty(bar_index == 0 ? na : 0))
     );
     assert_eq!(
         cash_result.plots[1].values,
-        vec![PineValue::Na, PineValue::Na]
+        vec![PineValue::Float(0.0), PineValue::Float(0.0)]
     );
 
     let percent_source = SourceFile::new(
@@ -9155,7 +9155,7 @@ plot(strategy.default_entry_qty(10))
         vec![
             PineValue::Float(25.0),
             PineValue::Float(25.0),
-            PineValue::Na,
+            PineValue::Float(0.0),
             PineValue::Float(50.0),
         ]
     );
@@ -13429,7 +13429,7 @@ plot(strategy.closedtrades.max_drawdown_percent(0.5))
     );
     assert_eq!(
         result.plots[11].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0)]
+        vec![PineValue::Na, PineValue::Na, PineValue::Float(4.0)]
     );
     assert_eq!(
         result.plots[12].values,
@@ -13456,7 +13456,7 @@ plot(strategy.closedtrades.max_drawdown_percent(0.5))
     );
     assert_eq!(
         result.plots[19].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(50.0)]
+        vec![PineValue::Na, PineValue::Na, PineValue::Float(100.0)]
     );
     assert_eq!(
         result.plots[20].values,
@@ -14578,7 +14578,7 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         PineValue::Float(0.0),
         PineValue::Float(0.0),
         PineValue::Float(0.0),
-        PineValue::Float(0.0),
+        PineValue::Float(2.0),
         PineValue::Float(2.0),
         PineValue::Float(2.0),
     ];
@@ -14587,9 +14587,9 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         PineValue::Float(0.0),
         PineValue::Float(0.0),
         PineValue::Float(0.0),
-        PineValue::Float(0.0),
-        PineValue::Float(2.0 / 6.0 * 100.0),
-        PineValue::Float(2.0 / 6.0 * 100.0),
+        PineValue::Float(2.0 / 1002.0 * 100.0),
+        PineValue::Float(2.0 / 1002.0 * 100.0),
+        PineValue::Float(2.0 / 1002.0 * 100.0),
     ];
     let max_drawdown = vec![
         PineValue::Float(0.0),
@@ -14613,10 +14613,10 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         PineValue::Float(0.0),
         PineValue::Float(0.0),
         PineValue::Float(0.0),
-        PineValue::Float(4.0 / 6.0 * 100.0),
-        PineValue::Float(4.0 / 6.0 * 100.0),
-        PineValue::Float(4.0 / 6.0 * 100.0),
-        PineValue::Float(4.0 / 6.0 * 100.0),
+        PineValue::Float(4.0 / 1000.0 * 100.0),
+        PineValue::Float(4.0 / 1000.0 * 100.0),
+        PineValue::Float(4.0 / 1000.0 * 100.0),
+        PineValue::Float(4.0 / 1000.0 * 100.0),
     ];
 
     assert_eq!(result.plots[0].values, open_profit);
@@ -14787,7 +14787,7 @@ if bar_index == 6
 }
 
 #[test]
-fn strategy_max_runup_and_drawdown_percent_use_trade_value_denominator() {
+fn strategy_max_runup_and_drawdown_percent_use_account_equity_bases() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("percent", initial_capital=1000)
@@ -14818,16 +14818,16 @@ if bar_index == 0
         result.plots[0].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(20.0),
-            PineValue::Float(20.0),
+            PineValue::Float(20.0 / 1020.0 * 100.0),
+            PineValue::Float(20.0 / 1020.0 * 100.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(20.0),
-            PineValue::Float(20.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
         ]
     );
 }

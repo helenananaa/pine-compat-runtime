@@ -1,0 +1,24 @@
+//@version=6
+indicator("array-opening-buffer-alias-v6-42")
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+varip items=array.new_int()
+var alias=items
+if barstate.isrealtime
+    items.push(1)
+plot(ticks)
+plot(items.size())
+plot(alias.size())
+plot(1)
+
+varip int opening_alias=-1
+varip int second_alias=-1
+if barstate.isrealtime and ticks==1
+    opening_alias:=alias.size()
+if barstate.isrealtime and ticks==2
+    second_alias:=alias.size()
+plot(opening_alias)
+plot(second_alias)

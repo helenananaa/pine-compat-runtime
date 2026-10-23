@@ -1,0 +1,12 @@
+//@version=5
+indicator("Codex named static request oracle",overlay=true,dynamic_requests=false)
+inner=request.security(symbol=syminfo.tickerid,timeframe="",expression=timeframe.multiplier)
+outer=request.security(symbol=syminfo.tickerid,timeframe="12M",expression=inner)
+merged=request.security(symbol=syminfo.tickerid,timeframe="",expression=timeframe.multiplier,gaps=barmerge.gaps_on,lookahead=barmerge.lookahead_off)
+outerMerged=request.security(symbol=syminfo.tickerid,timeframe="12M",expression=merged)
+var t=table.new(position.top_right,2,2,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,str.tostring(inner),text_color=color.white)
+    table.cell(t,1,0,str.tostring(outer),text_color=color.white)
+    table.cell(t,0,1,str.tostring(merged),text_color=color.white)
+    table.cell(t,1,1,str.tostring(outerMerged),text_color=color.white)

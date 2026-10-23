@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-11",
+  "version": 5,
+  "symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "requested_timeframe": "12M",
+  "table_values": [
+    83806.78,
+    77862.34,
+    77862.34,
+    77862.34
+  ],
+  "asserted_relation": "Generic input(hl2) and typed input.source(hl2) evaluate in requested context and match requested hl2; chart hl2 differs.",
+  "source_sha256": "4bced75af5f95a577fd0af3225f0d0c762f547aec9544ab68e0c019d3c9af4e7",
+  "screenshot_sha256": "080be8e00f084fc69e3fe59a91a87de99e78c806213ec169b3a6fc2ec4e1c72e",
+  "scope": "Current native values only, not export history or overrides parity.",
+  "cleanup": "Own indicator removed; original CA strategy and monthly chart preserved."
+}

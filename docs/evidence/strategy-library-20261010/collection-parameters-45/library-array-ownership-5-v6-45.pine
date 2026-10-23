@@ -1,0 +1,6 @@
+//@version=6
+library("ArrayOwnershipCase5Batch45")
+export f(array<float> values) =>
+    local = values
+    array.clear(local)
+    1

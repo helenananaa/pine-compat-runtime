@@ -1,0 +1,9 @@
+//@version=5
+indicator("request-point-global-mutation-v5-43")
+p=chart.point.from_index(1,10)
+f()=>
+    p.price+=5
+    p.price
+r=request.security(syminfo.tickerid,timeframe.period,f())
+plot(r)
+plot(p.price)

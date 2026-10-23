@@ -7,6 +7,13 @@ Windows/Linux release matrix. Runtime semantics and schemas are unchanged from
 0.3.1. See [release notes](releases/v0.3.2.md) and
 [host-interface acceptance](HOST_INTERFACES_ACCEPTANCE_20261007.md).
 
+The follow-up [host-interface resource measurements](HOST_INTERFACE_RESOURCES_20261007.md)
+complete 32 installed-wheel trials and 80 complete outputs across Windows and
+Linux, including 100k history + 10k tail inputs. Their correctness audit passes;
+new-interface resource qualification remains `notEvaluated` until API-specific
+budgets are frozen and evaluated. These measurements use the 0.3.1 release
+wheels and do not extend the older resource matrix or qualify 0.3.2 resources.
+
 [Stable acceptance](STABLE_ACCEPTANCE_20261006.md) records fresh optimized
 compatibility builds, official wheel installation checks and the complete
 216-trial resource matrix at unchanged budgets. [Migration](STABLE_MIGRATION.md)

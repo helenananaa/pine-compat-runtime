@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-11",
+  "version": 4,
+  "symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "requested_timeframe": "12M",
+  "table_values": [
+    111,
+    111,
+    9,
+    9
+  ],
+  "asserted_relation": "UDF-local scalar history using iff and equivalent ternary both evaluate independently in requested context; chart counts 111, requested prior annual counts 9.",
+  "source_sha256": "6fc8e7446c82e915137a29342bff4c2ac22e30369df41027589c050a1bead649",
+  "screenshot_sha256": "dfd21e88d5168b1ad842384519eec8a62c1b2c9e7aec6c3289b0951e25f08a75",
+  "scope": "Current native counts only; synthetic historical/realtime qualification must be separate.",
+  "cleanup": "Own indicator removed; original CA strategy and monthly chart preserved."
+}

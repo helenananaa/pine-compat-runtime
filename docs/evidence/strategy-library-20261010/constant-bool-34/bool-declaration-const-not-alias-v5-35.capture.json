@@ -1,0 +1,15 @@
+{
+  "name": "bool-declaration-const-not-alias-v5-35",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research35-20261017\\bool-declaration-const-not-alias-v5-35.pine",
+  "source_sha256": "c43d8987a09464dd8f021f74163796e2c3418b9cd2cb089c80bf954f3b1753e3",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row bool-declaration-const-not-alias-v5-35 condition 0 equals false 1 false payload 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "c43d8987a09464dd8f021f74163796e2c3418b9cd2cb089c80bf954f3b1753e3",
+  "normalized_source_sha256": "c43d8987a09464dd8f021f74163796e2c3418b9cd2cb089c80bf954f3b1753e3",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/bool-declaration-const-not-alias-v5-35.native.ax.txt",
+  "accessibility_sha256": "704ccb4dca4c139f2420c660492184a21ac018529ee8178f4219a6b1c60d9afa",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/bool-declaration-const-not-alias-v5-35.native.png",
+  "screenshot_sha256": "8af6854abdc3508234f27e9c81b6d21d060dfadce278e63b656eefa3e9e786cb"
+}

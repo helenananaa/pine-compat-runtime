@@ -1,0 +1,4 @@
+//@version=6
+indicator("Codex timestamp range oracle",overlay=true)
+plot(timestamp(999999,12,31,23,59),"large year")
+plot(timestamp("Jan 19 2024 00:00:01"),"month first date")

@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-11",
+  "symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "1M",
+  "probes": [
+    {
+      "version": 6,
+      "dynamic_requests": true,
+      "values": [
+        1,
+        12,
+        1,
+        12
+      ],
+      "source": "docs\\evidence\\strategy-library-20261010\\named-nested-dynamic-v6.pine",
+      "source_sha256": "f56842959d563d549ad31aed0497d50b9c551edb20f86ec0dd11b656326afe34",
+      "screenshot": "docs\\evidence\\strategy-library-20261010\\named-nested-dynamic-v6.png",
+      "screenshot_sha256": "f5258d446d354175b9a45a6dfb15ab69486b7b4a9d4e69c3fc89f27e43b85340"
+    },
+    {
+      "version": 5,
+      "dynamic_requests": false,
+      "values": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "source": "docs\\evidence\\strategy-library-20261010\\named-nested-static-v5.pine",
+      "source_sha256": "5b2c8487a0c489dcea3e5a1380bfa7f6c4b736f756be8c9bb1850e22120bceca",
+      "screenshot": "docs\\evidence\\strategy-library-20261010\\named-nested-static-v5.png",
+      "screenshot_sha256": "22c61cf89e138301dbcbd7c55afe7bcd183118d30699764b40571bdab1c8c2e4"
+    }
+  ],
+  "scope": "Native current monthly table values prove named nested calls with gaps/lookahead compile and preserve dynamic versus static context; historical and realtime parity require separate runtime validation.",
+  "cleanup": "Removed own temporary indicator; original CA strategy and monthly chart retained; temporary tab closed."
+}

@@ -114,6 +114,7 @@ impl BrokerState {
     ) -> Self {
         Self {
             initial_capital,
+            quote_to_account_rate: 1.0,
             commission,
             pyramiding_limit,
             close_entries_rule: StrategyCloseEntriesRule::Fifo,
@@ -204,7 +205,9 @@ impl BrokerState {
         match self.commission {
             Some(StrategyCommission::CashPerContract(value)) => qty * value,
             Some(StrategyCommission::CashPerOrder(value)) => value,
-            Some(StrategyCommission::Percent(value)) => qty * price * (value / 100.0),
+            Some(StrategyCommission::Percent(value)) => {
+                self.account_value(qty * price * (value / 100.0))
+            }
             None => 0.0,
         }
     }

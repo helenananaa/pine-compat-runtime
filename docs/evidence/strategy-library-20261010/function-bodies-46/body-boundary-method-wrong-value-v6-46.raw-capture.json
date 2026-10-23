@@ -1,0 +1,19 @@
+{
+  "name": "body-boundary-method-wrong-value-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-boundary-method-wrong-value-v6-46.pine",
+  "source_sha256": "a0a7363f9cf6c6088818d7e1f70f56e5eaf6289673d29bea1578636940847fc1",
+  "kind": "method-wrong-value",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"array.push\" with argument \"value\"=\"bad\". An argument of \"literal string\" type was used but a \"series float\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "21c4c6a850fbd410168fc0819b1b5916877e0cf736b84c56c7733cdccb63ee20",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-method-wrong-value-v6-46.native.ax.txt",
+  "accessibility_sha256": "da690ece5bb093e12c227c89543de80287237ebaa960ac055d8b23bd7886b419",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-method-wrong-value-v6-46.native.png",
+  "screenshot_sha256": "5ab9f914d8c48a6e0b9c1df72eb3cd253835c78049bddfab477b0451f52479cb",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

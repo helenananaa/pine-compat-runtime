@@ -1,0 +1,39 @@
+//@version=6
+indicator("Bool lifetime boundaries v6 probe34",precision=0)
+a=if false
+    true
+choose=bar_index%2==0?a:false
+var bool carry=a
+if bar_index%2==0
+    carry:=a
+else
+    carry:=false
+plain=a
+plain:=a
+var persistent=a
+persistent:=a
+fp(x)=>
+    if x
+        true
+fq(x)=>
+    localBool=if x
+        true
+    localBool
+nested()=>fp(false)
+aliasWithArg(x)=>a
+q1=fp(false)
+q2=fq(false)
+var int bad=0
+bad+=choose==false and carry==false?0:1
+plot(bad,title="dynamic materialization violations")
+plot(plain?1:0,title="unconditional reassignment")
+plot(persistent?1:0,title="persistent reassignment")
+plot(q1==q2?1:0,title="different parameter functions")
+plot(nested()?1:0,title="nested parameter return")
+plot(aliasWithArg(false)?1:0,title="global alias with unused parameter")
+plot(int(a),title="integer cast")
+plot(float(a),title="float cast")
+plot((a and true)==true?1:0,title="and right true")
+plot((a or false)==a?1:0,title="or left identity")
+plot((true and a)==a?1:0,title="and right identity")
+plot((false or a)==a?1:0,title="or right identity")

@@ -1,0 +1,6 @@
+//@version=5
+indicator("alert-frequency-inline-input-v5-39")
+selection=input.string("once",options=["all","once","close"])
+frequency=selection=="all"?alert.freq_all:selection=="once"?alert.freq_once_per_bar:alert.freq_once_per_bar_close
+alert("bounded inline frequency probe",frequency)
+plot(1)

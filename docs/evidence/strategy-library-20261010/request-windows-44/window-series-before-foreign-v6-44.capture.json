@@ -1,0 +1,24 @@
+{
+  "name": "window-series-before-foreign-v6-44",
+  "version": 6,
+  "scenario": "series-before-foreign",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-series-before-foreign-v6-44.pine",
+  "source_sha256": "fc17eb0f5c269487040330fdf6a93a8210a6653a1356c545278b0124b8269f6f",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    478,
+    2
+  ],
+  "native_row": "239 row window-series-before-foreign-v6-44 Plot 1.00 Plot 1.00 Plot 478.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "fc17eb0f5c269487040330fdf6a93a8210a6653a1356c545278b0124b8269f6f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-series-before-foreign-v6-44.native.ax.txt",
+  "accessibility_sha256": "d523e08c23aa3b576950a6285a955a89155909fc544099a2313accddfba886f2",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-series-before-foreign-v6-44.native.png",
+  "screenshot_sha256": "acdb2d95cc87bf742016a7f676433b65caa0fb14e0d97e9c867104b918e53d69",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

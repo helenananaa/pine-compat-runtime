@@ -11117,6 +11117,16 @@ fn run_script_csv_returns_matrix_zero_dimensions_fixture_contract() {
     assert_snapshot("runtime_matrix_zero_dimensions.json", &output);
 }
 
+#[test]
+fn run_script_csv_returns_elementwise_matrix_sum_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_add.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix addition");
+    assert_snapshot("runtime_matrix_add.json", &output);
+}
+
 fn assert_snapshot(name: &str, actual: &str) {
     let snapshot_path = workspace_dir().join("tests/snapshots").join(name);
     if env::var_os("UPDATE_SNAPSHOTS").is_some() {

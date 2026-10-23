@@ -567,20 +567,13 @@ alert(str.tostring(close))
 }
 
 #[test]
-fn rejects_alert_unsupported_frequency() {
+fn alert_frequency_value_domain_is_checked_at_runtime() {
     let analysis = analyze(
         r#"alert("Reached", freq="once")
 "#,
     );
 
-    assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "alert_frequency")
-    );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some(), "{:?}", analysis.diagnostics);
 }
 
 #[test]
@@ -597,11 +590,11 @@ fn plotcandle_display_accepts_input_selection() {
 }
 
 #[test]
-fn rejects_alert_placeholders() {
+fn rejects_unsupported_alertcondition_message_placeholders() {
     let analysis = analyze(
         r#"alert("{{close}}")
 alertcondition(true, "{{close}}", "Title placeholder")
-alertcondition(true, "Title", "{{timenow}}")
+alertcondition(true, "Title", "{{unknown}}")
 "#,
     );
 
@@ -616,12 +609,12 @@ alertcondition(true, "Title", "{{timenow}}")
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.message.contains("alert placeholder `{{close}}`"))
+            .all(|diagnostic| !diagnostic.message.contains("alert placeholder `{{close}}`"))
     );
     assert!(analysis.diagnostics.iter().any(|diagnostic| {
         diagnostic
             .message
-            .contains("alert placeholder `{{timenow}}`")
+            .contains("alert placeholder `{{unknown}}`")
     }));
     assert!(analysis.hir.is_none());
 }
@@ -4408,7 +4401,7 @@ fn method_final_if_series_condition_reassignment_promotes_qualifier_before_simpl
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            .any(|diagnostic| diagnostic.code == "E_METHOD_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
     );
@@ -4456,25 +4449,22 @@ fn udf_final_if_const_true_reassignment_promotes_before_simple_param_check() {
 }
 
 #[test]
-fn method_final_if_const_false_reassignment_preserves_simple_param_qualifier() {
+fn method_final_if_const_false_reassignment_retains_series_parameter_boundary() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_length(Box this, bool flag, int x) =>\n    local = x\n    if flag\n        local := bar_index\n        local\n    else\n        local\nlength = input.int(2, \"Length\")\nbox = Box.new(1)\nchosen = box.choose_length(false, length)\nplot(ta.ema(close, chosen))\n",
     );
 
     assert!(
-        analysis.diagnostics.is_empty(),
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
-    );
-    let hir = analysis.hir.expect("HIR");
-    let chosen = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "chosen")
-        .expect("chosen symbol");
-    assert_eq!(
-        chosen.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
     );
 }
 
@@ -4536,25 +4526,22 @@ fn udf_final_switch_const_true_reassignment_promotes_before_simple_param_check()
 }
 
 #[test]
-fn method_final_switch_const_false_reassignment_preserves_simple_param_qualifier() {
+fn method_final_switch_const_false_reassignment_retains_series_parameter_boundary() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_length(Box this, bool flag, int x) =>\n    local = x\n    switch\n        flag =>\n            local := bar_index\n            local\n        =>\n            local\nlength = input.int(2, \"Length\")\nbox = Box.new(1)\nchosen = box.choose_length(false, length)\nplot(ta.ema(close, chosen))\n",
     );
 
     assert!(
-        analysis.diagnostics.is_empty(),
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
-    );
-    let hir = analysis.hir.expect("HIR");
-    let chosen = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "chosen")
-        .expect("chosen symbol");
-    assert_eq!(
-        chosen.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
     );
 }
 
@@ -4616,25 +4603,22 @@ fn udf_final_selector_switch_const_matching_reassignment_promotes_before_simple_
 }
 
 #[test]
-fn method_final_selector_switch_const_nonmatching_reassignment_preserves_simple_param_qualifier() {
+fn method_final_selector_switch_const_nonmatching_reassignment_retains_series_parameter_boundary() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_length(Box this, string mode, int x) =>\n    local = x\n    switch mode\n        \"dead\" =>\n            local := bar_index\n            local\n        =>\n            local\nlength = input.int(2, \"Length\")\nbox = Box.new(1)\nchosen = box.choose_length(\"live\", length)\nplot(ta.ema(close, chosen))\n",
     );
 
     assert!(
-        analysis.diagnostics.is_empty(),
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
-    );
-    let hir = analysis.hir.expect("HIR");
-    let chosen = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "chosen")
-        .expect("chosen symbol");
-    assert_eq!(
-        chosen.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
     );
 }
 
@@ -4698,29 +4682,24 @@ fn udf_final_selector_switch_const_numeric_and_color_matching_reassignment_promo
 }
 
 #[test]
-fn method_final_selector_switch_const_numeric_and_color_nonmatching_reassignment_preserves_simple_param_qualifier()
+fn method_final_selector_switch_const_numeric_and_color_nonmatching_reassignment_retains_series_parameter_boundary()
  {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_int_length(Box this, int mode, int x) =>\n    local = x\n    switch mode\n        1 =>\n            local := bar_index\n            local\n        =>\n            local\nmethod choose_float_length(Box this, float mode, int x) =>\n    local = x\n    switch mode\n        1.5 =>\n            local := bar_index\n            local\n        =>\n            local\nmethod choose_color_length(Box this, color mode, int x) =>\n    local = x\n    switch mode\n        color.red =>\n            local := bar_index\n            local\n        =>\n            local\nlength = input.int(2, \"Length\")\nbox = Box.new(1)\nint_chosen = box.choose_int_length(2, length)\nfloat_chosen = box.choose_float_length(2.5, length)\ncolor_chosen = box.choose_color_length(color.green, length)\nplot(ta.ema(close, int_chosen))\nplot(ta.ema(close, float_chosen))\nplot(ta.ema(close, color_chosen))\n",
     );
 
     assert!(
-        analysis.diagnostics.is_empty(),
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
     );
-    let hir = analysis.hir.expect("HIR");
-    for name in ["int_chosen", "float_chosen", "color_chosen"] {
-        let symbol = hir
-            .symbols
-            .iter()
-            .find(|symbol| symbol.name == name)
-            .unwrap_or_else(|| panic!("{name} symbol"));
-        assert_eq!(
-            symbol.pine_type,
-            PineType::new(Qualifier::Input, ValueKind::Int)
-        );
-    }
 }
 
 #[test]
@@ -4921,68 +4900,42 @@ fn tuple_destructuring_preserves_udf_returned_input_and_simple_values() {
 }
 
 #[test]
-fn tuple_destructuring_preserves_user_method_returned_input_and_simple_values() {
+fn tuple_destructuring_rejects_default_typed_method_return_as_simple() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod pair(Box this, int length, string tf) =>\n    [length, tf]\nbox = Box.new(1)\nlength = input.int(2, \"Length\")\ntf = timeframe.period\n[len, chart_tf] = box.pair(length, tf)\nplot(ta.sma(close, len))\nplot(timeframe.in_seconds(chart_tf))\n",
     );
 
     assert!(
-        analysis.diagnostics.is_empty(),
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
-    );
-    let hir = analysis.hir.expect("HIR");
-    let len = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "len")
-        .expect("len symbol");
-    let chart_tf = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "chart_tf")
-        .expect("chart_tf symbol");
-
-    assert_eq!(
-        len.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
-    );
-    assert_eq!(
-        chart_tf.pine_type,
-        PineType::new(Qualifier::Simple, ValueKind::String)
     );
 }
 
 #[test]
-fn tuple_destructuring_preserves_udf_param_method_returned_input_and_simple_values() {
+fn tuple_destructuring_rejects_forwarded_default_typed_method_return_as_simple() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod pair(Box this, int length, string tf) =>\n    [length, tf]\nforward(box, length, tf) => box.pair(length, tf)\nbox = Box.new(1)\nlength = input.int(2, \"Length\")\ntf = timeframe.period\n[len, chart_tf] = forward(box, length, tf)\nplot(ta.sma(close, len))\nplot(timeframe.in_seconds(chart_tf))\n",
     );
 
     assert!(
-        analysis.diagnostics.is_empty(),
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
-    );
-    let hir = analysis.hir.expect("HIR");
-    let len = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "len")
-        .expect("len symbol");
-    let chart_tf = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "chart_tf")
-        .expect("chart_tf symbol");
-
-    assert_eq!(
-        len.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
-    );
-    assert_eq!(
-        chart_tf.pine_type,
-        PineType::new(Qualifier::Simple, ValueKind::String)
     );
 }
 
@@ -5185,7 +5138,7 @@ fn simple_params_accept_udf_selector_switch_returned_input_values() {
 }
 
 #[test]
-fn simple_params_accept_user_method_selector_switch_returned_input_values() {
+fn simple_params_accept_user_method_selector_switch_returned_series_values() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_length(Box this, string mode, int x) =>\n    switch mode\n        \"dead\" =>\n            for i = 0 to bar_index\n                x\n        \"live\" =>\n            x\n        =>\n            bar_index\nlength = input.int(2, \"Length\")\nmode = \"live\"\nbox = Box.new(1)\nchosen = box.choose_length(mode, length)\nplot(ta.sma(close, chosen))\n",
     );
@@ -5203,7 +5156,7 @@ fn simple_params_accept_user_method_selector_switch_returned_input_values() {
         .expect("chosen symbol");
     assert_eq!(
         chosen.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
+        PineType::new(Qualifier::Series, ValueKind::Int)
     );
 }
 
@@ -5231,7 +5184,7 @@ fn tuple_destructuring_preserves_udf_selector_switch_returned_input_values() {
 }
 
 #[test]
-fn tuple_destructuring_preserves_user_method_selector_switch_returned_input_values() {
+fn tuple_destructuring_preserves_user_method_selector_switch_returned_series_values() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_pair(Box this, string mode, int x) =>\n    switch mode\n        \"dead\" =>\n            [bar_index]\n        \"live\" =>\n            [x]\n        =>\n            [bar_index]\nlength = input.int(2, \"Length\")\nmode = \"live\"\nbox = Box.new(1)\n[len] = box.choose_pair(mode, length)\nplot(ta.sma(close, len))\n",
     );
@@ -5249,7 +5202,7 @@ fn tuple_destructuring_preserves_user_method_selector_switch_returned_input_valu
         .expect("len symbol");
     assert_eq!(
         len.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
+        PineType::new(Qualifier::Series, ValueKind::Int)
     );
 }
 
@@ -5277,7 +5230,7 @@ fn tuple_destructuring_preserves_nested_udf_selector_switch_returned_input_value
 }
 
 #[test]
-fn tuple_destructuring_preserves_nested_user_method_selector_switch_returned_input_values() {
+fn tuple_destructuring_preserves_nested_user_method_selector_switch_returned_series_values() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_pair(Box this, string mode, int x) =>\n    switch mode\n        \"dead\" =>\n            [bar_index]\n        \"live\" =>\n            [x]\n        =>\n            [bar_index]\nforward_pair(box, mode, x) => box.choose_pair(mode, x)\nlength = input.int(2, \"Length\")\nmode = \"live\"\nbox = Box.new(1)\n[len] = forward_pair(box, mode, length)\nplot(ta.sma(close, len))\n",
     );
@@ -5295,7 +5248,7 @@ fn tuple_destructuring_preserves_nested_user_method_selector_switch_returned_inp
         .expect("len symbol");
     assert_eq!(
         len.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
+        PineType::new(Qualifier::Series, ValueKind::Int)
     );
 }
 
@@ -5896,7 +5849,7 @@ fn method_final_for_series_bound_reassignment_promotes_qualifier_before_simple_p
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            .any(|diagnostic| diagnostic.code == "E_METHOD_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
     );
@@ -5964,7 +5917,7 @@ fn method_final_while_series_condition_reassignment_promotes_qualifier_before_si
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            .any(|diagnostic| diagnostic.code == "E_METHOD_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
     );
@@ -6013,25 +5966,22 @@ fn udf_const_scalar_comparisons_preserve_selected_input_qualifiers() {
 }
 
 #[test]
-fn tuple_method_const_selector_literal_preserves_selected_input_qualifier() {
+fn tuple_method_const_selector_literal_retains_series_parameter_boundary() {
     let analysis = analyze(
         "type Box\n    int seed\nmethod choose_pair(Box this, string selector, int x) =>\n    switch selector\n        \"dead\" => [bar_index]\n        \"live\" => [x]\n        => [bar_index]\nbox = Box.new(1)\nlength = input.int(2, \"Length\")\n[len] = box.choose_pair(\"live\", length)\nplot(ta.ema(close, len))\n",
     );
 
     assert!(
-        analysis.diagnostics.is_empty(),
+        analysis.hir.is_none(),
+        "typed method parameters retain their declared qualifier"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_CALL_ARG_TYPE"),
         "{:?}",
         analysis.diagnostics
-    );
-    let hir = analysis.hir.expect("HIR");
-    let len = hir
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "len")
-        .expect("len symbol");
-    assert_eq!(
-        len.pine_type,
-        PineType::new(Qualifier::Input, ValueKind::Int)
     );
 }
 
@@ -6114,4 +6064,44 @@ fn statically_selected_switch_ignores_unreachable_tail_qualifiers() {
             "{name}"
         );
     }
+}
+
+#[test]
+fn udf_inputs_keep_exported_library_and_metadata_boundaries() {
+    let imported = analyze_with_library(
+        "//@version=5\nindicator(\"root\")\nimport user/lib/1 as lib\nplot(lib.f())\n",
+        "//@version=5\nlibrary(\"Inputs\")\nexport f()=>input.int(2,\"Forbidden library input\")\n",
+    );
+    assert!(imported.hir.is_none());
+    assert!(
+        imported
+            .diagnostics
+            .iter()
+            .any(|d| d.code == "E_IMPORT_FUNCTION_SIDE_EFFECT"),
+        "{:?}",
+        imported.diagnostics
+    );
+    let dynamic = analyze(
+        "//@version=5\nindicator(\"bad metadata\")\nf()=>input.int(2,title=str.tostring(close))\nplot(f())\n",
+    );
+    assert!(dynamic.hir.is_none());
+}
+
+#[test]
+fn legacy_table_udf_native_probe_is_accepted_with_version_boundary() {
+    let source = include_str!(
+        "../../../../docs/evidence/strategy-library-20261010/legacy-table-udf-v4.pine"
+    );
+    let analysis = crate::analyze_source(&SourceFile::new("native-table.pine", source));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    let older = crate::analyze_source(&SourceFile::new(
+        "v3-table.pine",
+        source.replace("//@version=4", "//@version=3"),
+    ));
+    assert!(older.hir.is_none());
 }

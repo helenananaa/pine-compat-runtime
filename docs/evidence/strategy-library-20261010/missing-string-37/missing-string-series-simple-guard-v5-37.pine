@@ -1,0 +1,6 @@
+//@version=5
+indicator("missing-string-series-simple-guard-v5-37",precision=0)
+string x=na
+x:=str.tostring(close)
+f(simple string p)=>str.length(p)
+plot(f(x))

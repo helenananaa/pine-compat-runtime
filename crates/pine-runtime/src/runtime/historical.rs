@@ -108,6 +108,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) chart_visible_right_time: Option<i64>,
     pub(crate) first_bar_close: Option<f64>,
     pub(crate) request_environment: RequestEnvironment,
+    pub(crate) static_requests: crate::builtins::static_requests::StaticRequests,
+    pub(crate) context_windows: super::context_windows::ContextWindows,
     pub(crate) request_feed: crate::request::RequestFeed,
     pub(crate) historical_dynamic_request_contexts: HashSet<RequestCacheKey>,
     pub(crate) request_cache: HashMap<
@@ -150,6 +152,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) collection_gc_allocated_bytes: usize,
     pub(crate) collection_gc_next_bytes: usize,
     pub(crate) object_store: IdStore<Vec<PineValue>>,
+    pub(crate) array_primary_owners: IdStore<super::persistence::PersistentArrayOwner>,
     pub(crate) object_varip_fields: IdStore<Vec<bool>>,
     pub(crate) object_varip_ids: IdStore<u32>,
     pub(crate) next_object_id: u64,
@@ -206,6 +209,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) display_origin: usize,
     pub(crate) stored_origin: usize,
     pub(crate) alerts: super::append_history::AppendHistory<AlertEvent>,
+    pub(crate) pending_alert_events: Vec<(AlertEvent, bool)>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
     // Historical OHLC remains visible during fill callbacks, but account values
@@ -409,7 +413,7 @@ impl<'a> HistoricalRuntime<'a> {
         .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills);
         Self {
             program,
-            metadata,
+            metadata: Arc::clone(&metadata),
             input_overrides: InputOverrides::new(),
             magnifier_input: MagnifierInput::new(),
             magnifier_chart_bar_count: None,
@@ -426,7 +430,12 @@ impl<'a> HistoricalRuntime<'a> {
             chart_visible_left_time: None,
             chart_visible_right_time: None,
             first_bar_close: None,
+            static_requests: crate::builtins::static_requests::StaticRequests::new(
+                metadata.static_request_dependencies,
+                request_environment.clone(),
+            ),
             request_environment,
+            context_windows: super::context_windows::ContextWindows::default(),
             request_feed: crate::request::RequestFeed::default(),
             historical_dynamic_request_contexts: HashSet::new(),
             request_cache: HashMap::new(),
@@ -459,6 +468,7 @@ impl<'a> HistoricalRuntime<'a> {
             collection_gc_allocated_bytes: 0,
             collection_gc_next_bytes: 2 * 1024 * 1024,
             object_store: IdStore::new(),
+            array_primary_owners: IdStore::new(),
             object_varip_fields: IdStore::new(),
             object_varip_ids: IdStore::new(),
             next_object_id: 0,
@@ -513,6 +523,7 @@ impl<'a> HistoricalRuntime<'a> {
             display_origin: 0,
             stored_origin: 0,
             alerts: Default::default(),
+            pending_alert_events: Vec::new(),
             alert_once_per_bar_calls: HashSet::new(),
             strategy_broker,
             strategy_position_size_at_script_pass: Default::default(),
@@ -664,15 +675,6 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    pub(crate) fn fork_with_request_environment(
-        &self,
-        request_environment: RequestEnvironment,
-    ) -> Self {
-        let mut runtime = Self::with_runtime_program(self.program.clone(), request_environment);
-        runtime.inherit_execution_budget(self);
-        runtime
-    }
-
     /// Empty runtime with the same program, host inputs and request feed.
     /// Chart history, caches and broker state start over.
     pub(crate) fn blank_for_replay(&self) -> Self {
@@ -786,43 +788,10 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &'bars [Bar],
         execution_times: Option<&'bars [i64]>,
     ) -> Result<HistoricalDataset<'runtime, 'bars, 'a>, RuntimeError> {
-        self.ensure_execution_ready()?;
-        // A batch supplies the complete initial dataset. Restrict its first
-        // execution window before any series, bar indices or strategy state
-        // are created. Later incremental appends extend that window normally.
-        let skip = if self.bars == 0 {
-            self.program
-                .calc_bars_count
-                .filter(|count| *count > 0)
-                .map_or(0, |count| bars.len().saturating_sub(count as usize))
-        } else {
-            0
-        };
+        let (skip, previous_historical_end) =
+            self.prepare_historical_dataset(bars, execution_times)?;
         let bars = &bars[skip..];
         let execution_times = execution_times.map(|times| &times[skip..]);
-        if self.program.script_mode == ScriptMode::Strategy {
-            self.session_windows
-                .validate_range(self.bars, self.bars + bars.len())
-                .map_err(crate::SessionWindowInputError::runtime_error)?;
-        }
-        if self.bars == 0 && self.magnifier_chart_bar_count.is_none() {
-            self.prepare_magnifier_chart_bar_count(bars.len())?;
-        }
-        self.prepare_external_window(skip)?;
-        let previous_historical_end = self.historical_end;
-        self.historical_end = Some(self.bars + bars.len());
-        if let Some(first) = bars.first() {
-            self.chart_visible_left_time.get_or_insert(first.time);
-        }
-        if let Some((offset, last)) = bars
-            .len()
-            .checked_sub(1)
-            .map(|offset| (offset, &bars[offset]))
-        {
-            self.last_bar_index = Some(self.bars + offset);
-            self.last_bar_time = Some(last.time);
-            self.chart_visible_right_time = Some(last.time);
-        }
         Ok(HistoricalDataset {
             runtime: self,
             bars,
@@ -910,16 +879,7 @@ impl<'a> HistoricalRuntime<'a> {
         fresh_budget: bool,
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
-        if let Some(account) = self.program.strategy_settings.account_currency {
-            let chart = self.request_environment.chart().currency();
-            if account != chart {
-                return Err(RuntimeError {
-                    message: format!(
-                        "strategy account currency {account} differs from chart currency {chart}; foreign currency conversion is not supported"
-                    ),
-                });
-            }
-        }
+        let account_rate = self.account_currency_rate_for_bar(&bar, update_kind, execution_time)?;
         let bar_index = self.bars;
         if let Some(external) = &self.external_execution
             && external
@@ -955,6 +915,15 @@ impl<'a> HistoricalRuntime<'a> {
             self.reset_execution_budget();
         }
         let result = self.resource_budget.check().and_then(|()| {
+            // Native broker sizing/accounting uses 1 before an explicitly
+            // supplied pair has historical quotes. Explicit conversion queries
+            // still return na in this warmup interval. An absent pair is an
+            // input error above, rather than an implicit identity conversion.
+            self.strategy_broker
+                .set_quote_to_account_rate(account_rate.unwrap_or(1.0))
+                .map_err(|error| RuntimeError {
+                    message: error.to_string(),
+                })?;
             self.execute_bar_with_context(bar, update_kind, is_new_bar, execution_time)
         });
         if result.is_err() {
@@ -963,7 +932,7 @@ impl<'a> HistoricalRuntime<'a> {
         result
     }
 
-    fn ensure_execution_ready(&self) -> Result<(), RuntimeError> {
+    pub(crate) fn ensure_execution_ready(&self) -> Result<(), RuntimeError> {
         if self.execution_failed {
             Err(RuntimeError {
                 message: "E_RUNTIME_POISONED: historical runtime cannot execute after a previous execution error; create a new runtime".to_owned(),
@@ -984,6 +953,13 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);
+        if self
+            .static_requests
+            .observe_bar(bar_index, bar, update_kind)
+        {
+            self.request_cache.clear();
+            self.request_evaluations.clear();
+        }
         self.current_execution_time = execution_time;
         self.first_bar_close.get_or_insert(bar.close);
         self.chart_visible_left_time.get_or_insert(bar.time);
@@ -1064,19 +1040,7 @@ impl<'a> HistoricalRuntime<'a> {
                 }
             }
         } else {
-            let program = self.program.clone();
-            for statement in &program.statements {
-                match self.eval_stmt(statement) {
-                    Ok(StmtControl::None) => {}
-                    Ok(StmtControl::Break | StmtControl::Continue) => {
-                        return Err(RuntimeError::escaped_loop_control());
-                    }
-                    Err(_) if self.pending_loop_control.take().is_some() => {
-                        return Err(RuntimeError::escaped_loop_control());
-                    }
-                    Err(error) => return Err(error),
-                }
-            }
+            self.run_program_statements()?;
         }
 
         if self.external_execution.is_none() {
@@ -1292,19 +1256,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.trace_strategy_phase(
             crate::runtime::strategy_scheduler::StrategyBarPhase::ScriptStatements,
         );
-        let program = self.program.clone();
-        for statement in &program.statements {
-            match self.eval_stmt(statement) {
-                Ok(StmtControl::None) => {}
-                Ok(StmtControl::Break | StmtControl::Continue) => {
-                    return Err(RuntimeError::escaped_loop_control());
-                }
-                Err(_) if self.pending_loop_control.take().is_some() => {
-                    return Err(RuntimeError::escaped_loop_control());
-                }
-                Err(error) => return Err(error),
-            }
-        }
+        self.run_program_statements()?;
         // Even immediate orders fill after the script pass. Statements following
         // strategy.close still observe the account that entered this pass.
         if self.external_execution.is_none() {

@@ -1,0 +1,5 @@
+//@version=6
+indicator("qualifier-typed-const-helper-v6-39")
+need39(const int value)=>value
+outer39(int value)=>need39(value)
+plot(outer39(3))

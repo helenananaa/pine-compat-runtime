@@ -1,8 +1,0 @@
-//@version=4
-study("Unsupported security UDF local dependency mismatch")
-
-requestedValue(src, tf) =>
-    otherContext = security("NASDAQ:MSFT", tf, src)
-    security("NYSE:IBM", tf, otherContext)
-
-plot(requestedValue(close, "5"))

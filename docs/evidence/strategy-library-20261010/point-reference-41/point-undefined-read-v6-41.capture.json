@@ -1,0 +1,18 @@
+{
+  "name": "point-undefined-read-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-undefined-read-v6-41.pine",
+  "source_sha256": "3a1b54e10402696dacf75b0358b9a108d2aeadfba8a11e3164a48b9e4e75ad67",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 0: Cannot access the 'price' field of an undefined object. The object is 'na'. at  #main () : 4",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e0e43cfa0850cdcc00752f4865c10dd362c785542be5e8a7067c864752c8475a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-undefined-read-v6-41.native.ax.txt",
+  "accessibility_sha256": "8ec3b7d020cd0048089d06fd8ce59e51e7a992b6c5b62c5628a7aa01fc332108",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-undefined-read-v6-41.native.png",
+  "screenshot_sha256": "3ee0fae673a1411784bcef74f2b56d369267cf209a1d868741377f6a84b7a573",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

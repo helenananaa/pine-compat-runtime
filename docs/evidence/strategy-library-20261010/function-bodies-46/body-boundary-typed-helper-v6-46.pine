@@ -1,0 +1,5 @@
+//@version=6
+indicator("body-boundary-typed-helper-v6-46")
+g(bool flag)=>flag
+f(x)=>g(x)
+plot(1)

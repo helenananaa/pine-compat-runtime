@@ -1,0 +1,14 @@
+//@version=5
+indicator("missing-string-values-v5-37",precision=0)
+string a=na
+b=string(na)
+c=input.bool(false)?"A":na
+plot(na(a)?1:0,title="typed is na")
+plot(str.length(a),title="typed length")
+plot(a==""?1:0,title="typed equals empty")
+plot(na(b)?1:0,title="cast is na")
+plot(str.length(b),title="cast length")
+plot(b==""?1:0,title="cast equals empty")
+plot(na(c)?1:0,title="input conditional is na")
+plot(str.length(c),title="input conditional length")
+plot(c==""?1:0,title="input equals empty")

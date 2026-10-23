@@ -1,0 +1,11 @@
+//@version=5
+indicator("point-line-coordinate-copy-v5-41")
+a=chart.point.from_index(0,10)
+b=chart.point.from_index(1,20)
+item=line.new(a,b)
+a.price:=30
+plot(line.get_y1(item))
+line.set_first_point(item,a)
+a.price:=40
+plot(line.get_y1(item))
+plot(a.price)

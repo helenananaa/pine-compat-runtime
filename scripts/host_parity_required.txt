@@ -161,6 +161,7 @@ runtime_map_methods.json
 runtime_map_varip.json
 runtime_math.json
 runtime_math_edge_cases.json
+runtime_matrix_add.json
 runtime_matrix_bool.json
 runtime_matrix_for_in.json
 runtime_matrix_history_shape.json

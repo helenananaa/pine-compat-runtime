@@ -1,0 +1,17 @@
+{
+  "name": "original-runtime-user_method_matrix_call_result_reads-46",
+  "source": "E:\\projects\\pine-interpreter\\tests\\fixtures\\runtime\\user_method_matrix_call_result_reads.pine",
+  "source_sha256": "9765907e9d6a7dc681a69fe93dbe304a524c57a9039c3b7a296958630dd5df71",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Undeclared identifier \"float_values\" (CE10272)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6c4fddd774d9f83c437c9ce64477100ce1695f6c0a023ef0ea256987b4843304",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-runtime-user_method_matrix_call_result_reads-46.native.ax.txt",
+  "accessibility_sha256": "fb94a31b9466808671c7f906e20dff731e34ec9d93289e37281074acefd76348",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-runtime-user_method_matrix_call_result_reads-46.native.png",
+  "screenshot_sha256": "27334dd75aa31c3abcbd662f9d2b40ccbd3327e04e168cd31d35d2a3e64ef530",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

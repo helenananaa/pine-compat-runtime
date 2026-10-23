@@ -1,0 +1,4 @@
+//@version=6
+indicator("Reserved typed-var-v6 probe33",precision=0)
+var float text=17
+plot(text)

@@ -58,6 +58,13 @@ impl HistoricalRuntime<'_> {
                 message: "UDT materialization exceeded maximum depth".to_owned(),
             });
         }
+        if let PineValue::ChartPointRef(id) = value {
+            let fields = self.object_store.get(id).ok_or_else(|| RuntimeError {
+                message: "invalid chart.point reference".to_owned(),
+            })?;
+            return Ok(std::mem::size_of::<PineValue>()
+                .saturating_add(collection_values_allocation_bytes(fields)));
+        }
         let PineValue::UserTypeRef(id) = value else {
             return Ok(value_allocation_bytes(value));
         };

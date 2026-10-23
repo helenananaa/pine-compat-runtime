@@ -49,6 +49,7 @@ impl Analyzer {
                         | ValueKind::Bool
                         | ValueKind::String
                         | ValueKind::Color
+                        | ValueKind::ChartPoint
                 );
             }
             self.imported_user_type_field_user_type(user_type, field)
@@ -137,6 +138,7 @@ impl Analyzer {
                         | ValueKind::Box
                         | ValueKind::Table
                         | ValueKind::Polyline
+                        | ValueKind::ChartPoint
                 );
             }
             self.imported_user_type_field_user_type(user_type, field)
@@ -361,6 +363,7 @@ impl Analyzer {
     ) -> Option<(PineType, Option<String>, Vec<UdtFieldAccessStep>)> {
         let user_type = self.imported_user_types.get(type_name)?;
         let mut current_type = user_type;
+        let mut current_type_name = type_name.to_owned();
         let mut final_type = None;
         let mut final_user_type_name = None;
         let mut fields = Vec::with_capacity(field_names.len());
@@ -372,7 +375,8 @@ impl Analyzer {
                 .find(|(_, field)| field.name == *field_name)?;
             let pine_type = self.imported_user_type_field_type(current_type, field, qualifier)?;
             final_type = Some(pine_type);
-            final_user_type_name = self.imported_user_type_field_type_name(current_type, field);
+            final_user_type_name =
+                self.imported_field_type_name_in_alias(&current_type_name, current_type, field);
             fields.push(UdtFieldAccessStep { index, pine_type });
             if field_index + 1 < field_names.len() {
                 if pine_type.kind == ValueKind::ChartPoint && field_index + 2 == field_names.len() {
@@ -386,7 +390,8 @@ impl Analyzer {
                     });
                     return Some((chart_point_type, None, fields));
                 }
-                current_type = self.imported_user_type_field_user_type(current_type, field)?;
+                current_type_name = final_user_type_name.clone()?;
+                current_type = self.imported_user_types.get(&current_type_name)?;
             }
         }
         Some((final_type?, final_user_type_name, fields))
@@ -440,7 +445,7 @@ impl Analyzer {
                     return None;
                 }
                 let Some(next_type_name) =
-                    self.imported_user_type_field_type_name(current_type, field)
+                    self.imported_field_type_name_in_alias(&current_type_name, current_type, field)
                 else {
                     self.diagnostics.push(Diagnostic::error(
                         "E_UDT_UNKNOWN_FIELD",
@@ -489,6 +494,27 @@ impl Analyzer {
     ) -> Option<String> {
         self.imported_user_type_field_user_type_name(user_type, field)
             .map(str::to_owned)
+    }
+
+    fn imported_field_type_name_in_alias(
+        &self,
+        parent_name: &str,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        field: &crate::modules::ImportedUserTypeFieldInfo,
+    ) -> Option<String> {
+        if field.pine_type.is_some() {
+            return None;
+        }
+        if let Some((alias, _)) = parent_name.rsplit_once('.') {
+            let name = format!("{alias}.{}", field.type_name);
+            if self.imported_user_types.get(&name).is_some_and(|nested| {
+                nested.identity.source_id == user_type.identity.source_id
+                    && nested.identity.name == field.type_name
+            }) {
+                return Some(name);
+            }
+        }
+        self.imported_user_type_field_type_name(user_type, field)
     }
 
     fn imported_user_type_field_user_type<'a>(

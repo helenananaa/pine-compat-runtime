@@ -1,0 +1,28 @@
+{
+  "native_version": 4,
+  "symbol": "BINANCE:BTCUSDT",
+  "chart_timeframe": "M",
+  "source": "legacy-namespace-oracle-17.pine",
+  "observed_values": {
+    "pvt": 9196905.16,
+    "macd_tuple": 3574.09,
+    "atr_call": 10381.26,
+    "macd_variable": 7,
+    "atr_variable": 11
+  },
+  "scope": "Official compile/execution confirms variable and built-in-function namespaces coexist and pvt exists in v4; moving market values are not a full native numerical parity receipt.",
+  "v3_parameter_and_local_probe": {
+    "source": "legacy-local-namespace-oracle-17.pine",
+    "values": [
+      165518.86,
+      7
+    ],
+    "status": "compiled_and_ran"
+  },
+  "v3_pvt_negative_control": {
+    "source": "legacy-pvt-v3-rejection-17.pine",
+    "error": "Undeclared identifier pvt",
+    "status": "rejected"
+  },
+  "official_mapping": "https://www.tradingview.com/pine-script-docs/v5/migration-guides/to-pine-version-5/"
+}

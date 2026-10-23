@@ -1,0 +1,19 @@
+{
+  "name": "v6-literal-na-guard-le-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-le-37.pine",
+  "source_sha256": "4d05aee6c119760843aa88a9751c588e0703ee4057e7dc1df2de560d7b273963",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "251 row v6-literal-na-guard-le-37 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4d05aee6c119760843aa88a9751c588e0703ee4057e7dc1df2de560d7b273963",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-le-37.native.ax.txt",
+  "accessibility_sha256": "2118fd31183c6e4fddc4da2ce06815ff08c4385f01f89c7b254b2e3a75f86619",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/v6-literal-na-guard-le-37.native.png",
+  "screenshot_sha256": "9075380d98e9b9ec7adb441b34030e6ef6a3b8ac1bef069a7cb921ef85f11f65",
+  "scope": "v6 less-or-equal with literal na is legal and false",
+  "qualification_scope": "candidate_bounded_control"
+}

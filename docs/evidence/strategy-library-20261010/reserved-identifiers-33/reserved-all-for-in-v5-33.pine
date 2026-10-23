@@ -1,0 +1,30 @@
+//@version=5
+indicator("All reserved for-in v5 probe33",precision=0)
+total=0
+for catch in array.from(1)
+    total+=catch
+for class in array.from(1)
+    total+=class
+for do in array.from(1)
+    total+=do
+for ellipse in array.from(1)
+    total+=ellipse
+for in in array.from(1)
+    total+=in
+for is in array.from(1)
+    total+=is
+for polygon in array.from(1)
+    total+=polygon
+for range in array.from(1)
+    total+=range
+for return in array.from(1)
+    total+=return
+for struct in array.from(1)
+    total+=struct
+for text in array.from(1)
+    total+=text
+for throw in array.from(1)
+    total+=throw
+for try in array.from(1)
+    total+=try
+plot(total)

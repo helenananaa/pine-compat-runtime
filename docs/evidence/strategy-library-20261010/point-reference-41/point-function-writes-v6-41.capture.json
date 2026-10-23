@@ -1,0 +1,20 @@
+{
+  "name": "point-function-writes-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-function-writes-v6-41.pine",
+  "source_sha256": "0ef240a562724d42af29e9b3a542342076da5d1ad381ca0ce5e480a3f641b9ed",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15
+  ],
+  "native_row": "235 row point-function-writes-v6-41 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c38e4f89380e4e3a2eadce7923d3929329730572c75b8c519bc322d35ff6f675",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-function-writes-v6-41.native.ax.txt",
+  "accessibility_sha256": "008fc83a82570928a138d007373b46a3dcac3bd6e0d824bacc002c0a58ffff4d",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-function-writes-v6-41.native.png",
+  "screenshot_sha256": "1941a0dfff7a485ba0714202820f1ed72980e826ed47b2ee80d80ec5d7b46af8",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,78 @@
+[
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-boundary-oracle-19.pine",
+    "source_sha256": "ebbec3e8805fd4218ffc731d0cbcfc400eeb96a55c39db5a0313e5fe86542108",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-boundary-oracle-19.png",
+    "screenshot_sha256": "6c6c7f7b68bd59fcd0a1c92fcc406ebef27341b88985274a99e862d1f31c4ee0",
+    "native_version": 6,
+    "native_chart": "BINANCE:BTCUSDT M with requested NASDAQ:AAPL D, except UTC probe requests BTCUSDT D",
+    "native_values": [
+      23400000,
+      23400000,
+      -63000000,
+      -86400000,
+      9,
+      9,
+      30,
+      13,
+      0,
+      1,
+      1,
+      -63000000,
+      259200000
+    ],
+    "status": "implemented_control",
+    "scope": "Minimal official clock/language observations only; no full market/trade parity"
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-offset-oracle-19.pine",
+    "source_sha256": "5d9d947d27f297dc18d24afa8dd5716a6a44e39bbcbca8b5db6de2246a709ee5",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-offset-oracle-19.png",
+    "screenshot_sha256": "561f3b322294a885f57cd032932793e6e3d1ecff84ea2176ea65d16ca42b9beb",
+    "native_version": 6,
+    "native_chart": "BINANCE:BTCUSDT M with requested NASDAQ:AAPL D, except UTC probe requests BTCUSDT D",
+    "native_values": [
+      -86400000,
+      -86400000,
+      0,
+      23400000,
+      -63000000,
+      -86400000,
+      -63000000
+    ],
+    "status": "implemented_control",
+    "scope": "Minimal official clock/language observations only; no full market/trade parity"
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-session-oracle-19.pine",
+    "source_sha256": "75490feb73cbf6cae963bad8eca21d8588a42d23f11d2820c8a9c9a942574f24",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\calendar-session-oracle-19.png",
+    "screenshot_sha256": "8000407d5a4a5b56b8b4a2dcd73f7fd63ad8df719f0777288b11e261ecf702f0",
+    "native_version": 6,
+    "native_chart": "BINANCE:BTCUSDT M with requested NASDAQ:AAPL D, except UTC probe requests BTCUSDT D",
+    "native_values": [
+      -86400000,
+      -85500000,
+      -66600000,
+      -63000000
+    ],
+    "status": "pending_virtual_session_offsets",
+    "scope": "Minimal official clock/language observations only; no full market/trade parity"
+  },
+  {
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\utc-lower-open-oracle-19.pine",
+    "source_sha256": "d5750d3cf559f423b3bf1e7439e8252201ea6ec9f9b49941cdf9ee28a76f48d0",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\utc-lower-open-oracle-19.png",
+    "screenshot_sha256": "81db6e9adc8fdb5db5753e508bdd9decc266901e2e6bed5696a59613ece994be",
+    "native_version": 6,
+    "native_chart": "BINANCE:BTCUSDT M with requested NASDAQ:AAPL D, except UTC probe requests BTCUSDT D",
+    "native_values": [
+      -86400000,
+      -86400000,
+      0,
+      0
+    ],
+    "status": "implemented_control",
+    "scope": "Minimal official clock/language observations only; no full market/trade parity"
+  }
+]

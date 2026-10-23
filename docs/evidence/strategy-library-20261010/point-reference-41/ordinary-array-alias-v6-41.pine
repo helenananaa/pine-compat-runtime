@@ -1,0 +1,15 @@
+//@version=6
+indicator("ordinary-array-alias-v6-41")
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+varip items=array.new_int()
+var alias=items
+if barstate.isrealtime
+    items.push(1)
+plot(ticks)
+plot(items.size())
+plot(alias.size())
+plot(1)

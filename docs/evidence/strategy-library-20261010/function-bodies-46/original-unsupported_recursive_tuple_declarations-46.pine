@@ -1,0 +1,26 @@
+//@version=6
+indicator("Unsupported recursive tuple declarations")
+
+type Point
+    float value
+
+type Anchor
+    int tag
+
+direct(values) => direct(values)
+
+wrapped(values) => [wrapped(values)]
+
+mutualA(values) => mutualB(values)
+
+mutualB(values) => mutualA(values)
+
+method recursive(Anchor self, array<Point> values) => self.recursive(values)
+
+source = array.from(Point.new(10.0))
+anchor = Anchor.new(1)
+
+[direct_result] = direct(source)
+[wrapped_result] = wrapped(source)
+[mutual_result] = mutualA(source)
+[method_result] = anchor.recursive(source)

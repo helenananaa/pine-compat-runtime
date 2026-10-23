@@ -1,14 +1,15 @@
 use std::collections::HashSet;
 
-use crate::analyzer::user_types::{
-    UserTypeArrayElementInference, classify_user_type_array_element_names,
-};
+use crate::analyzer::user_types::UserTypeArrayElementInference;
 use crate::prelude::*;
 use crate::source_graph::{SourceContextId, SourceId};
 
+pub(crate) mod collections;
+mod declarations;
 mod defaults;
 mod local_arrays;
 mod overloads;
+mod qualifiers;
 pub(crate) use defaults::{function_default_values, record_default_shadowing};
 pub(crate) use local_arrays::local_array_mutation_spans;
 
@@ -326,12 +327,19 @@ impl Analyzer {
         type_name: &str,
         span: Span,
     ) -> Option<FunctionParamInfo> {
-        let explicit_series = type_name.starts_with("series ");
-        let explicit_simple = type_name.starts_with("simple ");
+        let mut explicit_series = type_name.starts_with("series ");
+        let mut explicit_simple = type_name.starts_with("simple ");
+        let explicit_const = type_name.starts_with("const ");
         let type_name = type_name
             .strip_prefix("series ")
             .or_else(|| type_name.strip_prefix("simple "))
+            .or_else(|| type_name.strip_prefix("const "))
             .unwrap_or(type_name);
+        let collection = collections::collection_parameter_info(type_name);
+        if collection.is_some() {
+            explicit_series = false;
+            explicit_simple = false;
+        }
         if explicit_simple && !matches!(type_name, "int" | "float" | "bool" | "string" | "color") {
             self.diagnostics.push(Diagnostic::error(
                 "E_FUNCTION_PARAM_TYPE",
@@ -340,21 +348,21 @@ impl Analyzer {
             ));
             return None;
         }
-        let qualifier = if explicit_simple {
+        let qualifier = if explicit_const {
+            Qualifier::Const
+        } else if explicit_simple {
             Qualifier::Simple
         } else {
             Qualifier::Series
         };
         let (pine_type, user_type_name) = match type_name {
+            _ if collection.is_some() => (collection.unwrap().0, None),
             _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
                 let element_type = &type_name["array<".len()..type_name.len() - 1];
                 if let Some(kind) = array_kind_from_element_type_name(element_type) {
                     (PineType::new(Qualifier::Series, kind), None)
                 } else if matches!(
-                    classify_user_type_array_element_names(
-                        &self.user_types,
-                        &[element_type.to_owned()]
-                    ),
+                    self.classify_declared_user_type_array_names(&[element_type.to_owned()]),
                     Some(UserTypeArrayElementInference::SameLocal(_))
                 ) || self
                     .imported_user_types
@@ -406,11 +414,21 @@ impl Analyzer {
                 return None;
             }
         };
+        if explicit_const && pine_type.kind == ValueKind::UserType {
+            self.diagnostics.push(Diagnostic::error(
+                "E_FUNCTION_PARAM_TYPE",
+                "user-defined type parameters cannot use the `const` qualifier",
+                span,
+            ));
+            return None;
+        }
         Some(FunctionParamInfo {
             pine_type,
             explicit_series,
             explicit_simple,
+            enforce_qualifier: false,
             user_type_name,
+            map_type: collection.and_then(|(_, map)| map),
             span,
         })
     }
@@ -535,16 +553,7 @@ impl Analyzer {
             return None;
         }
         for arg in args {
-            // A direct input at global callsite is evaluated in the caller
-            // before inlining, just like an input assigned to a global variable.
-            // Keep effects inside its arguments and inside function bodies gated.
-            let direct_global_input = self.legacy.dialect().version() >= 5
-                && self.function_depth == 0
-                && self.block_depth == 0
-                && matches!(&arg.value.kind, ExprKind::Call { callee, args }
-                    if expr_name(callee).is_some_and(|name| name.starts_with("input."))
-                        && args.iter().all(|arg| !self.argument_has_side_effect(&arg.value)));
-            if !direct_global_input && self.argument_has_disallowed_udf_side_effect(&arg.value) {
+            if self.argument_has_disallowed_udf_side_effect(&arg.value) {
                 self.unsupported(
                     "function_side_effect",
                     "side-effecting calls cannot be passed as user-defined function arguments",
@@ -636,30 +645,58 @@ impl Analyzer {
         let mut param_symbols = std::collections::HashSet::new();
         let mut param_const_switch_keys = std::collections::HashMap::new();
         for (
-            (param, expected_type),
+            param_index,
             (
-                (((arg_type, arg_user_type), arg_user_type_array), arg_map_info),
-                arg_const_switch_key,
+                (param, expected_type),
+                (
+                    (((arg_type, arg_user_type), arg_user_type_array), arg_map_info),
+                    arg_const_switch_key,
+                ),
             ),
-        ) in function.params.iter().zip(function.param_types.iter()).zip(
-            resolved_arg_types
-                .into_iter()
-                .zip(resolved_arg_user_types)
-                .zip(resolved_arg_user_type_arrays)
-                .zip(resolved_arg_map_infos)
-                .zip(resolved_arg_const_switch_keys),
-        ) {
+        ) in function
+            .params
+            .iter()
+            .zip(function.param_types.iter())
+            .zip(
+                resolved_arg_types
+                    .into_iter()
+                    .zip(resolved_arg_user_types)
+                    .zip(resolved_arg_user_type_arrays)
+                    .zip(resolved_arg_map_infos)
+                    .zip(resolved_arg_const_switch_keys),
+            )
+            .enumerate()
+        {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
             let bound_type = expected_type
                 .as_ref()
                 .map_or(arg_type, |expected| expected.bound_type(arg_type));
             let symbol = self.define_local_symbol(param, bound_type, None, false);
+            // Preserve the caller expression, including its binding context. A
+            // request inside this UDF can reconstruct immutable parameters and
+            // aliases without admitting a caller's external mutable state.
+            if self.legacy.dialect().version() >= 5
+                && super::requests::is_request_scalar_type(bound_type)
+                && let Some(arg_index) = arg_indices.iter().position(|index| *index == param_index)
+            {
+                self.request_param_sources.insert(
+                    symbol.id,
+                    SourcedExpr {
+                        expr: args[arg_index].value.clone(),
+                        source_context_id: self.current_source_context_id(),
+                    },
+                );
+            }
             param_symbols.insert(symbol.id);
             if let Some(key) = arg_const_switch_key.as_ref() {
                 self.record_symbol_const_switch_key(symbol, key);
             }
             if let Some(expected_type) = expected_type {
-                if !can_assign(expected_type.pine_type, arg_type) {
+                if !expected_type.accepts_argument(arg_type, arg_map_info)
+                    || (self.legacy.dialect().version() >= 6
+                        && expected_type.pine_type.kind == ValueKind::Bool
+                        && arg_type.kind == ValueKind::Na)
+                {
                     self.push_diagnostic_in_context(
                         Diagnostic::error(
                             "E_FUNCTION_ARG_TYPE",
@@ -702,7 +739,11 @@ impl Analyzer {
             if let Some(type_name) = arg_user_type_array {
                 self.mark_symbol_user_type_array(symbol, type_name);
             }
-            if let Some(info) = arg_map_info {
+            if let Some(info) = expected_type
+                .as_ref()
+                .and_then(|p| p.map_type)
+                .or(arg_map_info)
+            {
                 self.mark_symbol_map(symbol, info);
             }
             if let Some(key) = arg_const_switch_key {
@@ -1046,7 +1087,14 @@ impl Analyzer {
         self.block_depth -= 1;
 
         let then_type = then_type?;
-        let else_type = else_type?;
+        let else_type = if else_branch.is_empty()
+            && self.legacy.dialect().version() >= 6
+            && then_type.kind == ValueKind::Bool
+        {
+            PineType::new(Qualifier::Const, ValueKind::Bool)
+        } else {
+            else_type?
+        };
         let pine_type =
             self.merge_branch_types(condition_type, then_type, else_type, condition_value, span)?;
         if pine_type.kind == ValueKind::UserType

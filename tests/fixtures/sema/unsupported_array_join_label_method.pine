@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported array join label method")
 values = array.new_label()
-text = values.join()
+note = values.join()
 plot(close)

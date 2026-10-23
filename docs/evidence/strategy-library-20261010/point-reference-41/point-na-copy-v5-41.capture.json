@@ -1,0 +1,18 @@
+{
+  "name": "point-na-copy-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-na-copy-v5-41.pine",
+  "source_sha256": "45def9fe85833c3d3d809ca194631ffadab67448b2992de6cef558aff646b71a",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 0: Cannot access the 'index' field of an undefined object. The object is 'na'. at  #main () : 4",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "838b381c0c7f8441191405ec26797627462f5d2a75dbb233d3ae520119d3a072",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-na-copy-v5-41.native.ax.txt",
+  "accessibility_sha256": "977e9969173265cd99b51910136a2c719251293324cf0ab4ee441ac48dd11370",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-na-copy-v5-41.native.png",
+  "screenshot_sha256": "7d1159a3cb20cfc8702165fa9b0b4dbec026caabc40657e7274301373c599a3a",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

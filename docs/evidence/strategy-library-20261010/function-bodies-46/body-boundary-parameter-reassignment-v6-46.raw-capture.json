@@ -1,0 +1,19 @@
+{
+  "name": "body-boundary-parameter-reassignment-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-boundary-parameter-reassignment-v6-46.pine",
+  "source_sha256": "3feca78ee6f091bc4e0ff8faeb81a4e8f9c8621d93ae4c99b7d85f80e54f2e1f",
+  "kind": "parameter-reassignment",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Function arguments cannot be mutable (\"x\") (CE10175)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "1d559ec52d60e91d20c0867b8d628f3871acb18460439b7e29e06d850554ad4b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-parameter-reassignment-v6-46.native.ax.txt",
+  "accessibility_sha256": "16ad14215f163d0be0692d51316f5b434400a057332a4ec6abe4a2032b7c5278",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-parameter-reassignment-v6-46.native.png",
+  "screenshot_sha256": "707ae499ddd41e20b5ad12c7928873b7ff8c746d6e840640e93859ccf3c78043",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

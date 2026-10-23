@@ -1,0 +1,5 @@
+//@version=6
+indicator("missing-string-const-declaration-v6-37",precision=0)
+const string missing=na
+plot(na(missing)?1:0)
+plot(str.length(missing))

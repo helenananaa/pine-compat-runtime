@@ -1,0 +1,4 @@
+//@version=6
+indicator("extend-invalid-line-v6-40")
+item=line.new(0,1,2,2,extend="bogus")
+plot(1)

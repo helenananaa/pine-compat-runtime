@@ -1,0 +1,6 @@
+//@version=5
+indicator("extend-input-box-v5-40")
+value=input.string("r",options=["n","r","l","b"])
+item=box.new(0,2,1,1,extend=value)
+box.set_extend(item,value)
+plot(box.get_right(item))

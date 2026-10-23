@@ -1,0 +1,5 @@
+//@version=6
+indicator("collection-map-wrong-value-v6-45")
+f(map<string,float> v)=>v.size()
+values=map.new<string,int>()
+plot(f(values))

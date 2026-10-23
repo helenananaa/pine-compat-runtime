@@ -27,8 +27,7 @@ pub struct RequestTimeframe {
 }
 
 impl RequestTimeframe {
-    pub(crate) const SECURITY_RELATION: &'static str =
-        "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths";
+    pub(crate) const SECURITY_RELATION: &'static str = "sameOrLowerOrHigher";
 
     pub fn parse(value: impl AsRef<str>) -> Result<Self, RequestTimeframeError> {
         let raw = value.as_ref();
@@ -58,16 +57,14 @@ impl RequestTimeframe {
         self.seconds
     }
 
-    pub(crate) fn supports_security_timeframe(&self, requested: &Self) -> bool {
-        requested.seconds() < self.seconds()
-            || requested.value().ends_with('M')
-            || self.value().ends_with('M')
-            || requested.seconds() % self.seconds() == 0
-    }
-
     pub(crate) fn nominal_close(&self, open_time: i64) -> i64 {
         crate::builtins::time::calendar_timeframe_close(open_time, self.value(), self.seconds())
             .unwrap_or_else(|| open_time.saturating_add(self.seconds().saturating_mul(1000)))
+    }
+
+    pub(crate) fn previous_open(&self, open_time: i64) -> i64 {
+        crate::builtins::time::chart_timeframe_offset(open_time, self.value(), self.seconds(), 1)
+            .unwrap_or(i64::MIN)
     }
 }
 

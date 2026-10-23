@@ -68,10 +68,22 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("line.style_arrow_left"),
     same_string_constant("line.style_arrow_right"),
     same_string_constant("line.style_arrow_both"),
-    same_string_constant("extend.none"),
-    same_string_constant("extend.right"),
-    same_string_constant("extend.left"),
-    same_string_constant("extend.both"),
+    NamedStringConstant {
+        name: "extend.none",
+        value: "n",
+    },
+    NamedStringConstant {
+        name: "extend.right",
+        value: "r",
+    },
+    NamedStringConstant {
+        name: "extend.left",
+        value: "l",
+    },
+    NamedStringConstant {
+        name: "extend.both",
+        value: "b",
+    },
     same_string_constant("size.auto"),
     same_string_constant("size.tiny"),
     same_string_constant("size.small"),
@@ -110,9 +122,18 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("scale.left"),
     same_string_constant("scale.right"),
     same_string_constant("scale.none"),
-    same_string_constant("alert.freq_all"),
-    same_string_constant("alert.freq_once_per_bar"),
-    same_string_constant("alert.freq_once_per_bar_close"),
+    NamedStringConstant {
+        name: "alert.freq_all",
+        value: "all",
+    },
+    NamedStringConstant {
+        name: "alert.freq_once_per_bar",
+        value: "once_per_bar",
+    },
+    NamedStringConstant {
+        name: "alert.freq_once_per_bar_close",
+        value: "once_per_bar_close",
+    },
     same_string_constant("format.inherit"),
     same_string_constant("format.mintick"),
     same_string_constant("format.price"),

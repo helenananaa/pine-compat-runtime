@@ -1,0 +1,13 @@
+//@version=6
+indicator("point-pair-array-v6-40")
+type Pair40
+    chart.point firstPoint
+    chart.point secondPoint
+a=chart.point.from_index(1,10)
+b=chart.point.from_index(2,20)
+values=array.new<Pair40>()
+values.push(Pair40.new(a,b))
+pair=values.first()
+plot(pair.firstPoint.price)
+plot(pair.secondPoint.index)
+plot(values.size())

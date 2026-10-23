@@ -1,0 +1,7 @@
+//@version=5
+indicator("Direct bool input qualifier v5 probe34",precision=0)
+direct()=>
+    if false
+        true
+value=input.bool(direct())
+plot(value?1:0)

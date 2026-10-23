@@ -1,0 +1,3 @@
+//@version=5
+strategy("Close all mixed names v5 29")
+strategy.close_all(when=bar_index==3,immediately=true,disable_alert=false)

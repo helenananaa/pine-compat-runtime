@@ -8,7 +8,7 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
         match name {
-            "map.put" | "map.clear" | "map.remove" | "map.put_all" => {
+            "map.put" | "map.clear" | "map.put_all" => {
                 Some(PineType::new(Qualifier::Series, ValueKind::Void))
             }
             "map.contains" => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
@@ -27,7 +27,7 @@ impl Analyzer {
                     element_kind.array_kind_from_element_kind()?,
                 ))
             }
-            "map.get" => {
+            "map.get" | "map.remove" => {
                 let first_arg = args.first()?;
                 let info = self.map_type_of_expr(&first_arg.value).or_else(|| {
                     let ExprKind::Identifier(name) = &first_arg.value.kind else {

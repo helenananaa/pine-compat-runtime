@@ -8,5 +8,7 @@ if bar_index == 0
     time_bottom_right = chart.point.from_time(time + 60000, low + 1)
     box.new(top_left=time_top_left, bottom_right=time_bottom_right, xloc=xloc.bar_time, border_style=line.style_dotted, text="time box")
     box.new(na, na, na, na, color.white, 1, xloc=xloc.bar_time)
-    box.new(top_left=na, bottom_right=time_bottom_right, xloc=xloc.bar_time)
+    chart.point missing = na
+    if not na(missing)
+        box.new(top_left=missing, bottom_right=time_bottom_right, xloc=xloc.bar_time)
 plot(close)

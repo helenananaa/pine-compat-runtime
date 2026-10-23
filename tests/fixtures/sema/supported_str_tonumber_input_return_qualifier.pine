@@ -1,7 +1,7 @@
 //@version=6
 indicator("Supported str.tonumber input return qualifier")
 
-text = input.string("123.5", "Text")
-number = str.tonumber(text)
+note = input.string("123.5", "Text")
+number = str.tonumber(note)
 
 hline(number)

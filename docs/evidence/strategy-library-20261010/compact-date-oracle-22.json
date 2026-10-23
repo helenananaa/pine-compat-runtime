@@ -1,0 +1,20 @@
+{
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-oracle-22.pine",
+  "source_sha256": "e59ef7206b618c4a49c54bb2298ba3f98d6906be0d2e361ba255d5356d2768f7",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\compact-date-oracle-22.png",
+  "screenshot_sha256": "468dedaa797fe2e060ea12a7d8262a72adf67d91f243e89cead1201f28bdee99",
+  "pine_version": 5,
+  "captured_date": "2026-10-12",
+  "native_values": [
+    1660572000000,
+    1660593600000,
+    1660572000000,
+    1660552200000,
+    1660572000000,
+    1660552200000
+  ],
+  "prior_debug_error": "runtime failed: timestamp unsupported dateString `15Aug 2022 14:00 +0000`\n",
+  "status": "confirmed_remaining_core_gap",
+  "affected_original_sha256": "d864a54cc7d0e040c4e6f36a4acc6a57e27bee178a24200404742ce0b144da4a",
+  "scope": "Original Morning Scalp compact 15Aug strings are native-valid. Compact day/month accepts a distinct fallback that ignores the +0530 and GMT+0530 suffix in these saved controls; spaced and ISO inputs apply +0530. Do not assume inserting a space has equivalent semantics. Not implemented/qualified yet."
+}

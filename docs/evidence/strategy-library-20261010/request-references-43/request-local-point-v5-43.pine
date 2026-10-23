@@ -1,0 +1,7 @@
+//@version=5
+indicator("request-local-point-v5-43")
+f()=>
+    v=chart.point.from_index(1,10)
+    v.price+=5
+    v.price
+plot(request.security(syminfo.tickerid,timeframe.period,f()))

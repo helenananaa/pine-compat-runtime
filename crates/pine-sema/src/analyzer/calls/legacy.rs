@@ -565,7 +565,10 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) -> FocusedLegacyCallAnalysis {
         if self.legacy.dialect() == crate::PineDialect::V5
-            && name == "plot"
+            && matches!(
+                name,
+                "plot" | "bgcolor" | "plotshape" | "plotchar" | "plotarrow"
+            )
             && !args.iter().any(|arg| arg.name.as_deref() == Some("transp"))
         {
             return FocusedLegacyCallAnalysis::NotApplicable;

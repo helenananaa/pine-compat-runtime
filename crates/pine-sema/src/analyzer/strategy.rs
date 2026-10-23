@@ -132,6 +132,18 @@ pub(crate) fn is_supported_strategy_value_function(name: &str) -> bool {
 }
 
 impl Analyzer {
+    pub(crate) fn legacy_na_dynamic_request_arg(
+        &self,
+        callee: &str,
+        param: &str,
+        value: PineType,
+    ) -> bool {
+        self.legacy.dialect().version() == 5
+            && matches!(callee, "indicator" | "strategy")
+            && param == "dynamic_requests"
+            && value == PineType::new(Qualifier::Const, ValueKind::Na)
+    }
+
     pub(crate) fn validate_script_declaration_call(
         &mut self,
         name: &str,
@@ -184,8 +196,18 @@ impl Analyzer {
                     "`dynamic_requests` requires Pine v5 or v6",
                     value.span,
                 ));
-            } else if let Some(enabled) = self.known_const_bool_value(&value.value) {
-                self.dynamic_requests = enabled;
+            } else {
+                // Native resolves this annotation before ordinary const
+                // evaluation: false/zero literals disable requests, while
+                // const aliases and even `not true` enable them.
+                self.dynamic_requests = match value.value.without_groups().kind {
+                    pine_syntax::ExprKind::Literal(pine_syntax::Literal::Bool(value)) => value,
+                    pine_syntax::ExprKind::Literal(pine_syntax::Literal::Int(value)) => value != 0,
+                    pine_syntax::ExprKind::Literal(pine_syntax::Literal::Float(value)) => {
+                        value != 0.0
+                    }
+                    _ => true,
+                };
             }
         }
         if mode == ScriptMode::Strategy {
@@ -218,6 +240,30 @@ impl Analyzer {
                 | "strategy.risk.max_cons_loss_days"
         ) {
             return;
+        }
+
+        if self.legacy.dialect() >= crate::PineDialect::V6
+            && matches!(
+                name,
+                "strategy.order" | "strategy.exit" | "strategy.cancel" | "strategy.cancel_all"
+            )
+        {
+            let signature = pine_builtins::get_phase_1_builtin(name).expect("order signature");
+            for (index, arg) in args.iter().enumerate() {
+                if arg.name.as_deref() == Some("when")
+                    || (arg.name.is_none()
+                        && signature
+                            .params
+                            .get(index)
+                            .is_some_and(|param| param.name == "when"))
+                {
+                    self.unsupported(
+                        &format!("{name}.when"),
+                        &format!("`{name}` argument `when` was removed in Pine v6"),
+                        arg.span,
+                    );
+                }
+            }
         }
 
         if !matches!(self.script_declaration, Some((ScriptMode::Strategy, _))) {
@@ -699,13 +745,25 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_close_all_args(&mut self, args: &[CallArg]) {
-        for (index, arg) in args.iter().enumerate() {
-            if (arg.name.as_deref() == Some("when") || (arg.name.is_none() && index == 4))
-                && self.legacy.dialect() >= crate::PineDialect::V6
-            {
+        let version = self.legacy.dialect().version();
+        let has_when = args.iter().any(|arg| arg.name.as_deref() == Some("when"));
+        for arg in args {
+            let Some(name) = arg.name.as_deref() else {
+                continue;
+            };
+            if name == "when" && version >= 6 {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
                     "`strategy.close_all` argument `when` was removed in Pine v6",
+                    arg.span,
+                ));
+            } else if (version <= 3 && name != "when")
+                || (version == 4 && matches!(name, "immediately" | "disable_alert"))
+                || (version == 5 && has_when && matches!(name, "immediately" | "disable_alert"))
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    format!("`strategy.close_all` argument `{name}` is not available in this Pine v{version} overload"),
                     arg.span,
                 ));
             }
@@ -786,32 +844,10 @@ impl Analyzer {
             return;
         }
         if has_trailing_args {
-            if trigger_count > 0 {
+            if trailing_activation_count == 0 || !has_trail_offset {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
-                    "`strategy.exit` cannot combine trailing exits with fixed stop, limit, profit, or loss triggers in the current strategy subset",
-                    args.iter()
-                        .find(|arg| {
-                            matches!(
-                                arg.name.as_deref(),
-                                Some(
-                                    "stop"
-                                        | "limit"
-                                        | "profit"
-                                        | "loss"
-                                        | "trail_price"
-                                        | "trail_points"
-                                        | "trail_offset"
-                                )
-                            )
-                        })
-                        .map_or(Span::default(), |arg| arg.span),
-                ));
-            }
-            if trailing_activation_count != 1 || !has_trail_offset {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_NAME",
-                    "`strategy.exit` trailing exits require exactly one of `trail_price` or `trail_points` plus `trail_offset`",
+                    "`strategy.exit` trailing exits require at least one of `trail_price` or `trail_points` plus `trail_offset`",
                     args.iter()
                         .find(|arg| {
                             matches!(
@@ -824,20 +860,7 @@ impl Analyzer {
             }
             return;
         }
-        let downside_trigger_count = usize::from(has_stop) + usize::from(has_loss);
-        let upside_trigger_count = usize::from(has_limit) + usize::from(has_profit);
-        let supported_trigger_shape = trigger_count <= 1
-            || (trigger_count == 2 && downside_trigger_count == 1 && upside_trigger_count == 1);
-        if !supported_trigger_shape {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_NAME",
-                "`strategy.exit` combined trigger families are not supported in the current strategy subset",
-                args.iter()
-                    .find(|arg| matches!(arg.name.as_deref(), Some("limit" | "profit" | "loss")))
-                    .or_else(|| args.get(3))
-                    .map_or(Span::default(), |arg| arg.span),
-            ));
-        } else if trigger_count == 0 && has_id && !has_unsupported_arg {
+        if trigger_count == 0 && has_id && !has_unsupported_arg {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 "`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`",

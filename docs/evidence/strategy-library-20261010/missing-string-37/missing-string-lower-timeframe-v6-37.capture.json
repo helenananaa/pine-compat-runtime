@@ -1,0 +1,19 @@
+{
+  "name": "missing-string-lower-timeframe-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-lower-timeframe-v6-37.pine",
+  "source_sha256": "9f3daa40f0d27ce9f2380947300c3a27fc2b45938280d59f4fa0615b0d0cfcb6",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "251 row missing-string-lower-timeframe-v6-37 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "9f3daa40f0d27ce9f2380947300c3a27fc2b45938280d59f4fa0615b0d0cfcb6",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-lower-timeframe-v6-37.native.ax.txt",
+  "accessibility_sha256": "a5b881dc1a620e3b456e1eb7096aabc06b1eb30ef3223e8300e9e630e49f0655",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-lower-timeframe-v6-37.native.png",
+  "screenshot_sha256": "534399aac79792539ed61545194c9de27f0874bd490205e9a1bfbc8a7904d924",
+  "scope": "v6 security_lower_tf missing timeframe inherits chart timeframe; previous confirmed array has one element",
+  "qualification_scope": "candidate_bounded_control"
+}

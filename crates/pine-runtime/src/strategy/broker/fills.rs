@@ -30,11 +30,34 @@ fn exit_comment(
 fn pending_exit_alert_kind(
     trigger: &PendingExitTrigger,
     raw_exit_price: f64,
+    direction: TradeDirection,
 ) -> StrategyExitFillAlertKind {
     match trigger {
         PendingExitTrigger::Limit(_) => StrategyExitFillAlertKind::Profit,
         PendingExitTrigger::Stop(_) => StrategyExitFillAlertKind::Loss,
-        PendingExitTrigger::Trailing(_) => StrategyExitFillAlertKind::Trailing,
+        PendingExitTrigger::Trailing(trailing) => {
+            if trailing
+                .spec
+                .fixed_limit
+                .is_some_and(|price| match direction {
+                    TradeDirection::Long => raw_exit_price >= price,
+                    TradeDirection::Short => raw_exit_price <= price,
+                })
+            {
+                StrategyExitFillAlertKind::Profit
+            } else if trailing
+                .spec
+                .fixed_stop
+                .is_some_and(|price| match direction {
+                    TradeDirection::Long => raw_exit_price <= price && !matches!(trailing.state, super::pending_exits::PendingTrailingState::Active { stop_price } if stop_price > price && raw_exit_price <= stop_price),
+                    TradeDirection::Short => raw_exit_price >= price && !matches!(trailing.state, super::pending_exits::PendingTrailingState::Active { stop_price } if stop_price < price && raw_exit_price >= stop_price),
+                })
+            {
+                StrategyExitFillAlertKind::Loss
+            } else {
+                StrategyExitFillAlertKind::Trailing
+            }
+        }
         PendingExitTrigger::Bracket { downside, upside } if raw_exit_price == *downside => {
             StrategyExitFillAlertKind::Loss
         }
@@ -57,7 +80,16 @@ fn pending_exit_is_limit_fill(
             TradeDirection::Long => raw_exit_price >= *upside,
             TradeDirection::Short => raw_exit_price <= *upside,
         },
-        PendingExitTrigger::Stop(_) | PendingExitTrigger::Trailing(_) => false,
+        PendingExitTrigger::Trailing(trailing) => {
+            trailing
+                .spec
+                .fixed_limit
+                .is_some_and(|price| match direction {
+                    TradeDirection::Long => raw_exit_price >= price,
+                    TradeDirection::Short => raw_exit_price <= price,
+                })
+        }
+        PendingExitTrigger::Stop(_) => false,
     }
 }
 
@@ -158,7 +190,8 @@ impl BrokerState {
         );
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
         let commission = entry_fill.entry_commission + exit_commission;
-        let profit = (current_price - entry_fill.entry_price) * qty - commission;
+        let profit =
+            self.account_value((current_price - entry_fill.entry_price) * qty) - commission;
         let closed_entry_commission = entry_fill.entry_commission;
 
         self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -184,11 +217,12 @@ impl BrokerState {
         });
 
         self.apply_reduction_cash_and_position(
-            qty * current_price - exit_commission,
+            self.account_value(qty * current_price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            current_price,
         );
     }
 
@@ -228,7 +262,8 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
         let commission = entry_fill.entry_commission + exit_commission;
         let signed_qty = TradeDirection::Short.signed_quantity(qty);
-        let profit = (current_price - entry_fill.entry_price) * signed_qty - commission;
+        let profit =
+            self.account_value((current_price - entry_fill.entry_price) * signed_qty) - commission;
         let closed_entry_commission = entry_fill.entry_commission;
 
         self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -254,11 +289,12 @@ impl BrokerState {
         });
 
         self.apply_reduction_cash_and_position(
-            signed_qty * current_price - exit_commission,
+            self.account_value(signed_qty * current_price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            current_price,
         );
     }
 
@@ -294,7 +330,7 @@ impl BrokerState {
             });
             return;
         }
-        let alert_kind = pending_exit_alert_kind(&pending_exit.trigger, raw_exit_price);
+        let alert_kind = pending_exit_alert_kind(&pending_exit.trigger, raw_exit_price, direction);
         let alert_metadata = pending_exit.metadata.clone();
         let allocations = if let Some(target_trade_key) = pending_exit.target_trade_key {
             self.trade_ledger
@@ -317,6 +353,7 @@ impl BrokerState {
             for allocation in &allocations {
                 let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
                 let entry_fill = AllocatedEntryFill {
+                    extrema: allocation.extrema,
                     entry_price: allocation.entry_price,
                     entry_bar_index: allocation.entry_bar_index,
                     entry_time: allocation.entry_time,
@@ -325,7 +362,8 @@ impl BrokerState {
                 };
                 let commission = allocation.entry_commission + allocated_exit_commission;
                 let signed_qty = direction.signed_quantity(allocation.quantity);
-                let profit = (exit_price - allocation.entry_price) * signed_qty - commission;
+                let profit = self.account_value((exit_price - allocation.entry_price) * signed_qty)
+                    - commission;
 
                 self.record_order_event(
                     exit_id.clone(),
@@ -371,11 +409,12 @@ impl BrokerState {
         };
 
         self.apply_reduction_cash_and_position(
-            direction.signed_quantity(qty) * exit_price - exit_commission,
+            self.account_value(direction.signed_quantity(qty) * exit_price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            exit_price,
         );
     }
 }

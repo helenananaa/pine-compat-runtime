@@ -1,0 +1,419 @@
+Browser tab: 2, Title: "BTCUSDT 81,535.00 ▼ −0.1% 裸K", URL: "https://www.tradingview.com/chart/wf5lRGkJ/".
+0 AXWebArea BTCUSDT 81,535.00 ▼ −0.1% 裸K, URL: tradingview.com/chart/wf5lRGkJ/
+	1 container
+		2 container
+			3 pop up button Logged in as lingeyon Active layout: 裸K
+			4 text 11
+			5 toolbar
+				1360 container
+					1361 button BTCUSDT, Help: Symbol search, ID: header-toolbar-symbol-search
+					1362 button Description: Switch data type, ID: header-toolbar-switch-data-type
+					1363 pop up button Description: Compare symbols, ID: header-toolbar-compare
+					1364 container header-toolbar-intervals
+						1365 radio button Description: 1 minute, Value: 0
+							1366 container
+								1367 text 1 m
+						1368 radio button Description: 3 minutes, Value: 0
+							1369 container
+								1370 text 3 m
+						1371 radio button Description: 5 minutes, Value: 0
+							1372 container
+								1373 text 5 m
+						1374 radio button Description: 10 minutes, Value: 0
+							1375 container
+								1376 text 10 m
+						1377 radio button Description: 15 minutes, Value: 0
+							1378 container
+								1379 text 15 m
+						1380 radio button Description: 30 minutes, Value: 0
+							1381 container
+								1382 text 30 m
+						1383 radio button Description: 45 minutes, Value: 0
+							1384 container
+								1385 text 45 m
+						1386 radio button Description: 90 minutes, Value: 0
+							1387 container
+								1388 text 90 m
+						1389 radio button Description: 1 hour, Value: 0
+							1390 container
+								1391 text 1 h
+						1392 radio button Description: 2 hours, Value: 0
+							1393 container
+								1394 text 2 h
+						1395 radio button Description: 4 hours, Value: 0
+							1396 container
+								1397 text 4 h
+						1398 radio button Description: 6 hours, Value: 0
+							1399 container
+								1400 text 6 h
+						1401 radio button Description: 8 hours, Value: 0
+							1402 container
+								1403 text 8 h
+						1404 radio button Description: 12 hours, Value: 0
+							1405 container
+								1406 text 12 h
+						1407 radio button Description: 1 day, Value: 1
+							1408 text D
+						1409 radio button Description: 1 week, Value: 0
+							1410 text W
+						1411 radio button Description: 1 month, Value: 0
+							1412 text M
+						1413 pop up button Chart interval
+					1414 pop up button Candles
+					1415 container header-toolbar-indicators
+						1416 button Indicators, metrics, and strategies
+						1417 pop up button Favorite indicators
+					1418 pop up button Indicator templates
+					1419 button Description: Create alert, ID: header-toolbar-alerts
+					1420 checkbox Description: Bar replay, Value: 0, ID: header-toolbar-replay
+					1421 container header-toolbar-undo-redo
+						1422 button Undo update FX extrema short 31 script
+					1423 pop up button Description: Layout setup, ID: header-toolbar-layouts
+					1424 container header-toolbar-save-load
+						1425 button Save all charts for all symbols and intervals on your layout
+							1426 text 裸K
+							1427 text Save
+						1428 pop up button Manage layouts
+					1429 button Description: Quick search, ID: header-toolbar-quick-search
+					1430 button Description: Settings, ID: header-toolbar-properties
+					1431 button Description: Fullscreen mode, ID: header-toolbar-fullscreen
+					1432 pop up button Take a snapshot
+				80 pop up button Share your idea with the trade community
+				81 container
+					82 button Trade
+						83 text Trade
+			84 toolbar drawing-toolbar
+				85 container
+					86 container
+						87 button Cross
+						88 checkbox Description: Cursors, Value: 1
+					89 container
+						90 button Trendline
+						91 checkbox Description: Trend tools, Value: 0
+					92 container
+						93 button Fib retracement
+						94 checkbox Description: Gann and Fibonacci tools, Value: 0
+					95 container
+						96 button XABCD pattern
+						97 checkbox Description: Patterns, Value: 0
+					98 container
+						99 button Long position
+						100 checkbox Description: Forecasting and measurement tools, Value: 0
+					101 container
+						102 button Brush
+						103 checkbox Description: Geometric shapes, Value: 0
+					104 container
+						105 button Text
+						106 checkbox Description: Annotation tools, Value: 0
+					107 container
+						108 button Icon
+						109 checkbox Description: Icons, Value: 0
+					110 button Measure
+					111 button Zoom in
+					112 container
+						113 checkbox Description: Magnet mode snaps drawings placed near price bars to the closest OHLC value, Value: 0
+						114 checkbox Description: Magnets, Value: 0
+					115 checkbox Description: Keep drawing, Value: 0
+					116 container
+						117 checkbox Description: Lock drawings and indicators, Value: 0
+						118 checkbox Description: Lock options, Value: 0
+					119 container
+						120 checkbox Description: Hide all drawings, Value: 0
+						121 checkbox Description: Hide options, Value: 0
+					122 container
+						123 checkbox Description: New drawings will not be synced, Value: 0
+						124 checkbox Description: Sync drawings options, Value: 0
+					125 container
+						126 button Remove objects
+						127 button Remove options
+			128 container Chart #1
+				129 container
+					130 toolbar
+						1258 container Change symbol
+							1259 container
+								1260 image
+								1261 text B
+							1262 button Change symbol
+						1263 container
+							1264 button Flag symbol
+							1265 button More
+								1266 image
+						140 button Market open
+						1267 container
+							1268 text C 81,535.00 −80.64 (−0.10%) Vol 1.02 K
+					143 container
+						144 text 81,534.99 SELL 81,535.00 BUY
+					1269 container
+						1270 button Hide indicator legend
+						1271 toolbar
+							1272 container
+								1273 text CA_-_RSI_Bol_Strat_1.1
+								1274 text 6
+								1275 text 200
+							1276 container
+								1277 button Hide
+									1278 image
+								1279 button More
+									1280 image
+							1281 container
+								1282 text 72,398.44
+								1283 text 88,379.84
+								1284 text 56,417.04
+					161 image Chart for BINANCE:BTCUSDT, 1 day
+				1433 toolbar
+					1434 text FX extrema short 31
+					1435 container
+						1436 button Hide
+							1437 image
+						1438 button More
+							1439 image
+					1440 button Active strategy · Opened in Pine Editor
+					1441 container
+						1442 text 0.88740000
+						1443 text 7,200.77000000
+						1444 text 0.63899633
+						1445 text −0.63899633
+						1446 text 0.89800000
+						1447 text −8.94632500
+						1448 text −0.08946897
+						1449 text 0.90000000
+						1450 text 8,198.86000000
+						1451 text 1.37689373
+						1452 text −10.35970373
+						1453 text −15.82940958
+						1454 text 9,989.64029627
+						1455 text 8,197.02000000
+						1456 text −0.01000000
+						1457 text 9,990.41467867
+						1458 text 2.30747095
+						1459 text 11.88442251
+						1460 text 3.55077051
+						1461 text 18.22733433
+						1462 text 2.94646728
+						1463 text 11.88442251
+						1464 text 2.30747095
+						1465 text 3.55077051
+			187 toolbar
+				188 pop up button Date Range
+				189 button Timezone
+					190 text 11:24:08 UTC+8
+			191 container
+				192 toolbar
+					193 checkbox Description: Watchlist, details, and news, Value: 0
+					194 checkbox Description: Alerts, Value: 0
+					195 checkbox Description: Object tree and data window, Value: 1
+					196 checkbox Description: AI Copilot, Value: 0
+					197 checkbox Description: Screeners, Value: 0
+					198 checkbox Description: Pine Editor, Value: 1
+					199 checkbox Description: Calendars, Value: 0
+					200 checkbox Description: Community, Value: 0
+					201 checkbox Description: Notifications, Value: 0
+					202 checkbox Description: Chats, Value: 0
+					203 pop up button Products
+					204 checkbox Description: Help Center, Value: 0
+				205 container
+					206 tab group
+						207 tab (selectable, settable, boolean) Object tree, Value: 0, ID: object_tree
+						208 tab (selected, settable, boolean) Data window, Value: 1, ID: data-window
+					209 container
+						210 table
+							211 container
+								212 text Date
+								213 text Sat 17 Oct '26
+							214 row BTCUSDT · 1D · Binance Open 81,615.91 High 81,677.88 Low 81,416.00 Close 81,535.00 Change −80.64 (−0.10%) Vol 1.02 K Last day change −80.64 (−0.10%)
+								215 text BTCUSDT · 1D · Binance
+								216 toolbar
+									217 button Hide data
+								218 text Open
+								219 text 81,615.91
+								220 text High
+								221 text 81,677.88
+								222 text Low
+								223 text 81,416.00
+								224 text Close
+								225 text 81,535.00
+								226 text Change
+								227 text −80.64 (−0.10%)
+								228 text Vol
+								229 text 1.02 K
+								230 text Last day change
+								231 text −80.64 (−0.10%)
+							232 row CA_-_RSI_Bol_Strat_1.1 (6, 200) Bollinger Bands SMA Basis Line 72,398.44 Bollinger Bands Upper Line 88,379.84 Bollinger Bands Lower Line 56,417.04
+								233 text CA_-_RSI_Bol_Strat_1.1 (6, 200)
+								234 toolbar
+									235 button Hide data
+								1318 text Bollinger Bands SMA Basis Line
+								1319 text 72,398.44
+								1320 text Bollinger Bands Upper Line
+								1321 text 88,379.84
+								1322 text Bollinger Bands Lower Line
+								1323 text 56,417.04
+							242 row FX extrema short 31 entryRate 0.88740000 entryPrice 7,200.77000000 entryFee 0.63899633 netEntry −0.63899633 heldRate 0.89800000 heldProfit −8.94632500 heldPercent −0.08946897 exitRate 0.90000000 exitPrice 8,198.86000000 closedFee 1.37689373 closedProfit −10.35970373 closedPercent −15.82940958 closedEquity 9,989.64029627 heldClose 8,197.02000000 entrySize −0.01000000 heldEquity 9,990.41467867 tradeRunup 2.30747095 tradeDrawdown 11.88442251 tradeRunupPct 3.55077051
+								243 text FX extrema short 31
+								244 toolbar
+									245 button Hide data
+								1466 text entryRate
+								1467 text 0.88740000
+								1468 text entryPrice
+								1469 text 7,200.77000000
+								1470 text entryFee
+								1471 text 0.63899633
+								1472 text netEntry
+								1473 text −0.63899633
+								1474 text heldRate
+								1475 text 0.89800000
+								1476 text heldProfit
+								1477 text −8.94632500
+								1478 text heldPercent
+								1479 text −0.08946897
+								1480 text exitRate
+								1481 text 0.90000000
+								1482 text exitPrice
+								1483 text 8,198.86000000
+								1484 text closedFee
+								1485 text 1.37689373
+								1486 text closedProfit
+								1487 text −10.35970373
+								1488 text closedPercent
+								1489 text −15.82940958
+								1490 text closedEquity
+								1491 text 9,989.64029627
+								1492 text heldClose
+								1493 text 8,197.02000000
+								1494 text entrySize
+								1495 text −0.01000000
+								1496 text heldEquity
+								1497 text 9,990.41467867
+								1498 text tradeRunup
+								1499 text 2.30747095
+								1500 text tradeDrawdown
+								1501 text 11.88442251
+								1502 text tradeRunupPct
+								1503 text 3.55077051
+								1504 text tradeDrawdownPct
+								1505 text 18.22733433
+								1506 text strategyRunup
+								1507 text 2.94646728
+								1508 text strategyDrawdown
+								1509 text 11.88442251
+								1510 text lateTradeRunup
+								1511 text 2.30747095
+								1512 text lateTradeRunupPct
+								1513 text 3.55077051
+			278 toolbar footer-chart-panel
+				279 container
+					280 button Close strategy report
+						281 text FX extrema short 31
+					282 pop up button (collapsed) Description: Open context menu, ID: :r1c:, Secondary Actions: Expand
+				283 button Collapse panel
+				284 button Maximize panel
+			285 container bottom-area
+				1514 container
+					1515 tab group report-tabs
+						1516 tab (selectable, settable, boolean) Value: 0, ID: Strategy report
+						1517 tab (selected, settable, boolean) Value: 1, ID: List of Trades
+					1518 button (collapsed) Description: Aug 17, 2017 — Oct 17, 2026, Secondary Actions: Expand
+					1519 button Settings
+					1520 button Add alert
+					1521 text List of trades
+					1522 button Download .csv
+					1523 pop up button (collapsed) Description: Column setup, ID: :r79:, Secondary Actions: Expand
+					1524 table
+						1525 row
+							1526 cell
+								1527 container
+									1528 text Trade number 
+							1529 cell
+								1530 text Type
+							1531 cell
+								1532 text Date and time
+							1533 cell
+								1534 text Signal
+							1535 cell
+								1536 text Price
+							1537 cell
+								1538 text Size
+							1539 cell
+								1540 text Net PnL
+							1541 cell
+								1542 text Return
+						1543 row
+							1544 cell
+								1545 container
+									1546 text 1 Short
+							1547 cell
+								1548 button Show on chart
+								1549 button Show on chart
+							1550 cell
+								1551 text Exit
+								1552 text Entry
+							1553 cell
+								1554 text Jan 11, 2020
+								1555 text Jan 2, 2020
+							1556 cell
+								1557 text Close entry(s) order L
+								1558 text L
+							1559 cell
+								1560 container
+									1561 text 8,198.86 USDT
+								1562 text 7,200.77
+								1563 text USDT
+							1564 cell
+								1565 text 0.01
+								1566 container
+									1567 text 72.01 EUR
+							1568 cell
+								1569 text −10.36
+								1570 text EUR
+							1571 cell
+								1572 text −15.83%
+			345 container Trading panel
+		346 container
+			347 button Move split-view to overlay
+			348 text Pine Editor
+			349 button Collapse panel
+			350 button Fullscreen mode
+			351 button Close
+			352 container pine-editor-dialog
+				353 pop up button (collapsed) Untitled script, ID: :rm:, Secondary Actions: Expand
+					354 heading Untitled script, Value: 2
+						355 text Untitled script
+				1573 button (disabled) Update on chart
+				357 button Save script
+				358 button Publish script, Help: Share your script with community
+				359 container
+					360 pop up button (collapsed) Description: More, ID: :rq:, Secondary Actions: Expand
+				361 container
+					362 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+strategy("FX extrema short 31",currency=currency.EUR,initial_capital=10000,commission_type=strategy.commission.percent,commission_value=1,margin_long=0,margin_short=0,precision=8)
+rate=request.currency_rate(syminfo.currency,strategy.account_currency)
+if time==1577836800000
+    strategy.entry("L",strategy.short,qty=0.01)
+if time==1578614400000
+    strategy.close("L")
+entry=time==1577923200000
+held=time==1578614400000
+closed=time==1578700800000
+
+				363 container
+					364 button
+					365 button Line 1, Col 1
+						366 text Line
+						367 text 1
+						368 text , 
+						369 text Col
+						370 text 1
+					371 link Description: Pine Script® v6, Help: Open Pine Reference, Value: tradingview.com/pine-script-reference/v6
+		1256 container common-tooltip-wrapper
+			1257 text 1 day
+
+The focused UI element is 362 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+strategy("FX extrema short 31",currency=currency.EUR,initial_capital=10000,commission_type=strategy.commission.percent,commission_value=1,margin_long=0,margin_short=0,precision=8)
+rate=request.currency_rate(syminfo.currency,strategy.account_currency)
+if time==1577836800000
+    strategy.entry("L",strategy.short,qty=0.01)
+if time==1578614400000
+    strategy.close("L")
+entry=time==1577923200000
+held=time==1578614400000
+closed=time==1578700800000

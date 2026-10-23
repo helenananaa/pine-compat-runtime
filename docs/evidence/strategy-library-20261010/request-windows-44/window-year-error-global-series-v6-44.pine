@@ -1,0 +1,11 @@
+//@version=6
+indicator("window-year-error-global-series-v6-44",dynamic_requests=true)
+if year<2020
+    runtime.error("old chart prefix")
+s=bar_index>=0?syminfo.tickerid:"NASDAQ:AAPL"
+a=request.security(s,timeframe.period,bar_index,calc_bars_count=2)
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(count)

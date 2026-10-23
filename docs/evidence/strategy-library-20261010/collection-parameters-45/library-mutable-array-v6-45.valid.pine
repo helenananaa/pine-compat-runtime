@@ -1,0 +1,5 @@
+//@version=6
+library("ArrayContractV6Batch45")
+export step(simple array<float> v)=>
+    v.push(20)
+    v.size()

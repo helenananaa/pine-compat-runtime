@@ -1,5 +1,5 @@
 //@version=5
 indicator("String tostring result limit")
 values = array.new_string(14000, "x")
-text = str.tostring(values)
-plot(str.length(text))
+note = str.tostring(values)
+plot(str.length(note))

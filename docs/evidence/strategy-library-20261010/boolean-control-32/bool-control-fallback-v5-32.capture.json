@@ -1,0 +1,32 @@
+{
+  "name": "bool-control-fallback-v5-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-control-fallback-v5-32.pine",
+  "source_sha256": "8f1af79527ebe95b2388a8e5102a87a06422e237bdedd536d5ded9c59e20537c",
+  "native_status": "compiled_and_executed",
+  "native_row": "247 row Bool control defaults v5 probe32 switch false 0 while false 0 foreach false 0 for false 0 numeric missing 1",
+  "cursor_refreshed": true,
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4381cf325a472129e76125a482514bc0d537fdd144d4947c39f38ac4b5d3b9dd",
+  "editor_source_sha256": "4381cf325a472129e76125a482514bc0d537fdd144d4947c39f38ac4b5d3b9dd",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-control-fallback-v5-32.native.png",
+  "screenshot_sha256": "284a7a007fc59a1689c33053d61d5a53ac79dcf2d5c4cca869f1566440784f91",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-control-fallback-v5-32.native.ax.txt",
+  "accessibility_sha256": "e98f07f0e76cdc56ad96ac2842dd569fcc059dd3cc63b717e8936f92ac15c10c",
+  "native_values": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "labels": [
+    "switch false",
+    "while false",
+    "foreach false",
+    "for false",
+    "numeric missing"
+  ],
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "versioned_control_default_oracle"
+}

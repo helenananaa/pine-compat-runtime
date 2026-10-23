@@ -1,0 +1,10 @@
+//@version=5
+indicator("window-foreign-unbounded-first-v5-44",dynamic_requests=true)
+a=request.security(syminfo.tickerid,"W",bar_index)
+b=request.security(syminfo.tickerid,"W",bar_index+100,calc_bars_count=2)
+var count=0
+count+=1
+plot(bar_index)
+plot(a)
+plot(b)
+plot(count)

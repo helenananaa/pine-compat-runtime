@@ -1,0 +1,8 @@
+//@version=6
+indicator("extend-series-v6-40")
+value=bar_index%2==0?"r":"l"
+item=line.new(0,1,2,2,extend=value)
+line.set_extend(item,value)
+boxItem=box.new(0,2,1,1,extend=value)
+box.set_extend(boxItem,value)
+plot(1)

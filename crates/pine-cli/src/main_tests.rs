@@ -152,6 +152,7 @@ fn expected_partial_builtin(name: &str) -> bool {
         || matches!(
             name,
             "request.security"
+                | "request.currency_rate"
                 | "request.security_lower_tf"
                 | "strategy"
                 | "max_bars_back"
@@ -377,7 +378,6 @@ fn matrix_includes_known_unsupported_platform_families() {
         "strategy.*",
         "alert placeholders",
         "unsupported label/table methods",
-        "non-int history offsets",
         "negative history offsets",
     ] {
         assert!(
@@ -387,6 +387,11 @@ fn matrix_includes_known_unsupported_platform_families() {
             "{feature} should remain explicitly unsupported in matrix"
         );
     }
+    assert!(
+        entries
+            .iter()
+            .any(|entry| entry.feature == "non-int history offsets" && entry.status == "partial")
+    );
     assert!(
         entries
             .iter()
@@ -609,6 +614,8 @@ fn formats_profiled_result_json() {
         request_cache_contexts: 1,
         request_cache_values: 6,
         request_cache_value_capacity: 8,
+        static_request_chart_bars: 0,
+        static_request_chart_bar_capacity: 0,
         symbol_slots: 10,
         symbol_capacity: 14,
         current_series_slots: 0,
@@ -770,6 +777,34 @@ fn runtime_error_fixtures_report_expected_messages() {
             message.contains(expected_message),
             "{fixture} error `{message}` did not contain `{expected_message}`"
         );
+    }
+}
+
+#[test]
+fn table_cell_setter_regressions_populate_empty_cells() {
+    for fixture in [
+        "tests/fixtures/regressions/table_cell_set_text_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_bgcolor_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_text_color_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_width_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_height_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_text_size_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_text_halign_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_text_valign_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_text_wrap_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_tooltip_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_text_font_family_missing_cell.pine",
+        "tests/fixtures/regressions/table_cell_set_text_formatting_missing_cell.pine",
+    ] {
+        let output: serde_json::Value =
+            serde_json::from_str(&runtime_fixture_json(fixture)).unwrap();
+        for table in output["tables"].as_array().unwrap() {
+            let snapshot = table["snapshots"].as_array().unwrap().last().unwrap();
+            let cells = snapshot["cells"].as_array().unwrap();
+            assert_eq!(cells.len(), 1, "{fixture}");
+            assert_eq!(cells[0]["column"], 0, "{fixture}");
+            assert_eq!(cells[0]["row"], 0, "{fixture}");
+        }
     }
 }
 

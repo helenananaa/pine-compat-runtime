@@ -212,11 +212,13 @@ impl BrokerState {
             let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
             let commission = allocation.entry_commission + allocated_exit_commission;
             let signed_qty = direction.signed_quantity(allocation.quantity);
-            let profit = (price - allocation.entry_price) * signed_qty - commission;
+            let profit =
+                self.account_value((price - allocation.entry_price) * signed_qty) - commission;
             self.record_closed_trade_fill(ClosedTradeFill {
                 entry_id: allocation.entry_id.clone(),
                 exit_id: allocation.entry_id.clone(),
                 entry_fill: AllocatedEntryFill {
+                    extrema: allocation.extrema,
                     entry_price: allocation.entry_price,
                     entry_bar_index: allocation.entry_bar_index,
                     entry_time: allocation.entry_time,
@@ -250,11 +252,12 @@ impl BrokerState {
         self.order_book
             .retain_exits_for_pending_entries(filling_entry_id);
         self.apply_reduction_cash_and_position(
-            direction.signed_quantity(qty) * price - exit_commission,
+            self.account_value(direction.signed_quantity(qty) * price) - exit_commission,
             &allocations,
             qty,
             0.0,
             bar_index,
+            price,
         );
     }
 
@@ -373,12 +376,14 @@ impl BrokerState {
         for allocation in &allocations {
             let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
             let commission = allocation.entry_commission + allocated_exit_commission;
-            let profit = (price - allocation.entry_price) * allocation.quantity - commission;
+            let profit = self.account_value((price - allocation.entry_price) * allocation.quantity)
+                - commission;
             closed_entry_commission += allocation.entry_commission;
             self.record_closed_trade_fill(ClosedTradeFill {
                 entry_id: allocation.entry_id.clone(),
                 exit_id: id.clone(),
                 entry_fill: AllocatedEntryFill {
+                    extrema: allocation.extrema,
                     entry_price: allocation.entry_price,
                     entry_bar_index: allocation.entry_bar_index,
                     entry_time: allocation.entry_time,
@@ -399,11 +404,12 @@ impl BrokerState {
             self.order_book.exits_mut().clear_all();
         }
         self.apply_reduction_cash_and_position(
-            qty * price - exit_commission,
+            self.account_value(qty * price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            price,
         );
     }
 
@@ -472,12 +478,14 @@ impl BrokerState {
             let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
             let commission = allocation.entry_commission + allocated_exit_commission;
             let signed_qty = direction.signed_quantity(allocation.quantity);
-            let profit = (price - allocation.entry_price) * signed_qty - commission;
+            let profit =
+                self.account_value((price - allocation.entry_price) * signed_qty) - commission;
             closed_entry_commission += allocation.entry_commission;
             self.record_closed_trade_fill(ClosedTradeFill {
                 entry_id: allocation.entry_id.clone(),
                 exit_id: id.clone(),
                 entry_fill: AllocatedEntryFill {
+                    extrema: allocation.extrema,
                     entry_price: allocation.entry_price,
                     entry_bar_index: allocation.entry_bar_index,
                     entry_time: allocation.entry_time,
@@ -514,11 +522,12 @@ impl BrokerState {
             self.drop_exits_for_closed_trade_keys(&allocations);
         }
         self.apply_reduction_cash_and_position(
-            direction.signed_quantity(qty) * price - exit_commission,
+            self.account_value(direction.signed_quantity(qty) * price) - exit_commission,
             &allocations,
             qty,
             closed_entry_commission,
             bar_index,
+            price,
         );
     }
 
@@ -528,19 +537,12 @@ impl BrokerState {
         from_entry: Option<&str>,
         requested_quantity: f64,
     ) -> Vec<TradeAllocation> {
-        match (self.close_entries_rule, from_entry) {
-            (pine_ir::StrategyCloseEntriesRule::Any, Some(entry_id)) => self
-                .trade_ledger
-                .allocate_exit_any_for_entry_direction(direction, entry_id, requested_quantity),
-            // `from_entry` sizes/reserves the exit order. With the default
-            // FIFO rule its fill closes the oldest open trade regardless of
-            // the entry ID named by that order.
-            _ => self.trade_ledger.allocate_exit_fifo_for_direction(
-                direction,
-                None,
-                requested_quantity,
-            ),
-        }
+        self.trade_ledger.allocate_exit_for_close_rule(
+            direction,
+            from_entry,
+            requested_quantity,
+            self.close_entries_rule,
+        )
     }
 
     pub(super) fn allocate_generic_order_close(

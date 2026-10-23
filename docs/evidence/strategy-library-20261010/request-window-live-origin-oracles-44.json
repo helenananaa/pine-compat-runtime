@@ -1,0 +1,67 @@
+{
+  "scope": "One unchanged v6 source on actual Binance BTCUSDT minute chart; initial two-bar window grows by two new minute bars. Flat-price local projection checks indices/state/time, not exchange prices or all realtime/request context semantics.",
+  "records": [
+    {
+      "name": "live-current-origin-v6-44.initial",
+      "version": 6,
+      "scenario": "live-current-origin",
+      "source": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.pine",
+      "source_sha256": "0858cfdd82bcca7619d52f81fcb1a0fcac3faa46e0f8ac8e4d45db2db02a73bd",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        1,
+        2,
+        1792323120000
+      ],
+      "native_marker_prefix": [
+        1,
+        1,
+        2
+      ],
+      "native_row": "228 row live-current-origin-v6-44 Plot 1.00 Plot 1.00 Plot 2.00 Plot 1,792,323,120,000.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "0858cfdd82bcca7619d52f81fcb1a0fcac3faa46e0f8ac8e4d45db2db02a73bd",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.initial.native.ax.txt",
+      "accessibility_sha256": "c73d8d48e943847f525631cdc794ea0968af1a9e97bb4ad7b3f8a31f0a0f05c0",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.initial.native.png",
+      "screenshot_sha256": "fbaa4d69d33dc1043a2b7f990b9b6e8ddb0b3dc87a260510e46428eeea247a38",
+      "chart_ui_context": "166 image Chart for BINANCE:BTCUSDT, 1 minute",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.initial.capture.json",
+      "raw_capture_sha256": "b3fa835a83aff189783fcf8285a9fc1c2db4323e15107b472e59a081b92ff32c"
+    },
+    {
+      "name": "live-current-origin-v6-44.continued",
+      "version": 6,
+      "scenario": "live-current-origin",
+      "source": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.pine",
+      "source_sha256": "0858cfdd82bcca7619d52f81fcb1a0fcac3faa46e0f8ac8e4d45db2db02a73bd",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3,
+        3,
+        4,
+        1792323240000
+      ],
+      "native_marker_prefix": [
+        3,
+        3,
+        4
+      ],
+      "native_row": "228 row live-current-origin-v6-44 Plot 3.00 Plot 3.00 Plot 4.00 Plot 1,792,323,240,000.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "0858cfdd82bcca7619d52f81fcb1a0fcac3faa46e0f8ac8e4d45db2db02a73bd",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.continued.native.ax.txt",
+      "accessibility_sha256": "1466a61ac0137601c0643b37692697bc7b53bed128b8f5f21bf1f62313a51918",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.continued.native.png",
+      "screenshot_sha256": "1a455d80013980a629f2141e915b6e5f5935f204f4faafa58882c28c4390a43d",
+      "chart_ui_context": "166 image Chart for BINANCE:BTCUSDT, 1 minute",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-windows-44/live-current-origin-v6-44.continued.capture.json",
+      "raw_capture_sha256": "5fb97663b41c6e9af6385abcb91c5db5365d145bd924114bf72b3541675e7067"
+    }
+  ]
+}

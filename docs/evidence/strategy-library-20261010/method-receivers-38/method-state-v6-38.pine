@@ -1,0 +1,12 @@
+//@version=6
+indicator("method-state-v6-38")
+method accumulate38(float self)=>
+    var float total=0.0
+    total+=self
+    total
+x=1.0
+y=2.0
+a=x.accumulate38()
+b=y.accumulate38()
+plot(b/a)
+plot(na(a[1])?0:a-a[1])

@@ -7,6 +7,11 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<PineType> {
+        if signature.returns == ReturnSpec::MatrixSum {
+            let param_types = [0, 1]
+                .map(|index| super::arg_type_for_param_index(signature, args, arg_types, index));
+            return self.return_type(signature, &param_types);
+        }
         if signature.name == "timeframe.in_seconds"
             && arg_types
                 .first()
@@ -84,6 +89,20 @@ impl Analyzer {
             ReturnSpec::MatrixElement(index) => matrix_element_return_type(arg_types, index),
             ReturnSpec::MatrixArray(index) => matrix_array_return_type(arg_types, index),
             ReturnSpec::MatrixMult => matrix_mult_return_type(arg_types),
+            ReturnSpec::MatrixSum => {
+                let left = arg_types.first().copied().flatten()?;
+                let right = arg_types.get(1).copied().flatten()?;
+                let kind = if left.kind == ValueKind::IntMatrix
+                    && matches!(
+                        right.kind,
+                        ValueKind::IntMatrix | ValueKind::Int | ValueKind::Na
+                    ) {
+                    ValueKind::IntMatrix
+                } else {
+                    ValueKind::FloatMatrix
+                };
+                Some(PineType::new(Qualifier::Simple, kind))
+            }
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
                 .copied()

@@ -1,0 +1,27 @@
+{
+  "name": "missing-string-values-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-values-v6-37.pine",
+  "source_sha256": "6f76153fb00a3daf02071401ae881124bb05c62293cb13522664c65cea55c0b4",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    0,
+    1
+  ],
+  "native_row": "240 row missing-string-values-v6-37 typed is na 1 typed length 0 typed equals empty 1 cast is na 1 cast length 0 cast equals empty 1 input conditional is na 1 input conditional length 0 input equals empty 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6f76153fb00a3daf02071401ae881124bb05c62293cb13522664c65cea55c0b4",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-values-v6-37.native.ax.txt",
+  "accessibility_sha256": "4281406cd2ead3942c29b8fd1e361b73c7289180cd97095a59a66c61760a4097",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-values-v6-37.native.png",
+  "screenshot_sha256": "06e06b0595f05dc822708df86ca525469c2447cbd6a06a0341821799f5fec95e",
+  "scope": "Follow-up v6 missing-string identity matches v5 in these typed/cast/input contexts. Preserve na observation while qualifying length/comparison and request selector boundaries separately.",
+  "qualification_scope": "candidate_bounded_control"
+}

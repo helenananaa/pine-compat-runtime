@@ -1,0 +1,4 @@
+//@version=5
+indicator("extend-invalid-box-v5-40")
+item=box.new(0,2,1,1,extend="bogus")
+plot(1)

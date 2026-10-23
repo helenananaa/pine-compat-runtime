@@ -1,0 +1,4 @@
+//@version=6
+indicator("extend-qualified-literal-v6-40")
+item=line.new(0,1,2,2,extend="extend.right")
+plot(1)

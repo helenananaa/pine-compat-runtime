@@ -1,0 +1,198 @@
+{
+  "status": "native_source_copy_checked",
+  "records": [
+    {
+      "name": "const-selected-if-bool-v5-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/const-selected-if-bool-v5-35.pine",
+      "source_sha256": "06c429e184e11b07e4d929e909e0b1f1cb74b6829a16b800041fec6ce5e4f3cd",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row const-selected-if-bool-v5-35 condition 0 equals false 1 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "06c429e184e11b07e4d929e909e0b1f1cb74b6829a16b800041fec6ce5e4f3cd",
+      "normalized_source_sha256": "06c429e184e11b07e4d929e909e0b1f1cb74b6829a16b800041fec6ce5e4f3cd",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/const-selected-if-bool-v5-35.native.ax.txt",
+      "accessibility_sha256": "6a3e7cddd1be0efa584dcd3d41cdff15d28dba8a475641d12827b05a339a8d5c",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/const-selected-if-bool-v5-35.native.png",
+      "screenshot_sha256": "6ba1aee0ccf83351506b7f3e4b30a5f1035211f59872894366cbe777f5e3f354",
+      "native_values": [
+        0,
+        1,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "const-selected-if-bool-v6-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/const-selected-if-bool-v6-35.pine",
+      "source_sha256": "9980fe266aa9b44ae4ea3e04a9efe01ff822b7d7df017da0807dcafbeb58f647",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row const-selected-if-bool-v6-35 condition 0 equals false 1 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "9980fe266aa9b44ae4ea3e04a9efe01ff822b7d7df017da0807dcafbeb58f647",
+      "normalized_source_sha256": "9980fe266aa9b44ae4ea3e04a9efe01ff822b7d7df017da0807dcafbeb58f647",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/const-selected-if-bool-v6-35.native.ax.txt",
+      "accessibility_sha256": "e9dd45e16e47eabaf65e06c94ffa22f016aeb3ce6d2637059ac143f18f221cf8",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/const-selected-if-bool-v6-35.native.png",
+      "screenshot_sha256": "e86ab1b3542d92bdb08746ff46d855e43f5a581efc6fa8293f81e1f03e591520",
+      "native_values": [
+        0,
+        1,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "bool-declaration-plain-bool-v5-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-plain-bool-v5-35.pine",
+      "source_sha256": "56cbb8e92108b4a0d053d0e5717036b86433b7cf7ce7f9d27d754b5d55e249d5",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row bool-declaration-plain-bool-v5-35 condition 0 equals false 1 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "56cbb8e92108b4a0d053d0e5717036b86433b7cf7ce7f9d27d754b5d55e249d5",
+      "normalized_source_sha256": "56cbb8e92108b4a0d053d0e5717036b86433b7cf7ce7f9d27d754b5d55e249d5",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-plain-bool-v5-35.native.ax.txt",
+      "accessibility_sha256": "76a4738f334dfcfd906b636b5e546b2acc64d5b9fcd54f39dd704b0e6e4f8bce",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-plain-bool-v5-35.native.png",
+      "screenshot_sha256": "d10cfb4078585f4632db8291dd5ed473665dd30a37b6bdebd5846873722f67ec",
+      "native_values": [
+        0,
+        1,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "bool-declaration-var-bool-v5-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-var-bool-v5-35.pine",
+      "source_sha256": "0c349937f80f596e515ec959ad679f0dbbc4134b40954e835ddca7dc825fdf6d",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row bool-declaration-var-bool-v5-35 condition 0 equals false 1 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "0c349937f80f596e515ec959ad679f0dbbc4134b40954e835ddca7dc825fdf6d",
+      "normalized_source_sha256": "0c349937f80f596e515ec959ad679f0dbbc4134b40954e835ddca7dc825fdf6d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-var-bool-v5-35.native.ax.txt",
+      "accessibility_sha256": "f40b909427a80d3000d08d66155916002913362d4d55674b9bb55a156859900d",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-var-bool-v5-35.native.png",
+      "screenshot_sha256": "0b6d72383a00ff22c3256d8fc501c89e1099fe88d8da9e5f27a98420f18c8972",
+      "native_values": [
+        0,
+        1,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "bool-declaration-const-alias-v5-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-alias-v5-35.pine",
+      "source_sha256": "b8a079dad3d54aaf8553195c021cc9c02709db7a587fe460114707ff2c79ecd3",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row bool-declaration-const-alias-v5-35 condition 0 equals false 1 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "b8a079dad3d54aaf8553195c021cc9c02709db7a587fe460114707ff2c79ecd3",
+      "normalized_source_sha256": "b8a079dad3d54aaf8553195c021cc9c02709db7a587fe460114707ff2c79ecd3",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-alias-v5-35.native.ax.txt",
+      "accessibility_sha256": "356903b136f85c7f7be351299daa4b0fbaea5174dc0a37e8ea677d9083007bd9",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-alias-v5-35.native.png",
+      "screenshot_sha256": "1d36eb2dbf5903b41be1a3b425f11a598ce284120749afc186211fa7dc0cd7cd",
+      "native_values": [
+        0,
+        1,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "bool-declaration-const-not-alias-v5-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-not-alias-v5-35.pine",
+      "source_sha256": "c43d8987a09464dd8f021f74163796e2c3418b9cd2cb089c80bf954f3b1753e3",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row bool-declaration-const-not-alias-v5-35 condition 0 equals false 1 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "c43d8987a09464dd8f021f74163796e2c3418b9cd2cb089c80bf954f3b1753e3",
+      "normalized_source_sha256": "c43d8987a09464dd8f021f74163796e2c3418b9cd2cb089c80bf954f3b1753e3",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-not-alias-v5-35.native.ax.txt",
+      "accessibility_sha256": "704ccb4dca4c139f2420c660492184a21ac018529ee8178f4219a6b1c60d9afa",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-not-alias-v5-35.native.png",
+      "screenshot_sha256": "8af6854abdc3508234f27e9c81b6d21d060dfadce278e63b656eefa3e9e786cb",
+      "native_values": [
+        0,
+        1,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "bool-declaration-const-missing-v6-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-missing-v6-35.pine",
+      "source_sha256": "6d0b167249b1a5dfe087c6f1ae9c99631d4e52d89da09b4f751262bdd52e9f91",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row bool-declaration-const-missing-v6-35 condition 1 equals false 0 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "6d0b167249b1a5dfe087c6f1ae9c99631d4e52d89da09b4f751262bdd52e9f91",
+      "normalized_source_sha256": "6d0b167249b1a5dfe087c6f1ae9c99631d4e52d89da09b4f751262bdd52e9f91",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-missing-v6-35.native.ax.txt",
+      "accessibility_sha256": "95db8e201022fcedc05445ae6cb586583b017cc28abb72265fe606c81901e01b",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-const-missing-v6-35.native.png",
+      "screenshot_sha256": "fe6346fc406612ad8cbddbfe00f6eae79668e3aefec764f5cd601e865a70841e",
+      "native_values": [
+        1,
+        0,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "bool-declaration-var-untyped-v5-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-var-untyped-v5-35.pine",
+      "source_sha256": "4b027f4da7e33a83391969371fda53389c333c92e845407cd8d75828d4d2a7ad",
+      "native_status": "compiled_and_executed",
+      "native_row": "235 row bool-declaration-var-untyped-v5-35 condition 1 equals false 0 false payload 1",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "4b027f4da7e33a83391969371fda53389c333c92e845407cd8d75828d4d2a7ad",
+      "normalized_source_sha256": "4b027f4da7e33a83391969371fda53389c333c92e845407cd8d75828d4d2a7ad",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-var-untyped-v5-35.native.ax.txt",
+      "accessibility_sha256": "dde0ebf2037224dd5a85e94d1394a6f22538c9b5fff73533e427c398ee82aad2",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-var-untyped-v5-35.native.png",
+      "screenshot_sha256": "5a8a6dadc95286653fb2cca33124c7c522f987c38f32fd5dd30c568a0c0576d7",
+      "native_values": [
+        1,
+        0,
+        1
+      ],
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    },
+    {
+      "name": "bool-declaration-typeflow-v5-35",
+      "source": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-typeflow-v5-35.pine",
+      "source_sha256": "315cade26ca6b26743e1dba6a9cb41b23cd5f98c23cb9f21658741054f5c8962",
+      "native_status": "analysis_rejected",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "editor_source_sha256": "315cade26ca6b26743e1dba6a9cb41b23cd5f98c23cb9f21658741054f5c8962",
+      "normalized_source_sha256": "315cade26ca6b26743e1dba6a9cb41b23cd5f98c23cb9f21658741054f5c8962",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-typeflow-v5-35.native.ax.txt",
+      "accessibility_sha256": "75ed5d78937ac2a9fd4b7cf2ab3b55618559742b2dff76a790df2fb17c288d02",
+      "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/bool-declaration-typeflow-v5-35.native.png",
+      "screenshot_sha256": "c59f8f5a7f04195765c308fc6927efb5a92396e8a65736727c5179d14ebe65f3",
+      "group": "typed-declaration-context",
+      "qualification_scope": "candidate_bounded_control"
+    }
+  ],
+  "scope": "Explicit bool declarations materialize selected v5 conditional payloads. The v5 untyped var and v6 missing const declaration retain native identities; no universal typed conversion is claimed."
+}

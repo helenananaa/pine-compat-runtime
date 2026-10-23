@@ -1,0 +1,13 @@
+{
+  "symbol": "NASDAQ:AAPL",
+  "requestedContext": "D",
+  "nativeVersion": 6,
+  "observations": {
+    "chartDuration": 23400000,
+    "lowerMinuteClose": 23400000,
+    "explicit0930to1600NewYorkClose": 23400000,
+    "lowerOpen": 0,
+    "priorRequestedMinuteClose": -63000000
+  },
+  "scope": "Native regular-session day has 6.5h duration; no-session and explicit-session lower close both use trading-day close. A UTC midnight ceiling alone would not match; calendar input required for exchange-aware parity."
+}

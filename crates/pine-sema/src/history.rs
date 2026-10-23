@@ -751,13 +751,13 @@ impl<'a> HistoryRequirementCollector<'a> {
                 body,
                 ..
             } => {
+                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
                 self.visit_expr(from);
                 self.visit_expr(to);
                 if let Some(step) = step {
                     self.visit_expr(step);
                 }
                 self.visit_scoped_stmts(body);
-                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
             }
             HirStmtKind::ForIn { iterable, body, .. } => {
                 self.visit_expr(iterable);
@@ -765,9 +765,11 @@ impl<'a> HistoryRequirementCollector<'a> {
                 remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
             }
             HirStmtKind::While { condition, body } => {
+                // A binding changed by the loop is not fixed at its entry
+                // initializer on later iterations, including history offsets.
+                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
                 self.visit_expr(condition);
                 self.visit_scoped_stmts(body);
-                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
             }
             HirStmtKind::Break | HirStmtKind::Continue => {}
         }
@@ -826,6 +828,9 @@ impl<'a> HistoryRequirementCollector<'a> {
                 result,
                 ..
             } => {
+                for statement in statements {
+                    remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
+                }
                 self.visit_expr(from);
                 self.visit_expr(to);
                 if let Some(step) = step {
@@ -853,6 +858,9 @@ impl<'a> HistoryRequirementCollector<'a> {
                 statements,
                 result,
             } => {
+                for statement in statements {
+                    remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
+                }
                 self.visit_expr(condition);
                 let outer = self.const_symbols.clone();
                 self.visit_stmts(statements);

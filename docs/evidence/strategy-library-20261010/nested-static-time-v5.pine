@@ -1,0 +1,8 @@
+//@version=5
+indicator("Codex static time alignment oracle", dynamic_requests=false)
+inner = request.security(syminfo.tickerid, timeframe.period, time)
+outer = request.security(syminfo.tickerid, "12M", inner)
+plot(inner,"inner_time")
+plot(outer,"outer_time")
+plot(outer[12],"outer_12")
+plot(time[12],"chart_12")

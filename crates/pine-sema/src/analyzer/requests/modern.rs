@@ -1,23 +1,39 @@
 use super::*;
 use std::collections::HashSet;
 
+mod references;
+use references::RequestScope;
+
 impl Analyzer {
     pub(super) fn modern_request_expression_supported(&self, expr: &Expr) -> bool {
-        self.modern_request_expr(expr, &HashSet::new(), &mut HashSet::new(), &mut Vec::new())
+        self.modern_request_expr(
+            expr,
+            &RequestScope::default(),
+            &mut HashSet::new(),
+            &mut Vec::new(),
+        )
+    }
+
+    pub(super) fn modern_request_reference_expression_supported(&self, expr: &Expr) -> bool {
+        self.modern_request_expression_supported(expr)
+            || self.modern_request_expr(
+                expr,
+                &RequestScope::references(),
+                &mut HashSet::new(),
+                &mut Vec::new(),
+            )
     }
 
     fn modern_request_binding_is_reassigned(&self, name: &str, symbol_id: SymbolId) -> bool {
+        if self.scope.symbol_is_global(symbol_id) {
+            return self.request_global_reassigned_names.contains(name);
+        }
         if !self.request_reassigned_names.contains(name) {
             return false;
         }
-        // The global prepass records names from every UDF. For a local tuple
+        // The global prepass records names from every UDF. For a local
         // binding, a helper UDF's reassignment of the same spelling does not
         // mutate this binding. Restrict the check to the active function body.
-        if !self.symbol_tuple_value_sources.contains_key(&symbol_id)
-            || self.scope.symbol_is_global(symbol_id)
-        {
-            return true;
-        }
         let Some(function) = self
             .function_stack
             .last()
@@ -42,7 +58,7 @@ impl Analyzer {
     fn modern_request_expr(
         &self,
         expr: &Expr,
-        locals: &HashSet<String>,
+        locals: &RequestScope,
         visiting: &mut HashSet<SymbolId>,
         calls: &mut Vec<String>,
     ) -> bool {
@@ -61,26 +77,59 @@ impl Analyzer {
                     {
                         return true;
                     }
-                    // External persistent/mutable variables cannot be reconstructed
+                    let reference =
+                        locals.references && references::reference_kind(symbol.pine_type.kind);
+                    // External persistent/mutable scalar variables cannot be reconstructed
                     // from their initializer alone. Function-local state is evaluated
                     // inside the requested block and takes the locals path above.
-                    if self.modern_request_binding_is_reassigned(name, symbol.id) {
+                    if !reference && self.modern_request_binding_is_reassigned(name, symbol.id) {
                         return false;
                     }
-                    let Some(initializer) = self.symbol_init_exprs.get(&symbol.id).or_else(|| {
-                        self.symbol_tuple_value_sources
-                            .get(&symbol.id)
-                            .map(|(source, _)| source)
-                    }) else {
+                    if reference
+                        && let Some(sources) = self.request_reference_sources.get(&symbol.id)
+                    {
+                        // Reference aliases and prior in-place updates can form
+                        // cycles. The function call stack still rejects recursive
+                        // UDFs; each reference dependency is checked once here.
+                        if !visiting.insert(symbol.id) {
+                            return true;
+                        }
+                        let valid = sources.iter().all(|source| {
+                            self.with_source_context_ref(source.source_context_id, |analyzer| {
+                                analyzer.modern_request_expr(
+                                    &source.expr,
+                                    &RequestScope::references(),
+                                    visiting,
+                                    calls,
+                                )
+                            })
+                        });
+                        visiting.remove(&symbol.id);
+                        return valid;
+                    }
+                    let Some(initializer) = self
+                        .symbol_init_exprs
+                        .get(&symbol.id)
+                        .or_else(|| {
+                            (self.legacy.dialect().version() >= 5)
+                                .then(|| self.request_param_sources.get(&symbol.id))
+                                .flatten()
+                        })
+                        .or_else(|| {
+                            self.symbol_tuple_value_sources
+                                .get(&symbol.id)
+                                .map(|(source, _)| source)
+                        })
+                    else {
                         return false;
                     };
-                    if !is_request_scalar_type(symbol.pine_type) {
+                    if !is_request_scalar_type(symbol.pine_type) && !reference {
                         return false;
                     }
-                    if symbol.pine_type.qualifier != Qualifier::Series {
+                    if !reference && symbol.pine_type.qualifier != Qualifier::Series {
                         return true;
                     }
-                    if symbol.persistence != PersistenceKind::None {
+                    if !reference && symbol.persistence != PersistenceKind::None {
                         return false;
                     }
                     if !visiting.insert(symbol.id) {
@@ -90,7 +139,7 @@ impl Analyzer {
                         self.with_source_context_ref(initializer.source_context_id, |analyzer| {
                             analyzer.modern_request_expr(
                                 &initializer.expr,
-                                &HashSet::new(),
+                                &RequestScope::with_references(locals.references),
                                 visiting,
                                 calls,
                             )
@@ -100,6 +149,24 @@ impl Analyzer {
                 } else {
                     is_request_provider_scalar_name(name) || name == "na"
                 }
+            }
+            ExprKind::Member { receiver, .. } if locals.references => {
+                self.modern_request_expr(receiver, locals, visiting, calls)
+            }
+            ExprKind::QualifiedName(parts)
+                if locals.references
+                    && parts.len() > 1
+                    && self.modern_request_expr(
+                        &Expr {
+                            kind: ExprKind::Identifier(parts[0].clone()),
+                            span: expr.span,
+                        },
+                        locals,
+                        visiting,
+                        calls,
+                    ) =>
+            {
+                true
             }
             ExprKind::QualifiedName(_) => expr_name(expr).is_some_and(|name| {
                 is_request_provider_scalar_name(&name)
@@ -111,6 +178,7 @@ impl Analyzer {
                             | "timeframe.main_period"
                     )
                     || crate::types::const_color_value(expr).is_some()
+                    || crate::types::const_numeric_value(expr).is_some()
             }),
             ExprKind::Group(value) | ExprKind::Unary { expr: value, .. } => {
                 self.modern_request_expr(value, locals, visiting, calls)
@@ -142,6 +210,23 @@ impl Analyzer {
                     && self.modern_request_block(then_branch, locals, visiting, calls)
                     && self.modern_request_block(else_branch, locals, visiting, calls)
             }
+            ExprKind::For {
+                counter,
+                from,
+                to,
+                step,
+                body,
+            } => self.modern_request_for(
+                (counter, from, to, step.as_deref()),
+                body,
+                locals,
+                visiting,
+                calls,
+            ),
+            ExprKind::While { condition, body } => {
+                self.modern_request_expr(condition, locals, visiting, calls)
+                    && self.modern_request_block(body, locals, visiting, calls)
+            }
             ExprKind::Switch { selector, arms } => {
                 selector.as_deref().is_none_or(|selector| {
                     self.modern_request_expr(selector, locals, visiting, calls)
@@ -162,7 +247,19 @@ impl Analyzer {
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;
                 };
-                if let Some(function) = self.functions.get(&name) {
+                if let Some(group) = self.functions.get(&name) {
+                    let types: Vec<_> = args
+                        .iter()
+                        .map(|arg| self.type_of_expr_with_params(&arg.value, &locals.types))
+                        .collect();
+                    let function = if locals.references {
+                        let Some(function) = group.select_overload(args, &types) else {
+                            return false;
+                        };
+                        function
+                    } else {
+                        group
+                    };
                     let key = format!("{:?}:{name}", function.source_context_id);
                     if calls.len() >= 64 || calls.contains(&key) {
                         return false;
@@ -177,7 +274,18 @@ impl Analyzer {
                         return false;
                     }
                     calls.push(key);
-                    let params = function.params.iter().cloned().collect();
+                    let mut params = RequestScope::with_references(locals.references);
+                    for (i, (name, arg)) in function.params.iter().zip(args.iter()).enumerate() {
+                        let ty = self
+                            .type_of_expr_with_params(&arg.value, &locals.types)
+                            .or_else(|| {
+                                function
+                                    .param_types
+                                    .get(i)
+                                    .and_then(|p| p.as_ref().map(|p| p.pine_type))
+                            });
+                        params.insert_typed(name.clone(), ty);
+                    }
                     let valid =
                         self.with_source_context_ref(function.source_context_id, |analyzer| {
                             match &function.body {
@@ -193,9 +301,22 @@ impl Analyzer {
                     return valid;
                 }
                 if name == "request.security" {
+                    // Keep nested requests on the independently admitted scalar
+                    // path until reference prerequisites can be replayed there.
+                    if locals.references {
+                        return false;
+                    }
+                    let Ok(args) =
+                        super::source_args::normalize_security_source_args(args, expr.span)
+                    else {
+                        return false;
+                    };
+                    if !self.dynamic_requests {
+                        return args.get(2).is_some_and(|expression| {
+                            self.modern_request_expr(&expression.value, locals, visiting, calls)
+                        });
+                    }
                     return self.dynamic_requests
-                        && args.len() == 3
-                        && args.iter().all(|arg| arg.name.is_none())
                         && (matches!(&args[0].value.without_groups().kind,
                             ExprKind::Literal(Literal::String(symbol)) if symbol.is_empty())
                             || expr_name(&args[0].value).as_deref() == Some("syminfo.tickerid"))
@@ -206,10 +327,23 @@ impl Analyzer {
                             expr_name(&args[1].value).as_deref(),
                             Some("timeframe.main_period" | "timeframe.period")
                         ))
-                        && matches!(
-                            expr_name(&args[2].value).as_deref(),
-                            Some("open" | "high" | "low" | "close" | "volume" | "time")
-                        );
+                        && self.modern_request_expr(&args[2].value, locals, visiting, calls);
+                }
+                if locals.references
+                    && self.reference_request_call_supported(
+                        callee, expr, args, locals, visiting, calls,
+                    )
+                {
+                    return true;
+                }
+                let source_default = super::source_args::source_input_default(args);
+                // Input metadata is checked by the ordinary call analyzer.
+                // Only defval participates in the requested value graph; the
+                // runtime inherits overrides using this call site's identity.
+                if request_input_call_is_supported(&name) {
+                    return source_default.is_some_and(|value| {
+                        self.modern_request_expr(value, locals, visiting, calls)
+                    });
                 }
                 let array_constructor = matches!(
                     name.as_str(),
@@ -248,7 +382,7 @@ impl Analyzer {
     fn modern_request_block(
         &self,
         body: &[Stmt],
-        locals: &HashSet<String>,
+        locals: &RequestScope,
         visiting: &mut HashSet<SymbolId>,
         calls: &mut Vec<String>,
     ) -> bool {
@@ -257,7 +391,8 @@ impl Analyzer {
             let valid = match &statement.kind {
                 StmtKind::Decl { name, value, .. } => {
                     let valid = self.modern_request_expr(value, &locals, visiting, calls);
-                    locals.insert(name.clone());
+                    let ty = self.type_of_expr_with_params(value, &locals.types);
+                    locals.insert_typed(name.clone(), ty);
                     valid
                 }
                 StmtKind::Reassign { name, value } => {
@@ -269,6 +404,29 @@ impl Analyzer {
                     locals.extend(names.iter().cloned());
                     valid
                 }
+                StmtKind::FieldReassign {
+                    receiver, value, ..
+                } if locals.references => {
+                    self.modern_request_expr(
+                        &Expr {
+                            kind: ExprKind::Identifier(receiver.clone()),
+                            span: statement.span,
+                        },
+                        &locals,
+                        visiting,
+                        calls,
+                    ) && self.modern_request_expr(value, &locals, visiting, calls)
+                }
+                StmtKind::ArrayFieldReassign {
+                    array,
+                    index,
+                    value,
+                    ..
+                } if locals.references => {
+                    self.modern_request_expr(array, &locals, visiting, calls)
+                        && self.modern_request_expr(index, &locals, visiting, calls)
+                        && self.modern_request_expr(value, &locals, visiting, calls)
+                }
                 StmtKind::Expr(expr) => self.modern_request_expr(expr, &locals, visiting, calls),
                 StmtKind::If {
                     condition,
@@ -279,6 +437,24 @@ impl Analyzer {
                         && self.modern_request_block(then_branch, &locals, visiting, calls)
                         && self.modern_request_block(else_branch, &locals, visiting, calls)
                 }
+                StmtKind::For {
+                    counter,
+                    from,
+                    to,
+                    step,
+                    body,
+                } => self.modern_request_for(
+                    (counter, from, to, step.as_ref()),
+                    body,
+                    &locals,
+                    visiting,
+                    calls,
+                ),
+                StmtKind::While { condition, body } => {
+                    self.modern_request_expr(condition, &locals, visiting, calls)
+                        && self.modern_request_block(body, &locals, visiting, calls)
+                }
+                StmtKind::Break | StmtKind::Continue => true,
                 _ => false,
             };
             if !valid {
@@ -286,5 +462,25 @@ impl Analyzer {
             }
         }
         true
+    }
+
+    fn modern_request_for(
+        &self,
+        bounds: (&str, &Expr, &Expr, Option<&Expr>),
+        body: &[Stmt],
+        locals: &RequestScope,
+        visiting: &mut HashSet<SymbolId>,
+        calls: &mut Vec<String>,
+    ) -> bool {
+        let (counter, from, to, step) = bounds;
+        if !self.modern_request_expr(from, locals, visiting, calls)
+            || !self.modern_request_expr(to, locals, visiting, calls)
+            || step.is_some_and(|step| !self.modern_request_expr(step, locals, visiting, calls))
+        {
+            return false;
+        }
+        let mut loop_locals = locals.clone();
+        loop_locals.insert(counter.to_owned());
+        self.modern_request_block(body, &loop_locals, visiting, calls)
     }
 }

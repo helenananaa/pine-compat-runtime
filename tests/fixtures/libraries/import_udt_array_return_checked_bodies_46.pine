@@ -1,0 +1,306 @@
+//@version=5
+library("Imported UDT array returns")
+
+export type Point
+    float x
+
+export type First
+    float shared
+    float other
+
+export type Second
+    float other
+    float shared
+
+identity(values) => values
+
+builtinReaders(First value, array<First> values) =>
+    new_item = array.new<First>(1, value).first()
+    from_item = array.from(value).get(0)
+    copy_item = array.copy(values).copy().last()
+    slice_item = array.slice(id=values, index_from=0, index_to=1).first()
+    sorted_index = array.sort_indices(values, order.ascending, "shared").last()
+    new_item.shared + from_item.shared + copy_item.shared + slice_item.shared + sorted_index
+
+copyValues(values) => array.copy(values)
+
+tupleIdentity(values) => [values, values.copy()]
+
+export returnArray(array<Point> values) => values
+
+export direct(values) => values
+
+export localSize(values) => identity(values).size()
+
+export localLast(values) => identity(values).copy().last()
+
+export localScalarSize(First value) => identity(value).size()
+
+export localBuiltinReaders(First value, array<First> values) => builtinReaders(value, values)
+
+export scalar(First value) => value
+
+export first(array<First> values) => array.size(values) + 900
+
+export copy(array<First> values) => array.from(First.new(999.0, 9990.0))
+
+export size(array<First> values) => array.size(values) + 900
+
+export get(array<First> values, int index) => array.size(values) + index + 901
+
+export last(array<First> values) => array.size(values) + 902
+
+export emptyFirst() => array.new<First>()
+
+export noneFirst() =>
+    array<First> values = na
+    values
+
+export aliasReturn(values) =>
+    source = values
+    source
+
+export copyReturn(values) => array.copy(values)
+
+export nestedReturn(values) => identity(values)
+
+export nestedCopyReturn(values) => copyValues(values)
+
+export firstFrom(First value) => array.from(value)
+
+export secondNew(Second value) => array.new<Second>(1, value)
+
+export shadowedTyped(First First) =>
+    First selected = First
+    array<First> values = array.new<First>(1, selected)
+    First[] aliases = values
+    aliases
+
+export flowReturn(values) =>
+    if bar_index >= 0
+        source = values
+        source
+    else
+        na
+
+export loopReturn(values) =>
+    for index = 0 to 0
+        values
+
+export mixedReturn(first, second, bool choose) => choose ? first : second
+
+export tupleReturn(values) => [values, values]
+
+export tupleAliasReturn(values) =>
+    tuple_value = [values, values.copy()]
+    tuple_value
+
+export tupleSelfAliasReturn(values) =>
+    tuple_value = [values, values.copy()]
+    tuple_value = tuple_value
+    tuple_value
+
+export tupleReadSharedReturn(values) =>
+    tuple_value = [values]
+    [selected] = tuple_value
+    item = array.first(selected)
+    item.shared
+
+export tupleLocalShadowReturn(array<First> first, array<Second> second) =>
+    tuple_value = [first]
+    tuple_value = [second]
+    tuple_value
+
+export tupleBlockReturn(values) =>
+    source = values
+    copied = values.copy()
+    [source, copied]
+
+export tupleNestedReturn(values) => tupleIdentity(values)
+
+export tupleOuterReturn(values) =>
+    [direct, copied] = tupleNestedReturn(values)
+    [copied, direct]
+
+export arrayViaTuple(values) =>
+    [alias] = [values]
+    alias
+
+export arrayViaTupleAlias(values) =>
+    tuple_value = [values]
+    [alias] = tuple_value
+    alias
+
+export tupleFlowReturn(values) =>
+    if bar_index >= 0
+        [values, values.copy()]
+    else
+        [na, values]
+
+export tupleFinalIfAliasReturn(values) =>
+    if bar_index >= 0
+        tuple_value = [values, values.copy()]
+        tuple_value
+    else
+        tuple_value = [values.copy(), values]
+        tuple_value
+
+export tupleAliasTernaryReturn(values, bool choose) =>
+    base = [values, values.copy()]
+    choose ? base : base
+
+export tupleAliasSwitchReturn(values) =>
+    base = [values, values.copy()]
+    switch bar_index % 2
+        0 => base
+        => base
+
+export tupleAssignedIfAliasReturn(values, bool choose) =>
+    base = [values, values.copy()]
+    selected = if choose
+        base
+    else
+        base
+    selected
+
+export tupleFirstFrom(First value) => [array.from(value), array.new<First>(1, value)]
+
+export tupleSecondFrom(Second value) => [array.from(value), array.new<Second>(1, value)]
+
+export tupleTypedNa() =>
+    array<First> values = na
+    [values]
+
+export tupleMixed(first, second, bool choose) => choose ? [first, second] : [second, first]
+
+export tupleMixedAliasReturn(first, second, bool choose) =>
+    tuple_value = choose ? [first, second] : [second, first]
+    tuple_value
+
+export tupleMixedWrapperReturn(first, second, bool choose) => tupleMixedAliasReturn(first, second, choose)
+
+export tupleMixedScalarSinkReturn(first, second, bool choose) =>
+    discarded = tupleMixedAliasReturn(first, second, choose)
+    1
+
+export tupleMixedTupleSinkReturn(first, second, bool choose) =>
+    discarded = tupleMixedAliasReturn(first, second, choose)
+    [first, first]
+
+export tupleMixedFinalIfAliasReturn(first, second, bool choose) =>
+    if choose
+        tuple_value = [first, second]
+        tuple_value
+    else
+        tuple_value = [second, first]
+        tuple_value
+
+export tupleMixedTupleDeclSinkReturn(first, second, bool choose) =>
+    [discarded_first, discarded_second] = tupleMixedAliasReturn(first, second, choose)
+    1
+
+method retainArray(Point self, array<Point> values) => values
+
+method retainFirst(First self, array<First> values) => values
+
+method retainSecond(Second self, array<Second> values) => values
+
+method first(First self) => self.shared + 1000.0
+
+method copy(First self) => self.shared + 2000.0
+
+method size(First self) => self.shared + 3000.0
+
+method get(First self, int index) => self.shared + index + 4000.0
+
+method last(First self) => self.shared + 5000.0
+
+method scalar(First self) => First.new(self.shared + 1.0, self.other)
+
+method toSecond(First self) => Second.new(self.other, self.shared)
+
+method readShared(Second self) => self.shared
+
+method retain(First self, array<First> values, bool copy_values) => copy_values ? values.copy() : values
+
+method retain(Second self, array<Second> values, bool copy_values) => copy_values ? values.copy() : values
+
+method copyFirst(First self, array<First> values) => values.copy()
+
+method nestedSecond(Second self, array<Second> values) => identity(values)
+
+method fromFirst(First self) => array.from(self)
+
+method newSecond(Second self) => array.new<Second>(1, self)
+
+method flowFirst(First self, array<First> values) =>
+    if bar_index >= 0
+        values
+    else
+        na
+
+// Unused incompatible UDT-array method retained only in the historical fixture.       
+             
+             
+        
+              
+
+method tupleFirst(First self, array<First> values) => [values, values]
+
+method tuple(First self, array<First> values, bool reverse) => reverse ? [values.copy(), values] : [values, values.copy()]
+
+method tuple(Second self, array<Second> values, bool reverse) => reverse ? [values.copy(), values] : [values, values.copy()]
+
+method tupleNested(Second self, array<Second> values) => tupleIdentity(values)
+
+method tupleReadShared(First self, array<First> values) =>
+    tuple_value = [values]
+    [selected] = tuple_value
+    item = array.first(selected)
+    item.shared
+
+method tupleReadShared(Second self, array<Second> values) =>
+    tuple_value = [values]
+    [selected] = tuple_value
+    item = array.first(selected)
+    item.shared
+
+method tupleAlias(First self, array<First> values, bool reverse) =>
+    if reverse
+        tuple_value = [values.copy(), values]
+        tuple_value
+    else
+        tuple_value = [values, values.copy()]
+        tuple_value
+
+method tupleMixedFirst(First self, array<First> first, array<Second> second, bool choose) =>
+    if choose
+        [first, first]
+    else
+        [second, first]
+
+method tupleMixedAlias(First self, array<First> first, array<Second> second, bool choose) =>
+    tuple_value = choose ? [first, first] : [second, first]
+    tuple_value
+
+method tupleMixedWrapper(First self, array<First> first, array<Second> second, bool choose) => self.tupleMixedAlias(first, second, choose)
+
+method tupleMixedScalarSink(First self, array<First> first, array<Second> second, bool choose) =>
+    discarded = self.tupleMixedAlias(first, second, choose)
+    1
+
+method tupleMixedTupleSink(First self, array<First> first, array<Second> second, bool choose) =>
+    discarded = self.tupleMixedAlias(first, second, choose)
+    [first, first]
+
+method tupleMixedFinalIfAlias(First self, array<First> first, array<Second> second, bool choose) =>
+    if choose
+        tuple_value = [first, first]
+        tuple_value
+    else
+        tuple_value = [second, first]
+        tuple_value
+
+method tupleMixedTupleDeclSink(First self, array<First> first, array<Second> second, bool choose) =>
+    [discarded_first, discarded_second] = self.tupleMixedAlias(first, second, choose)
+    1

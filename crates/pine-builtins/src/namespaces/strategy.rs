@@ -5,7 +5,7 @@ use super::types::{SERIES_FLOAT, SERIES_INT, SERIES_STRING, VOID};
 const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::SimpleString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -63,7 +63,7 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
 const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::SimpleString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -111,22 +111,27 @@ const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::BoolCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "when",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
 ];
 
 const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::SimpleString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "qty",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "qty_percent",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -184,68 +189,78 @@ const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-const STRATEGY_CANCEL_PARAMS: &[BuiltinParam] = &[BuiltinParam {
-    name: "id",
-    accepts: Accepts::SimpleString,
-    optional: false,
+const STRATEGY_CANCEL_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "when",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+const STRATEGY_CANCEL_ALL_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "when",
+    accepts: Accepts::BoolCompatible,
+    optional: true,
 }];
-
-const STRATEGY_CANCEL_ALL_PARAMS: &[BuiltinParam] = &[];
 
 const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::SimpleString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "from_entry",
-        accepts: Accepts::SimpleString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "stop",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "limit",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "profit",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "loss",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "trail_price",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "trail_points",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "trail_offset",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "qty",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "qty_percent",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -298,6 +313,11 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::BoolCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "when",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
 ];
 
 const STRATEGY_TRADE_FIELD_PARAMS: &[BuiltinParam] = &[BuiltinParam {
@@ -308,7 +328,7 @@ const STRATEGY_TRADE_FIELD_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 
 const STRATEGY_DEFAULT_ENTRY_QTY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "fill_price",
-    accepts: Accepts::SeriesOrSimpleNumeric,
+    accepts: Accepts::NumericCompatible,
     optional: false,
 }];
 

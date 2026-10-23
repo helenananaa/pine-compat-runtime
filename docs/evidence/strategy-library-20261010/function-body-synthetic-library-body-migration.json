@@ -1,0 +1,12 @@
+{
+  "original": "E:\\projects\\pine-interpreter\\tests\\fixtures\\libraries\\import_udt_array_return_lib.pine",
+  "original_sha256": "ff9722e5697aedaf74b2a342a8f5ea978448c43f2a589ac381df12ab7a5e8ae9",
+  "derived": "E:\\projects\\pine-interpreter\\tests\\fixtures\\libraries\\import_udt_array_return_checked_bodies_46.pine",
+  "derived_sha256": "ee5b3340deaf30d0f86109ef9ee1ec86b6814fe7b647e976b197c5d3d914d3dd",
+  "removed_definition": "method mixedFirst(First self, array<First> first, array<Second> second, bool choose) =>\n    if choose\n        first\n    else\n        second\n",
+  "removed_definition_sha256": "f7c8e0136d3891b0d74564df099874edabd6a2feea743e7807c97af56e889786",
+  "scope": "Internal generic fixture preserving the earlier call-result and tuple tests except an unused typed method with incompatible UDT-array return branches. Generic export and method coverage remains synthetic, not Native library qualification. Original fixture is unchanged and retained as an independent declaration-rejection control.",
+  "removed_definition_raw_sha256": "f7c8e0136d3891b0d74564df099874edabd6a2feea743e7807c97af56e889786",
+  "byte_offsets_preserved": true,
+  "original_library_title_preserved": true
+}

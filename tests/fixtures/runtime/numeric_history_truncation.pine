@@ -1,0 +1,6 @@
+//@version=6
+indicator("fractional parameter history")
+previous(x, n) => x[n]
+plot(previous(close, 2.8))
+plot(previous(close, 1.8))
+plot(previous(close, -0.8))

@@ -1,0 +1,36 @@
+{
+  "name": "constant-v5-explicit-else-isolated-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-v5-explicit-else-isolated-32.pine",
+  "source_sha256": "1a2440bfa19bd02ce92c710a1ded9204970849fc1c9b2c83accfc27accbcfb73",
+  "native_status": "compiled_and_executed",
+  "native_row": "247 row Explicit else isolated v5 probe32 false explicit else 1 true then false 1 literal false 0 equals false 0 equals true 0 history zero 0 history one 0",
+  "cursor_refreshed": true,
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "9663d7d218a94f8a7ce01a75e571d00b6ef62bfed8bf06e0ef5615fa911619eb",
+  "editor_source_sha256": "9663d7d218a94f8a7ce01a75e571d00b6ef62bfed8bf06e0ef5615fa911619eb",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-v5-explicit-else-isolated-32.native.png",
+  "screenshot_sha256": "8bf5f319bb8a56c80972758a1086626cef6e1713f5cd143c3986210df88be948",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-v5-explicit-else-isolated-32.native.ax.txt",
+  "accessibility_sha256": "127b79370f62c5539bb8fc30f2ae4b585b33d155a23cf0390bed4f4925847af9",
+  "native_values": [
+    1.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "labels": [
+    "false explicit else",
+    "true then false",
+    "literal false",
+    "equals false",
+    "equals true",
+    "history zero",
+    "history one"
+  ],
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

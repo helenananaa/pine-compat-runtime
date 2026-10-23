@@ -1,0 +1,18 @@
+{
+  "version": 5,
+  "symbol": "BINANCE:BTCUSDT",
+  "timeframe": "1M",
+  "values": {
+    "floatStep": 16.1,
+    "descendingFloat": -9.2,
+    "negativeFractionalEndCount": 3,
+    "positiveFractionalEndCount": 3
+  },
+  "negativeControl": {
+    "from": 0,
+    "to": 3,
+    "step": 0.5,
+    "result": "compile rejected",
+    "message": "increment/decrement value type ('literal float') is not compatible with counter type ('series int')"
+  }
+}

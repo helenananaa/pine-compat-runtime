@@ -1,0 +1,14 @@
+{
+  "name": "parameter-const-reference-udt-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-udt-v6-35.pine",
+  "source_sha256": "471ab53bddd439f2a7e68bd72f8164aa28ef0d4d5b7d9e3829cd1dc0745ae0c3",
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot use the \"const\" keyword when declaring a variable or parameter that accepts a user-defined type.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "471ab53bddd439f2a7e68bd72f8164aa28ef0d4d5b7d9e3829cd1dc0745ae0c3",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-udt-v6-35.native.ax.txt",
+  "accessibility_sha256": "d503fc6a90dbb12c236c91f675d4fe9b0fa5982ba26322ce3d49e4d1adb9e7de",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-udt-v6-35.native.png",
+  "screenshot_sha256": "84baf204631f529f66970f206e8b7c8df1e55465ac181355d3c1c09e2b2ed3f8"
+}

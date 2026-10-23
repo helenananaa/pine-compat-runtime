@@ -1,0 +1,4 @@
+//@version=6
+indicator("qualifier-typed-ema-series-v6-39")
+average39(int length)=>ta.ema(close,length)
+plot(average39(bar_index+1))

@@ -3,8 +3,15 @@ mod all_entry_relative_exits;
 mod candidates;
 mod close_orders;
 mod closed_trades;
+#[cfg(test)]
+mod combined_exit_reservation_tests;
+mod combined_exits;
+mod currency;
+#[cfg(test)]
+mod currency_accounting_tests;
 mod deferred_relative_exits;
 mod entries;
+mod equity_extrema;
 mod exit_orders;
 mod exit_placement;
 mod exit_price_orders;
@@ -27,6 +34,7 @@ mod risk;
 mod shared_history;
 mod state;
 mod stop_profit_brackets;
+mod trade_extrema;
 mod types;
 
 #[cfg(test)]
@@ -36,6 +44,7 @@ mod oca_storage_tests;
 
 use pine_ir::{StrategyCloseEntriesRule, StrategyCommission, StrategyMarginSetting};
 
+pub(crate) use combined_exits::CombinedExitSpec;
 #[cfg(test)]
 use ledger::NetPosition;
 #[cfg(test)]
@@ -47,6 +56,7 @@ use order_book::OrderBook;
 pub(crate) use pending_closes::PendingCloseQuantity;
 use pending_entries::StopLimitEntryPlacement;
 pub(crate) use pending_entry_fills::{EntryPathTick, PathEventOutcome};
+pub(crate) use pending_exits::ExitQuantityRequest;
 use pending_exits::{
     PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
@@ -64,6 +74,7 @@ use crate::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrokerState {
     initial_capital: f64,
+    quote_to_account_rate: f64,
     commission: Option<StrategyCommission>,
     pyramiding_limit: usize,
     close_entries_rule: StrategyCloseEntriesRule,

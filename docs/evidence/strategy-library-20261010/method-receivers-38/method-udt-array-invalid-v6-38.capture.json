@@ -1,0 +1,18 @@
+{
+  "name": "method-udt-array-invalid-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-array-invalid-v6-38.pine",
+  "source_sha256": "4b2f61b218b17146fea434c86fed948ec7222e1482a9df532b899806b697f6f9",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot call \"head38\" with argument \"self\"=\"a\". An argument of \"array<Other38>\" type was used but a \"array<Point38>\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "eb008c1f9931d7aaf42c64bcde00aa40a1851fbf49c892e10fb48fa1c69285ea",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-array-invalid-v6-38.native.ax.txt",
+  "accessibility_sha256": "e69ce18b439994a99d664af08f6429fb7f86138598d890504efc65c467ef948a",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-array-invalid-v6-38.native.png",
+  "screenshot_sha256": "cef3b058d193336ddab66489c1ecf61bec503704df29a1b3bce42e43fa399ee7",
+  "native_values": null,
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "69a62e261c1d884d6b55a25b06eb64b83bf6c722a95b860799e947aaad6f1292"
+}

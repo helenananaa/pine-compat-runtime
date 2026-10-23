@@ -1,0 +1,20 @@
+{
+  "name": "method-builtin-result-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-builtin-result-v6-38.pine",
+  "source_sha256": "2164fd04dd7c9b0baef5afd702a55e45300fc2880d71a3f1fba22885136fca1d",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    4
+  ],
+  "native_row": "319 row method-builtin-result-v6-38 Plot 4.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b386c3a1f61aa77426bd5bc769af4fa70ebe5371d85607fb9f07ac804a177690",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-builtin-result-v6-38.native.ax.txt",
+  "accessibility_sha256": "5b2aca4c5d4564d0aae009d83919d120c4e40dc4ec74ff95f71c964ff15b0ec2",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-builtin-result-v6-38.native.png",
+  "screenshot_sha256": "2a85152fafb3a365ed60014666830d7d1b55f0fde35c4539355d78aef23d91f8",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "f309ec91e786fa78ec64942b1b09ce5e8ea631e299ebda6ac8d2e9a88c81bb7d"
+}

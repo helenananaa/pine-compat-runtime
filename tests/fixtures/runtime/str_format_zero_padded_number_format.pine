@@ -1,4 +1,4 @@
 //@version=5
 indicator("String format zero padded number format")
-text = str.format("Value {0,number,0000.00}", 12.3)
-plot(text == "Value 0012.30" ? 1 : 0)
+note = str.format("Value {0,number,0000.00}", 12.3)
+plot(note == "Value 0012.30" ? 1 : 0)

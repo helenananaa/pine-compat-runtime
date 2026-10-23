@@ -1,0 +1,20 @@
+{
+  "name": "request-na-typed-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-typed-v5-37.pine",
+  "source_sha256": "7731facc918b024d4645ed1179b43bca1d789ee43048e389c4562f742ae45f8a",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "240 row request-na-typed-v5-37 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "7731facc918b024d4645ed1179b43bca1d789ee43048e389c4562f742ae45f8a",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-typed-v5-37.native.ax.txt",
+  "accessibility_sha256": "97e87eb7dc6c0244ae4213318462da8118ac9f307d17ba013263b513e73015e0",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/request-na-typed-v5-37.native.png",
+  "screenshot_sha256": "7ba9b77f34ecde55ed433e88fc5bad12765476df35e29ae29aeb4db262b0f4fa",
+  "scope": "Follow-up only: v5 typed string na resolves current chart timeframe",
+  "qualification_scope": "candidate_bounded_control"
+}

@@ -1,0 +1,4 @@
+//@version=5
+indicator("QFL library host probe 18")
+import jason5480/time_filters/1 as tif
+plot(close)

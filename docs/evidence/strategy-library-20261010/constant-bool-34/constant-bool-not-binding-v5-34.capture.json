@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-not-binding-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-not-binding-v5-34.pine",
+  "source_sha256": "b872f83762d5b82f4d8165ac9b2714aed5e71d28429b0dda586f17250a570049",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool not binding versus expression v5 probe34 request enabled 1 a condition 1 direct not condition 0 b condition 0 b equals true 0 b equals false 1 b string true 0 b string false 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "b872f83762d5b82f4d8165ac9b2714aed5e71d28429b0dda586f17250a570049",
+  "normalized_source_sha256": "b872f83762d5b82f4d8165ac9b2714aed5e71d28429b0dda586f17250a570049",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-not-binding-v5-34.native.ax.txt",
+  "accessibility_sha256": "294f994b06725feaa249e97bb2398ed6a9e958d7ec562bac1f8424c0c3cfe6f9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-not-binding-v5-34.native.png",
+  "screenshot_sha256": "6e2cdc49930c191d6f5348f4095197233b136ddbae2997ca86f05ee27ca8a6ad"
+}

@@ -1,0 +1,10 @@
+//@version=6
+indicator("window-guard-never-v6-44",dynamic_requests=true)
+float a=na
+if bar_index>100000
+    a:=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2)
+var count=0
+count+=1
+plot(bar_index)
+plot(na(a)?-1:a)
+plot(count)

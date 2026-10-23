@@ -1,0 +1,19 @@
+{
+  "name": "table-quota-two-live-v6-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-two-live-v6-36.pine",
+  "source_sha256": "4b7f6878bcc1a8ebfd2d49400205094612b17b0c740856599dfa0acdbf837d7c",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "240 row table-quota-two-live-v6-36 executed 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4b7f6878bcc1a8ebfd2d49400205094612b17b0c740856599dfa0acdbf837d7c",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-two-live-v6-36.native.ax.txt",
+  "accessibility_sha256": "3a94d8315e2e9b806652a1613945f43ee6a51c6cb86dbc15b421c59133866767",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-two-live-v6-36.native.png",
+  "screenshot_sha256": "f25caae998b5b89688a81112e6f8404eca3f6bba48ab84ff5b2cae47e25c2829",
+  "scope": "Native v6 admits two simultaneously referenced6000-cell tables at different positions (12000 combined slots). The observed10000 boundary is not a combined-capacity script cap in this control.",
+  "qualification_scope": "candidate_table_control"
+}

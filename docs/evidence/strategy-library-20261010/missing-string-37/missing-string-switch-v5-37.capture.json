@@ -1,0 +1,20 @@
+{
+  "name": "missing-string-switch-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-switch-v5-37.pine",
+  "source_sha256": "c38a1b447b9429ffc677ff2dcec3355386348a41f847eb728e7616e12a1af09f",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1
+  ],
+  "native_row": "251 row missing-string-switch-v5-37 Plot 1 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c38a1b447b9429ffc677ff2dcec3355386348a41f847eb728e7616e12a1af09f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-switch-v5-37.native.ax.txt",
+  "accessibility_sha256": "1f845855cc8bc32984df6018072b34f13dfe4c64a5bd0949bc1bddf1f29e5a74",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-switch-v5-37.native.png",
+  "screenshot_sha256": "6df8135fa39e6605107ed6ae6fdfddd1cc665d37db414b4b41bbdd3fc8482e90",
+  "scope": "v5 selector switch compares missing string selectors/case values as empty strings",
+  "qualification_scope": "candidate_bounded_control"
+}

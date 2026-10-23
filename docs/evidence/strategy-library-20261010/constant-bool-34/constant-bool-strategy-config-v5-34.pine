@@ -1,0 +1,5 @@
+//@version=5
+a=if true
+    false
+strategy("Bool strategy config flags v5 probe34",process_orders_on_close=a,calc_on_order_fills=a,calc_on_every_tick=a,use_bar_magnifier=a)
+plot(close)

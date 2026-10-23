@@ -1,3 +1,4 @@
+mod block_returns;
 mod maps;
 use crate::analyzer::maps::map_kind_from_template_name;
 use crate::prelude::*;
@@ -14,14 +15,11 @@ struct TupleTypeContext<'a> {
 }
 
 impl Analyzer {
-    pub(crate) fn type_of_expr_with_params(
+    fn type_of_expr_in_param_context(
         &self,
         expr: &Expr,
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
-        if let Some(pine_type) = self.expr_types.get(&self.expr_key(expr.span)) {
-            return Some(*pine_type);
-        }
         match &expr.kind {
             ExprKind::Member { .. } => self.expr_types.get(&self.expr_key(expr.span)).copied(),
             ExprKind::Group(inner) => self.type_of_expr_with_params(inner, param_types),
@@ -68,6 +66,17 @@ impl Analyzer {
                                 Qualifier::Const,
                                 if name.starts_with("display.") {
                                     ValueKind::PlotDisplay
+                                } else if crate::legacy::strategy_direction_bool(
+                                    &name,
+                                    self.legacy.dialect().version(),
+                                )
+                                .is_some()
+                                {
+                                    ValueKind::Bool
+                                } else if self.legacy.dialect().version() != 4
+                                    && matches!(name.as_str(), "strategy.long" | "strategy.short")
+                                {
+                                    ValueKind::StrategyDirection
                                 } else {
                                     ValueKind::String
                                 },
@@ -143,20 +152,14 @@ impl Analyzer {
                 let condition_type = self.type_of_expr_with_params(condition, param_types)?;
                 let then_type = self.type_of_expr_with_params(then_expr, param_types)?;
                 let else_type = self.type_of_expr_with_params(else_expr, param_types)?;
-                if let Some(condition_value) = self.known_const_bool_value(condition) {
-                    return selected_branch_type(
-                        condition_type.qualifier,
-                        then_type,
-                        else_type,
-                        condition_value,
-                    );
-                }
+                let branch_qualifier = match self.known_const_bool_value(condition) {
+                    Some(true) => then_type.qualifier,
+                    Some(false) => else_type.qualifier,
+                    None => strongest_qualifier(then_type.qualifier, else_type.qualifier),
+                };
                 Some(PineType::new(
-                    strongest_qualifier(
-                        condition_type.qualifier,
-                        strongest_qualifier(then_type.qualifier, else_type.qualifier),
-                    ),
-                    common_kind(then_type.kind, else_type.kind)?,
+                    strongest_qualifier(condition_type.qualifier, branch_qualifier),
+                    self.ternary_common_kind(then_type.kind, else_type.kind)?,
                 ))
             }
             ExprKind::If {
@@ -343,12 +346,12 @@ impl Analyzer {
             let receiver_arg = receiver_call_arg(receiver_name, receiver_span);
             let builtin_name = map_method_builtin_name(method_name)?;
             return match builtin_name {
-                "map.get" => {
+                "map.get" | "map.remove" => {
                     let info = self.map_type_of_expr(&receiver_arg.value)?;
                     Some(PineType::new(Qualifier::Series, info.value_kind))
                 }
                 "map.contains" => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
-                "map.put" | "map.clear" | "map.remove" | "map.put_all" => {
+                "map.put" | "map.clear" | "map.put_all" => {
                     Some(PineType::new(Qualifier::Series, ValueKind::Void))
                 }
                 "map.copy" => Some(PineType::new(Qualifier::Simple, ValueKind::Map)),
@@ -389,7 +392,18 @@ impl Analyzer {
     ) -> Option<PineType> {
         let condition_type = self.type_of_expr_with_params(condition, param_types)?;
         let then_type = self.type_of_branch_return_with_params(then_branch, param_types)?;
-        let else_type = self.type_of_branch_return_with_params(else_branch, param_types)?;
+        let else_type = if else_branch.is_empty() {
+            PineType::new(
+                Qualifier::Const,
+                if self.legacy.dialect().version() >= 6 && then_type.kind == ValueKind::Bool {
+                    ValueKind::Bool
+                } else {
+                    ValueKind::Na
+                },
+            )
+        } else {
+            self.type_of_branch_return_with_params(else_branch, param_types)?
+        };
         if let Some(condition_value) = self.known_const_bool_value(condition) {
             return selected_branch_type(
                 condition_type.qualifier,
@@ -405,40 +419,6 @@ impl Analyzer {
             ),
             common_kind(then_type.kind, else_type.kind)?,
         ))
-    }
-
-    fn type_of_branch_return_with_params(
-        &self,
-        branch: &[Stmt],
-        param_types: &HashMap<String, PineType>,
-    ) -> Option<PineType> {
-        let last = branch.last()?;
-        match &last.kind {
-            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
-                self.type_of_expr_with_params(expr, param_types)
-            }
-            StmtKind::If {
-                condition,
-                then_branch,
-                else_branch,
-            } if !else_branch.is_empty() => {
-                self.type_of_if_expr_with_params(condition, then_branch, else_branch, param_types)
-            }
-            StmtKind::For {
-                from,
-                to,
-                step,
-                body,
-                ..
-            } => self.type_of_for_expr_with_params(from, to, step.as_ref(), body, param_types),
-            StmtKind::ForIn { iterable, body, .. } => {
-                self.type_of_for_in_expr_with_params(iterable, body, param_types)
-            }
-            StmtKind::While { condition, body } => {
-                self.type_of_while_expr_with_params(condition, body, param_types)
-            }
-            _ => None,
-        }
     }
 
     pub(crate) fn type_of_switch_expr_with_params(
@@ -617,8 +597,14 @@ impl Analyzer {
         let condition_type = self.type_of_expr_with_params(condition, param_types)?;
         let then_type =
             self.type_of_function_branch_return_with_params(then_branch, param_types)?;
-        let else_type =
-            self.type_of_function_branch_return_with_params(else_branch, param_types)?;
+        let else_type = if else_branch.is_empty()
+            && self.legacy.dialect().version() >= 6
+            && then_type.kind == ValueKind::Bool
+        {
+            PineType::new(Qualifier::Const, ValueKind::Bool)
+        } else {
+            self.type_of_function_branch_return_with_params(else_branch, param_types)?
+        };
         if let Some(condition_value) = self.known_const_bool_value(condition) {
             return selected_branch_type(
                 condition_type.qualifier,
@@ -645,6 +631,19 @@ impl Analyzer {
             return Some(PineType::new(Qualifier::Const, ValueKind::Na));
         };
         match &last.kind {
+            StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => self
+                .bound_symbol(name, last.span)
+                .map(|symbol| symbol.pine_type),
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => self.type_of_function_if_return_with_params(
+                condition,
+                then_branch,
+                else_branch,
+                param_types,
+            ),
             StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
                 self.type_of_expr_with_params(expr, param_types)
             }
@@ -693,56 +692,6 @@ impl Analyzer {
             strongest_qualifier(condition_type.qualifier, body_type.qualifier),
             body_type.kind,
         ))
-    }
-
-    fn type_of_loop_body_return_with_params(
-        &self,
-        statement: &Stmt,
-        param_types: &HashMap<String, PineType>,
-    ) -> Option<PineType> {
-        match &statement.kind {
-            StmtKind::FieldReassign {
-                receiver,
-                path,
-                field,
-                ..
-            } => self.type_of_expr_with_params(
-                &crate::analyzer::functions::field_reassign_result_expr(
-                    receiver,
-                    path,
-                    field,
-                    statement.span,
-                ),
-                param_types,
-            ),
-            StmtKind::If {
-                condition,
-                then_branch,
-                else_branch,
-            } => self.type_of_function_if_return_with_params(
-                condition,
-                then_branch,
-                else_branch,
-                param_types,
-            ),
-            StmtKind::Expr(expr) | StmtKind::TupleDecl { value: expr, .. } => {
-                self.type_of_expr_with_params(expr, param_types)
-            }
-            StmtKind::For {
-                from,
-                to,
-                step,
-                body,
-                ..
-            } => self.type_of_for_expr_with_params(from, to, step.as_ref(), body, param_types),
-            StmtKind::ForIn { iterable, body, .. } => {
-                self.type_of_for_in_expr_with_params(iterable, body, param_types)
-            }
-            StmtKind::While { condition, body } => {
-                self.type_of_while_expr_with_params(condition, body, param_types)
-            }
-            _ => None,
-        }
     }
 
     fn loop_header_qualifier_with_params(
@@ -849,12 +798,18 @@ impl Analyzer {
                     .legacy
                     .canonical_call_name(self.current_source_context_id(), callee.span)
                     .map_or(source_name, str::to_owned);
-                if name == "request.security" && (3..=6).contains(&args.len()) {
-                    return self.tuple_element_types_with_context(&args[2].value, context);
+                if (name == "request.security" || name.starts_with("$legacy.security."))
+                    && (3..=6).contains(&args.len())
+                {
+                    let expression =
+                        crate::analyzer::requests::source_args::security_source_expression(args)?;
+                    return self.tuple_element_types_with_context(expression, context);
                 }
                 if name == "request.security_lower_tf" && (3..=4).contains(&args.len()) {
+                    let expression =
+                        crate::analyzer::requests::source_args::security_source_expression(args)?;
                     return self
-                        .tuple_element_types_with_context(&args[2].value, context)?
+                        .tuple_element_types_with_context(expression, context)?
                         .into_iter()
                         .map(|ty| {
                             Some(PineType::new(
@@ -1115,6 +1070,14 @@ impl Analyzer {
                 receiver_symbol
                     .as_ref()
                     .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned())
+            })
+            .or_else(|| {
+                let ty = context
+                    .param_types
+                    .get(receiver_name)
+                    .copied()
+                    .or_else(|| receiver_symbol.as_ref().map(|s| s.pine_type))?;
+                self.named_method_receiver_key(receiver_name, receiver_span, ty)
             })?;
         let receiver_type = context
             .param_types
@@ -1190,6 +1153,10 @@ impl Analyzer {
         let mut nested_param_types = HashMap::new();
         let mut nested_param_user_types = HashMap::new();
         let nested_tuple_aliases = HashMap::new();
+        let receiver_type = method
+            .receiver_binding
+            .as_ref()
+            .map_or(receiver_type, |b| b.bound_type(receiver_type));
         nested_param_types.insert(method.receiver_name.clone(), receiver_type);
         nested_param_user_types.insert(method.receiver_name.clone(), method.receiver_type.clone());
         let mut resolved_arg_types = vec![None; method.params.len()];
@@ -1205,7 +1172,7 @@ impl Analyzer {
             .iter()
             .zip(resolved_arg_types.into_iter().zip(resolved_arg_user_types))
         {
-            nested_param_types.insert(param.name.clone(), arg_type?);
+            nested_param_types.insert(param.name.clone(), param.bound_type(arg_type?));
             if let Some(type_name) = arg_user_type {
                 nested_param_user_types.insert(param.name.clone(), type_name);
             }

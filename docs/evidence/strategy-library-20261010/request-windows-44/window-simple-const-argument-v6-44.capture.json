@@ -1,0 +1,19 @@
+{
+  "name": "window-simple-const-argument-v6-44",
+  "version": 6,
+  "scenario": "simple-const-argument",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-simple-const-argument-v6-44.pine",
+  "source_sha256": "38f76491637ed88954b3843a39c3f2c316008267dc6a51dbf253d36db2dc439f",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"plot\" with argument \"title\"=\"call \"str.tostring\" (simple string)\". An argument of \"simple string\" type was used but a \"const string\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "38f76491637ed88954b3843a39c3f2c316008267dc6a51dbf253d36db2dc439f",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-const-argument-v6-44.native.ax.txt",
+  "accessibility_sha256": "68b8cd106f1abef2359f6753b90b9e05bb3cb00cbf394cd33e2dedc51943d6b9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-simple-const-argument-v6-44.native.png",
+  "screenshot_sha256": "99d91e15385c05effbc9cb57a57513814b4029789eae46a8cb23fbf59181bb28",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

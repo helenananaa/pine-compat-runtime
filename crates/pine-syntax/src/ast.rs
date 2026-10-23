@@ -248,6 +248,7 @@ pub enum FunctionBody {
 pub enum DeclMode {
     Normal,
     Const,
+    Simple,
     Var,
     Varip,
 }

@@ -1,0 +1,21 @@
+{
+  "name": "body-boundary-untyped-receiver-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-boundary-untyped-receiver-v5-46.pine",
+  "source_sha256": "0f9a852ac96907cfbd7fffa06dec12c7f1eff80b4583b30da264226191444631",
+  "kind": "untyped-receiver",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "278 row body-boundary-untyped-receiver-v5-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e9a64bdb8673a4443229215bbf2a8cc6212e5ab313291d20157efac05b5501da",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-untyped-receiver-v5-46.native.ax.txt",
+  "accessibility_sha256": "613eecbdc4dc7e24729597e046fee21fe06b2e2d3f2f5ee0ce780d133a366d97",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-untyped-receiver-v5-46.native.png",
+  "screenshot_sha256": "769ce3412313aa34ef51cc1a12848f01d2dddc7d039fb42c41aa15c539d89c30",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

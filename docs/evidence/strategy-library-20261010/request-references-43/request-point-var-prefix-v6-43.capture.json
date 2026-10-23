@@ -1,0 +1,27 @@
+{
+  "name": "request-point-var-prefix-v6-43",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-var-prefix-v6-43.pine",
+  "source_sha256": "123c540228155a7339053b3d795758ac9ab48c0cada17bda0ba5b4c71e361b61",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    16755,
+    16760,
+    16760,
+    15,
+    15,
+    20,
+    20,
+    3349
+  ],
+  "native_row": "242 row request-point-var-prefix-v6-43 Plot 16,755.00 Plot 16,760.00 Plot 16,760.00 Plot 15.00 Plot 15.00 Plot 20.00 Plot 20.00 Plot 3,349.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "12395f51da9635e3055b0b7e28b8f2b5154f5211658b838611964c37a3000cb5",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-var-prefix-v6-43.native.ax.txt",
+  "accessibility_sha256": "61b889da7129fccb2bc6a418199fb1eeb5b5bca8aff8e7bafab9ddfbad217d44",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-var-prefix-v6-43.native.png",
+  "screenshot_sha256": "2c914869c87bb9d55807c127ff3b4b642c5ff4d9eaba9ca811cef206269eb7dc",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

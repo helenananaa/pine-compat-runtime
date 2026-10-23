@@ -1,0 +1,21 @@
+{
+  "name": "body-boundary-typed-helper-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-boundary-typed-helper-v6-46.pine",
+  "source_sha256": "c94044e22f7fdd1786c5a94f63ce22d3f565bd6198f6e8a15c4e09308370d5fb",
+  "kind": "typed-helper",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "278 row body-boundary-typed-helper-v6-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "74c681e4aecc3c808c50f14d89aa25d8f85ae71161cae5a800ea5915e5629008",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-typed-helper-v6-46.native.ax.txt",
+  "accessibility_sha256": "ea61aa6b09bce54c93a3a4fbda4d421e0d8822920655c91f3f804e7acc83ac39",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-boundary-typed-helper-v6-46.native.png",
+  "screenshot_sha256": "1152640058b69092fc44884d574772ce5454d17177eefdccd9dd08ba2f299f9a",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

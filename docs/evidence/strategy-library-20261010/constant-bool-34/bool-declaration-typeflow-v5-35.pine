@@ -1,0 +1,6 @@
+//@version=5
+indicator("bool-declaration-typeflow-v5-35",precision=0)
+const bool value=if true
+    false
+length=value?int(close):2
+plot(ta.ema(close,length),title="ema")

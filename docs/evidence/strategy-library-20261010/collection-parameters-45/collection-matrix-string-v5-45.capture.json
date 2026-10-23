@@ -1,0 +1,26 @@
+{
+  "name": "collection-matrix-string-v5-45",
+  "version": 5,
+  "scenario": "matrix-string",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-matrix-string-v5-45.pine",
+  "source_sha256": "18d9d99b688fdca56aebcaf1d9ab32ba5dead98ccac72d5da3a3752f0ebc9e94",
+  "expected_values": [
+    3,
+    3
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3,
+    3
+  ],
+  "native_row": "239 row collection-matrix-string-v5-45 Plot 3.00 Plot 3.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "db5d8a69c517aa93f19f4693f5b6e385f7065e818231c7477d1a92ea65be3732",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-string-v5-45.native.ax.txt",
+  "accessibility_sha256": "8c9ee4407d2d37447d55e5378556e96188baaf259f83656af09bb4d6b4c73918",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-matrix-string-v5-45.native.png",
+  "screenshot_sha256": "483eb2843f706dc27029b80f7970f629c824c98f2c41c3e83c588840d7b8aa7e",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

@@ -1,0 +1,5 @@
+//@version=3
+study("Codex legacy candidate oracle",overlay=true)
+f(x)=>x+1
+plot(percentile_nearest_rank(close,14,25),"nearest percentile")
+plot(percentile_linear_interpolation(close,14,25),"linear percentile")

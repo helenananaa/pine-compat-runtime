@@ -24,6 +24,7 @@ pub(crate) fn value_kind_name(kind: ValueKind) -> &'static str {
         ValueKind::Bool => "bool",
         ValueKind::String => "string",
         ValueKind::PlotDisplay => "plot_display",
+        ValueKind::StrategyDirection => "strategy_direction",
         ValueKind::Color => "color",
         ValueKind::Plot => "plot",
         ValueKind::HLine => "hline",

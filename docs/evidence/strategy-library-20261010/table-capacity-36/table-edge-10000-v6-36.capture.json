@@ -1,0 +1,19 @@
+{
+  "name": "table-edge-10000-v6-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10000-v6-36.pine",
+  "source_sha256": "3afaec8de6d15a67395316625ab3d28144c118e87432cbf04d9662b4b336a109",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "240 row table-edge-10000-v6-36 executed 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3afaec8de6d15a67395316625ab3d28144c118e87432cbf04d9662b4b336a109",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10000-v6-36.native.ax.txt",
+  "accessibility_sha256": "71ee0d1ba37a27989e30474420528a1d3759c63e1494ca51363e4242be26cb9d",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10000-v6-36.native.png",
+  "screenshot_sha256": "56f47b1c9dcbd5f3be7a19ffeed9f4f96e45e0dc49fd1c88569de7ee865b4f7c",
+  "scope": "Native v6 accepts a10000x1 layout and its last cell.",
+  "qualification_scope": "candidate_table_control"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "parameter-const-default-series-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-default-series-v6-35.pine",
+  "source_sha256": "99a4dadcaa43303053dd7c092922e4004b68e7035c3022b837052b783f9b8c8b",
+  "native_status": "analysis_rejected",
+  "native_error": "Default value of type series float can not be assigned to an argument of type const float",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "99a4dadcaa43303053dd7c092922e4004b68e7035c3022b837052b783f9b8c8b",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-default-series-v6-35.native.ax.txt",
+  "accessibility_sha256": "0ae757f2f2c08bd1959021d0f61d58bb321ef30c602d707388fe347ba385d173",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-default-series-v6-35.native.png",
+  "screenshot_sha256": "7829515f8a974aa00aa44108d311da2f2e352a9fafdd2bf7c3c2923cae2a03d0"
+}

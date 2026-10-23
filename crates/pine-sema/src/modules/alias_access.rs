@@ -220,6 +220,9 @@ fn imported_method_param_access_is_supported(
     module: &ModuleInfo,
     param: &ModuleMethodParamInfo,
 ) -> bool {
+    if super::function_parameters::qualified_method_scalar_type(&param.type_name).is_some() {
+        return true;
+    }
     if param.type_name.starts_with("array<") && param.type_name.ends_with('>') {
         let element_type = &param.type_name["array<".len()..param.type_name.len() - 1];
         return array_kind_from_element_type_name(element_type).is_some()

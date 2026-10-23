@@ -1,5 +1,6 @@
 //! Sparse persistent storage for monotonically allocated runtime handles.
 //! Checkpoints share entries; a write copies one bounded leaf and its path.
+use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
 const LEAF_BITS: u32 = 7;
@@ -18,11 +19,16 @@ enum Node<V> {
 pub(crate) struct IdStore<V> {
     root: Option<Arc<Node<V>>>,
     len: usize,
+    frame_aliases: Option<Arc<BTreeMap<u32, u32>>>,
 }
 
 impl<V: Clone> IdStore<V> {
     pub(crate) fn new() -> Self {
-        Self { root: None, len: 0 }
+        Self {
+            root: None,
+            len: 0,
+            frame_aliases: None,
+        }
     }
     pub(crate) fn len(&self) -> usize {
         self.len
@@ -43,6 +49,11 @@ impl<V: Clone> IdStore<V> {
     }
 
     pub(crate) fn get(&self, key: &u32) -> Option<&V> {
+        self.get_arc(key).map(AsRef::as_ref)
+    }
+
+    fn get_arc(&self, key: &u32) -> Option<&Arc<V>> {
+        let key = &self.resolve_key(*key);
         let mut node = self.root.as_deref()?;
         for bit in (LEAF_BITS..32).rev() {
             let Node::Branch { left, right } = node else {
@@ -53,10 +64,55 @@ impl<V: Clone> IdStore<V> {
         let Node::Leaf(values) = node else {
             unreachable!("leaf depth invariant")
         };
-        values[(*key as usize) & (LEAF_SIZE - 1)].as_deref()
+        values[(*key as usize) & (LEAF_SIZE - 1)].as_ref()
+    }
+
+    fn resolve_key(&self, key: u32) -> u32 {
+        self.frame_aliases
+            .as_deref()
+            .and_then(|aliases| aliases.get(&key))
+            .copied()
+            .unwrap_or(key)
+    }
+
+    /// Share writes for this execution. Finishing the execution freezes each
+    /// handle's buffer independently, while slice parents keep their identity.
+    pub(crate) fn link_entry(&mut self, source: u32, target: u32) -> bool {
+        let source = self.resolve_key(source);
+        if !self.alias_entry(source, target) {
+            return false;
+        }
+        Arc::make_mut(
+            self.frame_aliases
+                .get_or_insert_with(|| Arc::new(BTreeMap::new())),
+        )
+        .insert(target, source);
+        true
+    }
+
+    pub(crate) fn finish_linked_entries(&mut self) {
+        let Some(aliases) = self.frame_aliases.take() else {
+            return;
+        };
+        for (&target, &source) in aliases.iter() {
+            self.alias_entry(source, target);
+        }
+    }
+
+    /// Give a new internal identity the same immutable payload. A later write
+    /// uses the usual budgeted copy-on-write path.
+    pub(crate) fn alias_entry(&mut self, source: u32, target: u32) -> bool {
+        let Some(value) = self.get_arc(&source).cloned() else {
+            return false;
+        };
+        let slot = slot_mut(&mut self.root, 31, target);
+        self.len += usize::from(slot.is_none());
+        *slot = Some(value);
+        true
     }
 
     pub(crate) fn insert(&mut self, key: u32, value: V) {
+        let key = self.resolve_key(key);
         let slot = slot_mut(&mut self.root, 31, key);
         self.len += usize::from(slot.is_none());
         *slot = Some(Arc::new(value));
@@ -64,7 +120,8 @@ impl<V: Clone> IdStore<V> {
 
     pub(crate) fn get_mut(&mut self, key: &u32) -> Option<&mut V> {
         self.get(key)?;
-        slot_mut(&mut self.root, 31, *key)
+        let key = self.resolve_key(*key);
+        slot_mut(&mut self.root, 31, key)
             .as_mut()
             .map(Arc::make_mut)
     }
@@ -72,6 +129,7 @@ impl<V: Clone> IdStore<V> {
     /// A shared path duplicates entry Arcs before making the value mutable,
     /// even when its current entry Arc still has only one direct owner.
     pub(crate) fn get_mut_clones_value(&self, key: &u32) -> bool {
+        let key = &self.resolve_key(*key);
         let Some(mut node) = self.root.as_ref() else {
             return false;
         };
@@ -199,17 +257,23 @@ impl<V: Clone> IdStore<V> {
 
     /// Copy one retained identity between checkpoints without cloning payloads.
     pub(crate) fn copy_entry_from(&mut self, previous: &Self, key: u32) -> bool {
+        let source_key = previous.resolve_key(key);
         let mut node = previous.root.as_deref();
         for bit in (LEAF_BITS..32).rev() {
             let Some(Node::Branch { left, right }) = node else {
                 return false;
             };
-            node = if key & (1 << bit) == 0 { left } else { right }.as_deref();
+            node = if source_key & (1 << bit) == 0 {
+                left
+            } else {
+                right
+            }
+            .as_deref();
         }
         let Some(Node::Leaf(values)) = node else {
             return false;
         };
-        let Some(value) = &values[(key as usize) & (LEAF_SIZE - 1)] else {
+        let Some(value) = &values[(source_key as usize) & (LEAF_SIZE - 1)] else {
             return false;
         };
         let slot = slot_mut(&mut self.root, 31, key);
@@ -220,8 +284,15 @@ impl<V: Clone> IdStore<V> {
 
     pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
         Values {
-            stack: self.root.as_deref().into_iter().collect(),
+            stack: self
+                .root
+                .as_deref()
+                .map(|node| (node, 31, 0))
+                .into_iter()
+                .collect(),
             leaf: None,
+            store: self,
+            prefix: 0,
         }
     }
 
@@ -250,7 +321,9 @@ impl<V: Clone> IdStore<V> {
         if let Some(root) = &self.root {
             visit(root, 31, 0, &mut entries);
         }
-        entries.into_iter()
+        entries
+            .into_iter()
+            .map(|(id, _)| (id, self.get(&id).expect("live entry")))
     }
 
     pub(crate) fn retain(&mut self, mut keep: impl FnMut(u32, &V) -> bool) {
@@ -285,7 +358,32 @@ impl<V: Clone> IdStore<V> {
             }
             count
         }
-        self.len = visit(&mut self.root, 31, 0, &mut keep);
+        let aliases = self.frame_aliases.clone();
+        let mut retained = BTreeMap::new();
+        let mut roots = HashSet::new();
+        if let Some(aliases) = aliases.as_deref() {
+            for (&target, &source) in aliases {
+                if self.get(&target).is_some_and(|value| keep(target, value)) {
+                    retained.insert(target, source);
+                    roots.insert(source);
+                }
+            }
+        }
+        self.len = visit(&mut self.root, 31, 0, &mut |id, value| {
+            if aliases
+                .as_deref()
+                .is_some_and(|aliases| aliases.contains_key(&id))
+            {
+                retained.contains_key(&id)
+            } else {
+                roots.contains(&id) || keep(id, value)
+            }
+        });
+        self.frame_aliases = if retained.is_empty() {
+            None
+        } else {
+            Some(Arc::new(retained))
+        };
     }
 }
 
@@ -319,27 +417,40 @@ fn slot_mut<V: Clone>(node: &mut Option<Arc<Node<V>>>, bit: u32, key: u32) -> &m
 }
 
 struct Values<'a, V> {
-    stack: Vec<&'a Node<V>>,
-    leaf: Option<std::slice::Iter<'a, Option<Arc<V>>>>,
+    stack: Vec<(&'a Node<V>, u32, u32)>,
+    leaf: Option<std::iter::Enumerate<std::slice::Iter<'a, Option<Arc<V>>>>>,
+    store: &'a IdStore<V>,
+    prefix: u32,
 }
-impl<'a, V> Iterator for Values<'a, V> {
+impl<'a, V: Clone> Iterator for Values<'a, V> {
     type Item = &'a V;
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             if let Some(leaf) = &mut self.leaf {
-                if let Some(value) = leaf.flatten().next() {
-                    return Some(value.as_ref());
+                for (index, value) in leaf.by_ref() {
+                    if let Some(value) = value {
+                        return Some(if self.store.frame_aliases.is_some() {
+                            self.store
+                                .get(&(self.prefix | index as u32))
+                                .expect("live alias root")
+                        } else {
+                            value.as_ref()
+                        });
+                    }
                 }
                 self.leaf = None;
             }
             match self.stack.pop()? {
-                Node::Leaf(values) => self.leaf = Some(values.iter()),
-                Node::Branch { left, right } => {
+                (Node::Leaf(values), _, prefix) => {
+                    self.leaf = Some(values.iter().enumerate());
+                    self.prefix = prefix;
+                }
+                (Node::Branch { left, right }, bit, prefix) => {
                     if let Some(node) = right {
-                        self.stack.push(node);
+                        self.stack.push((node, bit - 1, prefix | (1 << bit)));
                     }
                     if let Some(node) = left {
-                        self.stack.push(node);
+                        self.stack.push((node, bit - 1, prefix));
                     }
                 }
             }
@@ -350,6 +461,30 @@ impl<'a, V> Iterator for Values<'a, V> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn execution_links_share_writes_then_freeze_and_keep_live_gc_roots() {
+        let mut store = IdStore::new();
+        store.insert(1, vec![1]);
+        assert!(store.link_entry(1, 2));
+        assert!(store.link_entry(2, 3));
+        store.get_mut(&2).unwrap().push(2);
+        assert_eq!(store.get(&1), Some(&vec![1, 2]));
+        assert_eq!(store.get(&3), Some(&vec![1, 2]));
+        store.insert(3, vec![7]);
+        assert!(store.values().all(|v| v == &vec![7]));
+        let before = store.clone();
+        store.retain(|id, _| id == 2);
+        assert_eq!(store.get(&2), Some(&vec![7]));
+        store.get_mut(&2).unwrap().push(8);
+        assert_eq!(before.get(&2), Some(&vec![7]));
+        store.finish_linked_entries();
+        store.get_mut(&2).unwrap().push(9);
+        assert_eq!(store.get(&1), Some(&vec![7, 8]));
+        store.retain(|id, _| id == 2);
+        assert_eq!(store.len(), 1);
+        assert_eq!(store.get(&2), Some(&vec![7, 8, 9]));
+    }
+
     #[test]
     fn differences_skip_shared_history_and_visit_rollback_removals() {
         let mut base = IdStore::new();
@@ -486,5 +621,40 @@ mod tests {
         store.get_mut(&0).unwrap();
         assert_eq!(clones.load(Ordering::Relaxed), 1);
         assert_eq!(original.len(), 10000);
+    }
+
+    #[test]
+    fn aliases_share_payloads_until_an_independent_write() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        struct Payload {
+            clones: Arc<AtomicUsize>,
+            value: u32,
+        }
+        impl Clone for Payload {
+            fn clone(&self) -> Self {
+                self.clones.fetch_add(1, Ordering::Relaxed);
+                Self {
+                    clones: self.clones.clone(),
+                    value: self.value,
+                }
+            }
+        }
+        let clones = Arc::new(AtomicUsize::new(0));
+        let mut store = IdStore::new();
+        store.insert(
+            7,
+            Payload {
+                clones: clones.clone(),
+                value: 10,
+            },
+        );
+        assert!(store.alias_entry(7, 50000));
+        assert_eq!(clones.load(Ordering::Relaxed), 0);
+        assert!(store.get_mut_clones_value(&50000));
+        store.get_mut(&50000).unwrap().value = 20;
+        assert_eq!(clones.load(Ordering::Relaxed), 1);
+        assert_eq!(store.get(&7).unwrap().value, 10);
+        assert_eq!(store.get(&50000).unwrap().value, 20);
+        assert!(!store.alias_entry(42, 50001));
     }
 }

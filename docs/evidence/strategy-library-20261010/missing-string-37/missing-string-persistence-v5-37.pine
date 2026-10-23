@@ -1,0 +1,7 @@
+//@version=5
+indicator("missing-string-persistence-v5-37",precision=0)
+var string a=na
+varip string b=na
+f(simple string x)=>na(x)?1:0
+plot(f(a))
+plot(f(b))

@@ -1,0 +1,5 @@
+//@version=6
+library("ArrayOwnershipCase4Batch45")
+export f(array<float> values) =>
+    array.push(values,1)
+    1

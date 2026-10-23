@@ -7,5 +7,7 @@ if bar_index == 2
     time_point = chart.point.from_time(time + 120000, low)
     label.new(point=time_point, xloc=xloc.bar_time, yloc=yloc.belowbar, style=label.style_label_down)
 if bar_index == 3
-    label.new(point=na, text="missing")
+    chart.point missing = na
+    if not na(missing)
+        label.new(point=missing, text="missing")
 plot(close)

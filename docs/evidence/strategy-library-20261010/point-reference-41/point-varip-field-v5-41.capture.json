@@ -1,0 +1,20 @@
+{
+  "name": "point-varip-field-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-varip-field-v5-41.pine",
+  "source_sha256": "72bccec38b6f39fbad0a31ff5d8653591d2c598c52b4c0ddb034c9a07778d5c6",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    20
+  ],
+  "native_row": "478 row point-varip-field-v5-41 Plot 20.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "432c67111044d61ebd77d91f14cbb819c029e64c75ab080c6bbad028a6c1e2ed",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-varip-field-v5-41.native.ax.txt",
+  "accessibility_sha256": "a751c260ae5eae66204a40e33a8615202ac1fe22995cf07fd98d98ef717a22ad",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-varip-field-v5-41.native.png",
+  "screenshot_sha256": "b27c8a0eac3c2e0599d4df6cc9a3e9547675f490890f84631ff8f3e374752954",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

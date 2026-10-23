@@ -1,0 +1,19 @@
+//@version=6
+indicator("array-transient-origin-view-v6-42")
+c=array.from(0)
+var b=c
+var s=c.slice(0,1)
+b.set(0,bar_index)
+varip int ch=0
+varip int bh=0
+varip int sh=0
+varip int ih=0
+if barstate.ishistory
+    ch:=c.first()
+    bh:=b.first()
+    sh:=s.first()
+    ih:=bar_index
+plot(ch)
+plot(bh)
+plot(sh)
+plot(ih)

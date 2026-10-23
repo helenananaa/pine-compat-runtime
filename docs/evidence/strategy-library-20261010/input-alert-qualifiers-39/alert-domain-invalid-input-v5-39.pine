@@ -1,0 +1,5 @@
+//@version=5
+indicator("alert-domain-invalid-input-v5-39")
+freq=input.string("invalid")
+alert("probe",freq)
+plot(1)

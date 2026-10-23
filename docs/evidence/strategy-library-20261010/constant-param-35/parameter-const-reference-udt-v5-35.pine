@@ -1,0 +1,7 @@
+//@version=5
+indicator("parameter-const-reference-udt-v5-35",precision=0)
+type Box
+    int value
+f(const Box x)=>x.value
+b=Box.new(2)
+plot(f(b),title="field")

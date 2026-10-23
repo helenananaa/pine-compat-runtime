@@ -1,0 +1,30 @@
+{
+  "name": "constant-condition-matrix-v6-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-condition-matrix-v6-32.pine",
+  "source_sha256": "88fdc69b43b04bf48f8a1f6aca14db35f7b0af002f2dfd400cfb5d136b73f105",
+  "native_status": "compiled_and_executed",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "1d3566433867234c3ff0e259f94f27795ea343f09a65491e395975cb250456ff",
+  "normalized_source_sha256": "1d3566433867234c3ff0e259f94f27795ea343f09a65491e395975cb250456ff",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-condition-matrix-v6-32.native.ax.txt",
+  "accessibility_sha256": "2409fd81c9b56db58eec6f99dc7182e0145eab5976e71dff1e40891d4e56fd92",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-condition-matrix-v6-32.native.png",
+  "screenshot_sha256": "9e0654009a14ac4f62a26032a9ec26268baaa38f7ca64d6fec29f4eb58735585",
+  "native_values": [
+    1,
+    1,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    null,
+    0,
+    0
+  ],
+  "cursor_refreshed": true,
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

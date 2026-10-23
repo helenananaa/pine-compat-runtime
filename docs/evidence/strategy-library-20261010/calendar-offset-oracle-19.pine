@@ -1,0 +1,12 @@
+//@version=6
+indicator("Calendar offset oracle 19",overlay=false)
+f() =>
+    [time("1",timeframe_bars_back=1)-time,time("1",timeframe_bars_back=2)-time,time("1",timeframe_bars_back=-1)-time,time_close("1",timeframe_bars_back=-1)-time,time_close("1",timeframe_bars_back=2)-time,time("60",timeframe_bars_back=1)-time,time_close("60",timeframe_bars_back=1)-time]
+[a,b,c,d,e,fv,g]=request.security("NASDAQ:AAPL","D",f())
+plot(a,title="minuteBack1Open")
+plot(b,title="minuteBack2Open")
+plot(c,title="minuteFuture1Open")
+plot(d,title="minuteFuture1Close")
+plot(e,title="minuteBack2Close")
+plot(fv,title="hourBack1Open")
+plot(g,title="hourBack1Close")

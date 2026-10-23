@@ -1,0 +1,31 @@
+{
+  "name": "constant-bool-operators-v6-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-operators-v6-32.pine",
+  "source_sha256": "fdd89b6a9063bc38dc15fc90eb9b7541c862bb50ff48675540d0c17cd397fc41",
+  "native_status": "compiled_and_executed",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "b89fdafa251390780ac85c4d9d928a34bc8eec464c1b0a79bf090e6d9e77432d",
+  "normalized_source_sha256": "b89fdafa251390780ac85c4d9d928a34bc8eec464c1b0a79bf090e6d9e77432d",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-operators-v6-32.native.ax.txt",
+  "accessibility_sha256": "3932be4da8a5c7ff81b76b53fd4c6b18f92958b09f8bc6f20ddeaab8d0ec4615",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-operators-v6-32.native.png",
+  "screenshot_sha256": "87a30c2065921fe5508458c41145d98c8059be3b2df6445f7e1dbd9bf321c76a",
+  "native_values": [
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    0,
+    1
+  ],
+  "cursor_refreshed": true,
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

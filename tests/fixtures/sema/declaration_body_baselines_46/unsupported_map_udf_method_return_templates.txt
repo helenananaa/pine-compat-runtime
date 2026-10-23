@@ -1,0 +1,4 @@
+ternary map branches must resolve to the same map template
+if map branches must resolve to the same map template
+cannot assign a different map template to `wrong_typed`
+`map.put_all` source map template int/string does not match target string/float

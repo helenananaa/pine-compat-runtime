@@ -1,0 +1,19 @@
+//@version=4
+study("Codex legacy scalar request oracle",overlay=true)
+f(src,mode)=>
+    float value=na
+    if mode=="EMA"
+        value:=ema(src,2)
+    else
+        value:=sma(src,2)
+    value
+a=f(close,"EMA")
+b=security(syminfo.tickerid,timeframe.period,f(close,"EMA"))
+c=security(syminfo.tickerid,"12M",sma(close,input(2)))
+d=security(syminfo.tickerid,"12M",vwap)
+var t=table.new(position.top_right,2,2,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,tostring(a),text_color=color.white)
+    table.cell(t,1,0,tostring(b),text_color=color.white)
+    table.cell(t,0,1,tostring(c),text_color=color.white)
+    table.cell(t,1,1,tostring(d),text_color=color.white)

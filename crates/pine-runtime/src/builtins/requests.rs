@@ -7,7 +7,6 @@ use pine_ir::{
 };
 
 use crate::builtins::args::call_arg_expr;
-use crate::builtins::time::timeframe_change_bucket;
 use crate::runtime::append_history::AppendHistory;
 use crate::*;
 
@@ -24,13 +23,13 @@ enum RequestLookahead {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct RequestMergePolicy {
+pub(super) struct RequestMergePolicy {
     gaps: RequestGaps,
     lookahead: RequestLookahead,
 }
 
 impl RequestMergePolicy {
-    const MODERN: Self = Self {
+    pub(super) const MODERN: Self = Self {
         gaps: RequestGaps::Off,
         lookahead: RequestLookahead::Off,
     };
@@ -43,6 +42,15 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
+        if callee == "request.currency_rate" {
+            return Some(self.eval_currency_rate(args));
+        }
+        if self.static_requests.is_requested_context()
+            && !self.program.dynamic_requests
+            && super::static_requests::is_security(callee)
+        {
+            return Some(self.eval_static_request(callee, call_site_id, args));
+        }
         if callee == "request.security_lower_tf" {
             return Some(self.eval_request_security_lower_tf(call_site_id, args));
         }
@@ -150,16 +158,22 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             None
         };
-        let PineValue::String(symbol) = self.eval_expr(symbol_arg)? else {
-            return Err(RuntimeError {
-                message: "request.security_lower_tf symbol must evaluate to string".to_owned(),
-            });
-        };
-        let PineValue::String(timeframe) = self.eval_expr(timeframe_arg)? else {
-            return Err(RuntimeError {
-                message: "request.security_lower_tf timeframe must evaluate to string".to_owned(),
-            });
-        };
+        let modern = self
+            .program
+            .language_version
+            .is_some_and(|version| version >= 5);
+        let symbol = self.eval_request_selector_string(
+            symbol_arg,
+            "request.security_lower_tf",
+            "symbol",
+            modern,
+        )?;
+        let timeframe = self.eval_request_selector_string(
+            timeframe_arg,
+            "request.security_lower_tf",
+            "timeframe",
+            modern,
+        )?;
         let scalar_kind = lower_tf_array_kind(expression_arg.pine_type.kind);
         let tuple_kinds = self
             .program
@@ -211,6 +225,20 @@ impl<'a> HistoricalRuntime<'a> {
             &symbol,
             &requested_timeframe,
         )?;
+        if !self.register_context_window(
+            call_site_id,
+            RequestKey::new(&symbol, requested_timeframe.clone()),
+            calc_bars_count,
+        )? {
+            let value = self.eval_expr(expression_arg)?;
+            let sample = self.freeze_requested_value(&value)?;
+            return self.lower_tf_arrays_from_samples(
+                scalar_kind,
+                tuple_kinds.as_deref(),
+                vec![sample],
+            );
+        }
+        let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
         if symbol == chart.symbol() && requested_timeframe == chart_timeframe {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
@@ -239,7 +267,7 @@ impl<'a> HistoricalRuntime<'a> {
             .ok_or_else(|| RuntimeError {
                 message: "request.security_lower_tf has no current chart bar".to_owned(),
             })?;
-        let chart_close = request_bar_nominal_close(current_time, &chart_timeframe);
+        let chart_close = self.request_environment.chart_close(current_time)?;
         let key = RequestKey::new(&symbol, requested_timeframe.clone());
         let cache_key = RequestCacheKey::new(call_site_id, key.symbol(), key.timeframe().value());
         if self.current_bar_update_kind != BarUpdateKind::Historical {
@@ -312,7 +340,15 @@ impl<'a> HistoricalRuntime<'a> {
                     false,
                 )?
             };
-            self.request_cache.insert(cache_key.clone(), values);
+            let start = values.partition_point(|(time, _)| *time < current_time);
+            let end = values.partition_point(|(time, _)| *time < chart_close);
+            let samples = (start..end).map(|index| values[index].1.clone()).collect();
+            if !(self.request_evaluations.contains_key(&cache_key)
+                || self.context_windows.prepared && values.is_empty())
+            {
+                self.request_cache.insert(cache_key.clone(), values);
+            }
+            return self.lower_tf_arrays_from_samples(scalar_kind, tuple_kinds.as_deref(), samples);
         }
         let samples = self
             .request_cache
@@ -376,6 +412,22 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.new_array_from_values(kind, values))
     }
 
+    fn eval_request_selector_string(
+        &mut self,
+        expr: &HirExpr,
+        function: &str,
+        parameter: &str,
+        allow_missing: bool,
+    ) -> Result<String, RuntimeError> {
+        match self.eval_expr(expr)? {
+            PineValue::String(value) => Ok(value),
+            PineValue::Na if allow_missing => Ok(String::new()),
+            _ => Err(RuntimeError {
+                message: format!("{function} {parameter} must evaluate to string"),
+            }),
+        }
+    }
+
     fn eval_request_security(
         &mut self,
         call_site_id: CallSiteId,
@@ -408,21 +460,19 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "request.security missing symbol argument".to_owned(),
             });
         };
-        let PineValue::String(symbol) = self.eval_expr(symbol_expr)? else {
-            return Err(RuntimeError {
-                message: "request.security symbol must evaluate to string".to_owned(),
-            });
-        };
+        let symbol =
+            self.eval_request_selector_string(symbol_expr, "request.security", "symbol", modern)?;
         let Some(timeframe_expr) = call_arg_expr(args, 1, "timeframe") else {
             return Err(RuntimeError {
                 message: "request.security missing timeframe argument".to_owned(),
             });
         };
-        let PineValue::String(timeframe) = self.eval_expr(timeframe_expr)? else {
-            return Err(RuntimeError {
-                message: "request.security timeframe must evaluate to string".to_owned(),
-            });
-        };
+        let timeframe = self.eval_request_selector_string(
+            timeframe_expr,
+            "request.security",
+            "timeframe",
+            modern,
+        )?;
         let Some(expression) = call_arg_expr(args, 2, "expression") else {
             return Err(RuntimeError {
                 message: "request.security missing expression argument".to_owned(),
@@ -456,6 +506,16 @@ impl<'a> HistoricalRuntime<'a> {
             )?;
         }
 
+        if modern
+            && !self.register_context_window(
+                call_site_id,
+                RequestKey::new(&symbol, requested_timeframe.clone()),
+                calc_bars_count,
+            )?
+        {
+            return self.eval_expr(expression);
+        }
+        let calc_bars_count = calc_bars_count.filter(|_| !self.context_windows.prepared);
         if symbol == chart_symbol && requested_timeframe == chart_timeframe {
             if let Some(count) = calc_bars_count {
                 let end = self.historical_end.ok_or_else(|| RuntimeError {
@@ -579,7 +639,6 @@ impl<'a> HistoricalRuntime<'a> {
         merge: RequestMergePolicy,
         calc_bars_count: Option<usize>,
     ) -> Result<PineValue, RuntimeError> {
-        validate_provider_timeframe(symbol, &requested_timeframe, chart_timeframe)?;
         let key = RequestKey::new(symbol, requested_timeframe.clone());
         let current_time = self
             .current_bar
@@ -640,8 +699,12 @@ impl<'a> HistoricalRuntime<'a> {
                 merge,
                 self.current_bar_update_kind,
                 include_forming,
-            );
-            if !include_forming {
+                RequestMergeClock::new(&self.request_environment, &key),
+            )?;
+            if !(include_forming
+                || self.request_evaluations.contains_key(&cache_key)
+                || self.context_windows.prepared && requested_values.is_empty())
+            {
                 self.request_cache
                     .insert(cache_key.clone(), requested_values);
             }
@@ -662,7 +725,8 @@ impl<'a> HistoricalRuntime<'a> {
             merge,
             self.current_bar_update_kind,
             false,
-        );
+            RequestMergeClock::new(&self.request_environment, &key),
+        )?;
         Ok(self.import_requested_value(&aligned))
     }
 
@@ -680,7 +744,7 @@ impl<'a> HistoricalRuntime<'a> {
         merge: RequestMergePolicy,
         calc_bars_count: Option<usize>,
     ) -> Result<PineValue, RuntimeError> {
-        let chart_close = request_bar_nominal_close(current_time, chart_timeframe);
+        let chart_close = self.request_environment.chart_close(current_time)?;
         let Some(observed_time) = self
             .request_feed
             .last_update_time(key)
@@ -729,7 +793,8 @@ impl<'a> HistoricalRuntime<'a> {
             merge,
             self.current_bar_update_kind,
             include_forming,
-        );
+            RequestMergeClock::new(&self.request_environment, key),
+        )?;
         Ok(self.import_requested_value(&aligned))
     }
 
@@ -737,6 +802,15 @@ impl<'a> HistoricalRuntime<'a> {
         &self,
         key: &RequestKey,
         start: usize,
+    ) -> Result<Vec<Bar>, RuntimeError> {
+        self.resolved_request_bars_range(key, start, usize::MAX)
+    }
+
+    pub(crate) fn resolved_request_bars_range(
+        &self,
+        key: &RequestKey,
+        start: usize,
+        end: usize,
     ) -> Result<Vec<Bar>, RuntimeError> {
         let provider_bars = match self.request_environment.provider().bars(key) {
             Ok(bars) => bars,
@@ -755,9 +829,9 @@ impl<'a> HistoricalRuntime<'a> {
             }
         };
         let include_forming = self.current_bar_update_kind != BarUpdateKind::Historical;
-        let bars = self
-            .request_feed
-            .resolved_from(key, provider_bars, include_forming, start);
+        let bars =
+            self.request_feed
+                .resolved_range(key, provider_bars, include_forming, start, end);
         // External execution can receive a known stream with no closed bars yet.
         // Missing keys still fail above; empty visible history aligns to na.
         if bars.is_empty() && self.external_execution.is_none() {
@@ -811,137 +885,6 @@ impl<'a> HistoricalRuntime<'a> {
         self.legacy_security_repaint_warnings
             .extend(runtime.legacy_security_repaint_warnings);
         Ok(values)
-    }
-
-    pub(crate) fn eval_requested_bar_expression(
-        &mut self,
-        bar: Bar,
-        expression: &HirExpr,
-        captures: &HashMap<SymbolId, PineValue>,
-        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-        tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
-    ) -> Result<RequestedValue, RuntimeError> {
-        let bar_index = self.bars;
-        self.current_bar_update_kind = BarUpdateKind::Historical;
-        self.current_bar_is_new = true;
-        self.current_bar = Some(bar);
-        self.series_store.set_current_bar(bar_index);
-        self.current_symbols.clear();
-        self.current_series.clear();
-        self.set_builtin_symbols(&bar, bar_index)?;
-        self.current_symbols.extend(
-            captures
-                .iter()
-                .map(|(symbol, value)| (*symbol, value.clone())),
-        );
-        self.eval_requested_expression_dependencies(
-            expression,
-            &mut HashSet::new(),
-            dependency_initializers,
-            tuple_dependencies,
-        )?;
-
-        let value = self.eval_expr(expression)?;
-        let value = self.freeze_requested_value(&value)?;
-        self.commit_current_series()?;
-        self.previous_bar_time = Some(bar.time);
-        self.bars += 1;
-        self.collect_temporary_collections();
-        self.current_bar_update_kind = BarUpdateKind::Historical;
-        self.current_bar_is_new = true;
-        self.current_bar = None;
-        Ok(value)
-    }
-
-    fn eval_requested_expression_dependencies(
-        &mut self,
-        expression: &HirExpr,
-        visiting: &mut HashSet<SymbolId>,
-        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-        tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
-    ) -> Result<(), RuntimeError> {
-        let mut symbols = Vec::new();
-        collect_hir_expr_symbols(expression, &mut symbols);
-        for symbol in symbols {
-            self.eval_requested_symbol_dependency(
-                symbol,
-                visiting,
-                dependency_initializers,
-                tuple_dependencies,
-            )?;
-        }
-        Ok(())
-    }
-
-    fn eval_requested_symbol_dependency(
-        &mut self,
-        symbol: SymbolId,
-        visiting: &mut HashSet<SymbolId>,
-        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-        tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
-    ) -> Result<(), RuntimeError> {
-        if self.current_symbols.contains_key(&symbol) {
-            return Ok(());
-        }
-        let pine_type = self
-            .program
-            .symbols
-            .iter()
-            .find(|candidate| candidate.id == symbol)
-            .map(|candidate| candidate.pine_type)
-            .ok_or_else(|| RuntimeError {
-                message: format!(
-                    "request.security expression references unknown symbol {}",
-                    symbol.0
-                ),
-            })?;
-        if pine_type.kind == ValueKind::Na {
-            return Ok(());
-        }
-        if pine_type.qualifier != Qualifier::Series {
-            return Err(RuntimeError {
-                message: format!(
-                    "request.security expression capture {} was not initialized before the request",
-                    symbol.0
-                ),
-            });
-        }
-        if !visiting.insert(symbol) {
-            // Analysis admits a recursive provider dependency only through a
-            // positive history reference. Its current value will be computed
-            // after the historical read, from this requested context's series.
-            return Ok(());
-        }
-        if let Some(initializer) = dependency_initializers.get(&symbol).copied() {
-            self.eval_requested_expression_dependencies(
-                initializer,
-                visiting,
-                dependency_initializers,
-                tuple_dependencies,
-            )?;
-            let value = self.eval_expr(initializer)?;
-            self.set_symbol_value(symbol, value);
-        } else if let Some(statement) = tuple_dependencies.get(&symbol).copied() {
-            let HirStmtKind::TupleDecl { value, .. } = &statement.kind else {
-                unreachable!("tuple dependency index contains only tuple declarations")
-            };
-            self.eval_requested_expression_dependencies(
-                value,
-                visiting,
-                dependency_initializers,
-                tuple_dependencies,
-            )?;
-            self.eval_stmt(statement)?;
-        } else {
-            return Err(RuntimeError {
-                message: format!(
-                    "request.security expression symbol {} is not an immutable admitted dependency",
-                    symbol.0
-                ),
-            });
-        }
-        visiting.remove(&symbol);
-        Ok(())
     }
 }
 
@@ -1006,7 +949,7 @@ fn collect_request_capture_symbols(
         let Some(initializer) = initializer else {
             continue;
         };
-        if pine_type.qualifier == Qualifier::Series {
+        if matches!(pine_type.qualifier, Qualifier::Series | Qualifier::Simple) {
             collect_request_capture_symbols(
                 program,
                 initializer,
@@ -1388,7 +1331,7 @@ fn collect_request_expr_initializers<'a>(
     }
 }
 
-fn collect_hir_expr_symbols(expression: &HirExpr, symbols: &mut Vec<SymbolId>) {
+pub(super) fn collect_hir_expr_symbols(expression: &HirExpr, symbols: &mut Vec<SymbolId>) {
     collect_hir_expr_symbols_inner(expression, symbols, &mut HashSet::new());
 }
 
@@ -1598,26 +1541,22 @@ fn collect_hir_stmt_symbols(
     }
 }
 
-fn validate_provider_timeframe(
-    _symbol: &str,
-    requested_timeframe: &RequestTimeframe,
-    chart_timeframe: &RequestTimeframe,
-) -> Result<(), RuntimeError> {
-    // Calendar months do not have a fixed number of seconds. Their merge
-    // boundaries come from calendar opens/closes, not nominal-duration ratios.
-    if !chart_timeframe.supports_security_timeframe(requested_timeframe) {
-        return Err(RuntimeError {
-            message: format!(
-                "request.security requested timeframe `{}` must be an integer multiple of chart timeframe `{}`",
-                requested_timeframe.value(),
-                chart_timeframe.value()
-            ),
-        });
+#[derive(Clone, Copy)]
+pub(super) struct RequestMergeClock<'a> {
+    chart: &'a RequestEnvironment,
+    requested: &'a RequestKey,
+}
+impl<'a> RequestMergeClock<'a> {
+    pub(super) fn new(chart: &'a RequestEnvironment, requested: &'a RequestKey) -> Self {
+        Self { chart, requested }
     }
-    Ok(())
 }
 
-fn align_requested_value(
+#[expect(
+    clippy::too_many_arguments,
+    reason = "merge policy and both symbol clocks are explicit"
+)]
+pub(super) fn align_requested_value(
     requested_values: &AppendHistory<(i64, RequestedValue)>,
     current_time: i64,
     requested_timeframe: &RequestTimeframe,
@@ -1625,21 +1564,51 @@ fn align_requested_value(
     merge: RequestMergePolicy,
     update_kind: BarUpdateKind,
     includes_forming: bool,
-) -> RequestedValue {
+    clock: RequestMergeClock<'_>,
+) -> Result<RequestedValue, RuntimeError> {
     if requested_timeframe.seconds() < chart_timeframe.seconds() {
         return align_lower_timeframe_value(
             requested_values,
             current_time,
-            chart_timeframe,
+            clock.chart.chart_close(current_time)?,
             merge,
             update_kind,
+            clock,
         );
     }
+    align_requested_value_with_close(
+        requested_values,
+        current_time,
+        requested_timeframe,
+        chart_timeframe,
+        merge,
+        update_kind,
+        includes_forming,
+        clock.chart.chart_close(current_time)?,
+        clock,
+    )
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the supplied chart close can truncate a session bar"
+)]
+pub(super) fn align_requested_value_with_close(
+    requested_values: &AppendHistory<(i64, RequestedValue)>,
+    current_time: i64,
+    requested_timeframe: &RequestTimeframe,
+    chart_timeframe: &RequestTimeframe,
+    merge: RequestMergePolicy,
+    update_kind: BarUpdateKind,
+    includes_forming: bool,
+    chart_close: i64,
+    clock: RequestMergeClock<'_>,
+) -> Result<RequestedValue, RuntimeError> {
     let mut available = requested_values.len();
     if includes_forming && available > 0 {
         let (open, value) = &requested_values[available - 1];
         if merge.gaps == RequestGaps::Off && *open <= current_time {
-            return value.clone();
+            return Ok(value.clone());
         }
         // Gapped output requires confirmation. A future-open forming bar is
         // unavailable even when the caller supplied it ahead of chart time.
@@ -1647,55 +1616,53 @@ fn align_requested_value(
     }
     let by_open = requested_timeframe == chart_timeframe
         || (merge.lookahead == RequestLookahead::On && update_kind == BarUpdateKind::Historical);
-    let target = if by_open {
-        current_time
-    } else {
-        request_bar_nominal_close(current_time, chart_timeframe)
-    };
+    let target = if by_open { current_time } else { chart_close };
     let stamp = |index| {
         if by_open {
-            requested_values[index].0
+            Ok(requested_values[index].0)
         } else {
-            requested_bar_close(requested_values, index, requested_timeframe)
+            requested_bar_close(requested_values, index, clock)
         }
     };
     let (mut lo, mut hi) = (0, available);
     while lo < hi {
         let mid = lo + (hi - lo) / 2;
-        let before = if merge.gaps == RequestGaps::On {
-            stamp(mid) < target
-        } else {
-            stamp(mid) <= target
-        };
-        if before {
+        if stamp(mid)? <= target {
             lo = mid + 1;
         } else {
             hi = mid;
         }
     }
-    let index = if merge.gaps == RequestGaps::On {
-        if lo == available || stamp(lo) != target {
-            return RequestedValue::Scalar(PineValue::Na);
-        }
-        lo
-    } else {
-        let Some(index) = lo.checked_sub(1) else {
-            return RequestedValue::Scalar(PineValue::Na);
-        };
-        index
+    let Some(index) = lo.checked_sub(1) else {
+        return Ok(RequestedValue::Scalar(PineValue::Na));
     };
-    requested_values[index].1.clone()
+    // A confirmation inside this chart bar belongs to this bar even when
+    // the two timeframes do not share boundaries. Historical lookahead_on
+    // instead emits newly opened request bars at the next chart open.
+    if merge.gaps == RequestGaps::On {
+        let boundary = if by_open {
+            clock.chart.previous_chart_open(current_time)?
+        } else {
+            current_time
+        };
+        if stamp(index)? <= boundary
+            || (requested_timeframe == chart_timeframe && stamp(index)? != current_time)
+        {
+            return Ok(RequestedValue::Scalar(PineValue::Na));
+        }
+    }
+    Ok(requested_values[index].1.clone())
 }
 
 fn align_lower_timeframe_value(
     requested_values: &AppendHistory<(i64, RequestedValue)>,
     current_time: i64,
-    chart_timeframe: &RequestTimeframe,
+    chart_close: i64,
     merge: RequestMergePolicy,
     update_kind: BarUpdateKind,
-) -> RequestedValue {
+    clock: RequestMergeClock<'_>,
+) -> Result<RequestedValue, RuntimeError> {
     let start = requested_values.partition_point(|(time, _)| *time < current_time);
-    let chart_close = request_bar_nominal_close(current_time, chart_timeframe);
     let end = requested_values.partition_point(|(time, _)| *time < chart_close);
     let index = if start < end {
         if merge.lookahead == RequestLookahead::On && update_kind == BarUpdateKind::Historical {
@@ -1704,52 +1671,56 @@ fn align_lower_timeframe_value(
             Some(end - 1)
         }
     } else if merge.gaps == RequestGaps::Off {
-        start.checked_sub(1).map(|last| {
+        if let Some(last) = start.checked_sub(1) {
+            let mut first = last;
             if merge.lookahead == RequestLookahead::On && update_kind == BarUpdateKind::Historical {
-                let bucket = timeframe_change_bucket(
-                    requested_values[last].0,
-                    chart_timeframe.value(),
-                    chart_timeframe.seconds(),
-                );
-                let mut first = last;
+                let time = requested_values[last].0;
+                let bucket = clock.chart.chart_merge_bucket(time)?.ok_or_else(|| RuntimeError {
+                    message: format!(
+                        "missing bar calendar coverage for symbol `{}` timeframe `{}` at `{time}`",
+                        clock.chart.chart().symbol(),
+                        clock.chart.chart().timeframe().value(),
+                    ),
+                })?;
                 while first > 0
-                    && timeframe_change_bucket(
-                        requested_values[first - 1].0,
-                        chart_timeframe.value(),
-                        chart_timeframe.seconds(),
-                    ) == bucket
+                    && clock
+                        .chart
+                        .chart_merge_bucket(requested_values[first - 1].0)?
+                        == Some(bucket)
                 {
                     first -= 1;
                 }
-                first
-            } else {
-                last
             }
-        })
+            Some(first)
+        } else {
+            None
+        }
     } else {
         None
     };
-    index.map_or(RequestedValue::Scalar(PineValue::Na), |index| {
-        requested_values[index].1.clone()
-    })
-}
-
-fn request_bar_nominal_close(open_time: i64, timeframe: &RequestTimeframe) -> i64 {
-    timeframe.nominal_close(open_time)
+    Ok(
+        index.map_or(RequestedValue::Scalar(PineValue::Na), |index| {
+            requested_values[index].1.clone()
+        }),
+    )
 }
 
 fn requested_bar_close(
     requested_values: &AppendHistory<(i64, RequestedValue)>,
     index: usize,
-    timeframe: &RequestTimeframe,
-) -> i64 {
+    clock: RequestMergeClock<'_>,
+) -> Result<i64, RuntimeError> {
     let open_time = requested_values[index].0;
-    let nominal_close = request_bar_nominal_close(open_time, timeframe);
-    requested_values
+    let nominal_close = clock.chart.nominal_close(
+        clock.requested.symbol(),
+        clock.requested.timeframe(),
+        open_time,
+    )?;
+    Ok(requested_values
         .get(index + 1)
         .map(|(next_open, _)| *next_open)
         .filter(|next_open| *next_open > open_time)
-        .map_or(nominal_close, |next_open| nominal_close.min(next_open))
+        .map_or(nominal_close, |next_open| nominal_close.min(next_open)))
 }
 
 fn legacy_source_span(args: &[HirCallArg]) -> Option<(i64, i64)> {

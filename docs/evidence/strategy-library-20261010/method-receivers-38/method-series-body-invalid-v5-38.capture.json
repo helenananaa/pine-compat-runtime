@@ -1,0 +1,18 @@
+{
+  "name": "method-series-body-invalid-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-series-body-invalid-v5-38.pine",
+  "source_sha256": "4a3f2c6bbb8cea514764d5b8f2524d6938cfee2645952f52efb3c98fa5310ffb",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot call 'f' with argument 'x'='self'. An argument of 'series int' type was used but a 'simple int' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6dc98198d9a00922093bbb8c711d19d00f6392b1ae5b008cbc96e6ba204c245c",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-series-body-invalid-v5-38.native.ax.txt",
+  "accessibility_sha256": "9fa984208b4d70ef31a9d8298a3c966c3c6290e6b5ed79c46addfaeb85863639",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-series-body-invalid-v5-38.native.png",
+  "screenshot_sha256": "6190ec966a5f4ee9daed51c153de713258bc4e527c9a24851eb662edf8aa9ce5",
+  "qualification_scope": "candidate_method_control",
+  "native_values": null,
+  "discovery_record_sha256": "0478589bfe6f0d3f97d031503f71ff7e22abb7609f78f909ffa72d5ad61ee42d"
+}

@@ -1,4 +1,0 @@
-//@version=5
-strategy("Unsupported strategy exit trailing bracket")
-strategy.entry("L", strategy.long, qty=1)
-strategy.exit("XL", "L", stop=low, limit=high, trail_points=10, trail_offset=2)

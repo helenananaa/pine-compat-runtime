@@ -5,7 +5,7 @@ use crate::prelude::*;
 const MAX_LEGACY_DECLARATION_NODES: usize = 256;
 const MAX_LEGACY_DECLARATION_EDGES: usize = 4_096;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub(crate) struct LegacyV2DeclarationPlan {
     lowering_order: Vec<usize>,
 }

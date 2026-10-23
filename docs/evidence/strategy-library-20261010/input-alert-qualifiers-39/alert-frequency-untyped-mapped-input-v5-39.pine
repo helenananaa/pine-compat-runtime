@@ -1,0 +1,11 @@
+//@version=5
+indicator("alert-frequency-untyped-mapped-input-v5-39")
+selection=input.string("once",options=["all","once","close"])
+frequency_of(selection)=>
+    switch selection
+        "all"=>alert.freq_all
+        "once"=>alert.freq_once_per_bar
+        =>alert.freq_once_per_bar_close
+frequency=frequency_of(selection)
+alert("bounded untyped frequency probe",frequency)
+plot(1)

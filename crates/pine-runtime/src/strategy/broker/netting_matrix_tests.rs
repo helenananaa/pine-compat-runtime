@@ -22,11 +22,13 @@ fn snapshot(signed_size: f64) -> PositionSnapshot {
     PositionSnapshot {
         signed_size,
         avg_price: 100.0,
+        quote_to_account_rate: 1.0,
     }
 }
 
 fn allocation(direction: TradeDirection, quantity: f64) -> super::ledger::TradeAllocation {
     super::ledger::TradeAllocation {
+        extrema: Default::default(),
         trade_index: 0,
         trade_key: 0,
         entry_id: "E".to_owned(),

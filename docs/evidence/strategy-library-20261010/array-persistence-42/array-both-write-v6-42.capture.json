@@ -1,0 +1,25 @@
+{
+  "name": "array-both-write-v6-42",
+  "version": 6,
+  "scenario": "array-both-write",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-both-write-v6-42.pine",
+  "source_sha256": "c192a29f349c83256f74995f89899fd78231b528b6ec97ff2a051e6a54e7da18",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    3351,
+    3351,
+    3349,
+    3349,
+    3349
+  ],
+  "native_row": "241 row array-both-write-v6-42 Plot 3,351.00 Plot 3,351.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2de02be812341c8a3418700ce00bcfcf7373c4eb517001d3b9893dd121ff2388",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-both-write-v6-42.native.ax.txt",
+  "accessibility_sha256": "1c0e767660a90e7c501b593363547a1a35452a26a1994b7cebd230d117db6380",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-both-write-v6-42.native.png",
+  "screenshot_sha256": "83eff5a9b906054c55ee83e2da09ee179886123d7874e603dc53a8284098b53e",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

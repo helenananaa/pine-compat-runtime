@@ -1,0 +1,13 @@
+//@version=6
+indicator("Virtual calendar periods oracle 20",overlay=false)
+f() =>
+    [time("D","0930-0945","America/New_York",timeframe_bars_back=1)-time,time_close("D","0930-0945","America/New_York",timeframe_bars_back=1)-time,time("D","0900-1000,1500-1600","America/New_York")-time,time_close("D","0900-1000,1500-1600","America/New_York")-time,time("W","0930-0945:23456","America/New_York")-time,time_close("W","0930-0945:23456","America/New_York")-time,time("M","0930-0945:23456","America/New_York")-time,time_close("M","0930-0945:23456","America/New_York")-time]
+[a,b,c,d,e,f1,g,h]=request.security("NASDAQ:AAPL","D",f())
+plot(a,title="dailyPreviousOpen")
+plot(b,title="dailyPreviousClose")
+plot(c,title="splitDailyOpen")
+plot(d,title="splitDailyClose")
+plot(e,title="weeklyOpen")
+plot(f1,title="weeklyClose")
+plot(g,title="monthlyOpen")
+plot(h,title="monthlyClose")

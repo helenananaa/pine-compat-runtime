@@ -1,10 +1,12 @@
 //@version=4
 study("Typed unsupported tuple producer")
+var float externalSource = na
+externalSource := close
 
 typedUnsupportedTuple(tf) =>
     localSource = close
     requested = if localSource > open
-        security(syminfo.tickerid, tf, localSource)
+        security(syminfo.tickerid, tf, externalSource)
     else
         na
     [requested, requested > open]

@@ -1,0 +1,6 @@
+//@version=5
+library("UnusedMapLibraryV5Batch46")
+export f(map<string,float> v)=>
+    v.put(1,2.0)
+    v.size()
+plot(1)

@@ -1,0 +1,7 @@
+//@version=5
+indicator("method-tuple-v5-38")
+method pair38(float self)=>[self,self+1.0]
+x=2.0
+[a,b]=x.pair38()
+plot(a)
+plot(b)

@@ -1,0 +1,4 @@
+//@version=6
+indicator("parameter-const-double-qualifier-v6-35",precision=0)
+f(const simple bool x)=>x
+plot(f(false)?1:0)

@@ -1,0 +1,10 @@
+//@version=5
+indicator("collection-map-persistent-v5-45")
+var values=map.new<string,float>()
+if barstate.isfirst
+    values.put("x",0)
+f(map<string,float> v)=>
+    v.put("x",v.get("x")+1)
+    v.get("x")
+plot(f(values))
+plot(bar_index+1)

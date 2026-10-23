@@ -1,0 +1,20 @@
+{
+  "name": "missing-string-cast-simple-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-simple-v5-37.pine",
+  "source_sha256": "7a6f884ba2bcc2626cf68063a6d459ff9635a1356e421882cd15b2b7a55565fe",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0
+  ],
+  "native_row": "251 row missing-string-cast-simple-v5-37 Plot 1 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "7a6f884ba2bcc2626cf68063a6d459ff9635a1356e421882cd15b2b7a55565fe",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-simple-v5-37.native.ax.txt",
+  "accessibility_sha256": "e13c5274786d9f6e5db28cee64ce8dc1ee23b580600f7e3fc6b8e52cc9adfbcc",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-simple-v5-37.native.png",
+  "screenshot_sha256": "444f7695368dd9df1fd6f12f7b86254e975cbcb7fee9a4480d9e3b89dc5725a5",
+  "scope": "v5 string(na) admits simple string parameter, keeps missing identity and has length0",
+  "qualification_scope": "candidate_bounded_control"
+}

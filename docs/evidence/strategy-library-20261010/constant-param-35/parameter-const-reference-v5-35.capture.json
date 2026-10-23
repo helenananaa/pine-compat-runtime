@@ -1,0 +1,17 @@
+{
+  "name": "parameter-const-reference-v5-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-v5-35.pine",
+  "source_sha256": "8156f8fff01e925b039fb73d969b968a324c568aaf802e2944e0f6d20cd59f39",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "238 row parameter-const-reference-v5-35 Plot 0",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "8156f8fff01e925b039fb73d969b968a324c568aaf802e2944e0f6d20cd59f39",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-v5-35.native.ax.txt",
+  "accessibility_sha256": "1a90e14b9e7e172446228e84e01bc4a6ae3515ecd16a61270890bdcf4af3a788",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reference-v5-35.native.png",
+  "screenshot_sha256": "bed7cf1804da817a11f9870c54e44814bf00949167d51780bbfb92c0fb92dec6"
+}

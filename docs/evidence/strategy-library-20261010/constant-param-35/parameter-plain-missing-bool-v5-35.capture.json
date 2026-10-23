@@ -1,0 +1,17 @@
+{
+  "name": "parameter-plain-missing-bool-v5-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-missing-bool-v5-35.pine",
+  "source_sha256": "b5bfac061561060b881d51904e742d01708d8bfa62d852d1ac1cfb3051ea348c",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "238 row parameter-plain-missing-bool-v5-35 missing bool 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b5bfac061561060b881d51904e742d01708d8bfa62d852d1ac1cfb3051ea348c",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-missing-bool-v5-35.native.ax.txt",
+  "accessibility_sha256": "b89ae3a1e5e5ba6ec85149e9e2d2800f5d59abdb078ee3508fd113f31e4ce46f",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-plain-missing-bool-v5-35.native.png",
+  "screenshot_sha256": "683bc9837ce70ca699e3d9168c99513b902664d13abf4feb9f7a9bd807663bdf"
+}

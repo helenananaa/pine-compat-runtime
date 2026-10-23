@@ -1,0 +1,4 @@
+//@version=6
+indicator("Currency identity")
+plot(request.currency_rate("USD", "USD"))
+plot(request.currency_rate("usd", "USD", true))

@@ -1,0 +1,9 @@
+//@version=5
+indicator("Compact date edge oracle 22",precision=0)
+plot(timestamp("1Jan 2024 05:30:01 +0530"),title="secondsOffset")
+plot(timestamp("15Aug 2022"),title="dateOnly")
+plot(timestamp("15Aug 2022 14:00:30 +0000"),title="seconds")
+plot(timestamp("15Aug 2022 14:00 -0400"),title="negativeOffset")
+plot(timestamp("15August 2022 14:00 +0000"),title="fullMonth")
+plot(timestamp("15aug 2022 14:00"),title="lowercase")
+plot(timestamp("15Aug 2022 14:00 Asia/Kolkata"),title="namedZone")

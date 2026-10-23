@@ -1,0 +1,12 @@
+//@version=6
+indicator("Bool input metadata v6 probe34",precision=0)
+a=if false
+    true
+x=input.bool(a,title=a?"truthy title":"false title")
+y=input.bool(bool(a),title="cast default")
+z=input.bool(a?true:false,title="ternary default")
+w=input.bool(a or false,title="or default")
+plot(x?1:0,title="direct default")
+plot(y?1:0,title="cast default value")
+plot(z?1:0,title="ternary default value")
+plot(w?1:0,title="or default value")

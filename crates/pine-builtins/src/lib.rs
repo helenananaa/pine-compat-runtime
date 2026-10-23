@@ -9,6 +9,11 @@ mod namespaces;
 mod registry;
 mod returns;
 mod signature;
+mod source_parameters;
+pub use source_parameters::{
+    strategy_close_all_source_parameter, strategy_close_source_parameter,
+    strategy_close_source_parameter_with_overload, strategy_exit_source_parameter,
+};
 
 pub use constants::{
     NAMED_COLORS, NamedColor, builtin_series_value_type, named_color, named_float_constant,

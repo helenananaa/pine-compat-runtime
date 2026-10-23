@@ -1,0 +1,30 @@
+{
+  "name": "fx-name-controls-v6",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-name-controls-v6-oracle-31.pine",
+  "source_sha256": "37fe325116a012373d300e0999c6a195dc634faf7be2f4e2d297d7e142fc248c",
+  "chart_timeframe": "D",
+  "native_status": "compiled_and_executed",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "b4f96ac271dd277b1ab510d0841da98c60c8ebe29d556c37e035ab01abae0f18",
+  "normalized_source_sha256": "b4f96ac271dd277b1ab510d0841da98c60c8ebe29d556c37e035ab01abae0f18",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-name-controls-v6-oracle-31.native.ax.txt",
+  "accessibility_sha256": "e5e57c3e3e921260db9967589281431084c390fe894eb72ea646a99ddfaed788",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-name-controls-v6-oracle-31.native.png",
+  "screenshot_sha256": "390e162e209d5a8fbe151b81bbdaf3cbd5fc3f9934d737cf6bb552d70f109a24",
+  "stem": "fx-name-controls-v6-oracle-31",
+  "native_labels": [
+    "lowerIdentity",
+    "lowerTarget",
+    "unknownIdentity",
+    "unknownTarget"
+  ],
+  "native_values": [
+    1.0,
+    0.891,
+    1.0,
+    null
+  ],
+  "chart_time": 1792195200000,
+  "scope": "Query-only D bar; provider receives USD/EUR native queried value 0.891, not the separate USDT/EUR stream. No OHLC/volume reads."
+}

@@ -1,0 +1,20 @@
+//@version=6
+indicator("array-transient-persistent-source-view-v6-42")
+var a=array.from(0)
+c=a
+var b=c
+var s=c.slice(0,1)
+a.set(0,bar_index)
+varip int ah=0
+varip int bh=0
+varip int sh=0
+varip int ih=0
+if barstate.ishistory
+    ah:=a.first()
+    bh:=b.first()
+    sh:=s.first()
+    ih:=bar_index
+plot(ah)
+plot(bh)
+plot(sh)
+plot(ih)

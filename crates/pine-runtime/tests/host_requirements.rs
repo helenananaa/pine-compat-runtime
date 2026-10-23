@@ -8,13 +8,10 @@ fn modern_merge_options_and_calendar_relation_are_reported_without_execution() {
         "//@version=6\nindicator(\"merge inventory\")\ng=barmerge.gaps_on\na=g\nplot(request.security(\"OTHER\",\"M\",close,gaps=a,lookahead=barmerge.lookahead_on))\nplot(request.security(\"OTHER\",\"M\",close))\n",
     );
     let report = host_requirements(&hir);
-    assert_eq!(report.schema_version, 2);
+    assert_eq!(report.schema_version, 3);
     assert_eq!(report.requests[0].gaps, "gapsOn");
     assert_eq!(report.requests[0].lookahead, "lookaheadOn");
-    assert_eq!(
-        report.requests[0].timeframe_relation,
-        "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
-    );
+    assert_eq!(report.requests[0].timeframe_relation, "sameOrLowerOrHigher");
     assert_eq!(report.requests[1].gaps, "gapsOff");
     assert_eq!(report.requests[1].lookahead, "lookaheadOff");
 }
@@ -42,6 +39,38 @@ fn indicator_inventory_has_no_broker_or_external_input_obligation() {
     assert!(report.chart.defaults.synthetic);
     assert!(!report.chart.defaults.symbol_lookup);
     assert_eq!(host_requirements_json(&hir), host_requirements_json(&hir));
+}
+
+#[test]
+fn currency_inventory_exposes_pair_selectors_and_account_conversion_without_market_access() {
+    let hir = program(
+        "//@version=6\nstrategy(\"rates\",currency=currency.EUR)\nplot(request.currency_rate(syminfo.currency,strategy.account_currency))\n",
+    );
+    let report = host_requirements(&hir);
+    assert_eq!(report.schema_version, 3);
+    let account = report.account.unwrap();
+    assert!(account.currency_conversion);
+    assert!(
+        !account
+            .unsupported_profiles
+            .contains(&"foreignCurrencyConversion")
+    );
+    let rates = report.currency_rates.unwrap();
+    assert_eq!(rates.schema_version, 1);
+    assert_eq!(rates.requests.len(), 1);
+    assert_eq!(
+        rates.requests[0].from,
+        pine_runtime::CurrencyArgument::ChartQuoteCurrency
+    );
+    assert_eq!(
+        rates.requests[0].to,
+        pine_runtime::CurrencyArgument::DeclaredAccountOrChartQuoteCurrency
+    );
+    assert!(
+        report.call_sites.iter().any(
+            |site| site.call_site_id == rates.requests[0].call_site_id && site.source.is_some()
+        )
+    );
 }
 
 #[test]
@@ -203,23 +232,20 @@ fn security_timeframe_inventory_matches_executable_modern_and_legacy_relations()
             "request.security"
         };
         // A three-minute request is lower than a five-minute chart without
-        // being an integer divisor. Six minutes is a forbidden higher ratio;
-        // calendar months retain their explicit boundary-based exception.
+        // being an integer divisor. Higher requests also use actual request
+        // boundaries, including non-integral ratios and calendar months.
         for (timeframe, accepted) in [
             ("3", true),
             ("5", true),
             ("10", true),
-            ("6", false),
+            ("6", true),
             ("M", true),
         ] {
             let hir = program(&format!(
                 "//@version={version}\n{declaration}(\"relation\")\nplot({function}(\"REMOTE\", \"{timeframe}\", close))\n"
             ));
             let report = host_requirements(&hir);
-            assert_eq!(
-                report.requests[0].timeframe_relation,
-                "sameOrLowerOrHigherIntegerMultipleExceptCalendarMonths"
-            );
+            assert_eq!(report.requests[0].timeframe_relation, "sameOrLowerOrHigher");
             let mut provider = InMemoryRequestDataProvider::new();
             provider
                 .insert(

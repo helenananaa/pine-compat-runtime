@@ -1,0 +1,7 @@
+//@version=6
+indicator("scalar-request-window-bounded-first-v6-43")
+a=request.security(syminfo.tickerid,timeframe.period,bar_index,calc_bars_count=2)
+b=request.security(syminfo.tickerid,timeframe.period,bar_index+100)
+plot(bar_index)
+plot(a)
+plot(b)

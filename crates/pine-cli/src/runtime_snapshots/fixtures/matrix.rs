@@ -47,7 +47,7 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
     ),
     (
         "runtime_user_method_matrix_call_result_reads.json",
-        "tests/fixtures/runtime/user_method_matrix_call_result_reads.pine",
+        "tests/fixtures/runtime/user_method_matrix_call_result_reads_checked_bodies_46.pine",
     ),
     (
         "runtime_matrix_float.json",
@@ -224,6 +224,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
     (
         "runtime_matrix_sum.json",
         "tests/fixtures/runtime/matrix_sum.pine",
+    ),
+    (
+        "runtime_matrix_add.json",
+        "tests/fixtures/runtime/matrix_add.pine",
     ),
     (
         "runtime_matrix_avg.json",

@@ -1,0 +1,18 @@
+{
+  "name": "method-simple-receiver-invalid-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-receiver-invalid-v5-38.pine",
+  "source_sha256": "c15ad526a1dae94790cd7f6d776cbe1072e25c73754a958291f2ca1235190c3f",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot call 'keep38' with argument 'self'='x'. An argument of 'series int' type was used but a 'simple int' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6e6a1bd94ef71a9af8e2b1308ca2cccd43e99ffe11aa32ac9f63aaa1e750cb88",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-receiver-invalid-v5-38.native.ax.txt",
+  "accessibility_sha256": "ce843e4e4f6d6b6cc11ee5052373d03ada08598ec5a78525bbc6806cf08b1f74",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-simple-receiver-invalid-v5-38.native.png",
+  "screenshot_sha256": "63b548c356ca9e52351404bcd04497a78e90f91df8f0e26b013402de22956ff6",
+  "qualification_scope": "candidate_method_control",
+  "native_values": null,
+  "discovery_record_sha256": "f58482eafbba2735aa136e3d6a6c985baad7812ed25a719aab6ab752e88c4426"
+}

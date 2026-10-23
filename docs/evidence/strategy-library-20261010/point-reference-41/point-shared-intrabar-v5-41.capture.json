@@ -1,0 +1,28 @@
+{
+  "name": "point-shared-intrabar-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-shared-intrabar-v5-41.pine",
+  "source_sha256": "7fa2ceb8496709875aad62c1b6583612c6b7faab4dc1e2bd9409bc2225403be4",
+  "qualification_scope": "intrabar_relation",
+  "native_relation": "ordinary_shared",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    242,
+    1,
+    1
+  ],
+  "native_marker_suffix": [
+    1,
+    1
+  ],
+  "native_row": "235 row point-shared-intrabar-v5-41 Plot 242.00 Plot 1.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2f8b0e409a9ab1fc8be2bc2fd03bcd38e86aeb7b95e7b17dd0744fdc2a444e11",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-shared-intrabar-v5-41.native.ax.txt",
+  "accessibility_sha256": "690e3128fd62d595b153d6f09db06f6c52ad2b8cd7651a0fe0c3daecf94d2e89",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-shared-intrabar-v5-41.native.png",
+  "screenshot_sha256": "877bff0fab1172bbffe94004a7ade24e72629e2358e548029ef8d86eef20c6a0",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

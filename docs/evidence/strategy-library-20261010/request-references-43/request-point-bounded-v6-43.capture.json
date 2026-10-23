@@ -1,0 +1,22 @@
+{
+  "name": "request-point-bounded-v6-43",
+  "version": 6,
+  "scenario": "point-bounded",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-bounded-v6-43.pine",
+  "source_sha256": "4e837b6062f79d6ddc8dc1eec25a9d85348a1f81f6bdbc85d9c63a0a2e7cae1f",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "238 row request-point-bounded-v6-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2c03bf215fb738157b3ad5f2f06215f6a14179c491880f3532e0d16f56364f04",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-bounded-v6-43.native.ax.txt",
+  "accessibility_sha256": "ec122f48b7305979da02e97d60d7dddfa7bb87abf1257d9e1337604a923afa17",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-bounded-v6-43.native.png",
+  "screenshot_sha256": "db1e53f66b1543b4ccac26ca3f44c5cf81e0e1a802c30549d20adc923a132ef1",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

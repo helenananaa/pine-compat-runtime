@@ -1,0 +1,5 @@
+//@version=5
+indicator("method-simple-receiver-v5-38")
+method keep38(simple int self)=>self
+x=input.int(2)
+plot(x.keep38())

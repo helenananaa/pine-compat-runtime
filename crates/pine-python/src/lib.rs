@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use pine_ir::{HirProgram, ValueKind};
 use pine_runtime::{
-    Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, InputCall, InputOverrides,
-    MagnifierInput, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue,
-    PreparedProgram, RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal,
-    input_calls, is_valid_public_color, magnifier_input_from_json, session_window_input_from_json,
+    Bar, ChartContext, HistoricalRuntime, InputCall, InputOverrides, MagnifierInput,
+    PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, PreparedProgram,
+    RequestKey, RequestTimeframe, encode_color_literal, input_calls, is_valid_public_color,
+    magnifier_input_from_json, session_window_input_from_json,
 };
 use pine_sema::{Analysis, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -23,6 +23,7 @@ mod history;
 mod outputs;
 mod realtime;
 mod replica;
+mod request_input;
 mod result_parse;
 mod tables;
 #[cfg(test)]
@@ -33,6 +34,7 @@ use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
 use history::{parse_bars, parse_execution_times};
 use outputs::{runtime_result_view_to_py, value_to_py};
 use realtime::PyRealtimeSession;
+use request_input::parse_request_environment;
 
 #[pyclass(name = "Program", skip_from_py_object)]
 #[derive(Clone)]
@@ -90,6 +92,33 @@ impl PyProgram {
             chart_symbol,
             chart_timeframe,
             execution_passes,
+            request_bars,
+        )
+    }
+
+    /// Declared initial execution window, for host coordinate mapping.
+    #[getter]
+    fn calculation_bars_count(&self) -> Option<usize> {
+        self.hir
+            .calc_bars_count
+            .filter(|count| *count > 0)
+            .map(|count| count as usize)
+    }
+
+    /// Create a stateful streaming evaluator with host-owned accounts.
+    #[pyo3(signature=(input_overrides=None, chart_symbol=None, chart_timeframe=None, request_bars=None))]
+    fn external_session(
+        &self,
+        input_overrides: Option<&Bound<'_, PyAny>>,
+        chart_symbol: Option<&str>,
+        chart_timeframe: Option<&str>,
+        request_bars: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<external::ExternalSession> {
+        external::ExternalSession::new(
+            self,
+            input_overrides,
+            chart_symbol,
+            chart_timeframe,
             request_bars,
         )
     }
@@ -267,6 +296,7 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     module.add("RENDER_METADATA_VERSION", PUBLIC_RENDER_METADATA_VERSION)?;
     module.add_class::<PyProgram>()?;
+    module.add_class::<external::ExternalSession>()?;
     module.add_class::<history::HistoricalSession>()?;
     realtime::register(module)?;
     changes::register(module)?;
@@ -320,36 +350,6 @@ fn parse_session_windows(
     session_window_input_from_json(&json)
         .map(Some)
         .map_err(PyValueError::new_err)
-}
-
-fn parse_request_environment(
-    request_bars: Option<&Bound<'_, PyAny>>,
-    chart_symbol: Option<&str>,
-    chart_timeframe: Option<&str>,
-) -> PyResult<RequestEnvironment> {
-    let mut chart = parse_chart_context(chart_symbol, chart_timeframe)?;
-    let Some(request_bars) = request_bars else {
-        return Ok(RequestEnvironment::default().for_chart(chart));
-    };
-    let dict = request_bars.cast::<PyDict>().map_err(|_| {
-        PyValueError::new_err("request_bars must be a dict mapping SYMBOL:TIMEFRAME to bars")
-    })?;
-    let mut streams = Vec::with_capacity(dict.len());
-    for (key, value) in dict {
-        let key: String = key.extract()?;
-        if key == "$chart" {
-            chart = chart_metadata::parse_chart_metadata(chart, &value)?;
-            continue;
-        }
-        let request_key = parse_request_key(&key)?;
-        streams.push((request_key, parse_bars(&value)?));
-    }
-    let provider = InMemoryRequestDataProvider::from_streams(streams)
-        .map_err(|err| PyValueError::new_err(err.to_string()))?;
-    Ok(RequestEnvironment::new(
-        chart,
-        std::sync::Arc::new(provider),
-    ))
 }
 
 fn parse_chart_context(

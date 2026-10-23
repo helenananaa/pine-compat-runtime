@@ -1,0 +1,22 @@
+{
+  "name": "point-line-coordinate-copy-v6-41",
+  "version": 6,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-line-coordinate-copy-v6-41.pine",
+  "source_sha256": "96e00ef97ca579412b56b8f9c6ae28729a3a77a7429fbbb063bfde649cc0cb6d",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    10,
+    30,
+    40
+  ],
+  "native_row": "478 row point-line-coordinate-copy-v6-41 Plot 10.00 Plot 30.00 Plot 40.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "ac82c9dbc03160dc2869cf0e0a9bdea47eb62a3e1e9c3f8b05d4566b0c099c1a",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-line-coordinate-copy-v6-41.native.ax.txt",
+  "accessibility_sha256": "a2d9d3f64d43ed7f438afa4f190e36c3ece8a1928251d68b83600e7fa487831a",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-line-coordinate-copy-v6-41.native.png",
+  "screenshot_sha256": "99bb62d6c10a8c411b4917f88764b691130f296bbd1586b13830fec4b51efdd7",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

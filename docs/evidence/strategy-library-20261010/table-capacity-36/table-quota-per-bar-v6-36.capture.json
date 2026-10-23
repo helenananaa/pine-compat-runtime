@@ -1,0 +1,19 @@
+{
+  "name": "table-quota-per-bar-v6-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-per-bar-v6-36.pine",
+  "source_sha256": "dc8a7a266a79851043f9f62f6330e8da69e5119f10e32adc0b4975f2d17797e1",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "240 row table-quota-per-bar-v6-36 executed 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "dc8a7a266a79851043f9f62f6330e8da69e5119f10e32adc0b4975f2d17797e1",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-per-bar-v6-36.native.ax.txt",
+  "accessibility_sha256": "c45aebea6ca2776e7533eec4cf42d04b841f255788a6adbdd21e568d9f96ba0c",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-quota-per-bar-v6-36.native.png",
+  "screenshot_sha256": "03ba8eabfad0e0b78941dd1ca255ff18ce2bc152a41c17f18153a2b45c43b6e8",
+  "scope": "6000-cell table created every chart bar; validates layout rather than cumulative allocated-cell quota",
+  "qualification_scope": "candidate_table_control"
+}

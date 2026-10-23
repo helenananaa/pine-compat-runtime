@@ -1,0 +1,4 @@
+//@version=5
+indicator("extend-wrong-type-v5-40")
+item=line.new(0,1,2,2,extend=1)
+plot(1)

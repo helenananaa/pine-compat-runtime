@@ -1,0 +1,5 @@
+//@version=6
+indicator("parameter-method-const-receiver-v6-35",precision=0)
+method keep(const int receiver)=>receiver
+value=2
+plot(value.keep(),title="receiver")

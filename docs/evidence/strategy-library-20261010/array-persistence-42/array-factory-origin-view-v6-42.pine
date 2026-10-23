@@ -1,0 +1,22 @@
+//@version=6
+indicator("array-factory-origin-view-v6-42")
+f()=>
+    var a=array.from(0)
+    a.set(0,bar_index)
+    a
+c=f()
+var b=c
+var s=c.slice(0,1)
+varip int ch=0
+varip int bh=0
+varip int sh=0
+varip int ih=0
+if barstate.ishistory
+    ch:=c.first()
+    bh:=b.first()
+    sh:=s.first()
+    ih:=bar_index
+plot(ch)
+plot(bh)
+plot(sh)
+plot(ih)

@@ -1,0 +1,8 @@
+//@version=5
+library("CollectionContract")
+export bump(map<string,float> v)=>
+    v.put("x",v.get("x")+0.5)
+    v.get("x")
+export step(matrix<float> v)=>
+    v.set(0,0,v.get(0,0)+0.5)
+    v.get(0,0)

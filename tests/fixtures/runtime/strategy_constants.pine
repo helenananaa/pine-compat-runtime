@@ -1,7 +1,7 @@
 //@version=5
 strategy("Strategy constants")
-directions = strategy.long == "strategy.long" and strategy.short == "strategy.short" and strategy.direction.all == "strategy.direction.all" and strategy.direction.long == "strategy.direction.long" and strategy.direction.short == "strategy.direction.short"
-defaults = strategy.fixed == "strategy.fixed" and strategy.cash == "strategy.cash" and strategy.percent_of_equity == "strategy.percent_of_equity"
-commissions = strategy.commission.cash_per_contract == "strategy.commission.cash_per_contract" and strategy.commission.cash_per_order == "strategy.commission.cash_per_order" and strategy.commission.percent == "strategy.commission.percent"
-oca = strategy.oca.cancel == "strategy.oca.cancel" and strategy.oca.none == "strategy.oca.none" and strategy.oca.reduce == "strategy.oca.reduce"
+directions = strategy.long != strategy.short and strategy.long == strategy.long and strategy.short == strategy.short and strategy.direction.all != strategy.direction.long and strategy.direction.all != strategy.direction.short and strategy.direction.long != strategy.direction.short
+defaults = strategy.fixed != strategy.cash and strategy.cash != strategy.percent_of_equity and strategy.fixed != strategy.percent_of_equity
+commissions = strategy.commission.cash_per_contract != strategy.commission.cash_per_order and strategy.commission.cash_per_order != strategy.commission.percent and strategy.commission.cash_per_contract != strategy.commission.percent
+oca = strategy.oca.cancel != strategy.oca.none and strategy.oca.none != strategy.oca.reduce and strategy.oca.cancel != strategy.oca.reduce
 plot(directions and defaults and commissions and oca ? 1 : 0)

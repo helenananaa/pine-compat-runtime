@@ -1,0 +1,20 @@
+{
+  "name": "method-const-param-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-param-v6-38.pine",
+  "source_sha256": "283622c9a121b114e022aa85e5e4ad51aa4895b5024bbceb252daec5619d2d5b",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    12
+  ],
+  "native_row": "319 row method-const-param-v6-38 Plot 12.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "18293b03ef5fb069a41c18513641c014dc8f7cd715e61dbcce8d375b3d3353bd",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-param-v6-38.native.ax.txt",
+  "accessibility_sha256": "6ecf6211007caad0fa71d1845b7d2988d9f872163f665465d9f2e502ba91ffa5",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-const-param-v6-38.native.png",
+  "screenshot_sha256": "b24f2867652f14f44223b3a930602c6339fbcc183bca5daf92c22d0855bf3624",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "49af061a6b9925b4329b0c0b5b0e737f95bc41dbce0a339a43de9cb757824bb4"
+}

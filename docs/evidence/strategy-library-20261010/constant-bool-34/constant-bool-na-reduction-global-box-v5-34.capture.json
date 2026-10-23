@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-na-reduction-global-box-v5-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-na-reduction-global-box-v5-34.pine",
+  "source_sha256": "f6456ec7d6670fa076f0baa82009ab4f2cbb0e0fad39b080b64c1724ae2249cc",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool NA reduction global-box probe34 cross equality 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "f6456ec7d6670fa076f0baa82009ab4f2cbb0e0fad39b080b64c1724ae2249cc",
+  "normalized_source_sha256": "f6456ec7d6670fa076f0baa82009ab4f2cbb0e0fad39b080b64c1724ae2249cc",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-global-box-v5-34.native.ax.txt",
+  "accessibility_sha256": "5d71c2c4d79a1999ab725da26411b65f4bcb6db1df3aa7d7bffdfa4528a671bf",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-na-reduction-global-box-v5-34.native.png",
+  "screenshot_sha256": "8d1c06e403f26172d7dc9741db5c208d44ac8efa70d75932b59584dff93c8b1d"
+}

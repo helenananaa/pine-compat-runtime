@@ -1,0 +1,5 @@
+//@version=6
+indicator("Reserved tuple-v6 probe33",precision=0)
+pair()=>[1,2]
+[text,other]=pair()
+plot(text+other)

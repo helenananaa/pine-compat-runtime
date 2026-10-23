@@ -1,0 +1,6 @@
+//@version=6
+indicator("FX name controls 31",precision=8)
+plot(request.currency_rate("usd","USD",true),title="lowerIdentity")
+plot(request.currency_rate("USD","eur",true),title="lowerTarget")
+plot(request.currency_rate("ZZZ","ZZZ",true),title="unknownIdentity")
+plot(request.currency_rate("USD","ZZZ",true),title="unknownTarget")

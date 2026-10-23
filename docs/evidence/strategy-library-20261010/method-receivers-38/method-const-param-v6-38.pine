@@ -1,0 +1,5 @@
+//@version=6
+indicator("method-const-param-v6-38")
+method plus38(float self,const int extra)=>self+extra
+x=10.0
+plot(x.plus38(extra=2))

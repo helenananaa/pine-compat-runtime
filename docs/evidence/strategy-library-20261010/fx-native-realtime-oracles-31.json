@@ -1,0 +1,78 @@
+[
+  {
+    "name": "fx-realtime-reference-v6",
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-realtime-reference-v6-oracle-31.pine",
+    "source_sha256": "8c9d9b42e2ae651d3dedca45dbbe783ff9724de751dbcff0402167834aa3ef83",
+    "chart_timeframe": "W",
+    "source_text_checked_via_editor_copy": true,
+    "clipboard_marker_cleared_by_copy": true,
+    "editor_source_sha256": "8bd2ea6149e1498f75c592cc9cddd9614065a4f9dc6398d016fa84439892642b",
+    "normalized_source_sha256": "8bd2ea6149e1498f75c592cc9cddd9614065a4f9dc6398d016fa84439892642b",
+    "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-realtime-reference-v6-oracle-31.native.ax.txt",
+    "accessibility_sha256": "b02e70c3221f8bac37ac8b9ae83d3cedc4e71c64d14d42b0fb2754a0f4e62d03",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-realtime-reference-v6-oracle-31.native.png",
+    "screenshot_sha256": "d3b64d9fa0de9dfbf4e8ce86402650c680ec077cb0ef60e533a267fd7f8b225c",
+    "chart_symbol": "BINANCE:BTCUSDT",
+    "chart_currency": "USDT",
+    "account_currency": "EUR",
+    "quantity_precision": 5,
+    "timeframe_verified_in_chart_ui": true,
+    "stem": "fx-realtime-reference-v6-oracle-31",
+    "native_labels": [
+      "liveRate",
+      "liveAccount",
+      "liveSymbol",
+      "liveQty",
+      "barOpen",
+      "executionTime",
+      "isRealtime"
+    ],
+    "native_values": [
+      0.8917,
+      89.17,
+      112.14534036,
+      27.75874,
+      1791763200000.0,
+      1792207610391.0,
+      1.0
+    ]
+  },
+  {
+    "name": "fx-realtime-month-reference-v6",
+    "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-realtime-month-reference-v6-oracle-31.pine",
+    "source_sha256": "8c9d9b42e2ae651d3dedca45dbbe783ff9724de751dbcff0402167834aa3ef83",
+    "chart_timeframe": "M",
+    "source_text_checked_via_editor_copy": true,
+    "clipboard_marker_cleared_by_copy": true,
+    "editor_source_sha256": "8bd2ea6149e1498f75c592cc9cddd9614065a4f9dc6398d016fa84439892642b",
+    "normalized_source_sha256": "8bd2ea6149e1498f75c592cc9cddd9614065a4f9dc6398d016fa84439892642b",
+    "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-realtime-month-reference-v6-oracle-31.native.ax.txt",
+    "accessibility_sha256": "351b0a78905a2a1540023ee0f0488cb56786ebe5c84e4e324457218ffc6ba36a",
+    "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\fx-realtime-month-reference-v6-oracle-31.native.png",
+    "screenshot_sha256": "ec5cd937702e43ba300daaee9577e4536803607948492fdd2fe4a8d3522ce419",
+    "chart_symbol": "BINANCE:BTCUSDT",
+    "chart_currency": "USDT",
+    "account_currency": "EUR",
+    "quantity_precision": 5,
+    "timeframe_verified_in_chart_ui": true,
+    "stem": "fx-realtime-month-reference-v6-oracle-31",
+    "native_labels": [
+      "liveRate",
+      "liveAccount",
+      "liveSymbol",
+      "liveQty",
+      "barOpen",
+      "executionTime",
+      "isRealtime"
+    ],
+    "native_values": [
+      0.8823,
+      88.23,
+      113.34013374,
+      28.05448,
+      1790812800000.0,
+      1792207647055.0,
+      1.0
+    ]
+  }
+]

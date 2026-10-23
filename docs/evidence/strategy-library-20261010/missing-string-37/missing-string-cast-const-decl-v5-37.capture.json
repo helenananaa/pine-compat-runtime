@@ -1,0 +1,19 @@
+{
+  "name": "missing-string-cast-const-decl-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-decl-v5-37.pine",
+  "source_sha256": "9116f842d1abfdafdeb6587e3a2f1e960bab2954f44c4f722e91ee366c3d0d46",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "251 row missing-string-cast-const-decl-v5-37 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "9116f842d1abfdafdeb6587e3a2f1e960bab2954f44c4f722e91ee366c3d0d46",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-decl-v5-37.native.ax.txt",
+  "accessibility_sha256": "6502337fe49479a353515b655cd3fb61d650916c6018c95db7e1cef577003cb5",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-cast-const-decl-v5-37.native.png",
+  "screenshot_sha256": "17df4a2243ea29bfedf59ef8890386869e4e96688106024efcc20ee6f1fee87a",
+  "scope": "v5 const string=string(na) is valid; direct const string=na rejection must not ban explicit const casts",
+  "qualification_scope": "candidate_bounded_control"
+}

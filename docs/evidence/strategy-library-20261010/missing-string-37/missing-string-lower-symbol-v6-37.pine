@@ -1,0 +1,4 @@
+//@version=6
+indicator("missing-string-lower-symbol-v6-37",precision=0)
+v=request.security_lower_tf(na,timeframe.period,close)
+plot(array.size(v)[1])

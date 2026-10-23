@@ -1,0 +1,7 @@
+//@version=6
+indicator("parameter-const-reference-array-mutates-v6-35",precision=0)
+f(const array<int> x)=>
+    array.push(x,2)
+    array.size(x)
+b=array.new_int()
+plot(f(b),title="mutated size")

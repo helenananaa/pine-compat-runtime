@@ -1,0 +1,50 @@
+//@version=5
+indicator("User type array varip")
+
+type Point
+    float x
+    string label
+
+type Wrapper
+    Point nested
+
+varip array<Point> points = array.new<Point>()
+points.push(Point.new(close, "point"))
+
+varip Point[] alias = points
+alias.push(Point.new(close + 10, "alias"))
+
+varip copied = points.copy()
+copied.push(Point.new(close + 20, "copy"))
+
+varip array<Wrapper> wrappers = array.from(Wrapper.new(Point.new(close + 100, "wrapper")))
+wrappers.push(Wrapper.new(Point.new(close + 110, "wrapper_push")))
+
+varip Wrapper[] wrapper_alias = wrappers
+wrapper_alias.push(Wrapper.new(Point.new(close + 120, "wrapper_alias")))
+
+varip array<Wrapper> new_wrappers = array.new<Wrapper>(1, Wrapper.new(Point.new(close + 200, "new_wrapper")))
+new_wrappers.push(Wrapper.new(Point.new(close + 210, "new_wrapper_push")))
+
+varip Wrapper[] new_wrapper_alias = new_wrappers
+new_wrapper_alias.push(Wrapper.new(Point.new(close + 220, "new_wrapper_alias")))
+
+first = points.get(0)
+last = alias.last()
+copy_last = copied.last()
+wrapper_first = wrappers.get(0)
+wrapper_last = wrapper_alias.last()
+new_wrapper_first = new_wrappers.get(0)
+new_wrapper_last = new_wrapper_alias.last()
+
+plot(points.size(), "points_size")
+plot(first.x, "first_x")
+plot(last.x, "last_x")
+plot(copied.size(), "copied_size")
+plot(copy_last.x, "copy_last_x")
+plot(wrappers.size(), "wrapper_points_size")
+plot(wrapper_first.nested.x, "wrapper_first_x")
+plot(wrapper_last.nested.x, "wrapper_last_x")
+plot(new_wrappers.size(), "new_wrapper_points_size")
+plot(new_wrapper_first.nested.x, "new_wrapper_first_x")
+plot(new_wrapper_last.nested.x, "new_wrapper_last_x")

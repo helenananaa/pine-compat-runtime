@@ -1,0 +1,15 @@
+{
+  "name": "parameter-exported-const-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-exported-const-v6-35.pine",
+  "source_sha256": "0946b055d774ae71dd990fba1abc7919f03457b57a7a862e5699b4c360416740",
+  "library": true,
+  "native_status": "analysis_rejected",
+  "native_error": "Cannot declare an exported function's parameters with the \"const\" keyword.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "0946b055d774ae71dd990fba1abc7919f03457b57a7a862e5699b4c360416740",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-exported-const-v6-35.native.ax.txt",
+  "accessibility_sha256": "0b001e70524ff69e59b879dca5224cc996c556ed02f1099ca083890374d697e1",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-exported-const-v6-35.native.png",
+  "screenshot_sha256": "b5374d05b3a088b4f9e0f9ba2d13507d27541703ef0bb5a676ca876dea47853f"
+}

@@ -1,0 +1,6 @@
+//@version=3
+study("Codex tuple v3 boundary")
+f()=>
+    [open,high]
+[o,h]=security(tickerid,"12M",f())
+plot(o+h)

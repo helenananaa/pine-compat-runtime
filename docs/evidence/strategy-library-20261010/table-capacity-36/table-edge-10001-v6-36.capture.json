@@ -1,0 +1,16 @@
+{
+  "name": "table-edge-10001-v6-36",
+  "source": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v6-36.pine",
+  "source_sha256": "2ba2ad934695745af1bed68c0475a58bbd872045340373db178b9e52653806dc",
+  "native_status": "analysis_or_runtime_rejected",
+  "native_error": "Too many table cells.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "2ba2ad934695745af1bed68c0475a58bbd872045340373db178b9e52653806dc",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v6-36.native.ax.txt",
+  "accessibility_sha256": "4324c3d799fdf06eb754717477ffe949025929eaabc5f7abc807d2f71a392be0",
+  "screenshot": "docs/evidence/strategy-library-20261010/table-capacity-36/table-edge-10001-v6-36.native.png",
+  "screenshot_sha256": "ace6b1ab6d2c6f6a5b3f9d81f4a991423da8f4d0864744ba177c5f4ae2fead63",
+  "scope": "Native v6 rejects10001 declared cells on bar0 while10000 succeeds.",
+  "qualification_scope": "candidate_table_control"
+}

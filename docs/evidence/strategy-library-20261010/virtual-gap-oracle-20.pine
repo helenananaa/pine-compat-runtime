@@ -1,0 +1,12 @@
+//@version=6
+indicator("Virtual gap oracle 20",overlay=false)
+f() =>
+    [time("1","0930-0945","America/New_York",timeframe_bars_back=1)-time,time("1","0930-0945","America/New_York",timeframe_bars_back=-1)-time,time("60","0930-0945","America/New_York",timeframe_bars_back=1)-time,time("60","0930-0945","America/New_York",timeframe_bars_back=-1)-time,time("60","1600-1700","America/New_York",timeframe_bars_back=1)-time,time("60","1600-1700","America/New_York",timeframe_bars_back=-1)-time,time("1","1600-1700","America/New_York",timeframe_bars_back=-1)-time]
+[a,b,c,d,e,f1,g]=request.security("NASDAQ:AAPL","60",f())
+plot(a,title="pastMinuteAfterGap")
+plot(b,title="futureMinuteAfterGap")
+plot(c,title="pastHourAfterGap")
+plot(d,title="futureHourAfterGap")
+plot(e,title="pastHourBeforeGap")
+plot(f1,title="futureHourBeforeGap")
+plot(g,title="futureMinuteBeforeGap")

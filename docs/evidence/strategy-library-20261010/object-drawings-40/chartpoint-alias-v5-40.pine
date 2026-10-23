@@ -1,0 +1,7 @@
+//@version=5
+indicator("chartpoint-alias-v5-40")
+first=chart.point.from_index(1,10)
+other=first
+other.price:=20
+plot(first.price)
+plot(other.price)

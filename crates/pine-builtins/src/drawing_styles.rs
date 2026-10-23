@@ -23,6 +23,8 @@ pub const LABEL_STYLES: &[&str] = &[
     "label.style_flag",
     "label.style_arrowup",
     "label.style_arrowdown",
+    "label.style_triangleup",
+    "label.style_triangledown",
     "label.style_cross",
     "label.style_xcross",
     "label.style_none",

@@ -1,0 +1,22 @@
+{
+  "name": "collection-map-simple-v6-45",
+  "version": 6,
+  "scenario": "map-simple",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research45-20261018\\collection-map-simple-v6-45.pine",
+  "source_sha256": "ba08533824217fa687e13fdf523bdec5401b4a65063d177a1ee6ad48a68ea55f",
+  "expected_values": null,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0
+  ],
+  "native_row": "239 row collection-map-simple-v6-45 Plot 0.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "acf55a9e3dad22a9c8b11cf5e4d7e8a7acb7156e8f6733d82674a1fa13e4e660",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-map-simple-v6-45.native.ax.txt",
+  "accessibility_sha256": "3693c075455eda3e546b21381cc970d1b15eec60c55b7a39a12ab687edcb7155",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research45-20261018/collection-map-simple-v6-45.native.png",
+  "screenshot_sha256": "d18832eae991948ae3b36b9ca761a31638758011ebd469ac7310b22e8bcbd477",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

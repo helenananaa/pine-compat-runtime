@@ -1,0 +1,11 @@
+//@version=3
+strategy("Close all comment v3 29",precision=0)
+n=cum(1)-1
+if n==0
+    strategy.entry("L",strategy.long,qty=1)
+if n==1
+    strategy.close_all(false,"blocked")
+if n==3
+    strategy.close_all(true,"allowed")
+plot(strategy.position_size,title="position")
+plot(1,title="compiled")

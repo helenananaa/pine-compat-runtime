@@ -1,0 +1,10 @@
+//@version=5
+indicator("extend-values-v5-40")
+plot(str.length(extend.none))
+plot(str.length(extend.right))
+plot(str.length(extend.left))
+plot(str.length(extend.both))
+plot(extend.none=="n"?1:0)
+plot(extend.right=="r"?1:0)
+plot(extend.left=="l"?1:0)
+plot(extend.both=="b"?1:0)

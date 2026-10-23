@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported str tostring color array")
 values = array.new_color()
-text = str.tostring(values)
+note = str.tostring(values)
 plot(close)

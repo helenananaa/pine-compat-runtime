@@ -1,7 +1,13 @@
 use super::*;
+mod collections;
 mod owned_fields;
 
-pub(super) fn function_body_has_side_effect(body: &FunctionBody, declarations: &[Stmt]) -> bool {
+pub(super) fn function_body_has_side_effect(
+    body: &FunctionBody,
+    declarations: &[Stmt],
+    params: &[pine_syntax::FunctionParam],
+) -> bool {
+    let parameter_writes = collections::parameter_mutation_spans(body, params, declarations);
     match body {
         FunctionBody::Expr(expr) => {
             let mut has_side_effect = false;
@@ -9,6 +15,7 @@ pub(super) fn function_body_has_side_effect(body: &FunctionBody, declarations: &
                 if let ExprKind::Call { callee, .. } = &expr.kind
                     && crate::analyzer::functions::call_has_side_effect(callee)
                     && !is_export_table_call(callee)
+                    && !parameter_writes.contains(&callee.span)
                 {
                     has_side_effect = true;
                 }
@@ -18,6 +25,7 @@ pub(super) fn function_body_has_side_effect(body: &FunctionBody, declarations: &
         FunctionBody::Block(statements) => {
             let mut allowed = crate::analyzer::functions::local_array_mutation_spans(body);
             allowed.extend(owned_fields::local_field_mutation_spans(body, declarations));
+            allowed.extend(parameter_writes);
             let mut has_side_effect = false;
             for statement in statements {
                 visit_statement_exprs(statement, &mut |expr| {

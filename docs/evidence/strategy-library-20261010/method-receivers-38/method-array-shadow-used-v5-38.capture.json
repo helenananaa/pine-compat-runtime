@@ -1,0 +1,21 @@
+{
+  "name": "method-array-shadow-used-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-shadow-used-v5-38.pine",
+  "source_sha256": "6ec213683df38096fd1b5dc46154b80993720c4fe565e79c2adb9257d3cf8d22",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    42,
+    2
+  ],
+  "native_row": "319 row method-array-shadow-used-v5-38 Plot 42.00 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3b76645b92c7bc066adc60fc97825d818572ad0353ac958697793a3ec0a8d3f0",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-shadow-used-v5-38.native.ax.txt",
+  "accessibility_sha256": "3c25ab6a1a80ca2a3546a5d021061b5a47369d1727b7f90a746ef9f53ec0efbd",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-shadow-used-v5-38.native.png",
+  "screenshot_sha256": "1810b488a3d7e21867a59822327e244f0b67d0a864b96664ab6b263bcaafa400",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "718d2dd245aea08f5c908897c93c6e051f71ffca1b4ef97750b2da69a0ea6efd"
+}

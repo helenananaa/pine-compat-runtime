@@ -1,4 +1,4 @@
 //@version=5
 indicator("Table new cell limit")
-table.new(position.top_left, 1001, 1)
+table.new(position.top_left, 10001, 1)
 plot(close)

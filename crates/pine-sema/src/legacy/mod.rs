@@ -40,7 +40,18 @@ pub(crate) use v2_declarations::LegacyV2DeclarationPlan;
 use crate::compatibility::CompatibilityReport;
 use crate::source_graph::SourceContextId;
 
-#[derive(Debug)]
+pub(crate) fn strategy_direction_bool(name: &str, version: u16) -> Option<bool> {
+    if version != 4 {
+        return None;
+    }
+    match name {
+        "strategy.long" => Some(true),
+        "strategy.short" => Some(false),
+        _ => None,
+    }
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct LegacyFrontEnd {
     dialect: PineDialect,
     resolver: resolver::LegacyResolver,

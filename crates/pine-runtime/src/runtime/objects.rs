@@ -1,9 +1,13 @@
 use super::collection_gc::collection_values_allocation_bytes;
+use super::persistence::PersistentArrayOwner;
 use crate::*;
+
+mod rollback;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum IntrabarReference {
     Object(u32),
+    Point(u32),
     Array(u32),
     Map(u32),
     Matrix(u32),
@@ -16,6 +20,7 @@ fn enqueue_intrabar_references(
 ) {
     let reference = match value {
         PineValue::UserTypeRef(id) => IntrabarReference::Object(*id),
+        PineValue::ChartPointRef(id) => IntrabarReference::Point(*id),
         PineValue::Array(id) => IntrabarReference::Array(*id),
         PineValue::Map(id) => IntrabarReference::Map(*id),
         PineValue::Matrix(id) => IntrabarReference::Matrix(*id),
@@ -54,6 +59,12 @@ impl HistoricalRuntime<'_> {
         let mut seen = std::collections::HashSet::new();
         while let Some(value) = pending.pop() {
             match value {
+                PineValue::ChartPointRef(_) => {
+                    return Err(RuntimeError {
+                        message: "request.security chart.point graph transfer is not implemented"
+                            .to_owned(),
+                    });
+                }
                 PineValue::UserTypeRef(_) => {
                     return Err(RuntimeError {
                         message: "request.security UDT object graph transfer is not implemented"
@@ -97,6 +108,9 @@ impl HistoricalRuntime<'_> {
                 message: "UDT materialization exceeded maximum depth".to_owned(),
             });
         }
+        if matches!(value, PineValue::ChartPointRef(_)) {
+            return self.materialize_chart_point(value.clone());
+        }
         let PineValue::UserTypeRef(id) = value else {
             return Ok(value.clone());
         };
@@ -118,7 +132,7 @@ impl HistoricalRuntime<'_> {
 
     pub(crate) fn allocate_object(
         &mut self,
-        fields: Vec<PineValue>,
+        mut fields: Vec<PineValue>,
         identity: &pine_ir::HirUserTypeIdentity,
     ) -> Result<PineValue, RuntimeError> {
         let id = u32::try_from(self.next_object_id).map_err(|_| RuntimeError {
@@ -143,6 +157,10 @@ impl HistoricalRuntime<'_> {
         if !self.record_collection_values(&fields) {
             return Err(self.resource_budget.collection_error());
         }
+        for (index, value) in fields.iter_mut().enumerate() {
+            *value =
+                self.bind_array_value(value.clone(), Some(PersistentArrayOwner::Field(id, index)))?;
+        }
         self.object_store.insert(id, fields);
         self.object_varip_fields.insert(id, flags);
         Ok(PineValue::UserTypeRef(id))
@@ -153,10 +171,20 @@ impl HistoricalRuntime<'_> {
         previous: &Self,
         roots: Vec<PineValue>,
     ) -> Result<(), RuntimeError> {
+        let has_retained_objects = self.object_varip_ids.len()>0 || roots.iter().any(|value| {
+            value.can_reference_collection() && !matches!(value,PineValue::Array(id) if scalar_array_kind(self.array_kinds.get(id)))
+        });
+        let committed_objects = self.object_store.clone();
         self.next_object_id = self.next_object_id.max(previous.next_object_id);
         let mut pending = Vec::new();
         for value in &roots {
-            enqueue_intrabar_references(&mut pending, value, true);
+            // A varip UDT binding retains its identity, not ordinary fields.
+            // A varip collection additionally retains contained point values.
+            enqueue_intrabar_references(
+                &mut pending,
+                value,
+                !matches!(value, PineValue::UserTypeRef(_)),
+            );
         }
         // Field-level varip on committed objects survives reassignment during
         // a forming pass. Ordinary fields still roll back to committed state.
@@ -176,12 +204,28 @@ impl HistoricalRuntime<'_> {
                 }
             }
         }
+        let rollback_roots = if has_retained_objects {
+            self.ordinary_object_roots()?
+        } else {
+            std::collections::HashSet::new()
+        };
         let mut seen = std::collections::HashSet::new();
         while let Some((value, retain_contents)) = pending.pop() {
             match value {
-                IntrabarReference::Object(id) if seen.insert((0, id)) => {
+                IntrabarReference::Point(id)
+                    if seen.insert((if retain_contents { 7 } else { 8 }, id))
+                        && (retain_contents || !self.object_store.contains_key(&id)) =>
+                {
+                    self.object_store
+                        .copy_entry_from(&previous.object_store, id);
+                    self.object_varip_fields
+                        .copy_entry_from(&previous.object_varip_fields, id);
+                }
+                IntrabarReference::Object(id)
+                    if seen.insert((if retain_contents { 0 } else { 9 }, id)) =>
+                {
                     let imported = !self.object_store.contains_key(&id);
-                    if imported {
+                    if imported || retain_contents {
                         // Import only retained identities. Sparse storage leaves
                         // abandoned speculative allocations out of checkpoints.
                         self.object_store
@@ -197,7 +241,13 @@ impl HistoricalRuntime<'_> {
                             enqueue_intrabar_references(
                                 &mut pending,
                                 value,
-                                imported || flags.is_some_and(|flags| flags[index]),
+                                imported
+                                    || flags.is_some_and(|flags| flags[index])
+                                    || (retain_contents
+                                        && matches!(
+                                            value,
+                                            PineValue::ChartPointRef(_) | PineValue::UserTypeRef(_)
+                                        )),
                             );
                         }
                     }
@@ -251,6 +301,33 @@ impl HistoricalRuntime<'_> {
                 _ => {}
             }
         }
+        for id in rollback_roots {
+            let Some(fields) = committed_objects.get(&id) else {
+                continue;
+            };
+            let flags = self
+                .object_varip_fields
+                .get(&id)
+                .cloned()
+                .unwrap_or_else(|| vec![false; fields.len()]);
+            if flags.iter().all(|flag| !*flag) {
+                self.object_store.copy_entry_from(&committed_objects, id);
+            } else {
+                for (index, value) in fields.iter().enumerate() {
+                    if !flags[index]
+                        && self
+                            .object_store
+                            .get(&id)
+                            .and_then(|fields| fields.get(index))
+                            != Some(value)
+                    {
+                        self.reserve_object_field_write(id, index, value)?;
+                        self.object_store.get_mut(&id).expect("validated object")[index] =
+                            value.clone();
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
@@ -271,6 +348,7 @@ impl HistoricalRuntime<'_> {
         value: PineValue,
     ) -> Result<(), RuntimeError> {
         self.reserve_object_field_write(id, index, &value)?;
+        let value = self.bind_array_value(value, Some(PersistentArrayOwner::Field(id, index)))?;
         self.object_store.get_mut(&id).expect("validated object")[index] = value;
         Ok(())
     }

@@ -134,7 +134,7 @@ alertcondition(true, "Chart", "{{exchange}} {{ticker}} {{interval}} {{time}} {{c
     assert_eq!(result.alerts[0].source, "Chart");
     assert_eq!(
         result.alerts[0].message,
-        "NASDAQ AAPL 1 2021-01-01T00:00:00+0000 12"
+        "NASDAQ AAPL 1 2021-01-01T00:00:00Z 12"
     );
 }
 

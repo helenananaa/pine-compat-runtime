@@ -1,0 +1,10 @@
+//@version=5
+indicator("point-udt-copy-v5-41")
+type Wrap
+    chart.point point
+p=chart.point.from_index(1,10)
+a=Wrap.new(p)
+b=a.copy()
+b.point.price:=20
+plot(a.point.price)
+plot(p.price)

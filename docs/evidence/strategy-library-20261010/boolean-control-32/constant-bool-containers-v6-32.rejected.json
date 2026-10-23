@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-containers-v6-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-containers-v6-32.pine",
+  "source_sha256": "6d445a313babae38dc74dba37ee633579a2869f5f5e3ed4ee914ba768e56698a",
+  "native_status": "analysis_rejected",
+  "error": "Syntax error at input [ (CE10156), line 11:9",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "f072f7be2e77eae2d28fd9a738c1fff3743039c1fe019eea42500286b0684847",
+  "normalized_source_sha256": "f072f7be2e77eae2d28fd9a738c1fff3743039c1fe019eea42500286b0684847",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-containers-v6-32.rejected.ax.txt",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-containers-v6-32.rejected.png",
+  "accessibility_sha256": "cca334620c33b41c0c1eb0624f0910de29e4f8c999a06a3f8a650a252765130c",
+  "screenshot_sha256": "b3232f4286fbc88c1aaedb89eca7d2d2df2c4bc5bbbbf6a460dd524ccf2362f8"
+}

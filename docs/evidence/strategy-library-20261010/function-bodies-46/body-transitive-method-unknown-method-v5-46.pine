@@ -1,0 +1,6 @@
+//@version=5
+indicator("body-transitive-method-unknown-method-v5-46")
+type Anchor
+    int value
+f(Anchor self,x)=>self.absent(x)+self.value
+plot(1)

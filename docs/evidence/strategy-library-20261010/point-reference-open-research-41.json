@@ -1,0 +1,132 @@
+{
+  "status": "open_research",
+  "records": [
+    {
+      "name": "ordinary-array-alias-v5-41",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v5-41.pine",
+      "source_sha256": "318907e102fbde96a3f0ca245ff7b86253d23d1c231994ec9aac689c59a892e3",
+      "qualification_scope": "open_research",
+      "native_relation": "array_alias_split",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        208,
+        208,
+        0,
+        1
+      ],
+      "native_marker_suffix": [
+        0,
+        1
+      ],
+      "native_row": "235 row ordinary-array-alias-v5-41 Plot 208.00 Plot 208.00 Plot 0.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "0a7018e3dc0908352d618fcc9bac68ed73a89475d56de1e57111359289705e45",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v5-41.native.ax.txt",
+      "accessibility_sha256": "acbfa19f49f1db225311faa56249d6078d7dee1514ac4d8f3c67c4ecb712fce9",
+      "screenshot": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v5-41.native.png",
+      "screenshot_sha256": "18f96b32c343477da70c094c781569b697a7e9474bfb390cfacfccf668ca68e7",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v5-41.capture.json",
+      "raw_capture_sha256": "ec23b951aa89a2fd32c5099e02b3c0ff350227e502a8eab8ba57fc5fc893f455",
+      "execution_kind": "intrabar",
+      "intrabar_expected": [
+        "tick",
+        "tick",
+        0,
+        1
+      ]
+    },
+    {
+      "name": "ordinary-array-alias-v6-41",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v6-41.pine",
+      "source_sha256": "7d3d92daca947f7192473108bb59e9795a29ac781e2bfc455caf162d26199692",
+      "qualification_scope": "open_research",
+      "native_relation": "array_buffer_alias_forks",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        24,
+        24,
+        0,
+        1
+      ],
+      "native_marker_suffix": [
+        0,
+        1
+      ],
+      "native_row": "235 row ordinary-array-alias-v6-41 Plot 24.00 Plot 24.00 Plot 0.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "eb5505eacf3c8a05c6c33b4476d797e6a2daaa09755870c2f1797612795008a3",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v6-41.native.ax.txt",
+      "accessibility_sha256": "f75124273ad9898ffb7ead465fa25af177dceb44b8075ced98b04c50c350bcb0",
+      "screenshot": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v6-41.native.png",
+      "screenshot_sha256": "f3b53ff82f2350cb5af64ac8f06fc73e9f3971766b5b05eb547f7707fc87bbdd",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/point-reference-41/ordinary-array-alias-v6-41.capture.json",
+      "raw_capture_sha256": "03b94a90eda6068f0c8804746cd60f2b1e4e98135ccfa4d1551d3c02fb760774",
+      "execution_kind": "intrabar",
+      "intrabar_expected": [
+        "tick",
+        "tick",
+        0,
+        1
+      ]
+    },
+    {
+      "name": "point-request-local-v5-41",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v5-41.pine",
+      "source_sha256": "c054e99ea8368c077233317c75d5a0a5c0b49c2e8121c9e83f8082f9f4fae9f1",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "235 row point-request-local-v5-41 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "d2cf7ce32cdcb7ea4013d022da16615d0be3c6ac23443ae20d326390678f1f3d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v5-41.native.ax.txt",
+      "accessibility_sha256": "bb2eb31ef0034bc0319c741388b415c1aa8ee88eb84ccdd048d82eda98f1a196",
+      "screenshot": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v5-41.native.png",
+      "screenshot_sha256": "b9a649830437a541f2413aa6625bbb8df0525828863fc55e4af94f8e6cf0a5cb",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v5-41.capture.json",
+      "raw_capture_sha256": "fb3e42b52de3761dc45073252e7add6388c610610a19204f43d11e9d52f72165",
+      "execution_kind": "static",
+      "qualification_scope": "open_research"
+    },
+    {
+      "name": "point-request-local-v6-41",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v6-41.pine",
+      "source_sha256": "6bb8fa09a1913ca16a19694a0cb5ae5a437c5bcb1b113d53bc2499df5350a661",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "235 row point-request-local-v6-41 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c279a6d64391aa540d2f1d039d88c84581c05fade45f80eb4b21e6e882a49cc1",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v6-41.native.ax.txt",
+      "accessibility_sha256": "3f0aa784033d16587cac6a6f85496ea0267be7fe53f9b7765c400010d5ddba4a",
+      "screenshot": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v6-41.native.png",
+      "screenshot_sha256": "2abcaa7912604e98dd970f0a59cae4084c4db071ec55fe655e599fc71590dd32",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/point-reference-41/point-request-local-v6-41.capture.json",
+      "raw_capture_sha256": "f98c1f98fa49e4c9c55ff03459e423ae68e106ae775b4782c2fa125cea01af67",
+      "execution_kind": "static",
+      "qualification_scope": "open_research"
+    }
+  ],
+  "scope": "Bounded Native Pine v5/v6 reference, coordinate, undefined-object and realtime relations only; full strategy output and mixed reference graphs remain unqualified."
+}

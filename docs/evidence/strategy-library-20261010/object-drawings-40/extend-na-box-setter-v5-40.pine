@@ -1,0 +1,5 @@
+//@version=5
+indicator("extend-na-box-setter-v5-40")
+box item=na
+box.set_extend(item,"bogus")
+plot(1)

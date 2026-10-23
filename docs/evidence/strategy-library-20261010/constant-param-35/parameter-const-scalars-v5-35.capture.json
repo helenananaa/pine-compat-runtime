@@ -1,0 +1,22 @@
+{
+  "name": "parameter-const-scalars-v5-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-scalars-v5-35.pine",
+  "source_sha256": "ba33924fe2a822d56631c6d4f2ed8139c7bc44e7e5e296ddecbb5f8de0739472",
+  "library": false,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1,
+    0,
+    1,
+    1
+  ],
+  "native_row": "238 row parameter-const-scalars-v5-35 int 1 float widening 1 bool 0 string 1 color 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "ba33924fe2a822d56631c6d4f2ed8139c7bc44e7e5e296ddecbb5f8de0739472",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-scalars-v5-35.native.ax.txt",
+  "accessibility_sha256": "685ac9d3f65d8784bda1dcd12723241c5ec606d2ab6afcc1872b3f55ca8c6c23",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-scalars-v5-35.native.png",
+  "screenshot_sha256": "696c3481595224b883d4fee30182aceb39da5c79605fa00cd55cd11bb53cd1d8"
+}

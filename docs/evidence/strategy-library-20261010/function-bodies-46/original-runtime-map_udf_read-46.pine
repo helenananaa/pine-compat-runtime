@@ -1,0 +1,76 @@
+//@version=6
+indicator("Map UDF read")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) =>
+    made = prices.copy()
+    made
+
+prices = map.new<string, float>()
+prices.put("open", 1.25)
+prices.put("close", 4.5)
+
+read_value(id, key) =>
+    id.get(key)
+
+read_counts(id) =>
+    keys = map.keys(id)
+    values = id.values()
+    map.size(id) + array.size(keys) + array.size(values)
+
+read_method(id) =>
+    id.contains("close") ? id.get("close") : na
+
+identity(id) => id
+
+copy_map(id) =>
+    made = id.copy()
+    made
+
+choose(id) =>
+    if bar_index % 2 == 0
+        id
+    else
+        copy_map(id)
+
+new_empty() => map.new<string, float>()
+
+returned = identity(prices)
+returned_copy = copy_map(prices)
+chosen = choose(prices)
+anchor = Anchor.new(1)
+method_return = anchor.expose()
+empty_return = new_empty()
+history_return = identity(prices)[1]
+direct_size = map.size(identity(prices))
+direct_get = map.get(copy_map(prices), "close")
+direct_copy = map.copy(identity(prices))
+float returned_total = 0
+for [key, value] in identity(prices)
+    returned_total := returned_total + value
+
+plot(read_value(prices, "open"), "open")
+plot(read_counts(prices), "counts")
+plot(read_method(prices), "method")
+plot(returned.get("open"), "returned_open")
+plot(returned_copy.get("close"), "returned_copy_close")
+plot(chosen.size(), "chosen_size")
+plot(method_return.get("close"), "method_return_close")
+plot(empty_return.size(), "empty_return_size")
+plot(history_return.size(), "history_return_size")
+plot(returned_total, "returned_total")
+plot(direct_size, "direct_size")
+plot(direct_get, "direct_get")
+plot(direct_copy.get("open"), "direct_copy_open")
+
+returned.put("alias", 7)
+returned_copy.put("copy_only", 8)
+method_return.put("method_only", 9)
+plot(prices.get("alias"), "alias_shared")
+plot(na(prices.get("copy_only")) ? 1 : 0, "copy_independent")
+plot(returned_copy.get("copy_only"), "copy_value")
+plot(na(prices.get("method_only")) ? 1 : 0, "method_copy_independent")
+plot(method_return.get("method_only"), "method_copy_value")
+plot(na(direct_copy.get("alias")) ? 1 : 0, "direct_copy_independent")

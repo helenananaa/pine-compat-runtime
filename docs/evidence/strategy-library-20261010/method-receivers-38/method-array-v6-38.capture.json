@@ -1,0 +1,20 @@
+{
+  "name": "method-array-v6-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-v6-38.pine",
+  "source_sha256": "a872bf6d7ba886df7154f42ad4df6097ca0e0208d8c0baee8850eff1279007c8",
+  "version": 6,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    7
+  ],
+  "native_row": "319 row method-array-v6-38 Plot 7.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "480e082a783468c55754f50fcd25013a8402080945793cda7c5961f48205cfcd",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-v6-38.native.ax.txt",
+  "accessibility_sha256": "672f0f1241779dbe30cd724ac9bd660ad73ea197d05d66330701685788332f6b",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-array-v6-38.native.png",
+  "screenshot_sha256": "88f34b7651eaa0b17cf40675b648c9d0691e38994083d4b25ff9029523f17816",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "f9c9b148d4ca6c83be1df626f1a8fc0a3fe10da2347f07e4abc703d6eacec00e"
+}

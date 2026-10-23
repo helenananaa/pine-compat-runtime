@@ -1,0 +1,6 @@
+//@version=4
+study("extend-legacy-values-v4-40")
+plot(extend.none=="n"?1:0)
+plot(extend.right=="r"?1:0)
+plot(extend.left=="l"?1:0)
+plot(extend.both=="b"?1:0)

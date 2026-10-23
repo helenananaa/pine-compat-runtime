@@ -1,0 +1,10 @@
+//@version=6
+indicator("request-map-write-v6-43")
+values=map.new<string,float>()
+values.put("x",10)
+f(map<string,float> v)=>
+    v.put("x",v.get("x")+5)
+    v.get("x")
+a=request.security(syminfo.tickerid,timeframe.period,f(values))
+plot(a)
+plot(values.get("x"))

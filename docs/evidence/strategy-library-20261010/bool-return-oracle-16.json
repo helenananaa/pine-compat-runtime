@@ -1,0 +1,17 @@
+{
+  "version": 6,
+  "results": {
+    "dynamicExpressionFalse": 0,
+    "dynamicFunctionFalse": 0,
+    "expressionEqualsFalse": 1
+  },
+  "firstConstantProbe": {
+    "results": [
+      1,
+      1,
+      0
+    ],
+    "status": "unexpected constant-condition result; retained separately, not used as proof of general conditional semantics"
+  },
+  "scope": "Dynamic false condition validates documented v6 false fallback; no claim of matching unexpected constant-fold behavior"
+}

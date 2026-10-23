@@ -1,0 +1,9 @@
+//@version=6
+indicator("window-simple-literal-reassign-v6-44",dynamic_requests=true)
+simple int x=1
+x:=2
+var count=0
+count+=1
+plot(bar_index)
+plot(x)
+plot(count)

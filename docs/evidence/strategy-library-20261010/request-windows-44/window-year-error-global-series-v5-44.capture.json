@@ -1,0 +1,19 @@
+{
+  "name": "window-year-error-global-series-v5-44",
+  "version": 5,
+  "scenario": "year-error-global-series",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research44-20261018\\window-year-error-global-series-v5-44.pine",
+  "source_sha256": "6e2230be84dbe5075d5dded860e50f2e4867893aeb029869310d8b7dd8f70846",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 0: old chart prefix",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "6e2230be84dbe5075d5dded860e50f2e4867893aeb029869310d8b7dd8f70846",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-year-error-global-series-v5-44.native.ax.txt",
+  "accessibility_sha256": "66a203c188666f241ab68a702fee87144bec2f0ff3428ba5cd05027474557171",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research44-20261018/window-year-error-global-series-v5-44.native.png",
+  "screenshot_sha256": "6af4a4ac142862a8c97bce2a48463410c6ad74c1c00326a703f7dde65fb912db",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

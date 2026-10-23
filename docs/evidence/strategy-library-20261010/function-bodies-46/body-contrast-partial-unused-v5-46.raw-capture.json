@@ -1,0 +1,21 @@
+{
+  "name": "body-contrast-partial-unused-v5-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-contrast-partial-unused-v5-46.pine",
+  "source_sha256": "e06a0115c361e89316891e84a4a90eccda5e29a8b2dfac44bc9a6bec2afae5c2",
+  "kind": "partial-unused",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "239 row body-contrast-partial-unused-v5-46 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "a98fc5d97297f34d000fee540a3236386764baa228f7f27345ab0bff8b377173",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-partial-unused-v5-46.native.ax.txt",
+  "accessibility_sha256": "6a406694bb1b9abe20c3626054977c326ff8403c9c02be06163419b0b3652cc9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-contrast-partial-unused-v5-46.native.png",
+  "screenshot_sha256": "ddc9871d06d0ce1c67261712b07d4c7688ae701b34ea4b62140fb33d8108e07c",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

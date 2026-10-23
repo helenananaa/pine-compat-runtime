@@ -1,0 +1,146 @@
+[
+  {
+    "name": "negative-entry-v5",
+    "source": "//@version=5\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nif bar_index==2\n    strategy.entry(\"L\",strategy.long)\nplot(strategy.position_size)",
+    "error": "equity is less than 0"
+  },
+  {
+    "name": "negative-order-v5",
+    "source": "//@version=5\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nif bar_index==2\n    strategy.order(\"L\",strategy.long)\nplot(strategy.position_size)",
+    "error": "equity is less than 0"
+  },
+  {
+    "name": "negative-helper-v5",
+    "source": "//@version=5\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nplot(strategy.default_entry_qty(100))",
+    "error": "equity is less than 0"
+  },
+  {
+    "name": "zero-v5",
+    "source": "//@version=5\nstrategy(\"zero\",initial_capital=0,default_qty_type=strategy.percent_of_equity,default_qty_value=100)\nstrategy.entry(\"E\",strategy.long)\nstrategy.order(\"O\",strategy.long)\nplot(strategy.default_entry_qty(100))\nplot(strategy.position_size)",
+    "values": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "orders": 0
+  },
+  {
+    "name": "zero-percent-v5",
+    "source": "//@version=5\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=0,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nstrategy.entry(\"L\",strategy.long)\nstrategy.order(\"O\",strategy.long)\nplot(strategy.default_entry_qty(100))",
+    "values": [
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "orders": 1
+  },
+  {
+    "name": "price-precedence-v5",
+    "source": "//@version=5\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nplot(strategy.default_entry_qty(na))\nplot(strategy.default_entry_qty(0))\nplot(strategy.default_entry_qty(-100))",
+    "values": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        -1,
+        -1,
+        1,
+        1
+      ]
+    ],
+    "orders": 1
+  },
+  {
+    "name": "negative-entry-v6",
+    "source": "//@version=6\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nif bar_index==2\n    strategy.entry(\"L\",strategy.long)\nplot(strategy.position_size)",
+    "error": "equity is less than 0"
+  },
+  {
+    "name": "negative-order-v6",
+    "source": "//@version=6\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nif bar_index==2\n    strategy.order(\"L\",strategy.long)\nplot(strategy.position_size)",
+    "error": "equity is less than 0"
+  },
+  {
+    "name": "negative-helper-v6",
+    "source": "//@version=6\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nplot(strategy.default_entry_qty(100))",
+    "error": "equity is less than 0"
+  },
+  {
+    "name": "zero-v6",
+    "source": "//@version=6\nstrategy(\"zero\",initial_capital=0,default_qty_type=strategy.percent_of_equity,default_qty_value=100)\nstrategy.entry(\"E\",strategy.long)\nstrategy.order(\"O\",strategy.long)\nplot(strategy.default_entry_qty(100))\nplot(strategy.position_size)",
+    "values": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "orders": 0
+  },
+  {
+    "name": "zero-percent-v6",
+    "source": "//@version=6\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=0,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nstrategy.entry(\"L\",strategy.long)\nstrategy.order(\"O\",strategy.long)\nplot(strategy.default_entry_qty(100))",
+    "values": [
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "orders": 1
+  },
+  {
+    "name": "price-precedence-v6",
+    "source": "//@version=6\nstrategy(\"equity\",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=100,margin_long=0,margin_short=0)\nif bar_index==0\n    strategy.entry(\"S\",strategy.short,qty=1)\nplot(strategy.default_entry_qty(na))\nplot(strategy.default_entry_qty(0))\nplot(strategy.default_entry_qty(-100))",
+    "values": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        -1,
+        -1,
+        1,
+        1
+      ]
+    ],
+    "orders": 1
+  }
+]

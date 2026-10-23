@@ -1,0 +1,29 @@
+//@version=6
+indicator("Constant bool containers probe32",precision=0)
+a=if false
+    true
+type Holder
+    bool value
+holder=Holder.new(a)
+b=bool(a)
+f(x)=>x
+alias=f(a)
+g()=>[a,a]
+[t1,t2]=g()
+var arr=array.from(a)
+var mat=matrix.new<bool>(1,1,a)
+var m=map.new<string,bool>()
+map.put(m,"a",a)
+renderedBool=str.tostring(a)
+plot(holder.value?1:0,title="UDT field")
+plot(alias?1:0,title="function identity")
+plot(t1?1:0,title="tuple")
+plot(array.get(arr,0)?1:0,title="array")
+plot(matrix.get(mat,0,0)?1:0,title="matrix")
+plot(map.get(m,"a")?1:0,title="map")
+plot(b==true?1:0,title="cast equals true")
+plot(b==a?1:0,title="cast equals source")
+plot(renderedBool=="true"?1:0,title="string true")
+plot(renderedBool=="false"?1:0,title="string false")
+plot(renderedBool=="NaN" or renderedBool=="na"?1:0,title="string missing")
+plot(ta.barssince(a),title="barssince")

@@ -1,6 +1,4 @@
-use crate::analyzer::user_types::{
-    UserTypeArrayElementInference, classify_user_type_array_element_names,
-};
+use crate::analyzer::user_types::UserTypeArrayElementInference;
 use crate::prelude::*;
 use crate::types::is_scalar_array_kind;
 
@@ -73,9 +71,9 @@ impl Analyzer {
         span: Span,
     ) -> (PersistenceKind, Option<pine_ir::VarSlotId>) {
         match mode {
-            pine_syntax::DeclMode::Normal | pine_syntax::DeclMode::Const => {
-                (PersistenceKind::None, None)
-            }
+            pine_syntax::DeclMode::Normal
+            | pine_syntax::DeclMode::Const
+            | pine_syntax::DeclMode::Simple => (PersistenceKind::None, None),
             pine_syntax::DeclMode::Var => (PersistenceKind::Var, Some(self.alloc_var_slot())),
             pine_syntax::DeclMode::Varip => {
                 if is_drawing_id_value(value_type.kind) {
@@ -171,10 +169,9 @@ impl Analyzer {
             Some(declared_type @ DeclaredType::Array { element_type }) => {
                 if let Some(kind) = array_kind_from_element_type_name(element_type) {
                     Some(PineType::new(Qualifier::Series, kind))
-                } else if let Some(inference) = classify_user_type_array_element_names(
-                    &self.user_types,
-                    std::slice::from_ref(element_type),
-                ) {
+                } else if let Some(inference) =
+                    self.classify_declared_user_type_array_names(std::slice::from_ref(element_type))
+                {
                     match inference {
                         UserTypeArrayElementInference::SameLocal(_) => {
                             Some(PineType::new(Qualifier::Series, ValueKind::UserTypeArray))
@@ -294,10 +291,9 @@ impl Analyzer {
         declared_type: &DeclaredType,
     ) -> Option<String> {
         let element_type = declared_type.array_element_type()?;
-        match classify_user_type_array_element_names(
-            &self.user_types,
-            std::slice::from_ref(&element_type.to_owned()),
-        ) {
+        match self
+            .classify_declared_user_type_array_names(std::slice::from_ref(&element_type.to_owned()))
+        {
             Some(UserTypeArrayElementInference::SameLocal(type_name)) => Some(type_name),
             _ if self
                 .imported_user_types

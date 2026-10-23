@@ -1,0 +1,22 @@
+//@version=5
+indicator("point-realtime-history-fixture-v5-41")
+
+dyn = bar_index == 0 ? na : 1
+
+var chart.point normal = chart.point.from_index(bar_index, close)
+varip chart.point intrabar = chart.point.from_index(bar_index, close)
+
+normal.price := normal.price + 1
+intrabar.price := intrabar.price + 1
+intrabar_prior = intrabar[1]
+intrabar_dynamic_prior = intrabar[dyn]
+
+plot(normal.price)
+plot(intrabar.price)
+plot(normal.index)
+plot(intrabar.index)
+plot(na(intrabar_prior) ? -1 : intrabar_prior.price)
+plot(na(intrabar_dynamic_prior) ? -1 : intrabar_dynamic_prior.price)
+
+plot(na(intrabar_prior)?1:intrabar_prior.price==intrabar.price?1:0)
+plot(na(intrabar_dynamic_prior)?1:intrabar_dynamic_prior.price==intrabar.price?1:0)

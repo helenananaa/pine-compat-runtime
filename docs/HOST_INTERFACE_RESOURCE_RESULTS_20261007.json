@@ -1,0 +1,697 @@
+{
+  "date": "2026-10-07",
+  "coreCommit": "14a2ab89c08a85a76d769e9fbe2f13f9c958342d",
+  "version": "0.3.1",
+  "correctness": "passed",
+  "resourceQualification": "notEvaluated",
+  "measurementToolSha256": "aff8cd05d69db95458e3128abc15cdd252841052a3d85015a790795da26e1ee8",
+  "auditToolSha256": "058ed95795dc58f508141c58601195587741f92cc0ace3e84152768fe2de9dd0",
+  "trials": 32,
+  "completeOutputs": 80,
+  "crossPlatformOutputPairs": 40,
+  "platforms": [
+    {
+      "platform": "Windows-11-10.0.26200-SP0",
+      "trials": 16,
+      "completeOutputs": 40,
+      "wheel": {
+        "name": "pine_compat_runtime-0.3.1-cp310-abi3-win_amd64.whl",
+        "sha256": "2cc616d6d24dc7cf84c499c74bfabddbaf3b0134e1380f9be2afbaada6fbd599"
+      },
+      "artifact": {
+        "version": "0.3.1",
+        "module": "E:\\projects\\pine-interpreter\\.local\\host-interface-resources-20261007\\venv\\Lib\\site-packages\\pine_compat\\__init__.py",
+        "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+        "executable": "E:\\projects\\pine-interpreter\\.local\\host-interface-resources-20261007\\venv\\Scripts\\python.exe",
+        "native": [
+          {
+            "path": "E:\\projects\\pine-interpreter\\.local\\host-interface-resources-20261007\\venv\\Lib\\site-packages\\pine_compat\\pine_compat.pyd",
+            "sha256": "92bebe624f7880929885ad9466760702cd7193922a0fd4a1ca83a150c8e140c1"
+          }
+        ]
+      },
+      "reportSha256": "032fbc48129613f710adf644f9046d3efe1f628857449530cee81c09576a40cc",
+      "planSha256": "a862e4f5c87fef8800649c4d92146c3b2750aa0eb5053016581be17f0cf30f92",
+      "summary": [
+        {
+          "mode": "history",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            47079424,
+            47206400
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.5061
+            },
+            "create": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 6.164350000000001
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 4.30765
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.02795
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 10,
+              "processMedianMs": 4.882425
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.87925
+            },
+            "batchControl": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 55.0449
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 23.12525
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            58626048,
+            58683392
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.5421
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 7.744949999999999
+            },
+            "completeBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 80.322
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 80.4904
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 87.03229999999999
+            }
+          }
+        },
+        {
+          "mode": "history",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            82100224,
+            82657280
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.50195
+            },
+            "create": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 5.79355
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 3.8921
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.0322
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 40,
+              "processMedianMs": 4.5792
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 0.84785
+            },
+            "batchControl": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 49.6369
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 16.478949999999998
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            86380544,
+            86577152
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.48245
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 7.377599999999999
+            },
+            "completeBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 80.542175
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 80.980575
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 87.1465
+            }
+          }
+        },
+        {
+          "mode": "history",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            198000640,
+            198647808
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.4576
+            },
+            "create": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 59.925200000000004
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 437.11519999999996
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.0414
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 10,
+              "processMedianMs": 14.5525
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 10.482
+            },
+            "batchControl": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 554.70175
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 200.5388
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            310771712,
+            312745984
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.49844999999999995
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 1061.2791
+            },
+            "completeBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 1416.4043
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 1546.90135
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 1621.7240499999998
+            }
+          }
+        },
+        {
+          "mode": "history",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            537563136,
+            539516928
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.54295
+            },
+            "create": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 119.462075
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 737.37405
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.0749
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 40,
+              "processMedianMs": 23.983825
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 18.534475
+            },
+            "batchControl": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 924.5807500000001
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 263.40565
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            583958528,
+            584257536
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.47639999999999993
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 1372.9768
+            },
+            "completeBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 1504.6500250000001
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 1526.2953499999999
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 1631.5171500000001
+            }
+          }
+        }
+      ]
+    },
+    {
+      "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-alas-redroid+-x86_64-with-glibc2.35",
+      "trials": 16,
+      "completeOutputs": 40,
+      "wheel": {
+        "name": "pine_compat_runtime-0.3.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "sha256": "5a11021c98a1b3966718cd2aa6fc2ae3f432d6c2dedac088ebe87b1746a2c746"
+      },
+      "artifact": {
+        "version": "0.3.1",
+        "module": "/tmp/pine-host-interface-resources-20261007/lib/python3.10/site-packages/pine_compat/__init__.py",
+        "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+        "executable": "/tmp/pine-host-interface-resources-20261007/bin/python",
+        "native": [
+          {
+            "path": "/tmp/pine-host-interface-resources-20261007/lib/python3.10/site-packages/pine_compat/pine_compat.abi3.so",
+            "sha256": "b3e939b71f578e8a4a197107ad241b2046c48c98b5b82f54ba62816b01f69854"
+          }
+        ]
+      },
+      "reportSha256": "225b4ebb2bc7194b61263e3e3264abb7575cb06432745987ed9be848ea499a38",
+      "planSha256": "deb0eb43a736e71d84be554067ca4cc193aa19c93415741a4f5d423d82789616",
+      "summary": [
+        {
+          "mode": "history",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            48328704,
+            48631808
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.2354695
+            },
+            "create": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 4.5959795
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 3.6775130000000003
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.0165915
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 10,
+              "processMedianMs": 4.4042705
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.970463
+            },
+            "batchControl": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 47.512352
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 32.8360805
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            62001152,
+            62504960
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.24696649999999998
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 7.291126
+            },
+            "completeBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 79.0829525
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 78.476298
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 144.31675
+            }
+          }
+        },
+        {
+          "mode": "history",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            89096192,
+            89513984
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.2346595
+            },
+            "create": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 4.41250225
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 3.5682505
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.016286
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 40,
+              "processMedianMs": 3.9278655000000002
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 0.832777
+            },
+            "batchControl": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 42.321591749999996
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 35.203289
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 1024,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            97124352,
+            97660928
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.2591695
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 6.588648
+            },
+            "completeBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 77.54418175
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 76.18530075000001
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 158.17154324999998
+            }
+          }
+        },
+        {
+          "mode": "history",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            222797824,
+            223035392
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.426789
+            },
+            "create": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 46.294461999999996
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 430.66697650000003
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.0440965
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 10,
+              "processMedianMs": 17.44682325
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 14.483949
+            },
+            "batchControl": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 522.4951115
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 267.8875545
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 1,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            360882176,
+            361648128
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.32722949999999995
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 832.5450040000001
+            },
+            "completeBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 821.585413
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 900.968721
+            },
+            "serialization": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 1633.7577545
+            }
+          }
+        },
+        {
+          "mode": "history",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            619495424,
+            620421120
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.33819699999999997
+            },
+            "create": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 47.26781750000001
+            },
+            "seedWithOutput": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 430.09488350000004
+            },
+            "fork": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.0331025
+            },
+            "advanceWithOutput": {
+              "operationsPerProcess": 40,
+              "processMedianMs": 15.521450250000001
+            },
+            "finalSnapshot": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 12.33359625
+            },
+            "batchControl": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 497.53717600000004
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 267.135933
+            }
+          }
+        },
+        {
+          "mode": "external",
+          "historyBars": 100000,
+          "tailBars": 10000,
+          "streams": 4,
+          "repeats": 2,
+          "peakRssBytesRange": [
+            715587584,
+            715923456
+          ],
+          "phases": {
+            "compile": {
+              "operationsPerProcess": 1,
+              "processMedianMs": 0.286918
+            },
+            "prefixBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 819.2450425
+            },
+            "completeBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 851.15217775
+            },
+            "repeatBatch": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 925.3601925
+            },
+            "serialization": {
+              "operationsPerProcess": 4,
+              "processMedianMs": 1630.0401715
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "No frozen latency/memory acceptance budgets for these new API workloads.",
+    "Python installed wheels only; no Rust/CLI/WASM resource matrix.",
+    "Synthetic indicator/account feedback; no native live-tick/reference qualification.",
+    "History advances 1000 bars per call and materializes a full output each time.",
+    "External execution is sequential batch reuse; four streams are not four persistent sessions.",
+    "Process memory includes Python inputs, outputs, verification and allocator retention.",
+    "Finite two-process repeats do not establish indefinite resource bounds or leak freedom."
+  ]
+}

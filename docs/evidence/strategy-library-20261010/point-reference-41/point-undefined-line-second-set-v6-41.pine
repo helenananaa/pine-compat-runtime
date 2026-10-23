@@ -1,0 +1,6 @@
+//@version=6
+indicator("point-undefined-line-second-set-v6-41")
+chart.point p=na
+l=line.new(0,1,1,2)
+line.set_second_point(l,p)
+plot(1)

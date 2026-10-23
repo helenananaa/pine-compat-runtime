@@ -1,0 +1,18 @@
+{
+  "name": "method-udt-unused-read-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-unused-read-v5-38.pine",
+  "source_sha256": "ffb5fb3ba2abaa30d3664de647861583c1324b0b2783522293052db84f0adea3",
+  "version": 5,
+  "native_status": "analysis_rejected",
+  "native_error": "The 'self' argument is not used. The first method argument should be used.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "642192bf65cd4b0b5abad36cc6ad5d4518626874c378986968fec44b14950dd8",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-unused-read-v5-38.native.ax.txt",
+  "accessibility_sha256": "5e41482f58c0973fdb128aa06685c90f03cc387dbf9f11f3bcf2ef5e34b23114",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-udt-unused-read-v5-38.native.png",
+  "screenshot_sha256": "5b9f66d7f3fa904e92a93a0cf653f92408b5a3e2cc6f5b1534a7a044c04ae37d",
+  "qualification_scope": "unqualified_receiver_use_analysis",
+  "native_values": null,
+  "discovery_record_sha256": "4af8b1fdc1047d16d90bb30f0669b5ec176097aed14606e80ca6aa9a87bb76bc"
+}

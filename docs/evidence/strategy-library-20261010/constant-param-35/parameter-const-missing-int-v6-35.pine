@@ -1,0 +1,4 @@
+//@version=6
+indicator("parameter-const-missing-int-v6-35",precision=0)
+f(const int x)=>x
+plot(na(f(na))?1:0,title="missing int")

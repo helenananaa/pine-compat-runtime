@@ -1,0 +1,7 @@
+//@version=5
+indicator("array-dynamic-get-v5-42")
+var a=array.new_int()
+var b=a
+a.push(bar_index)
+value=b.get(bar_index)
+plot(value==bar_index?1:0)

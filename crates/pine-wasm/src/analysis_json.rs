@@ -166,7 +166,7 @@ fn input_value_json(value: &PineValue) -> String {
     match value {
         PineValue::Int(value) => value.to_string(),
         PineValue::Float(value) => value.to_string(),
-        PineValue::Bool(value) => value.to_string(),
+        PineValue::Bool(value) | PineValue::ConstantBool { value, .. } => value.to_string(),
         PineValue::String(value) => format!("\"{}\"", json_escape(value)),
         _ => "null".to_owned(),
     }

@@ -1,0 +1,15 @@
+//@version=6
+indicator("array-function-return-mutation-v6-42")
+f()=>
+    var a=array.new_int()
+    a.push(1)
+    a
+c=f()
+c.push(2)
+varip int size=0
+varip int idx=0
+if barstate.ishistory
+    size:=c.size()
+    idx:=bar_index
+plot(size)
+plot(idx)

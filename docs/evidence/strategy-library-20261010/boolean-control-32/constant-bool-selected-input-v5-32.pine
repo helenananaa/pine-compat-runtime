@@ -1,0 +1,15 @@
+//@version=5
+indicator("Selected bool qualifiers v5 probe32",precision=0)
+i=input.bool(false)
+a=if true
+    i
+b=if true
+    bar_index<0
+var c=if true
+    false
+plot(a?1:0,title="input body condition")
+plot(a==false?1:0,title="input body equal false")
+plot(b?1:0,title="series body condition")
+plot(b==false?1:0,title="series body equal false")
+plot(c?1:0,title="var const branch")
+plot(c==false?1:0,title="var branch equal false")

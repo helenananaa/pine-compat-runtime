@@ -1,0 +1,9 @@
+//@version=5
+indicator("collection-map-global-v5-45")
+values=map.new<string,float>()
+values.put("x",10)
+f()=>
+    map.put(values,"x",values.get("x")+5)
+    values.get("x")
+plot(f())
+plot(values.get("x"))

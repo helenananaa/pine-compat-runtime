@@ -1,0 +1,9 @@
+//@version=6
+indicator("request-point-provider-week-v6-43")
+p=chart.point.from_index(1,10)
+f(chart.point v)=>
+    v.price+=5
+    v.price
+r=request.security(syminfo.tickerid,"W",f(p))
+plot(r)
+plot(p.price)

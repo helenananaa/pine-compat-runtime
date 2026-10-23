@@ -4,7 +4,11 @@ use pine_ir::CallSiteId;
 
 use crate::Bar;
 
-use super::{ChartContext, RequestTimeframe, bars::validate_requested_bars};
+use super::{
+    BarCalendar, BarCalendarRegistry, ChartContext, CurrencyRateError, CurrencyRateProvider,
+    NoCurrencyRateProvider, RequestTimeframe, bars::validate_requested_bars,
+};
+use crate::RuntimeError;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RequestKey {
@@ -165,6 +169,8 @@ pub struct RequestEnvironment {
     chart: ChartContext,
     main_timeframe: RequestTimeframe,
     provider: Arc<dyn RequestDataProvider>,
+    calendars: Arc<BarCalendarRegistry>,
+    currency_rates: Arc<dyn CurrencyRateProvider>,
 }
 
 impl RequestEnvironment {
@@ -175,6 +181,8 @@ impl RequestEnvironment {
             chart,
             main_timeframe,
             provider,
+            calendars: Arc::new(BarCalendarRegistry::default()),
+            currency_rates: Arc::new(NoCurrencyRateProvider),
         }
     }
 
@@ -193,12 +201,118 @@ impl RequestEnvironment {
         self.provider.as_ref()
     }
 
+    pub(crate) fn with_data_provider(mut self, provider: Arc<dyn RequestDataProvider>) -> Self {
+        self.provider = provider;
+        self
+    }
+
+    #[must_use]
+    pub fn with_currency_rates(mut self, provider: Arc<dyn CurrencyRateProvider>) -> Self {
+        self.currency_rates = provider;
+        self
+    }
+
+    /// Read a host-supplied effective rate without consulting wall-clock time.
+    /// The caller specifies the calculation timestamp explicitly.
+    pub fn currency_rate(&self, from: &str, to: &str, time: i64) -> Result<f64, CurrencyRateError> {
+        super::currency::validate_currency(from)?;
+        super::currency::validate_currency(to)?;
+        if from == to {
+            return Ok(1.0);
+        }
+        let rate = self.currency_rates.rate(from, to, time)?;
+        if !rate.is_finite() || rate <= 0.0 {
+            return Err(CurrencyRateError::InvalidResolvedRate);
+        }
+        Ok(rate)
+    }
+
+    #[must_use]
+    pub fn with_bar_calendars(mut self, calendars: Arc<BarCalendarRegistry>) -> Self {
+        self.calendars = calendars;
+        self
+    }
+
+    #[must_use]
+    pub fn bar_calendars(&self) -> &BarCalendarRegistry {
+        &self.calendars
+    }
+
+    pub(crate) fn chart_calendar(&self) -> Option<&BarCalendar> {
+        self.calendars.get(self.chart.symbol())
+    }
+
+    pub(crate) fn chart_timezone(&self) -> &str {
+        self.chart_calendar()
+            .map_or("Etc/UTC", BarCalendar::timezone)
+    }
+
+    pub(crate) fn nominal_close(
+        &self,
+        symbol: &str,
+        timeframe: &RequestTimeframe,
+        open: i64,
+    ) -> Result<i64, RuntimeError> {
+        match self.calendars.get(symbol) {
+            Some(calendar) => calendar
+                .exact(timeframe, open)
+                .map(|interval| interval.close())
+                .map_err(|err| RuntimeError {
+                    message: err.to_string(),
+                }),
+            None => Ok(timeframe.nominal_close(open)),
+        }
+    }
+
+    pub(crate) fn chart_close(&self, open: i64) -> Result<i64, RuntimeError> {
+        if self.chart_calendar().is_some() {
+            self.nominal_close(self.chart.symbol(), self.chart.timeframe(), open)
+        } else {
+            crate::builtins::time::chart_timeframe_close(
+                open,
+                self.chart.timeframe().value(),
+                self.chart.timeframe().seconds(),
+            )
+            .ok_or_else(|| RuntimeError {
+                message: format!("time_close timestamp is out of range: {open}"),
+            })
+        }
+    }
+
+    pub(crate) fn previous_chart_open(&self, open: i64) -> Result<i64, RuntimeError> {
+        match self.chart_calendar() {
+            Some(calendar) => calendar
+                .previous_open(self.chart.timeframe(), open)
+                .map_err(|err| RuntimeError {
+                    message: err.to_string(),
+                }),
+            None => Ok(self.chart.timeframe().previous_open(open)),
+        }
+    }
+
+    pub(crate) fn chart_merge_bucket(&self, time: i64) -> Result<Option<i64>, RuntimeError> {
+        match self.chart_calendar() {
+            Some(calendar) => calendar
+                .merge_bucket(self.chart.timeframe(), time)
+                .map_err(|err| RuntimeError {
+                    message: err.to_string(),
+                }),
+            None => Ok(crate::builtins::time::timeframe_change_bucket(
+                time,
+                self.chart.timeframe().value(),
+                self.chart.timeframe().seconds(),
+            )),
+        }
+    }
+
     #[must_use]
     pub fn for_chart(&self, chart: ChartContext) -> Self {
         Self {
             chart,
             main_timeframe: self.main_timeframe.clone(),
             provider: Arc::clone(&self.provider),
+            calendars: Arc::clone(&self.calendars),
+            currency_rates: Arc::clone(&self.currency_rates),
         }
     }
 }
@@ -211,6 +325,8 @@ impl Default for RequestEnvironment {
             chart,
             main_timeframe,
             provider: Arc::new(NoRequestDataProvider),
+            calendars: Arc::new(BarCalendarRegistry::default()),
+            currency_rates: Arc::new(NoCurrencyRateProvider),
         }
     }
 }

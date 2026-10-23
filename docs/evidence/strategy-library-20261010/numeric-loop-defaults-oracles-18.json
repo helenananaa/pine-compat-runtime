@@ -1,0 +1,47 @@
+{
+  "native_symbol": "BINANCE:BTCUSDT",
+  "native_chart_timeframe": "M",
+  "sources": {
+    "qfl-defaults-float-loop-oracle-18": "ca58e1e88529d269cbb2ca86ebd7287000c7b602e9c8c6bcc51fa4db07cdbf6f",
+    "float-loop-bounds-oracle-18": "1e98eee463bf0fe35f10659be2caf4d0c8d6c6686d823d27657aa03e8baff90a",
+    "float-loop-bounds-v4-oracle-18": "e9519a84220bd7facc2cc4083e794f7a34e9704af4a62dc74cb0c42512bc01d5",
+    "float-loop-defaults-v6-oracle-18": "9d7d791081f7f38ece61e5c0a7ab723603395dee831586ce365aeb323e6a985c",
+    "qfl-defaults-v4-rejected-18": "ca29848b703d292639900846eca3b41ee599f5f8af73f0c8feed134f729f2b8e",
+    "float-loop-negative-step-v6-oracle-18": "d96202d2cbc6ee795c76f11a4c2672195e3214c30193ff1a001bf4a84ab02dd4",
+    "integer-negative-step-v4-oracle-18": "11c9f95238f5648d1ff23d109e51b618eb300da63cdb92a3d2c764e9652beeb5",
+    "integer-negative-step-v5-oracle-18": "154a8cb8dbd96b5971a12159f9a53707aa5da02ce7b51a9dd20cee6de0bc9aed"
+  },
+  "numeric_expected_values": [
+    16.1,
+    -9.2,
+    3,
+    3
+  ],
+  "numeric_native_versions": [
+    4,
+    5,
+    6
+  ],
+  "qualified_default_native_versions": [
+    5,
+    6
+  ],
+  "v4_default_syntax": "rejected",
+  "negative_step_native_observations": {
+    "v4": "integer negative step runtime RE10021",
+    "v5": "integer negative step runtime RE10021",
+    "v6": "float negative step runtime RE10021"
+  },
+  "negative_step_error": "step in loop must be greater than zero",
+  "int_counter_float_step": "v5 compile rejected",
+  "scope": "Official minimal language oracles. Synthetic local comparisons do not qualify full market/trade parity.",
+  "decimal_boundary_probe": {
+    "version": 5,
+    "source": "float-loop-rounding-oracle-18.pine",
+    "expectedCounts": [
+      3,
+      3,
+      4
+    ]
+  }
+}

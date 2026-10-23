@@ -1,0 +1,22 @@
+{
+  "name": "request-point-provider-week-v6-43",
+  "version": 6,
+  "scenario": "point-provider-week",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-provider-week-v6-43.pine",
+  "source_sha256": "94896daa59943f702846b3a030e06487469eac892dd17db6727d8ed67aa5e565",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    15
+  ],
+  "native_row": "238 row request-point-provider-week-v6-43 Plot 15.00 Plot 15.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c52d53aadd7fb51cf4066874434fa1ba538136511ef8b894a5ad03e3f07240b6",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-provider-week-v6-43.native.ax.txt",
+  "accessibility_sha256": "89f1d4e5d5dcccf3c6dbcc8669ca9ae1ed04ef3a0205c3346272e5aa526e9e7c",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-provider-week-v6-43.native.png",
+  "screenshot_sha256": "2286083fb97fdc2001fee06cf3e74b4ef66285629a3f7daedb9c16603ab1bff4",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

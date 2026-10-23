@@ -1,0 +1,15 @@
+{
+  "name": "bool-declaration-var-untyped-v5-35",
+  "source": "E:/projects/pine-interpreter/target/strategy-gap-research35-20261017/bool-declaration-var-untyped-v5-35.pine",
+  "source_sha256": "4b027f4da7e33a83391969371fda53389c333c92e845407cd8d75828d4d2a7ad",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row bool-declaration-var-untyped-v5-35 condition 1 equals false 0 false payload 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "4b027f4da7e33a83391969371fda53389c333c92e845407cd8d75828d4d2a7ad",
+  "normalized_source_sha256": "4b027f4da7e33a83391969371fda53389c333c92e845407cd8d75828d4d2a7ad",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/bool-declaration-var-untyped-v5-35.native.ax.txt",
+  "accessibility_sha256": "dde0ebf2037224dd5a85e94d1394a6f22538c9b5fff73533e427c398ee82aad2",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/bool-declaration-var-untyped-v5-35.native.png",
+  "screenshot_sha256": "5a8a6dadc95286653fb2cca33124c7c522f987c38f32fd5dd30c568a0c0576d7"
+}

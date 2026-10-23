@@ -1,0 +1,16 @@
+{
+  "name": "missing-string-dynamic-guard-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-dynamic-guard-v5-37.pine",
+  "source_sha256": "9104c5ef83f080941eb40dbaafbba049501846512c15d525426742471fc1ac29",
+  "native_status": "analysis_rejected",
+  "native_error": "An argument of 'series string' type was used but a 'simple string' is expected.",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "9104c5ef83f080941eb40dbaafbba049501846512c15d525426742471fc1ac29",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-dynamic-guard-v5-37.native.ax.txt",
+  "accessibility_sha256": "9ff49cbd2194cd62f5b9c32593cd56990e7957d7d0adfe228e1d4507623308ac",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-dynamic-guard-v5-37.native.png",
+  "screenshot_sha256": "05c9036598b52405157dfa2baa939ef44c3158a2081e7bfd56e2471d5a02defa",
+  "scope": "v5 dynamic_requests=false still rejects a missing-string selector reassigned from a chart condition",
+  "qualification_scope": "candidate_bounded_control"
+}

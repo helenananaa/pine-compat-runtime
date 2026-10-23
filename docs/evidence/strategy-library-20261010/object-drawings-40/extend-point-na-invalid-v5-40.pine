@@ -1,0 +1,5 @@
+//@version=5
+indicator("extend-point-na-invalid-v5-40")
+chart.point a=na
+item=line.new(a,a,extend="bogus")
+plot(1)

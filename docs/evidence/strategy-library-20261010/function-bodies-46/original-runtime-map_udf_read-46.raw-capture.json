@@ -1,0 +1,17 @@
+{
+  "name": "original-runtime-map_udf_read-46",
+  "source": "E:\\projects\\pine-interpreter\\tests\\fixtures\\runtime\\map_udf_read.pine",
+  "source_sha256": "688796309b4d8bc2cc67cc1e9d996983224f316c26eb597313c83287da9ce3f8",
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Undeclared identifier \"prices\" (CE10272)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "688796309b4d8bc2cc67cc1e9d996983224f316c26eb597313c83287da9ce3f8",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-runtime-map_udf_read-46.native.ax.txt",
+  "accessibility_sha256": "212ee825050744c781139ef6cfc3171bcf903553ab3d4341c1f1d3ab4762f317",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/original-runtime-map_udf_read-46.native.png",
+  "screenshot_sha256": "0335f6b4746f94a3503e161ae89e2e3df348d175e7e2f0266aab3e1ba05b41a1",
+  "chart_ui_context": "163 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

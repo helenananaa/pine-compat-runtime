@@ -1,0 +1,18 @@
+//@version=4
+study("Codex legacy tuple oracle",overlay=true)
+f(src)=>
+    value=src+timeframe.multiplier
+    [value,timeframe.multiplier,time]
+[a,b,c]=security(syminfo.tickerid,"12M",f(10))
+[x,y,z]=security(syminfo.tickerid,timeframe.period,f(10))
+var t=table.new(position.top_right,3,4,bgcolor=color.black)
+if barstate.islast
+    table.cell(t,0,0,"value",text_color=color.white)
+    table.cell(t,1,0,tostring(a),text_color=color.white)
+    table.cell(t,2,0,tostring(x),text_color=color.white)
+    table.cell(t,0,1,"multiplier",text_color=color.white)
+    table.cell(t,1,1,tostring(b),text_color=color.white)
+    table.cell(t,2,1,tostring(y),text_color=color.white)
+    table.cell(t,0,2,"UTC time",text_color=color.white)
+    table.cell(t,1,2,tostring(c),text_color=color.white)
+    table.cell(t,2,2,tostring(z),text_color=color.white)

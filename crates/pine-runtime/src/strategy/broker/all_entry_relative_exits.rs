@@ -35,6 +35,13 @@ impl BrokerState {
         } = deferred_exit;
         let bar_index = last_update_bar_index;
         match trigger {
+            DeferredRelativeExitTrigger::Combined(spec) => {
+                if let Some((key, _)) = self.last_open_trade_key_and_price_for_entry(entry_id) {
+                    self.place_combined_exit_for_trade(
+                        id, key, spec, quantity, bar_index, metadata,
+                    );
+                }
+            }
             DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } => {
                 if quantity != ExitQuantityRequest::Full {
                     return;
@@ -106,6 +113,8 @@ impl BrokerState {
                     entry_id.to_owned(),
                     target_trade_key,
                     PendingTrailingSpec {
+                        fixed_stop: None,
+                        fixed_limit: None,
                         activation: PendingTrailingActivation::Points {
                             ticks: activation_ticks,
                             price: activation_price,

@@ -1,13 +1,13 @@
-use chrono::{DateTime, Datelike, Duration, LocalResult, Offset, TimeZone, Timelike, Utc};
+use chrono::{DateTime, Duration, LocalResult, Offset, TimeZone, Utc};
 use chrono_tz::Tz;
 
 use crate::RuntimeError;
 
-use super::{dayofweek_value, parse_fixed_timezone_offset, utc_datetime_from_millis};
+use super::{parse_fixed_timezone_offset, utc_datetime_from_millis};
 
 pub(super) struct TimeSession {
-    periods: Vec<TimeSessionPeriod>,
-    days: [bool; 8],
+    pub(super) periods: Vec<TimeSessionPeriod>,
+    pub(super) days: [bool; 8],
 }
 
 #[derive(Clone, Copy)]
@@ -25,9 +25,9 @@ impl DefaultSessionDays {
     }
 }
 
-struct TimeSessionPeriod {
-    start_minute: i64,
-    end_minute: i64,
+pub(super) struct TimeSessionPeriod {
+    pub(super) start_minute: i64,
+    pub(super) end_minute: i64,
 }
 
 #[derive(Clone, Copy)]
@@ -44,7 +44,7 @@ pub(super) fn parse_time_session_timezone(timezone: &str) -> Option<TimeSessionT
 }
 
 impl TimeSessionTimezone {
-    fn offset_seconds_at(self, datetime: &DateTime<Utc>) -> i32 {
+    pub(super) fn offset_seconds_at(self, datetime: &DateTime<Utc>) -> i32 {
         match self {
             Self::Fixed(offset) => offset,
             Self::Iana(timezone) => timezone
@@ -54,7 +54,7 @@ impl TimeSessionTimezone {
         }
     }
 
-    fn close_utc_millis(self, local_close_time: i64) -> Result<i64, RuntimeError> {
+    pub(super) fn close_utc_millis(self, local_close_time: i64) -> Result<i64, RuntimeError> {
         match self {
             Self::Fixed(offset) => {
                 local_close_time
@@ -71,6 +71,32 @@ impl TimeSessionTimezone {
                 let local_close = utc_datetime_from_millis(local_close_time)?.naive_utc();
                 resolve_iana_session_close(timezone, local_close).ok_or_else(|| RuntimeError {
                     message: "time session timestamp is out of range".to_owned(),
+                })
+            }
+        }
+    }
+
+    pub(super) fn open_utc_millis(self, local_time: i64) -> Result<i64, RuntimeError> {
+        match self {
+            Self::Fixed(_) => self.close_utc_millis(local_time),
+            Self::Iana(timezone) => {
+                let local = utc_datetime_from_millis(local_time)?.naive_utc();
+                for minutes in 0..=2 * 24 * 60 {
+                    let shifted = local.checked_add_signed(Duration::minutes(minutes));
+                    let Some(shifted) = shifted else { break };
+                    let resolved = match timezone.from_local_datetime(&shifted) {
+                        LocalResult::Single(value) => Some(value.timestamp_millis()),
+                        LocalResult::Ambiguous(a, b) => {
+                            Some(a.timestamp_millis().min(b.timestamp_millis()))
+                        }
+                        LocalResult::None => None,
+                    };
+                    if let Some(value) = resolved {
+                        return Ok(value);
+                    }
+                }
+                Err(RuntimeError {
+                    message: "time session timestamp is out of range".into(),
                 })
             }
         }
@@ -107,43 +133,6 @@ pub(super) fn parse_time_session(
     }
 
     Some(TimeSession { periods, days })
-}
-
-pub(super) fn session_close_for_bar_open(
-    open_time: i64,
-    default_close: i64,
-    session: &TimeSession,
-    timezone: TimeSessionTimezone,
-) -> Result<Option<i64>, RuntimeError> {
-    let open_datetime = utc_datetime_from_millis(open_time)?;
-    let timezone_offset_seconds = timezone.offset_seconds_at(&open_datetime);
-    let timezone_offset_ms = i64::from(timezone_offset_seconds)
-        .checked_mul(1000)
-        .ok_or_else(|| RuntimeError {
-            message: "time session timestamp is out of range".to_owned(),
-        })?;
-    let local_open_time =
-        open_time
-            .checked_add(timezone_offset_ms)
-            .ok_or_else(|| RuntimeError {
-                message: "time session timestamp is out of range".to_owned(),
-            })?;
-    let datetime = utc_datetime_from_millis(local_open_time)?;
-    let minute = i64::from(datetime.hour()) * 60 + i64::from(datetime.minute());
-    let day = dayofweek_value(datetime) as usize;
-    let midnight = utc_midnight_millis(datetime)?;
-
-    for period in &session.periods {
-        let Some(local_close_time) =
-            session_period_close_for_open(minute, day, midnight, period, &session.days)?
-        else {
-            continue;
-        };
-        let close_time = timezone.close_utc_millis(local_close_time)?;
-        return Ok(Some(default_close.min(close_time)));
-    }
-
-    Ok(None)
 }
 
 fn resolve_iana_session_close(timezone: Tz, local_close: chrono::NaiveDateTime) -> Option<i64> {
@@ -203,6 +192,9 @@ fn parse_session_period(period: &str) -> Option<TimeSessionPeriod> {
 }
 
 fn parse_session_hhmm(value: &str) -> Option<i64> {
+    if value == "2400" {
+        return Some(0);
+    }
     if value.len() != 4 || !value.chars().all(|ch| ch.is_ascii_digit()) {
         return None;
     }
@@ -212,74 +204,4 @@ fn parse_session_hhmm(value: &str) -> Option<i64> {
         return None;
     }
     Some(hour * 60 + minute)
-}
-
-fn session_period_close_for_open(
-    minute: i64,
-    day: usize,
-    midnight: i64,
-    period: &TimeSessionPeriod,
-    days: &[bool; 8],
-) -> Result<Option<i64>, RuntimeError> {
-    const DAY_MS: i64 = 86_400_000;
-
-    if period.start_minute == period.end_minute {
-        if days[day] {
-            return Ok(Some(midnight.checked_add(DAY_MS).ok_or_else(|| {
-                RuntimeError {
-                    message: "time session timestamp is out of range".to_owned(),
-                }
-            })?));
-        }
-        return Ok(None);
-    }
-
-    if period.start_minute < period.end_minute {
-        if days[day] && minute >= period.start_minute && minute < period.end_minute {
-            return Ok(Some(session_end_timestamp(midnight, period.end_minute)?));
-        }
-        return Ok(None);
-    }
-
-    if minute >= period.start_minute {
-        let session_day = if day == 7 { 1 } else { day + 1 };
-        if !days[session_day] {
-            return Ok(None);
-        }
-        let next_midnight = midnight.checked_add(DAY_MS).ok_or_else(|| RuntimeError {
-            message: "time session timestamp is out of range".to_owned(),
-        })?;
-        return Ok(Some(session_end_timestamp(
-            next_midnight,
-            period.end_minute,
-        )?));
-    }
-
-    if minute < period.end_minute && days[day] {
-        return Ok(Some(session_end_timestamp(midnight, period.end_minute)?));
-    }
-
-    Ok(None)
-}
-
-fn session_end_timestamp(midnight: i64, end_minute: i64) -> Result<i64, RuntimeError> {
-    midnight
-        .checked_add(end_minute.checked_mul(60_000).ok_or_else(|| RuntimeError {
-            message: "time session timestamp is out of range".to_owned(),
-        })?)
-        .ok_or_else(|| RuntimeError {
-            message: "time session timestamp is out of range".to_owned(),
-        })
-}
-
-fn utc_midnight_millis(datetime: DateTime<Utc>) -> Result<i64, RuntimeError> {
-    let Some(midnight) = Utc
-        .with_ymd_and_hms(datetime.year(), datetime.month(), datetime.day(), 0, 0, 0)
-        .single()
-    else {
-        return Err(RuntimeError {
-            message: "time session timestamp is out of range".to_owned(),
-        });
-    };
-    Ok(midnight.timestamp_millis())
 }

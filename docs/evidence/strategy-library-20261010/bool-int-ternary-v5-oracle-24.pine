@@ -1,0 +1,11 @@
+//@version=5
+indicator("Bool int ternary oracle 24",precision=0)
+c=time>0
+a=c?true:1
+b=c?false:1
+d=c?1:false
+e=c?0:true
+plot(a?1:0,title="boolFirstTrue")
+plot(b?1:0,title="boolFirstFalse")
+plot(d?1:0,title="intFirstOne")
+plot(e?1:0,title="intFirstZero")

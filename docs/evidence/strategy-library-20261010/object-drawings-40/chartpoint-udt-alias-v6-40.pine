@@ -1,0 +1,10 @@
+//@version=6
+indicator("chartpoint-udt-alias-v6-40")
+type Pair40
+    chart.point value
+first=chart.point.from_index(1,10)
+values=array.from(Pair40.new(first))
+other=values.first()
+other.value.price:=20
+plot(first.price)
+plot(other.value.price)

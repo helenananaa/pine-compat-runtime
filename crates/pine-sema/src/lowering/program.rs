@@ -26,6 +26,9 @@ impl Analyzer {
         if self.has_errors() {
             return None;
         }
+        if self.has_boolean_return_boundaries && self.constant_bool_origins.is_empty() {
+            super::constant_booleans::strip_boolean_return_boundaries(&mut statements);
+        }
 
         let symbols = self.lower_symbols();
         let history = infer_history_requirements(&statements, &symbols);
@@ -48,6 +51,7 @@ impl Analyzer {
         };
         let program = HirProgram {
             language_version: self.compatibility.language_version,
+            dynamic_requests: self.dynamic_requests,
             script_mode,
             timenow_symbol: self.timenow_symbol,
             strategy_settings,

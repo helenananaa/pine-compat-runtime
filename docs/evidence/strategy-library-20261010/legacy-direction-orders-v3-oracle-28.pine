@@ -1,0 +1,16 @@
+//@version=3
+strategy("Legacy direction orders 28",precision=0)
+n=cum(1)-1
+f(x)=>x
+l=f(strategy.long)
+s=f(strategy.short)
+if n==0
+    strategy.entry("L",l,qty=1)
+if n==1
+    strategy.close("L",s)
+if n==3
+    strategy.entry("S",s,qty=1)
+if n==4
+    strategy.close("S",l)
+plot(strategy.position_size,title="position")
+plot(n<2?0:1,title="first close reached")

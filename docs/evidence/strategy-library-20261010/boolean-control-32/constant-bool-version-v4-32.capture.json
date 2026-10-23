@@ -1,0 +1,40 @@
+{
+  "name": "constant-bool-version-v4-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-version-v4-32.pine",
+  "source_sha256": "8aa14c4bcbe903a400d6c5fb8638ce36f2d2858c2db6a47eea86d93533a1b43c",
+  "native_status": "compiled_and_executed",
+  "native_row": "247 row Constant bool version 4 probe32 const true body 0 const false body 0 function false 0 dynamic false 0 const variable 0 explicit else 0 equals true 0 equals false 0 history 0",
+  "cursor_refreshed": true,
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "bef167b1f9b5f81b3abd6c34005a0075b90b04fff65abb2c635a626b727d800c",
+  "editor_source_sha256": "bef167b1f9b5f81b3abd6c34005a0075b90b04fff65abb2c635a626b727d800c",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-version-v4-32.native.png",
+  "screenshot_sha256": "46664d7a49ae5924afcc946dc82cf812d47ca80b519d4770730c61a6a1d91d4c",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\constant-bool-version-v4-32.native.ax.txt",
+  "accessibility_sha256": "5b57560e307b5162ec2d788ab84cbca0f49f3e321a39f9adce615e1bcfa48302",
+  "native_values": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "labels": [
+    "const true body",
+    "const false body",
+    "function false",
+    "dynamic false",
+    "const variable",
+    "explicit else",
+    "equals true",
+    "equals false",
+    "history"
+  ],
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

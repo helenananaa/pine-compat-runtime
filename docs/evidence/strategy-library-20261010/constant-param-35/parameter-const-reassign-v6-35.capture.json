@@ -1,0 +1,15 @@
+{
+  "name": "parameter-const-reassign-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reassign-v6-35.pine",
+  "source_sha256": "dd5cc5589fb0db4885cd0894ad441d7682ca828d427507a816fd380f94c10cbc",
+  "library": false,
+  "native_status": "analysis_rejected",
+  "native_error": "Function arguments cannot be mutable (\"x\")",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "dd5cc5589fb0db4885cd0894ad441d7682ca828d427507a816fd380f94c10cbc",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reassign-v6-35.native.ax.txt",
+  "accessibility_sha256": "fd431e06d09bdc102e25c06f82375aeb42254ee58da375abc12dab90f12d8c06",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-reassign-v6-35.native.png",
+  "screenshot_sha256": "1a68c120cfb7df9bce9f507e2b1f77d2976e9ae34a15037be6eaa9ff1b68ea32"
+}

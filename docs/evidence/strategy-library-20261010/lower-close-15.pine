@@ -1,0 +1,8 @@
+//@version=6
+indicator("Lower close investigation 15",precision=0)
+plot(time_close("1S")-time,title="S close offset")
+plot(time_close("30S")-time,title="30S close offset")
+plot(time_close("1")-time,title="1m close offset")
+plot(time_close("60")-time,title="60m close offset")
+plot(time_close("1S")[1]-time[1],title="Previous S close offset")
+plot(time("1S")-time,title="S open offset")

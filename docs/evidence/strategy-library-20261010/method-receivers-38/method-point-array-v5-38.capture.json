@@ -1,0 +1,20 @@
+{
+  "name": "method-point-array-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-point-array-v5-38.pine",
+  "source_sha256": "8b7e647d6d5e7595a0e1c856b9f911acc7257c8cc8f4566a002c8214eed27fe9",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    2
+  ],
+  "native_row": "319 row method-point-array-v5-38 Plot 2.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "acc83798dbd1e377d12e85dbf94c3e7a158002d9cbc93c7025f04521d8e831de",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-point-array-v5-38.native.ax.txt",
+  "accessibility_sha256": "23202615002b3381ae120a430ffeb6c5fcf56a170f1abe356300b664191c93d4",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-point-array-v5-38.native.png",
+  "screenshot_sha256": "a1472473b43f87fd6b782bfa0d02a7bb0e99b48d3a5baf2427e3dd490b51d6c5",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "bf38e658d21bea80ed2ce1e6016e7330f479f7d0b8fe3b964083015a438283f0"
+}

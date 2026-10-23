@@ -1,0 +1,20 @@
+{
+  "name": "missing-string-persistence-v6-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-persistence-v6-37.pine",
+  "source_sha256": "c58b3fda57682bc959dbb9868fb1e8854c26da8a1b4beccdea167a53e701ea3b",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    1
+  ],
+  "native_row": "251 row missing-string-persistence-v6-37 Plot 1 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "c58b3fda57682bc959dbb9868fb1e8854c26da8a1b4beccdea167a53e701ea3b",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-persistence-v6-37.native.ax.txt",
+  "accessibility_sha256": "fffe354e1acee07d05fbc14ea74a4cfacf8ddab91271f28bdada9c7f12896693",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-persistence-v6-37.native.png",
+  "screenshot_sha256": "b0c125d71ad01dcd051c541d4236b2d6b234dbe5597cf799ad2bd97807fa9100",
+  "scope": "v6 immutable var/varip missing-string bindings accept simple parameters and preserve missing identity",
+  "qualification_scope": "candidate_bounded_control"
+}

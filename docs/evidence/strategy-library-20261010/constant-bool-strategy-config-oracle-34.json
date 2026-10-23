@@ -1,0 +1,40 @@
+{
+  "name": "constant-bool-strategy-config-v5-34",
+  "source": "docs/evidence/strategy-library-20261010/constant-bool-34/constant-bool-strategy-config-v5-34.pine",
+  "source_sha256": "883e84b04b0929ec32b614db5331562bbb09ad8c7a0d0199a97937831a892b3b",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Bool strategy config flags v5 probe34 Plot 81,615.64",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "883e84b04b0929ec32b614db5331562bbb09ad8c7a0d0199a97937831a892b3b",
+  "normalized_source_sha256": "883e84b04b0929ec32b614db5331562bbb09ad8c7a0d0199a97937831a892b3b",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-bool-34/constant-bool-strategy-config-v5-34.native.ax.txt",
+  "accessibility_sha256": "0d83ffc2424a077179159424554325acadeaa29721f1e8f072603d07559818b8",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-bool-34/constant-bool-strategy-config-v5-34.native.png",
+  "screenshot_sha256": "47cd3613dcafabc02a4786182200c0242a85cc58e68e88932c797abd58ca7547",
+  "property_evidence": [
+    {
+      "path": "docs/evidence/strategy-library-20261010/constant-bool-34/constant-bool-strategy-config-v5-34.properties.ax.txt",
+      "sha256": "e3de119c1d885601d7ed2280e0579057a9be90e3fb97df5bbde1ae8291000048"
+    },
+    {
+      "path": "docs/evidence/strategy-library-20261010/constant-bool-34/constant-bool-strategy-config-v5-34.properties.png",
+      "sha256": "294f12e6b2b0989c2712efdfa74247432780a1a4a7cb5636f862ba7fcf28d239"
+    },
+    {
+      "path": "docs/evidence/strategy-library-20261010/constant-bool-34/constant-bool-strategy-config-v5-34.execution-options.ax.txt",
+      "sha256": "08f4aadc34bedb6069068c03c2dfef6d30eb68a46c55e68c1f511c903a172705"
+    },
+    {
+      "path": "docs/evidence/strategy-library-20261010/constant-bool-34/constant-bool-strategy-config-v5-34.execution-options.png",
+      "sha256": "673510932ecd5156730d422560f772213a6ccc623478951a770f0f363fba297f"
+    }
+  ],
+  "native_settings": {
+    "process_orders_on_close": false,
+    "calc_on_order_fills": false,
+    "calc_on_every_tick": false,
+    "use_bar_magnifier": false
+  },
+  "scope": "Native property labels are Default (4 ticks per bar), On bar close, and One tick; expanded execution options show On order fill and On realtime bar tick unselected. Rust source analysis asserts all four settings are false. No native price, order, or full-ledger equivalence is claimed."
+}

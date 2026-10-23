@@ -1,0 +1,4 @@
+//@version=4
+study("Codex named defaults v4 oracle",overlay=true)
+x=input(defval=2,defval=3,title="Named default")
+plot(x,"named default")

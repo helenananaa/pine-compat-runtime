@@ -52,7 +52,7 @@ impl<'a> HistoricalRuntime<'a> {
                 }
             }
         }
-        self.push_alert_event(call_site_id, "alert".to_owned(), message);
+        self.push_alert_event(call_site_id, "alert".to_owned(), message, false);
         Ok(PineValue::Void)
     }
 
@@ -81,29 +81,53 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             String::new()
         };
-        let message = match self.render_alertcondition_message(&message) {
-            Ok(message) => message,
-            Err(message) => {
-                self.push_alert_diagnostic(RuntimeDiagnostic {
-                    code: "E_UNSUPPORTED_ALERT_PLACEHOLDER".to_owned(),
-                    message,
-                });
-                return Ok(PineValue::Void);
-            }
-        };
-        self.push_alert_event(call_site_id, source, message);
+        if message.contains("{{timenow}}") && self.current_execution_time.is_none() {
+            return Err(RuntimeError {
+                message:
+                    "timenow requires an explicit execution timestamp for this script execution"
+                        .to_owned(),
+            });
+        }
+        self.push_alert_event(call_site_id, source, message, true);
         Ok(PineValue::Void)
     }
 
-    fn push_alert_event(&mut self, call_site_id: CallSiteId, source: String, message: String) {
+    fn push_alert_event(
+        &mut self,
+        call_site_id: CallSiteId,
+        source: String,
+        message: String,
+        template: bool,
+    ) {
         let time = self.current_bar.map_or(0, |bar| bar.time);
-        self.alerts.push(AlertEvent {
-            id: call_site_id.0,
-            bar_index: self.bars,
-            time,
-            message,
-            source,
-        });
+        self.pending_alert_events.push((
+            AlertEvent {
+                id: call_site_id.0,
+                bar_index: self.bars,
+                time,
+                message,
+                source,
+            },
+            template,
+        ));
+    }
+
+    pub(crate) fn flush_alert_events(&mut self) {
+        for (mut event, template) in std::mem::take(&mut self.pending_alert_events) {
+            if template {
+                match self.render_alertcondition_message(&event.message) {
+                    Ok(message) => event.message = message,
+                    Err(message) => {
+                        self.push_alert_diagnostic(RuntimeDiagnostic {
+                            code: "E_UNSUPPORTED_ALERT_PLACEHOLDER".to_owned(),
+                            message,
+                        });
+                        continue;
+                    }
+                }
+            }
+            self.alerts.push(event);
+        }
     }
 
     fn alert_string_arg(
@@ -131,11 +155,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(AlertFrequency::OncePerBar);
         };
         match self.eval_expr(expr)? {
-            PineValue::String(value) if value == "alert.freq_all" => Ok(AlertFrequency::All),
-            PineValue::String(value) if value == "alert.freq_once_per_bar" => {
-                Ok(AlertFrequency::OncePerBar)
-            }
-            PineValue::String(value) if value == "alert.freq_once_per_bar_close" => {
+            PineValue::String(value) if value == "all" => Ok(AlertFrequency::All),
+            PineValue::String(value) if value == "once_per_bar" => Ok(AlertFrequency::OncePerBar),
+            PineValue::String(value) if value == "once_per_bar_close" => {
                 Ok(AlertFrequency::OncePerBarClose)
             }
             PineValue::String(value) => Err(RuntimeError {
@@ -152,6 +174,15 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(message.to_owned());
         };
 
+        let message = if message.contains("{{timenow}}") {
+            let timestamp = self.current_execution_time.ok_or_else(|| {
+                "timenow requires an explicit execution timestamp for this script execution"
+                    .to_owned()
+            })?;
+            message.replace("{{timenow}}", &self.alert_time_placeholder(timestamp))
+        } else {
+            message.to_owned()
+        };
         let message = message
             .replace("{{open}}", &format_number(bar.open, ""))
             .replace("{{high}}", &format_number(bar.high, ""))
@@ -169,6 +200,7 @@ impl<'a> HistoricalRuntime<'a> {
                 "{{strategy.position_size}}",
                 &format_number(self.strategy_broker.position_size(), ""),
             );
+        let message = self.render_numbered_alert_plots(&message)?;
         let mut rendered = String::with_capacity(message.len());
         let mut remaining = message.as_str();
         while let Some(start) = remaining.find("{{plot(\"") {
@@ -220,7 +252,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn alert_time_placeholder(&self, timestamp: i64) -> String {
         utc_datetime_from_millis(timestamp)
-            .map(|datetime| format_utc_datetime(datetime, "yyyy-MM-dd'T'HH:mm:ssZ"))
+            .map(|datetime| format_utc_datetime(datetime, "yyyy-MM-dd'T'HH:mm:ss'Z'"))
             .unwrap_or_else(|_| timestamp.to_string())
     }
 }

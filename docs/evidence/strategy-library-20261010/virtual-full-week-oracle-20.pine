@@ -1,0 +1,13 @@
+//@version=6
+indicator("Virtual full week oracle 20",overlay=false)
+f() =>
+    [time("W","1800-1000:23456","America/New_York")-time,time_close("W","1800-1000:23456","America/New_York")-time,time("W","0000-0000:23456","America/New_York")-time,time_close("W","0000-0000:23456","America/New_York")-time,time("M","1700-1700:23456","America/New_York")-time,time_close("M","1700-1700:23456","America/New_York")-time,time("W","0900-1000,1500-1600:23456","America/New_York")-time,time_close("W","0900-1000,1500-1600:23456","America/New_York")-time]
+[a,b,c,d,e,f1,g,h]=request.security("NASDAQ:AAPL","D",f())
+plot(a,title="overnightWeekOpen")
+plot(b,title="overnightWeekClose")
+plot(c,title="midnightWeekOpen")
+plot(d,title="midnightWeekClose")
+plot(e,title="fullMonthOpen")
+plot(f1,title="fullMonthClose")
+plot(g,title="splitWeekOpen")
+plot(h,title="splitWeekClose")

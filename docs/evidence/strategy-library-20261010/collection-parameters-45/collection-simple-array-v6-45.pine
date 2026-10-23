@@ -1,0 +1,8 @@
+//@version=6
+indicator("collection-simple-array-v6-45")
+f(simple array<float> v)=>
+    v.push(20)
+    v.size()
+values=array.new<float>(1,10)
+plot(f(values))
+plot(values.size())

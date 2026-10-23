@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported str format label array")
 values = array.new_label()
-text = str.format("Labels {0}", values)
+note = str.format("Labels {0}", values)
 plot(close)

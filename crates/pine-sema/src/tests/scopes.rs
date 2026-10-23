@@ -217,7 +217,7 @@ fn rejects_incompatible_switch_arm_results() {
 
 #[test]
 fn rejects_incompatible_ternary_branch_results() {
-    let analysis = analyze("x = close > open ? high : true\nplot(x)\n");
+    let analysis = analyze("//@version=6\nx = close > open ? high : true\nplot(x)\n");
 
     assert!(
         analysis
@@ -231,6 +231,21 @@ fn rejects_incompatible_ternary_branch_results() {
         analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
+
+    // Implicit v5 admits this ternary and produces bool, which is still
+    // rejected in the numeric plot argument. Do not mistake that diagnostic
+    // for the modern branch-type rejection above.
+    let legacy = analyze("x = close > open ? high : true\nplot(x)\n");
+    assert!(legacy.hir.is_none());
+    assert!(legacy.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "E_CALL_ARG_TYPE" && diagnostic.message.contains("series bool")
+    }));
+    assert!(
+        !legacy
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_BRANCH_TYPE")
+    );
 }
 
 #[test]
@@ -668,8 +683,8 @@ fn rejects_for_expression_counter_as_simple_arg_with_series_step() {
 }
 
 #[test]
-fn rejects_non_int_for_loop_range() {
-    let analysis = analyze("for i = 0.5 to 2\n    plot(close)\n");
+fn rejects_non_numeric_for_loop_range() {
+    let analysis = analyze("for i = \"x\" to 2\n    value = i\n");
 
     assert!(
         analysis
@@ -682,7 +697,7 @@ fn rejects_non_int_for_loop_range() {
 
 #[test]
 fn rejects_non_int_for_loop_step() {
-    let analysis = analyze("for i = 0 to 2 by 0.5\n    plot(close)\n");
+    let analysis = analyze("for i = 0 to 2 by 0.5\n    value = i\n");
 
     assert!(
         analysis
@@ -824,21 +839,18 @@ fn accepts_array_queue_mutation_inside_udf() {
 }
 
 #[test]
-fn rejects_array_ordering_mutation_inside_udf() {
+fn accepts_array_ordering_mutation_inside_udf() {
     let analysis = analyze(
         "order(values) =>\n    values.sort()\n    values.reverse()\n    values.size()\nvalues = array.new_float()\nplot(order(values))\n",
     );
 
+    assert!(analysis.compatibility.unsupported.is_empty());
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
-        analysis.compatibility.unsupported
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1083,16 +1095,13 @@ fn accepts_tuple_while_expression_result() {
 }
 
 #[test]
-fn rejects_for_expression_without_final_expression() {
+fn accepts_for_expression_with_terminal_declaration_result() {
     let analysis = analyze("x = for i = 0 to 2\n    y = i\nplot(x)\n");
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_LOOP_RETURN"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }

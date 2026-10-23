@@ -1,0 +1,8 @@
+//@version=5
+indicator("collection-matrix-widen-write-v5-45")
+f(matrix<float> v)=>
+    v.set(0,0,2.5)
+    v.get(0,0)
+values=matrix.new<int>(1,1,1)
+plot(f(values))
+plot(values.get(0,0))

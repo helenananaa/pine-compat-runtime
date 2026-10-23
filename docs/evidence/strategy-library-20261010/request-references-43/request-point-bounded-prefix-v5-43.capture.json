@@ -1,0 +1,28 @@
+{
+  "name": "request-point-bounded-prefix-v5-43",
+  "version": 5,
+  "scenario": "bounded-prefix",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-bounded-prefix-v5-43.pine",
+  "source_sha256": "7426f892e3c1692b0c16db5c7417b87ae2e7dacfd8cc86d642caaa401120ce2b",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    6,
+    6,
+    1,
+    1,
+    5,
+    6,
+    0
+  ],
+  "native_row": "240 row request-point-bounded-prefix-v5-43 Plot 1.00 Plot 6.00 Plot 6.00 Plot 1.00 Plot 1.00 Plot 5.00 Plot 6.00 Plot 0.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "4de9a0b75d72422cc6830ab29e6d36e94d60056465adcd753974509c077a7ce4",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-bounded-prefix-v5-43.native.ax.txt",
+  "accessibility_sha256": "34e26bbf1df6c652035248b47520d437a71c9beb2c03783a21ce266f335d4fff",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-bounded-prefix-v5-43.native.png",
+  "screenshot_sha256": "90ff2514f33213debcd7a70ae130bea60075750aa14be5134a58b4a3a7e69bac",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

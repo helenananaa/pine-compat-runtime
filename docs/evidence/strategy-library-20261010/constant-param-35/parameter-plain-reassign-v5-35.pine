@@ -1,0 +1,6 @@
+//@version=5
+indicator("parameter-plain-reassign-v5-35",precision=0)
+f(bool x)=>
+    x:=true
+    x
+plot(f(false)?1:0)

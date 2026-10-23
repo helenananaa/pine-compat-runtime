@@ -1,0 +1,17 @@
+//@version=5
+indicator("Explicit else isolated v5 probe32",precision=0)
+a=if false
+    true
+else
+    false
+b=if true
+    false
+else
+    true
+plot(a?1:0,title="false explicit else")
+plot(b?1:0,title="true then false")
+plot(false?1:0,title="literal false")
+plot(a==false?1:0,title="equals false")
+plot(a==true?1:0,title="equals true")
+plot(a[0]?1:0,title="history zero")
+plot(a[1]?1:0,title="history one")

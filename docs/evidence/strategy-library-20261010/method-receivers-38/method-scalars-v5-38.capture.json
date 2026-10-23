@@ -1,0 +1,24 @@
+{
+  "name": "method-scalars-v5-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-scalars-v5-38.pine",
+  "source_sha256": "091c7691c9bd34074c03cbb7782a3661ba5bb94ab82e7f39a83547d19ab9d4d9",
+  "version": 5,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    12,
+    2,
+    0,
+    3,
+    25
+  ],
+  "native_row": "319 row method-scalars-v5-38 Plot 12.00 Plot 2.00 Plot 0.00 Plot 3.00 Plot 25.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "bc5286bb47f91184dd1da5671aa652ffdf564ccd15ccfd9faebd9bb9dcee3886",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-scalars-v5-38.native.ax.txt",
+  "accessibility_sha256": "05d53a7a27594e01054dcdf26986f2e59f4e57441341e14887144a758e8892e5",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-scalars-v5-38.native.png",
+  "screenshot_sha256": "9bdec21b877ab1392a3d37c0888267ae52189c9d2c7e02e1192ff49a18459c43",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "0dd4c7c613af5a8ecbb23fbc733f520a5f0d79f6221a487ea56d4aea50071ce3"
+}

@@ -1,0 +1,5 @@
+//@version=5
+indicator("dynamic-requests-na-v5-34",dynamic_requests=na,precision=0)
+tf=bar_index%2==0?"D":"W"
+v=request.security(syminfo.tickerid,tf,close)
+plot(v>0?1:0,title="positive requested close")

@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported array join matrix method")
 values = array.new<matrix>()
-text = values.join()
+note = values.join()
 plot(close)

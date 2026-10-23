@@ -1,0 +1,5 @@
+//@version=6
+indicator("qualifier-typed-return-v6-39")
+identity39(string value)=>value
+alert("qualifier probe",identity39(alert.freq_all))
+plot(1)

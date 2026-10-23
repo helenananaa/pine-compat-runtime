@@ -1,0 +1,8 @@
+//@version=6
+indicator("table-quota-two-live-v6-36",precision=0)
+var a=table.new(position.top_left,60,100)
+var b=table.new(position.bottom_right,60,100)
+if barstate.islast
+    table.cell(a,59,99,"a")
+    table.cell(b,59,99,"b")
+plot(1,title="executed")

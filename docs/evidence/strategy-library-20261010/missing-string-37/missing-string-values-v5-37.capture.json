@@ -1,0 +1,27 @@
+{
+  "name": "missing-string-values-v5-37",
+  "source": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-values-v5-37.pine",
+  "source_sha256": "02c287b2c8b80ec2806e80818d8693f78294ee3bdea84fe16c4129a2a9132a0d",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    0,
+    1
+  ],
+  "native_row": "240 row missing-string-values-v5-37 typed is na 1 typed length 0 typed equals empty 1 cast is na 1 cast length 0 cast equals empty 1 input conditional is na 1 input conditional length 0 input equals empty 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "02c287b2c8b80ec2806e80818d8693f78294ee3bdea84fe16c4129a2a9132a0d",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-values-v5-37.native.ax.txt",
+  "accessibility_sha256": "9182784bca1aa249070005ded00c11248540b6e3e1a285b81f754e228464c9d6",
+  "screenshot": "docs/evidence/strategy-library-20261010/missing-string-37/missing-string-values-v5-37.native.png",
+  "screenshot_sha256": "07b84892b2538a00d08070c236d97b3b92b57565d8b3b4333bfbc47377c3eedc",
+  "scope": "Follow-up v5 missing-string identity: na remains true, length is0 and comparison with empty string is true. Do not erase na identity through generic empty-string materialization.",
+  "qualification_scope": "candidate_bounded_control"
+}

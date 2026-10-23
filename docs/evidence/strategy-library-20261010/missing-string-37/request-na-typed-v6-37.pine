@@ -1,0 +1,6 @@
+//@version=6
+indicator("request-na-typed-v6-37",precision=0)
+string missing=na
+value=request.security(syminfo.tickerid,missing,close)
+plot(value==close?1:0)
+plot(na(value)?1:0)

@@ -1,0 +1,9 @@
+//@version=6
+indicator("request-matrix-write-v6-43")
+values=matrix.new<float>(1,1,10)
+f(matrix<float> v)=>
+    v.set(0,0,v.get(0,0)+5)
+    v.get(0,0)
+a=request.security(syminfo.tickerid,timeframe.period,f(values))
+plot(a)
+plot(values.get(0,0))

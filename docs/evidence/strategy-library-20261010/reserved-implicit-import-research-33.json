@@ -1,0 +1,17 @@
+{
+  "name": "reserved-implicit-import-v6-research-33",
+  "source": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-implicit-import-v6-research-33.pine",
+  "source_sha256": "a92a77c797e62c466fac771cdec81b3b32fd4d7bc6585528cdb4e712e4abf498",
+  "native_status": "analysis_rejected",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "a92a77c797e62c466fac771cdec81b3b32fd4d7bc6585528cdb4e712e4abf498",
+  "normalized_source_sha256": "a92a77c797e62c466fac771cdec81b3b32fd4d7bc6585528cdb4e712e4abf498",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-implicit-import-v6-research-33.native.ax.txt",
+  "accessibility_sha256": "f7cdd5cf8e44e23c4799b643cc881cfee74c1f758f09c9d32ecefac83a2d1d12",
+  "screenshot": "docs/evidence/strategy-library-20261010/reserved-identifiers-33/reserved-implicit-import-v6-research-33.native.png",
+  "screenshot_sha256": "06b82b06f4ef613f80e75013dd8aaa4ecf062eb7b1781133eda8a1fc0ae442be",
+  "scope": "Negative library-lookup boundary only. Native reports unpublished library, not a reserved identifier; no claim that an executable real library named text was qualified.",
+  "native_library_error": "The user TradingView does not have a published library titled text",
+  "reserved_identifier_rule_qualified_for_implicit_alias": false
+}

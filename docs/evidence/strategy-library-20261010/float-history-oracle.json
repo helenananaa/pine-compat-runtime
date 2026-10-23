@@ -1,0 +1,27 @@
+{
+  "versions": {
+    "v2": {
+      "sqrt8": "2.83",
+      "implicit": 78581.29,
+      "integer2": 78581.29,
+      "direct2_8": 78581.29,
+      "negative0_8": "matches current close",
+      "note": "First test with int() failed because v2 lacks int; corrected control uses close[2]."
+    },
+    "v5": {
+      "quotient10_5": true,
+      "implicitMatchesInt10": true,
+      "directFloat2_8Accepted": true
+    },
+    "v6": {
+      "quotient10_5": true,
+      "direct2_8": 78581.29,
+      "cast2_8": 78581.29,
+      "integer2": 78581.29,
+      "integer3": 62887.88,
+      "negative0_8": "matches int(-0.8) and current close",
+      "seriesFloatOffset": "close%3 accepted; explicit cast control agrees"
+    }
+  },
+  "scope": "Unpublished official probes on existing BINANCE:BTCUSDT monthly chart; no full strategy/trade parity qualification"
+}

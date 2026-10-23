@@ -1,0 +1,6 @@
+//@version=6
+indicator("Low Scanner boundary oracle")
+n=input.int(19)
+a=n/2
+plot(a,title="alias")
+plot(ta.ema(close,a),title="ema alias")

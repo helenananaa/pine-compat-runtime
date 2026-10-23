@@ -1,0 +1,21 @@
+{
+  "name": "parameter-const-defaults-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-defaults-v6-35.pine",
+  "source_sha256": "d7a93381c96afbabd78e3929e7b5e9fd0e1e212becb66e6f5c276ae9f9f45fc3",
+  "library": false,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    0,
+    2,
+    1,
+    1
+  ],
+  "native_row": "238 row parameter-const-defaults-v6-35 bool default 0 int default 2 string default 1 color default 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "d7a93381c96afbabd78e3929e7b5e9fd0e1e212becb66e6f5c276ae9f9f45fc3",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-defaults-v6-35.native.ax.txt",
+  "accessibility_sha256": "63e11ccd5ac9e8cf5b5837f7cdd356a4587ea75b547c4b2aae26366d364d2dd5",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-defaults-v6-35.native.png",
+  "screenshot_sha256": "168da535cbd66df849835e1b4d3b639ad375ecd9a694f5c894504951859d9dfc"
+}

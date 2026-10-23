@@ -1,0 +1,6 @@
+//@version=5
+indicator("constant-bool-input-cast-single-v5-34",precision=0)
+a=if true
+    false
+x=input.bool(bool(a),title="plain default")
+plot(x?1:0,title="default value")

@@ -58,7 +58,7 @@ impl Analyzer {
 
                 let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if let Some(value) = self.const_bool_symbols.get(&symbol.id) {
-                    return Some(*value);
+                    return value.condition_value();
                 }
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;

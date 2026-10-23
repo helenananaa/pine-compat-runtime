@@ -1,0 +1,396 @@
+Browser tab: 2, Title: "BTCUSDT 81,474.00 ▼ −0.17% 裸K", URL: "https://www.tradingview.com/chart/wf5lRGkJ/".
+0 AXWebArea BTCUSDT 81,474.00 ▼ −0.17% 裸K, URL: tradingview.com/chart/wf5lRGkJ/
+	1 container
+		2 container
+			3 pop up button Logged in as lingeyon Active layout: 裸K
+			4 text 11
+			5 toolbar
+				214 container
+					215 container
+						216 button BTCUSDT, Help: Symbol search, ID: header-toolbar-symbol-search
+						217 button Description: Switch data type, ID: header-toolbar-switch-data-type
+					218 pop up button Description: Compare symbols, ID: header-toolbar-compare
+					219 container header-toolbar-intervals
+						220 radio button Description: 1 minute, Value: 0
+							221 container
+								222 text 1 m
+						223 radio button Description: 3 minutes, Value: 0
+							224 container
+								225 text 3 m
+						226 radio button Description: 5 minutes, Value: 0
+							227 container
+								228 text 5 m
+						229 radio button Description: 10 minutes, Value: 0
+							230 container
+								231 text 10 m
+						232 radio button Description: 15 minutes, Value: 0
+							233 container
+								234 text 15 m
+						235 radio button Description: 30 minutes, Value: 0
+							236 container
+								237 text 30 m
+						238 radio button Description: 45 minutes, Value: 0
+							239 container
+								240 text 45 m
+						241 radio button Description: 90 minutes, Value: 0
+							242 container
+								243 text 90 m
+						244 radio button Description: 1 hour, Value: 0
+							245 container
+								246 text 1 h
+						247 radio button Description: 2 hours, Value: 0
+							248 container
+								249 text 2 h
+						250 radio button Description: 4 hours, Value: 0
+							251 container
+								252 text 4 h
+						253 radio button Description: 6 hours, Value: 0
+							254 container
+								255 text 6 h
+						256 radio button Description: 8 hours, Value: 0
+							257 container
+								258 text 8 h
+						259 radio button Description: 12 hours, Value: 0
+							260 container
+								261 text 12 h
+						262 radio button Description: 1 day, Value: 1
+							263 text D
+						264 radio button Description: 1 week, Value: 0
+							265 text W
+						266 radio button Description: 1 month, Value: 0
+							267 text M
+						268 pop up button Chart interval
+					269 pop up button Candles
+					270 container header-toolbar-indicators
+						271 button Indicators, metrics, and strategies
+						272 pop up button Favorite indicators
+					273 pop up button Indicator templates
+					274 button Description: Create alert, ID: header-toolbar-alerts
+					275 checkbox Description: Bar replay, Value: 0, ID: header-toolbar-replay
+					276 container header-toolbar-undo-redo
+						277 button Undo update FX ledger cash_per_order 31 script
+					278 pop up button Description: Layout setup, ID: header-toolbar-layouts
+					279 container header-toolbar-save-load
+						280 button Save all charts for all symbols and intervals on your layout
+							281 text 裸K
+							282 text Save
+						283 pop up button Manage layouts
+					284 button Description: Quick search, ID: header-toolbar-quick-search
+					285 button Description: Settings, ID: header-toolbar-properties
+					286 button Description: Fullscreen mode, ID: header-toolbar-fullscreen
+					287 pop up button Take a snapshot
+				77 pop up button Share your idea with the trade community
+				78 container
+					79 button Trade
+						80 text Trade
+			81 toolbar drawing-toolbar
+				82 container
+					83 container
+						84 button Cross
+						85 checkbox Description: Cursors, Value: 1
+					86 container
+						87 button Trendline
+						88 checkbox Description: Trend tools, Value: 0
+					89 container
+						90 button Fib retracement
+						91 checkbox Description: Gann and Fibonacci tools, Value: 0
+					92 container
+						93 button XABCD pattern
+						94 checkbox Description: Patterns, Value: 0
+					95 container
+						96 button Long position
+						97 checkbox Description: Forecasting and measurement tools, Value: 0
+					98 container
+						99 button Brush
+						100 checkbox Description: Geometric shapes, Value: 0
+					101 container
+						102 button Text
+						103 checkbox Description: Annotation tools, Value: 0
+					104 container
+						105 button Icon
+						106 checkbox Description: Icons, Value: 0
+					107 button Measure
+					108 button Zoom in
+					109 container
+						110 checkbox Description: Magnet mode snaps drawings placed near price bars to the closest OHLC value, Value: 0
+						111 checkbox Description: Magnets, Value: 0
+					112 checkbox Description: Keep drawing, Value: 0
+					113 container
+						114 checkbox Description: Lock drawings and indicators, Value: 0
+						115 checkbox Description: Lock options, Value: 0
+					116 container
+						117 checkbox Description: Hide all drawings, Value: 0
+						118 checkbox Description: Hide options, Value: 0
+					119 container
+						120 checkbox Description: New drawings will not be synced, Value: 0
+						121 checkbox Description: Sync drawings options, Value: 0
+					122 container
+						123 button Remove objects
+						124 button Remove options
+			125 container Chart #1
+				126 container
+					127 toolbar
+						347 container Change symbol
+							348 container
+								349 image
+								350 text B
+							351 button Change symbol
+						133 container
+							134 button Flag symbol
+							135 button More
+								136 image
+						137 button Market open
+						352 container
+							353 text C 81,474.00 −141.64 (−0.17%) Vol 892.71
+					140 container
+						141 text 81,473.99 SELL 81,474.00 BUY
+					144 container
+						145 button Hide indicator legend
+						146 toolbar
+							147 container
+								148 text CA_-_RSI_Bol_Strat_1.1
+								149 text 6
+								150 text 200
+							151 container
+								152 button Hide
+									153 image
+								158 button More
+									159 image
+							354 container
+								355 text 72,398.44
+								356 text 88,379.84
+								357 text 56,417.04
+					161 image Chart for BINANCE:BTCUSDT, 1 day
+				394 toolbar
+					395 text FX ledger cash_per_order 31
+					396 container
+						397 button Hide
+							398 image
+						399 button More
+							400 image
+					401 button Active strategy · Opened in Pine Editor
+					402 container
+						403 text 0.88740000
+						404 text 7,200.77000000
+						405 text 1.00000000
+						406 text −1.00000000
+						407 text 0.89800000
+						408 text 8.94632500
+						409 text 0.08947220
+						410 text 0.90000000
+						411 text 8,198.86000000
+						412 text 2.00000000
+						413 text 6.98281000
+						414 text 10.61105570
+						415 text 10,006.98281000
+						416 text 8,197.02000000
+						417 text 0.01000000
+						418 text 10,007.94632500
+			162 toolbar
+				163 pop up button Date Range
+				164 button Timezone
+					165 text 10:47:46 UTC+8
+			166 container
+				167 toolbar
+					168 checkbox Description: Watchlist, details, and news, Value: 0
+					169 checkbox Description: Alerts, Value: 0
+					170 checkbox Description: Object tree and data window, Value: 1
+					171 checkbox Description: AI Copilot, Value: 0
+					172 checkbox Description: Screeners, Value: 0
+					173 checkbox Description: Pine Editor, Value: 1
+					174 checkbox Description: Calendars, Value: 0
+					175 checkbox Description: Community, Value: 0
+					176 checkbox Description: Notifications, Value: 0
+					177 checkbox Description: Chats, Value: 0
+					294 pop up button Products
+					178 checkbox Description: Help Center, Value: 0
+				295 container
+					296 tab group
+						297 tab (selectable, settable, boolean) Object tree, Value: 0, ID: object_tree
+						298 tab (selected, settable, boolean) Data window, Value: 1, ID: data-window
+					299 container
+						300 table
+							301 container
+								302 text Date
+								303 text Sat 17 Oct '26
+							304 row BTCUSDT · 1D · Binance Open 81,615.91 High 81,677.88 Low 81,416.00 Close 81,474.00 Change −141.64 (−0.17%) Vol 892.71 Last day change −141.64 (−0.17%)
+								305 text BTCUSDT · 1D · Binance
+								306 toolbar
+									307 button Hide data
+								308 text Open
+								309 text 81,615.91
+								310 text High
+								311 text 81,677.88
+								312 text Low
+								313 text 81,416.00
+								314 text Close
+								315 text 81,474.00
+								316 text Change
+								317 text −141.64 (−0.17%)
+								318 text Vol
+								319 text 892.71
+								320 text Last day change
+								321 text −141.64 (−0.17%)
+							322 row CA_-_RSI_Bol_Strat_1.1 (6, 200) Bollinger Bands SMA Basis Line 72,398.44 Bollinger Bands Upper Line 88,379.84 Bollinger Bands Lower Line 56,417.04
+								323 text CA_-_RSI_Bol_Strat_1.1 (6, 200)
+								324 toolbar
+									325 button Hide data
+								369 text Bollinger Bands SMA Basis Line
+								370 text 72,398.44
+								371 text Bollinger Bands Upper Line
+								372 text 88,379.84
+								373 text Bollinger Bands Lower Line
+								374 text 56,417.04
+							390 row FX ledger cash_per_order 31 entryRate 0.88740000 entryPrice 7,200.77000000 entryFee 1.00000000 netEntry −1.00000000 heldRate 0.89800000 heldProfit 8.94632500 heldPercent 0.08947220 exitRate 0.90000000 exitPrice 8,198.86000000 closedFee 2.00000000 closedProfit 6.98281000 closedPercent 10.61105570 closedEquity 10,006.98281000 heldClose 8,197.02000000 entrySize 0.01000000 heldEquity 10,007.94632500
+								391 text FX ledger cash_per_order 31
+								392 toolbar
+									393 button Hide data
+								419 text entryRate
+								420 text 0.88740000
+								421 text entryPrice
+								422 text 7,200.77000000
+								423 text entryFee
+								424 text 1.00000000
+								425 text netEntry
+								426 text −1.00000000
+								427 text heldRate
+								428 text 0.89800000
+								429 text heldProfit
+								430 text 8.94632500
+								431 text heldPercent
+								432 text 0.08947220
+								433 text exitRate
+								434 text 0.90000000
+								435 text exitPrice
+								436 text 8,198.86000000
+								437 text closedFee
+								438 text 2.00000000
+								439 text closedProfit
+								440 text 6.98281000
+								441 text closedPercent
+								442 text 10.61105570
+								443 text closedEquity
+								444 text 10,006.98281000
+								445 text heldClose
+								446 text 8,197.02000000
+								447 text entrySize
+								448 text 0.01000000
+								449 text heldEquity
+								450 text 10,007.94632500
+			179 toolbar footer-chart-panel
+				180 container
+					181 button Close strategy report
+						182 text FX ledger cash_per_order 31
+					183 pop up button (collapsed) Description: Open context menu, ID: :r1c:, Secondary Actions: Expand
+				184 button Collapse panel
+				185 button Maximize panel
+			326 container bottom-area
+				451 container
+					452 tab group report-tabs
+						453 tab (selectable, settable, boolean) Value: 0, ID: Strategy report
+						454 tab (selected, settable, boolean) Value: 1, ID: List of Trades
+					455 button (collapsed) Description: Aug 17, 2017 — Oct 17, 2026, Secondary Actions: Expand
+					456 button Settings
+					457 button Add alert
+					458 text List of trades
+					459 button Download .csv
+					460 pop up button (collapsed) Description: Column setup, ID: :r3b:, Secondary Actions: Expand
+					461 table
+						462 row
+							463 cell
+								464 container
+									465 text Trade number 
+							466 cell
+								467 text Type
+							468 cell
+								469 text Date and time
+							470 cell
+								471 text Signal
+							472 cell
+								473 text Price
+							474 cell
+								475 text Size
+							476 cell
+								477 text Net PnL
+							478 cell
+								479 text Return
+						480 row
+							481 cell
+								482 container
+									483 text 1 Long
+							484 cell
+								485 button Show on chart
+								486 button Show on chart
+							487 cell
+								488 text Exit
+								489 text Entry
+							490 cell
+								491 text Jan 11, 2020
+								492 text Jan 2, 2020
+							493 cell
+								494 text Close entry(s) order L
+								495 text L
+							496 cell
+								497 container
+									498 text 8,198.86 USDT
+								499 text 7,200.77
+								500 text USDT
+							501 cell
+								502 text 0.01
+								503 container
+									504 text 72.01 EUR
+							505 cell
+								506 text +6.98
+								507 text EUR
+							508 cell
+								509 text +10.61%
+			186 container Trading panel
+		187 container
+			188 button Move split-view to overlay
+			189 text Pine Editor
+			190 button Collapse panel
+			191 button Fullscreen mode
+			192 button Close
+			193 container pine-editor-dialog
+				194 pop up button (collapsed) Untitled script, ID: :rm:, Secondary Actions: Expand
+					195 heading Untitled script, Value: 2
+						196 text Untitled script
+				510 button (disabled) Update on chart
+				198 button Save script
+				199 button Publish script, Help: Share your script with community
+				200 container
+					201 pop up button (collapsed) Description: More, ID: :rq:, Secondary Actions: Expand
+				202 container
+					204 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+strategy("FX ledger cash_per_order 31",currency=currency.EUR,initial_capital=10000,commission_type=strategy.commission.cash_per_order,commission_value=1,margin_long=0,margin_short=0,precision=8)
+rate=request.currency_rate(syminfo.currency,strategy.account_currency)
+if time==1577836800000
+    strategy.entry("L",strategy.long,qty=0.01)
+if time==1578614400000
+    strategy.close("L")
+entry=time==1577923200000
+held=time==1578614400000
+closed=time==1578700800000
+
+				205 container
+					206 button
+					207 button Line 1, Col 1
+						208 text Line
+						209 text 1
+						210 text , 
+						211 text Col
+						212 text 1
+					213 link Description: Pine Script® v6, Help: Open Pine Reference, Value: tradingview.com/pine-script-reference/v6
+		345 container common-tooltip-wrapper
+			346 text 1 day
+
+The focused UI element is 204 editor (settable) Description: Editor content;Press Alt+F1 for Accessibility Options., Value: //@version=6
+strategy("FX ledger cash_per_order 31",currency=currency.EUR,initial_capital=10000,commission_type=strategy.commission.cash_per_order,commission_value=1,margin_long=0,margin_short=0,precision=8)
+rate=request.currency_rate(syminfo.currency,strategy.account_currency)
+if time==1577836800000
+    strategy.entry("L",strategy.long,qty=0.01)
+if time==1578614400000
+    strategy.close("L")
+entry=time==1577923200000
+held=time==1578614400000
+closed=time==1578700800000

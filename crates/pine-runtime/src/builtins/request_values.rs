@@ -55,6 +55,7 @@ impl HistoricalRuntime<'_> {
                         PineValue::Int(_)
                             | PineValue::Float(_)
                             | PineValue::Bool(_)
+                            | PineValue::ConstantBool { .. }
                             | PineValue::String(_)
                             | PineValue::Color(_)
                             | PineValue::Na
@@ -76,6 +77,7 @@ impl HistoricalRuntime<'_> {
             PineValue::Int(_)
             | PineValue::Float(_)
             | PineValue::Bool(_)
+            | PineValue::ConstantBool { .. }
             | PineValue::String(_)
             | PineValue::Color(_)
             | PineValue::Na

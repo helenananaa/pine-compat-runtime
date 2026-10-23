@@ -1,4 +1,4 @@
 //@version=5
 indicator("String repeat result limit")
-text = str.repeat("x", 40961)
-plot(str.length(text))
+note = str.repeat("x", 40961)
+plot(str.length(note))

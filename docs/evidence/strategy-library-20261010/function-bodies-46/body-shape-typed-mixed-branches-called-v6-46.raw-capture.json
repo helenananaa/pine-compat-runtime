@@ -1,0 +1,19 @@
+{
+  "name": "body-shape-typed-mixed-branches-called-v6-46",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research46-20261018\\body-shape-typed-mixed-branches-called-v6-46.pine",
+  "source_sha256": "09a0760c2a141026a9693f7c4724f51bbe936c4d88d00740bd7f0dc38aa6c5ad",
+  "kind": "typed-mixed-branches-called",
+  "version": 6,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "Cannot call \"operator ?:\" with argument \"expr2\"=\"bad\". An argument of \"literal string\" type was used but a \"simple int\" is expected. (CE10123)",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "b9a287b29824531debbf2655e263c8d1e4fdca8fca7d2445c6873b3ce1cc7d02",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-shape-typed-mixed-branches-called-v6-46.native.ax.txt",
+  "accessibility_sha256": "24d7d7024275bb07206b0c3282c8607c4c0c200734e6dc214d3af9760427cc63",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research46-20261018/body-shape-typed-mixed-branches-called-v6-46.native.png",
+  "screenshot_sha256": "43678a1acb33d563483d505463cb280fb97f10af2c0f2b565c172977c3fd9ee7",
+  "chart_ui_context": "161 image Chart for BINANCE:BTCUSDT, 1 month",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

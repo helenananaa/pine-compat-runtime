@@ -1,0 +1,28 @@
+{
+  "name": "request-point-two-calls-v5-43",
+  "version": 5,
+  "scenario": "point-two-calls",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research43-20261018\\request-point-two-calls-v5-43.pine",
+  "source_sha256": "bf8caa11b0f65455aa049d5086858b85607d5099c00da87232953815a234f1ad",
+  "historical_expected": [
+    15,
+    20,
+    20
+  ],
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    15,
+    20,
+    20
+  ],
+  "native_row": "242 row request-point-two-calls-v5-43 Plot 15.00 Plot 20.00 Plot 20.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "bf8caa11b0f65455aa049d5086858b85607d5099c00da87232953815a234f1ad",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-two-calls-v5-43.native.ax.txt",
+  "accessibility_sha256": "657977758923b12074d4cf10fc34d4579d83277de8eb102b8b690a3f0f9be3d9",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research43-20261018/request-point-two-calls-v5-43.native.png",
+  "screenshot_sha256": "345719fceb35beecc220ce65c78e28fcdda52cf20899b22ebd9a74dabe2fc9c3",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

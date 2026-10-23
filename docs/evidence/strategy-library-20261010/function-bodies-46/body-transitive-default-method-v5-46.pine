@@ -1,0 +1,7 @@
+//@version=5
+indicator("body-transitive-default-method-v5-46")
+type Anchor
+    int value
+method g(Anchor self,bool flag,int offset=0)=>flag?self.value+offset:0
+f(Anchor self,x)=>self.g(x)
+plot(1)

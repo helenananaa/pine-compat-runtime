@@ -1,0 +1,15 @@
+{
+  "name": "constant-bool-qualified-parameter-v6-34",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final34-20261017\\constant-bool-qualified-parameter-v6-34.pine",
+  "source_sha256": "7b7e1525f7178a0d1b53057b2df4d23e472d69a5af3fb1b57186f2cdad051b7e",
+  "native_status": "compiled_and_executed",
+  "native_row": "235 row Parameter bool const annotation probe34 Plot 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "7b7e1525f7178a0d1b53057b2df4d23e472d69a5af3fb1b57186f2cdad051b7e",
+  "normalized_source_sha256": "7b7e1525f7178a0d1b53057b2df4d23e472d69a5af3fb1b57186f2cdad051b7e",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-qualified-parameter-v6-34.native.ax.txt",
+  "accessibility_sha256": "d67900bfdff3e20246f71366063580a9545835ba1f0d132db55ba0f7eb464007",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-final34-20261017/constant-bool-qualified-parameter-v6-34.native.png",
+  "screenshot_sha256": "c4eebaf89c9536972edbf8bbaf634227ce2479422dd9ae5c9f483a597f8dc641"
+}

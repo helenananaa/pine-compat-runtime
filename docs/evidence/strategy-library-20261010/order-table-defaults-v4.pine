@@ -1,0 +1,14 @@
+//@version=4
+strategy("Order and table defaults oracle 15", overlay=true)
+if bar_index == 0
+    strategy.order("L", true, qty=1)
+if bar_index == 2
+    strategy.order("S", false, qty=2)
+plot(strategy.position_size, title="position")
+var t = table.new(position.top_right, 3, 3)
+if barstate.islast
+    for c = 0 to 2
+        for r = 0 to 2
+            table.cell(t, c, r, tostring(c)+":"+tostring(r), bgcolor=color.blue)
+    table.clear(t, 0, 0)
+    table.clear(t, 1, 1, 2)

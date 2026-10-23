@@ -1,0 +1,40 @@
+{
+  "name": "bool-control-functions-history-v5-32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-control-functions-history-v5-32.pine",
+  "source_sha256": "02b6525a62fd6fe7e6cae31467447939be8bb1b79d312b3425d98255a47535bd",
+  "native_status": "compiled_and_executed",
+  "native_row": "247 row Control bool functions v5 probe32 function switch 0 function while 0 function for 0 function foreach 0 current bool history 0 previous bool history 0 selected true 1 selected false 1 numeric missing 1",
+  "cursor_refreshed": true,
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "f48de730c97a9c75c43730f11d38549c54914a9466d4cdf825bd3b271ce0b5f5",
+  "editor_source_sha256": "f48de730c97a9c75c43730f11d38549c54914a9466d4cdf825bd3b271ce0b5f5",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-control-functions-history-v5-32.native.png",
+  "screenshot_sha256": "47a378823e0b041c9be24a9cbe241441d20dc2f1197601fa89868898db07ead4",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\bool-control-functions-history-v5-32.native.ax.txt",
+  "accessibility_sha256": "90b076fac0f2ab60ff14e68d180f22ea11f9d142aa42ea48bd3226dbfaf25662",
+  "native_values": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "labels": [
+    "function switch",
+    "function while",
+    "function for",
+    "function foreach",
+    "current bool history",
+    "previous bool history",
+    "selected true",
+    "selected false",
+    "numeric missing"
+  ],
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "qualification_role": "versioned_control_default_oracle"
+}

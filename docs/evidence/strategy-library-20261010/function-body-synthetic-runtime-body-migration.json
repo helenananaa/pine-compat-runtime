@@ -1,0 +1,23 @@
+[
+  {
+    "original": "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
+    "original_sha256": "d6350c6bf67d195164c4fd146b26a0f24d59cc58dba3e1d60af43318ec7d3c4a",
+    "derived": "tests/fixtures/runtime/local_user_method_map_call_result_reads_checked_bodies_46.pine",
+    "derived_sha256": "6f587952e69febf5bb7b257cdf3f3ab4240f2a47240c9d317067471bde9dcb6f",
+    "scope": "Synthetic broad regression input. Moves global initialization before method declarations, changes type-qualified method syntax to function syntax; retains every plot, mutation and original expected output. Not Native whole-source qualified (matrix stress input exceeds plot limit). Original retained as rejection control."
+  },
+  {
+    "original": "tests/fixtures/runtime/user_method_matrix_call_result_reads.pine",
+    "original_sha256": "9765907e9d6a7dc681a69fe93dbe304a524c57a9039c3b7a296958630dd5df71",
+    "derived": "tests/fixtures/runtime/user_method_matrix_call_result_reads_checked_bodies_46.pine",
+    "derived_sha256": "d0548ee40a4ce4dc6a17dcc164052cc3159e40a8868631dd71e834cb7582efc2",
+    "scope": "Synthetic broad regression input. Moves global initialization before method declarations, changes type-qualified method syntax to function syntax; retains every plot, mutation and original expected output. Not Native whole-source qualified (matrix stress input exceeds plot limit). Original retained as rejection control."
+  },
+  {
+    "original": "tests/fixtures/runtime/map_udf_read.pine",
+    "original_sha256": "688796309b4d8bc2cc67cc1e9d996983224f316c26eb597313c83287da9ce3f8",
+    "derived": "tests/fixtures/runtime/map_udf_read_checked_bodies_46.pine",
+    "derived_sha256": "6ebdf7dd72301642b1d3bc053534a9b5ceefefc82403cb646ffc3ab75c0404ad",
+    "scope": "Synthetic broad regression input. Moves global initialization before method declarations, changes type-qualified method syntax to function syntax; retains every plot, mutation and original expected output. Not Native whole-source qualified (matrix stress input exceeds plot limit). Original retained as rejection control."
+  }
+]

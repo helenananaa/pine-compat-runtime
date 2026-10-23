@@ -5,12 +5,12 @@ use super::types::*;
 const MATRIX_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "rows",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "columns",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -23,12 +23,12 @@ const MATRIX_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
 const MATRIX_NEW_INT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "rows",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "columns",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -41,12 +41,12 @@ const MATRIX_NEW_INT_PARAMS: &[BuiltinParam] = &[
 const MATRIX_NEW_BOOL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "rows",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "columns",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -59,12 +59,12 @@ const MATRIX_NEW_BOOL_PARAMS: &[BuiltinParam] = &[
 const MATRIX_NEW_STRING_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "rows",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "columns",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -77,12 +77,12 @@ const MATRIX_NEW_STRING_PARAMS: &[BuiltinParam] = &[
 const MATRIX_NEW_COLOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "rows",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "columns",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -113,6 +113,19 @@ const MATRIX_TWO_NUMERIC_ID_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id2",
         accepts: Accepts::NumericMatrix,
+        optional: false,
+    },
+];
+
+const MATRIX_SUM_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id1",
+        accepts: Accepts::NumericMatrix,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "id2",
+        accepts: Accepts::MatrixOrNumericCompatibleWithMatrixCounterpart(0),
         optional: false,
     },
 ];
@@ -681,8 +694,8 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "matrix.sum",
         phase: BuiltinPhase::Phase1Core,
-        params: MATRIX_NUMERIC_ID_PARAMS,
-        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        params: MATRIX_SUM_PARAMS,
+        returns: ReturnSpec::MatrixSum,
         variadic: false,
     },
     BuiltinSignature {

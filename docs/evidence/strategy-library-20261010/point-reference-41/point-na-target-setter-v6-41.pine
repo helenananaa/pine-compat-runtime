@@ -1,0 +1,6 @@
+//@version=6
+indicator("point-na-target-setter-v6-41")
+line item=na
+chart.point p=na
+line.set_first_point(item,p)
+plot(1)

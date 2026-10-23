@@ -4,8 +4,10 @@ use pine_syntax::SourceFile;
 #[test]
 fn push_admission_preserves_other_side_effect_and_type_boundaries() {
     for (version, body) in [
-        (4, "    array.push(values, 1)\n    array.size(values)"),
-        (5, "    array.reverse(values)\n    array.size(values)"),
+        (
+            5,
+            "    array.concat(values, array.new_bool())\n    array.size(values)",
+        ),
         (6, "    array.push(values, true)\n    array.size(values)"),
         (6, "    plot(1)\n    array.size(values)"),
         (6, "    outer := 2\n    array.size(values)"),

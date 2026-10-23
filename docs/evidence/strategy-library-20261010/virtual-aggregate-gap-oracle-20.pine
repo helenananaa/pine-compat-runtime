@@ -1,0 +1,11 @@
+//@version=6
+indicator("Virtual aggregate gap oracle 20",overlay=false)
+f() =>
+    [na(time("D","0900-1000,1500-1600","America/New_York")[3])?999:time("D","0900-1000,1500-1600","America/New_York")[3]-time[3],na(time_close("D","0900-1000,1500-1600","America/New_York")[3])?999:time_close("D","0900-1000,1500-1600","America/New_York")[3]-time[3],time("D","1700-1700:23456","America/New_York")-time,time_close("D","1700-1700:23456","America/New_York")-time,time("W","1700-1700:23456","America/New_York")-time,time_close("W","1700-1700:23456","America/New_York")-time]
+[a,b,c,d,e,f1]=request.security("NASDAQ:AAPL","60",f())
+plot(a,title="dailyGapOpen")
+plot(b,title="dailyGapClose")
+plot(c,title="overnightDailyOpen")
+plot(d,title="overnightDailyClose")
+plot(e,title="overnightWeekOpen")
+plot(f1,title="overnightWeekClose")

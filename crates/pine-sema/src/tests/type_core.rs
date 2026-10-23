@@ -135,15 +135,16 @@ fn rejects_unknown_history_offset() {
 }
 
 #[test]
-fn rejects_non_int_history_offset() {
+fn accepts_numeric_float_history_offset() {
     let analysis = analyze("x = close[close]\n");
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "dynamic_history_offset"
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1478,18 +1479,15 @@ fn accepts_v5_while_expression_numeric_condition_via_explicit_hir_coercion() {
 }
 
 #[test]
-fn rejects_while_expression_without_final_result() {
+fn accepts_while_expression_with_terminal_declaration_result() {
     let analysis = analyze("result = while close > open\n    value = 1\nplot(result)\n");
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_BRANCH_RETURN"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1507,14 +1505,17 @@ fn accepts_nested_if_statement_as_if_expression_branch_result() {
 }
 
 #[test]
-fn rejects_nested_if_expression_branch_without_a_value() {
+fn accepts_nested_if_expression_branch_with_reassignment_result() {
     let analysis = analyze(
         "value = 0\nresult = if close >= open\n    if volume > 0\n        value := 1\n    else\n        high\nelse\n    low\n",
     );
 
-    assert_eq!(analysis.diagnostics.len(), 1, "{:?}", analysis.diagnostics);
-    assert_eq!(analysis.diagnostics[0].code, "E_BRANCH_RETURN");
-    assert!(analysis.hir.is_none());
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

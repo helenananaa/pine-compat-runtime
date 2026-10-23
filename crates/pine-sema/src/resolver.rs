@@ -91,6 +91,10 @@ impl ScopeResolver {
         {
             scope.insert(name.to_owned(), info);
         }
+        self.update_lower_symbol(info);
+    }
+
+    pub(crate) fn update_lower_symbol(&mut self, info: SymbolInfo) {
         if let Some((_, symbol)) = self
             .all_symbols
             .iter_mut()

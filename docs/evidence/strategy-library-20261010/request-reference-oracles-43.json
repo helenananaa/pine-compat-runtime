@@ -1,0 +1,1057 @@
+{
+  "scope": "Bounded direct chart-context reference semantics only. Original Native source bytes and full-source clipboard verification are retained. Local controls use three fixed bars. Foreign replay, context windows, all reference graphs and Native exchange-close are not qualified.",
+  "records": [
+    {
+      "name": "request-array-write-v5-43",
+      "version": 5,
+      "scenario": "array-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v5-43.pine",
+      "source_sha256": "144815ed0ca799db335da9dea5be86a3f5c3fde94d9542e6970a22313011757d",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-array-write-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "144815ed0ca799db335da9dea5be86a3f5c3fde94d9542e6970a22313011757d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v5-43.native.ax.txt",
+      "accessibility_sha256": "d025145a011ee07cce090e287a9adb29700f47cbb4dda299a4f3e31445d8aa33",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v5-43.native.png",
+      "screenshot_sha256": "3aa5484a1f3b22899936c9cb2412cc6b6c073ccf88bf49cd240e6bf5dc3ff6dc",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v5-43.capture.json",
+      "raw_capture_sha256": "8cc19cf8a24a9dcc1e6d82d407b291080488251aef7253e584c01ba57b8fa3cf",
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-array-write-v6-43",
+      "version": 6,
+      "scenario": "array-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v6-43.pine",
+      "source_sha256": "282a54395107fb048ba69d7b676392550e40a5207df8e4b6abaf334cb601e49c",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-array-write-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "282a54395107fb048ba69d7b676392550e40a5207df8e4b6abaf334cb601e49c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v6-43.native.ax.txt",
+      "accessibility_sha256": "e924d27412ef73cb7360ad713cee930b90b490e78766e19ba7d8ed75602d6daa",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v6-43.native.png",
+      "screenshot_sha256": "fdb93f4d85db10afab2e06179b7db0c72704eaee0c14e2ee9c6d693608e3c22a",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-array-write-v6-43.capture.json",
+      "raw_capture_sha256": "aeb4b88a8a9c5bcee1bb17b42116c19bf307612a0dc61031cd59b307774be15e",
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-drawing-rebound-v5-43",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v5-43.pine",
+      "source_sha256": "69cce9b8fdcbeb95721e4cbf88370cfa01b33228d737002d71de5036505f53ee",
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "built-in 'line.new' cannot be used with any parameter of the `security()` function.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "69cce9b8fdcbeb95721e4cbf88370cfa01b33228d737002d71de5036505f53ee",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v5-43.native.ax.txt",
+      "accessibility_sha256": "9e811a58a57286c6bcec7568ab7cb75b1a17eb320a46c71512661c7530d20a7e",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v5-43.native.png",
+      "screenshot_sha256": "738908717e1b81055d4a0a3aa5dd5bc82b0b88d71726ce287f2951c3bed32812",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v5-43.capture.json",
+      "raw_capture_sha256": "a2a5c6d06e91eef915cf5b69c776dedfa14646073948b98ed934157b219c2987"
+    },
+    {
+      "name": "request-drawing-rebound-v6-43",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v6-43.pine",
+      "source_sha256": "bd213ed4bae56f035ae5ed46e6bb38053591604e16a0758a96f619448dba445e",
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "built-in \"line.new\" cannot be used with any parameter of the \"security()\" function. (CE10057)",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "bd213ed4bae56f035ae5ed46e6bb38053591604e16a0758a96f619448dba445e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v6-43.native.ax.txt",
+      "accessibility_sha256": "5dd5bd58c65edcfbc6d66efbb970074ea7bc736d9646ebee234252ba146d05a3",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v6-43.native.png",
+      "screenshot_sha256": "6cfd9b5efe35b8d1e6297c7f179d4a5ab564a90d25471dd27a294ea1ccc874b1",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-drawing-rebound-v6-43.capture.json",
+      "raw_capture_sha256": "c492c926c07e338997140968462ff208f47b11f936134e007a8f7ee740b06056"
+    },
+    {
+      "name": "request-global-map-v5-43",
+      "version": 5,
+      "scenario": "global-map",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v5-43.pine",
+      "source_sha256": "fe5dbdea28b1332ac51f58912ecddbde9a35250b6af64805704fc4a864ce9b96",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-global-map-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "fe5dbdea28b1332ac51f58912ecddbde9a35250b6af64805704fc4a864ce9b96",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v5-43.native.ax.txt",
+      "accessibility_sha256": "f6f5f1c9f492850b6f2c1d119ff47771ebb3df6bff103a2d5835aae4c8881e1a",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v5-43.native.png",
+      "screenshot_sha256": "0d7e08d26610ccb3f6f13642258ff480223c53092e7b8f6b8b34403e04e10235",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v5-43.capture.json",
+      "raw_capture_sha256": "8df046377f292148202235002b56a07d977d237ae6f23d35afd8324ceb1fc2de",
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-global-map-v6-43",
+      "version": 6,
+      "scenario": "global-map",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v6-43.pine",
+      "source_sha256": "3f4b18120a0f1a547d419fa46908537301f43d0a1f4a89c9667d1b2be758e6ad",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-global-map-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "3f4b18120a0f1a547d419fa46908537301f43d0a1f4a89c9667d1b2be758e6ad",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v6-43.native.ax.txt",
+      "accessibility_sha256": "d00f2673f156ec9bbdd0eaa59a766ecdcad692b11fdc52d4e454db37737d14fa",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v6-43.native.png",
+      "screenshot_sha256": "d1188b6d47c08d6ecb99ae81d69db4c2c227255f6d3c0580f2b869591a3f689b",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-map-v6-43.capture.json",
+      "raw_capture_sha256": "0a418efcb29c6c5e39e2efabaff5bd166437fcc6bc2c37110f7d04c89a660b52",
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-global-matrix-v5-43",
+      "version": 5,
+      "scenario": "global-matrix",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v5-43.pine",
+      "source_sha256": "8af950dcf5ec096ff9ef66fcec53a1c6b09f1ff23ccbb3b18ec37007fbca25ce",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-global-matrix-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "8af950dcf5ec096ff9ef66fcec53a1c6b09f1ff23ccbb3b18ec37007fbca25ce",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v5-43.native.ax.txt",
+      "accessibility_sha256": "536a23902d59bbaf26454f8097abc86b9f62cf8fa5639ce35271710984e47117",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v5-43.native.png",
+      "screenshot_sha256": "87d2247e73035b16bc353cd4866a45f2f0433c40dd163bc3387aca6937bd82aa",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v5-43.capture.json",
+      "raw_capture_sha256": "66b983b0b315809e8e824543edd19fbbf9c0db7d36e0a69c0448423bbe57b7b1",
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-global-matrix-v6-43",
+      "version": 6,
+      "scenario": "global-matrix",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v6-43.pine",
+      "source_sha256": "fc8756a140e94626a5e04a13e61f6e0ac0bc49104db5368b8b3401b1cfb55179",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-global-matrix-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "fc8756a140e94626a5e04a13e61f6e0ac0bc49104db5368b8b3401b1cfb55179",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v6-43.native.ax.txt",
+      "accessibility_sha256": "734179e0b370d85a300a5659e678be7dcb70f036f058df0fdaa930e82779ace9",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v6-43.native.png",
+      "screenshot_sha256": "b70e508786e9c2ad52aeeff53d4486f0da735a8bfeed72983e9fa4e9032c1c19",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-global-matrix-v6-43.capture.json",
+      "raw_capture_sha256": "56f75a6a236b4a4bc466a62a77ac5dec8768f7e28aa2dfc83fc855790f393f50",
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-local-point-v5-43",
+      "version": 5,
+      "scenario": "local-point",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v5-43.pine",
+      "source_sha256": "57cf2cc7aa3621c72b54845e5bfb3cfe04da015031bc9a50e3829d91f23d9fbb",
+      "historical_expected": [
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15
+      ],
+      "native_row": "242 row request-local-point-v5-43 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "57cf2cc7aa3621c72b54845e5bfb3cfe04da015031bc9a50e3829d91f23d9fbb",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v5-43.native.ax.txt",
+      "accessibility_sha256": "c91f97722633c194c361dce8cfcf7e25642cba8c5a4f871db0851b498469ceed",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v5-43.native.png",
+      "screenshot_sha256": "d7787d51a80e3b304719960235fe7685e4af7a96fe4d2d98f845a7c47773bd8d",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v5-43.capture.json",
+      "raw_capture_sha256": "a1edb364cf767d9df4fc136ce70e4c8af0d056d95de8d9e4d268ee294650cf45",
+      "forming_expected": [
+        15
+      ]
+    },
+    {
+      "name": "request-local-point-v6-43",
+      "version": 6,
+      "scenario": "local-point",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v6-43.pine",
+      "source_sha256": "533a927324e491711737a30308f06e1adaff0a0feea5714e23a6b99e30633ba9",
+      "historical_expected": [
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15
+      ],
+      "native_row": "242 row request-local-point-v6-43 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "533a927324e491711737a30308f06e1adaff0a0feea5714e23a6b99e30633ba9",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v6-43.native.ax.txt",
+      "accessibility_sha256": "164cd77c6afd3e19f9b06b1536648ff8f95d0c5b99095a26677704d63f5ab852",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v6-43.native.png",
+      "screenshot_sha256": "6df5059940d6771c6233800c80bca468c65c056600b6bc4bae0320bc8cce65ea",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-local-point-v6-43.capture.json",
+      "raw_capture_sha256": "5f4ec1dc7d0b13a0e3486ced3a7b84aeef7ed5b91979fa26cb2b32e02715f0c2",
+      "forming_expected": [
+        15
+      ]
+    },
+    {
+      "name": "request-point-array-v5-43",
+      "version": 5,
+      "scenario": "point-array",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v5-43.pine",
+      "source_sha256": "122882a81d0635721107497018728244faf7455a81f91ccbd65c9de911b3ed59",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "240 row request-point-array-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "b751c7f16eee057a8aca6c08aef857e17ab0f2f70c0fff8bb240d42f92092703",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v5-43.native.ax.txt",
+      "accessibility_sha256": "b60da3a7d60e94cbe208b718dffdf01831c01639b8ce1c6ecc38d158766fa3ce",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v5-43.native.png",
+      "screenshot_sha256": "5163853933761adaa18354e348457f819e2674a252978e4a07367f0ef1bca098",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v5-43.capture.json",
+      "raw_capture_sha256": "65226916a0757c6718ef5e035e8bbfd570fbb8d8737c6111d5763eaaf15d3b24",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-array-v6-43",
+      "version": 6,
+      "scenario": "point-array",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v6-43.pine",
+      "source_sha256": "edb7137afbcbee76858f84ca2fffe540ca8286c8506db1672f65a7a31dea83ee",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "238 row request-point-array-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "e842d1fd8a4f4842e5565689812968f6ead8a0ae90af5a48ed3f3aa03db157a7",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v6-43.native.ax.txt",
+      "accessibility_sha256": "e4bb36b5d2a9e50f638df05894cb519ba6b22d198b62cea920f5b892bc5ea096",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v6-43.native.png",
+      "screenshot_sha256": "3714739b595f144f3556266696ebe080df9de369e53bfd496a4a5c8814e5ed00",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-array-v6-43.capture.json",
+      "raw_capture_sha256": "59c549e0bf29da033fcdee373713bee3d64d54dedc0e12ec87b320e1d99cd692",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-copy-v5-43",
+      "version": 5,
+      "scenario": "point-copy",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v5-43.pine",
+      "source_sha256": "8a56a64c945fb0e1de02b49088d77740a5e9debe1f8996605908eaee8ffd2fd1",
+      "historical_expected": [
+        15,
+        10,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        10,
+        15
+      ],
+      "native_row": "242 row request-point-copy-v5-43 Plot 15.00 Plot 10.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "8a56a64c945fb0e1de02b49088d77740a5e9debe1f8996605908eaee8ffd2fd1",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v5-43.native.ax.txt",
+      "accessibility_sha256": "3fede8253475e3aefff9ac34849bf7fbf09527dd79e07bc93c46c6824300773d",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v5-43.native.png",
+      "screenshot_sha256": "bf461a408521db0ae26f8a1371ba4f439d2f4c0c38d484f1420d61a2ed8d3b9c",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v5-43.capture.json",
+      "raw_capture_sha256": "ac3dd501cb9da47ea0d0259651e9fa24b66dc2863036d635f1f55d6558c45833",
+      "forming_expected": [
+        15,
+        10,
+        15
+      ]
+    },
+    {
+      "name": "request-point-copy-v6-43",
+      "version": 6,
+      "scenario": "point-copy",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v6-43.pine",
+      "source_sha256": "38016a7bb75cf3c20e18d1a36b113ab1dd64077a3ae9740435ecf6ceaec1f505",
+      "historical_expected": [
+        15,
+        10,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        10,
+        15
+      ],
+      "native_row": "242 row request-point-copy-v6-43 Plot 15.00 Plot 10.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "38016a7bb75cf3c20e18d1a36b113ab1dd64077a3ae9740435ecf6ceaec1f505",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v6-43.native.ax.txt",
+      "accessibility_sha256": "48f2bad13e6716619a77f9724490870f75d6c6d0ddfa15d4e53ef872311da391",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v6-43.native.png",
+      "screenshot_sha256": "0dade8e0a6b70ce00ef45ba1ed6d889d4cf7cd5fdfe5237f406342b859c1049b",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-copy-v6-43.capture.json",
+      "raw_capture_sha256": "2656f59b6309255dd3cd7f00f6f8d76c7ddf4b9df6252ed570f46587f856937b",
+      "forming_expected": [
+        15,
+        10,
+        15
+      ]
+    },
+    {
+      "name": "request-point-field-read-v5-43",
+      "version": 5,
+      "scenario": "point-field-read",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v5-43.pine",
+      "source_sha256": "59538dbfe04e44d9f561803d8c11f56e73bb3fce72094c64733f15119dbfe1a4",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        20
+      ],
+      "native_row": "240 row request-point-field-read-v5-43 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "759f95715f6d715d577070ed44233a5c9e2c7e49e09bd4c18735f582ef8b7c9c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v5-43.native.ax.txt",
+      "accessibility_sha256": "728d1744b7a380ce0f87e80ccd7a31b5402a5c1166a7cc278b62afb09ac7e397",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v5-43.native.png",
+      "screenshot_sha256": "0c8b1b8dca82a4272b192b197833c766a3143c8275e3d0132bfe01fd9eef5a52",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v5-43.capture.json",
+      "raw_capture_sha256": "14f53b6f10fcc974f5cbfec0786d11d1c793183c12e0d08d734a8be305a39441",
+      "historical_expected": [
+        20,
+        20
+      ],
+      "forming_expected": [
+        20,
+        20
+      ]
+    },
+    {
+      "name": "request-point-field-read-v6-43",
+      "version": 6,
+      "scenario": "point-field-read",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v6-43.pine",
+      "source_sha256": "f9700f1a70ea8777bedf3ecb4ab5131596968ef0493099eaf826c9032be30724",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        20,
+        20
+      ],
+      "native_row": "240 row request-point-field-read-v6-43 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "27fb4af3db3b54921a7de5a02b6b525f2b67c5e3d514d56b7049cc43218dfb7a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v6-43.native.ax.txt",
+      "accessibility_sha256": "974c73fde8128bd21abfb69386fab7a4c26086121ce97f1526b9e5490ea82cb1",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v6-43.native.png",
+      "screenshot_sha256": "0c01f5e8b725b90ae3d8fe3cf6e4af6971c17e9d058f332c71c4b8b12bd0444f",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-field-read-v6-43.capture.json",
+      "raw_capture_sha256": "2e795eb1c576ce4f39f017ccc61a2b9c85313f2331eaa17f328a66c7d1fdad56",
+      "historical_expected": [
+        20,
+        20
+      ],
+      "forming_expected": [
+        20,
+        20
+      ]
+    },
+    {
+      "name": "request-point-global-mutation-v5-43",
+      "version": 5,
+      "scenario": "point-global-mutation",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v5-43.pine",
+      "source_sha256": "555a16f44aed331b08fff9f8407e4ab83b16aec3412125bfa7010817889ba416",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "240 row request-point-global-mutation-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "b89cfc04ac2fddfedfac16c657d8016e90ffe0c9729e7010f4dd5e8eb984c16a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v5-43.native.ax.txt",
+      "accessibility_sha256": "2951d4944c837c5d865c058ab8fba576d7dfc7a4a3ca68c3114ee4513778a5b0",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v5-43.native.png",
+      "screenshot_sha256": "c75026d7112a0f9ba978ee8c284791e50f091a79512d06895e8d5902a2b141c2",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v5-43.capture.json",
+      "raw_capture_sha256": "fdd4e5b408e85c752324b6c7b74ca826ca11403313f95cab3455f167351c2e23",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-global-mutation-v6-43",
+      "version": 6,
+      "scenario": "point-global-mutation",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v6-43.pine",
+      "source_sha256": "267d49e79c1823db10d402be8f16381459984964d94fdc3e5e0713ffb09940a6",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "238 row request-point-global-mutation-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "7baffd1bec3d503997f5e82b59e9dcdfef54d1a0f42fcfd3814c74fbc2fd211f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v6-43.native.ax.txt",
+      "accessibility_sha256": "a0ba7487e4c21dcafec0fcf3a196e1004ff535d6e048a6349f1f2193ea147a84",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v6-43.native.png",
+      "screenshot_sha256": "9fe2789a82c3f0340cc8b0fd56b3e2575a28a8669a13fb3224f50e10159406f0",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-global-mutation-v6-43.capture.json",
+      "raw_capture_sha256": "ebfcfdee94e813c1674f12c3d0f13995aeddd2714666b8400a4d64cdb4313703",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-param-v5-43",
+      "version": 5,
+      "scenario": "point-param",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v5-43.pine",
+      "source_sha256": "aaaae554606e11690fb5220b6009a981dc462e2855ed74d09bb4d8538e017729",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "240 row request-point-param-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "4a4aef387e4977415c499fbb2c4b53f38c6a1d2c6be75f9222bd09901f7cd5f2",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v5-43.native.ax.txt",
+      "accessibility_sha256": "9df1f5ec9d156348bf1394fe1ec3b17b9781a5e34467c522148ca5c588d008ae",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v5-43.native.png",
+      "screenshot_sha256": "cb8645aadeff775f9c2cc1eeb5a65f9cad0db743f67be50cec9b5503db1bfa4b",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v5-43.capture.json",
+      "raw_capture_sha256": "1f1b5c1be922155d84239a8602aa1e68d4734bfdc629e1ac19eac3ee835fe83b",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-param-v6-43",
+      "version": 6,
+      "scenario": "point-param",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v6-43.pine",
+      "source_sha256": "94d6e2e03a07ec5582e9fa75b218f6084469fd67c49c1c7d8d7b50d1da111312",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "240 row request-point-param-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "abe8a22d343034e8e4835f835d02f616f9babdf530c97b1b6ff8b76eeb65c59b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v6-43.native.ax.txt",
+      "accessibility_sha256": "0de929f4245726780e47d9ac4d94ec9f23a062ab9e0fc0c3205b60d24bd7f82b",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v6-43.native.png",
+      "screenshot_sha256": "48c2c0c18d8c3928b6918062101524338ffade6704cc8d16c08a24eadbdc4f18",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-param-v6-43.capture.json",
+      "raw_capture_sha256": "3ce7387db0b35319641fcd5f66bceae886288d47db402d0f53d4ab8145b6fee4",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-rebound-v5-43",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v5-43.pine",
+      "source_sha256": "90b70ce4f1ba90545bd24cea09a7abb60e0f2558caaaf47a1cf935e456d1a697",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        25,
+        25
+      ],
+      "native_row": "238 row request-point-rebound-v5-43 Plot 25.00 Plot 25.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "a865c6fd3d023d01c96e49e0887e44c92367e419ea6a97fee1dc70d16b84ce9b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v5-43.native.ax.txt",
+      "accessibility_sha256": "c3109f0770f986c5297ee9d4bf9b7d670e5c5df48ddd84912abf1984535652c9",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v5-43.native.png",
+      "screenshot_sha256": "4167dc692c2fa1d8b665a1f99fbd958d9a6dfc50b36d60ab8eb3b6982b23a5ec",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v5-43.capture.json",
+      "raw_capture_sha256": "13797397e52648b8c97d1f9aca13ff4a12916cdaa2afb6a8bfd8f62716ea08d8",
+      "historical_expected": [
+        25,
+        25
+      ],
+      "forming_expected": [
+        25,
+        25
+      ]
+    },
+    {
+      "name": "request-point-rebound-v6-43",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v6-43.pine",
+      "source_sha256": "81afa2d1574078e11c9d2dfb905f53f5a35e5049b679916a14622819020fd753",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        25,
+        25
+      ],
+      "native_row": "238 row request-point-rebound-v6-43 Plot 25.00 Plot 25.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "392b3ba92b11f0dc0d3a8ca53667fadd6c3d74e26cbea2c00c990fdeae67ad9c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v6-43.native.ax.txt",
+      "accessibility_sha256": "0b655511056b9da958a19d5578d753929cf3b385e23847bbbad5437fd71c40d7",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v6-43.native.png",
+      "screenshot_sha256": "7c7a959a4b8843eba1a89100333506c27c149dcbb6b3dde0c8701a1f14181af9",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-rebound-v6-43.capture.json",
+      "raw_capture_sha256": "0fbe17b4965d5d2e7bab72f0d6f21ab9229131acb2f93d1d42233f4cc3c4012f",
+      "historical_expected": [
+        25,
+        25
+      ],
+      "forming_expected": [
+        25,
+        25
+      ]
+    },
+    {
+      "name": "request-point-two-calls-v5-43",
+      "version": 5,
+      "scenario": "point-two-calls",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v5-43.pine",
+      "source_sha256": "bf8caa11b0f65455aa049d5086858b85607d5099c00da87232953815a234f1ad",
+      "historical_expected": [
+        15,
+        20,
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        20,
+        20
+      ],
+      "native_row": "242 row request-point-two-calls-v5-43 Plot 15.00 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "bf8caa11b0f65455aa049d5086858b85607d5099c00da87232953815a234f1ad",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v5-43.native.ax.txt",
+      "accessibility_sha256": "657977758923b12074d4cf10fc34d4579d83277de8eb102b8b690a3f0f9be3d9",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v5-43.native.png",
+      "screenshot_sha256": "345719fceb35beecc220ce65c78e28fcdda52cf20899b22ebd9a74dabe2fc9c3",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v5-43.capture.json",
+      "raw_capture_sha256": "3d8baf2512f10b8a91289cbf07fcbdd3a4bbbfc418a77d757a4d03f91236a9a1",
+      "forming_expected": [
+        15,
+        20,
+        20
+      ]
+    },
+    {
+      "name": "request-point-two-calls-v6-43",
+      "version": 6,
+      "scenario": "point-two-calls",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v6-43.pine",
+      "source_sha256": "53d1eeae169cc5959f73c6c840dfb8ddfa13626417a82d3bb2da3aba268ddae4",
+      "historical_expected": [
+        15,
+        20,
+        20
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        20,
+        20
+      ],
+      "native_row": "242 row request-point-two-calls-v6-43 Plot 15.00 Plot 20.00 Plot 20.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "53d1eeae169cc5959f73c6c840dfb8ddfa13626417a82d3bb2da3aba268ddae4",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v6-43.native.ax.txt",
+      "accessibility_sha256": "6f75e629abcb26ba95caaa08a7ebcea0fb530c483b55703a00662bee230a3e45",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v6-43.native.png",
+      "screenshot_sha256": "1be0f42eddc307c357fa4cad3f4373fae8243757c5c9f21621b4e1cc7e3bd278",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-two-calls-v6-43.capture.json",
+      "raw_capture_sha256": "eb005a8cb16830729e374f7c7604307155ecc23df1f7e22d52e80b5ab059cc95",
+      "forming_expected": [
+        15,
+        20,
+        20
+      ]
+    },
+    {
+      "name": "request-point-udt-v5-43",
+      "version": 5,
+      "scenario": "point-udt",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v5-43.pine",
+      "source_sha256": "40ac9ecf40cb8c96297e0c0add868e2755035fb90d33fb4e935cb5b75cc9c5b7",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "240 row request-point-udt-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "63e0dddb098662348adacd89a455ec8c705adc0963799380645a5d3b156573de",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v5-43.native.ax.txt",
+      "accessibility_sha256": "4e76918536b0d774beccb5f384efb9683ce899d4d056b570f0282554f2fc134a",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v5-43.native.png",
+      "screenshot_sha256": "7c29b7bf06f550214fd21badaa22f10932c74137495641bde4c6364a699ce649",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v5-43.capture.json",
+      "raw_capture_sha256": "e83a739ebc40926f6f9847de20fe6ed55165dc3cfad55b89ee929551140a1461",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-udt-v6-43",
+      "version": 6,
+      "scenario": "point-udt",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v6-43.pine",
+      "source_sha256": "9e36bf28d0330d1610c930abfd0e766a19489804ab688c7a2a20e87e6df4bb3c",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "238 row request-point-udt-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2857a0ab5659d9f99fbe808c70e5ff38e342782c5c7dea0dcc247f93ad25204f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v6-43.native.ax.txt",
+      "accessibility_sha256": "89fd14d72e13579384e8641eb61749277d81a815134064b3d6dc2fc2f9e006b0",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v6-43.native.png",
+      "screenshot_sha256": "9822d94b937c3cf62b81d1301d1d104ef34bd5e6de17ce19a8307a3c8c1ed081",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-udt-v6-43.capture.json",
+      "raw_capture_sha256": "e86c1b83bc6c37418bbb2279037d103268c2cb02368f8f22bb213a2aa0dc1713",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-point-var-param-v5-43",
+      "version": 5,
+      "scenario": "point-var-param",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v5-43.pine",
+      "source_sha256": "bdd5ebd530867fa613c670074efd5681cf55871fc2de2a7048e58a4580ef6efa",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        16760,
+        16760
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ]
+      ],
+      "native_row": "240 row request-point-var-param-v5-43 Plot 16,760.00 Plot 16,760.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "99c49aa978ad7dda8871f69be051129c483f90e8c5673a86740d2d8728722839",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v5-43.native.ax.txt",
+      "accessibility_sha256": "08f940df1c41fb97865c9e5b0700856b99e836c4ebe8a626689f1bdb6e6aea54",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v5-43.native.png",
+      "screenshot_sha256": "5841155aafc688ff764b1092126a60ecd45ea0779810ddf7c83a38f775fda56f",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v5-43.capture.json",
+      "raw_capture_sha256": "b5cef10f3971824d8001aa787b65d81b9367344238883f066c80eaf80e872ba3",
+      "historical_expected": [
+        25,
+        25
+      ],
+      "forming_expected": [
+        25,
+        25
+      ]
+    },
+    {
+      "name": "request-point-var-param-v6-43",
+      "version": 6,
+      "scenario": "point-var-param",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v6-43.pine",
+      "source_sha256": "672e59232f5dc42c1388267d71acef9a33c8181ed1e62b48088ff03d938905c0",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        16760,
+        16760
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ]
+      ],
+      "native_row": "240 row request-point-var-param-v6-43 Plot 16,760.00 Plot 16,760.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "b021dce2f7e72093cd695839d4cb81b53e92615bcc9a5780c61059c5573d0e51",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v6-43.native.ax.txt",
+      "accessibility_sha256": "54eb05a0e9dead2ba7964b0639fcfd08fbe84e274b6ce109a515fdd3f5ed9c0c",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v6-43.native.png",
+      "screenshot_sha256": "442be14713b8d7c576243931922672317b2c55b02579411c752a3d066b21e743",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-param-v6-43.capture.json",
+      "raw_capture_sha256": "77274d5ec2431c14312ef75d99cae13c4872a540397263c8e62dbd0537b3dcec",
+      "historical_expected": [
+        25,
+        25
+      ],
+      "forming_expected": [
+        25,
+        25
+      ]
+    },
+    {
+      "name": "request-point-var-prefix-v5-43",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v5-43.pine",
+      "source_sha256": "d5170ae9a7d646d993d11ff3f4b918bb2fd357b03377d329db32a57393416574",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        16755,
+        16760,
+        16760,
+        15,
+        15,
+        20,
+        20,
+        3349
+      ],
+      "native_row": "242 row request-point-var-prefix-v5-43 Plot 16,755.00 Plot 16,760.00 Plot 16,760.00 Plot 15.00 Plot 15.00 Plot 20.00 Plot 20.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "74d36bedb4105d708a589914967f600f1c8629c21bfdc859cd5c5e8cb211a5fc",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v5-43.native.ax.txt",
+      "accessibility_sha256": "675f33a6b3e8751b1ded9f5fb85a50299f78e1fd988163284dca53fcd14af83c",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v5-43.native.png",
+      "screenshot_sha256": "0e3ed8cfcfd7b1e64849c9ec2d0cd7c637bbc9c7bb5902b440efa9be7ee4384c",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v5-43.capture.json",
+      "raw_capture_sha256": "626397bf46e1bc9f8fcfe71602cb714b7d2af4bd3b7479112d3fb56065cf8bac",
+      "historical_expected": [
+        20,
+        25,
+        25,
+        15,
+        15,
+        20,
+        20,
+        2
+      ],
+      "forming_expected": [
+        20,
+        25,
+        25,
+        15,
+        15,
+        20,
+        20,
+        2
+      ]
+    },
+    {
+      "name": "request-point-var-prefix-v6-43",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v6-43.pine",
+      "source_sha256": "123c540228155a7339053b3d795758ac9ab48c0cada17bda0ba5b4c71e361b61",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        16755,
+        16760,
+        16760,
+        15,
+        15,
+        20,
+        20,
+        3349
+      ],
+      "native_row": "242 row request-point-var-prefix-v6-43 Plot 16,755.00 Plot 16,760.00 Plot 16,760.00 Plot 15.00 Plot 15.00 Plot 20.00 Plot 20.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "12395f51da9635e3055b0b7e28b8f2b5154f5211658b838611964c37a3000cb5",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v6-43.native.ax.txt",
+      "accessibility_sha256": "61b889da7129fccb2bc6a418199fb1eeb5b5bca8aff8e7bafab9ddfbad217d44",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v6-43.native.png",
+      "screenshot_sha256": "2c914869c87bb9d55807c127ff3b4b642c5ff4d9eaba9ca811cef206269eb7dc",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-point-var-prefix-v6-43.capture.json",
+      "raw_capture_sha256": "b62c391d03f22b4dff534df61fc601d8eb48a3c07746268015a332621a7acc0a",
+      "historical_expected": [
+        20,
+        25,
+        25,
+        15,
+        15,
+        20,
+        20,
+        2
+      ],
+      "forming_expected": [
+        20,
+        25,
+        25,
+        15,
+        15,
+        20,
+        20,
+        2
+      ]
+    },
+    {
+      "name": "request-udt-scalar-write-v5-43",
+      "version": 5,
+      "scenario": "udt-scalar-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v5-43.pine",
+      "source_sha256": "cc2767b77716759fb5b0ee20ba7b675660da92f91b0a8a543ad42376816a4acd",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-udt-scalar-write-v5-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "cc2767b77716759fb5b0ee20ba7b675660da92f91b0a8a543ad42376816a4acd",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v5-43.native.ax.txt",
+      "accessibility_sha256": "936a35cb5243cbcd211ab5a1c1dbdd7dbb836e866f8b639c1a487797567566e4",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v5-43.native.png",
+      "screenshot_sha256": "d55c873d0ef849eea6096fc7ff4bfbd6979ecbcfebc0f52dc276a1c3d39dd7a2",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v5-43.capture.json",
+      "raw_capture_sha256": "c57a2b7eefd9bad53aad59d147bf688791394ed4a5996328346159b6040fdcc6",
+      "forming_expected": [
+        15,
+        15
+      ]
+    },
+    {
+      "name": "request-udt-scalar-write-v6-43",
+      "version": 6,
+      "scenario": "udt-scalar-write",
+      "source": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v6-43.pine",
+      "source_sha256": "ee225111ec758041213617ae4efd7ff015f2edfdeea5142d45f7554259a9226b",
+      "historical_expected": [
+        15,
+        15
+      ],
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        15,
+        15
+      ],
+      "native_row": "242 row request-udt-scalar-write-v6-43 Plot 15.00 Plot 15.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ee225111ec758041213617ae4efd7ff015f2edfdeea5142d45f7554259a9226b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v6-43.native.ax.txt",
+      "accessibility_sha256": "9d7286262abe7df7445807ba445ca4d45576e69652f2547bd8119461d6081126",
+      "screenshot": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v6-43.native.png",
+      "screenshot_sha256": "4d0e28356b2280c544cf36119b44ca5d48939785485f7ff693ad724a2e95825a",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Complete-source Native observation. Only explicit unbounded current-symbol/current-timeframe scalar-result reference captures are qualified in this batch; bounded, foreign, generic map/matrix parameters and window observations are frontier evidence.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/request-references-43/request-udt-scalar-write-v6-43.capture.json",
+      "raw_capture_sha256": "b9e90ddf99f3e8c1fa43362bc9cb5828fa9e1a7abe9a0c010c567185ccddcbff",
+      "forming_expected": [
+        15,
+        15
+      ]
+    }
+  ]
+}

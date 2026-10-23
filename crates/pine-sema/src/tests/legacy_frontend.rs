@@ -389,7 +389,7 @@ fn legacy_security_accepts_immutable_global_alias_graphs_and_dynamic_simple_cont
 }
 
 #[test]
-fn legacy_security_accepts_pure_udfs_and_keeps_mutable_state_fail_closed() {
+fn legacy_security_accepts_udf_local_state_and_rejects_mutable_captures() {
     let mutable = analyze_production(include_str!(
         "../../../../tests/fixtures/legacy/v1/unsupported/security_mutable_alias.pine"
     ));
@@ -413,16 +413,15 @@ fn legacy_security_accepts_pure_udfs_and_keeps_mutable_state_fail_closed() {
     assert!(pure_udf.compatibility.unsupported.is_empty());
 
     let mutable_udf = analyze_production(include_str!(
-        "../../../../tests/fixtures/legacy/v4/unsupported/security_mutable_udf.pine"
+        "../../../../tests/fixtures/legacy/v4/runtime/security_stateful_udf.pine"
     ));
-    assert!(diagnostic_codes(&mutable_udf).contains(&"E_UNSUPPORTED_FEATURE"));
     assert!(
-        mutable_udf
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|item| item.feature == "security")
+        mutable_udf.diagnostics.is_empty(),
+        "{:?}",
+        mutable_udf.diagnostics
     );
+    assert!(mutable_udf.compatibility.unsupported.is_empty());
+    assert!(mutable_udf.hir.is_some());
 
     let modern_udf = analyze_production(
         "//@version=6\nindicator(\"modern UDF request\")\ncalculate() => ta.sma(close, 2)\nplot(request.security(\"NYSE:IBM\", \"5\", calculate()))\n",
@@ -436,7 +435,7 @@ fn legacy_security_accepts_pure_udfs_and_keeps_mutable_state_fail_closed() {
 }
 
 #[test]
-fn legacy_security_accepts_same_selector_udf_local_dependencies_only() {
+fn legacy_security_accepts_static_udf_dependencies_with_independent_selectors() {
     let supported = analyze_production(include_str!(
         "../../../../tests/fixtures/legacy/v4/runtime/security_udf_local_dependencies_legacy.pine"
     ));
@@ -449,16 +448,10 @@ fn legacy_security_accepts_same_selector_udf_local_dependencies_only() {
     assert!(supported.hir.is_some());
 
     let mismatched = analyze_production(include_str!(
-        "../../../../tests/fixtures/legacy/v4/unsupported/security_udf_local_dependency_mismatch.pine"
+        "../../../../tests/fixtures/sema/supported_legacy_static_request_dependencies.pine"
     ));
-    assert!(diagnostic_codes(&mismatched).contains(&"E_UNSUPPORTED_FEATURE"));
-    assert!(
-        mismatched
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|item| item.feature == "security")
-    );
+    assert!(mismatched.hir.is_some(), "{:?}", mismatched.diagnostics);
+    assert!(mismatched.compatibility.unsupported.is_empty());
 
     for source in [
         "//@version=4\nstudy(\"different timeframe\")\nf(src) =>\n    earlier = security(\"NYSE:IBM\", \"15\", src)\n    security(\"NYSE:IBM\", \"5\", earlier)\nplot(f(close))\n",
@@ -466,21 +459,19 @@ fn legacy_security_accepts_same_selector_udf_local_dependencies_only() {
         "//@version=4\nstudy(\"named nested request\")\nf(src) =>\n    earlier = security(symbol=\"NYSE:IBM\", resolution=\"5\", expression=src)\n    security(\"NYSE:IBM\", \"5\", earlier)\nplot(f(close))\n",
     ] {
         let analysis = analyze_production(source);
-        assert!(
-            analysis
-                .compatibility
-                .unsupported
-                .iter()
-                .any(|item| item.feature == "security"),
-            "{:?}",
-            analysis.diagnostics
-        );
+        assert!(analysis.hir.is_some(), "{:?}", analysis.diagnostics);
+        assert!(analysis.compatibility.unsupported.is_empty());
     }
 
     let control_flow_local = analyze_production(include_str!(
         "../../../../tests/fixtures/legacy/v4/unsupported/security_udf_control_flow_local.pine"
     ));
-    assert!(diagnostic_codes(&control_flow_local).contains(&"E_UNSUPPORTED_FEATURE"));
+    assert!(
+        diagnostic_codes(&control_flow_local).contains(&"E_UNSUPPORTED_FEATURE"),
+        "{:?}; executable HIR: {}",
+        control_flow_local.diagnostics,
+        control_flow_local.hir.is_some()
+    );
     assert!(
         control_flow_local
             .compatibility
@@ -492,19 +483,12 @@ fn legacy_security_accepts_same_selector_udf_local_dependencies_only() {
     let modern = analyze_production(
         "//@version=6\nindicator(\"modern local request\")\nrequested(src) =>\n    local = src + 1\n    request.security(\"NYSE:IBM\", \"5\", local)\nplot(requested(close))\n",
     );
-    assert!(
-        modern
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|item| item.feature == "request.security"),
-        "{:?}",
-        modern.diagnostics
-    );
+    assert!(modern.hir.is_some(), "{:?}", modern.diagnostics);
+    assert!(modern.compatibility.unsupported.is_empty());
 }
 
 #[test]
-fn legacy_security_global_alias_nested_request_requires_matching_selector() {
+fn legacy_security_global_alias_nested_request_accepts_independent_selectors() {
     let supported = analyze_production(
         "//@version=2\nstudy(\"matching global alias\")\nacc = nz(acc[1]) + close\ninner = security(\"NYSE:IBM\", \"5\", acc)\nplot(security(\"NYSE:IBM\", \"5\", inner * 2))\n",
     );
@@ -517,7 +501,7 @@ fn legacy_security_global_alias_nested_request_requires_matching_selector() {
     let mismatched = analyze_production(
         "//@version=2\nstudy(\"mismatched global alias\")\ninner = security(\"NYSE:IBM\", \"15\", close)\nplot(security(\"NYSE:IBM\", \"5\", inner * 2))\n",
     );
-    assert!(diagnostic_codes(&mismatched).contains(&"E_UNSUPPORTED_FEATURE"));
+    assert!(mismatched.hir.is_some(), "{:?}", mismatched.diagnostics);
 }
 
 #[test]
@@ -1020,7 +1004,7 @@ fn focused_legacy_calls_yield_to_user_defined_functions() {
 }
 
 #[test]
-fn production_aliases_still_yield_to_v4_user_functions_and_lexical_values() {
+fn production_aliases_yield_to_v4_user_functions_but_not_scalar_variables() {
     let udf = analyze_production(
         "//@version=4\nstudy(\"collision\")\nsma(source, length) => source\nplot(sma(close, 2))\n",
     );
@@ -1037,18 +1021,18 @@ fn production_aliases_still_yield_to_v4_user_functions_and_lexical_values() {
     let lexical = analyze_production(
         "//@version=4\nstudy(\"collision\")\nsma = close\nplot(sma(close, 2))\n",
     );
-    assert_eq!(diagnostic_codes(&lexical), vec!["E_UNKNOWN_FUNCTION"]);
+    assert!(lexical.diagnostics.is_empty(), "{:?}", lexical.diagnostics);
     assert!(
         lexical
             .compatibility
             .legacy_translations
             .iter()
-            .all(|translation| translation.source_feature != "sma")
+            .any(|translation| translation.source_feature == "sma")
     );
 }
 
 #[test]
-fn v3_v4_udf_calls_ignore_only_later_global_legacy_alias_collisions() {
+fn v3_v4_udf_function_namespace_is_independent_of_global_variable_position() {
     let later_fixture = include_str!(
         "../../../../tests/fixtures/legacy/v4/runtime/udf_source_order_builtin_aliases_legacy.pine"
     );
@@ -1083,7 +1067,7 @@ fn v3_v4_udf_calls_ignore_only_later_global_legacy_alias_collisions() {
             1,
         ));
         assert!(
-            diagnostic_codes(&earlier).contains(&"E_UNKNOWN_FUNCTION"),
+            earlier.diagnostics.is_empty(),
             "v{version}: {:?}",
             earlier.diagnostics
         );
@@ -1092,7 +1076,7 @@ fn v3_v4_udf_calls_ignore_only_later_global_legacy_alias_collisions() {
                 .compatibility
                 .legacy_translations
                 .iter()
-                .all(|translation| translation.source_feature != "sma")
+                .any(|translation| translation.source_feature == "sma")
         );
     }
 }
@@ -1722,10 +1706,20 @@ fn user_defined_function_wins_over_exact_alias() {
 }
 
 #[test]
-fn lexical_value_prevents_function_alias_fallback() {
+fn lexical_value_keeps_a_separate_function_alias_namespace() {
     let analysis = analyze_legacy("//@version=4\nsma = close\nplot(sma(close, 2))\n");
-    assert_eq!(diagnostic_codes(&analysis), vec!["E_UNKNOWN_FUNCTION"]);
-    assert!(analysis.compatibility.legacy_translations.is_empty());
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .any(|translation| translation.source_feature == "sma")
+    );
 }
 
 #[test]
@@ -2837,7 +2831,7 @@ barcolor(color.red, title="bars")
 }
 
 #[test]
-fn v4_plotshape_tolerates_identical_duplicate_literal_transparency_only() {
+fn v4_v5_plotshape_tolerates_identical_duplicate_literal_transparency_only() {
     let accepted = analyze_production(
         "//@version=4\nstudy(\"legacy\")\nplotshape(close > open, transp=0, color=color.green, transp=0)\n",
     );
@@ -2862,7 +2856,8 @@ fn v4_plotshape_tolerates_identical_duplicate_literal_transparency_only() {
     let modern = analyze_production(
         "//@version=5\nindicator(\"modern\")\nplotshape(close > open, transp=0, transp=0)\n",
     );
-    assert!(diagnostic_codes(&modern).contains(&"E_CALL_ARG_NAME"));
+    assert!(modern.diagnostics.is_empty(), "{:?}", modern.diagnostics);
+    assert!(modern.hir.is_some());
 }
 
 #[test]
@@ -3487,7 +3482,7 @@ fn v2_declaration_graph_preserves_symbol_identity_and_stable_current_order() {
 }
 
 #[test]
-fn v1_v2_allow_legacy_input_inside_udf_without_relaxing_v3() {
+fn legacy_versions_allow_input_calls_inside_udf() {
     let body = "study(\"local input\")\nf() =>\n    factor = input(0.5)\n    factor\nplot(f())\n";
     for source in [body.to_owned(), format!("//@version=2\n{body}")] {
         let analysis = analyze_production(&source);
@@ -3498,14 +3493,15 @@ fn v1_v2_allow_legacy_input_inside_udf_without_relaxing_v3() {
         );
         assert!(analysis.hir.is_some());
     }
-    let v3 = analyze_production(&format!("//@version=3\n{body}"));
-    assert!(v3.hir.is_none());
-    assert!(
-        v3.compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect")
-    );
+    for version in [3, 4] {
+        let analysis = analyze_production(&format!("//@version={version}\n{body}"));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
 }
 
 #[test]
@@ -4248,7 +4244,7 @@ fn v4_function_final_statements_and_reference_side_effects_are_supported() {
             .iter()
             .filter(|feature| feature.feature == "function_side_effect")
             .count(),
-        3,
+        2,
         "{:?}",
         focused_boundary.compatibility.unsupported
     );

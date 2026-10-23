@@ -1,0 +1,35 @@
+{
+  "name": "legacy-direction-v3-original-recheck32",
+  "source": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\legacy-direction-v3-original-recheck32.pine",
+  "source_sha256": "efd252efb0e2d591bf5d46a5711e2ca343d319c0acdfca29123c8ee21739d918",
+  "chart_timeframe": "D",
+  "scope": "Native full-source copy checked; default boolean control results qualified separately from still-unimplemented constant-fold behavior.",
+  "native_status": "compiled_and_executed",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "editor_source_sha256": "efd252efb0e2d591bf5d46a5711e2ca343d319c0acdfca29123c8ee21739d918",
+  "normalized_source_sha256": "efd252efb0e2d591bf5d46a5711e2ca343d319c0acdfca29123c8ee21739d918",
+  "accessibility_capture": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\legacy-direction-v3-original-recheck32.native.ax.txt",
+  "accessibility_sha256": "44da423cc9933f61ed7b6a9c7fa0e2afdeebbd0e2dd2636bb86483a2518fc0ec",
+  "screenshot": "E:\\projects\\pine-interpreter\\docs\\evidence\\strategy-library-20261010\\boolean-control-32\\legacy-direction-v3-original-recheck32.native.png",
+  "screenshot_sha256": "45547372504058b91bf4d97546420eb794304bd8dc2f961dbf18c99b7e21784f",
+  "native_labels": [
+    "long true",
+    "short false",
+    "long equals true",
+    "short equals false",
+    "function bool",
+    "position"
+  ],
+  "native_values": [
+    1.0,
+    1.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0
+  ],
+  "data_window_refreshed_by_chart_click": true,
+  "source_unchanged_from_batch27": true,
+  "qualification_role": "research_only_remaining_or_already_fixed_case"
+}

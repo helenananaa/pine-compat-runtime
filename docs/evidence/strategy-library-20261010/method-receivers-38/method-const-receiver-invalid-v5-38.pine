@@ -1,0 +1,5 @@
+//@version=5
+indicator("method-const-receiver-invalid-v5-38")
+method keep38(const int self)=>self
+x=bar_index
+plot(x.keep38())

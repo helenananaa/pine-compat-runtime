@@ -1,0 +1,6 @@
+//@version=5
+strategy("Fill price percent_of_equity 30",initial_capital=100,default_qty_type=strategy.percent_of_equity,default_qty_value=25,precision=8)
+plot(strategy.default_entry_qty(na),title="naPrice")
+plot(strategy.default_entry_qty(0),title="zeroPrice")
+plot(strategy.default_entry_qty(-100),title="negativePrice")
+plot(strategy.default_entry_qty(100),title="positivePrice")

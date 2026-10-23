@@ -1,0 +1,4 @@
+//@version=6
+indicator("Reserved parameter-v6 probe33",precision=0)
+f(text)=>text
+plot(f(1))

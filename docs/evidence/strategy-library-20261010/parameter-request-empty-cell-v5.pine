@@ -1,0 +1,9 @@
+//@version=5
+indicator("Codex parameter request oracle",overlay=true)
+f(src)=>
+    alias=src+timeframe.multiplier
+    request.security(syminfo.tickerid,"12M",alias)
+var t=table.new(position.top_right,1,1)
+table.cell_set_text_color(t,0,0,color.white)
+if barstate.islast
+    table.cell(t,0,0,str.tostring(f(10)),text_color=color.white,bgcolor=color.black)

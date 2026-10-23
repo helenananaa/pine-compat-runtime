@@ -4,7 +4,7 @@ use chrono::{Datelike, Timelike};
 use pine_ir::{SeriesId, SymbolId};
 
 use crate::builtins::time::{
-    chart_timeframe_close, dayofweek_value, timeframe_bucket, utc_datetime_from_millis,
+    dayofweek_value, timeframe_bucket, timezone_offset_seconds, utc_datetime_from_millis,
 };
 use crate::*;
 
@@ -18,6 +18,17 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(previous_time) = self.previous_bar_time else {
             return true;
         };
+        if let Some(calendar) = self.request_environment.chart_calendar() {
+            let timeframe = self.request_environment.chart().timeframe();
+            return calendar
+                .exact(timeframe, current_time)
+                .ok()
+                .map(|interval| interval.trading_day())
+                != calendar
+                    .exact(timeframe, previous_time)
+                    .ok()
+                    .map(|interval| interval.trading_day());
+        }
         timeframe_bucket(current_time, SECONDS_PER_DAY)
             != timeframe_bucket(previous_time, SECONDS_PER_DAY)
     }
@@ -28,20 +39,33 @@ impl<'a> HistoricalRuntime<'a> {
         bar_index: usize,
     ) -> Result<(), RuntimeError> {
         let datetime = utc_datetime_from_millis(bar.time)?;
-        let chart_timeframe = self.request_environment.chart().timeframe();
-        let time_close =
-            chart_timeframe_close(bar.time, chart_timeframe.value(), chart_timeframe.seconds())
-                .ok_or_else(|| RuntimeError {
-                    message: format!("time_close timestamp is out of range: {}", bar.time),
-                })?;
+        let time_close = self.request_environment.chart_close(bar.time)?;
         let millis_since_midnight = i64::from(datetime.num_seconds_from_midnight()) * 1000
             + i64::from(datetime.timestamp_subsec_millis());
-        let time_tradingday =
+        let mut time_tradingday =
             bar.time
                 .checked_sub(millis_since_midnight)
                 .ok_or_else(|| RuntimeError {
                     message: format!("time_tradingday timestamp is out of range: {}", bar.time),
                 })?;
+        if let Some(calendar) = self.request_environment.chart_calendar() {
+            time_tradingday = calendar
+                .exact(self.request_environment.chart().timeframe(), bar.time)
+                .map_err(|err| RuntimeError {
+                    message: err.to_string(),
+                })?
+                .trading_day();
+        }
+        let offset = timezone_offset_seconds(self.request_environment.chart_timezone(), &datetime)
+            .and_then(|seconds| chrono::Duration::try_seconds(i64::from(seconds)))
+            .ok_or_else(|| RuntimeError {
+                message: "chart calendar timezone is out of range".into(),
+            })?;
+        let datetime = datetime
+            .checked_add_signed(offset)
+            .ok_or_else(|| RuntimeError {
+                message: "chart calendar local timestamp is out of range".into(),
+            })?;
         let previous_close = self.price_flow_previous_close;
         let previous_volume = self.price_flow_previous_volume;
         self.accdist_current = self.next_accdist(bar);
@@ -116,7 +140,8 @@ impl<'a> HistoricalRuntime<'a> {
                 && self.activate_bar_aligned_series(series_id)
             {
                 self.current_symbols.insert(symbol_id, value.clone());
-                self.current_series.insert(series_id, value);
+                self.current_series
+                    .insert(series_id, value.materialize_boolean());
             } else {
                 self.current_symbols.insert(symbol_id, value);
             }
@@ -334,7 +359,8 @@ impl<'a> HistoricalRuntime<'a> {
             && self.activate_bar_aligned_series(series_id)
         {
             self.current_symbols.insert(symbol, value.clone());
-            self.current_series.insert(series_id, value);
+            self.current_series
+                .insert(series_id, value.materialize_boolean());
         } else {
             self.current_symbols.insert(symbol, value);
         }
@@ -385,7 +411,8 @@ impl<'a> HistoricalRuntime<'a> {
             } else {
                 self.clone_collection_history_value(value)?
             };
-            self.series_store.commit(series_id, value, max_depth);
+            self.series_store
+                .commit(series_id, value.materialize_boolean(), max_depth);
         }
         Ok(())
     }

@@ -1,0 +1,17 @@
+//@version=6
+indicator("method-objects-v6-38")
+method length38(label self)=>str.length(label.get_text(self))
+method start38(line self)=>line.get_y1(self)
+method bottom38(box self)=>box.get_bottom(self)
+method defined38(table self)=>not na(self)
+method price38(chart.point self)=>self.price
+var label l=label.new(0,10,"ab")
+var line n=line.new(0,10,1,20)
+var box b=box.new(0,20,1,10)
+var table t=table.new(position.top_right,1,1)
+var chart.point p=chart.point.from_index(0,7.0)
+plot(l.length38())
+plot(n.start38())
+plot(b.bottom38())
+plot(t.defined38()?1:0)
+plot(p.price38())

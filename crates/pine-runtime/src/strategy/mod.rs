@@ -60,6 +60,7 @@ pub(crate) fn explicit_quantity_on_chart_grid(qty: f64, quantity_scale: Option<u
 
 pub use broker::BrokerState;
 pub(crate) use broker::PendingCloseQuantity;
+pub(crate) use broker::{CombinedExitSpec, ExitQuantityRequest};
 pub(crate) use broker::{EntryPathTick, PathEventOutcome};
 pub(crate) use broker::{
     LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec, StrategyExitMetadata,

@@ -482,6 +482,9 @@ pub(crate) fn bind_legacy_output_args(
     const_ints: &[Option<i64>],
     string_domains: &[Option<Vec<String>>],
 ) -> LegacyOutputBinding {
+    if dialect == PineDialect::V5 {
+        return bind_v5_output_transparency(name, args, arg_types);
+    }
     let version = dialect.version();
     let params = match params_for_call(dialect, name, args, arg_types) {
         Ok(params) => params,
@@ -683,6 +686,108 @@ pub(crate) fn bind_legacy_output_args(
         requires_adaptation: requires_adaptation || emulates_numeric_style,
         emulates_transparency,
         emulates_numeric_style,
+    })
+}
+
+// v5 retains named transp alongside modern output parameters. Validate those
+// parameters against the modern signature, rather than the v4 positional table.
+fn bind_v5_output_transparency(
+    name: &str,
+    args: &[CallArg],
+    arg_types: &[Option<PineType>],
+) -> LegacyOutputBinding {
+    let signature =
+        pine_builtins::get_phase_1_builtin(name).expect("v5 output target is registered");
+    let mut canonical_args = Vec::with_capacity(args.len());
+    let mut canonical_arg_types = Vec::with_capacity(args.len());
+    let mut arg_rewrites = Vec::with_capacity(args.len());
+    let mut diagnostics = Vec::new();
+    let mut saw_named = false;
+    let mut saw_transp = false;
+    let mut positional_count = 0;
+    for (index, arg) in args.iter().enumerate() {
+        let arg_type = arg_types.get(index).copied().flatten();
+        if arg.name.is_some() {
+            saw_named = true;
+        } else if saw_named {
+            diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_ORDER",
+                format!("positional arguments cannot follow named arguments in Pine v5 `{name}`"),
+                arg.span,
+            ));
+        }
+        let canonical_name = if arg.name.as_deref() == Some("transp") {
+            if saw_transp {
+                // Native v5 also accepts plotshape's repeated identical
+                // literal transparency. Dropping only that literal is safe;
+                // ambiguous values retain an explicit diagnostic.
+                if name == "plotshape"
+                    && matches!(arg.value.without_groups().kind, ExprKind::Literal(_))
+                    && args[..index].iter().any(|previous| {
+                        previous.name.as_deref() == Some("transp")
+                            && previous.value.without_groups().kind
+                                == arg.value.without_groups().kind
+                    })
+                {
+                    arg_rewrites.push(LegacyCallArgRewrite {
+                        keep: false,
+                        canonical_name: None,
+                    });
+                    continue;
+                }
+                diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_DUPLICATE",
+                    format!("`{name}` argument `transp` is provided more than once"),
+                    arg.span,
+                ));
+            }
+            saw_transp = true;
+            if !arg_type.is_some_and(is_legacy_transparency_type) {
+                diagnostics.push(output_error(
+                    format!("Pine v5 `{name}` argument `transp` expects an input integer or `na`"),
+                    arg.span,
+                ));
+            }
+            pine_ir::LEGACY_TRANSPARENCY_ARG
+        } else {
+            let param = if let Some(arg_name) = arg.name.as_deref() {
+                signature.params.iter().find(|param| param.name == arg_name)
+            } else {
+                let param = signature.params.get(positional_count);
+                positional_count += 1;
+                param
+            };
+            let Some(param) = param else {
+                diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    format!("invalid argument for Pine v5 `{name}`"),
+                    arg.span,
+                ));
+                continue;
+            };
+            let mut canonical_arg = arg.clone();
+            canonical_arg.name = Some(param.name.to_owned());
+            canonical_args.push(canonical_arg);
+            canonical_arg_types.push(arg_type);
+            param.name
+        };
+        arg_rewrites.push(LegacyCallArgRewrite {
+            keep: true,
+            canonical_name: Some(canonical_name),
+        });
+    }
+    if !diagnostics.is_empty() {
+        return LegacyOutputBinding::Invalid(diagnostics);
+    }
+    LegacyOutputBinding::Bound(BoundLegacyOutput {
+        canonical_name: canonical_output_name(name),
+        canonical_args,
+        canonical_arg_types,
+        arg_rewrites,
+        style_value_rewrites: Vec::new(),
+        requires_adaptation: true,
+        emulates_transparency: saw_transp,
+        emulates_numeric_style: false,
     })
 }
 

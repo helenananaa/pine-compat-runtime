@@ -1,0 +1,3 @@
+//@version=4
+strategy("Default currency oracle 20",precision=0)
+plot(syminfo.currency == "USDT" ? 1 : 0,title="symbolUSDT")

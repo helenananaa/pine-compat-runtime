@@ -4,19 +4,19 @@ use pine_ir::HirCallArg;
 
 use crate::*;
 
+mod calendar_time;
 mod component;
 mod formatting;
 mod session;
+mod session_grid;
 mod timestamp;
 
 use self::component::TimeComponent;
 pub(crate) use self::formatting::{format_datetime_with_timezone, format_utc_datetime};
-use self::session::{
-    DefaultSessionDays, parse_time_session, parse_time_session_timezone, session_close_for_bar_open,
-};
+use self::session::{DefaultSessionDays, parse_time_session, parse_time_session_timezone};
 pub(crate) use self::timestamp::{format_fixed_timezone_offset, parse_fixed_timezone_offset};
 use self::timestamp::{
-    numeric_timestamp_millis, parse_numeric_timestamp_timezone, parse_timestamp_date_string,
+    numeric_timestamp_parts_millis, parse_numeric_timestamp_timezone, parse_timestamp_date_string,
 };
 
 pub(crate) fn dayofweek_value(datetime: DateTime<Utc>) -> i64 {
@@ -220,7 +220,7 @@ pub(crate) fn chart_timeframe_close(
     }
 }
 
-fn chart_timeframe_offset(
+pub(crate) fn chart_timeframe_offset(
     timestamp_ms: i64,
     timeframe: &str,
     seconds: i64,
@@ -395,7 +395,9 @@ impl<'a> HistoricalRuntime<'a> {
                 .map(PineValue::Int)
                 .map_err(|message| RuntimeError { message });
         }
-        let timezone = args.timezone.unwrap_or_else(|| "UTC".to_owned());
+        let timezone = args
+            .timezone
+            .unwrap_or_else(|| self.request_environment.chart_timezone().to_owned());
         let timezone = parse_numeric_timestamp_timezone(&timezone).ok_or_else(|| RuntimeError {
             message: format!("timestamp unsupported timezone `{timezone}`"),
         })?;
@@ -403,19 +405,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let Some(datetime) =
-            normalize_timestamp_parts(year, month, day, args.hour, args.minute, args.second)
-        else {
-            return Err(RuntimeError {
-                message: format!(
-                    "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}",
-                    hour = args.hour,
-                    minute = args.minute,
-                    second = args.second
-                ),
-            });
-        };
-        let Some(timestamp) = numeric_timestamp_millis(timezone, datetime) else {
+        let Some(timestamp) = numeric_timestamp_parts_millis(
+            timezone,
+            [year, month, day, args.hour, args.minute, args.second],
+        ) else {
             return Err(RuntimeError {
                 message: format!(
                     "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}",
@@ -496,6 +489,11 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         for (index, arg) in positional.iter().enumerate().skip(offset) {
+            // The numeric first argument was already evaluated to distinguish
+            // the year overload from timezone/dateString overloads.
+            if index == 0 {
+                continue;
+            }
             let Some(value) = self.eval_timestamp_int_arg(arg)? else {
                 return Ok(None);
             };
@@ -569,10 +567,17 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
         };
-        if seconds < chart_seconds {
-            return Err(RuntimeError {
-                message: format!("{name} unsupported lower timeframe `{timeframe}`"),
-            });
+        if self.request_environment.chart_calendar().is_some() {
+            let requested = RequestTimeframe::parse(timeframe).map_err(|err| RuntimeError {
+                message: err.to_string(),
+            })?;
+            return self.eval_calendar_bar_time(
+                &args,
+                &requested,
+                session.as_ref(),
+                timezone,
+                close_time,
+            );
         }
         if session.is_none()
             && timeframe == chart_timeframe.value()
@@ -598,6 +603,25 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} bars_back timestamp is out of range"),
             });
         };
+        if let Some(session) = session.as_ref() {
+            let requested = RequestTimeframe::parse(timeframe).map_err(|err| RuntimeError {
+                message: err.to_string(),
+            })?;
+            return session_grid::virtual_session_time(
+                base_time,
+                &requested,
+                chart_seconds,
+                session,
+                timezone,
+                args.timeframe_bars_back,
+                || self.charge_execution_steps(1),
+            )
+            .map(|bounds| {
+                bounds.map_or(PineValue::Na, |(open, close)| {
+                    PineValue::Int(if close_time { close } else { open })
+                })
+            });
+        }
         if session.is_none()
             && timeframe == chart_timeframe.value()
             && args.timeframe_bars_back == 0
@@ -626,24 +650,28 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} timeframe_bars_back timestamp is out of range"),
             });
         };
-        let Some((open_time, close_timestamp)) =
+        let Some((mut open_time, mut close_timestamp)) =
             timeframe_bucket_bounds(bucket, timeframe, seconds)
         else {
             return Err(RuntimeError {
                 message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
             });
         };
-        if let Some(session) = session {
-            let Some(session_close) =
-                session_close_for_bar_open(open_time, close_timestamp, &session, timezone)?
-            else {
-                return Ok(PineValue::Na);
-            };
-            return Ok(PineValue::Int(if close_time {
-                session_close
-            } else {
-                open_time
-            }));
+        // Native time-based D/W/M charts expose the selected intraday
+        // query's daily close. Select/offset in the requested timeframe
+        // first: its previous minute may belong to the previous UTC day.
+        // This runtime profile is continuous UTC; exchange calendars are
+        // a separate host capability, not inferred from the symbol name.
+        if seconds < 86_400 && chart_seconds >= 86_400 && (close_time || session.is_none()) {
+            let (daily_open, daily_close) = timeframe_bucket(open_time, 86_400)
+                .and_then(|day| timeframe_bucket_bounds(day, "D", 86_400))
+                .ok_or_else(|| RuntimeError {
+                    message: format!("{name} daily boundary timestamp is out of range"),
+                })?;
+            close_timestamp = daily_close;
+            if !close_time {
+                open_time = daily_open;
+            }
         }
 
         Ok(PineValue::Int(if close_time {
@@ -664,7 +692,10 @@ impl<'a> HistoricalRuntime<'a> {
             return self.eval_canonical_bar_time_function_args(args);
         }
 
-        let mut parsed = BarTimeFunctionArgs::default();
+        let mut parsed = BarTimeFunctionArgs {
+            timezone: self.request_environment.chart_timezone().to_owned(),
+            ..BarTimeFunctionArgs::default()
+        };
         let mut positional = Vec::new();
         let mut saw_timeframe = false;
         for arg in args {
@@ -774,7 +805,10 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<Option<BarTimeFunctionArgs>, RuntimeError> {
-        let mut parsed = BarTimeFunctionArgs::default();
+        let mut parsed = BarTimeFunctionArgs {
+            timezone: self.request_environment.chart_timezone().to_owned(),
+            ..BarTimeFunctionArgs::default()
+        };
         let Some(timeframe) = crate::builtins::args::positional_arg(args, 0) else {
             return Ok(None);
         };
@@ -914,6 +948,24 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(previous_time) = self.previous_bar_time else {
             return Ok(PineValue::Bool(false));
         };
+        if let Some(calendar) = self.request_environment.chart_calendar() {
+            let timeframe = RequestTimeframe::parse(timeframe).map_err(|err| RuntimeError {
+                message: err.to_string(),
+            })?;
+            let current = calendar
+                .select(&timeframe, current_time, 0)
+                .map_err(|err| RuntimeError {
+                    message: err.to_string(),
+                })?;
+            let previous = calendar
+                .select(&timeframe, previous_time, 0)
+                .map_err(|err| RuntimeError {
+                    message: err.to_string(),
+                })?;
+            return Ok(PineValue::Bool(
+                current.map(|interval| interval.open()) != previous.map(|interval| interval.open()),
+            ));
+        }
         let Some(current_bucket) = timeframe_change_bucket(current_time, timeframe, seconds) else {
             return Err(RuntimeError {
                 message: format!("timeframe.change unsupported timeframe `{timeframe}`"),

@@ -1,0 +1,8 @@
+//@version=6
+indicator("collection-matrix-method-v6-45")
+method bump(matrix<float> v)=>
+    v.set(0,0,v.get(0,0)+5)
+    v.get(0,0)
+values=matrix.new<float>(1,1,10)
+plot(values.bump())
+plot(values.get(0,0))

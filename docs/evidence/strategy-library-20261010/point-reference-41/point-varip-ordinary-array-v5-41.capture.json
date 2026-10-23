@@ -1,0 +1,30 @@
+{
+  "name": "point-varip-ordinary-array-v5-41",
+  "version": 5,
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\point-varip-ordinary-array-v5-41.pine",
+  "source_sha256": "fbbc191d7dfe542c8bfc83271b81efb70e35dbb4cd4d273ba577db98f773f9d6",
+  "qualification_scope": "intrabar_retention_frontier",
+  "native_relation": "ordinary_array_binding",
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    32,
+    1,
+    1,
+    1
+  ],
+  "native_marker_suffix": [
+    1,
+    1,
+    1
+  ],
+  "native_row": "235 row point-varip-ordinary-array-v5-41 Plot 32.00 Plot 1.00 Plot 1.00 Plot 1.00",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "98de25cef5b8ccc6c73b11d02d8291d86fa13503968b760ddb75e2ef12bb01e1",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-varip-ordinary-array-v5-41.native.ax.txt",
+  "accessibility_sha256": "17b17f8b98910d673c289034744f3c3c68abeb5d63246040df9a9f55f767a69d",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research41-20261018/point-varip-ordinary-array-v5-41.native.png",
+  "screenshot_sha256": "74acdb2cecf32cb95f39a64d260cfe00bb95bb7ea9ca5ae9b6329759013ba07f",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

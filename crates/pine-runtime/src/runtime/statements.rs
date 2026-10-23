@@ -4,6 +4,9 @@ use crate::builtins::matrices::matrix_array_element_kind;
 use crate::error::RuntimeLoopControl;
 use crate::*;
 
+mod loop_number;
+use loop_number::LoopNumber;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum StmtControl {
     None,
@@ -44,7 +47,7 @@ impl<'a> HistoricalRuntime<'a> {
                 else_branch,
             } => {
                 let branch = match self.eval_expr(condition)? {
-                    PineValue::Bool(true) => then_branch,
+                    PineValue::Bool(true) | PineValue::ConstantBool { .. } => then_branch,
                     PineValue::Bool(false) | PineValue::Na => else_branch,
                     _ => return Ok(StmtControl::None),
                 };
@@ -86,7 +89,18 @@ impl<'a> HistoricalRuntime<'a> {
             }
             HirStmtKind::Reassign { symbol, value } => {
                 let value = self.eval_expr(value)?;
-                self.assign_persistent_symbol(*symbol, value.clone());
+                let preserve_constant = self.uses_v6_semantics()
+                    && self.metadata.symbol_index(*symbol).is_some_and(|index| {
+                        let symbol = &self.program.symbols[index];
+                        symbol.persistence == pine_ir::PersistenceKind::None
+                            && symbol.pine_type.qualifier == pine_ir::Qualifier::Const
+                    });
+                let value = if preserve_constant {
+                    value
+                } else {
+                    value.materialize_boolean()
+                };
+                let value = self.assign_persistent_symbol(*symbol, value)?;
                 self.set_symbol_value(*symbol, value);
             }
             HirStmtKind::FieldReassign {
@@ -95,7 +109,7 @@ impl<'a> HistoricalRuntime<'a> {
                 field_index,
                 value,
             } => {
-                let value = self.eval_expr(value)?;
+                let value = self.eval_expr(value)?.materialize_boolean();
                 if !path.is_empty() {
                     let mut receiver = self
                         .current_symbols
@@ -108,17 +122,28 @@ impl<'a> HistoricalRuntime<'a> {
                         };
                         receiver = self.object_field(id, *index)?;
                     }
-                    let PineValue::UserTypeRef(id) = receiver else {
-                        return Err(RuntimeError {
-                            message:
-                                "nested field mutation receiver is undefined or not a UDT object"
-                                    .to_owned(),
-                        });
-                    };
-                    self.set_object_field(id, *field_index, value)?;
+                    match receiver {
+                        PineValue::UserTypeRef(id) => {
+                            self.set_object_field(id, *field_index, value)?
+                        }
+                        PineValue::ChartPointRef(id) => {
+                            self.set_chart_point_field(id, *field_index, value)?
+                        }
+                        _ => {
+                            return Err(RuntimeError {
+                                message:
+                                    "nested field mutation receiver is undefined or not an object"
+                                        .to_owned(),
+                            });
+                        }
+                    }
                     return Ok(StmtControl::None);
                 }
                 let updated = match self.current_symbols.get(symbol).cloned() {
+                    Some(PineValue::ChartPointRef(id)) => {
+                        self.set_chart_point_field(id, *field_index, value)?;
+                        PineValue::ChartPointRef(id)
+                    }
                     Some(PineValue::UserTypeRef(id)) => {
                         self.set_object_field(id, *field_index, value)?;
                         PineValue::UserTypeRef(id)
@@ -146,7 +171,7 @@ impl<'a> HistoricalRuntime<'a> {
                         });
                     }
                 };
-                self.assign_persistent_symbol(*symbol, updated.clone());
+                let updated = self.assign_persistent_symbol(*symbol, updated)?;
                 self.set_symbol_value(*symbol, updated);
             }
             HirStmtKind::ArrayFieldReassign {
@@ -204,9 +229,7 @@ impl<'a> HistoricalRuntime<'a> {
                         PineValue::Bool(true)
                     )
                 }
-                (None, Some(condition)) => {
-                    matches!(self.eval_expr(condition)?, PineValue::Bool(true))
-                }
+                (None, Some(condition)) => self.eval_expr(condition)?.is_condition_true(),
                 (_, None) => true,
             };
 
@@ -278,38 +301,30 @@ impl<'a> HistoricalRuntime<'a> {
         body: &[HirStmt],
         result: Option<&HirExpr>,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(from) = self.eval_expr(from)?.as_i64() else {
+        let Some(from) = LoopNumber::from_value(self.eval_expr(from)?) else {
             return Ok(PineValue::Na);
         };
-        let Some(mut to_boundary) = self.eval_expr(to)?.as_i64() else {
+        let Some(mut to_boundary) = LoopNumber::from_value(self.eval_expr(to)?) else {
             return Ok(PineValue::Na);
         };
         let step_size = if let Some(step) = step {
-            let Some(step) = self.eval_expr(step)?.as_i64() else {
+            let Some(step) = LoopNumber::from_value(self.eval_expr(step)?) else {
                 return Ok(PineValue::Na);
             };
-            if step == 0 {
-                return Err(RuntimeError {
-                    message: "for loop step cannot be zero".to_owned(),
-                });
-            }
-            step.checked_abs().ok_or_else(|| RuntimeError {
-                message: "for loop step is out of range".to_owned(),
-            })?
+            Some(step)
         } else {
-            1
+            None
         };
         let dynamic_boundary = self.uses_v6_semantics();
-        let step = if from <= to_boundary {
-            step_size
-        } else {
-            -step_size
-        };
+        let ascending = !from.compare(to_boundary).is_gt();
+        let step = from.step(step_size, ascending)?;
         let mut value = from;
         let mut iterations = 0_usize;
         let mut loop_result = PineValue::Na;
         loop {
-            if (step > 0 && value > to_boundary) || (step < 0 && value < to_boundary) {
+            if (ascending && value.compare(to_boundary).is_gt())
+                || (!ascending && value.compare(to_boundary).is_lt())
+            {
                 break;
             }
             if iterations >= MAX_WHILE_ITERATIONS {
@@ -321,7 +336,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             self.charge_loop_iteration()?;
             iterations += 1;
-            self.set_symbol_value(counter, PineValue::Int(value));
+            self.set_symbol_value(counter, value.into_value());
             let mut control = StmtControl::None;
             for statement in body {
                 match self.eval_stmt(statement) {
@@ -356,12 +371,12 @@ impl<'a> HistoricalRuntime<'a> {
                 StmtControl::Break => break,
                 StmtControl::Continue => {}
             }
-            let Some(next) = value.checked_add(step) else {
+            let Some(next) = value.advance(step) else {
                 break;
             };
             value = next;
             if dynamic_boundary {
-                let Some(next_boundary) = self.eval_expr(to)?.as_i64() else {
+                let Some(next_boundary) = LoopNumber::from_value(self.eval_expr(to)?) else {
                     return Ok(PineValue::Na);
                 };
                 to_boundary = next_boundary;
@@ -380,7 +395,7 @@ impl<'a> HistoricalRuntime<'a> {
         let mut loop_result = PineValue::Na;
         loop {
             match self.eval_expr(condition)? {
-                PineValue::Bool(true) => {}
+                PineValue::Bool(true) | PineValue::ConstantBool { .. } => {}
                 PineValue::Bool(false) | PineValue::Na => break,
                 _ => break,
             }

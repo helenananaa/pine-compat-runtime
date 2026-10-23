@@ -1,0 +1,6 @@
+//@version=6
+indicator("Reserved udt-name-v6 probe33",precision=0)
+type text
+    int value
+h=text.new(7)
+plot(h.value)

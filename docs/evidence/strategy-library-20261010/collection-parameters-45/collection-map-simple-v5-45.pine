@@ -1,0 +1,5 @@
+//@version=5
+indicator("collection-map-simple-v5-45")
+f(simple map<string,float> v)=>v.size()
+values=map.new<string,float>()
+plot(f(values))

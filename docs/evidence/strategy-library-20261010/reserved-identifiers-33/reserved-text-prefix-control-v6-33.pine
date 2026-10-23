@@ -1,0 +1,6 @@
+//@version=6
+indicator("Reserved text prefix control33",precision=0)
+myText=7
+Text=3
+f(value)=>value
+plot(f(myText)+Text)

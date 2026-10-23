@@ -1,0 +1,21 @@
+//@version=6
+indicator("point-udt-intrabar-v6-41")
+type Wrap
+    chart.point point
+varip int ticks=0
+if barstate.isnew
+    ticks:=0
+if barstate.isrealtime
+    ticks+=1
+var normal=Wrap.new(chart.point.from_index(1,0))
+varip direct=Wrap.new(chart.point.from_index(1,0))
+varip items=array.from(Wrap.new(chart.point.from_index(1,0)))
+if barstate.isrealtime
+    normal.point.price+=1
+    direct.point.price+=1
+    item=items.first()
+    item.point.price+=1
+plot(ticks)
+plot(normal.point.price)
+plot(direct.point.price)
+plot(items.first().point.price)

@@ -1358,27 +1358,6 @@ id = table.new(position.top_right, 2, 2)
 table.cell(id, 2, 0, "bad")
 plot(close)
 "#,
-        r#"indicator("missing table cell")
-id = table.new(position.top_right, 2, 2)
-table.cell_set_text(id, 0, 0, "bad")
-plot(close)
-"#,
-        r#"indicator("missing table tooltip cell")
-id = table.new(position.top_right, 2, 2)
-table.cell_set_tooltip(id, 0, 0, "bad")
-plot(close)
-"#,
-        r#"indicator("missing table font family cell")
-id = table.new(position.top_right, 2, 2)
-table.cell_set_text_font_family(id, 0, 0, font.family_monospace)
-plot(close)
-"#,
-        r#"//@version=6
-indicator("missing table formatting cell")
-id = table.new(position.top_right, 2, 2)
-table.cell_set_text_formatting(id, 0, 0, text.format_bold)
-plot(close)
-"#,
         r#"indicator("bad table merge bounds")
 id = table.new(position.top_right, 2, 2)
 table.merge_cells(id, 0, 0, 2, 1)
@@ -1403,6 +1382,50 @@ plot(close)
             "{source_text}"
         );
     }
+}
+
+#[test]
+fn table_setters_populate_empty_cells_and_cell_overwrites_their_styles() {
+    let source = SourceFile::new(
+        "empty-setters.pine",
+        r#"//@version=6
+indicator("empty setters")
+var id=table.new(position.top_right,2,1)
+table.cell_set_text_color(id,0,0,color.white)
+table.cell_set_bgcolor(id,0,0,color.black)
+table.cell_set_text_size(id,0,0,size.large)
+table.cell_set_text(id,0,0,"empty setter")
+table.cell_set_tooltip(id,1,0,"tooltip")
+table.cell_set_text_font_family(id,1,0,font.family_monospace)
+table.cell_set_text_formatting(id,1,0,text.format_bold)
+if barstate.islast
+    table.cell(id,1,0,"replaced")
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let result = run_historical(&analysis.hir.unwrap(), &[bar(1.)]).unwrap();
+    let snapshot = result.tables[0].snapshots.last().unwrap();
+    assert_eq!(snapshot.cells.len(), 2);
+    assert_eq!(
+        snapshot.cells[0].text,
+        PineValue::String("empty setter".into())
+    );
+    assert_eq!(
+        snapshot.cells[0].text_size,
+        PineValue::String("size.large".into())
+    );
+    assert_eq!(snapshot.cells[1].text, PineValue::String("replaced".into()));
+    assert_eq!(snapshot.cells[1].tooltip, PineValue::String(String::new()));
+    assert_eq!(
+        snapshot.cells[1].text_font_family,
+        PineValue::String("font.family_default".into())
+    );
+    assert_eq!(snapshot.cells[1].text_formatting, PineValue::Int(0));
 }
 
 #[test]
@@ -2262,4 +2285,24 @@ if close > open
         result.plots[0].values,
         vec![PineValue::Float(2.0), PineValue::Na, PineValue::Float(6.0)]
     );
+}
+
+#[test]
+fn legacy_udf_table_native_probe_preserves_return_and_mutation_identity() {
+    let source = SourceFile::new(
+        "native-table.pine",
+        include_str!(
+            "../../../../docs/evidence/strategy-library-20261010/legacy-table-udf-v4.pine"
+        ),
+    );
+    let analysis = analyze_source(&source);
+    let program = analysis
+        .hir
+        .unwrap_or_else(|| panic!("{:?}", analysis.diagnostics));
+    let result = run_historical(&program, &[bar(1.), bar(2.)]).unwrap();
+    assert_eq!(result.tables.len(), 1);
+    let cells = &result.tables[0].snapshots.last().unwrap().cells;
+    assert_eq!(cells.len(), 2);
+    assert_eq!(cells[0].text, PineValue::String("v4 UDF".into()));
+    assert_eq!(cells[1].text, PineValue::String("setter".into()));
 }

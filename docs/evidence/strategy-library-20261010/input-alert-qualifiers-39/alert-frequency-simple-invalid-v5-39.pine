@@ -1,0 +1,6 @@
+//@version=5
+indicator("alert-frequency-simple-invalid-v5-39")
+frequency_of(simple string value)=>value
+frequency=frequency_of(alert.freq_all)
+alert("bounded frequency admission probe",frequency)
+plot(1)

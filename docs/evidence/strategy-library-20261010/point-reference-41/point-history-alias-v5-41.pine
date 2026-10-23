@@ -1,0 +1,6 @@
+//@version=5
+indicator("point-history-alias-v5-41")
+var p=chart.point.from_index(0,0)
+p.price:=bar_index
+previous=p[1]
+plot(na(previous)?0:previous.price==bar_index?1:0)

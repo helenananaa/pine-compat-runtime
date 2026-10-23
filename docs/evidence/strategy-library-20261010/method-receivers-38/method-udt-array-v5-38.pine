@@ -1,0 +1,9 @@
+//@version=5
+indicator("method-udt-array-v5-38")
+type Point38
+    float x
+method head38(array<Point38> self)=>array.get(self,0)
+a=array.new<Point38>()
+array.push(a,Point38.new(7.0))
+p=a.head38()
+plot(p.x)

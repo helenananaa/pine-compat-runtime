@@ -1,0 +1,10 @@
+//@version=6
+indicator("parameter-const-defaults-v6-35",precision=0)
+fb(const bool x=false)=>x
+fi(const int x=2)=>x
+fs(const string x="ok")=>x
+fc(const color x=color.red)=>x
+plot(fb()?1:0,title="bool default")
+plot(fi(),title="int default")
+plot(fs()=="ok"?1:0,title="string default")
+plot(fc()==color.red?1:0,title="color default")

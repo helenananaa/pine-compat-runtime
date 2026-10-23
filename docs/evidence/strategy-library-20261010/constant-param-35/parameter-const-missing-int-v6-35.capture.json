@@ -1,0 +1,18 @@
+{
+  "name": "parameter-const-missing-int-v6-35",
+  "source": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-missing-int-v6-35.pine",
+  "source_sha256": "3b78f5466d5c849b423b3e0f4da6473e403c13c9c83779089a2c68bafc3b2311",
+  "library": false,
+  "native_status": "compiled_and_executed",
+  "native_values": [
+    1
+  ],
+  "native_row": "238 row parameter-const-missing-int-v6-35 missing int 1",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "3b78f5466d5c849b423b3e0f4da6473e403c13c9c83779089a2c68bafc3b2311",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-missing-int-v6-35.native.ax.txt",
+  "accessibility_sha256": "22d44725c96c0f1cafd8b8c063c5c0e1ed6a26214a829d62343a20b9316d8b9a",
+  "screenshot": "docs/evidence/strategy-library-20261010/constant-param-35/parameter-const-missing-int-v6-35.native.png",
+  "screenshot_sha256": "379bc488c4f65747ae0d3399d2a626527361bbbaace52fd2536a1e70f558f4c2"
+}

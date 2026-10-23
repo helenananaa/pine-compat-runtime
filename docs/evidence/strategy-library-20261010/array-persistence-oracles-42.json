@@ -1,0 +1,1867 @@
+{
+  "scope": "Captured Native sources are immutable. Local vectors bound the three-bar historical case and the two-history-bar forming case; Native observations additionally test the displayed historical prefix. Confirmed local session checks do not imply Native exchange-close qualification.",
+  "records": [
+    {
+      "name": "array-both-write-v5-42",
+      "version": 5,
+      "scenario": "array-both-write",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v5-42.pine",
+      "source_sha256": "3e51fb33a9449685e742b351b460b8791e93a63be9269ade1a5d6fb497bcf655",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3351,
+        3351,
+        3349,
+        3349,
+        3349
+      ],
+      "native_row": "241 row array-both-write-v5-42 Plot 3,351.00 Plot 3,351.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "262bd9beea6b230a9d0eee32e3f82d09958c24c24170e82b039110a6ca01024a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v5-42.native.ax.txt",
+      "accessibility_sha256": "741071cd9e2891063d8ffcea9c80f094a87937353d98c8652d6f94224cf2cc7e",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v5-42.native.png",
+      "screenshot_sha256": "d75fbe1a28bcc4ef6d1a318c498517c33ba800ebac5b7f7ebf352a6928dcf2ba",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v5-42.capture.json",
+      "raw_capture_sha256": "b4246e43d2dbcd1c51e38fb360eeb034bd7bcf2b41d1393efe946b2f457cf530",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        4,
+        4,
+        2,
+        2,
+        2
+      ],
+      "forming_expected": [
+        3,
+        3,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-dynamic-get-v5-42",
+      "version": 5,
+      "scenario": "array-dynamic-get",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v5-42.pine",
+      "source_sha256": "b079893c17231ede5495ed8ab35542d7dfd3b0c9210b00ec19c3b0e888778df4",
+      "native_status": "runtime_error",
+      "native_values": null,
+      "native_error": "Error on bar 1: In 'array.get()' function. Index 1 is out of bounds, array size is 1. at  #main () : 6",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "70f69eae18f12105a02ecca804750207b640251461a8886e7c2adec47d68a50b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v5-42.native.ax.txt",
+      "accessibility_sha256": "4a3a99f48e41db969b4b92040e5a502e6815c9dfb6161c27adb6367c57e0b80a",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v5-42.native.png",
+      "screenshot_sha256": "fac254bd319e37ab0d5d886cd58a683aa1cbe7ddba90a43f5f637d54b555cbb2",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v5-42.capture.json",
+      "raw_capture_sha256": "0eae74db1f6e60153bad34aa5c18162672626a8abb98c8a30f915e3988957004",
+      "execution_kind": "static",
+      "runtime_error_pattern": "array index 1 is out of bounds for array of size 1"
+    },
+    {
+      "name": "array-transient-alias-v5-42",
+      "version": 5,
+      "scenario": "array-transient-alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v5-42.pine",
+      "source_sha256": "1b167fd09c6a6a83100553f526854ea66027147b544cced8cc2709ef85cccb6f",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        3461,
+        3461
+      ],
+      "native_marker_prefix": [
+        1
+      ],
+      "native_row": "241 row array-transient-alias-v5-42 Plot 1.00 Plot 3,461.00 Plot 3,461.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c36e484c0ec6ee4995e7f09152e476d6a69f1c33435193c85065568b3c409dcf",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v5-42.native.ax.txt",
+      "accessibility_sha256": "078bcb4acedd28990cabce4a1c0eb1061a5c3d3e4d7ba145491f86ccaebd63dd",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v5-42.native.png",
+      "screenshot_sha256": "ec518857a8cfa68d0b18fae02d5c7a5e968a4b1fdb82384db27fb3b7f37f7778",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v5-42.capture.json",
+      "raw_capture_sha256": "b19f631f2599b0a2917279c34b6e30576fe63830e6eeb5c474657436c05a2f39",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        1,
+        3,
+        3
+      ],
+      "intrabar_profile": "transient"
+    },
+    {
+      "name": "array-udt-field-alias-v5-42",
+      "version": 5,
+      "scenario": "array-udt-field-alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v5-42.pine",
+      "source_sha256": "2314e32d90bd918402d380090de4b9abf785edf0487ab7233302f2bb320f2026",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3350,
+        1,
+        0
+      ],
+      "native_marker_suffix": [
+        0
+      ],
+      "native_row": "241 row array-udt-field-alias-v5-42 Plot 3,350.00 Plot 1.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "49f939c4bb573f0ca316d1f647423177dee1ccc3b69606cd4a4f3f15a01b06aa",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v5-42.native.ax.txt",
+      "accessibility_sha256": "cff2b679f63aa1e4ce52025eee3c19492544e5c18e97b8880266aee19903e559",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v5-42.native.png",
+      "screenshot_sha256": "5c86963441a89567f24d9116770aba8ccb717973bf92fe18fc025e07e395fc8b",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v5-42.capture.json",
+      "raw_capture_sha256": "fb0f39191fbd9ebe2943ad0e3356373eb284448cabd114362ececcff831284e8",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        3,
+        1,
+        0
+      ],
+      "forming_expected": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "array-both-write-v6-42",
+      "version": 6,
+      "scenario": "array-both-write",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v6-42.pine",
+      "source_sha256": "c192a29f349c83256f74995f89899fd78231b528b6ec97ff2a051e6a54e7da18",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3351,
+        3351,
+        3349,
+        3349,
+        3349
+      ],
+      "native_row": "241 row array-both-write-v6-42 Plot 3,351.00 Plot 3,351.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "2de02be812341c8a3418700ce00bcfcf7373c4eb517001d3b9893dd121ff2388",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v6-42.native.ax.txt",
+      "accessibility_sha256": "1c0e767660a90e7c501b593363547a1a35452a26a1994b7cebd230d117db6380",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v6-42.native.png",
+      "screenshot_sha256": "83eff5a9b906054c55ee83e2da09ee179886123d7874e603dc53a8284098b53e",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-both-write-v6-42.capture.json",
+      "raw_capture_sha256": "0de67b9b934c001dc282a0a651cfc559847ff4c39783140aaf665b6a34f9f161",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        4,
+        4,
+        2,
+        2,
+        2
+      ],
+      "forming_expected": [
+        3,
+        3,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-dynamic-get-v6-42",
+      "version": 6,
+      "scenario": "array-dynamic-get",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v6-42.pine",
+      "source_sha256": "b9f5043f0f88f6e83403d84dbf8ad7e57c720a86391606adabe3d03b7968fde4",
+      "native_status": "runtime_error",
+      "native_values": null,
+      "native_error": "Error on bar 1: In 'array.get()' function. Index 1 is out of bounds, array size is 1. at  #main () : 6",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "6d4e3ade5722b1e86d3f670d59e201719ea29420274f0affa440815c3bb87a9c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v6-42.native.ax.txt",
+      "accessibility_sha256": "52f6a2bc519aa6545fa261bd06aa8ee646c2c2c0eec0dbbe91bd99cb5df8648f",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v6-42.native.png",
+      "screenshot_sha256": "8f9d64eea1c025a784929af2ce8619f1d9cafe3df8f2d3c0a49bd92bfd459683",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-dynamic-get-v6-42.capture.json",
+      "raw_capture_sha256": "cf761f485ae1757065958375e9bb0bb100a1e3efa99443680066859508575821",
+      "execution_kind": "static",
+      "runtime_error_pattern": "array index 1 is out of bounds for array of size 1"
+    },
+    {
+      "name": "array-transient-alias-v6-42",
+      "version": 6,
+      "scenario": "array-transient-alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v6-42.pine",
+      "source_sha256": "7ff98ffc0d4d6a3955125e4114c391f06bf57657eef5b0831a51fb73955eb31c",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        1,
+        3422,
+        3422
+      ],
+      "native_marker_prefix": [
+        1
+      ],
+      "native_row": "241 row array-transient-alias-v6-42 Plot 1.00 Plot 3,422.00 Plot 3,422.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "fb31901d192e2bf6a8a605a6f640fad7c9c3566a093d8ae085f42c00c6847644",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v6-42.native.ax.txt",
+      "accessibility_sha256": "545ee86f2a6fdf54fc2a24e588b1686be684b1eae0d98081b745c72f4043254f",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v6-42.native.png",
+      "screenshot_sha256": "72be445993a063f75fb401de63594da540f6d2d7042a87a7be6f031c8330413d",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-alias-v6-42.capture.json",
+      "raw_capture_sha256": "92369a43f69b709fe8dd41619a63a3c5126a4eeb28dc44a7f6ab97f6cfe4f7b4",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        1,
+        3,
+        3
+      ],
+      "intrabar_profile": "transient"
+    },
+    {
+      "name": "array-udt-field-alias-v6-42",
+      "version": 6,
+      "scenario": "array-udt-field-alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v6-42.pine",
+      "source_sha256": "1b3cc2df3a0d238a67eabe0818373f1117a84fd10b0ffdfdcd4fa004ba1b7745",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3350,
+        1,
+        0
+      ],
+      "native_marker_suffix": [
+        0
+      ],
+      "native_row": "241 row array-udt-field-alias-v6-42 Plot 3,350.00 Plot 1.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "0249af952fe48727ac6a3c305368ad0b7b97351d8e2394b732cdf16d38b332f3",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v6-42.native.ax.txt",
+      "accessibility_sha256": "ba355369a41bf831abfbb1c5859fc3258d792ecfee1e1992f1d7e62aef00492a",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v6-42.native.png",
+      "screenshot_sha256": "225d0094cb6d22164aea81c4fe6afbbd620b9dbf1a652f1d601ee2a88dea1c3a",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-udt-field-alias-v6-42.capture.json",
+      "raw_capture_sha256": "b2668672ff65fb2f36fc45cf54f78775f0e94d4f74668b582f6344451cd0bb05",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        3,
+        1,
+        0
+      ],
+      "forming_expected": [
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "array-loop-persistent-alias-v5-42",
+      "version": 5,
+      "scenario": "array-loop-persistent-alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v5-42.pine",
+      "source_sha256": "6a43507c88849460979476288ae5e304d99797e480aab1ce39d27f762c35066e",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        6702,
+        6702,
+        3349
+      ],
+      "native_row": "241 row array-loop-persistent-alias-v5-42 Plot 6,702.00 Plot 6,702.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ad2acaa9bbcc9a63839257b4a81cc640a28b470366a8bb3e408c65df6577e6c6",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v5-42.native.ax.txt",
+      "accessibility_sha256": "a2d5ef26376232adc7a7737c071186eff9c49e48eca98392339519df4e6a1247",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v5-42.native.png",
+      "screenshot_sha256": "af232b49b49afe33295f1ec9d5677afa171486db16f5b55edee12521e0675e75",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v5-42.capture.json",
+      "raw_capture_sha256": "53a914109e71795708b959bbc08cd3bf8d1afeb4bfdcd791e7e4c6b0a4ee52eb",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        8,
+        8,
+        2
+      ],
+      "forming_expected": [
+        6,
+        6,
+        1
+      ]
+    },
+    {
+      "name": "array-two-udt-fields-v5-42",
+      "version": 5,
+      "scenario": "array-two-udt-fields",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v5-42.pine",
+      "source_sha256": "8de63594d433c90cb536eb8cf916dc71384ce28b145ecbd5872db21f66395f2b",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2,
+        3351,
+        3351,
+        3349
+      ],
+      "native_row": "241 row array-two-udt-fields-v5-42 Plot 2.00 Plot 3,351.00 Plot 3,351.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ffc075e06674a96e207b04e7634fdd30a9bb1979d4b17382022ae95d7df985a6",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v5-42.native.ax.txt",
+      "accessibility_sha256": "2295fbfc51a3430ed44a50c4521fc7b59bda398328e351862169da5215935aba",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v5-42.native.png",
+      "screenshot_sha256": "efb4a3407ed59a121d25a310e803bb41369a25e0e037df0c8f1f826de4123442",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v5-42.capture.json",
+      "raw_capture_sha256": "f48cf6c3bd572113895699022be92b229940421a2b07be3d762da333381a4c95",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        4,
+        4,
+        2
+      ],
+      "forming_expected": [
+        2,
+        3,
+        3,
+        1
+      ]
+    },
+    {
+      "name": "array-loop-persistent-alias-v6-42",
+      "version": 6,
+      "scenario": "array-loop-persistent-alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v6-42.pine",
+      "source_sha256": "1ed91e842bb9ffdc889553085257f9ea3507c69f67f16358f13c01e45cd88fe6",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        6702,
+        6702,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ],
+        [
+          "offset",
+          0,
+          2,
+          3353
+        ]
+      ],
+      "native_row": "241 row array-loop-persistent-alias-v6-42 Plot 6,702.00 Plot 6,702.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "fb67c360e7036a426eeea95650b9529385a469aefd9cb0c2c3117e768a96bdae",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v6-42.native.ax.txt",
+      "accessibility_sha256": "1ca9ce202b21c7152da8d75c3e3b7edffa19d1075818e4c5254276fc7fa588b5",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v6-42.native.png",
+      "screenshot_sha256": "0210692cd6ffeaaa5b77d5c214b17510a774d6b262cf9427089f7d99f1d7bb2d",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-loop-persistent-alias-v6-42.capture.json",
+      "raw_capture_sha256": "84ddf7eb1366102095a65a431912d50fd7d2be48a01f409765c49a91f9ed5221",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        8,
+        8,
+        2
+      ],
+      "forming_expected": [
+        6,
+        6,
+        1
+      ]
+    },
+    {
+      "name": "array-two-udt-fields-v6-42",
+      "version": 6,
+      "scenario": "array-two-udt-fields",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v6-42.pine",
+      "source_sha256": "13bf8a67248f7d1f4b2eeb7c4163baf5ea7550a0c1dbddb8ecf6fdfe6c35ba78",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        2,
+        3351,
+        3351,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          1,
+          2
+        ],
+        [
+          "offset",
+          1,
+          3,
+          2
+        ]
+      ],
+      "native_row": "241 row array-two-udt-fields-v6-42 Plot 2.00 Plot 3,351.00 Plot 3,351.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "842087d0b9a7cc8b654aa1b6ab4d2f3348dd05297597e70e9831307ce671e4ee",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v6-42.native.ax.txt",
+      "accessibility_sha256": "55e867b6d3c604ee253c75b65698db8d8b1eaa2681bae5f523bc541ccfedf34b",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v6-42.native.png",
+      "screenshot_sha256": "28597cc15284456fc9611a23f9bd31c6491329e852fd30aedf0a95de1794a4f4",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-two-udt-fields-v6-42.capture.json",
+      "raw_capture_sha256": "b252bdd2a0777a21a9eedac1e002b1996b7859dd7e6b98d2c2f5b4a304c4a271",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        4,
+        4,
+        2
+      ],
+      "forming_expected": [
+        2,
+        3,
+        3,
+        1
+      ]
+    },
+    {
+      "name": "array-late-history-v5-42",
+      "version": 5,
+      "scenario": "late-history",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v5-42.pine",
+      "source_sha256": "8227b454d3a9a645a4da86f9e642796017573b02fd3e74bf8e84848b24951fc2",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        14,
+        14,
+        0,
+        1
+      ],
+      "native_marker_suffix": [
+        1
+      ],
+      "native_row": "241 row array-late-history-v5-42 Plot 14.00 Plot 14.00 Plot 0.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "01eeb664b2cd3ca87e6302c7d7f2cae3d1a5082c5d65f6efb63f06ac052e455b",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v5-42.native.ax.txt",
+      "accessibility_sha256": "5dc4a0bdbdb2fe58ce3939f8c3a9bb01ec0a2f5837c783f92fea6532e9fd4089",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v5-42.native.png",
+      "screenshot_sha256": "85caa76df4805a26de4bc7ddc1857ad07d5cef42fbf4cb6b94231e43a378c631",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v5-42.capture.json",
+      "raw_capture_sha256": "7a95a2ff2ab69b3d3f6c0e09c31f45563d4c0b36a14001d4ab64b4a20421e8cc",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "intrabar_profile": "late_history"
+    },
+    {
+      "name": "array-forming-reassign-v5-42",
+      "version": 5,
+      "scenario": "forming-reassign",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v5-42.pine",
+      "source_sha256": "a275e6682366c6dc62d7923e46a18d93a3c5c485da2628775cbacad605e86ab9",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        11,
+        1,
+        12,
+        1
+      ],
+      "native_marker_suffix": [
+        1
+      ],
+      "native_row": "241 row array-forming-reassign-v5-42 Plot 11.00 Plot 1.00 Plot 12.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "7cfbd07735e408b9cac56ab98a4e9528e3a6366b6be122dc6cb2a090d41442d8",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v5-42.native.ax.txt",
+      "accessibility_sha256": "4d0e4302e2b077fcb54c89e83f7e4ea576236fa13dc604e3fc74af01edd7eb6d",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v5-42.native.png",
+      "screenshot_sha256": "a6113efe94844852cd194bc7f5fd8cefe3eaa4e3e277c4f36519824a8f3f623e",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v5-42.capture.json",
+      "raw_capture_sha256": "067863475982bf2dcf074bdfe5335d07ed5b4a595d4d5c02321aec17b1297a74",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "intrabar_profile": "forming_reassign"
+    },
+    {
+      "name": "array-late-history-v6-42",
+      "version": 6,
+      "scenario": "late-history",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v6-42.pine",
+      "source_sha256": "c53d72abfdfec94d18e7bd77798c0b2319ab7686a3bfee6c011319e44b4c779a",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        28,
+        28,
+        0,
+        1
+      ],
+      "native_marker_suffix": [
+        1
+      ],
+      "native_row": "241 row array-late-history-v6-42 Plot 28.00 Plot 28.00 Plot 0.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "f0f89a52c72f604c0fdd646597fc824024659839ad48d68b0da575d2ef8a9817",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v6-42.native.ax.txt",
+      "accessibility_sha256": "de810e24befe741cc10b343f8e74601b4b5ffaa1d022e48890689d3793cb06b9",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v6-42.native.png",
+      "screenshot_sha256": "d960057f1b4479e69efb125daa429e4f676a3a8d36eec60662ffa195b2cff6c8",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-late-history-v6-42.capture.json",
+      "raw_capture_sha256": "fd834c8692453e48a06f72c9c21b1c259c6dc6aa07900d42c607f75cb0fab0a5",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "intrabar_profile": "late_history"
+    },
+    {
+      "name": "array-forming-reassign-v6-42",
+      "version": 6,
+      "scenario": "forming-reassign",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v6-42.pine",
+      "source_sha256": "bf780cc485d743bdde51f7e7046b8768343261c3cc1519d38637a0115ef98182",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        13,
+        1,
+        14,
+        1
+      ],
+      "native_marker_suffix": [
+        1
+      ],
+      "native_row": "241 row array-forming-reassign-v6-42 Plot 13.00 Plot 1.00 Plot 14.00 Plot 1.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "d015973d34177fda4ef3d3c58ad528d2d0f6fa2a9a36fa732af1dd9d71544def",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v6-42.native.ax.txt",
+      "accessibility_sha256": "05b043769f8a6d83e3ac9efad9cb1cf9a381260139343ec136437598f5a98ce9",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v6-42.native.png",
+      "screenshot_sha256": "a0c030c72b684cfe8446aff78b54d14986e47b70db7326cadcd00aa85ef86778",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-forming-reassign-v6-42.capture.json",
+      "raw_capture_sha256": "3b98af415e94b8de2a1e82d4f58369deafcbb0a66f04b8897a6cd6313c820262",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "intrabar_profile": "forming_reassign"
+    },
+    {
+      "name": "array-reference-equality-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v5-42.pine",
+      "source_sha256": "7e4ce75efa46c5e0e2ba6e920e124d71adfaa72cfa07c9dfad653d81fd517b2b",
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call 'operator ==' with argument 'expr0'='a'. An argument of 'array<int>' type was used but a 'simple string' is expected.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c49a71245f2b8858c24dc22a0c95741d6b923f82d3674b70dfcff006e2a33e79",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v5-42.native.ax.txt",
+      "accessibility_sha256": "dc9ecb7a406d020847c46bafab231c6908e64c68b154360f4b9886ad91a1cf97",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v5-42.native.png",
+      "screenshot_sha256": "d3294c016af465a004986ee625fec94d3f1de1b87ec99046e8137edbdffffa2e",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v5-42.capture.json",
+      "raw_capture_sha256": "d8563d64c6e18e801b0e3821e2da625ce4eddba6ba19e7b185ff86203f5aad32",
+      "execution_kind": "static"
+    },
+    {
+      "name": "array-reference-inequality-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v5-42.pine",
+      "source_sha256": "58515a738a0b12da5e3d682da640308abebdfb425119feb4d234111dc4cccfc1",
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call 'operator !=' with argument 'expr0'='a'. An argument of 'array<int>' type was used but a 'simple string' is expected.",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "0506f3e2489beda3c6feed16e86869f0e5761241b683307eb8426c12d8275a3d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v5-42.native.ax.txt",
+      "accessibility_sha256": "7013df6a1140e41bd5c2c87e3cd0da841d93023060e3d5758332c647965913f8",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v5-42.native.png",
+      "screenshot_sha256": "6f5980da6308399a5c32b3dcda2c5f7f98c772e55b545018297434ac7c02435d",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v5-42.capture.json",
+      "raw_capture_sha256": "8128eb06597e5a84a3a6f53bc136d1ebee50eb04a5ceaafdb610416decacccc0",
+      "execution_kind": "static"
+    },
+    {
+      "name": "array-reference-equality-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v6-42.pine",
+      "source_sha256": "096dfbfcfb937d81be851755a3ec4d64474a63c75ee7de75caed15a0859cc8e1",
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call \"operator ==\" with argument \"expr0\"=\"a\". An argument of \"array<int>\" type was used but a \"simple string\" is expected. (CE10123)",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "81da890d696f60b7b5d7a824d4823fbc5ce5cf3f0e62500f7324d8bfa58eab65",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v6-42.native.ax.txt",
+      "accessibility_sha256": "52bcc32d9744a3319352e2b683433de7c7add6d02c0d6eb3313a034274040095",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v6-42.native.png",
+      "screenshot_sha256": "6c6d9bf7022f94a34bde2bfd52ab827631a63db650ebb6df032b58dcc0535fc7",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-equality-v6-42.capture.json",
+      "raw_capture_sha256": "f0c1436c879578da0cca13fd690a61fc2d3bf0216e41ba008467935bbd4687d3",
+      "execution_kind": "static"
+    },
+    {
+      "name": "array-reference-inequality-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v6-42.pine",
+      "source_sha256": "89c90a134b45d22cfaf75c6fa7a4e854546327aa30b0dc5cf0e4ad38cbaffb1e",
+      "native_status": "analysis_rejected",
+      "native_values": null,
+      "native_error": "Cannot call \"operator !=\" with argument \"expr0\"=\"a\". An argument of \"array<int>\" type was used but a \"simple string\" is expected. (CE10123)",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "f6fc2b7d04a5c500a1e382e51ad98e51c8a870af85c42d734f78378f28285c3d",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v6-42.native.ax.txt",
+      "accessibility_sha256": "865ecf171303604b9a26873221c252732aad70af542fb76ea0917f23c8610e5d",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v6-42.native.png",
+      "screenshot_sha256": "fd322edbbb5fa0c56931727d40928ef0643a68c4e756efa45101751d4afff5b4",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-reference-inequality-v6-42.capture.json",
+      "raw_capture_sha256": "4663ec456d4c5a33b5ee28d6356a18a5ea26973a9a558812e117991a6fe80399",
+      "execution_kind": "static"
+    },
+    {
+      "name": "array-opening-buffer-alias-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v5-42.pine",
+      "source_sha256": "7b3681f9d58706d746a60a56d9cf57ae5f7fcef0320304a8a608735c8cf1462d",
+      "parent_source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\ordinary-array-alias-v5-41.pine",
+      "parent_sha256": "318907e102fbde96a3f0ca245ff7b86253d23d1c231994ec9aac689c59a892e3",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "native_relation": "opening_and_second_alias_zero",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        51,
+        51,
+        0,
+        1,
+        0,
+        0
+      ],
+      "native_marker_suffix": [
+        0,
+        0
+      ],
+      "native_row": "235 row array-opening-buffer-alias-v5-42 Plot 51.00 Plot 51.00 Plot 0.00 Plot 1.00 Plot 0.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "59a6db7d72cbaf18608146e21068360d5b38acffcaece83bb1a830c6c0d91824",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v5-42.native.ax.txt",
+      "accessibility_sha256": "9fc5a418993aa4cdf924bab48707509d9218eb6edb1860fdac8543b55dc6b8a9",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v5-42.native.png",
+      "screenshot_sha256": "7cd657a1827298431a0e0f9997ef0ab3f2ae57215b7062660fc300acbc3d89a8",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v5-42.capture.json",
+      "raw_capture_sha256": "a69ba5778d917ac8208307a8be5a6a01e2397609c4f72626a2a307ea74df35c4",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        0,
+        0,
+        0,
+        1,
+        -1,
+        -1
+      ],
+      "intrabar_profile": "opening"
+    },
+    {
+      "name": "array-opening-buffer-alias-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v6-42.pine",
+      "source_sha256": "8887d70a8046b02d06bc1a8c9c916b2c9120558ff1155f4ab8639fe4d121005d",
+      "parent_source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research41-20261018\\ordinary-array-alias-v6-41.pine",
+      "parent_sha256": "7d3d92daca947f7192473108bb59e9795a29ac781e2bfc455caf162d26199692",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "native_relation": "opening_and_second_alias_zero",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        53,
+        53,
+        0,
+        1,
+        0,
+        0
+      ],
+      "native_marker_suffix": [
+        0,
+        0
+      ],
+      "native_row": "235 row array-opening-buffer-alias-v6-42 Plot 53.00 Plot 53.00 Plot 0.00 Plot 1.00 Plot 0.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ef84f1755c4b8080ed5e67458c6070cca550a624fba36dff9e384cce89e2f166",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v6-42.native.ax.txt",
+      "accessibility_sha256": "ebc86ccaa0bf7ea88695cd8920df9a77a30d99bfa03186ebc4595409ea24409f",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v6-42.native.png",
+      "screenshot_sha256": "cc7dfc4ba5df82d13d96380ed94d9d8fc79c564aee3ad4b0e44baeaadab230ce",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-opening-buffer-alias-v6-42.capture.json",
+      "raw_capture_sha256": "83a5036a1a58370f832efe1c51afcaa02ba200b0d823e94ecb9eb0a49cbad2d5",
+      "execution_kind": "intrabar",
+      "historical_expected": [
+        0,
+        0,
+        0,
+        1,
+        -1,
+        -1
+      ],
+      "intrabar_profile": "opening"
+    },
+    {
+      "name": "array-function-return-mutation-v5-42",
+      "version": 5,
+      "scenario": "function-return-mutation",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v5-42.pine",
+      "source_sha256": "d47afedbca45efe95277dd241cb0e7b33145fdb99e94c033e529e5338d8d5c9e",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        6700,
+        3349
+      ],
+      "native_relations": [
+        [
+          "offset",
+          0,
+          1,
+          3351
+        ]
+      ],
+      "native_row": "241 row array-function-return-mutation-v5-42 Plot 6,700.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c9e5d3f65cf8d6b5719027686e557764c9908f8493b283bf141cc1ad7100005e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v5-42.native.ax.txt",
+      "accessibility_sha256": "7d05433763a256f3ec1903449f6da5b53bbb948af5fcf9815a278d3e2693b8e3",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v5-42.native.png",
+      "screenshot_sha256": "2b94a4b2cd121a388f42125cf87a04cf4589e2cbf0b368dc0a398f652e70fdc5",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v5-42.capture.json",
+      "raw_capture_sha256": "c64198a9edf7d5dc4e257fc253382691b081a8d68e1aeb48cc69dd9424e0702a",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        6,
+        2
+      ],
+      "forming_expected": [
+        4,
+        1
+      ]
+    },
+    {
+      "name": "array-function-parameter-return-v5-42",
+      "version": 5,
+      "scenario": "function-parameter-return",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v5-42.pine",
+      "source_sha256": "e91e132bb642bd566be3cde9daa780ce9ecd550e1e18b76bfa3d01ed028bb953",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3350,
+        3350,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ],
+        [
+          "offset",
+          0,
+          2,
+          1
+        ]
+      ],
+      "native_row": "241 row array-function-parameter-return-v5-42 Plot 3,350.00 Plot 3,350.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "968a07fd14edc6fc7a63c63e8b39799274388f1861c6afecaa15be9e6ef181c4",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v5-42.native.ax.txt",
+      "accessibility_sha256": "3aee33a08bd530f03b34d5b9a676669eed404427bd794c3d3ea60826e6da1db1",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v5-42.native.png",
+      "screenshot_sha256": "803e5d32d5107933bc11564cd2a0ce5b245ee427b3862998e22e6ad73e47f983",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v5-42.capture.json",
+      "raw_capture_sha256": "02140746ff06ea7f6bf8bcba2fc900def4674fac069f29f1a1ef4ec79c382cf0",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        3,
+        3,
+        2
+      ],
+      "forming_expected": [
+        2,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "array-array-history-parent-v5-42",
+      "version": 5,
+      "scenario": "array-history-parent",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v5-42.pine",
+      "source_sha256": "6e866340ada904941bc1238bad0c281df2c23460faebea183050770edd7cbae6",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3348,
+        3349
+      ],
+      "native_relations": [
+        [
+          "offset",
+          0,
+          1,
+          -1
+        ]
+      ],
+      "native_row": "241 row array-array-history-parent-v5-42 Plot 3,348.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1064af9ce7a1ba2e7983cb61178837f0a959d77169bfe3a0974c3c7e4b7591b1",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v5-42.native.ax.txt",
+      "accessibility_sha256": "969e0b9dd25b0097e9bb192640b485460f0ab27b26bf65c565036f6adbdca2a0",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v5-42.native.png",
+      "screenshot_sha256": "96d052bbc1ee647f3ea08693dae05836162d2ba12a71ee5935592a7f177ec092",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v5-42.capture.json",
+      "raw_capture_sha256": "0976e05dfd06232ac2a2406ed991c49e08166a1c7f6685a72d4b8f4249cbcd49",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        1,
+        2
+      ],
+      "forming_expected": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "array-function-return-mutation-v6-42",
+      "version": 6,
+      "scenario": "function-return-mutation",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v6-42.pine",
+      "source_sha256": "54f6a012649c5ef30a3c926b9eb1ae0cd1b11ce5ca47c04e202c80e3734b7915",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        6700,
+        3349
+      ],
+      "native_row": "241 row array-function-return-mutation-v6-42 Plot 6,700.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "fd160528401a2e580d63cfcfa66d2c1be7405daada64b49d573995f1a3aade86",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v6-42.native.ax.txt",
+      "accessibility_sha256": "8bd6a3134313554cee1d5d1812acc81a3baf392a1f168d3bd6222d10bc88e517",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v6-42.native.png",
+      "screenshot_sha256": "7887a5f75d27be6ecd2dc432ed0b4f8c0cb7832d3ba1113c6c91823b2d0b3ee6",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-return-mutation-v6-42.capture.json",
+      "raw_capture_sha256": "45a524a222197bcd4b611291b6d034ab9cf9fcf30be879725c28021181311eac",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        6,
+        2
+      ],
+      "forming_expected": [
+        4,
+        1
+      ]
+    },
+    {
+      "name": "array-function-parameter-return-v6-42",
+      "version": 6,
+      "scenario": "function-parameter-return",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v6-42.pine",
+      "source_sha256": "f8665e5c3c28e04197a4b2ccd9c95006f4af99019e4fd1a61dfa225dd45c2b59",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3350,
+        3350,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ],
+        [
+          "offset",
+          0,
+          2,
+          1
+        ]
+      ],
+      "native_row": "241 row array-function-parameter-return-v6-42 Plot 3,350.00 Plot 3,350.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "78ff876e9204da4da904a58b1ea640e6959c3cc127cfeee6173745c979086822",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v6-42.native.ax.txt",
+      "accessibility_sha256": "f327a82b01cb4884573b8b495c5139f2c589da0bf452aa7e8da732f04197214b",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v6-42.native.png",
+      "screenshot_sha256": "f627d274ebc234086754e2c5e00af44e020f02540252cdd042e52579f4a8473e",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-function-parameter-return-v6-42.capture.json",
+      "raw_capture_sha256": "9b61c333f015cebbd7b32c1526e9c175264592b9d4cfb4db04e20abef2563c8a",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        3,
+        3,
+        2
+      ],
+      "forming_expected": [
+        2,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "array-array-history-parent-v6-42",
+      "version": 6,
+      "scenario": "array-history-parent",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v6-42.pine",
+      "source_sha256": "98909b60ecff0e5b3063fffeef5cb135959fd27520330d8db6e2bc4b505f1069",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3348,
+        3349
+      ],
+      "native_relations": [
+        [
+          "offset",
+          0,
+          1,
+          -1
+        ]
+      ],
+      "native_row": "241 row array-array-history-parent-v6-42 Plot 3,348.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "57487b7db5d6c83a3b0c001f5d3d5fcc8a7fbf4fc83008bead4ccf2bdfe4b556",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v6-42.native.ax.txt",
+      "accessibility_sha256": "edab0a396f1c487f8181d63be3013dc555c8635511e3b890122d41f76632f1d0",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v6-42.native.png",
+      "screenshot_sha256": "f94377063f4058d27e9a7aa6d0e307e4fbda21f19da35d5d6bdf3306f49cc033",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-array-history-parent-v6-42.capture.json",
+      "raw_capture_sha256": "d30357da9caceec9c081afd444f84e65125419380709380bfa03ce46e23d9fa9",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        1,
+        2
+      ],
+      "forming_expected": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "array-history-persistence-alias-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v5-42.pine",
+      "source_sha256": "775c6f0f274a4d32236e4b50dc784f53aa63bab28eb62e39e1a72ea6fa8f1980",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3350,
+        1,
+        3350,
+        1,
+        3350,
+        1,
+        3350,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "native_marker_suffix": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "native_row": "241 row array-history-persistence-alias-v5-42 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 0.00 Plot 0.00 Plot 0.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ecdb6b28f0dddda2dee7f5c9c353c307cba972949b39aaa4da1304a82a148b1e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v5-42.native.ax.txt",
+      "accessibility_sha256": "e573234ddec7262fca06ed25857eb00c58f506e2a57fc528d7a47440d24223e5",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v5-42.native.png",
+      "screenshot_sha256": "f6283e2e9847631df5f70eef7d32cd29defe373da5a2b2f82a1ae27704bb4c54",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v5-42.capture.json",
+      "raw_capture_sha256": "3033a3173fd6b026a8faeeb483e67150e03ad26fedf24f00cae37ae4ac1c3792",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        3,
+        1,
+        3,
+        1,
+        3,
+        1,
+        3,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "forming_expected": [
+        2,
+        1,
+        2,
+        1,
+        2,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "array-history-persistence-alias-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v6-42.pine",
+      "source_sha256": "822e6772be4b0ec840e4d23a09d2846c164b8b3162086552ccc517d134b21aa6",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3350,
+        1,
+        3350,
+        1,
+        3350,
+        1,
+        3350,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "native_marker_suffix": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "native_row": "241 row array-history-persistence-alias-v6-42 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 3,350.00 Plot 1.00 Plot 0.00 Plot 0.00 Plot 0.00 Plot 0.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "08102e15b1dd051395a56fec5c9f7c4ed8fa9b65362542829ed182f1d94a839a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v6-42.native.ax.txt",
+      "accessibility_sha256": "578a4459d8b5ba37a571628090a03891fb889b6208497d725b07f2c1aac510ff",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v6-42.native.png",
+      "screenshot_sha256": "750daed715f899cb72bc45db95c469d486031d440233049151687e516cf1ec1a",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-history-persistence-alias-v6-42.capture.json",
+      "raw_capture_sha256": "af998ff20f6e79bd014d44af48b3ff2704ac055d6e573d2064942f6345720a78",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        3,
+        1,
+        3,
+        1,
+        3,
+        1,
+        3,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "forming_expected": [
+        2,
+        1,
+        2,
+        1,
+        2,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "array-factory-origin-view-v5-42",
+      "version": 5,
+      "scenario": "factory",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v5-42.pine",
+      "source_sha256": "48f21564da0ec3f18a09163ca6d8a38d20520a33f772d65a594ae3652e4d729d",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        0,
+        0,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          3
+        ],
+        [
+          "eq",
+          1,
+          2
+        ]
+      ],
+      "native_row": "241 row array-factory-origin-view-v5-42 Plot 3,349.00 Plot 0.00 Plot 0.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "9c7624dc79fe5f1730803b14ae38c4b7e52a3ff84f60e8d3aad606fb09306b1f",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v5-42.native.ax.txt",
+      "accessibility_sha256": "695e98af64180841252c2fc424739b6792b5646a7959c7576baa8400d5e4f1a5",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v5-42.native.png",
+      "screenshot_sha256": "20d97c2d0f43963b66416ca5ca0e8d74ba5632fdfffd1f2f6fe3afaf02222838",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v5-42.capture.json",
+      "raw_capture_sha256": "f216e12e00b497d64b0362f025afbe314f222ae3a804be89f63d510fbfdadaed",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        0,
+        0,
+        2
+      ],
+      "forming_expected": [
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "array-transient-origin-view-v5-42",
+      "version": 5,
+      "scenario": "transient",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v5-42.pine",
+      "source_sha256": "5aae1ca1ff51d2949957e0039ce46af57a43b458c507d90a92029c99ba21bfe5",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0,
+        3349,
+        3349,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          1,
+          2
+        ],
+        [
+          "eq",
+          1,
+          3
+        ]
+      ],
+      "native_row": "241 row array-transient-origin-view-v5-42 Plot 0.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "d91feba72cb4ea0d9d7a21c45af186fca29f73bba65b56fc26649b47364480ec",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v5-42.native.ax.txt",
+      "accessibility_sha256": "f759e075b6aba98468b8025a40a598da61c4811144c61ad7ea0615ed2f508933",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v5-42.native.png",
+      "screenshot_sha256": "1022cc159bbd96c998afbe2e245a5f044918d8c067c19aa9d8dc556b8894117f",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v5-42.capture.json",
+      "raw_capture_sha256": "326cc71d99550a5cba6736d54109c760b37ca437b50739a4e15779da3aa0fccb",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        0,
+        2,
+        2,
+        2
+      ],
+      "forming_expected": [
+        0,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-factory-origin-view-v6-42",
+      "version": 6,
+      "scenario": "factory",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v6-42.pine",
+      "source_sha256": "7a4977612bafa0fdc4e5afc002dae2ba4b5ddbc93c6286d1d3848f81cc2e3882",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        0,
+        0,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          3
+        ],
+        [
+          "eq",
+          1,
+          2
+        ]
+      ],
+      "native_row": "241 row array-factory-origin-view-v6-42 Plot 3,349.00 Plot 0.00 Plot 0.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "c759b977d5bfcf7a1de1091e536705e41d99da38b0a14e86c820b7db5740dbb8",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v6-42.native.ax.txt",
+      "accessibility_sha256": "f3742b3c005146fdc14432ac6296a2e23d6046b04b81d038d894e46fd55cc664",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v6-42.native.png",
+      "screenshot_sha256": "63a92957ad01e18767412dec82d4f8fa58ea0c681d3186cd8296b8c207f2b30d",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-factory-origin-view-v6-42.capture.json",
+      "raw_capture_sha256": "b5fda9917be11124bf94ce869a47ba3f821e27be9eeb6c5571cd2dca03ee4062",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        0,
+        0,
+        2
+      ],
+      "forming_expected": [
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "array-transient-origin-view-v6-42",
+      "version": 6,
+      "scenario": "transient",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v6-42.pine",
+      "source_sha256": "f353ef54bb74b67ebc28c7c9e259a99a8c078bebf03a490955c54555c8d3d9c1",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0,
+        3349,
+        3349,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          1,
+          2
+        ],
+        [
+          "eq",
+          1,
+          3
+        ]
+      ],
+      "native_row": "241 row array-transient-origin-view-v6-42 Plot 0.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "f04dd073d710b367ae58805755f99a975846486c805348505e25415376199f3e",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v6-42.native.ax.txt",
+      "accessibility_sha256": "5e151a20c11ccbc4aa443ab60d5f23d82aa5e0e8a82352b6d36638f5b3b7922e",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v6-42.native.png",
+      "screenshot_sha256": "897be280eb8b34e21d430faa3b7caccd9f1035b8d0faae7e1e504507eea7ea0c",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-origin-view-v6-42.capture.json",
+      "raw_capture_sha256": "eb6535ce81ab57d7654c655a46b53f342cdeb056c61afb9670136a4590a815a0",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        0,
+        2,
+        2,
+        2
+      ],
+      "forming_expected": [
+        0,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-parent-v5-42",
+      "version": 5,
+      "scenario": "parent",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v5-42.pine",
+      "source_sha256": "4e47206aa2e9811b5228c8c8819746a33e4d40d8d0f20ee2f0381d0329c989bb",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        3349,
+        0,
+        3349
+      ],
+      "native_row": "241 row array-slice-parent-v5-42 Plot 3,349.00 Plot 3,349.00 Plot 0.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "e4f1aca7c978f1f55065c47a764fce7bb428af4ca9776e1b99daaab318d0c990",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v5-42.native.ax.txt",
+      "accessibility_sha256": "1c3248c2ffe03726446823a06870b9baf00eb6e7ee9824b1ebeb9b39c93361de",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v5-42.native.png",
+      "screenshot_sha256": "b85d53f1728ae78053360ce203fd2f64add4fd05fdfdc04896a2c65ee46edc8e",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v5-42.capture.json",
+      "raw_capture_sha256": "3c81a1340ec8631d9e0b08949c73cf82b4a27f8c2876c11b6b178ce07086f602",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        2,
+        0,
+        2
+      ],
+      "forming_expected": [
+        1,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-alias-v5-42",
+      "version": 5,
+      "scenario": "alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v5-42.pine",
+      "source_sha256": "24802181c782b8a1987fa896cf61692a15437a821ce5ba4d6f8d367687ae42c6",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0,
+        0,
+        3349,
+        3349
+      ],
+      "native_row": "241 row array-slice-alias-v5-42 Plot 0.00 Plot 0.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "528256e2f78e1d98fbe34390987c0bd017c9ac222ed46da833a187a86174ed1c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v5-42.native.ax.txt",
+      "accessibility_sha256": "0a0458091ad0c7b000d016bd1914716adc354dc509ce8771a45ea85653aa650a",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v5-42.native.png",
+      "screenshot_sha256": "0d1fca70beaf4056196f7cb0907761ff6f4ca41875c843ecefebbe33f356fb82",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v5-42.capture.json",
+      "raw_capture_sha256": "84977a87692ed88b57dd595738eb62941a59da269c4760ab0f491522e18a0aa4",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        0,
+        0,
+        2,
+        2
+      ],
+      "forming_expected": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-viewalias-v5-42",
+      "version": 5,
+      "scenario": "viewalias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v5-42.pine",
+      "source_sha256": "456d8b12dd870adfe708091fbeb6fc83bc317f0794dfc059ecec7259b0cbe6f9",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        3349,
+        3349,
+        3349
+      ],
+      "native_row": "241 row array-slice-viewalias-v5-42 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "45f41e0de0da708688869d6643da28ba1b21004d5b3870fbbe4065583a240b3c",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v5-42.native.ax.txt",
+      "accessibility_sha256": "26e695b9c0923d07ab56d7d326475d657f4e86840f9be45f60d68ebb50cf379f",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v5-42.native.png",
+      "screenshot_sha256": "1a8e2fffa9ecb750cb16634455180ae39f234fe5ca1441a942641df2519df325",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v5-42.capture.json",
+      "raw_capture_sha256": "2e1611c4f8e2b7fb0873cf563d2d96b5bee55e0eeb9f775616a04cf35ca9a870",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "forming_expected": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-parent-v6-42",
+      "version": 6,
+      "scenario": "parent",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v6-42.pine",
+      "source_sha256": "f841a55d5607adff5886ec5b3939b068cda1830d14bb4a842cc714c2b2cb0e05",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        3349,
+        0,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ],
+        [
+          "eq",
+          0,
+          3
+        ]
+      ],
+      "native_row": "241 row array-slice-parent-v6-42 Plot 3,349.00 Plot 3,349.00 Plot 0.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "08155eea77c187a22576e8f2891b98343260743b4f03eadb0fac366fc1da9fb4",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v6-42.native.ax.txt",
+      "accessibility_sha256": "70784bf53f8d1373eb5dc7a2812f05dd24e385a94e62320a1e9334c5486e514c",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v6-42.native.png",
+      "screenshot_sha256": "1973bcf9414d03a37c80a9491ef23448238ea2c277631d5e7552bbb1d0166504",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-parent-v6-42.capture.json",
+      "raw_capture_sha256": "d7fc503b162f2eefca351fda35417e2ebba64f4890dc73fa42e528320f9030c4",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        2,
+        0,
+        2
+      ],
+      "forming_expected": [
+        1,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-alias-v6-42",
+      "version": 6,
+      "scenario": "alias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v6-42.pine",
+      "source_sha256": "1b548e54cb42c52c5c5928dea25e5d95569c5b0c70186954d9aa13857f6ec1c2",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        0,
+        0,
+        3349,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ],
+        [
+          "eq",
+          2,
+          3
+        ]
+      ],
+      "native_row": "241 row array-slice-alias-v6-42 Plot 0.00 Plot 0.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "1c1422a90db053e0e5b46d5fbd381b531a5649ac00ad3607e687de67307b6178",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v6-42.native.ax.txt",
+      "accessibility_sha256": "2dec79a9318d832d5d41ad57bccc71c45af4069ce8ef4d159ef6fa3f11b307f2",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v6-42.native.png",
+      "screenshot_sha256": "b66bcdf49389532499e2a85860e1c29352e1920287dda93cce9a5a1c1cb969eb",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-alias-v6-42.capture.json",
+      "raw_capture_sha256": "4de47e155e7731b7885f4bf25ec0653c6754b83682b3ccaa9af3eb4365d2f0a3",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        0,
+        0,
+        2,
+        2
+      ],
+      "forming_expected": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-viewalias-v6-42",
+      "version": 6,
+      "scenario": "viewalias",
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v6-42.pine",
+      "source_sha256": "a4ddd300b35dd59a0025b7af49eba009a07ae0a42d2c56d9da6a1e7616e4ada5",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        3349,
+        3349,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ],
+        [
+          "eq",
+          0,
+          2
+        ],
+        [
+          "eq",
+          0,
+          3
+        ]
+      ],
+      "native_row": "241 row array-slice-viewalias-v6-42 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "8d30461ec0eedaadbeb450dddae64a6469bba6690ff66e2ff1dd5b387164f18a",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v6-42.native.ax.txt",
+      "accessibility_sha256": "c92850810436b2b6a9c89ce8b6308d4d937b9e2a6302755f293dc989a178c522",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v6-42.native.png",
+      "screenshot_sha256": "14e7b4e03bfcbbaf788e449b8bc01c385d63cf28bbc671e67ee0da9952b3e009",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-viewalias-v6-42.capture.json",
+      "raw_capture_sha256": "bdf8ba6edd3e5549ff26159e07439fac857a5c9f3262aa94f8fd33672fe3b008",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "forming_expected": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-window-alias-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v5-42.pine",
+      "source_sha256": "a6f5b49617a0e9824ed4e20c64bb8ea0c7bb14686b3097dc88688c64bf30dd9d",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3351,
+        3351,
+        2,
+        3349
+      ],
+      "native_row": "241 row array-slice-window-alias-v5-42 Plot 3,351.00 Plot 3,351.00 Plot 2.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "fd25f9c6dee57597f5abfe90973560c5d31bf6adf759009b3b8e928ad7335d70",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v5-42.native.ax.txt",
+      "accessibility_sha256": "016eaa45351970e9eb782e2fe80d1038120ba3b0c7a24c368cf8a524d39fcce8",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v5-42.native.png",
+      "screenshot_sha256": "ac7d6da0bb7b5e6dba25ccf7e83bc560dad3fe5863da1cc35ac5f300efcade85",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v5-42.capture.json",
+      "raw_capture_sha256": "d9af9ebba8388246b709a9aea2dd3882b317aefc65647d1314e9eb7898c3a3ae",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        4,
+        4,
+        2,
+        2
+      ],
+      "forming_expected": [
+        3,
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "array-slice-window-alias-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v6-42.pine",
+      "source_sha256": "4c133da1504e0a37c06a9ab3ccb2dba3c9f93958eb61e92acf9612334d490fa4",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3351,
+        3351,
+        2,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          1
+        ],
+        [
+          "offset",
+          0,
+          3,
+          2
+        ]
+      ],
+      "native_row": "241 row array-slice-window-alias-v6-42 Plot 3,351.00 Plot 3,351.00 Plot 2.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "3089bc4abbe94c07b4b933540540ae5ae80d2b21df0e29d7e9dab1929ddd4056",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v6-42.native.ax.txt",
+      "accessibility_sha256": "d4a8f109e0c74ace89e9ade21a88fe7805c5ca289b39cb6776b197970aecc77b",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v6-42.native.png",
+      "screenshot_sha256": "d2a495c2e13e5b1de9969d78586fdae2eaf86fc549e818105326911d60e1f6d3",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-slice-window-alias-v6-42.capture.json",
+      "raw_capture_sha256": "3c03b94f5476713bc978eef7fc880ed5ac51dad7d1baed1757b849395b2c79a1",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        4,
+        4,
+        2,
+        2
+      ],
+      "forming_expected": [
+        3,
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "array-transient-persistent-source-view-v5-42",
+      "version": 5,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v5-42.pine",
+      "source_sha256": "945b71817c787b374d1abbf80655ac2eb320a9c07d09c3db9f68139f81dc6645",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        0,
+        0,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          3
+        ],
+        [
+          "eq",
+          1,
+          2
+        ]
+      ],
+      "native_row": "241 row array-transient-persistent-source-view-v5-42 Plot 3,349.00 Plot 0.00 Plot 0.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "d17582ef5c4c4e8c7d4990d54dd4c44a207b0ac1b5a43996656515deef8505b7",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v5-42.native.ax.txt",
+      "accessibility_sha256": "b85728303951b34007418ce8c9f8198303beff50912a1d84b6985406410941a4",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v5-42.native.png",
+      "screenshot_sha256": "0aeb16f6c9814a867165ca441204362ad0f30f33488fb8fc649620895775b90d",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v5-42.capture.json",
+      "raw_capture_sha256": "a6674d1409b13616cf0da78a74d88b850b40db507fa705823c9b4cf54be2862c",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        0,
+        0,
+        2
+      ],
+      "forming_expected": [
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "array-transient-persistent-source-view-v6-42",
+      "version": 6,
+      "source": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v6-42.pine",
+      "source_sha256": "ac49300383b853a805fe4b4ab8cec008681bbc9052d1f04539c4017226ac93f3",
+      "native_status": "compiled_and_executed",
+      "native_values": [
+        3349,
+        0,
+        0,
+        3349
+      ],
+      "native_relations": [
+        [
+          "eq",
+          0,
+          3
+        ],
+        [
+          "eq",
+          1,
+          2
+        ]
+      ],
+      "native_row": "241 row array-transient-persistent-source-view-v6-42 Plot 3,349.00 Plot 0.00 Plot 0.00 Plot 3,349.00",
+      "source_text_checked_via_editor_copy": true,
+      "clipboard_marker_cleared_by_copy": true,
+      "normalized_source_sha256": "ab6a1d1e3538b45b3580474773172acc63d3d1e2d5ebe848169a73dd2f2e2f30",
+      "accessibility_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v6-42.native.ax.txt",
+      "accessibility_sha256": "a2763413b10ca5a5246c87a32e7420caba804d12b113a47da515f0c108f01d1d",
+      "screenshot": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v6-42.native.png",
+      "screenshot_sha256": "7219e7fadf43b031324289fa471d48c8efaeddeef70dfa0243706631a9e41398",
+      "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+      "scope": "Bounded v5/v6 execution alias, persistent buffer, slice parent/window and realtime rollback observations. No full original strategy ledger, all collection graphs, all versions or exhaustive realtime claim.",
+      "raw_capture": "docs/evidence/strategy-library-20261010/array-persistence-42/array-transient-persistent-source-view-v6-42.capture.json",
+      "raw_capture_sha256": "426c07d4681deca51678d8c32f1a7e57a1d9328d39418da8f2bbe4ce6b6ce52d",
+      "execution_kind": "static",
+      "native_historical_index": 3349,
+      "historical_expected": [
+        2,
+        0,
+        0,
+        2
+      ],
+      "forming_expected": [
+        1,
+        0,
+        0,
+        1
+      ]
+    }
+  ]
+}

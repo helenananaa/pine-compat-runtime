@@ -1,0 +1,10 @@
+//@version=3
+study("Codex UDF inputs oracle",overlay=true)
+f()=>
+    n=input(2,"UDF length",type=integer)
+    s=input(close,"UDF source",type=source)
+    n+s
+a=f()
+b=f()
+plot(a)
+plot(b)

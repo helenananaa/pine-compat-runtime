@@ -1,0 +1,5 @@
+//@version=6
+indicator("matrix-float-dimension-rejected-v6-46")
+rows=bar_index+0.5
+values=matrix.new<float>(rows,2,1)
+plot(values.rows())

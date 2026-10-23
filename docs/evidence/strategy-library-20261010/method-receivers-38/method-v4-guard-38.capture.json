@@ -1,0 +1,18 @@
+{
+  "name": "method-v4-guard-38",
+  "source": "docs/evidence/strategy-library-20261010/method-receivers-38/method-v4-guard-38.pine",
+  "source_sha256": "e7290397c6cc78eddd8548573b31647ce3274514fee2b148ee726cf0ec03697a",
+  "version": 4,
+  "native_status": "analysis_rejected",
+  "native_values": null,
+  "native_error": "'method' is not a valid type keyword in variable declaration",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "e974a979aa61812142be3f62ba70ce7374e6e474419209b7483bf095b2f8d56f",
+  "accessibility_capture": "docs/evidence/strategy-library-20261010/method-receivers-38/method-v4-guard-38.native.ax.txt",
+  "accessibility_sha256": "933ec044d452ea371a9a7923b334c0058bae05be8bab94ab6ff2e9d8aa2326fc",
+  "screenshot": "docs/evidence/strategy-library-20261010/method-receivers-38/method-v4-guard-38.native.png",
+  "screenshot_sha256": "713292376e04f8d30e9de7a421e89fa8c2630a69a3804c80f9b0fb4f39cf4d3f",
+  "qualification_scope": "candidate_method_control",
+  "discovery_record_sha256": "90399517a5669ffb74964765c2af699ccf54a6eb051ddc082d23bd186f621fc9"
+}

@@ -1,0 +1,11 @@
+//@version=6
+indicator("request-udt-scalar-write-v6-43")
+type Wrap
+    float price
+w=Wrap.new(10)
+f(Wrap v)=>
+    v.price+=5
+    v.price
+a=request.security(syminfo.tickerid,timeframe.period,f(w))
+plot(a)
+plot(w.price)

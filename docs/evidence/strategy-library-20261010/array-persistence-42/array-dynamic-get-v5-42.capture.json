@@ -1,0 +1,19 @@
+{
+  "name": "array-dynamic-get-v5-42",
+  "version": 5,
+  "scenario": "array-dynamic-get",
+  "source": "E:\\projects\\pine-interpreter\\target\\strategy-gap-research42-20261018\\array-dynamic-get-v5-42.pine",
+  "source_sha256": "b079893c17231ede5495ed8ab35542d7dfd3b0c9210b00ec19c3b0e888778df4",
+  "native_status": "runtime_error",
+  "native_values": null,
+  "native_error": "Error on bar 1: In 'array.get()' function. Index 1 is out of bounds, array size is 1. at  #main () : 6",
+  "source_text_checked_via_editor_copy": true,
+  "clipboard_marker_cleared_by_copy": true,
+  "normalized_source_sha256": "70f69eae18f12105a02ecca804750207b640251461a8886e7c2adec47d68a50b",
+  "accessibility_capture": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-dynamic-get-v5-42.native.ax.txt",
+  "accessibility_sha256": "4a3a99f48e41db969b4b92040e5a502e6815c9dfb6161c27adb6367c57e0b80a",
+  "screenshot": "E:/projects/pine-interpreter/target/strategy-gap-research42-20261018/array-dynamic-get-v5-42.native.png",
+  "screenshot_sha256": "fac254bd319e37ab0d5d886cd58a683aa1cbe7ddba90a43f5f637d54b555cbb2",
+  "chart_ui_context": "167 image Chart for BINANCE:BTCUSDT, 1 day",
+  "scope": "Native whole-source admission, controlled drawing/object markers and value-domain errors only. Complete original script output/ledger parity and exhaustive reference/realtime semantics remain unqualified."
+}

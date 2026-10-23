@@ -134,6 +134,20 @@ def api_json(repository, suffix, token):
         return json.load(response)
 
 
+def pull_request_candidate(repo, event_path):
+    event = read(event_path)
+    base = event.get("pull_request", {}).get("base", {}).get("sha", "")
+    require(re.fullmatch(r"[0-9a-f]{40}", base) is not None, "invalid pull request base")
+    added = subprocess.check_output(
+        ["git", "diff", "--name-only", "--diff-filter=A", base, "HEAD", "--", "release-inputs/"],
+        cwd=repo, text=True,
+    ).splitlines()
+    candidates = [PurePosixPath(name).stem for name in added
+                  if len(PurePosixPath(name).parts) == 2 and name.endswith(".json")]
+    require(len(candidates) <= 1, "one qualified release input may be added per pull request")
+    return candidates[0] if candidates else None
+
+
 def verify_producer(plan, label, fetch):
     run = fetch(f"actions/runs/{plan['workflowRun']}")
     require(run.get("repository", {}).get("full_name") == plan["repository"], "producer repository mismatch")
@@ -206,6 +220,8 @@ def main():
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--tag", default=os.environ.get("GITHUB_REF_NAME", ""))
     parser.add_argument("--platform", choices=sorted(PLATFORMS))
+    parser.add_argument("--check-pull-request", action="store_true",
+                        help="exercise a newly added release input in PR CI without publishing")
     parser.add_argument("--dist", type=Path, default=Path("dist"))
     parser.add_argument("--ref", default=os.environ.get("GITHUB_REF", ""))
     parser.add_argument("--repository", default=os.environ.get("GITHUB_REPOSITORY", ""))
@@ -213,7 +229,10 @@ def main():
     if args.ref.startswith("refs/tags/"):
         require(args.ref == "refs/tags/" + args.tag, "tag/ref mismatch")
     if args.mode == "select" and not args.ref.startswith("refs/tags/"):
-        plan = None
+        candidate = None
+        if args.check_pull_request and os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+            candidate = pull_request_candidate(args.repo, os.environ["GITHUB_EVENT_PATH"])
+        plan = load_plan(args.repo.resolve(), candidate, args.repository) if candidate else None
     else:
         plan = load_plan(args.repo.resolve(), args.tag, args.repository)
     if args.mode == "select":
@@ -222,6 +241,7 @@ def main():
             require(args.platform is not None, "platform required")
             verify_producer(plan, args.platform, lambda suffix: api_json(args.repository, suffix, os.environ.get("GH_TOKEN", "")))
             values.update(enabled="true", run_id=str(plan["workflowRun"]),
+                          tag=plan["tag"],
                           artifact_id=str(plan["wheels"][args.platform]["artifactId"]),
                           artifact_name=plan["wheels"][args.platform]["artifactName"], source_commit=plan["sourceCommit"])
         destination = os.environ.get("GITHUB_OUTPUT")

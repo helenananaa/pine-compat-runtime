@@ -67,6 +67,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >-
           python scripts/promote_qualified_wheels.py select
+          --check-pull-request
           --platform "${{ matrix.label }}"
 
       - name: Download qualified wheel
@@ -83,6 +84,7 @@ jobs:
         if: steps.promotion.outputs.enabled == 'true'
         run: >-
           python scripts/promote_qualified_wheels.py verify
+          --tag "${{ steps.promotion.outputs.tag }}"
           --platform "${{ matrix.label }}"
 
       - name: Build wheel

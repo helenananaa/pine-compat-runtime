@@ -226,6 +226,30 @@ class QualifiedPromotionTests(unittest.TestCase):
         self.assertEqual(fields["run_id"], "42")
         self.assertEqual(fields["artifact_id"], str(self.plan["wheels"][label]["artifactId"]))
         self.assertEqual(fields["source_commit"], self.source)
+        self.assertEqual(fields["tag"], "v0.3.3")
+
+    def test_pull_request_exercises_only_new_release_inputs(self):
+        event = self.dist / "event.json"
+        output = self.dist / "candidate-output.txt"
+        self.write_json("dist/event.json", {"pull_request": {"base": {"sha": self.source}}})
+        args = ["promotion", "select", "--check-pull-request", "--repo", str(self.repo),
+                "--tag", "18/merge", "--ref", "refs/pull/18/merge", "--repository", "owner/runtime",
+                "--platform", "windows-x86_64"]
+        environment = {"GITHUB_EVENT_NAME": "pull_request", "GITHUB_EVENT_PATH": str(event), "GITHUB_OUTPUT": str(output)}
+        with patch.object(sys, "argv", args), patch.dict(promotion.os.environ, environment), \
+                patch.object(promotion, "verify_producer") as verify, redirect_stdout(io.StringIO()):
+            promotion.main()
+        verify.assert_called_once()
+        fields = dict(line.split("=", 1) for line in output.read_text().splitlines())
+        self.assertEqual(fields["enabled"], "true")
+        self.assertEqual(fields["tag"], "v0.3.3")
+        self.write_json("dist/event.json", {"pull_request": {"base": {"sha": self.git("rev-parse", "HEAD").strip()}}})
+        output.unlink()
+        with patch.object(sys, "argv", args), patch.dict(promotion.os.environ, environment), \
+                patch.object(promotion, "verify_producer", side_effect=AssertionError("old plans must not be selected")), \
+                redirect_stdout(io.StringIO()):
+            promotion.main()
+        self.assertEqual(output.read_text().strip(), "enabled=false")
 
 
 if __name__ == "__main__":

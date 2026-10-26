@@ -95,9 +95,17 @@ impl BrokerState {
                 self.contract_point_value_to_account(),
             );
         }
+        let profit_percent = closed_trade_profit_percent(
+            fill.entry_fill.entry_price,
+            fill.qty,
+            fill.entry_fill.entry_commission,
+            fill.profit,
+            self.contract_point_value_to_account(),
+        );
         self.record_window_realized_pnl(fill.profit);
         // Preserve the trade-order left fold used by realized_profit(), once per close.
         self.realized_profit_sum += fill.profit;
+        self.closed_trade_stats.record(fill.profit, profit_percent);
         self.trades.push(StrategyTrade {
             id: fill.entry_id,
             exit_id: fill.exit_id,
@@ -113,13 +121,7 @@ impl BrokerState {
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             quote_to_account_rate: self.quote_to_account_rate,
             commission: fill.commission,
-            profit_percent: closed_trade_profit_percent(
-                fill.entry_fill.entry_price,
-                fill.qty,
-                fill.entry_fill.entry_commission,
-                fill.profit,
-                self.contract_point_value_to_account(),
-            ),
+            profit_percent,
             max_runup: extrema.runup * quantity,
             max_runup_percent: extrema.runup_percent,
             max_drawdown: extrema.drawdown * quantity,

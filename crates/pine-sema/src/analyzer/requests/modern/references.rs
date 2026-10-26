@@ -57,8 +57,7 @@ impl Analyzer {
         call: &Expr,
         args: &[CallArg],
         locals: &RequestScope,
-        visiting: &mut HashSet<SymbolId>,
-        calls: &mut Vec<String>,
+        walk: &mut RequestWalk,
     ) -> bool {
         let Some(name) = expr_name(callee) else {
             return false;
@@ -80,7 +79,7 @@ impl Analyzer {
         if constructor || collection {
             return args
                 .iter()
-                .all(|arg| self.modern_request_expr(&arg.value, locals, visiting, calls));
+                .all(|arg| self.modern_request_expr(&arg.value, locals, walk));
         }
         let ExprKind::QualifiedName(parts) = &callee.kind else {
             return false;
@@ -97,7 +96,7 @@ impl Analyzer {
         };
         let method = &parts[1];
         if ty.kind == ValueKind::ChartPoint && method == "copy" {
-            return self.modern_request_expr(&receiver, locals, visiting, calls) && args.is_empty();
+            return self.modern_request_expr(&receiver, locals, walk) && args.is_empty();
         }
         let canonical = if ty.kind.array_element_kind().is_some() {
             crate::prelude::array_method_builtin_name(method)
@@ -107,9 +106,9 @@ impl Analyzer {
             crate::types::matrix_method_builtin_name(ty.kind, method)
         };
         canonical.is_some()
-            && self.modern_request_expr(&receiver, locals, visiting, calls)
+            && self.modern_request_expr(&receiver, locals, walk)
             && args
                 .iter()
-                .all(|arg| self.modern_request_expr(&arg.value, locals, visiting, calls))
+                .all(|arg| self.modern_request_expr(&arg.value, locals, walk))
     }
 }

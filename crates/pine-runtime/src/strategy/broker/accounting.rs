@@ -228,13 +228,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn gross_profit(&self) -> f64 {
-        normalize_zero(
-            self.trades
-                .iter()
-                .filter(|trade| trade.profit > 0.0)
-                .map(|trade| trade.profit)
-                .sum(),
-        )
+        normalize_zero(self.closed_trade_stats.gross_profit())
     }
 
     #[must_use]
@@ -244,13 +238,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn gross_loss(&self) -> f64 {
-        normalize_zero(
-            self.trades
-                .iter()
-                .filter(|trade| trade.profit < 0.0)
-                .map(|trade| -trade.profit)
-                .sum(),
-        )
+        normalize_zero(self.closed_trade_stats.gross_loss())
     }
 
     #[must_use]
@@ -271,71 +259,37 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn average_winning_trade(&self) -> Option<f64> {
-        let mut count = 0usize;
-        let mut total = 0.0;
-        for trade in &self.trades {
-            if trade.profit > 0.0 {
-                count += 1;
-                total += trade.profit;
-            }
-        }
-        if count == 0 {
-            None
-        } else {
-            Some(normalize_zero(total / count as f64))
-        }
+        self.closed_trade_stats
+            .average_winning_trade()
+            .map(normalize_zero)
     }
 
     #[must_use]
     pub(crate) fn average_losing_trade(&self) -> Option<f64> {
-        let mut count = 0usize;
-        let mut total = 0.0;
-        for trade in &self.trades {
-            if trade.profit < 0.0 {
-                count += 1;
-                total += -trade.profit;
-            }
-        }
-        if count == 0 {
-            None
-        } else {
-            Some(normalize_zero(total / count as f64))
-        }
+        self.closed_trade_stats
+            .average_losing_trade()
+            .map(normalize_zero)
     }
 
     #[must_use]
     pub(crate) fn average_trade_percent(&self) -> Option<f64> {
-        self.average_trade_percent_matching(|_| true, |value| value)
+        self.closed_trade_stats
+            .average_trade_percent()
+            .map(normalize_zero)
     }
 
     #[must_use]
     pub(crate) fn average_winning_trade_percent(&self) -> Option<f64> {
-        self.average_trade_percent_matching(|profit| profit > 0.0, |value| value)
+        self.closed_trade_stats
+            .average_winning_trade_percent()
+            .map(normalize_zero)
     }
 
     #[must_use]
     pub(crate) fn average_losing_trade_percent(&self) -> Option<f64> {
-        self.average_trade_percent_matching(|profit| profit < 0.0, |value| -value)
-    }
-
-    fn average_trade_percent_matching(
-        &self,
-        include_profit: impl Fn(f64) -> bool,
-        map_percent: impl Fn(f64) -> f64,
-    ) -> Option<f64> {
-        let mut count = 0usize;
-        let mut total = 0.0;
-        for (trade, metrics) in self.trades.iter().zip(&self.closed_trade_metrics) {
-            if include_profit(trade.profit) {
-                count += 1;
-                total += map_percent(metrics.profit_percent);
-            }
-        }
-        if count == 0 {
-            None
-        } else {
-            Some(normalize_zero(total / count as f64))
-        }
+        self.closed_trade_stats
+            .average_losing_trade_percent()
+            .map(normalize_zero)
     }
 
     #[must_use]
@@ -476,35 +430,17 @@ impl BrokerState {
 
     #[must_use]
     pub fn winning_trade_count(&self) -> i64 {
-        i64::try_from(
-            self.trades
-                .iter()
-                .filter(|trade| trade.profit > 0.0)
-                .count(),
-        )
-        .unwrap_or(i64::MAX)
+        i64::try_from(self.closed_trade_stats.winning_count()).unwrap_or(i64::MAX)
     }
 
     #[must_use]
     pub fn losing_trade_count(&self) -> i64 {
-        i64::try_from(
-            self.trades
-                .iter()
-                .filter(|trade| trade.profit < 0.0)
-                .count(),
-        )
-        .unwrap_or(i64::MAX)
+        i64::try_from(self.closed_trade_stats.losing_count()).unwrap_or(i64::MAX)
     }
 
     #[must_use]
     pub fn even_trade_count(&self) -> i64 {
-        i64::try_from(
-            self.trades
-                .iter()
-                .filter(|trade| normalize_zero(trade.profit) == 0.0)
-                .count(),
-        )
-        .unwrap_or(i64::MAX)
+        i64::try_from(self.closed_trade_stats.even_count()).unwrap_or(i64::MAX)
     }
 
     #[must_use]

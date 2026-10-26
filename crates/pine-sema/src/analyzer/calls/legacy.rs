@@ -2,8 +2,18 @@ use crate::prelude::*;
 
 #[derive(Default)]
 struct LegacyInputTrace {
+    // Symbols on the current alias path; rejects cyclic aliases.
     symbols: std::collections::HashSet<SymbolId>,
-    functions: std::collections::HashSet<String>,
+    // Marker containment is a reachability query: an initializer or function
+    // result already searched by this query cannot reveal a marker on another
+    // path, so a shared dependency graph is searched once rather than per path.
+    expanded_symbols: std::collections::HashSet<SymbolId>,
+    expanded_functions: std::collections::HashSet<String>,
+}
+
+#[cfg(test)]
+thread_local! {
+    static INITIALIZER_SEARCHES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 pub(super) enum FocusedLegacyCallAnalysis {
@@ -291,9 +301,11 @@ impl Analyzer {
                 else {
                     return false;
                 };
-                if !trace.symbols.insert(symbol.id) {
+                if !trace.expanded_symbols.insert(symbol.id) || !trace.symbols.insert(symbol.id) {
                     return false;
                 }
+                #[cfg(test)]
+                INITIALIZER_SEARCHES.with(|searches| searches.set(searches.get() + 1));
                 let contains =
                     self.symbol_init_exprs
                         .get(&symbol.id)
@@ -335,14 +347,12 @@ impl Analyzer {
         let Some(function) = self.functions.get(&name).cloned() else {
             return false;
         };
-        if !trace.functions.insert(name.clone()) {
+        if !trace.expanded_functions.insert(name) {
             return false;
         }
-        let contains = self.with_source_context_ref(function.source_context_id, |analyzer| {
+        self.with_source_context_ref(function.source_context_id, |analyzer| {
             analyzer.legacy_input_constant_in_function_return(&function.body, trace)
-        });
-        trace.functions.remove(&name);
-        contains
+        })
     }
 
     fn is_unshadowed_focused_legacy_input_call(&self, name: &str, callee: &Expr) -> bool {
@@ -957,5 +967,94 @@ impl Analyzer {
             &bound.canonical_args,
             &bound.canonical_arg_types,
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::INITIALIZER_SEARCHES;
+    use pine_syntax::SourceFile;
+
+    /// `x{i} = x{i-1} + x{i-1}` doubles the paths to `x0` at every level.
+    fn shared_alias_graph(header: &str, root: &str, depth: usize, output: &str) -> String {
+        let mut source = format!("{header}\nx0 = {root}\n");
+        for level in 1..=depth {
+            let previous = level - 1;
+            source.push_str(&format!("x{level} = x{previous} + x{previous}\n"));
+        }
+        source.push_str(&output.replace("{last}", &format!("x{depth}")));
+        source
+    }
+
+    fn analyze_counting_searches(source: &str) -> (crate::Analysis, usize) {
+        INITIALIZER_SEARCHES.with(|searches| searches.set(0));
+        let analysis = crate::analyze_source(&SourceFile::new("shared-aliases.pine", source));
+        (analysis, INITIALIZER_SEARCHES.with(std::cell::Cell::get))
+    }
+
+    fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
+        analysis
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.code.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn marker_search_expands_each_shared_initializer_once_per_query() {
+        const DEPTH: usize = 16;
+        let source = shared_alias_graph(
+            "//@version=6\nindicator(\"shared aliases\")",
+            "close",
+            DEPTH,
+            "plot({last})\n",
+        );
+        let (analysis, searches) = analyze_counting_searches(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+        // Each declaration searches its ancestors once, so the total is
+        // quadratic in depth. The per-path search made 589,786 at this depth.
+        assert!(
+            searches <= DEPTH * DEPTH,
+            "{searches} initializer searches for depth {DEPTH}"
+        );
+    }
+
+    #[test]
+    fn marker_after_a_searched_shared_graph_is_still_rejected() {
+        let header = "//@version=4\nstudy(\"shared aliases\")\nkind = input.integer";
+        let clean = shared_alias_graph(header, "tostring(close)", 12, "alert({last})\n");
+        let (analysis, _) = analyze_counting_searches(&clean);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        // The left operand searches the whole shared graph first; the marker
+        // alias on the right must still be found by the same query.
+        let leak = shared_alias_graph(header, "tostring(close)", 12, "alert({last} + kind)\n");
+        let (analysis, _) = analyze_counting_searches(&leak);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_INPUT_CONSTANT_CONTEXT"],
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+
+        // A marker reached only through the shared graph is rejected as well.
+        let shared_leak = shared_alias_graph(header, "kind", 12, "alert({last})\n");
+        let (analysis, _) = analyze_counting_searches(&shared_leak);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_INPUT_CONSTANT_CONTEXT"],
+            "{:?}",
+            analysis.diagnostics
+        );
     }
 }

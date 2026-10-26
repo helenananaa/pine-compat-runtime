@@ -1,8 +1,10 @@
 //! Immutable lookup tables shared by runtime checkpoints.
 use std::collections::{HashMap, HashSet};
+use std::sync::OnceLock;
 
 use pine_ir::{HirProgram, PersistenceKind, SeriesId, SymbolId, VarSlotId};
 
+use super::request_dependencies::{RequestDependencies, RequestDependencyIndex};
 use crate::retention::SeriesRetention;
 
 #[derive(Debug)]
@@ -17,6 +19,8 @@ pub(crate) struct RuntimeMetadata {
     history: HashSet<SeriesId>,
     execution_scoped: HashSet<SeriesId>,
     persistent_slots: [Vec<VarSlotId>; 3],
+    // Built on first use: most programs never evaluate a requested context.
+    request_dependencies: OnceLock<RequestDependencyIndex>,
 }
 
 impl RuntimeMetadata {
@@ -37,6 +41,7 @@ impl RuntimeMetadata {
                 .collect(),
             execution_scoped: program.execution_scoped_series.iter().copied().collect(),
             persistent_slots: Default::default(),
+            request_dependencies: OnceLock::new(),
         };
         for (index, symbol) in program.symbols.iter().enumerate() {
             // Match the previous first-symbol lookup, including manually
@@ -68,6 +73,17 @@ impl RuntimeMetadata {
 
     pub(crate) fn persistent_slots(&self, kind: PersistenceKind) -> &[VarSlotId] {
         &self.persistent_slots[persistence_index(kind)]
+    }
+
+    /// `program` is the program this metadata was built from.
+    pub(crate) fn request_dependencies<'p>(
+        &'p self,
+        program: &'p HirProgram,
+    ) -> RequestDependencies<'p> {
+        let index = self
+            .request_dependencies
+            .get_or_init(|| RequestDependencyIndex::from_program(program));
+        RequestDependencies::new(program, self, index)
     }
 }
 

@@ -139,6 +139,9 @@ pub struct HistoricalRuntime<'a> {
     >,
     pub(crate) request_evaluations:
         HashMap<RequestCacheKey, Arc<crate::builtins::request_incremental::RequestEvaluation<'a>>>,
+    // Incremental admission per request, with the captured symbols it was
+    // checked for.
+    pub(crate) request_incremental_admissions: HashMap<RequestCacheKey, (Box<[SymbolId]>, bool)>,
     pub(crate) bounded_same_context_evaluations:
         HashMap<RequestCacheKey, Box<HistoricalRuntime<'a>>>,
     // Captures belong to this runtime's handle namespace, unlike child state.
@@ -466,6 +469,7 @@ impl<'a> HistoricalRuntime<'a> {
             historical_dynamic_request_contexts: HashSet::new(),
             request_cache: HashMap::new(),
             request_evaluations: HashMap::new(),
+            request_incremental_admissions: HashMap::new(),
             bounded_same_context_evaluations: HashMap::new(),
             bounded_same_context_captures: HashMap::new(),
             legacy_security_repaint_warnings: HashMap::new(),

@@ -1,11 +1,10 @@
 //! Reuse a checkpoint preceding the terminal requested bar. The old terminal
 //! bar is always replayed when a context grows, preserving endpoint semantics.
 use super::request_values::RequestedValue;
-use super::requests::{
-    request_capture_values, request_dependency_initializers, request_tuple_dependency_statements,
-};
+use super::requests::request_capture_values;
 use crate::request::RequestCacheKey;
 use crate::runtime::append_history::AppendHistory;
+use crate::runtime::request_dependencies::RequestDependencies;
 use crate::{
     HistoricalRuntime, PineValue, RequestDataError, RequestEnvironment, RequestKey, RuntimeError,
 };
@@ -54,25 +53,13 @@ impl<'a> HistoricalRuntime<'a> {
         include_forming: bool,
     ) -> Result<AppendHistory<(i64, RequestedValue)>, RuntimeError> {
         let program = self.program.clone();
-        let initializers = request_dependency_initializers(&program);
-        let tuple_dependencies = request_tuple_dependency_statements(&program);
-        let captures = request_capture_values(
-            &self.program,
-            expression,
-            &self.current_symbols,
-            &initializers,
-            &tuple_dependencies,
-        );
+        let metadata = Arc::clone(&self.metadata);
+        let dependencies = metadata.request_dependencies(&program);
+        let captures = request_capture_values(expression, &self.current_symbols, dependencies);
         for value in captures.values() {
             self.reject_request_object_graph(value)?;
         }
-        if !incremental_expression(
-            expression,
-            &initializers,
-            &captures,
-            &self.program.symbols,
-            0,
-        ) {
+        if !self.incremental_request_admitted(cache_key, expression, dependencies, &captures) {
             let bars = self.resolved_request_bars_from(key, 0)?;
             let start = if self.context_windows.prepared {
                 self.context_windows.source_start(key, &bars)
@@ -209,13 +196,8 @@ impl<'a> HistoricalRuntime<'a> {
             if terminal {
                 before_last = Some(Arc::new(runtime.clone()));
             }
-            let result = runtime.eval_requested_bar_expression(
-                *bar,
-                expression,
-                &captures,
-                &initializers,
-                &tuple_dependencies,
-            );
+            let result =
+                runtime.eval_requested_bar_expression(*bar, expression, &captures, dependencies);
             self.accept_execution_budget(&runtime);
             if result.is_err() {
                 self.failed_request_context = runtime.failed_request_context.clone();
@@ -248,171 +230,191 @@ impl<'a> HistoricalRuntime<'a> {
         );
         Ok(values)
     }
+
+    /// Admission reads which dependencies are captured, not their values, so
+    /// it is checked once per request and captured symbol set.
+    fn incremental_request_admitted(
+        &mut self,
+        cache_key: &RequestCacheKey,
+        expression: &HirExpr,
+        dependencies: RequestDependencies<'_>,
+        captures: &HashMap<SymbolId, PineValue>,
+    ) -> bool {
+        let mut captured: Box<[SymbolId]> = captures.keys().copied().collect();
+        captured.sort_unstable_by_key(|symbol| symbol.0);
+        if let Some((checked, admitted)) = self.request_incremental_admissions.get(cache_key)
+            && *checked == captured
+        {
+            return *admitted;
+        }
+        let admitted = IncrementalCheck {
+            dependencies,
+            captures,
+            checked: HashMap::new(),
+        }
+        .expression(expression, &HashSet::new(), 0);
+        self.request_incremental_admissions
+            .insert(cache_key.clone(), (captured, admitted));
+        admitted
+    }
+}
+
+#[cfg(test)]
+thread_local! {
+    static INITIALIZER_CHECKS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 // Replay only expressions whose effects live in the requested checkpoint and
 // whose inputs do not depend on the dataset endpoint. Other expressions retain
 // the complete evaluator.
-fn incremental_expression(
-    expr: &HirExpr,
-    initializers: &HashMap<SymbolId, &HirExpr>,
-    captures: &HashMap<SymbolId, PineValue>,
-    symbols: &[pine_ir::HirSymbol],
-    depth: usize,
-) -> bool {
-    incremental_scoped_expression(
-        expr,
-        initializers,
-        captures,
-        symbols,
-        &HashSet::new(),
-        depth,
-    )
+struct IncrementalCheck<'p, 'c> {
+    dependencies: RequestDependencies<'p>,
+    captures: &'c HashMap<SymbolId, PineValue>,
+    // Dependency graphs share initializers across paths. Outside a block, a
+    // symbol's answer depends only on the depth that reaches it.
+    checked: HashMap<(SymbolId, usize), bool>,
 }
 
-fn incremental_scoped_expression(
-    expr: &HirExpr,
-    initializers: &HashMap<SymbolId, &HirExpr>,
-    captures: &HashMap<SymbolId, PineValue>,
-    symbols: &[pine_ir::HirSymbol],
-    locals: &HashSet<SymbolId>,
-    depth: usize,
-) -> bool {
-    if depth > 64 {
-        return false;
-    }
-    let visit = |expr| {
-        incremental_scoped_expression(expr, initializers, captures, symbols, locals, depth + 1)
-    };
-    match &expr.kind {
-        HirExprKind::Literal(_) => true,
-        HirExprKind::Builtin(name) => stable_builtin(name),
-        HirExprKind::Symbol(symbol) => {
-            locals.contains(symbol)
-                || captures.contains_key(symbol)
-                || initializers.get(symbol).map_or_else(
-                    || {
-                        symbols
-                            .iter()
-                            .find(|item| item.id == *symbol)
-                            .is_some_and(|item| stable_builtin(&item.name))
-                    },
-                    |value| visit(value),
-                )
+impl IncrementalCheck<'_, '_> {
+    fn expression(&mut self, expr: &HirExpr, locals: &HashSet<SymbolId>, depth: usize) -> bool {
+        if depth > 64 {
+            return false;
         }
-        HirExprKind::Unary { expr, .. } => visit(expr),
-        HirExprKind::Binary { left, right, .. } => visit(left) && visit(right),
-        HirExprKind::Ternary {
-            condition,
-            then_expr,
-            else_expr,
-        } => visit(condition) && visit(then_expr) && visit(else_expr),
-        HirExprKind::Tuple(items) => items.iter().all(visit),
-        HirExprKind::History { expr, offset } => {
-            visit(expr)
-                && match offset {
-                    HirHistoryOffset::Constant(_) => true,
-                    HirHistoryOffset::Dynamic(value) => visit(value),
-                }
-        }
-        HirExprKind::Call { callee, args, .. } => {
-            (callee == "input"
-                || callee.starts_with("input.")
-                || callee.starts_with("ta.")
-                || (callee.starts_with("math.") && callee != "math.random")
-                || pine_builtins::is_pure_scalar_string_builtin(callee)
-                || matches!(
-                    callee.as_str(),
-                    "timeframe.change"
-                        | "year"
-                        | "nz"
-                        | "na"
-                        | "fixnan"
-                        | "int"
-                        | "float"
-                        | "bool"
-                        | "color.new"
-                        | "color.rgb"
-                        | "color.r"
-                        | "color.g"
-                        | "color.b"
-                        | "color.t"
-                ))
-                && args.iter().all(|arg| visit(&arg.value))
-        }
-        HirExprKind::Block { statements, result } => {
-            let mut bound = locals.clone();
-            statements.iter().all(|statement| {
-                incremental_statement(
-                    statement,
-                    initializers,
-                    captures,
-                    symbols,
-                    &mut bound,
-                    depth + 1,
-                )
-            }) && incremental_scoped_expression(
-                result,
-                initializers,
-                captures,
-                symbols,
-                &bound,
-                depth + 1,
-            )
-        }
-        _ => false,
-    }
-}
-
-// Lowered scalar UDFs keep their local state in the checkpoint. Admit only
-// declarations, local assignments and conditional branches with stable inputs.
-// Mutations of external state, loops, nested requests and endpoint reads retain
-// the complete evaluator.
-fn incremental_statement(
-    statement: &HirStmt,
-    initializers: &HashMap<SymbolId, &HirExpr>,
-    captures: &HashMap<SymbolId, PineValue>,
-    symbols: &[pine_ir::HirSymbol],
-    locals: &mut HashSet<SymbolId>,
-    depth: usize,
-) -> bool {
-    if depth > 64 {
-        return false;
-    }
-    let visit = |expr, bound: &HashSet<SymbolId>| {
-        incremental_scoped_expression(expr, initializers, captures, symbols, bound, depth + 1)
-    };
-    match &statement.kind {
-        HirStmtKind::Decl { symbol, value } => {
-            if !visit(value, locals) {
-                return false;
+        let next = depth + 1;
+        match &expr.kind {
+            HirExprKind::Literal(_) => true,
+            HirExprKind::Builtin(name) => stable_builtin(name),
+            HirExprKind::Symbol(symbol) => self.symbol(*symbol, locals, depth),
+            HirExprKind::Unary { expr, .. } => self.expression(expr, locals, next),
+            HirExprKind::Binary { left, right, .. } => {
+                self.expression(left, locals, next) && self.expression(right, locals, next)
             }
-            locals.insert(*symbol);
-            true
+            HirExprKind::Ternary {
+                condition,
+                then_expr,
+                else_expr,
+            } => {
+                self.expression(condition, locals, next)
+                    && self.expression(then_expr, locals, next)
+                    && self.expression(else_expr, locals, next)
+            }
+            HirExprKind::Tuple(items) => {
+                items.iter().all(|item| self.expression(item, locals, next))
+            }
+            HirExprKind::History { expr, offset } => {
+                self.expression(expr, locals, next)
+                    && match offset {
+                        HirHistoryOffset::Constant(_) => true,
+                        HirHistoryOffset::Dynamic(value) => self.expression(value, locals, next),
+                    }
+            }
+            HirExprKind::Call { callee, args, .. } => {
+                (callee == "input"
+                    || callee.starts_with("input.")
+                    || callee.starts_with("ta.")
+                    || (callee.starts_with("math.") && callee != "math.random")
+                    || pine_builtins::is_pure_scalar_string_builtin(callee)
+                    || matches!(
+                        callee.as_str(),
+                        "timeframe.change"
+                            | "year"
+                            | "nz"
+                            | "na"
+                            | "fixnan"
+                            | "int"
+                            | "float"
+                            | "bool"
+                            | "color.new"
+                            | "color.rgb"
+                            | "color.r"
+                            | "color.g"
+                            | "color.b"
+                            | "color.t"
+                    ))
+                    && args
+                        .iter()
+                        .all(|arg| self.expression(&arg.value, locals, next))
+            }
+            HirExprKind::Block { statements, result } => {
+                let mut bound = locals.clone();
+                statements
+                    .iter()
+                    .all(|statement| self.statement(statement, &mut bound, next))
+                    && self.expression(result, &bound, next)
+            }
+            _ => false,
         }
-        HirStmtKind::Reassign { symbol, value } => locals.contains(symbol) && visit(value, locals),
-        HirStmtKind::Expr(value) => visit(value, locals),
-        HirStmtKind::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => {
-            visit(condition, locals)
-                && [then_branch, else_branch].into_iter().all(|branch| {
-                    let mut bound = locals.clone();
-                    branch.iter().all(|statement| {
-                        incremental_statement(
-                            statement,
-                            initializers,
-                            captures,
-                            symbols,
-                            &mut bound,
-                            depth + 1,
-                        )
+    }
+
+    fn symbol(&mut self, symbol: SymbolId, locals: &HashSet<SymbolId>, depth: usize) -> bool {
+        if locals.contains(&symbol) || self.captures.contains_key(&symbol) {
+            return true;
+        }
+        let Some(initializer) = self.dependencies.initializer(symbol) else {
+            return self
+                .dependencies
+                .symbol(symbol)
+                .is_some_and(|item| stable_builtin(&item.name));
+        };
+        // Block locals reach initializers unchanged; keep those paths exact.
+        if !locals.is_empty() {
+            return self.initializer(initializer, locals, depth);
+        }
+        if let Some(&admitted) = self.checked.get(&(symbol, depth)) {
+            return admitted;
+        }
+        let admitted = self.initializer(initializer, locals, depth);
+        self.checked.insert((symbol, depth), admitted);
+        admitted
+    }
+
+    fn initializer(&mut self, value: &HirExpr, locals: &HashSet<SymbolId>, depth: usize) -> bool {
+        #[cfg(test)]
+        INITIALIZER_CHECKS.with(|checks| checks.set(checks.get() + 1));
+        self.expression(value, locals, depth + 1)
+    }
+
+    // Lowered scalar UDFs keep their local state in the checkpoint. Admit only
+    // declarations, local assignments and conditional branches with stable inputs.
+    // Mutations of external state, loops, nested requests and endpoint reads retain
+    // the complete evaluator.
+    fn statement(
+        &mut self,
+        statement: &HirStmt,
+        locals: &mut HashSet<SymbolId>,
+        depth: usize,
+    ) -> bool {
+        if depth > 64 {
+            return false;
+        }
+        let next = depth + 1;
+        match &statement.kind {
+            HirStmtKind::Decl { symbol, value } => {
+                if !self.expression(value, locals, next) {
+                    return false;
+                }
+                locals.insert(*symbol);
+                true
+            }
+            HirStmtKind::Reassign { symbol, value } => {
+                locals.contains(symbol) && self.expression(value, locals, next)
+            }
+            HirStmtKind::Expr(value) => self.expression(value, locals, next),
+            HirStmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                self.expression(condition, locals, next)
+                    && [then_branch, else_branch].into_iter().all(|branch| {
+                        let mut bound = locals.clone();
+                        branch
+                            .iter()
+                            .all(|statement| self.statement(statement, &mut bound, next))
                     })
-                })
+            }
+            _ => false,
         }
-        _ => false,
     }
 }
 
@@ -550,6 +552,64 @@ plot(request.security("B","1",x))
             "refresh must not rebuild the 22-bar direct requested prefix"
         );
         assert_eq!(runtime.result().plots[1].values[0].as_f64(), Some(12.0));
+    }
+
+    #[test]
+    fn shared_dependency_graph_is_admitted_once_per_capture_set() {
+        const DEPTH: usize = 16;
+        // `x{i} = x{i-1} + x{i-1}` doubles the paths to `x0` at every level.
+        let mut source = String::from(
+            "//@version=6
+indicator(\"shared\")
+x0 = close
+",
+        );
+        for level in 1..=DEPTH {
+            let previous = level - 1;
+            source.push_str(&format!(
+                "x{level} = x{previous} + x{previous}
+"
+            ));
+        }
+        source.push_str(&format!(
+            "plot(request.security(\"B\", \"1\", x{DEPTH}))
+"
+        ));
+        let analysis = analyze_source(&SourceFile::new("shared.pine", source));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.unwrap();
+        let timeframe = RequestTimeframe::parse("1").unwrap();
+        let provider = InMemoryRequestDataProvider::from_streams([(
+            RequestKey::new("B", timeframe.clone()),
+            (0..8).map(|i| bar(i * 60_000, (i + 1) as f64)).collect(),
+        )])
+        .unwrap();
+        let environment =
+            RequestEnvironment::new(ChartContext::new("A", timeframe), Arc::new(provider));
+        let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment);
+        INITIALIZER_CHECKS.with(|checks| checks.set(0));
+        for index in 0..8 {
+            runtime.append_bar(bar(index * 60_000, 1.0)).unwrap();
+        }
+        let checks = INITIALIZER_CHECKS.with(std::cell::Cell::get);
+        assert_eq!(runtime.request_evaluations.len(), 1);
+        for (index, value) in runtime.result().plots[0].values.iter().enumerate() {
+            assert_eq!(
+                value.as_f64(),
+                Some((index + 1) as f64 * (1u64 << DEPTH) as f64)
+            );
+        }
+        // The captured set never changes, so one admission check visits each
+        // initializer once. The per-path walk made 2^(DEPTH + 1) - 1 = 131,071
+        // initializer checks on every bar.
+        assert!(
+            checks <= DEPTH + 1,
+            "{checks} initializer checks for depth {DEPTH}"
+        );
     }
 
     #[test]

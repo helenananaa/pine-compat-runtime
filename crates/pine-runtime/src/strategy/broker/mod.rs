@@ -2,6 +2,9 @@ mod accounting;
 mod all_entry_relative_exits;
 mod candidates;
 mod close_orders;
+mod closed_trade_stats;
+#[cfg(test)]
+mod closed_trade_stats_tests;
 mod closed_trades;
 #[cfg(test)]
 mod combined_exit_reservation_tests;
@@ -44,6 +47,7 @@ mod oca_storage_tests;
 
 use pine_ir::{StrategyCloseEntriesRule, StrategyCommission, StrategyMarginSetting};
 
+use closed_trade_stats::ClosedTradeStats;
 pub(crate) use combined_exits::CombinedExitSpec;
 #[cfg(test)]
 use ledger::NetPosition;
@@ -114,6 +118,7 @@ pub struct BrokerState {
     order_fill_alerts: SharedHistory<StrategyOrderFillAlertEvent>,
     trades: SharedHistory<StrategyTrade>,
     closed_trade_metrics: SharedHistory<ClosedTradeMetrics>,
+    closed_trade_stats: ClosedTradeStats,
     position: SharedHistory<StrategyPositionSnapshot>,
     equity: SharedHistory<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,

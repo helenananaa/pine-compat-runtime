@@ -154,6 +154,7 @@ impl BrokerState {
             order_fill_alerts: Default::default(),
             trades: Default::default(),
             closed_trade_metrics: Default::default(),
+            closed_trade_stats: Default::default(),
             position: Default::default(),
             equity: Default::default(),
             diagnostics: Vec::new(),

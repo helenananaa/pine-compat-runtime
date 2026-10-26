@@ -404,6 +404,11 @@ impl<'a> RealtimeRuntime<'a> {
         self.forming.as_ref().unwrap_or(&self.confirmed)
     }
 
+    #[cfg(test)]
+    pub(crate) fn live_runtime(&self) -> &HistoricalRuntime<'a> {
+        self.live()
+    }
+
     fn sync_cursor(&mut self) {
         self.cursor = OutputCursor::capture(self.live());
     }

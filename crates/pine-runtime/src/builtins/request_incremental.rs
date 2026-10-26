@@ -240,6 +240,10 @@ impl<'a> HistoricalRuntime<'a> {
         dependencies: RequestDependencies<'_>,
         captures: &HashMap<SymbolId, PineValue>,
     ) -> bool {
+        #[cfg(test)]
+        if COMPLETE_EVALUATOR.with(std::cell::Cell::get) {
+            return false;
+        }
         let mut captured: Box<[SymbolId]> = captures.keys().copied().collect();
         captured.sort_unstable_by_key(|symbol| symbol.0);
         if let Some((checked, admitted)) = self.request_incremental_admissions.get(cache_key)
@@ -251,6 +255,7 @@ impl<'a> HistoricalRuntime<'a> {
             dependencies,
             captures,
             checked: HashMap::new(),
+            loops: 0,
         }
         .expression(expression, &HashSet::new(), 0);
         self.request_incremental_admissions
@@ -262,6 +267,9 @@ impl<'a> HistoricalRuntime<'a> {
 #[cfg(test)]
 thread_local! {
     static INITIALIZER_CHECKS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // Differential tests run one of two runtimes with every request, nested
+    // ones included, on the complete evaluator.
+    static COMPLETE_EVALUATOR: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 // Replay only expressions whose effects live in the requested checkpoint and
@@ -273,6 +281,9 @@ struct IncrementalCheck<'p, 'c> {
     // Dependency graphs share initializers across paths. Outside a block, a
     // symbol's answer depends only on the depth that reaches it.
     checked: HashMap<(SymbolId, usize), bool>,
+    // Admitted loop bodies enclosing the statement; `break` and `continue`
+    // need one.
+    loops: usize,
 }
 
 impl IncrementalCheck<'_, '_> {
@@ -342,8 +353,52 @@ impl IncrementalCheck<'_, '_> {
                     .all(|statement| self.statement(statement, &mut bound, next))
                     && self.expression(result, &bound, next)
             }
+            HirExprKind::For {
+                counter,
+                from,
+                to,
+                step,
+                statements,
+                result,
+            } => {
+                self.expression(from, locals, next)
+                    && self.expression(to, locals, next)
+                    && step
+                        .as_deref()
+                        .is_none_or(|step| self.expression(step, locals, next))
+                    && self.loop_body(Some(*counter), statements, Some(result), locals, next)
+            }
+            HirExprKind::While {
+                condition,
+                statements,
+                result,
+            } => {
+                self.expression(condition, locals, next)
+                    && self.loop_body(None, statements, Some(result), locals, next)
+            }
             _ => false,
         }
+    }
+
+    // Counters, body locals and loop-local `var` state live in the checkpoint
+    // like other block locals. Bounds and conditions read the enclosing scope.
+    fn loop_body(
+        &mut self,
+        counter: Option<SymbolId>,
+        statements: &[HirStmt],
+        result: Option<&HirExpr>,
+        locals: &HashSet<SymbolId>,
+        depth: usize,
+    ) -> bool {
+        let mut bound = locals.clone();
+        bound.extend(counter);
+        self.loops += 1;
+        let admitted = statements
+            .iter()
+            .all(|statement| self.statement(statement, &mut bound, depth))
+            && result.is_none_or(|result| self.expression(result, &bound, depth));
+        self.loops -= 1;
+        admitted
     }
 
     fn symbol(&mut self, symbol: SymbolId, locals: &HashSet<SymbolId>, depth: usize) -> bool {
@@ -375,9 +430,10 @@ impl IncrementalCheck<'_, '_> {
     }
 
     // Lowered scalar UDFs keep their local state in the checkpoint. Admit only
-    // declarations, local assignments and conditional branches with stable inputs.
-    // Mutations of external state, loops, nested requests and endpoint reads retain
-    // the complete evaluator.
+    // declarations, local assignments, conditional branches and counted or
+    // conditional loops with stable inputs. Mutations of external state,
+    // for...in loops, nested requests and endpoint reads retain the complete
+    // evaluator.
     fn statement(
         &mut self,
         statement: &HirStmt,
@@ -413,6 +469,25 @@ impl IncrementalCheck<'_, '_> {
                             .all(|statement| self.statement(statement, &mut bound, next))
                     })
             }
+            HirStmtKind::For {
+                counter,
+                from,
+                to,
+                step,
+                body,
+            } => {
+                self.expression(from, locals, next)
+                    && self.expression(to, locals, next)
+                    && step
+                        .as_ref()
+                        .is_none_or(|step| self.expression(step, locals, next))
+                    && self.loop_body(Some(*counter), body, None, locals, next)
+            }
+            HirStmtKind::While { condition, body } => {
+                self.expression(condition, locals, next)
+                    && self.loop_body(None, body, None, locals, next)
+            }
+            HirStmtKind::Break | HirStmtKind::Continue => self.loops > 0,
             _ => false,
         }
     }
@@ -437,6 +512,10 @@ fn stable_builtin(name: &str) -> bool {
     ) || name.starts_with("syminfo.")
         || name.starts_with("timeframe.")
 }
+
+#[cfg(test)]
+#[path = "request_incremental_tests.rs"]
+mod differential_tests;
 
 #[cfg(test)]
 mod tests {

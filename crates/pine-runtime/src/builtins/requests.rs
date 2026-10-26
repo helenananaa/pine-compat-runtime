@@ -1,5 +1,6 @@
 use super::request_values::RequestedValue;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 use pine_ir::{
     CallSiteId, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirStmt, HirStmtKind,
@@ -8,6 +9,7 @@ use pine_ir::{
 
 use crate::builtins::args::call_arg_expr;
 use crate::runtime::append_history::AppendHistory;
+use crate::runtime::request_dependencies::RequestDependencies;
 use crate::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -531,15 +533,10 @@ impl<'a> HistoricalRuntime<'a> {
                 let key =
                     RequestCacheKey::new(call_site_id, &chart_symbol, chart_timeframe.value());
                 let program = self.program.clone();
-                let initializers = request_dependency_initializers(&program);
-                let tuple_dependencies = request_tuple_dependency_statements(&program);
-                let captures = request_capture_values(
-                    &self.program,
-                    expression,
-                    &self.current_symbols,
-                    &initializers,
-                    &tuple_dependencies,
-                );
+                let metadata = Arc::clone(&self.metadata);
+                let dependencies = metadata.request_dependencies(&program);
+                let captures =
+                    request_capture_values(expression, &self.current_symbols, dependencies);
                 for value in captures.values() {
                     self.reject_request_object_graph(value)?;
                 }
@@ -563,13 +560,8 @@ impl<'a> HistoricalRuntime<'a> {
                 let bar = self.current_bar.ok_or_else(|| RuntimeError {
                     message: "request.security has no current chart bar".to_owned(),
                 })?;
-                let result = runtime.eval_requested_bar_expression(
-                    bar,
-                    expression,
-                    &captures,
-                    &initializers,
-                    &tuple_dependencies,
-                );
+                let result =
+                    runtime.eval_requested_bar_expression(bar, expression, &captures, dependencies);
                 self.accept_execution_budget(&runtime);
                 if result.is_err() {
                     self.failed_request_context = runtime.failed_request_context.clone();
@@ -857,15 +849,9 @@ impl<'a> HistoricalRuntime<'a> {
         requested_environment: RequestEnvironment,
     ) -> Result<Vec<(i64, RequestedValue)>, RuntimeError> {
         let program = self.program.clone();
-        let dependency_initializers = request_dependency_initializers(&program);
-        let tuple_dependencies = request_tuple_dependency_statements(&program);
-        let captures = request_capture_values(
-            &self.program,
-            expression,
-            &self.current_symbols,
-            &dependency_initializers,
-            &tuple_dependencies,
-        );
+        let metadata = Arc::clone(&self.metadata);
+        let dependencies = metadata.request_dependencies(&program);
+        let captures = request_capture_values(expression, &self.current_symbols, dependencies);
         for value in captures.values() {
             self.reject_request_object_graph(value)?;
         }
@@ -874,13 +860,8 @@ impl<'a> HistoricalRuntime<'a> {
         runtime.historical_end = Some(requested_bars.len());
         let mut values = Vec::with_capacity(requested_bars.len());
         for bar in requested_bars {
-            let result = runtime.eval_requested_bar_expression(
-                *bar,
-                expression,
-                &captures,
-                &dependency_initializers,
-                &tuple_dependencies,
-            );
+            let result =
+                runtime.eval_requested_bar_expression(*bar, expression, &captures, dependencies);
             // Requested history is part of this chart execution's work. Do
             // not grant each requested bar a fresh chart-sized allowance.
             self.accept_execution_budget(&runtime);
@@ -896,20 +877,16 @@ impl<'a> HistoricalRuntime<'a> {
 }
 
 pub(crate) fn request_capture_values(
-    program: &pine_ir::HirProgram,
     expression: &HirExpr,
     current_symbols: &HashMap<SymbolId, PineValue>,
-    dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-    tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
+    dependencies: RequestDependencies<'_>,
 ) -> HashMap<SymbolId, PineValue> {
     let mut candidates = HashSet::new();
     collect_request_capture_symbols(
-        program,
         expression,
         &mut HashSet::new(),
         &mut candidates,
-        dependency_initializers,
-        tuple_dependencies,
+        dependencies,
     );
     candidates
         .into_iter()
@@ -923,12 +900,10 @@ pub(crate) fn request_capture_values(
 }
 
 fn collect_request_capture_symbols(
-    program: &pine_ir::HirProgram,
     expression: &HirExpr,
     visited: &mut HashSet<SymbolId>,
     captures: &mut HashSet<SymbolId>,
-    dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-    tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
+    dependencies: RequestDependencies<'_>,
 ) {
     let mut symbols = Vec::new();
     collect_hir_expr_symbols(expression, &mut symbols);
@@ -936,16 +911,14 @@ fn collect_request_capture_symbols(
         if !visited.insert(symbol) {
             continue;
         }
-        let Some(pine_type) = program
-            .symbols
-            .iter()
-            .find(|candidate| candidate.id == symbol)
+        let Some(pine_type) = dependencies
+            .symbol(symbol)
             .map(|candidate| candidate.pine_type)
         else {
             continue;
         };
-        let initializer = dependency_initializers.get(&symbol).copied().or_else(|| {
-            tuple_dependencies.get(&symbol).and_then(|stmt| {
+        let initializer = dependencies.initializer(symbol).or_else(|| {
+            dependencies.tuple_statement(symbol).and_then(|stmt| {
                 if let HirStmtKind::TupleDecl { value, .. } = &stmt.kind {
                     Some(value)
                 } else {
@@ -957,14 +930,7 @@ fn collect_request_capture_symbols(
             continue;
         };
         if matches!(pine_type.qualifier, Qualifier::Series | Qualifier::Simple) {
-            collect_request_capture_symbols(
-                program,
-                initializer,
-                visited,
-                captures,
-                dependency_initializers,
-                tuple_dependencies,
-            );
+            collect_request_capture_symbols(initializer, visited, captures, dependencies);
         } else {
             captures.insert(symbol);
         }

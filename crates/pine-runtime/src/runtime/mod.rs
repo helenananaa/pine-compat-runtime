@@ -28,6 +28,7 @@ pub(crate) mod plot_history;
 mod profile;
 mod program_pass;
 pub(crate) mod realtime;
+pub(crate) mod request_dependencies;
 pub(crate) mod resource_limits;
 mod result_view;
 pub(crate) mod statements;

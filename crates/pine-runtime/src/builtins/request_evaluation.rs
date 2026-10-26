@@ -1,7 +1,8 @@
 //! Requested-expression replay and immutable dependency reconstruction.
 use super::{request_values::RequestedValue, requests::collect_hir_expr_symbols};
+use crate::runtime::request_dependencies::RequestDependencies;
 use crate::{Bar, BarUpdateKind, HistoricalRuntime, PineValue, RequestEnvironment, RuntimeError};
-use pine_ir::{HirExpr, HirStmt, HirStmtKind, Qualifier, SymbolId, ValueKind};
+use pine_ir::{HirExpr, HirStmtKind, Qualifier, SymbolId, ValueKind};
 use std::collections::{HashMap, HashSet};
 
 impl HistoricalRuntime<'_> {
@@ -29,15 +30,13 @@ impl HistoricalRuntime<'_> {
         bar: Bar,
         expression: &HirExpr,
         captures: &HashMap<SymbolId, PineValue>,
-        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-        tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
+        dependencies: RequestDependencies<'_>,
     ) -> Result<RequestedValue, RuntimeError> {
         self.eval_requested_bar_expression_with_kind(
             bar,
             expression,
             captures,
-            dependency_initializers,
-            tuple_dependencies,
+            dependencies,
             BarUpdateKind::Historical,
         )
     }
@@ -47,8 +46,7 @@ impl HistoricalRuntime<'_> {
         bar: Bar,
         expression: &HirExpr,
         captures: &HashMap<SymbolId, PineValue>,
-        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-        tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
+        dependencies: RequestDependencies<'_>,
         update_kind: BarUpdateKind,
     ) -> Result<RequestedValue, RuntimeError> {
         let bar_index = self.bars;
@@ -64,12 +62,7 @@ impl HistoricalRuntime<'_> {
                 .iter()
                 .map(|(symbol, value)| (*symbol, value.clone())),
         );
-        self.eval_requested_expression_dependencies(
-            expression,
-            &mut HashSet::new(),
-            dependency_initializers,
-            tuple_dependencies,
-        )?;
+        self.eval_requested_expression_dependencies(expression, &mut HashSet::new(), dependencies)?;
 
         let value = self.eval_expr(expression)?;
         let value = self.freeze_requested_value(&value)?;
@@ -88,18 +81,12 @@ impl HistoricalRuntime<'_> {
         &mut self,
         expression: &HirExpr,
         visiting: &mut HashSet<SymbolId>,
-        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-        tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
+        dependencies: RequestDependencies<'_>,
     ) -> Result<(), RuntimeError> {
         let mut symbols = Vec::new();
         collect_hir_expr_symbols(expression, &mut symbols);
         for symbol in symbols {
-            self.eval_requested_symbol_dependency(
-                symbol,
-                visiting,
-                dependency_initializers,
-                tuple_dependencies,
-            )?;
+            self.eval_requested_symbol_dependency(symbol, visiting, dependencies)?;
         }
         Ok(())
     }
@@ -108,17 +95,13 @@ impl HistoricalRuntime<'_> {
         &mut self,
         symbol: SymbolId,
         visiting: &mut HashSet<SymbolId>,
-        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
-        tuple_dependencies: &HashMap<SymbolId, &HirStmt>,
+        dependencies: RequestDependencies<'_>,
     ) -> Result<(), RuntimeError> {
         if self.current_symbols.contains_key(&symbol) {
             return Ok(());
         }
-        let pine_type = self
-            .program
-            .symbols
-            .iter()
-            .find(|candidate| candidate.id == symbol)
+        let pine_type = dependencies
+            .symbol(symbol)
             .map(|candidate| candidate.pine_type)
             .ok_or_else(|| RuntimeError {
                 message: format!(
@@ -143,25 +126,15 @@ impl HistoricalRuntime<'_> {
             // after the historical read, from this requested context's series.
             return Ok(());
         }
-        if let Some(initializer) = dependency_initializers.get(&symbol).copied() {
-            self.eval_requested_expression_dependencies(
-                initializer,
-                visiting,
-                dependency_initializers,
-                tuple_dependencies,
-            )?;
+        if let Some(initializer) = dependencies.initializer(symbol) {
+            self.eval_requested_expression_dependencies(initializer, visiting, dependencies)?;
             let value = self.eval_expr(initializer)?;
             self.set_symbol_value(symbol, value);
-        } else if let Some(statement) = tuple_dependencies.get(&symbol).copied() {
+        } else if let Some(statement) = dependencies.tuple_statement(symbol) {
             let HirStmtKind::TupleDecl { value, .. } = &statement.kind else {
                 unreachable!("tuple dependency index contains only tuple declarations")
             };
-            self.eval_requested_expression_dependencies(
-                value,
-                visiting,
-                dependency_initializers,
-                tuple_dependencies,
-            )?;
+            self.eval_requested_expression_dependencies(value, visiting, dependencies)?;
             self.eval_stmt(statement)?;
         } else {
             return Err(RuntimeError {

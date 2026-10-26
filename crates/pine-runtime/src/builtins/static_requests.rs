@@ -194,8 +194,8 @@ impl HistoricalRuntime<'_> {
         }
         if !self.static_requests.values.contains_key(&site) {
             let program = self.program.clone();
-            let initializers = request_dependency_initializers(&program);
-            let tuples = request_tuple_dependency_statements(&program);
+            let metadata = std::sync::Arc::clone(&self.metadata);
+            let dependencies = metadata.request_dependencies(&program);
             let expression_type = crate::builtins::args::call_arg_expr(args, 2, "expression")
                 .ok_or_else(|| RuntimeError {
                     message: "static request has no expression".to_owned(),
@@ -210,13 +210,7 @@ impl HistoricalRuntime<'_> {
                 pine_type: expression_type,
                 series_id: None,
             };
-            let captures = request_capture_values(
-                &program,
-                &call,
-                &self.current_symbols,
-                &initializers,
-                &tuples,
-            );
+            let captures = request_capture_values(&call, &self.current_symbols, dependencies);
             let mut root = self.fork_with_request_environment(environment.clone());
             root.static_requests.requested = false;
             root.static_requests.stack.push(site);
@@ -237,8 +231,7 @@ impl HistoricalRuntime<'_> {
                     *bar,
                     &call,
                     &captures,
-                    &initializers,
-                    &tuples,
+                    dependencies,
                     kind,
                 );
                 self.accept_execution_budget(&root);

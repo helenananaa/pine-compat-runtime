@@ -251,13 +251,7 @@ impl<'a> HistoricalRuntime<'a> {
         {
             return *admitted;
         }
-        let admitted = IncrementalCheck {
-            dependencies,
-            captures,
-            checked: HashMap::new(),
-            loops: 0,
-        }
-        .expression(expression, &HashSet::new(), 0);
+        let admitted = IncrementalCheck::new(dependencies, captures).admits(expression);
         self.request_incremental_admissions
             .insert(cache_key.clone(), (captured, admitted));
         admitted
@@ -275,18 +269,90 @@ thread_local! {
 // Replay only expressions whose effects live in the requested checkpoint and
 // whose inputs do not depend on the dataset endpoint. Other expressions retain
 // the complete evaluator.
+//
+// A declared symbol is checked once, through its initializer in the scope that
+// declares it: block locals and enclosing loops of the expression that reached
+// it cannot appear there. Its answer therefore depends only on the symbol, so
+// shared dependency graphs are checked once per symbol. Each pass checks one
+// expression with the answers known so far and records the symbols it still
+// needs; `resolve` answers those on an explicit stack, so long dependency
+// chains neither recurse nor reach the nesting limit.
 struct IncrementalCheck<'p, 'c> {
     dependencies: RequestDependencies<'p>,
     captures: &'c HashMap<SymbolId, PineValue>,
-    // Dependency graphs share initializers across paths. Outside a block, a
-    // symbol's answer depends only on the depth that reaches it.
-    checked: HashMap<(SymbolId, usize), bool>,
+    checked: HashMap<SymbolId, bool>,
+    // Declared symbols the current pass reached without a known answer. The
+    // pass treats them as admitted; every check is a conjunction, so a pass
+    // that fails anyway does not need them.
+    pending: Vec<SymbolId>,
     // Admitted loop bodies enclosing the statement; `break` and `continue`
     // need one.
     loops: usize,
 }
 
-impl IncrementalCheck<'_, '_> {
+impl<'p, 'c> IncrementalCheck<'p, 'c> {
+    fn new(
+        dependencies: RequestDependencies<'p>,
+        captures: &'c HashMap<SymbolId, PineValue>,
+    ) -> Self {
+        Self {
+            dependencies,
+            captures,
+            checked: HashMap::new(),
+            pending: Vec::new(),
+            loops: 0,
+        }
+    }
+
+    fn admits(&mut self, expression: &HirExpr) -> bool {
+        loop {
+            let admitted = self.expression(expression, &HashSet::new(), 0);
+            let pending = std::mem::take(&mut self.pending);
+            if !admitted || pending.is_empty() {
+                return admitted;
+            }
+            for symbol in pending {
+                self.resolve(symbol);
+            }
+        }
+    }
+
+    /// Answers `root` and every declared symbol it reaches, dependencies
+    /// first. A symbol whose initializer still needs answers is checked again
+    /// once they are known.
+    fn resolve(&mut self, root: SymbolId) {
+        let mut stack = vec![root];
+        // Symbols waiting for answers. Everything above one on the stack is
+        // its dependency, so reaching it again is a cycle.
+        let mut waiting = HashSet::new();
+        while let Some(&symbol) = stack.last() {
+            if self.checked.contains_key(&symbol) {
+                stack.pop();
+                continue;
+            }
+            let admitted = self
+                .dependencies
+                .initializer(symbol)
+                .is_some_and(|initializer| self.initializer(initializer));
+            let pending = std::mem::take(&mut self.pending);
+            if admitted
+                && !pending.is_empty()
+                && !pending
+                    .iter()
+                    .any(|dependency| *dependency == symbol || waiting.contains(dependency))
+            {
+                waiting.insert(symbol);
+                stack.extend(pending);
+                continue;
+            }
+            // A cyclic alias never settles on a value; keep the complete
+            // evaluator.
+            self.checked.insert(symbol, admitted && pending.is_empty());
+            waiting.remove(&symbol);
+            stack.pop();
+        }
+    }
+
     fn expression(&mut self, expr: &HirExpr, locals: &HashSet<SymbolId>, depth: usize) -> bool {
         if depth > 64 {
             return false;
@@ -294,8 +360,8 @@ impl IncrementalCheck<'_, '_> {
         let next = depth + 1;
         match &expr.kind {
             HirExprKind::Literal(_) => true,
-            HirExprKind::Builtin(name) => stable_builtin(name),
-            HirExprKind::Symbol(symbol) => self.symbol(*symbol, locals, depth),
+            HirExprKind::Builtin(name) => stable_builtin(name) || constant_builtin(name),
+            HirExprKind::Symbol(symbol) => self.symbol(*symbol, locals),
             HirExprKind::Unary { expr, .. } => self.expression(expr, locals, next),
             HirExprKind::Binary { left, right, .. } => {
                 self.expression(left, locals, next) && self.expression(right, locals, next)
@@ -308,6 +374,17 @@ impl IncrementalCheck<'_, '_> {
                 self.expression(condition, locals, next)
                     && self.expression(then_expr, locals, next)
                     && self.expression(else_expr, locals, next)
+            }
+            HirExprKind::Switch { selector, arms } => {
+                selector
+                    .as_deref()
+                    .is_none_or(|selector| self.expression(selector, locals, next))
+                    && arms.iter().all(|arm| {
+                        arm.condition
+                            .as_ref()
+                            .is_none_or(|condition| self.expression(condition, locals, next))
+                            && self.expression(&arm.result, locals, next)
+                    })
             }
             HirExprKind::Tuple(items) => {
                 items.iter().all(|item| self.expression(item, locals, next))
@@ -401,32 +478,30 @@ impl IncrementalCheck<'_, '_> {
         admitted
     }
 
-    fn symbol(&mut self, symbol: SymbolId, locals: &HashSet<SymbolId>, depth: usize) -> bool {
+    fn symbol(&mut self, symbol: SymbolId, locals: &HashSet<SymbolId>) -> bool {
         if locals.contains(&symbol) || self.captures.contains_key(&symbol) {
             return true;
         }
-        let Some(initializer) = self.dependencies.initializer(symbol) else {
+        if self.dependencies.initializer(symbol).is_none() {
             return self
                 .dependencies
                 .symbol(symbol)
                 .is_some_and(|item| stable_builtin(&item.name));
-        };
-        // Block locals reach initializers unchanged; keep those paths exact.
-        if !locals.is_empty() {
-            return self.initializer(initializer, locals, depth);
         }
-        if let Some(&admitted) = self.checked.get(&(symbol, depth)) {
+        if let Some(&admitted) = self.checked.get(&symbol) {
             return admitted;
         }
-        let admitted = self.initializer(initializer, locals, depth);
-        self.checked.insert((symbol, depth), admitted);
-        admitted
+        self.pending.push(symbol);
+        true
     }
 
-    fn initializer(&mut self, value: &HirExpr, locals: &HashSet<SymbolId>, depth: usize) -> bool {
+    fn initializer(&mut self, value: &HirExpr) -> bool {
         #[cfg(test)]
         INITIALIZER_CHECKS.with(|checks| checks.set(checks.get() + 1));
-        self.expression(value, locals, depth + 1)
+        let loops = std::mem::take(&mut self.loops);
+        let admitted = self.expression(value, &HashSet::new(), 0);
+        self.loops = loops;
+        admitted
     }
 
     // Lowered scalar UDFs keep their local state in the checkpoint. Admit only
@@ -462,11 +537,19 @@ impl IncrementalCheck<'_, '_> {
                 else_branch,
             } => {
                 self.expression(condition, locals, next)
-                    && [then_branch, else_branch].into_iter().all(|branch| {
-                        let mut bound = locals.clone();
-                        branch
-                            .iter()
-                            .all(|statement| self.statement(statement, &mut bound, next))
+                    && [then_branch, else_branch]
+                        .into_iter()
+                        .all(|branch| self.branch(branch, locals, next))
+            }
+            HirStmtKind::Switch { selector, arms } => {
+                selector
+                    .as_ref()
+                    .is_none_or(|selector| self.expression(selector, locals, next))
+                    && arms.iter().all(|arm| {
+                        arm.condition
+                            .as_ref()
+                            .is_none_or(|condition| self.expression(condition, locals, next))
+                            && self.branch(&arm.body, locals, next)
                     })
             }
             HirStmtKind::For {
@@ -491,8 +574,19 @@ impl IncrementalCheck<'_, '_> {
             _ => false,
         }
     }
+
+    // Declarations inside a branch stay local to it.
+    fn branch(&mut self, statements: &[HirStmt], locals: &HashSet<SymbolId>, depth: usize) -> bool {
+        let mut bound = locals.clone();
+        statements
+            .iter()
+            .all(|statement| self.statement(statement, &mut bound, depth))
+    }
 }
 
+// Bar values derived from the requested bar's own open time and the context's
+// static calendar, never from later bars: `time_close` is the calendar close
+// of that open, and the calendar fields read its local time.
 fn stable_builtin(name: &str) -> bool {
     matches!(
         name,
@@ -502,7 +596,16 @@ fn stable_builtin(name: &str) -> bool {
             | "close"
             | "volume"
             | "time"
+            | "time_close"
             | "time_tradingday"
+            | "year"
+            | "month"
+            | "weekofyear"
+            | "dayofmonth"
+            | "dayofweek"
+            | "hour"
+            | "minute"
+            | "second"
             | "bar_index"
             | "hl2"
             | "hlc3"
@@ -511,6 +614,13 @@ fn stable_builtin(name: &str) -> bool {
             | "barstate.isfirst"
     ) || name.starts_with("syminfo.")
         || name.starts_with("timeframe.")
+}
+
+// Named constants the runtime reads only from the static tables.
+fn constant_builtin(name: &str) -> bool {
+    (name.starts_with("dayofweek.") && pine_builtins::named_int_constant(name).is_some())
+        || (name.starts_with("color.") && pine_builtins::named_color(name).is_some())
+        || (name.starts_with("math.") && pine_builtins::named_float_constant(name).is_some())
 }
 
 #[cfg(test)]
@@ -683,12 +793,79 @@ x0 = close
             );
         }
         // The captured set never changes, so one admission check visits each
-        // initializer once. The per-path walk made 2^(DEPTH + 1) - 1 = 131,071
-        // initializer checks on every bar.
+        // initializer at most twice: once to find its dependencies and once
+        // after they are answered. The per-path walk made
+        // 2^(DEPTH + 1) - 1 = 131,071 initializer checks on every bar.
         assert!(
-            checks <= DEPTH + 1,
+            checks <= 2 * DEPTH + 1,
             "{checks} initializer checks for depth {DEPTH}"
         );
+    }
+
+    /// Admission counts nesting inside one initializer, not the length of the
+    /// dependency chain, and inlined UDF bodies share answers like the chart
+    /// scope does.
+    #[test]
+    fn long_chains_and_udf_graphs_are_admitted_with_linear_checks() {
+        const CHAIN: usize = 200;
+        const UDF_DEPTH: usize = 24;
+        let mut chain = String::from("x0 = close\n");
+        for level in 1..=CHAIN {
+            chain.push_str(&format!("x{level} = x{} + 1\n", level - 1));
+        }
+        let mut udf = String::from("f(float a, float b) =>\n    a + b\ny0 = close\n");
+        for level in 1..=UDF_DEPTH {
+            let previous = level - 1;
+            udf.push_str(&format!("y{level} = f(y{previous}, y{previous})\n"));
+        }
+        for (definitions, expression, depth, expected) in [
+            (chain, format!("x{CHAIN}"), CHAIN, 1.0 + CHAIN as f64),
+            (
+                udf,
+                format!("y{UDF_DEPTH}"),
+                UDF_DEPTH,
+                (1u64 << UDF_DEPTH) as f64,
+            ),
+        ] {
+            let source = format!(
+                "//@version=6\nindicator(\"chain\")\n{definitions}plot(request.security(\"B\", \"1\", {expression}))\n"
+            );
+            let analysis = analyze_source(&SourceFile::new("chain.pine", source));
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "{expression}: {:?}",
+                analysis.diagnostics
+            );
+            let hir = analysis.hir.unwrap();
+            let timeframe = RequestTimeframe::parse("1").unwrap();
+            let provider = InMemoryRequestDataProvider::from_streams([(
+                RequestKey::new("B", timeframe.clone()),
+                (0..4).map(|i| bar(i * 60_000, 1.0)).collect(),
+            )])
+            .unwrap();
+            let environment =
+                RequestEnvironment::new(ChartContext::new("A", timeframe), Arc::new(provider));
+            let mut runtime = HistoricalRuntime::with_request_environment(&hir, environment);
+            INITIALIZER_CHECKS.with(|checks| checks.set(0));
+            for index in 0..4 {
+                runtime.append_bar(bar(index * 60_000, 1.0)).unwrap();
+            }
+            let checks = INITIALIZER_CHECKS.with(std::cell::Cell::get);
+            assert_eq!(runtime.request_evaluations.len(), 1, "{expression}");
+            assert!(
+                runtime.result().plots[0]
+                    .values
+                    .iter()
+                    .all(|value| value.as_f64() == Some(expected)),
+                "{expression}"
+            );
+            // The depth-tracked walk fell back to the complete evaluator past
+            // about 30 chained symbols and was exponential in the UDF graph.
+            assert!(
+                checks <= 2 * depth + 1,
+                "{checks} initializer checks for {expression}"
+            );
+        }
     }
 
     #[test]

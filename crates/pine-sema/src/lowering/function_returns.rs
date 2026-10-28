@@ -132,7 +132,7 @@ fn final_loop_statement_expr(statement: &Stmt) -> Option<Expr> {
 fn implicit_na_result_expr(analyzer: &Analyzer) -> HirExpr {
     let symbol = analyzer
         .scope
-        .all_symbols
+        .all_symbols()
         .iter()
         .find_map(|(name, symbol)| {
             (name == "na" && symbol.pine_type.kind == ValueKind::Na).then_some(*symbol)

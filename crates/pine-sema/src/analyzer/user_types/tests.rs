@@ -64,7 +64,7 @@ fn imported_field(
 
 fn analyzer() -> Analyzer {
     use crate::compatibility::CompatibilityReport;
-    use crate::resolver::ScopeResolver;
+    use crate::resolver::{Bindings, ScopeResolver};
     use crate::symbols::{
         initial_series_count, initial_symbol_count, initial_symbol_order, initial_symbols,
     };
@@ -83,7 +83,7 @@ fn analyzer() -> Analyzer {
         input_declaration_call_sites: HashMap::new(),
         lower_tf_tuple_types: Vec::new(),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
-        bindings: HashMap::new(),
+        bindings: Bindings::default(),
         lower_symbol_overrides: Vec::new(),
         lower_reassigned_symbols: HashSet::new(),
         constant_bool_origins: HashMap::new(),

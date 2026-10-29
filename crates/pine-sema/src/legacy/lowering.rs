@@ -192,4 +192,8 @@ impl LegacyLoweringPlan {
             })
             .copied()
     }
+
+    pub(crate) fn has_string_values(&self) -> bool {
+        !self.string_values.is_empty()
+    }
 }

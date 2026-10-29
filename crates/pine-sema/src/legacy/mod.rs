@@ -402,6 +402,10 @@ impl LegacyFrontEnd {
     ) -> Option<&'static str> {
         self.lowering.string_value(source_context_id, span)
     }
+
+    pub(crate) fn has_canonical_string_values(&self) -> bool {
+        self.lowering.has_string_values()
+    }
 }
 
 #[derive(Debug, Clone)]

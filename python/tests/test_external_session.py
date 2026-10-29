@@ -49,6 +49,42 @@ def test_append_matches_batch_with_series_arrays_ta_and_authoritative_feedback()
     assert session.append([], []) == result
 
 
+@pytest.mark.parametrize('clocked', [False, True])
+def test_compact_append_returns_only_new_intents_and_matches_snapshot_appends(clocked):
+    assert pine_compat.EXTERNAL_COMPACT_APPEND_SCHEMA_VERSION == 1
+    source = SOURCE + "\nplot(ta.sma(close, 2))\n" + ("plot(timenow)\n" if clocked else "")
+    program = pine_compat.compile_script(source)
+    full, compact = program.external_session(), program.external_session()
+    clocks = [59999, 119999, 179999]
+    intents = []
+    for i in range(len(BARS)):
+        options = {"execution_times": clocks[i:i+1]} if clocked else {}
+        expected = full.append(BARS[i:i+1], ACCOUNTS[i:i+1], **options)
+        result = compact.append(BARS[i:i+1], ACCOUNTS[i:i+1], snapshot=False, **options)
+        assert "output" not in result and result["intent_base"] == len(intents)
+        assert result["bar_cursor"] == compact.cursor == i + 1 and result["bar_open"] is False
+        assert {key: result[key] for key in ("protocol", "pyramiding")} == {key: expected[key] for key in ("protocol", "pyramiding")}
+        intents += result["intents"]
+        assert intents == expected["intents"]
+        assert compact.diagnostics() == expected["output"]["diagnostics"]
+    assert compact.snapshot() == expected
+    empty = compact.append([], [], snapshot=False, **({"execution_times": []} if clocked else {}))
+    assert empty["intents"] == [] and empty["intent_base"] == len(intents)
+
+
+def test_compact_append_validation_errors_leave_the_session_retryable():
+    program = pine_compat.compile_script(SOURCE)
+    session = program.external_session()
+    with pytest.raises(ValueError):
+        session.append(BARS[:1], ACCOUNTS[:1], execution_times=[True], snapshot=False)
+    assert session.cursor == 0
+    assert session.append(BARS[:1], ACCOUNTS[:1], snapshot=False)["intent_base"] == 0
+    with pytest.raises(ValueError, match="feedback time/count"):
+        session.append(BARS[1:], ACCOUNTS[1:2], snapshot=False)
+    with pytest.raises(ValueError, match="POISONED"):
+        session.diagnostics()
+
+
 def test_failed_session_cannot_reuse_partially_committed_state():
     session = pine_compat.compile_script(SOURCE).external_session()
     with pytest.raises(ValueError, match="feedback time/count"):

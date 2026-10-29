@@ -11,6 +11,8 @@ use pyo3::types::{PyAny, PyBool, PyDict, PyInt, PyModule};
 pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
     for (name, version) in [
         ("EXTERNAL_CLOCK_SCHEMA_VERSION", 1),
+        // ExternalSession.append(snapshot=False) and ExternalSession.diagnostics().
+        ("EXTERNAL_COMPACT_APPEND_SCHEMA_VERSION", 1),
         (
             "EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION",
             pine_runtime::EXTERNAL_REQUEST_UPDATE_SCHEMA_VERSION,
@@ -313,7 +315,10 @@ impl ExternalSession {
         .map_err(|error| PyValueError::new_err(error.message))
     }
 
-    #[pyo3(signature=(bars, accounts, execution_passes=None, execution_times=None, *, execution_schedule=None))]
+    /// Append committed bars. Without a snapshot, the result holds only the
+    /// intents this append emitted, after `intent_base`, and no chart output.
+    #[pyo3(signature=(bars, accounts, execution_passes=None, execution_times=None, *, execution_schedule=None, snapshot=true))]
+    #[allow(clippy::too_many_arguments)]
     fn append(
         &mut self,
         py: Python<'_>,
@@ -322,6 +327,7 @@ impl ExternalSession {
         execution_passes: Option<&Bound<'_, PyAny>>,
         execution_times: Option<&Bound<'_, PyAny>>,
         execution_schedule: Option<&Bound<'_, PyAny>>,
+        snapshot: bool,
     ) -> PyResult<Py<PyAny>> {
         if self.failed {
             return Err(PyValueError::new_err(
@@ -353,6 +359,16 @@ impl ExternalSession {
             ));
         }
         let schedule = parse_schedule(&json, execution_schedule)?;
+        let base = if snapshot {
+            None
+        } else {
+            Some(
+                self.runtime
+                    .external_intents()
+                    .map_err(|error| PyValueError::new_err(error.message))?
+                    .len(),
+            )
+        };
         if let Err(err) = py.detach(|| match schedule {
             Some(schedule) => self.runtime.append_external_schedule(
                 &bars,
@@ -371,8 +387,19 @@ impl ExternalSession {
             return Err(PyValueError::new_err(err.message));
         }
         self.cursor += bars.len();
-        self.render_result(py, None, true)
+        self.render_result(py, base, snapshot)
     }
+
+    /// Runtime diagnostics, equal to a snapshot's `output["diagnostics"]`,
+    /// without materializing the chart output.
+    fn diagnostics(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        self.ensure_usable()?;
+        crate::outputs::runtime_diagnostics_to_py(
+            py,
+            self.runtime.result_view().diagnostics.as_ref(),
+        )
+    }
+
     #[pyo3(signature=(bars, *, requested_history=None, observed_feedback=false))]
     fn initialize_history(
         &mut self,

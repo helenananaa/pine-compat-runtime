@@ -18,7 +18,7 @@ use crate::compatibility::CompatibilityReport;
 use crate::legacy::LegacyFrontEnd;
 use crate::modules::ImportedUserTypeInfo;
 use crate::prelude::{ExprKey, UserTypeIdentity, UserTypeInfo};
-use crate::resolver::{BindingKey, ScopeResolver, SymbolInfo};
+use crate::resolver::{BindingKey, Bindings, ScopeResolver, SymbolInfo};
 use crate::source_graph::{SourceContextId, SourceId};
 use crate::types::{
     const_color_value, const_int_value, const_numeric_value, const_string_value, is_collection_kind,
@@ -62,7 +62,7 @@ pub(crate) struct Analyzer {
     pub(crate) input_declaration_call_sites: HashMap<(SourceContextId, usize, usize), CallSiteId>,
     pub(crate) lower_tf_tuple_types: Vec<(CallSiteId, Vec<pine_ir::ValueKind>)>,
     pub(crate) scope: ScopeResolver,
-    pub(crate) bindings: HashMap<BindingKey, SymbolInfo>,
+    pub(crate) bindings: Bindings,
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
     pub(crate) lower_reassigned_symbols: HashSet<SymbolId>,
     pub(crate) constant_bool_origins: HashMap<(SourceContextId, usize), u64>,
@@ -428,11 +428,8 @@ impl Analyzer {
         let Some(updated) = self.scope.resolve(name) else {
             return;
         };
-        for binding in self.bindings.values_mut() {
-            if binding.id == original.id {
-                *binding = updated;
-            }
-        }
+        debug_assert_eq!(updated.id, original.id);
+        self.bindings.update_symbol(updated);
     }
 
     pub(crate) fn series_id_for_type(&mut self, pine_type: PineType) -> Option<SeriesId> {

@@ -7,7 +7,7 @@ use pine_syntax::{Diagnostic, SourceFile};
 use crate::analyzer::context::Analyzer;
 use crate::compatibility::{CompatibilityReport, UnsupportedFeature};
 use crate::modules::validate_modules;
-use crate::resolver::ScopeResolver;
+use crate::resolver::{Bindings, ScopeResolver};
 use crate::source_graph::AnalysisInput;
 use crate::source_graph::SourceContextId;
 use crate::symbols::{
@@ -120,7 +120,7 @@ fn analyze_validated_modules(
         input_declaration_call_sites: HashMap::new(),
         lower_tf_tuple_types: Vec::new(),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
-        bindings: HashMap::new(),
+        bindings: Bindings::default(),
         lower_symbol_overrides: Vec::new(),
         lower_reassigned_symbols: HashSet::new(),
         constant_bool_origins: HashMap::new(),

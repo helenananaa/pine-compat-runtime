@@ -119,11 +119,7 @@ impl Analyzer {
             ..symbol
         };
         self.scope.update(name, updated);
-        for binding in self.bindings.values_mut() {
-            if binding.id == symbol.id {
-                *binding = updated;
-            }
-        }
+        self.bindings.update_symbol(updated);
         updated
     }
 
@@ -553,10 +549,13 @@ impl Analyzer {
                                 // Omitted UDT fields synthesize `na` without a source token.
                                 (name == "na")
                                     .then(|| {
-                                        self.scope.all_symbols.iter().find_map(|(name, symbol)| {
-                                            (name == "na" && symbol.pine_type.kind == ValueKind::Na)
-                                                .then_some(*symbol)
-                                        })
+                                        self.scope.all_symbols().iter().find_map(
+                                            |(name, symbol)| {
+                                                (name == "na"
+                                                    && symbol.pine_type.kind == ValueKind::Na)
+                                                    .then_some(*symbol)
+                                            },
+                                        )
                                     })
                                     .flatten()
                             })?

@@ -533,11 +533,7 @@ impl Analyzer {
                     self.define_symbol_with_persistence(name, symbol_type, persistence, var_slot_id)
                 };
                 if self.legacy_v2_predeclared_symbols.contains(&symbol.id) {
-                    for binding in self.bindings.values_mut() {
-                        if binding.id == symbol.id {
-                            *binding = symbol;
-                        }
-                    }
+                    self.bindings.update_symbol(symbol);
                 }
                 if symbol_type.kind != ValueKind::Tuple {
                     self.symbol_tuple_element_types.remove(&symbol.id);

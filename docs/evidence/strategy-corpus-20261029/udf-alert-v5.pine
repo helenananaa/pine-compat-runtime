@@ -1,0 +1,6 @@
+//@version=5
+indicator("probe")
+f() =>
+    alert("observed")
+    close
+plot(f())

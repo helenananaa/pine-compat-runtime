@@ -1,0 +1,3 @@
+//@version=5
+indicator("probe")
+plot(nz(source=close[1], replacement=0))

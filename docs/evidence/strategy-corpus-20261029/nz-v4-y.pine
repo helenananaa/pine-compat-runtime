@@ -1,0 +1,3 @@
+//@version=4
+study("probe")
+plot(nz(x=close[1], y=0))

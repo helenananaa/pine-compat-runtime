@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "observations": [
+    {
+      "observation": {
+        "chart": {
+          "time": 0,
+          "open": 1000,
+          "high": 1002,
+          "low": 998,
+          "close": 1000,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": null
+      },
+      "standard": {
+        "time": 0,
+        "open": 100,
+        "high": 102,
+        "low": 98,
+        "close": 100,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 0,
+          "open": 1000,
+          "high": 1002,
+          "low": 998,
+          "close": 1000,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": 59999
+      },
+      "standard": {
+        "time": 0,
+        "open": 100,
+        "high": 102,
+        "low": 98,
+        "close": 100,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 60000,
+          "open": 1001,
+          "high": 1003,
+          "low": 999,
+          "close": 1001,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": null
+      },
+      "standard": {
+        "time": 60000,
+        "open": 101,
+        "high": 103,
+        "low": 99,
+        "close": 101,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 60000,
+          "open": 1001,
+          "high": 1003,
+          "low": 999,
+          "close": 1001,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": 119999
+      },
+      "standard": {
+        "time": 60000,
+        "open": 101,
+        "high": 103,
+        "low": 99,
+        "close": 101,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 120000,
+          "open": 1002,
+          "high": 1004,
+          "low": 1000,
+          "close": 1002,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": null
+      },
+      "standard": {
+        "time": 120000,
+        "open": 102,
+        "high": 104,
+        "low": 100,
+        "close": 102,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 120000,
+          "open": 1002,
+          "high": 1004,
+          "low": 1000,
+          "close": 1002,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": 179999
+      },
+      "standard": {
+        "time": 120000,
+        "open": 102,
+        "high": 104,
+        "low": 100,
+        "close": 102,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 180000,
+          "open": 1003,
+          "high": 1005,
+          "low": 1001,
+          "close": 1003,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": null
+      },
+      "standard": {
+        "time": 180000,
+        "open": 103,
+        "high": 105,
+        "low": 101,
+        "close": 103,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 180000,
+          "open": 1003,
+          "high": 1005,
+          "low": 1001,
+          "close": 1003,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": 239999
+      },
+      "standard": {
+        "time": 180000,
+        "open": 103,
+        "high": 105,
+        "low": 101,
+        "close": 103,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 240000,
+          "open": 1004,
+          "high": 1006,
+          "low": 1002,
+          "close": 1004,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": null
+      },
+      "standard": {
+        "time": 240000,
+        "open": 104,
+        "high": 106,
+        "low": 102,
+        "close": 104,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 240000,
+          "open": 1004,
+          "high": 1006,
+          "low": 1002,
+          "close": 1004,
+          "volume": 10
+        },
+        "kind": "historical",
+        "executionTime": 299999
+      },
+      "standard": {
+        "time": 240000,
+        "open": 104,
+        "high": 106,
+        "low": 102,
+        "close": 104,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 240000,
+          "open": 1007,
+          "high": 1015,
+          "low": 995,
+          "close": 1009,
+          "volume": 21
+        },
+        "kind": "forming",
+        "executionTime": 299997
+      },
+      "standard": {
+        "time": 240000,
+        "open": 104,
+        "high": 106,
+        "low": 102,
+        "close": 104,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 240000,
+          "open": 1004,
+          "high": 1006,
+          "low": 1002,
+          "close": 1004,
+          "volume": 10
+        },
+        "kind": "forming",
+        "executionTime": 299998
+      },
+      "standard": {
+        "time": 240000,
+        "open": 104,
+        "high": 106,
+        "low": 102,
+        "close": 104,
+        "volume": 10
+      }
+    },
+    {
+      "observation": {
+        "chart": {
+          "time": 240000,
+          "open": 1004,
+          "high": 1006,
+          "low": 1002,
+          "close": 1004,
+          "volume": 10
+        },
+        "kind": "confirmed",
+        "executionTime": 299999
+      },
+      "standard": {
+        "time": 240000,
+        "open": 104,
+        "high": 106,
+        "low": 102,
+        "close": 104,
+        "volume": 10
+      }
+    }
+  ]
+}

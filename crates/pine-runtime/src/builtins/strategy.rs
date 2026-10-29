@@ -287,6 +287,23 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(crate) fn eval_optional_order_price(
+        &mut self,
+        expr: Option<&HirExpr>,
+    ) -> Result<Option<f64>, RuntimeError> {
+        let Some(expr) = expr else {
+            return Ok(None);
+        };
+        let value = self.eval_expr(expr)?;
+        // Pine na means this price was not specified. Other invalid prices
+        // still reach the broker's validation; do not erase them as defaults.
+        Ok(if value.is_na() {
+            None
+        } else {
+            Some(value.as_f64().unwrap_or(f64::NAN))
+        })
+    }
+
     fn eval_strategy_entry(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let Some(bar) = self.current_bar else {
             return Err(RuntimeError {
@@ -360,17 +377,15 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr)?.as_f64(),
             None => None,
         };
+        let limit = self.eval_optional_order_price(limit_expr)?;
+        let stop = self.eval_optional_order_price(stop_expr)?;
         let qty = if let Some(qty) = explicit_qty {
             qty
         } else {
-            let equity = self.strategy_broker.equity_value(bar.close);
-            self.default_order_qty(
-                equity,
-                bar.close,
-                is_long,
-                limit_expr.is_none() && stop_expr.is_none(),
-            )?
-            .unwrap_or(f64::NAN)
+            let close = self.current_standard_bar.map_or(bar.close, |bar| bar.close);
+            let equity = self.strategy_broker.equity_value(close);
+            self.default_order_qty(equity, close, is_long, limit.is_none() && stop.is_none())?
+                .unwrap_or(f64::NAN)
         };
         if qty == 0.0 {
             return Ok(PineValue::Void);
@@ -406,21 +421,17 @@ impl<'a> HistoricalRuntime<'a> {
         // transaction when this entry becomes eligible to fill.
         let oca_id = id.clone();
         if is_short {
-            if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
-                let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
-                let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+            if let (Some(limit), Some(stop)) = (limit, stop) {
                 self.strategy_broker
                     .place_pending_stop_limit_short_entry_with_metadata(
                         id, qty, stop, limit, self.bars, metadata,
                     );
-            } else if let Some(stop_expr) = stop_expr {
-                let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+            } else if let Some(stop) = stop {
                 self.strategy_broker
                     .place_pending_stop_short_entry_with_metadata(
                         id, qty, stop, self.bars, metadata,
                     );
-            } else if let Some(limit_expr) = limit_expr {
-                let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+            } else if let Some(limit) = limit {
                 self.strategy_broker
                     .place_pending_limit_short_entry_with_metadata(
                         id, qty, limit, self.bars, metadata,
@@ -429,28 +440,24 @@ impl<'a> HistoricalRuntime<'a> {
                 self.strategy_broker
                     .place_pending_market_short_entry_with_metadata(id, qty, self.bars, metadata);
             }
-        } else if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
-            let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
-            let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+        } else if let (Some(limit), Some(stop)) = (limit, stop) {
             self.strategy_broker
                 .place_pending_stop_limit_long_entry_with_metadata(
                     id, qty, stop, limit, self.bars, metadata,
                 );
-        } else if let Some(limit_expr) = limit_expr {
-            let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+        } else if let Some(limit) = limit {
             self.strategy_broker
                 .place_pending_limit_long_entry_with_metadata(id, qty, limit, self.bars, metadata);
-        } else if let Some(stop_expr) = stop_expr {
-            let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+        } else if let Some(stop) = stop {
             self.strategy_broker
                 .place_pending_stop_long_entry_with_metadata(id, qty, stop, self.bars, metadata);
         } else {
             self.strategy_broker
                 .place_pending_market_long_entry_with_metadata(id, qty, self.bars, metadata);
         }
-        if qty_expr.is_none()
-            && limit_expr.is_none()
-            && stop_expr.is_none()
+        if explicit_qty.is_none()
+            && limit.is_none()
+            && stop.is_none()
             && let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =
                 self.program.strategy_settings.default_qty
         {
@@ -507,6 +514,8 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr)?.as_f64(),
             None => None,
         };
+        let limit = self.eval_optional_order_price(limit_expr)?;
+        let stop = self.eval_optional_order_price(stop_expr)?;
         let qty = if let Some(qty) = explicit_qty {
             qty
         } else if matches!(
@@ -514,12 +523,13 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value)
                 if value == "strategy.long" || value == "strategy.short"
         ) {
-            let equity = self.strategy_broker.equity_value(bar.close);
+            let close = self.current_standard_bar.map_or(bar.close, |bar| bar.close);
+            let equity = self.strategy_broker.equity_value(close);
             self.default_order_qty(
                 equity,
-                bar.close,
+                close,
                 matches!(&direction, PineValue::String(value) if value == "strategy.long"),
-                limit_expr.is_none() && stop_expr.is_none(),
+                limit.is_none() && stop.is_none(),
             )?
             .unwrap_or(f64::NAN)
         } else {
@@ -554,14 +564,6 @@ impl<'a> HistoricalRuntime<'a> {
         if qty == 0.0 {
             return Ok(PineValue::Void);
         }
-        let limit = match limit_expr {
-            Some(expr) => Some(self.eval_expr(expr)?.as_f64().unwrap_or(f64::NAN)),
-            None => None,
-        };
-        let stop = match stop_expr {
-            Some(expr) => Some(self.eval_expr(expr)?.as_f64().unwrap_or(f64::NAN)),
-            None => None,
-        };
         let metadata = self.eval_strategy_order_metadata(args)?;
         let oca_name = match optional_order_arg_expr(5, "oca_name") {
             Some(expr) => match self.eval_expr(expr)? {
@@ -621,7 +623,7 @@ impl<'a> HistoricalRuntime<'a> {
             },
             _ => {}
         }
-        if qty_expr.is_none()
+        if explicit_qty.is_none()
             && limit.is_none()
             && stop.is_none()
             && let Some(StrategyDefaultQuantity::PercentOfEquity(percent)) =

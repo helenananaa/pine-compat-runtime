@@ -133,6 +133,17 @@ impl Analyzer {
                 })
             })
             .collect::<Option<_>>()?;
+        if builtin_name == "nz" && self.legacy.dialect() <= crate::PineDialect::V4 {
+            // Lower legacy source names to the modern registry slots before
+            // ordering named arguments; the runtime consumes positional HIR.
+            for arg in &mut lowered_args {
+                arg.name = match arg.name.as_deref() {
+                    Some("x") => Some("source".to_owned()),
+                    Some("y") => Some("replacement".to_owned()),
+                    _ => arg.name.take(),
+                };
+            }
+        }
         if builtin_name != "bool" {
             for (index, arg) in lowered_args.iter_mut().enumerate() {
                 let request_expression = matches!(

@@ -14,7 +14,7 @@ mod merge;
 mod walk;
 pub use currency::{CurrencyArgument, CurrencyRateInputContract, CurrencyRateRequirement};
 
-pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 4;
+pub const HOST_REQUIREMENTS_SCHEMA_VERSION: u32 = 5;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -105,6 +105,7 @@ pub struct DefaultQuantityInputContract {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionInputContract {
+    pub standard_ohlc: &'static str,
     pub clock: &'static str,
     pub realtime_updates: &'static str,
     pub calc_on_every_tick: bool,
@@ -292,7 +293,7 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
         schema_version: HOST_REQUIREMENTS_SCHEMA_VERSION,
         discovery: "conservativeExecutableHirInventory",
         chart: ChartInputContract {
-            bars: "hostSuppliedStandardOhlcv",
+            bars: "hostSuppliedChartOhlcvWithExplicitChartType",
             price_grid: "positiveIntegerMinMoveAndPriceScale",
             bar_calendars: "continuousUtcDefaultOrHostSuppliedTradingIntervalsV1",
             quantity_precision: "decimalPowerZeroThroughNine",
@@ -330,7 +331,11 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
                     value: value.to_string(),
                 }
             }),
-            unsupported_profiles: vec!["inverseContractAccounting", "nonstandardChartBroker"],
+            unsupported_profiles: vec![
+                "inverseContractAccounting",
+                "nonstandardChartsOtherThanHeikinAshi",
+                "heikinAshiHistoryTickAndExternalDualPriceBroker",
+            ],
         }),
         currency_rates: needs_currency.then_some(CurrencyRateInputContract {
             schema_version: crate::CURRENCY_RATE_SCHEMA_VERSION,
@@ -343,6 +348,11 @@ pub fn host_requirements(program: &HirProgram) -> HostRequirements {
             requests: currency_requests,
         }),
         execution: ExecutionInputContract {
+            standard_ohlc: if strategy && program.strategy_settings.fill_orders_on_standard_ohlc {
+                "requiredPerObservationOnHeikinAshiNativeBrokerSchema1"
+            } else {
+                "notEnabled"
+            },
             clock: if clock {
                 "explicitTimestampWhenEvaluated"
             } else {

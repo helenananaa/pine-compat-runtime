@@ -85,6 +85,7 @@ impl HistoricalRuntime<'_> {
         self.current_bar_update_kind = BarUpdateKind::Historical;
         self.current_bar_is_new = true;
         self.current_bar = None;
+        self.current_standard_bar = None;
         self.current_execution_time = None;
         Ok(())
     }

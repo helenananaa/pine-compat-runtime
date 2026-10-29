@@ -411,6 +411,11 @@ impl Analyzer {
     ) -> Option<PineType> {
         self.check_feature_name(name, callee_span);
         let signature = self.select_fill_signature(signature, args, arg_types);
+        let signature = if name == "nz" {
+            pine_builtins::nz_signature_for_version(self.legacy.dialect().version())
+        } else {
+            signature
+        };
         let source_args = self.normalize_strategy_source_args(name, args, arg_types);
         let args = source_args.as_deref().unwrap_or(args);
         self.validate_script_declaration_call(name, callee_span, args);
@@ -419,7 +424,7 @@ impl Analyzer {
         if self.udf_output_is_forbidden(name) {
             self.unsupported(
                 "function_side_effect",
-                "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+                &format!("`{name}` is not supported inside user-defined functions"),
                 callee_span,
             );
         }

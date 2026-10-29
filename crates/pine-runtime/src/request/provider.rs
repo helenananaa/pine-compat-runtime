@@ -192,6 +192,7 @@ impl RequestDataProvider for InMemoryRequestDataProvider {
 
 #[derive(Clone)]
 pub struct RequestEnvironment {
+    standard_ohlc: Option<Arc<dyn crate::StandardOhlcProvider>>,
     chart: ChartContext,
     main_timeframe: RequestTimeframe,
     provider: Arc<dyn RequestDataProvider>,
@@ -208,6 +209,7 @@ impl RequestEnvironment {
             chart,
             main_timeframe,
             provider,
+            standard_ohlc: None,
             calendars: Arc::new(BarCalendarRegistry::default()),
             currency_rates: Arc::new(NoCurrencyRateProvider),
             symbol_contexts: Arc::new(HashMap::new()),
@@ -217,6 +219,22 @@ impl RequestEnvironment {
     #[must_use]
     pub fn chart(&self) -> &ChartContext {
         &self.chart
+    }
+
+    #[must_use]
+    pub fn with_standard_ohlc_provider(
+        mut self,
+        provider: Arc<dyn crate::StandardOhlcProvider>,
+    ) -> Self {
+        self.standard_ohlc = Some(provider);
+        self
+    }
+
+    pub(crate) fn standard_ohlc_bar(
+        &self,
+        observation: crate::StandardOhlcObservation,
+    ) -> Option<Bar> {
+        self.standard_ohlc.as_ref()?.standard_bar(observation)
     }
 
     #[must_use]
@@ -380,6 +398,7 @@ impl RequestEnvironment {
         Self {
             chart,
             main_timeframe: self.main_timeframe.clone(),
+            standard_ohlc: self.standard_ohlc.clone(),
             provider: Arc::clone(&self.provider),
             calendars: Arc::clone(&self.calendars),
             currency_rates: Arc::clone(&self.currency_rates),
@@ -396,6 +415,7 @@ impl Default for RequestEnvironment {
             chart,
             main_timeframe,
             provider: Arc::new(NoRequestDataProvider),
+            standard_ohlc: None,
             calendars: Arc::new(BarCalendarRegistry::default()),
             currency_rates: Arc::new(NoCurrencyRateProvider),
             symbol_contexts: Arc::new(HashMap::new()),

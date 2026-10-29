@@ -32,6 +32,10 @@ pub(crate) fn request_environment_and_execution_times_from_json(
         "request bars must be a JSON object mapping SYMBOL:TIMEFRAME to bar arrays".to_owned()
     })?;
     let chart = parse_chart_context(object.get("$chart"))?;
+    let standard_ohlc = object
+        .get("$standardOhlc")
+        .map(|value| pine_runtime::standard_ohlc_from_json(&value.to_string()))
+        .transpose()?;
     let symbol_contexts = object
         .get("$symbolMetadata")
         .map(|value| pine_runtime::symbol_contexts_from_json(&value.to_string()))
@@ -59,6 +63,7 @@ pub(crate) fn request_environment_and_execution_times_from_json(
         if matches!(
             key.as_str(),
             "$chart"
+                | "$standardOhlc"
                 | "$symbolMetadata"
                 | "$executionTimes"
                 | "$magnifier"
@@ -79,6 +84,10 @@ pub(crate) fn request_environment_and_execution_times_from_json(
         RequestEnvironment::new(chart, Arc::new(provider))
     };
     let environment = environment.with_symbol_contexts(symbol_contexts)?;
+    let environment = match standard_ohlc {
+        Some(provider) => environment.with_standard_ohlc_provider(Arc::new(provider)),
+        None => environment,
+    };
     let environment = match calendars {
         Some(calendars) => environment.with_bar_calendars(Arc::new(calendars)),
         None => environment,
@@ -145,6 +154,7 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
         !matches!(
             field.as_str(),
             "symbol"
+                | "chartType"
                 | "timeframe"
                 | "minMove"
                 | "priceScale"
@@ -158,6 +168,11 @@ fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
         return Err(format!("request bars `$chart` has unknown field `{field}`"));
     }
     let mut chart = ChartContext::default();
+    if let Some(value) = object.get("chartType") {
+        chart = chart.with_chart_type(pine_runtime::ChartType::parse(
+            value.as_str().ok_or("$chart.chartType must be a string")?,
+        )?);
+    }
     if let Some(value) = object.get("pointValue") {
         let value = value
             .as_f64()

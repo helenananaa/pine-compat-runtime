@@ -62,3 +62,12 @@ pub fn is_gradient_fill_call<'a>(
 pub fn gradient_fill_signature() -> &'static BuiltinSignature {
     &namespaces::outputs::GRADIENT_FILL_SIGNATURE
 }
+
+/// Pine v5 renamed nz's source parameters without changing their positions.
+pub fn nz_signature_for_version(version: u16) -> &'static BuiltinSignature {
+    if version <= 4 {
+        &namespaces::core::LEGACY_NZ_SIGNATURE
+    } else {
+        get_phase_1_builtin("nz").expect("nz is registered")
+    }
+}

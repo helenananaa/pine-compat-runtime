@@ -20,12 +20,12 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "limit",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "stop",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -78,12 +78,12 @@ const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "limit",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "stop",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {

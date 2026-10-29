@@ -1,6 +1,6 @@
 //@version=5
 indicator("Profile dynamic series history named reordered nz call max_bars_back miss", max_bars_back=10)
-src = nz(x=close, replacement=open)
+src = nz(source=close, replacement=open)
 max_bars_back(src, 2)
 offset = bar_index == 0 ? 0 : 3
-plot(nz(replacement=open, x=close)[offset])
+plot(nz(replacement=open, source=close)[offset])

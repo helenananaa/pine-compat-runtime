@@ -1817,7 +1817,7 @@ fn reuses_nz_call_expression_series_id_for_max_bars_back_history() {
 #[test]
 fn reuses_named_reordered_nz_call_expression_series_id_for_max_bars_back_history() {
     let analysis = analyze(
-        "len = input.int(1, \"Length\")\nsrc = nz(x=close, replacement=open)\nmax_bars_back(src, 5)\nplot(nz(replacement=open, x=close)[len])\n",
+        "len = input.int(1, \"Length\")\nsrc = nz(source=close, replacement=open)\nmax_bars_back(src, 5)\nplot(nz(replacement=open, source=close)[len])\n",
     );
 
     assert!(

@@ -132,6 +132,9 @@ impl Analyzer {
     }
 
     pub(crate) fn allows_udf_output_or_declaration_side_effect(&self, name: &str) -> bool {
+        if name == "alert" {
+            return true;
+        }
         if name == "input" || name.starts_with("input.") {
             return true;
         }

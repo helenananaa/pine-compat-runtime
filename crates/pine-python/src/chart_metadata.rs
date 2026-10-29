@@ -17,17 +17,19 @@ pub(crate) fn parse_chart_metadata(
     let has_min_contract = grid.contains("minContract")?;
     let has_point_value = grid.contains("pointValue")?;
     let has_currency = grid.contains("currency")?;
+    let has_chart_type = grid.contains("chartType")?;
     if grid.len()
         != 2 + usize::from(has_quantity_precision)
             + usize::from(has_quantity_step)
             + usize::from(has_min_contract)
             + usize::from(has_point_value)
             + usize::from(has_currency)
+            + usize::from(has_chart_type)
         || !grid.contains("minMove")?
         || !grid.contains("priceScale")?
     {
         return Err(PyValueError::new_err(
-            "$chart requires minMove and priceScale, optionally quantityPrecision, quantityStep, minContract, pointValue and currency; use chart_symbol/chart_timeframe for identity",
+            "$chart requires minMove and priceScale, optionally quantityPrecision, quantityStep, minContract, pointValue, currency and chartType; use chart_symbol/chart_timeframe for identity",
         ));
     }
     let integer = |key: &str| -> PyResult<u32> {
@@ -42,6 +44,15 @@ pub(crate) fn parse_chart_metadata(
     chart = chart
         .with_price_grid(integer("minMove")?, integer("priceScale")?)
         .map_err(PyValueError::new_err)?;
+    if has_chart_type {
+        let value = grid
+            .get_item("chartType")?
+            .expect("checked key")
+            .extract::<String>()?;
+        chart = chart.with_chart_type(
+            pine_runtime::ChartType::parse(&value).map_err(PyValueError::new_err)?,
+        );
+    }
     if has_currency {
         let value = grid.get_item("currency")?.expect("checked key");
         let currency = value

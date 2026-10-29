@@ -1,0 +1,4436 @@
+{
+  "schema_version": 1,
+  "summary": {
+    "metadata": {
+      "started_at": "2026-10-29T11:31:06.482665+00:00",
+      "commit": "b646ced593a872e47586f0f506052f6d7c14cde9",
+      "baseline": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final45-20261018\\results.json",
+      "baseline_sha256": "9d10c0fe37819ec6a72054426ee565eca2798cedf203d8619a60ea0a90f7b7e3",
+      "baseline_metadata": {
+        "date": "2026-10-18",
+        "cwd": "E:\\projects\\pine-interpreter",
+        "commit": "736996aac32b1da6f92af12dde4548ff0cbd45f9",
+        "cli_version": "pine-compat 0.3.2",
+        "cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+        "evidence_scope": "offline_analysis_all_standalone_sources_and_512_bar_default_input_synthetic_smoke",
+        "input_rows": 7576,
+        "unique_standalone_sources": 7255,
+        "source_evidence": "same normalized saved source set, all 7255 hashes verified; no cached analysis or runtime receipts reused",
+        "bars_sha256": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+        "source_corpus_commit": "28ecae3c645e9269e2099d27cc9abbb1f52ee9ea",
+        "execution_head_commit": "736996aac32b1da6f92af12dde4548ff0cbd45f9",
+        "provenance_note": "Corrected inherited source-inventory commit label; all fresh execution rows, input hashes and CLI hash are unchanged. Original receipt retained alongside."
+      },
+      "cli_sha256": "cadf0e5184204b753902c53e8bd8f96109d54600d665c3c2793c2af5b2a7d7e4",
+      "cli_version": "pine-compat 0.3.3",
+      "bars_sha256": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+      "chart_bars": 512,
+      "chart_symbol": "V-BTC-SPOT",
+      "chart_timeframe": "1",
+      "workers": 4,
+      "analysis_timeout_seconds": 15,
+      "runtime_timeout_seconds": 8,
+      "python": "3.12.7",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "runner_sha256": "485dd3e8f62effe8b1ea03f981873bae50ad5b0998820afee40fa32560fa7044",
+      "cargo_lock_sha256": "3b55229fb85cafd2218cc4545d1d35b4a5278396f775e6a29fa6b9c8cbaf33ba",
+      "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "input_rows": 7576,
+      "unique_standalone_sources": 7255,
+      "cached_receipts_reused": false,
+      "scope": "all source analysis and default-input 512 synthetic bar smoke; no native equivalence claim",
+      "completed_at": "2026-10-29T11:34:08.274132+00:00"
+    },
+    "source_integrity": {
+      "original_paths_checked": 7576,
+      "normalized_sources_checked": 7255,
+      "changed_or_missing": [],
+      "status": "passed"
+    },
+    "previous_status": {
+      "missing_request_input": 642,
+      "runtime_passed": 5365,
+      "analysis_rejected": 1102,
+      "runtime_rejected_other": 18,
+      "missing_execution_clock": 79,
+      "missing_currency_input": 49
+    },
+    "current_status": {
+      "missing_request_input": 641,
+      "runtime_passed": 5365,
+      "analysis_rejected": 1102,
+      "runtime_rejected_other": 19,
+      "missing_execution_clock": 79,
+      "missing_currency_input": 49
+    },
+    "compile_accepted": 6153,
+    "status_changes": [
+      {
+        "sha256": "3388abeba6d500d8195b3617958d07d28ef9a6bfb08f07acc26b8c591759b8e1",
+        "previous": "missing_request_input",
+        "current": "runtime_rejected_other"
+      }
+    ],
+    "newly_accepted": [],
+    "newly_rejected": [],
+    "runtime_pass_lost": [],
+    "runtime_pass_gained": [],
+    "normalized_sources_unchanged_after_run": true
+  },
+  "corpus_mode_counts": {
+    "strategy": 6706,
+    "indicator": 146,
+    "legacyIndicator": 399,
+    "missing": 2,
+    "mixed": 2
+  },
+  "validated_receipt_counts": {
+    "analysis": 7255,
+    "runtime": 6153
+  },
+  "runtime_output_count_differences": [],
+  "completed_with_e_diagnostics": {
+    "source_count": 311,
+    "code_counts": {
+      "E_STRATEGY_EXIT_PRICE": 173,
+      "E_STRATEGY_EXIT_QTY": 14,
+      "E_STRATEGY_PRICE": 35,
+      "E_STRATEGY_EXIT_TICKS": 61,
+      "E_STRATEGY_MARGIN": 45,
+      "E_UNSUPPORTED_ALERT_PLACEHOLDER": 1,
+      "E_STRATEGY_CLOSE_QTY": 1
+    },
+    "sources_by_code": {
+      "E_STRATEGY_EXIT_PRICE": [
+        "86459a1fd6042c5ef89a231ad5fb1daab339c4d6ea7e52e2ef713ff20d3a9e9b",
+        "994876383d58d1b2ac3063a88f0147d5f92a548030f82415a6bb8e53ef2c1923",
+        "06bafc6be3adb30033ddcd28d07548f312ffd8fdbca5e44e9d4dc9f33b215ec3",
+        "34200f6d40ddbce8eea1fa2d468a218ff501a6ff7cca4950f1e87d9626de5adc",
+        "c6a9098339f8ea712ae866b1c921b85ac636f37def3b7b790ed64c190e69bdc1",
+        "f5bb96aa1abef5d625cfc38e2653aa2e1613a198bf93b8aca254578a378dbc11",
+        "4cb42d8cb9b08fc4fba9a419f13feb98ec8e3a2cc15d92425e6279dd23150f7e",
+        "81973814bf55d186cf5be639eeca6e9295ac4b37fbba3e5aa85c7561bda3fe30",
+        "fb251952236899afe4678345a701d6e9fe9ed496d7cdbbd19dbf9ad6f4f17e92",
+        "c2863c6809e8170a6d001ba577ddcdd874ee8cd9076eb80980081061708442c9",
+        "d463eb09ed7ffc60597a2aa0db819aa404f74f6066f8e645397df6fe308cb940",
+        "bc72135966f5617fcf60caac45a2e2ece7799f721e0849e2b0237c9ded0de665",
+        "c4a4d7e5e14512550dc5a8d784cf4cb08deecd08f9adad5826bb1786d2125c86",
+        "43f2f5f8d3126e41d2add2559f84624166dc86b3787fc174d83755935cb2b5a0",
+        "49ef06e27837527da04f07927885b1d75c785ad983ab203f95fccc43955f6cc6",
+        "d07e74613f0d0cee08d67ed5dde8f9f347378e58bdf4301e2d0215947932ebae",
+        "50bf16d6e65815534848d40c192972238022345eacc4ab336ccfcf839ca77422",
+        "011652adf7467f7907aad81eac4adbdf1a09cf3f653d3a8c2c9a2cc7b6582875",
+        "b06225c6ebbe093955d4a0c3b9743a9114150471e9c886dc53ac2ce64afad8f7",
+        "e0ab1db42d76a34dfe432450d35974cce9ab5f178743cb56556fb29be4ed7a63",
+        "5ecf9023570f5f978b4a1cefc06ab21fed0de950e16013d1d3fa0328ba544a52",
+        "19b3bc2606971d2ccbd27597cfbe79f771a56c32ee015496e2b092ad3bd0c0f9",
+        "8caf912d3793cf59195e2624d900ff36e99199a0c9a86af91b7f1b5a80c4587f",
+        "ac923d52885b2a0933cf9bf228e815fc0030eb5a6576605145b516720e3799ae",
+        "61768fc2987820446927a10de4318471399da9b7d38073a879fb837f770c643f",
+        "71678db67c9b92723a628f04212faea7bf19376a4fe334ac4255f27079413f60",
+        "6a488b665d6c978bacd95fb929139bc0a6570273704979c18ad72241ba4e951a",
+        "9e23f9880a55478af245a2a6188c0c991189c16c49329bc7f5eb480a1104b0c2",
+        "2cd11307be19ac3c3c40484f8c2b55244a5f07f9533118ecb751394d8681697a",
+        "d81ef165f876c883428bf26add965d7900e26502733f8eecc3b18c631145f76f",
+        "ba7417a87990146419cf56fc9216a0f0e2032b8db7f32295f3f6552775666c1c",
+        "a9cbf41ef66c2e7b93c39a48e41944f2afebb62c5708c0cdef1f6da415158433",
+        "0e00859f1856e793d4f6a4405a0904e4bc787eeffa913942d16eaaa5234b89b0",
+        "31c6c844181ba6c1b0c9346ec4c67ad1f182b2b8717ae0672479429947995281",
+        "5b2198b06f030305913d0b4b0e845a0b640a62fd0bfe48aa0bc2208a5038e176",
+        "5651148b182b2c6dfa93e1edd29001d08f23ede136b2f4cc58db2c4c5dcd7bcc",
+        "a3c7746da14da1be2258ea2fc88e993e0bafe19942fc67122e0e9d57c4d627e1",
+        "ac5fb2f372c64356a13dbded22e07db2798b6dc67caa009e00c4b7640eeb22b0",
+        "e620e44da333eb04a827e7bad4747d3403aa600e7a6841f7776295bb5b0ab717",
+        "1fe44f5c510d9bee8bbe34c474f9de6c2fd067e9a42ebd849e25e2806ec27a0b",
+        "4ac9f60aec6a69f853aedd8cfc858a8df1401c13b9229ccfe164378270d7a090",
+        "14d5b3132243f4a372f1d9886343616b55fa074142db618d52c896c85f912742",
+        "4569eab4e395bdd661ef77def17cc808b1b954f1401d368fd6827fc36e5e83b5",
+        "751f6e0a1bbbfaddc561f6a28bb000d599954090347b3efe7526806904421f36",
+        "9a24a5ed1832477231c37378b661b23aa9c9dc4100cdf134ed27a0084c8ab61b",
+        "f397dcf18d254afdb79ca86e16ec453f66fe19c479f09e4fd700c0525c08bb23",
+        "d7bbfb7a6c325bb8e21cf1b4c7081f946da5c2aaa5b1b20ce460076911fbf672",
+        "08d5c7a4170db2f970093c96ad55ba372435f2c6af359a702bae6e06910dbbe1",
+        "e421fc141d19e8fe5c41b9c79c3f7a9aca5d17659ed2733719cc74cb3d122ade",
+        "1e76528780c22b15a355df0f86071b41f4b09ecfb76333e691f46c8c6707c72e",
+        "e4f57766f13889c4418c94b27c10ee46a33e9b3ef08bb857c4e2c7df1d8c284a",
+        "202140234c54c993d49c572a9a2c0c78b645afd53d02378d1609ac54cd255959",
+        "0f7f9801b8f94b705badd548e3770ad3c907c690a6b74f82ab9e8c76bf03b875",
+        "a1fcb7009027bb213bee24a0359baee30bcd5a3fab8ebebcea2fb40583aa7730",
+        "e9ca747aec8d09f99ff635d9281c74edaef71fef26ea84987beb86087e6a615d",
+        "c231c632ecfffee895d17fd72fbd7df58c2261adeff67586a42f8e5e81d4d32e",
+        "b0e92ce4333e7097d4fa64c49d8b626531f82b4de252862d93e5facc27c7998e",
+        "301be7999a78a94028765fb1dc4fc12858c56f2a6089e60ae57f26c38b252419",
+        "d292698a98f228418be672a8c6e892f13c48bd3110cc77e582d5a87243de862c",
+        "0c711b93acb36da6be52c3cd7b18e8609064b44c7ca2642886ebcd672c65831b",
+        "b04ce1fbbcb99516f247cf2449650b6855efa8fd2799089c3710c9dc9678d9f5",
+        "749f7ec934ce74e8f3e3c5d4bd7d8a86d3344348ee33627e989e98290967f6e1",
+        "e08648bf3071cfb3f026d8e55b3c6c045d11c8d009ffacb6736f1f8c64848181",
+        "9b9b3a013e144dbde43d4d03bf4b1089a586364595fddbfe1f23e272b2e293af",
+        "5a1d4d1d877b155ca844a707011695577ed823e9ed4fdaeb4c380d4dc150ddcb",
+        "ab4dedf9f284c4c9819b73a9c9e72f16211b14939b304f5d7c8f9110fe61484a",
+        "c931f96a7741900c9fafae4d3fe6d6a9978353e1bdc817a365b9efdb8d512ebc",
+        "1c7e1aeca5efab384a78cd9d110069bfc3f1b0735b29ffc66def2511debb7b54",
+        "967f8fb154d0377b6eb6e248eb0e00c5d073b903d9a72c1b79f51bdcdc53a364",
+        "916dc7283b4da4e29d72001f94d2fc9ec0a673846feea0a759869b1fbc014e19",
+        "15d28af77031fa8759c87274a44b985a020678ddb9e2034af4c849a8d8388583",
+        "191cad80df517384240fc1727e3db448e031987b9f3991e42bc103bf2c0aafca",
+        "39d56baa96eda0eeb0b9741595aac2ae6d115e96188f58f722dd6e706bb2760b",
+        "2cdda40c854cb1b726cdf872cb71cbe02ed6374e4a89ea02cd1726c63a7894d7",
+        "e40064ce4350d7a091cade1e0f4f092c99ed95ea7ba2bb40492c6d0337bca0b7",
+        "0fd6b46b6e240ce061a070981f8509e12872a1ad262ae1904c8f4250950b9ce6",
+        "911a7e25b5cf96be3a39f14becd8881c4aee9829ff98fd3318cbe133bd445a9d",
+        "f48fd6081430dd4589206ff86cb8921278898363d2fc198ef5b43264d2ab2be2",
+        "c1d6a047ddbf7f735d1fd4390dbd701fe5c5eed22e3a5817063c47821e37b54a",
+        "f734af89196983032336f620233a32ad878c09500a6c4c04cfaaf0257a0a6fb4",
+        "bdbf700c3bbf9568084d485797f3e232aa101a87e3d7b4840dd4f905dd870b9e",
+        "e7fdb98d63cd0a78b39dddf4f22ae2d081deb9293f698b203f2886730833225d",
+        "5c72314e9034dea4fe2b18864f2e0f231f6cd73a82cdc68ee434fba32471cf04",
+        "613e5d38d9a5f01989fc26e6f11db81469a6f747b8c0d5120a3361da0df64205",
+        "ab591bafe4596049ce56584518b6b6a025f9667b68109d873c8c12b9420dd0b5",
+        "859f117baf3a7b274f9fceb0a2a585981ebaf463c34117dcd3b83ca7206e7756",
+        "58663121c8508b95a38e39089e143ca4dad8a3a2403ba8b698d9a9d61d7221f5",
+        "f38a0d5400f75dab1a0e581692e8d9dd76689a9d864810a5250840a7bf4ad4d5",
+        "c0dc0e98240ef4e2ba28d1a00e9076fad3bac73336a7747d3cce57f9e92b20a8",
+        "3fa94980cf050f09d02a3f06ed7ab1c0bcf23da73d3998e50aa0790f2ab660e7",
+        "f6abb49e0e42814a96e72591b8944b0bc5e69778d806e09416013ae77cf6e255",
+        "1f90a7b9d4917f0033a9f5a88bfa5698133a047de4f01e573502d113f5ca24e0",
+        "5e7935e4b7b036491cd3a569bce7d8f38fa616b853abe3b191d03ff79d57e307",
+        "48293e9025935af16c18a67d82cc269e4a6b5ee9d7956f823b143e063d1afdb4",
+        "ce50db208b280a5f07ea517bede5cca22959ce07670aa1542074965c4c6ac2af",
+        "98518f1544d818144470e6f1741729441af985f98037bd88c4e166af45379b1b",
+        "23e0d52bd1b92b9f60937b5affdd998329183c1de88679ca1b61b9e7ba0ebf3c",
+        "224cbb9edb8efc667e7f71d73bd8300074f2b9b44e9eca4615d78ad88ea5c387",
+        "eb41102f9b0890c1516de54dea05bb2d55690beccd9dd00917cf071543632d33",
+        "cbeb3cc3de90607c0bf8d8efe7d63f5ca4bb2935e1f5ab00bc86397ea50a360b",
+        "167270a23a902c94208a5c69484065fcd19425b0635b413bcc2490b1c9ac1634",
+        "d83624d4d1d3f77fd3ae11e3dd111363314c5005a55f73ad3588cf4a03355a64",
+        "30dc9e986c145350fd642a8441596b85bc903771f77fe1308f73fe406f6ae46f",
+        "056692eb7ed1409b5846f6c0246fa43053d2f74db78b6fc68b312c26d97f44ec",
+        "c109385e35713d925446e63d6f139ea6799bd2fcd357487b4b644f558d41a231",
+        "826a6fade35171abcd43f405349ea04cea6c5a15a3fe26a25edd88c771302a7c",
+        "d76bb1af559e978107417df9b47abe4c7135badac3120b690396d50ff4a218d2",
+        "ee6d6941ca77be0c79a39502b657e0cb49430cce09828d6d9319fab3959e9fdb",
+        "4c6b6810c4923e0eba256d7210b2c352aa2d976085fe58bc713682d56a1d9ddb",
+        "e5ad8ee77623c80808b3f6a51af9986add126e6672d0c98f66d2fb93a03f4806",
+        "c50f2dc7e8810d810c34b97116bf36635bc2971b7d7927a0af1957487129a716",
+        "0ee82c10cd876543e6c6297a3eef27b308de2decd1854eede33380ddaa5fb388",
+        "4e6acb06448a13dc6a30cf696abb30b1eaa2f884702ed4f93a9717dd5f7d70f8",
+        "d0c875c5068ecbe51abb2b71b174f3faaed68da142763a07328cf85d9a471249",
+        "f1b1aa27cf19f38ce1c8ad37631e09ea846c1626ac53885ed64d8120b817c869",
+        "650f612648fd1fd0b4786a561f85d5355cd011e613539ee37af7f672c5efb8cf",
+        "34c330da31c2e2bf0eacaa0249c2ecc57c7937a8a9cdfee378d1ee4479a3be3c",
+        "c188afb73acb3cbe1a94dcb86d16c5399cfbddc8c34bf077d21fc1f442097cc4",
+        "42ca3e81abaa8d8508c98e39b121c3ca68a7eabf5c924cc15298f31c853bd3bd",
+        "a174f14f3023a706ab22818b2907878b1a5508e8c6a96a32eea17dbcc643d692",
+        "aba162deba764bb7ff2dfe0d255d5aae77aa3e36f1c42df82729a869c753b701",
+        "958c5d5d00995cd77e0908c5115003f1d2f40b928406a8168655ef89951c7c32",
+        "ce1cd9cba76608f2a43b9bf55dd17a8795d408044a9182e7eca2034745565a9e",
+        "6df046e2ddffcfd352a204e010a5692753ee8258bc8125553095b485bea93445",
+        "b1b9eef3b3249bc23794de477cefb08fa13f06ccc74410e112fb0d574bc54f69",
+        "b110c0ac81d45ff47ffd682b5c71d5296ccf912709a75705c6252deb9e288a4c",
+        "be4031e93c09f243cb8c3f538aa7ddb80c79f4e11741b9d5688f5e5ff55b300d",
+        "9896160561f357e2cc8c01505b12d6f9cfb42db41e9de1613fadf632e721a033",
+        "6fda8f1b10e05d889caeecd3d81ea7655ebedafb56dc7cdc51cfe492ea108310",
+        "5302324c73e8f9a2782d25310be99173f757d662b8e97e0d8956920843e9f663",
+        "fceb835dbe744e011088760fdde8aac37d681185ffb7fb40fc08ac888de7a549",
+        "3691042a7e3ae77d4f2373ff8269231a0eef16e13a01e56f928ba1a968af2155",
+        "79e818c1e294dbe6a62b805921b84ff82394da6a021f24c187e7eb6dfd6a4f73",
+        "663b882691fe19a0b5b155fa2149685a28f7ab89d59bb29a10b0a4a08c6145c1",
+        "38eb97dbf93b4f8454d3293d9b3d02fdd8f0f45157112c7e807938e93b63dc42",
+        "3bb412f1e92a4490634101908ac1c3b6801dfd23a3a261ca06572b81af4c2d3d",
+        "9a2c2dbbb60e9894269748efed34d3ecefa863021ffbbd2fc905eb41b9b48443",
+        "2439fec34ca59aa906a0dda19b2851593c71361ac5ea5ab41e20d9901179310d",
+        "0275219008c2b58a2729fd44001e40f30b2b37b4c757bdc2e2067e8e6857c047",
+        "935677d15e8ffd7c11e00c2673be8488eba2a5c0615b0fae91a2b18a58765579",
+        "4ff8692f3b9416e27a2f893af2ecc84d03a7a6bece81f4bd94ba6802a981c5d6",
+        "2331bb649b4bcd083101e63d0a8828fa2fb2b6ac59ad81d69c0e95714e166d01",
+        "79ffd4244bbb09bf1d4a70eddaff9f499217df4e620e4c0277f070873be1456e",
+        "f8320aeddb23a995f06c9757b120df635b760d7d7484c3619f0454756dfccd5b",
+        "85bc70bd2d49ab212e2cc4f272e48df79ddce2b7d0fe32cf628d58d6983bb18c",
+        "e7d3b27ba0482b9b316d5855ba36a7e9f30bc1e426b5b0723f595fb92dde74ff",
+        "9ef9ba3b7e224d4dddb48c84fc541590daeaed794655144086526b00b195bd05",
+        "f313ab78fec0118c0370909122ba93bd99b7b4ffe49117652dab118627948a95",
+        "4c846008d1faa68dbeddd7e059ebb1f4f4a3b15950160c1087e69d22cf2fce6a",
+        "5b6de6031ad1097f78cf19e313a90340162471e38942c8efcda346264fdde3f1",
+        "aae62e00d1c6566d3a1c81f21cae4611efd167f65ae29bf30244c5afdecb77e2",
+        "75591c260f2aef313be208e129362d4a686b3e30f1518fe9f3ca206cc88536e2",
+        "027b911949b5784327b3fc979fb22df100db4788a807813af9669b06e6f68653",
+        "0da623df81451667656d84709c28841a938a73cb05ed63b1e2a6f70669443a5f",
+        "84db380485bc5bfeae06036ae056221df65ed38ce5e76d94fee0f51f9a2b3a29",
+        "46ef4512c4b58a886b2273885c0111fd109b9ac4ab9dd4916be83f0c28516d5f",
+        "c5cc4453f124d255813451e1f994b3fdf999d4c1c90a73101436d3f3e1c17cea",
+        "0893db498f7b29ebfe0e9fe01940166e99ac04203983bc9f6794c459ca65e6de",
+        "b63ff6cd415516b57a1af7fc2daed75631ccd5511d5a7e517bc65021d8718c98",
+        "e5ef0723dbff98e67032bd98a0fa3779c4535d9371feaa4f831167d7eb2aa30e",
+        "98d5fdef6600968e9a175b29871701d25df7e62a94b52ea1518877ae434566e2",
+        "c3c0928e8e61d6e063afec431ea9dcda51f4395553c2298bc6217a4136398e3c",
+        "68f68fd27a30c650f7151381a85c0f90260347765cba1f26381e8c5f87d8f2fb",
+        "01f853e3591d32d285ffa66580ea385c8110c4966c75932ebd8d4dda73de9680",
+        "f587326aff677e5775fb4df121d78fae547b6ecf4aa4d40291c24ec3ea2e269a",
+        "11bb2340d874c9f0d7f5ee8533afdd849cdbec297b3a28f21bee4896fb25ade6",
+        "735510204292c1b140c286a12807adcf1143775bda3df5745725be3a7544c9e6",
+        "6699195246ec673cb28e572a277e4eb630c23ebb65d5074f4430dac8f3cf9130",
+        "91b76d7fb56bf630f255e9ef17a529b5dc6a6f54b64f581ac0952bb03143de89",
+        "30d2d20a2b677d5cfff76b127d1a7718d1928e50a864657c7b1f0727caa00eab",
+        "e0f71014f5dc297e332ae73fa4d10d01d0c08a3f56997facdd9b1495d7c9b8a0",
+        "60bbe9bdb670b3a18357b459ec1368c9ef720d87500705e08f96c951dfd14505",
+        "e1736aa3ae3547211b3a494762779fa07f5481ee7339b182e7f93af6fb143920"
+      ],
+      "E_STRATEGY_EXIT_QTY": [
+        "994876383d58d1b2ac3063a88f0147d5f92a548030f82415a6bb8e53ef2c1923",
+        "49031a650462a4abfe4520963208ccc153c26f172d74652c047cfb16a0c9c305",
+        "a1581a7ce508fe7261795f343b941d6b7583d0bf0a1aa8949730adfcb60f15ff",
+        "451724b36249fb03a35615032f779c5585b665d651baa6bbfca8062b9f015def",
+        "ba7417a87990146419cf56fc9216a0f0e2032b8db7f32295f3f6552775666c1c",
+        "d1c724edf1304babac039a1a5d8dcb2a2c3a8639b5f2d2c294de4d426b4f859d",
+        "1f5ab12a08e2d08132f68d492efe824859837848e848aa916e6eff93204f9707",
+        "8bd6f023a74a41d4acb824ed44c3fe123f49eac9bd0c8a32cb93d0be0c4573cd",
+        "cbeb3cc3de90607c0bf8d8efe7d63f5ca4bb2935e1f5ab00bc86397ea50a360b",
+        "d76bb1af559e978107417df9b47abe4c7135badac3120b690396d50ff4a218d2",
+        "b7dcdceacf377ea5599b3475d3d43c2dd35cdf4bd799b7c4fb4cbab328bbb90f",
+        "9896160561f357e2cc8c01505b12d6f9cfb42db41e9de1613fadf632e721a033",
+        "093da5b317bf34a388b2abb049d17950fa8a8f926afad2f02842944eac1f8ab1",
+        "27ac78daa5342760df536bdc83ff4e254fb1f28094bfaac685f2fdc73bb21968"
+      ],
+      "E_STRATEGY_PRICE": [
+        "06bafc6be3adb30033ddcd28d07548f312ffd8fdbca5e44e9d4dc9f33b215ec3",
+        "b57ae4e83e6aa82cf7f68f7dff7c466f9fab5dad6f838102c0c1fbd79b8f3a43",
+        "4c8938606920f181956011fe97f1acbc9641c22405834fdb3a1a90c66419cb20",
+        "a85980c46bb9f8ac887a86465f423aaa3cafc759e484838804e86ad505e02c87",
+        "5ae0fe803416f274c3d1681453680ea9c54c9750a59f0c7d554bedf497ae0b90",
+        "394f7961a86a9a4cb6bc38832819865bf2d9b1063166fdeb2651793791ff01dd",
+        "e96e4f685b5be61ded8766dc81692861d56e38125cb91d4edc54608e8bfc0728",
+        "560c6287d1d3c8540c5628aee59754cf4aad8999f268b66e26e192e776718187",
+        "71678db67c9b92723a628f04212faea7bf19376a4fe334ac4255f27079413f60",
+        "a9cbf41ef66c2e7b93c39a48e41944f2afebb62c5708c0cdef1f6da415158433",
+        "4b488c58445f5f7bfe304357d6016f4b5b851a3be291821bd59d2b54ab95cf7f",
+        "9b9b3a013e144dbde43d4d03bf4b1089a586364595fddbfe1f23e272b2e293af",
+        "efab6372ca28464081dffdf897584f561ee2350aeeb4093098bbcec0ea163234",
+        "2cdda40c854cb1b726cdf872cb71cbe02ed6374e4a89ea02cd1726c63a7894d7",
+        "3fceb74bb523c4911a651444221c0351c85de7826ee45313357c130f1c2a0c98",
+        "58663121c8508b95a38e39089e143ca4dad8a3a2403ba8b698d9a9d61d7221f5",
+        "eb02ad6d9f67ee50bc3283e0b406a057bb6c89a0191d2c2b8542f098633fa82d",
+        "a0186ff4e5115aad816686b3e7d032cf86d9c14719ced81b08e6a85e089cd944",
+        "f6abb49e0e42814a96e72591b8944b0bc5e69778d806e09416013ae77cf6e255",
+        "f5b9e9a48973a0467f48188d18bb745462fdb08412047204f842a102e8cb2615",
+        "cb4f33b72d881c44517483fc414f7e4be661ab365c0332a8ad95dccbc0168c06",
+        "c7c89f8219698b6f2b2094d9d8638d2602869fc1b8bb41f68b2e63c82c145f37",
+        "b6f6f83f14fac0b6256187aafacfec293e89541dcd9fb82233923700f00f5407",
+        "7572c5df47c936f96ef0d5018e326437a43d9d7577b3e25ab2b40ac89653a218",
+        "30d7885b805079db4128724e34b813172d05d5f59de1d79e5b043ec9ce134f8a",
+        "0e0bc3f67fe9b36a8be16d319cfa904f2279ff8496cc1f5c70132d11843d8b1c",
+        "e0619d3b7965632d97f593f7cd7b9e1166a639ea648efc31c4c8f37cf28741f5",
+        "11708222a872994966d69a4fbcd4b70c21ca0e7512b088925d9528b9d89c0dd0",
+        "79e818c1e294dbe6a62b805921b84ff82394da6a021f24c187e7eb6dfd6a4f73",
+        "8831eaba817481aad498fbe9c3d8aedfbf1b7ecf6860b9344705eb97c60cab62",
+        "ea0bce6286e1367a3aa806698c01375b67e12737892094ff0bc68e305b9e2576",
+        "5b6de6031ad1097f78cf19e313a90340162471e38942c8efcda346264fdde3f1",
+        "a671c9c384eeeab1c634b2332a76473096ceeb473d541c04dd443014080c7be2",
+        "f40a0a310aa83353811d68ca04045f4979b8a40ea4e18b6a3212802297ce75d5",
+        "9503ef4377517450c9b8e53bd1fdcd6d6068b59f087506c85e6c7e69afc21cc7"
+      ],
+      "E_STRATEGY_EXIT_TICKS": [
+        "47586bb239da62a73d6fcf52de0d34731344cfdb141a1e0db20dda2cfd0fc718",
+        "4f435d98dcd4d1f79801782ec339d0d715a67fecf9d7d415407b8e9d792e583e",
+        "bb4617acaf10d1e2bedc523f2e504b604886fdc3ad9836c7ea61b719f2d48281",
+        "ab758ad49cdd0a7837522166db21670f68348550446368bb956c4cad488f4d58",
+        "e99b4e56af0879c43b1fb0d1d0f2b53089c1cd65e4c2db3eec6728d7c6dcead9",
+        "5eaeda3549da33281221e2bff130962537661186937bb3e06f4aea1e878b1cee",
+        "8d5d2f40d60875af0d4f05b199d9da79e50016ea5676c46e0e9ed0dc1c85d3f1",
+        "d67616ecc247bfe8390e341d673184e78b10de9df3b62b0ca3e4e6c88a7e9612",
+        "09db10955ea91e2826d7b8c5e75944eced5af57b4b6daae88f2df6713e6e12d3",
+        "2c3229a8319b86febbb909322990d269458d94a3020a86365df419b3c18d0e68",
+        "0989eafe90c3b702c7f421511a89cfb3291ad5c8d9c7c84d0fa58dda33d183db",
+        "0c39290eca37784afcdcff2ec400bd7ed081037c7a5278bf2888fe464c64131e",
+        "9c3ea7a8695cbe9038d58d1d6108a09e4a4683c7d4dd46f8c229f29d81a0433b",
+        "4e1736cd7a9b1c2496d9f7b0e4085a8ff521422d581f78bebb93d2a7dc0406dd",
+        "d3f058af2524c3bd3993da8310a3735de643cb53f1486bbbc9f8d2b102bbd2d3",
+        "92ed359a8ea77f5459101a380280ef72e357df689dfe085f64e09b58cf31e6d6",
+        "9597cac0722ac35ead13561a23dd7d987bc07bc3136b6b1d10f8ed1901bcbe4e",
+        "ed9a75e8d1b543874ea575430cb83c47cd6a47631fed2e25c754385fa92eee2c",
+        "daa1f9defe01ad528b69376acbb62fe88d949a233d10d816c4f84e334b423f4d",
+        "2898e5c95fc7ce2c4633300ced162d842254efed6d82fa40719144467e67824c",
+        "87352b2940667ec2cc638abe8c32bd3e55d611942abe203f62602262f68f2033",
+        "3b55d309417caa20e92ed75e6019c69b1ed0108de77b620365e94955efc60f06",
+        "a383a830384b1de08b09a359014804bc51e3456e14726223b31f768de055b15b",
+        "63a4d58e0313c2a37b16c5676c6511a42a5dc1063fe2048c035eff07f69e9426",
+        "4e96abce112ec138f8eee944b2db552b505dd6ac2e6737dce406b5637598a774",
+        "cc47efe6cf1276db454dbb4d048dab79140e5fc742c0dacc108af5c068d96b42",
+        "95c76f121926fed67fb535e1f238ebf28f975c0985fbffd4dce333dcd29f3d72",
+        "80218a99192d5af712a274c66bd5436971fa8d6797b5338f5bb984a679a6cbd3",
+        "56cde8e04cc336893d0ce94fe7e8b3f2746dd202c01a020c3b9b459d61a8bb56",
+        "3d7ea4ad7cef2133ff27a343762738c2822e7e252c27d4f00ee2fb3aeac3ff61",
+        "0ed9d77dea2aeb8bd2f8c53f72971bb2c92f29e3cc7a89d6ee1a66c617b231e5",
+        "5ae6ddefa08372a38aaa0db2fef72bf121c59abd6492bad1e9132a68fb316d0a",
+        "dc7ccd8bcd8b94c577a85a42443cb43db694970365634ff21fdbc6ad7f4a9c54",
+        "c4b9c7cfe30a39ccdc0ed3752ae7259a88490da1fd980571010cdc386f8521fc",
+        "3deaa1cb3c008d316161c6a63742869d9a24123ec2b318026b7e644a726aaacd",
+        "5737e0a96f11741819184a7d65722b2732ed113d8792d2d4b922081a0a10fc26",
+        "9a408160d15f4b7e54788d14bb123247c968f81024113d784b7a5322006e0610",
+        "04a40c6e70bf0cb65402dc2c431122782cfc3b1a07e0d388e861fd219eea0d06",
+        "a3e239b3a8e021eac127c7d12e9543adaa32c3fdbc38a56ded6974e1f4a7adac",
+        "e6b1335765201eae403881e69690c3d919d70c75a23197ec9d7b49d9718fea9e",
+        "037ea4c78b17bd6fc3962bb5f94d6a4822e4fc84ed6f3a4b5006d80b3a99e5d0",
+        "39a3213378b564ca1612927a328242580d9d68a6d9412ee5cda99f6ad312fc95",
+        "40c44aba7c4b29a2c62e9a4a3c9a754cf940fb22e6a99b30793f9a2b39f1bc32",
+        "8bad7561d8c6e014e3bd912fe928246257cf14b4a35815aa9a2723a7a28db241",
+        "7b90144f160aab9554c70d198336f1a61d7b024f4aed659a3cc518a59df0f5dd",
+        "24dbf59614b88ee1ab718b5be1f1b1f0fa28d7cd0959e733aa237c28f7a3a4c7",
+        "95a64caec3b03b8a44bafec7ab0c26dce4581ab9df64a3056d7a38f9e60c6bd5",
+        "812def2fab709a310185f55f40e84c2eec8dcd881c15225269906a5c90dd4c7e",
+        "d2437c6d28c5bf4aac2cd598fbab6ab6b4979607b5c3dab363792716f8e978b9",
+        "b92e66f7f2688e19d572b6459153a30dbd65c59e978f96acd1a66e031b3ecd38",
+        "82d9fb7b1f0a75c016c6d4b3db76836fe290a4f23ad2d5ccf9e602145d92bd46",
+        "410be6ce70786005b8b53c25c6afd6a7168f9f40c0834848dc6ee6e571272f03",
+        "aae7ecc035ea703bb009536fa5946038dbf03bc5a81040aa350305d659181d99",
+        "0bfd577d4de3959a27fd143fdf4b8c759f5ae456a82a9c093041b115534f0271",
+        "96895ff298f79fc7c654cad142d9f7b9a7ad771c4737029de3bbbfa88d3fc79b",
+        "27ac78daa5342760df536bdc83ff4e254fb1f28094bfaac685f2fdc73bb21968",
+        "75d8bbee54dd51dda3a790bdccb55da8a1104d168200f792c189b9c8e7644202",
+        "97fcd6c1d3cd3392125fa54bc67d8a8cd9e6b4e5ac1b1f32ed55558e1530e3b4",
+        "83ca33ed93987289b50bde8ac82be0cfa60f951175f3ead2e158d6a121ba182b",
+        "877c6d10d59675374bb5a127bd0ef4f168c0f99976737a9ff7985e9565c07039",
+        "58c1e68b6cb8f41bbb500ce579076bae167a8245d96659279c15272407ca0b2b"
+      ],
+      "E_STRATEGY_MARGIN": [
+        "2df36c00707bdab5dabfdd4d10a91903b9ee47d86115850861ec664d89f380c2",
+        "a85980c46bb9f8ac887a86465f423aaa3cafc759e484838804e86ad505e02c87",
+        "19b3bc2606971d2ccbd27597cfbe79f771a56c32ee015496e2b092ad3bd0c0f9",
+        "05efe40226c6092e073d15293c435bb2d27c5eda3739c8d8aef368a83c38d132",
+        "51207120d99578df7ccf38a2e84f6d947b939a2333bbcdcd08f5d399f2cae599",
+        "7b2b3dfcf868f221649383e6042b687290f420468715edaf2717cd9c6a7873b5",
+        "5706524b95c6b13b7ef0c8b46e26f033a347fd53aa8fc4fb602d195e84ab9075",
+        "7a862e86825578b700f4dca0cfa3a55c9c05fd1c2b8dd15d14aff7337e7838cd",
+        "d13d1d609e2dd8f14ab26a0f944be523b99a0e305f7f97982b79e365d41d2c3d",
+        "4569eab4e395bdd661ef77def17cc808b1b954f1401d368fd6827fc36e5e83b5",
+        "8961419e31d8160d01498327afb88a05e7c9833fb20d5d3322f3ce936e6aebac",
+        "53a3690a2c4d0621b19b2a373dca921118c59a6939932a8d511b2aeb13a4b7f8",
+        "9aab59b0f3fab1e6d5c9c68c32a5a604f4b6da7d6db3db0d0b57d2dc0062e65a",
+        "902e9baa84718a943103acc0aa4ccb53ed5630b0676ede37b989e2ca9688d456",
+        "582ef949558e9ea32118237f2588eb5e08f6770a569a42096d575dddde56897f",
+        "27eb25871bddcb870387a4769409976b0453ec2d74d31fd44add2e0aefb6cb5e",
+        "daacea2b2813d2ddb0cd1da38b0375046c6b30ec790e2790f88abac48981a03e",
+        "611fef2c219ec96c0da9029db68f5a04e3a17b4c248dbb49c4c6739d0005691c",
+        "f57e3112e162f0876b91bd9ad6bb1fea2a139e5fa3dfcee7aaafa2567f77269e",
+        "8a43addda5c4df5277705346ce985e3866dd3bace64bd5657e7a6cded926def7",
+        "13597d1801480768c3deed1ff643064c12d6c7265c55c07473113cbabd1600c1",
+        "ae3294a483e52d3c535e93e325730b3f31ded55d58a725f6e2a692b518033096",
+        "2b2ab41b9bcfde658b34ca71516af65dac4c0d525cadfd68d70f1aca8757a781",
+        "37f6747171dc45a8bba0ec0c8762ff8ae873b1f5f97c9eda6bb74164abee5f20",
+        "48addafe3272bb4f945ec5374c96031c715144adda4860558a67efb8b842d9a5",
+        "ee3eaad2727af9423a1517382e6402d3ac1c6dbae96c86f7855cdebc74be4bf8",
+        "e040300face8821676227ffc62c18b2ff86bf17b9233c7b7b2b001408fed1eee",
+        "c043709eb51f371facc1b460de71aabb1886dcb4421b7ab3c0a8f7369cad8d83",
+        "c109385e35713d925446e63d6f139ea6799bd2fcd357487b4b644f558d41a231",
+        "ee76ce214b5c30ec0dccb187d9bb86dabe186237192672b10bfee6c4df1adea3",
+        "defd2e53598096cafc98149cc801585b80210f2ceca34cac533263907020b228",
+        "9931cdce2fd8a2626bcd610ceae716b8b01e43fbd96e0ee02ac79c91c8ceb155",
+        "7464bbf2c996d219a36b7d7d75a2da1f035f479f63586299026f8ace81208542",
+        "2a7186aeccd96081f9e58a0f3415212c80755cb956b8614809406fe79d06f3d3",
+        "26b264d887d60cd4fd6e169e07a677b5a45b702aed5cb1eb501df94bdb3bcf3a",
+        "4e0eb4fec7fad91c2043fbadad7441027a1b712257049a64108470bb2190ab89",
+        "bb22cf59e251efdf6ced74785129c5067e4070274731d08a02604ff9545946df",
+        "a8fb60a0b78d1c5d13b5a289d6231df2c8db595da742b68bfb79caf1243a0e8f",
+        "977ffa438801ca023fa380d677ea138afe95186a48f79f41421e57942e49760b",
+        "8f34c734cd81233cf1692ea1a4d74990111a2bbf32770ace28a47cd8aa7cb61e",
+        "bd62d773d593e370fc41a303fb4544fcc9749cdf393e0ff7c98675f270fcecb4",
+        "389e6e9cabd0d4c909745a66ae95e72abaa5a3b957b5e7aff4533cc4127524eb",
+        "b5d39c6c7e06e50151b91e74ce269b0b44b5fafef4fba07260ee7dfd5ebefa16",
+        "fdf587e433fdb60be802ac64c00c820cbb327303e3b3caadfa7dc3e0424c3b24",
+        "c1c5a855ee390c60bc2ddb8856e49eec10a5b2c2aebf1261875e97dbef4a0d02"
+      ],
+      "E_UNSUPPORTED_ALERT_PLACEHOLDER": [
+        "29fc0c945e7aba2268afe98ad78975c5890c0db5ad9b5bbb8d3cc62e69c21e8c"
+      ],
+      "E_STRATEGY_CLOSE_QTY": [
+        "e887fbcc9d29b7986ca17a93f805199fb8467315681b9dd6426cdaa960e30e73"
+      ]
+    },
+    "note": "Supplementary view only. Frozen runtime_passed means exit 0 without an explicitly severity=error diagnostic; E_* broker diagnostics may omit severity. These sources are not all proven runtime defects."
+  },
+  "completed_without_e_diagnostics": 5054,
+  "first_error_code_counts": {
+    "E_LEGACY_VERSION_FEATURE": 168,
+    "E_CALL_ARG_TYPE": 115,
+    "E_STRATEGY_MODE": 103,
+    "E_PARSE_EXPR": 87,
+    "E_LANGUAGE_VERSION_DUPLICATE": 83,
+    "E_CALL_ARG_DUPLICATE": 67,
+    "E_CALL_ARG_NAME": 62,
+    "E_IMPORT_MISSING_LIBRARY": 51,
+    "E_PARSE_EXPECTED": 50,
+    "E_UNKNOWN_FUNCTION": 50,
+    "E_UNKNOWN_SYMBOL": 39,
+    "E_ASSIGN_TYPE": 37,
+    "E_UNSUPPORTED_FEATURE": 36,
+    "E_CALL_ARG_VALUE": 34,
+    "E_OPERATOR_TYPE": 25,
+    "E_LEGACY_REFERENCE_TYPE": 25,
+    "E_CALL_ARITY": 17,
+    "E_LEX_CHAR": 13,
+    "E_PARSE_STMT": 10,
+    "E_PARSE_SWITCH": 8,
+    "E_BRANCH_TYPE": 2,
+    "E_DECL_TYPE": 2,
+    "E_LEX_INDENT": 2,
+    "E_PARSE_FUNCTION": 2,
+    "E_PARSE_IMPORT": 2,
+    "E_TUPLE_TYPE": 2,
+    "E_LEGACY_INDICATOR_DECLARATION": 1,
+    "E_LEGACY_INPUT_CONSTANT_CONTEXT": 1,
+    "E_LEGACY_RSI_OVERLOAD": 1,
+    "E_LEGACY_SECURITY_MERGE": 1,
+    "E_LEGACY_V3_NA_INFERENCE": 1,
+    "E_LEX_STRING": 1,
+    "E_LEX_VERSION": 1,
+    "E_PARSE_FOR": 1,
+    "E_PARSE_NAME": 1,
+    "E_SEMA_EXPR_DEPTH": 1
+  },
+  "other_runtime_rejections": [
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: array index 0 is out of bounds for array of size 0\n",
+      "count": 9,
+      "sources": [
+        "d44c82e2cddc1fbed5ec0c5750f4f40ee646a2da59b706318e20a4795b7469b5",
+        "8710b05013a83bf00d4faf49f74c8303bd60595c103dacd35fce5e6a255f2b02",
+        "4525ec1e4fd9a2cc7f1580c97350a6f5d09570b376324605cb6cd6979d907dc6",
+        "e95f099fd2320a4d3370157448b55b6a19524b115e5e3807f1fcb32b6512d91c",
+        "a3ef5783bb9be65d56638d45afac4dc15afcfbde8f280d742297e9c5d8bca8a7",
+        "acc4f231864bff40c6c667d738d5a29fbb9cd98ced697300558de710b736e1f0",
+        "d3bcd7ba8170fea477fb84995cf82e441c316cc2b5ff37c98d8f82dd681dc942",
+        "b60de09b2ee1831ea174cd0122a39b1df68c75d32c3d6d79a857f7b04f45f410",
+        "2cda992e70dbd8c50163ace47888be1aebb77504addc4c66d3553dac9d743d3b"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: Cannot create an order with negative quantity on bar 28: current qty_type is percent_of_equity and equity is less than 0\n",
+      "count": 1,
+      "sources": [
+        "007c7f985e7bc2f4a70df0abd4d502833fe51cca11880770d16f3c41f7922101"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: Cannot create an order with negative quantity on bar 75: current qty_type is percent_of_equity and equity is less than 0\n",
+      "count": 1,
+      "sources": [
+        "461b02f941513c43dcdc36b0ea39655de7af409762d4ad2a9a4c51ef27b76e49"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: E_EXECUTION_BUDGET: per-bar evaluation step budget exceeded (limit 10000000)\n",
+      "count": 1,
+      "sources": [
+        "1082921e56e3a628230ef8f1b9b4420a1df52c49d44890ccaf21f67492fcfad8"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: E_NATIVE_RISK_UNSUPPORTED: native risk directives require fully resolved immutable configuration; unresolved call sites: [48]\n",
+      "count": 1,
+      "sources": [
+        "3388abeba6d500d8195b3617958d07d28ef9a6bfb08f07acc26b8c591759b8e1"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: `strategy.order` invalid `qty` value (1853716252766.5) on bar 42: expected a positive number no greater than 1000000000000\n",
+      "count": 1,
+      "sources": [
+        "d54613d00dcccbfcb4d13bfd1051890f2edbdb6af9c1db1ab4d809a10fd31f83"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: array index 6 is out of bounds for array of size 6\n",
+      "count": 1,
+      "sources": [
+        "9f75c84a20b3569bc15fbf89a0c51897663cbb53829414dc393a302d69df7357"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: hour unsupported timezone `D`\n",
+      "count": 1,
+      "sources": [
+        "0d8404bca3e7042574440bba844b59180b8350984ae4e242af5b8786cf2085bb"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: time unsupported session `UTC`\n",
+      "count": 1,
+      "sources": [
+        "a1e093c1d2b5ff13b2f21139f4fb4f4cfa78eaf0450dfccffe0793e947feb5e0"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: time unsupported session `regular`\n",
+      "count": 1,
+      "sources": [
+        "a4fa654f8c568d9b3763202ec605654b012aff343eb3e8f6911b100638d9fa33"
+      ]
+    },
+    {
+      "status": "runtime_rejected_other",
+      "message": "runtime failed: time unsupported timeframe `15m`\n",
+      "count": 1,
+      "sources": [
+        "46ae85238547ea6d8c0a814c20620bae4ce372aa619b76c150e3fc94728c7bb1"
+      ]
+    }
+  ],
+  "prioritized_candidates": [
+    {
+      "rank": 1,
+      "candidate": "entry_order_explicit_na",
+      "source_count": 9,
+      "only_this_diagnostic_family": 7,
+      "sources": [
+        {
+          "sha256": "ce50096b5d59ea1598f30996bbb7649e5cc0fd949dac71d0d83ee839b47de559",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "Open High Low Strategy.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Open%20High%20Low%20Strategy.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2352,
+                "end": 2360,
+                "line": 44,
+                "column": 62
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2362,
+                "end": 2369,
+                "line": 44,
+                "column": 72
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2702,
+                "end": 2710,
+                "line": 49,
+                "column": 64
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2712,
+                "end": 2719,
+                "line": 49,
+                "column": 74
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "6d3e7d100aef63fd8d4f4a3b4ea27041f4fccd1570bb9e4ada74f572f6904af5",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "Strategy- Range Breakout.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Strategy-%20Range%20Breakout.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 7345,
+                "end": 7353,
+                "line": 108,
+                "column": 62
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 7355,
+                "end": 7362,
+                "line": 108,
+                "column": 72
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 7695,
+                "end": 7703,
+                "line": 113,
+                "column": 64
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 7705,
+                "end": 7712,
+                "line": 113,
+                "column": 74
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "8e4b187fc74f52fbce1af1b78f22bf4095f4e523ff0c95daa7894fde837054c1",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "Strategy-Reversal-Catcher.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Strategy-Reversal-Catcher.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4009,
+                "end": 4017,
+                "line": 62,
+                "column": 56
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4019,
+                "end": 4026,
+                "line": 62,
+                "column": 66
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4345,
+                "end": 4353,
+                "line": 67,
+                "column": 58
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4355,
+                "end": 4362,
+                "line": 67,
+                "column": 68
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "ef518fe6d6da10ad325a126608f18327b02efecd3cf4e70420d7ef75e4ae0a3f",
+          "only_this_diagnostic_family": false,
+          "error_count": 3,
+          "version": 3,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/30c51e24efc9.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 1144,
+                "end": 1153,
+                "line": 32,
+                "column": 61
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 1265,
+                "end": 1274,
+                "line": 35,
+                "column": 65
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 1039,
+                "end": 1048,
+                "line": 28,
+                "column": 1
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "b0e359d78a55a2f625ef97de8d090541551629055b7cc4111b4532c3976f8001",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/69bff7b2d7ce.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4049,
+                "end": 4057,
+                "line": 82,
+                "column": 56
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4059,
+                "end": 4066,
+                "line": 82,
+                "column": 66
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4385,
+                "end": 4393,
+                "line": 87,
+                "column": 58
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 4395,
+                "end": 4402,
+                "line": 87,
+                "column": 68
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "ff3e648bf5bc111957eeda84a7dd48fee0db22a40250cc60796f95933ed80ec5",
+          "only_this_diagnostic_family": false,
+          "error_count": 29,
+          "version": 3,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/81eb14ebc3d4.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_LEGACY_VERSION_FEATURE",
+              "severity": "error",
+              "message": "the source spelling `timeframe.period` requires Pine v4 or later and is not available in v3",
+              "span": {
+                "start": 1310,
+                "end": 1326,
+                "line": 26,
+                "column": 18
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series float and series na",
+              "span": {
+                "start": 1953,
+                "end": 1972,
+                "line": 38,
+                "column": 37
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series float and series na",
+              "span": {
+                "start": 2046,
+                "end": 2063,
+                "line": 40,
+                "column": 35
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `+` expects numeric or string operands, got const na and const na",
+              "span": {
+                "start": 2098,
+                "end": 2118,
+                "line": 41,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `-` expects numeric operands, got series float and series na",
+              "span": {
+                "start": 2603,
+                "end": 2622,
+                "line": 52,
+                "column": 15
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `/` expects numeric operands, got series na and series float",
+              "span": {
+                "start": 2669,
+                "end": 2691,
+                "line": 54,
+                "column": 17
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 2707,
+                "end": 2740,
+                "line": 55,
+                "column": 15
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 2752,
+                "end": 2786,
+                "line": 55,
+                "column": 60
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`plot` argument `series` expects series/simple numeric, got series na",
+              "span": {
+                "start": 2867,
+                "end": 2875,
+                "line": 58,
+                "column": 11
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 3785,
+                "end": 3818,
+                "line": 74,
+                "column": 69
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 3890,
+                "end": 3924,
+                "line": 75,
+                "column": 70
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series na and const int",
+              "span": {
+                "start": 3965,
+                "end": 3982,
+                "line": 76,
+                "column": 39
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and const int",
+              "span": {
+                "start": 4024,
+                "end": 4041,
+                "line": 77,
+                "column": 40
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`plotshape` argument `series` expects series/simple numeric or bool, got const na",
+              "span": {
+                "start": 4292,
+                "end": 4306,
+                "line": 85,
+                "column": 11
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`plotshape` argument `series` expects series/simple numeric or bool, got const na",
+              "span": {
+                "start": 4488,
+                "end": 4503,
+                "line": 87,
+                "column": 11
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 5287,
+                "end": 5306,
+                "line": 98,
+                "column": 39
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 5475,
+                "end": 5495,
+                "line": 101,
+                "column": 41
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 1901,
+                "end": 1915,
+                "line": 37,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 1997,
+                "end": 2010,
+                "line": 39,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2086,
+                "end": 2123,
+                "line": 41,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2589,
+                "end": 2622,
+                "line": 52,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2653,
+                "end": 2691,
+                "line": 54,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2693,
+                "end": 2799,
+                "line": 55,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3717,
+                "end": 3818,
+                "line": 74,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3821,
+                "end": 3924,
+                "line": 75,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3927,
+                "end": 3982,
+                "line": 76,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3985,
+                "end": 4041,
+                "line": 77,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 4046,
+                "end": 4072,
+                "line": 79,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 4074,
+                "end": 4100,
+                "line": 80,
+                "column": 1
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "0e806628d4fa59bc3497f7d2f1444f0c4e1dffa0296b0450beab93eca1939045",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/82268d7cc523.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2219,
+                "end": 2227,
+                "line": 51,
+                "column": 62
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2229,
+                "end": 2236,
+                "line": 51,
+                "column": 72
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2569,
+                "end": 2577,
+                "line": 56,
+                "column": 64
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2579,
+                "end": 2586,
+                "line": 56,
+                "column": 74
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "1bf3c279ace1c9d8cfd32854a8a9d3ad6c2130010746b3c5703aad90779df4b0",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/8b61893cd13b.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 6829,
+                "end": 6837,
+                "line": 125,
+                "column": 62
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 6839,
+                "end": 6846,
+                "line": 125,
+                "column": 72
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 7179,
+                "end": 7187,
+                "line": 130,
+                "column": 64
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 7189,
+                "end": 7196,
+                "line": 130,
+                "column": 74
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "0e100d692c40bb35009f527b377de0831922285765a04df97ecfb38fdfec2f2b",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/f62860d02f3c.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2218,
+                "end": 2226,
+                "line": 51,
+                "column": 62
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2228,
+                "end": 2235,
+                "line": 51,
+                "column": 72
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `limit` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2568,
+                "end": 2576,
+                "line": 56,
+                "column": 64
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`strategy.entry` argument `stop` expects series/simple numeric, got const na",
+              "span": {
+                "start": 2578,
+                "end": 2585,
+                "line": 56,
+                "column": 74
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "candidate": "nz_named_source",
+      "source_count": 8,
+      "only_this_diagnostic_family": 8,
+      "sources": [
+        {
+          "sha256": "23634347ca96ae7ded1a6f62d081783aa782cfebcab442aeb253ad6d9fa41963",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "[D] Dudu 95 Strategy Template ver.1.1..pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/%5BD%5D%20Dudu%2095%20Strategy%20Template%20ver.1.1..pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 16944,
+                "end": 16967,
+                "line": 166,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 17354,
+                "end": 17378,
+                "line": 179,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 19767,
+                "end": 19790,
+                "line": 203,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 19958,
+                "end": 19982,
+                "line": 210,
+                "column": 12
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "ffd5a4706db0bc128cbc91cbe2732dec4aee127291a42561cb8e0ece79973f8c",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "[DuDu95] SSL 4C MACD Laugerre RSI Strategy.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/%5BDuDu95%5D%20SSL%204C%20MACD%20Laugerre%20RSI%20Strategy.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 18846,
+                "end": 18869,
+                "line": 232,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 19256,
+                "end": 19280,
+                "line": 245,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 21669,
+                "end": 21692,
+                "line": 269,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 21860,
+                "end": 21884,
+                "line": 276,
+                "column": 12
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "0bc888a2c3e013189330e694b068607ff5f50289e1781b040abd0fca5fdc0993",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "[Sniper] SSL Hybrid + QQE MOD + Waddah Attar Strategy.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/%5BSniper%5D%20SSL%20Hybrid%20%2B%20QQE%20MOD%20%2B%20Waddah%20Attar%20Strategy.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27846,
+                "end": 27869,
+                "line": 347,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 28256,
+                "end": 28280,
+                "line": 360,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30669,
+                "end": 30692,
+                "line": 384,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30860,
+                "end": 30884,
+                "line": 391,
+                "column": 12
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "acdf19e258a0c407594cd826aa1f18aa2d0c209e1521c68541922d5b15cc1cd5",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "[Sniper] SuperTrend + SSL Hybrid + QQE MOD.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/%5BSniper%5D%20SuperTrend%20%2B%20SSL%20Hybrid%20%2B%20QQE%20MOD.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27202,
+                "end": 27225,
+                "line": 332,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27612,
+                "end": 27636,
+                "line": 345,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30025,
+                "end": 30048,
+                "line": 369,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30216,
+                "end": 30240,
+                "line": 376,
+                "column": 12
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "cbf121e3e59be475f503a60963dace6b52b5d75ae97d14790b43c179d5b8d4b2",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "[fpemehd] Strategy Template.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/%5Bfpemehd%5D%20Strategy%20Template.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 12215,
+                "end": 12238,
+                "line": 116,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 12625,
+                "end": 12649,
+                "line": 129,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 15038,
+                "end": 15061,
+                "line": 153,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 15229,
+                "end": 15253,
+                "line": 160,
+                "column": 12
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "460a12de491a2ffb5ff64bc089f000039052b71be2e2e628924d98b36a0c0e35",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/7a085430f911.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27302,
+                "end": 27325,
+                "line": 392,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27714,
+                "end": 27738,
+                "line": 406,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30139,
+                "end": 30162,
+                "line": 436,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30332,
+                "end": 30356,
+                "line": 444,
+                "column": 12
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "c7ecbde05f36d6dd7a6613fa52800e64466207ed4d9e2a57b57cffee8e1e08c2",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/f05cd1275e62.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27283,
+                "end": 27306,
+                "line": 392,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27695,
+                "end": 27719,
+                "line": 406,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30120,
+                "end": 30143,
+                "line": 436,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30313,
+                "end": 30337,
+                "line": 444,
+                "column": 12
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "6d2fb3a37507a213ed900bbafe4dc82ef15647cdbc3c33326afecdf0b78eb71c",
+          "only_this_diagnostic_family": true,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/f5bafedc9813.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 27941,
+                "end": 27964,
+                "line": 414,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 28353,
+                "end": 28377,
+                "line": 428,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30778,
+                "end": 30801,
+                "line": 458,
+                "column": 12
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`nz` has no argument named `source`",
+              "span": {
+                "start": 30971,
+                "end": 30995,
+                "line": 466,
+                "column": 12
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "candidate": "udf_side_effect:alert",
+      "source_count": 10,
+      "only_this_diagnostic_family": 8,
+      "sources": [
+        {
+          "sha256": "cce3dee740f3f2d12ebba96332c0067fd6814cd8d8a1ba5bdf32da6622412f4b",
+          "only_this_diagnostic_family": true,
+          "error_count": 2,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "Fractal Breakout Strategy [KL].pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Fractal%20Breakout%20Strategy%20%5BKL%5D.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 6456,
+                "end": 6461,
+                "line": 94,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 6456,
+                "end": 6461,
+                "line": 94,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "77682e5291e37e6daf0f9fd853ed540efd96c701b8681f7ed87acb72a5f8cc16",
+          "only_this_diagnostic_family": false,
+          "error_count": 9,
+          "version": 4,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "HAERI 𝐍𝐄𝐓𝐖𝐎𝐑𝐊.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/HAERI%20%F0%9D%90%8D%F0%9D%90%84%F0%9D%90%93%F0%9D%90%96%F0%9D%90%8E%F0%9D%90%91%F0%9D%90%8A.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `earnings`",
+              "span": {
+                "start": 34616,
+                "end": 34624,
+                "line": 607,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `dividends`",
+              "span": {
+                "start": 34718,
+                "end": 34727,
+                "line": 608,
+                "column": 17
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `splits`",
+              "span": {
+                "start": 34817,
+                "end": 34823,
+                "line": 609,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 97513,
+                "end": 97518,
+                "line": 1535,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 97612,
+                "end": 97617,
+                "line": 1536,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 97747,
+                "end": 97752,
+                "line": 1541,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 97845,
+                "end": 97850,
+                "line": 1542,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 98043,
+                "end": 98048,
+                "line": 1548,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 98337,
+                "end": 98342,
+                "line": 1554,
+                "column": 9
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "a325d94fb4de6cebccb91c92acd2952a6d792b884c9d0fdc746424c69748a9a9",
+          "only_this_diagnostic_family": true,
+          "error_count": 2,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "Mean Reversion Strategy v2 [KL].pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Mean%20Reversion%20Strategy%20v2%20%5BKL%5D.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 6862,
+                "end": 6867,
+                "line": 97,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 6862,
+                "end": 6867,
+                "line": 97,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "91417db6b215a6a4a10eb36a3bc747bba1e0df2cbfd9e8c7157d1cea1fba59da",
+          "only_this_diagnostic_family": false,
+          "error_count": 4,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "[KL] Mean Reversion (ATR) Strategy.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/%5BKL%5D%20Mean%20Reversion%20%28ATR%29%20Strategy.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_VALUE",
+              "severity": "error",
+              "message": "`strategy.close` argument `qty` must be finite and positive",
+              "span": {
+                "start": 3587,
+                "end": 3625,
+                "line": 53,
+                "column": 49
+              }
+            },
+            {
+              "code": "E_CALL_ARG_VALUE",
+              "severity": "error",
+              "message": "`strategy.close` argument `qty` must be finite and positive",
+              "span": {
+                "start": 3745,
+                "end": 3783,
+                "line": 55,
+                "column": 49
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 4593,
+                "end": 4598,
+                "line": 72,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 4593,
+                "end": 4598,
+                "line": 72,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "6a1db5f9f9fd6a17dfc4f9c361631ebda99fde5177d83f9a4b991b01978c7cd5",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 4,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "[KL] Relative Volume + ATR Strategy.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/%5BKL%5D%20Relative%20Volume%20%2B%20ATR%20Strategy.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 2391,
+                "end": 2396,
+                "line": 44,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "f42cebe1a22665b8e1456d77ba5fead84f3101f9d94f176c5a6ff7ead3f971d5",
+          "only_this_diagnostic_family": true,
+          "error_count": 2,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/043cba03e400.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3392,
+                "end": 3397,
+                "line": 74,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3392,
+                "end": 3397,
+                "line": 74,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "d18662f833fc3d5e4e9bbc7ace57691687e129fc0fd656f88dd9cd01cd6019c5",
+          "only_this_diagnostic_family": true,
+          "error_count": 2,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/448189b92781.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 6895,
+                "end": 6900,
+                "line": 121,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 6895,
+                "end": 6900,
+                "line": 121,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "7c36fdea15d87a0a122683a02ff6435f0aca6ec76bc0248e498ff5ace4828134",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 4,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/bd5d7e7db25d.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 2171,
+                "end": 2176,
+                "line": 48,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "b1c2cb36bce030e85d3dc63bdbaf4c13c3ecc2c4f724a6db0b60f4c888084801",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 4,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/c1e2edf782ea.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 2130,
+                "end": 2135,
+                "line": 47,
+                "column": 5
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "2642604d454bc55ce39daac38f48b82ceb92e974689fe87c87bedccbe70b0685",
+          "only_this_diagnostic_family": true,
+          "error_count": 2,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/df381fba6c54.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 5758,
+                "end": 5763,
+                "line": 104,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 5848,
+                "end": 5853,
+                "line": 107,
+                "column": 9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "candidate": "standard_ohlc_fill_contract",
+      "source_count": 11,
+      "only_this_diagnostic_family": 10,
+      "sources": [
+        {
+          "sha256": "0cd9e73fb8fe613e10f0fe0b9a8540244c47995ffbb879374ea8244a433290f7",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/3a44ca73111e.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 182,
+                "end": 217,
+                "line": 5,
+                "column": 31
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "d8ad962408b23c546b91558c3249bc81ca1dea1c084dedfc37aea4be15019132",
+          "only_this_diagnostic_family": false,
+          "error_count": 2,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/45bb4b88a543.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_PARSE_STMT",
+              "severity": "error",
+              "message": "expected statement after `,`",
+              "span": {
+                "start": 810,
+                "end": 811,
+                "line": 8,
+                "column": 91
+              }
+            },
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 272,
+                "end": 305,
+                "line": 2,
+                "column": 259
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "f65a29ae8b8c503e7ef3a3eaa34c6b4d85cf6bd2e38f2fb596e2953bb7ad5e37",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/46a35296b616.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 287,
+                "end": 322,
+                "line": 2,
+                "column": 274
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "0f4d90483ef06bc72a4c2e25b6d84a4e093f1a8b7e79b4288140a64f9a4b0ee1",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/5840b5297e8b.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 114,
+                "end": 147,
+                "line": 2,
+                "column": 101
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "707f571ec0c593900f6efa910ea46bdf363273843e73280d3b4f7f98e5851503",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/911b17598e39.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 61,
+                "end": 96,
+                "line": 2,
+                "column": 48
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "9057366f1ce5c340df43ca1295f5a330efe4db2349e2da4508c80e6d26770177",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/c32eb3e407b2.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 205,
+                "end": 240,
+                "line": 5,
+                "column": 49
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "924fa23982d895b864fc3193fb9c88db6552e1cf3fd42a075f8cdd85a2652847",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/d86fbd3adf15.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 258,
+                "end": 291,
+                "line": 3,
+                "column": 243
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "98c5e3ea3025f12145f99b8af52d06b1b2fc824491e116963995558d69878ecd",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/e0040491f520.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 195,
+                "end": 228,
+                "line": 5,
+                "column": 41
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "34ab5799b034eddecaf9afd712ef33f51232e1bd6879999242b8eda9b657d925",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/f38264e7f7ac.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 1113,
+                "end": 1146,
+                "line": 24,
+                "column": 259
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "d3fb2186aa6d71f0aba49b3f87b1e146fa64c3c88b36a739198319cac06d0a23",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/f881eb0e6340.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 906,
+                "end": 941,
+                "line": 18,
+                "column": 10
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "2075d664aeac97420b6356c807de9b82507950e49522a9958cff80ed7f1f92ed",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/fa59f6a52cd7.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_CALL_ARG_NAME",
+              "severity": "error",
+              "message": "`strategy` has no argument named `fill_orders_on_standard_ohlc`",
+              "span": {
+                "start": 54,
+                "end": 87,
+                "line": 2,
+                "column": 41
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "candidate": "legacy_volume_builtin_alias",
+      "source_count": 4,
+      "only_this_diagnostic_family": 3,
+      "sources": [
+        {
+          "sha256": "9efc853a67ebf04888fb6056db748f2e98f3446a72bf48aa25c94e9b3088016c",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 3,
+          "origins": [
+            {
+              "source_id": "everget",
+              "path": "oscillators/cci_commodity_channel_index.pine",
+              "source_url": "https://github.com/everget/tradingview-pinescript-indicators/blob/7037c4bcc3181ab24af4b15a8ecf265487841126/oscillators/cci_commodity_channel_index.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 1941,
+                "end": 1948,
+                "line": 74,
+                "column": 10
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "593f943b819088188a1413c8c6a5b94651865199d1ce6575680e99486d6037dc",
+          "only_this_diagnostic_family": true,
+          "error_count": 1,
+          "version": 3,
+          "origins": [
+            {
+              "source_id": "everget",
+              "path": "oscillators/rsi_relative_strength_index.pine",
+              "source_url": "https://github.com/everget/tradingview-pinescript-indicators/blob/7037c4bcc3181ab24af4b15a8ecf265487841126/oscillators/rsi_relative_strength_index.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 1778,
+                "end": 1785,
+                "line": 69,
+                "column": 10
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "bd80c6743ef869013906c7fecdf17b2f3d47416bcb91494476e2141f6ecfe2c6",
+          "only_this_diagnostic_family": false,
+          "error_count": 9,
+          "version": 3,
+          "origins": [
+            {
+              "source_id": "everget",
+              "path": "volume/accumulation_distribution_line.pine",
+              "source_url": "https://github.com/everget/tradingview-pinescript-indicators/blob/7037c4bcc3181ab24af4b15a8ecf265487841126/volume/accumulation_distribution_line.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 691,
+                "end": 698,
+                "line": 12,
+                "column": 36
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 720,
+                "end": 727,
+                "line": 12,
+                "column": 65
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 759,
+                "end": 766,
+                "line": 14,
+                "column": 14
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 909,
+                "end": 916,
+                "line": 19,
+                "column": 15
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 1233,
+                "end": 1240,
+                "line": 27,
+                "column": 21
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 1276,
+                "end": 1283,
+                "line": 27,
+                "column": 64
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 1418,
+                "end": 1425,
+                "line": 28,
+                "column": 22
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 1461,
+                "end": 1468,
+                "line": 28,
+                "column": 65
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 746,
+                "end": 791,
+                "line": 14,
+                "column": 1
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "c6196b6b3ddab80fe974a2c4605b0809898b80c9a1bcbac34fd966bdac9c416a",
+          "only_this_diagnostic_family": true,
+          "error_count": 6,
+          "version": 3,
+          "origins": [
+            {
+              "source_id": "fmz",
+              "path": "extracts/fmz/5271741fa501.pine",
+              "source_url": null,
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 43625,
+                "end": 43632,
+                "line": 970,
+                "column": 18
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 43659,
+                "end": 43666,
+                "line": 970,
+                "column": 52
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 44235,
+                "end": 44242,
+                "line": 986,
+                "column": 19
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 44270,
+                "end": 44277,
+                "line": 986,
+                "column": 54
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 44838,
+                "end": 44845,
+                "line": 997,
+                "column": 19
+              }
+            },
+            {
+              "code": "E_UNKNOWN_SYMBOL",
+              "severity": "error",
+              "message": "unknown symbol `accdist`",
+              "span": {
+                "start": 44873,
+                "end": 44880,
+                "line": 997,
+                "column": 54
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "candidate": "udf_max_bars_back",
+      "source_count": 3,
+      "only_this_diagnostic_family": 0,
+      "sources": [
+        {
+          "sha256": "96e3b8c1bef2c87339d4591213c9c0afeec22937b70cb62c70575b56c5dacef0",
+          "only_this_diagnostic_family": false,
+          "error_count": 35,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "dearvn-futures",
+              "path": "spx-30m-options.txt",
+              "source_url": "https://github.com/dearvn/trading-futures-tradingview-script/blob/15033d66146b8f4bbb22548194570d9a927afc40/spx-30m-options.txt",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_IMPORT_MISSING_LIBRARY",
+              "severity": "error",
+              "message": "missing library source for import `jdehorty/KernelFunctions/2`",
+              "span": {
+                "start": 277,
+                "end": 321,
+                "line": 11,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 430,
+                "end": 455,
+                "line": 16,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 501,
+                "end": 526,
+                "line": 17,
+                "column": 14
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 579,
+                "end": 604,
+                "line": 18,
+                "column": 23
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 657,
+                "end": 682,
+                "line": 19,
+                "column": 21
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5216,
+                "end": 5241,
+                "line": 126,
+                "column": 15
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5333,
+                "end": 5358,
+                "line": 127,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5457,
+                "end": 5482,
+                "line": 128,
+                "column": 22
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5588,
+                "end": 5613,
+                "line": 129,
+                "column": 20
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5710,
+                "end": 5735,
+                "line": 130,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5977,
+                "end": 6002,
+                "line": 134,
+                "column": 14
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6057,
+                "end": 6082,
+                "line": 134,
+                "column": 94
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6204,
+                "end": 6229,
+                "line": 135,
+                "column": 14
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6284,
+                "end": 6309,
+                "line": 135,
+                "column": 94
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6554,
+                "end": 6579,
+                "line": 138,
+                "column": 7
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6664,
+                "end": 6689,
+                "line": 139,
+                "column": 7
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 7003,
+                "end": 7028,
+                "line": 149,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.gaussian`",
+              "span": {
+                "start": 7092,
+                "end": 7108,
+                "line": 150,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossover` argument `source1` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7206,
+                "end": 7211,
+                "line": 152,
+                "column": 36
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossover` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7213,
+                "end": 7218,
+                "line": 152,
+                "column": 43
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossunder` argument `source1` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7257,
+                "end": 7262,
+                "line": 153,
+                "column": 37
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossunder` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7264,
+                "end": 7269,
+                "line": 153,
+                "column": 44
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 8911,
+                "end": 8924,
+                "line": 185,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 16779,
+                "end": 16804,
+                "line": 362,
+                "column": 7
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.wma` argument `source` expects series numeric, got series na",
+              "span": {
+                "start": 16906,
+                "end": 16909,
+                "line": 364,
+                "column": 42
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 16873,
+                "end": 16898,
+                "line": 364,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 16981,
+                "end": 16992,
+                "line": 365,
+                "column": 20
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.vwma` argument `source` expects series numeric, got series na",
+              "span": {
+                "start": 25241,
+                "end": 25244,
+                "line": 587,
+                "column": 44
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 25207,
+                "end": 25232,
+                "line": 587,
+                "column": 10
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>=` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 25324,
+                "end": 25347,
+                "line": 589,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 25475,
+                "end": 25492,
+                "line": 594,
+                "column": 55
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 25674,
+                "end": 25691,
+                "line": 600,
+                "column": 55
+              }
+            },
+            {
+              "code": "E_ASSIGN_TYPE",
+              "severity": "error",
+              "message": "cannot assign series na to `enter_short_price` of type const float",
+              "span": {
+                "start": 30898,
+                "end": 30921,
+                "line": 752,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossover` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 59296,
+                "end": 59312,
+                "line": 1374,
+                "column": 202
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossunder` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 59585,
+                "end": 59603,
+                "line": 1379,
+                "column": 201
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "2e85c4a18df901c62a21eb3a3780b5f1f7a7b8ec9e51d418b7e980110d7f3a90",
+          "only_this_diagnostic_family": false,
+          "error_count": 35,
+          "version": 6,
+          "origins": [
+            {
+              "source_id": "dearvn-futures",
+              "path": "spx-30m.txt",
+              "source_url": "https://github.com/dearvn/trading-futures-tradingview-script/blob/15033d66146b8f4bbb22548194570d9a927afc40/spx-30m.txt",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_IMPORT_MISSING_LIBRARY",
+              "severity": "error",
+              "message": "missing library source for import `jdehorty/KernelFunctions/2`",
+              "span": {
+                "start": 275,
+                "end": 319,
+                "line": 11,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 428,
+                "end": 453,
+                "line": 16,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 499,
+                "end": 524,
+                "line": 17,
+                "column": 14
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 577,
+                "end": 602,
+                "line": 18,
+                "column": 23
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 655,
+                "end": 680,
+                "line": 19,
+                "column": 21
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5246,
+                "end": 5271,
+                "line": 126,
+                "column": 15
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5363,
+                "end": 5388,
+                "line": 127,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5487,
+                "end": 5512,
+                "line": 128,
+                "column": 22
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5618,
+                "end": 5643,
+                "line": 129,
+                "column": 20
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 5740,
+                "end": 5765,
+                "line": 130,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6007,
+                "end": 6032,
+                "line": 134,
+                "column": 14
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6087,
+                "end": 6112,
+                "line": 134,
+                "column": 94
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6234,
+                "end": 6259,
+                "line": 135,
+                "column": 14
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6314,
+                "end": 6339,
+                "line": 135,
+                "column": 94
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6584,
+                "end": 6609,
+                "line": 138,
+                "column": 7
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 6694,
+                "end": 6719,
+                "line": 139,
+                "column": 7
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 7060,
+                "end": 7085,
+                "line": 150,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.gaussian`",
+              "span": {
+                "start": 7149,
+                "end": 7165,
+                "line": 151,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossover` argument `source1` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7263,
+                "end": 7268,
+                "line": 153,
+                "column": 36
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossover` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7270,
+                "end": 7275,
+                "line": 153,
+                "column": 43
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossunder` argument `source1` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7314,
+                "end": 7319,
+                "line": 154,
+                "column": 37
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossunder` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 7321,
+                "end": 7326,
+                "line": 154,
+                "column": 44
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 8968,
+                "end": 8981,
+                "line": 186,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 16844,
+                "end": 16869,
+                "line": 363,
+                "column": 7
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.wma` argument `source` expects series numeric, got series na",
+              "span": {
+                "start": 16971,
+                "end": 16974,
+                "line": 365,
+                "column": 42
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 16938,
+                "end": 16963,
+                "line": 365,
+                "column": 9
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 17046,
+                "end": 17057,
+                "line": 366,
+                "column": 20
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.vwma` argument `source` expects series numeric, got series na",
+              "span": {
+                "start": 25382,
+                "end": 25385,
+                "line": 588,
+                "column": 44
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `kernels.rationalQuadratic`",
+              "span": {
+                "start": 25348,
+                "end": 25373,
+                "line": 588,
+                "column": 10
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>=` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 25465,
+                "end": 25488,
+                "line": 590,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 25616,
+                "end": 25633,
+                "line": 595,
+                "column": 55
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and series na",
+              "span": {
+                "start": 25815,
+                "end": 25832,
+                "line": 601,
+                "column": 55
+              }
+            },
+            {
+              "code": "E_ASSIGN_TYPE",
+              "severity": "error",
+              "message": "cannot assign series na to `enter_short_price` of type const float",
+              "span": {
+                "start": 31039,
+                "end": 31062,
+                "line": 753,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossover` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 59436,
+                "end": 59452,
+                "line": 1375,
+                "column": 202
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.crossunder` argument `source2` expects series/simple numeric, got series na",
+              "span": {
+                "start": 59725,
+                "end": 59743,
+                "line": 1380,
+                "column": 201
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "9b2fce8f13daf2dd2420c0f487d08da2fe0af4c7eb0df03348949b13fe7a614f",
+          "only_this_diagnostic_family": false,
+          "error_count": 21,
+          "version": 5,
+          "origins": [
+            {
+              "source_id": "hasnocool",
+              "path": "Advanced Trend Detection Strategy.pine",
+              "source_url": "https://github.com/hasnocool/tradingview-pine-scripts/blob/69969aeaf271b2f7b5a7632a1bde43069a0cbe26/Advanced%20Trend%20Detection%20Strategy.pine",
+              "candidate_names": []
+            }
+          ],
+          "errors": [
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_UNSUPPORTED_FEATURE",
+              "severity": "error",
+              "message": "`function_side_effect` is not supported: indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+              "span": {
+                "start": 3047,
+                "end": 3060,
+                "line": 45,
+                "column": 5
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`ta.sma` argument `length` expects integer-compatible, got series float",
+              "span": {
+                "start": 15132,
+                "end": 15148,
+                "line": 180,
+                "column": 28
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "order_na_control_matrix": [
+    {
+      "variant": "bare_limit",
+      "sources": 8,
+      "accepted": 0,
+      "run_count": 0,
+      "diagnostic_run_counts": {},
+      "order_trade_count_pairs": []
+    },
+    {
+      "variant": "bare_stop",
+      "sources": 8,
+      "accepted": 0,
+      "run_count": 0,
+      "diagnostic_run_counts": {},
+      "order_trade_count_pairs": []
+    },
+    {
+      "variant": "omitted",
+      "sources": 8,
+      "accepted": 8,
+      "run_count": 32,
+      "diagnostic_run_counts": {},
+      "order_trade_count_pairs": [
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "variant": "series_limit",
+      "sources": 8,
+      "accepted": 8,
+      "run_count": 32,
+      "diagnostic_run_counts": {
+        "E_STRATEGY_PRICE": 32
+      },
+      "order_trade_count_pairs": [
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "variant": "typed_both",
+      "sources": 8,
+      "accepted": 8,
+      "run_count": 32,
+      "diagnostic_run_counts": {
+        "E_STRATEGY_PRICE": 32
+      },
+      "order_trade_count_pairs": [
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "variant": "typed_limit",
+      "sources": 8,
+      "accepted": 8,
+      "run_count": 32,
+      "diagnostic_run_counts": {
+        "E_STRATEGY_PRICE": 32
+      },
+      "order_trade_count_pairs": [
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "variant": "typed_stop",
+      "sources": 8,
+      "accepted": 8,
+      "run_count": 32,
+      "diagnostic_run_counts": {
+        "E_STRATEGY_PRICE": 32
+      },
+      "order_trade_count_pairs": [
+        [
+          0,
+          0
+        ]
+      ]
+    }
+  ],
+  "nz_derived_controls": [
+    {
+      "name": "nz_derived_23634347ca96ae7ded1a6f62d081783aa782cfebcab442aeb253ad6d9fa41963",
+      "original_sha256": "23634347ca96ae7ded1a6f62d081783aa782cfebcab442aeb253ad6d9fa41963",
+      "source_sha256": "540569e06370388e3c256e616cee6553c03b5b3d9a4b006d775b7d47c10a8e5e",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "44a7405b6f9f349e90ccf20ea11ede5b87abbd05cc3fc22d230d27565c0373a6",
+          "orders": 23,
+          "trades": 11
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "44a7405b6f9f349e90ccf20ea11ede5b87abbd05cc3fc22d230d27565c0373a6",
+          "orders": 23,
+          "trades": 11
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "44a7405b6f9f349e90ccf20ea11ede5b87abbd05cc3fc22d230d27565c0373a6",
+          "orders": 23,
+          "trades": 11
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "868216a12a950f9e7492c787c8c1478bfaa7c446abaacc5c9050a53e68f86096",
+          "orders": 23,
+          "trades": 11
+        }
+      ]
+    },
+    {
+      "name": "nz_derived_ffd5a4706db0bc128cbc91cbe2732dec4aee127291a42561cb8e0ece79973f8c",
+      "original_sha256": "ffd5a4706db0bc128cbc91cbe2732dec4aee127291a42561cb8e0ece79973f8c",
+      "source_sha256": "852c8c5778c3804aeaa1b5403e7aaa27fe02a8594f709cacb9989ab4a0c82cbb",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "e972dbc72b47377337bfd70010541080fdc659723aaa685ebf9873831611a22a",
+          "orders": 25,
+          "trades": 12
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "e972dbc72b47377337bfd70010541080fdc659723aaa685ebf9873831611a22a",
+          "orders": 25,
+          "trades": 12
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "e972dbc72b47377337bfd70010541080fdc659723aaa685ebf9873831611a22a",
+          "orders": 25,
+          "trades": 12
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "0bd981a14f17649a3ac089a418012d28e53c40f4711536ed58db07ab969f57a1",
+          "orders": 25,
+          "trades": 12
+        }
+      ]
+    },
+    {
+      "name": "nz_derived_0bc888a2c3e013189330e694b068607ff5f50289e1781b040abd0fca5fdc0993",
+      "original_sha256": "0bc888a2c3e013189330e694b068607ff5f50289e1781b040abd0fca5fdc0993",
+      "source_sha256": "45b921d6f673e46ad24c208785b08dc9d0ac3234398a8fbb9dd9c887519388f5",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "41ebf4e5d539e3c1501ddd96f4d5211b4f6cd692d84cbbf9bd182df20dc994de",
+          "orders": 0,
+          "trades": 0
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "41ebf4e5d539e3c1501ddd96f4d5211b4f6cd692d84cbbf9bd182df20dc994de",
+          "orders": 0,
+          "trades": 0
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "41ebf4e5d539e3c1501ddd96f4d5211b4f6cd692d84cbbf9bd182df20dc994de",
+          "orders": 0,
+          "trades": 0
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "feb6f37fbdc3481de24c0b90b0c092402c00b300edced44235472d362d9cebcf",
+          "orders": 0,
+          "trades": 0
+        }
+      ]
+    },
+    {
+      "name": "nz_derived_acdf19e258a0c407594cd826aa1f18aa2d0c209e1521c68541922d5b15cc1cd5",
+      "original_sha256": "acdf19e258a0c407594cd826aa1f18aa2d0c209e1521c68541922d5b15cc1cd5",
+      "source_sha256": "6f8f0e948751be86e6b3301d2e43442cf50c649e1b0eb4a876e7f7175c1c1fb0",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "cf6edf0a3244726354771c0511834f9d3aafcb3c877b658c217c635a09ea82e3",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "cf6edf0a3244726354771c0511834f9d3aafcb3c877b658c217c635a09ea82e3",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "cf6edf0a3244726354771c0511834f9d3aafcb3c877b658c217c635a09ea82e3",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "cc0a26178c2f741e9dbc03cabe2f6091fa3a2607dac974c431d311792761592a",
+          "orders": 21,
+          "trades": 10
+        }
+      ]
+    },
+    {
+      "name": "nz_derived_cbf121e3e59be475f503a60963dace6b52b5d75ae97d14790b43c179d5b8d4b2",
+      "original_sha256": "cbf121e3e59be475f503a60963dace6b52b5d75ae97d14790b43c179d5b8d4b2",
+      "source_sha256": "3c9f35e53ae78a891277353ffac602b4443cbb467a8d034df267f78ad00d2a1f",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "41c54683911cf26f786075fb549160aa60e315adffc6116099f20bcdd0158fb5",
+          "orders": 23,
+          "trades": 11
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "41c54683911cf26f786075fb549160aa60e315adffc6116099f20bcdd0158fb5",
+          "orders": 23,
+          "trades": 11
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "41c54683911cf26f786075fb549160aa60e315adffc6116099f20bcdd0158fb5",
+          "orders": 23,
+          "trades": 11
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "51fc259e448a7e54b1811696216594ee284bffb56eebf552c00f829023ce8528",
+          "orders": 23,
+          "trades": 11
+        }
+      ]
+    },
+    {
+      "name": "nz_derived_460a12de491a2ffb5ff64bc089f000039052b71be2e2e628924d98b36a0c0e35",
+      "original_sha256": "460a12de491a2ffb5ff64bc089f000039052b71be2e2e628924d98b36a0c0e35",
+      "source_sha256": "c55f8bdb59a511b8965a80e82f493fadafbf9144d27353e128aa8b19f767bd6f",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "24c75aa9d0e6f0dc0b253736a65de13c2d22276aeb505cf57bdf63b5cc4be9d7",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "24c75aa9d0e6f0dc0b253736a65de13c2d22276aeb505cf57bdf63b5cc4be9d7",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "24c75aa9d0e6f0dc0b253736a65de13c2d22276aeb505cf57bdf63b5cc4be9d7",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "24c75aa9d0e6f0dc0b253736a65de13c2d22276aeb505cf57bdf63b5cc4be9d7",
+          "orders": 21,
+          "trades": 10
+        }
+      ]
+    },
+    {
+      "name": "nz_derived_c7ecbde05f36d6dd7a6613fa52800e64466207ed4d9e2a57b57cffee8e1e08c2",
+      "original_sha256": "c7ecbde05f36d6dd7a6613fa52800e64466207ed4d9e2a57b57cffee8e1e08c2",
+      "source_sha256": "02e3adde020c0a007c05eaec8efd123aaf124109a28477d4c5d023da2c1d5de7",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "dee8c568c43c0557a18029839be8ec69e4018564e3b323e659c7d3102507529f",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "dee8c568c43c0557a18029839be8ec69e4018564e3b323e659c7d3102507529f",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "dee8c568c43c0557a18029839be8ec69e4018564e3b323e659c7d3102507529f",
+          "orders": 21,
+          "trades": 10
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "dee8c568c43c0557a18029839be8ec69e4018564e3b323e659c7d3102507529f",
+          "orders": 21,
+          "trades": 10
+        }
+      ]
+    },
+    {
+      "name": "nz_derived_6d2fb3a37507a213ed900bbafe4dc82ef15647cdbc3c33326afecdf0b78eb71c",
+      "original_sha256": "6d2fb3a37507a213ed900bbafe4dc82ef15647cdbc3c33326afecdf0b78eb71c",
+      "source_sha256": "7e1fbc1b2cb3b2f8f4169772f0828b8ddcdaea67088b742671e9db64c5367581",
+      "replacements": 4,
+      "executable": true,
+      "runs": [
+        {
+          "mode": "run",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "3fd5e03d8bbba9bdbc68c55788c6ce95802eab3de618edac2e6449792cd0badd",
+          "orders": 0,
+          "trades": 0
+        },
+        {
+          "mode": "run-incremental",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "3fd5e03d8bbba9bdbc68c55788c6ce95802eab3de618edac2e6449792cd0badd",
+          "orders": 0,
+          "trades": 0
+        },
+        {
+          "mode": "run-realtime-history",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "3fd5e03d8bbba9bdbc68c55788c6ce95802eab3de618edac2e6449792cd0badd",
+          "orders": 0,
+          "trades": 0
+        },
+        {
+          "mode": "run-realtime-forming",
+          "exit_code": 0,
+          "stderr": "",
+          "sha256": "3fd5e03d8bbba9bdbc68c55788c6ce95802eab3de618edac2e6449792cd0badd",
+          "orders": 0,
+          "trades": 0
+        }
+      ]
+    }
+  ],
+  "local_evidence_root": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-retest-20261029",
+  "evidence_sha256": {
+    "summary.json": "710abafb41479ec735ee827d40df9a7e426e3ecfc23a55ddcf3a5c0db9ca6bda",
+    "results.json": "5b32d45b76b20abf4b8def05c0b408766714b3051cbe010badabeff99cfc88cb",
+    "metadata.json": "5fc8e0144606d3f6ea4e7a0cb300c134b2f0e0a90f424f41215632814310febc",
+    "source-integrity.json": "f4d69e28230500ea3590216512c1e7d48f8cf953a674cd0c8631cb61ac1b9dd4",
+    "source-manifest.json": "4584be5e9947ae7da8d46efae545ba5f68a28e86388a852697c5dbb34828c74b",
+    "analysis-receipts.jsonl": "d0178a46aaf2745eb55b86e580c4384984e6f6ab409456bc2ffaf09250ec241a",
+    "runtime-receipts.jsonl": "7be360fe85b8df463ae6bddbb98c53cefbf4956d2d4b307f9bbfc8067c48d166",
+    "triage.json": "9b6a91e13bd0a3abcc7fd4538815d3da51dd3a315bef3d6d7886a529cc1a01f0",
+    "runtime-count-differences.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "passed-diagnostic-codes.json": "e32713bc3df1c72ed15a5252f7207a5763218278f718286437ef81ca986bdaae",
+    "order-na-results.json": "e272ef100b8a5fb46df5abad9c4bb60502ce06fbc7f078038794262a5ea23c18",
+    "probe-results.json": "08f2985e99d3825134ab92a46e7a5c51bf8f9607aab81a0aad61a9b486afb191",
+    "order_na_probes.py": "f865c515c3d3d6ccd6ece04685766f9043dfb01fdeae8b074206f82f6b9d583d",
+    "probes.py": "52899d966179530267d4cd44bdfbb22b14aadc75345d0c7e4c28c1473d0183e9",
+    "bars.csv": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+    "pine-compat.exe": "cadf0e5184204b753902c53e8bd8f96109d54600d665c3c2793c2af5b2a7d7e4",
+    "build_report_evidence.py": "6fd6da7debbd91955074b095466ef6b105599b74a13ae1504d2a636be16e7a10"
+  },
+  "repository_fixture_sha256": {
+    "docs/evidence/strategy-corpus-20261029/bars.csv": "0946d04b1159cb80bb139a8658265168f3a13eba357d8f41eb77c296be677d52",
+    "docs/evidence/strategy-corpus-20261029/entry-bare-na.pine": "a1dfb9f97ff3ec0e81d8fb508246bf92d96134fa33b398571e5c3d0962efd840",
+    "docs/evidence/strategy-corpus-20261029/entry-omitted.pine": "fd8eee2d4799cf7dc8d81e1e1577c3667b3c392569d68572742f882d2d9c28c2",
+    "docs/evidence/strategy-corpus-20261029/entry-typed-na.pine": "fda1afe15b2010279c65bc51a4d15cefb95bbf8a461e65ffd7daf491b7dcf068",
+    "docs/evidence/strategy-corpus-20261029/nz-v4-y.pine": "b33e1bc2b433afa57b5a934dd2cedbbcc7c00dac7bb7040e5c6e61e838752a11",
+    "docs/evidence/strategy-corpus-20261029/nz-v5-source.pine": "b7282ac40c92b5e58a109a78016c378b8441edf6861ce8bf4d1f6120913b6656",
+    "docs/evidence/strategy-corpus-20261029/udf-alert-v5.pine": "d4c17283694e4c1e4ed1012e5831caa5161d08ca90ccedcdee7cae98218d380f"
+  },
+  "repository_tool_sha256": {
+    "scripts/retest_saved_strategy_library.py": "485dd3e8f62effe8b1ea03f981873bae50ad5b0998820afee40fa32560fa7044",
+    "scripts/summarize_saved_strategy_retest.py": "6327df14380862afdfd3685d3931016588f7f9c6b80f807dd21f0b6874075497"
+  },
+  "limitations": [
+    "Frozen runtime_passed is completion, not diagnostic-free execution or semantic equivalence.",
+    "Candidate groups overlap; only-family does not imply guaranteed runtime admission after a fix.",
+    "Third-party source controls are modified copies, excluded from original corpus statistics.",
+    "No new native TradingView receipts, full release matrix or performance measurements."
+  ]
+}

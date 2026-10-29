@@ -4303,7 +4303,7 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
-        &["risk_free_rate", "fill_orders_on_standard_ohlc"],
+        &["risk_free_rate"],
     );
 }
 
@@ -20600,11 +20600,9 @@ fn reports_unsupported_alert_function_side_effect_fixture() {
 }
 
 #[test]
-fn reports_unsupported_imperative_alert_function_side_effect_fixture() {
-    assert_unsupported_fixture(
+fn accepts_imperative_alert_function_side_effect_fixture() {
+    assert_valid_fixture(
         "tests/fixtures/sema/unsupported_imperative_alert_function_side_effect.pine",
-        "function_side_effect",
-        "alert",
     );
 }
 

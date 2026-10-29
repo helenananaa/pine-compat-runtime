@@ -89,7 +89,8 @@ impl HistoricalRuntime<'_> {
         let equity = if self.external_execution.is_some() {
             self.external_sizing_equity()?
         } else {
-            self.strategy_broker.equity_value(bar.close)
+            self.strategy_broker
+                .equity_value(self.current_standard_bar.map_or(bar.close, |bar| bar.close))
         };
         Ok(self
             .default_order_qty(equity, fill_price, true, false)?

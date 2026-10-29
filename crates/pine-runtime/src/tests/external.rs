@@ -23,6 +23,30 @@ fn account(time: i64, qty: f64) -> ExternalAccountFrame {
 }
 
 #[test]
+fn external_orders_keep_na_prices_absent_and_preserve_valid_counterparts() {
+    for command in ["entry", "order"] {
+        for (args, limit, stop) in [
+            ("qty=na, limit=na, stop=float(na)", None, None),
+            ("qty=1, limit=11, stop=na", Some(11.0), None),
+            ("qty=1, limit=na, stop=9", None, Some(9.0)),
+        ] {
+            let hir = program(&format!(
+                "strategy(\"NA prices\")\nstrategy.{command}(\"E\",strategy.long,{args})"
+            ));
+            let mut runtime = HistoricalRuntime::new(&hir)
+                .with_external_accounts(vec![account(0, 0.0)])
+                .unwrap();
+            runtime.append_bar(bar(10.0)).unwrap();
+            let intents = runtime.external_intents().unwrap();
+            assert_eq!(intents.len(), 1);
+            assert_eq!(intents[0].limit, limit);
+            assert_eq!(intents[0].stop, stop);
+            assert_eq!(intents[0].qty, Some(1.0));
+        }
+    }
+}
+
+#[test]
 fn external_generic_orders_keep_fixed_quantity_and_oca_without_native_execution() {
     let hir = program(
         "strategy(\"Orders\",pyramiding=1)\nstrategy.order(\"sell\",strategy.short,qty=3,limit=11,stop=9,oca_name=\"g\",oca_type=strategy.oca.reduce)\nstrategy.entry(\"buy\",strategy.long,qty=2,oca_name=\"g\",oca_type=strategy.oca.cancel)\nplot(strategy.position_size)",

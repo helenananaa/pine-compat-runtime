@@ -1,6 +1,36 @@
 use super::*;
 
 #[test]
+fn standard_ohlc_host_input_preserves_chart_values_and_uses_market_prices() {
+    let source = include_str!("../../../../tests/fixtures/runtime/standard_ohlc/strategy.pine");
+    let bars = include_str!("../../../../tests/fixtures/runtime/standard_ohlc/chart.csv");
+    let input: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../tests/fixtures/runtime/standard_ohlc/observations.json"
+    ))
+    .unwrap();
+    let host = serde_json::json!({"$chart":{"chartType":"heikinashi"},"$standardOhlc":input});
+    let program = compile_script(source).unwrap();
+    let result: serde_json::Value = serde_json::from_str(
+        &program
+            .run_csv_with_request_bars_internal(bars, &host.to_string())
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        result["plots"][0]["values"],
+        serde_json::json!([1000, 1001, 1002, 1003, 1004])
+    );
+    assert_eq!(result["strategy"]["trades"][0]["entryPrice"], 101);
+    assert_eq!(result["strategy"]["trades"][0]["exitPrice"], 104);
+    assert!(
+        program
+            .run_csv_with_request_bars_internal(bars, r#"{"$chart":{"chartType":"heikinashi"}}"#)
+            .unwrap_err()
+            .contains("E_STANDARD_OHLC_INPUT")
+    );
+}
+
+#[test]
 fn external_order_contract_version_is_exported() {
     assert_eq!(external_order_schema_version(), 2);
     assert_eq!(external_closing_tick_schema_version(), 1);

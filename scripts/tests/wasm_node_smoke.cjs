@@ -34,6 +34,7 @@ require('./wasm_request_reference_captures.cjs')(process.argv[2]);
 require('./wasm_request_context_windows.cjs')(process.argv[2]);
 require('./wasm_collection_parameters.cjs')(process.argv[2]);
 require('./wasm_function_body_declarations.cjs')(process.argv[2]);
+require('./wasm_strategy_compat.cjs')(process.argv[2]);
 
 // Namespace resolution is shared by direct and prepared WASM executions.
 for (const version of [3,4]) {
@@ -111,7 +112,7 @@ assert.deepEqual(direct.diagnostics, []);
 
 const program = pine.compileScript(source);
 const requirements = JSON.parse(program.hostRequirements());
-assert.equal(requirements.schemaVersion, 4);
+assert.equal(requirements.schemaVersion, 5);
 {
   const mergeProgram=pine.compileScript('//@version=6\nindicator("merge inventory")\ng=barmerge.gaps_on\nplot(request.security("OTHER","M",close,gaps=g,lookahead=barmerge.lookahead_on))\n');
   const report=JSON.parse(mergeProgram.hostRequirements());
@@ -120,7 +121,7 @@ assert.equal(requirements.schemaVersion, 4);
   assert.equal(report.requests[0].timeframeRelation,'sameOrLowerOrHigher');
   mergeProgram.free();
 }
-assert.equal(requirements.chart.bars, 'hostSuppliedStandardOhlcv');
+assert.equal(requirements.chart.bars, 'hostSuppliedChartOhlcvWithExplicitChartType');
 const compiledRun = JSON.parse(program.runCsv(bars));
 assert.deepEqual(compiledRun.plots[0].values, [2, 4, 6]);
 const owned = compiledRun.plots[0].values.slice();

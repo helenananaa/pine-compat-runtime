@@ -4,6 +4,7 @@ use pine_syntax::SourceFile;
 #[test]
 fn alert_messages_and_alertcondition_titles_accept_native_literal_braces() {
     for source in [
+        "//@version=5\nindicator(\"udf\")\nf()=>alert(\"{{ticker}}\")\nf()\nplot(1)",
         include_str!(
             "../../../docs/evidence/strategy-library-20261010/literal-alert-braces-v4-oracle-25.pine"
         ),
@@ -27,7 +28,7 @@ fn plain_braces_do_not_relax_message_templates_types_or_scope() {
         "alertcondition(true,\"Title\",\"{{unknown}}\")",
         "alertcondition(true,str.tostring(close),\"message\")",
         "alert(1)",
-        "f()=>alert(\"{{ticker}}\")\nf()",
+        "f()=>alertcondition(true,\"Title\",\"{{ticker}}\")\nf()",
     ] {
         let result = analyze_source(&SourceFile::new(
             "negative.pine",

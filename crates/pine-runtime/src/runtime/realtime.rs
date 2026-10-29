@@ -490,7 +490,7 @@ impl<'a> RealtimeRuntime<'a> {
             // state once, advance the broker transactionally, and retain all
             // user state instead of restoring then cloning it again.
             let mut runtime = self.forming.as_ref().unwrap_or(&self.confirmed).clone();
-            runtime.advance_broker_only_forming(update.bar)?;
+            runtime.advance_broker_only_forming(update.bar, context.execution_time)?;
             return Ok(runtime);
         }
         let is_new_bar = context.opening_update.unwrap_or(self.forming.is_none());

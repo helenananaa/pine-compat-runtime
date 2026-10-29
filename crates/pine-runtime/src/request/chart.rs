@@ -2,6 +2,7 @@ use super::{QuantityGrid, QuantityRules, QuantityStep, RequestTimeframe};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChartContext {
+    chart_type: crate::ChartType,
     symbol: String,
     timeframe: RequestTimeframe,
     min_move: u32,
@@ -18,6 +19,7 @@ impl ChartContext {
     #[must_use]
     pub fn new(symbol: impl Into<String>, timeframe: RequestTimeframe) -> Self {
         Self {
+            chart_type: crate::ChartType::Standard,
             symbol: symbol.into(),
             timeframe,
             min_move: 1,
@@ -34,6 +36,17 @@ impl ChartContext {
     #[must_use]
     pub fn symbol(&self) -> &str {
         &self.symbol
+    }
+
+    #[must_use]
+    pub fn chart_type(&self) -> crate::ChartType {
+        self.chart_type
+    }
+
+    #[must_use]
+    pub fn with_chart_type(mut self, chart_type: crate::ChartType) -> Self {
+        self.chart_type = chart_type;
+        self
     }
 
     #[must_use]
@@ -174,6 +187,7 @@ impl ChartContext {
 impl Default for ChartContext {
     fn default() -> Self {
         Self {
+            chart_type: crate::ChartType::Standard,
             symbol: "NASDAQ:AAPL".to_owned(),
             timeframe: RequestTimeframe::default(),
             min_move: 1,

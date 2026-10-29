@@ -12,10 +12,7 @@ use crate::{
 use pine_ir::HirProgram;
 use pine_sema::analyze_source;
 use pine_syntax::{Severity, SourceFile};
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
 
 const MINUTE: i64 = 60_000;
 const PERIOD: i64 = 5 * MINUTE;
@@ -122,6 +119,46 @@ fn loop_fixtures() -> Vec<Fixture> {
     ]
 }
 
+/// Bar-time builtins, named constants, `switch`, and dependency graphs longer
+/// or wider than the old depth-tracked walk admitted.
+fn admission_fixtures() -> Vec<Fixture> {
+    let chain = (1..=48)
+        .map(|level| format!("x{level} = x{} + 1\n", level - 1))
+        .collect::<String>();
+    let udf_graph = (1..=10)
+        .map(|level| format!("y{level} = f(y{}, y{}) / 2\n", level - 1, level - 1))
+        .collect::<String>();
+    vec![
+        Fixture::incremental(
+            "calendar_fields",
+            "",
+            "close + minute * 0.01 + hour + second + dayofmonth + month + year % 100 + weekofyear + (dayofweek == dayofweek.thursday ? 0.5 : 0.0)",
+        ),
+        Fixture::incremental("time_close", "", "close + (time_close - time) / 60000"),
+        Fixture::incremental(
+            "named_constants",
+            "",
+            "close * math.pi + color.r(color.red) + color.b(color.blue)",
+        ),
+        Fixture::incremental(
+            "switch_expression",
+            "f() =>\n    switch\n        close > open + 1 => close\n        close < open => open\n        => hl2\n",
+            "f()",
+        ),
+        Fixture::incremental(
+            "switch_selector_and_statement",
+            "f() =>\n    float out = 0.0\n    switch minute % 3\n        0 =>\n            float bump = close * 2\n            out := bump\n        1 =>\n            out := nz(ta.change(close))\n        =>\n            out := hl2\n    out\n",
+            "f()",
+        ),
+        Fixture::incremental("long_chain", format!("x0 = close\n{chain}").leak(), "x48"),
+        Fixture::incremental(
+            "udf_graph",
+            format!("f(float a, float b) =>\n    a + nz(b[1])\ny0 = close\n{udf_graph}").leak(),
+            "y10",
+        ),
+    ]
+}
+
 fn budget_fixtures() -> Vec<Fixture> {
     let iterations = ExecutionLimits {
         max_loop_iterations_per_bar: 400,
@@ -164,6 +201,16 @@ fn fallback_fixtures() -> Vec<Fixture> {
             "nested_request_in_loop",
             "f() =>\n    float acc = 0.0\n    for i = 0 to 1\n        acc += request.security(\"C\", \"5\", close) + i\n    acc\n",
             "f()",
+        ),
+        Fixture::fallback(
+            "confirmation_in_switch",
+            "f() =>\n    switch\n        barstate.isconfirmed => close\n        => open\n",
+            "f()",
+        ),
+        Fixture::fallback(
+            "last_bar_time",
+            "",
+            "close + (last_bar_time - time) / 60000",
         ),
     ]
 }
@@ -481,6 +528,11 @@ fn loop_requests_match_complete_evaluator() {
 }
 
 #[test]
+fn admitted_requests_match_complete_evaluator() {
+    assert_differential(&admission_fixtures());
+}
+
+#[test]
 fn loop_request_budgets_match_complete_evaluator() {
     assert_differential(&budget_fixtures());
 }
@@ -534,14 +586,10 @@ fn loop_admission_rejects_for_in_external_mutation_and_endpoint_reads() {
             .find(|symbol| symbol.name == "total")
             .unwrap()
             .id;
-        let mut check = IncrementalCheck {
-            dependencies,
-            captures: &HashMap::new(),
-            checked: HashMap::new(),
-            loops: 0,
-        };
+        let captures = HashMap::new();
         assert_eq!(
-            check.expression(dependencies.initializer(total).unwrap(), &HashSet::new(), 0),
+            IncrementalCheck::new(dependencies, &captures)
+                .admits(dependencies.initializer(total).unwrap()),
             admitted,
             "{definition}"
         );

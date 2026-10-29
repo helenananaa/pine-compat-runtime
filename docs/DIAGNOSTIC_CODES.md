@@ -233,6 +233,10 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 
 ## Runtime
 
+- `E_STANDARD_OHLC_INPUT`: an enabled Heikin-Ashi standard-price profile lacks
+  the exact host observation, receives invalid/misaligned standard OHLC, or
+  requests the unsupported history-tick dual-price combination. Input rejection
+  before execution is retryable; synthetic chart prices are never substituted.
 - `E_RUNTIME`: runtime execution emitted a host-visible diagnostic.
 - `E_UNSUPPORTED_ALERT_PLACEHOLDER`: a triggered `alertcondition` message
   references a named plot with no numeric value on the current bar. The alert

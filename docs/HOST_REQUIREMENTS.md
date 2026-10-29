@@ -25,7 +25,7 @@ pine-compat requirements script.pine --library-source Author/Library/1=library.p
 ```
 
 An unsupported script returns a nonzero status with the existing analysis JSON
-diagnostics on stderr. A valid report on stdout uses its own schema version 4;
+diagnostics on stderr. A valid report on stdout uses its own schema version 5;
 it is separate from analysis schema 5 and the current runtime result schema 9.
 
 Python uses the compiled program, including libraries supplied to compilation:
@@ -45,7 +45,12 @@ program.free();
 
 ## Contract and interpretation
 
-Schema 4 adds linear contract metadata discovery and distinguishes the default
+Schema 5 adds `execution.standardOhlc` and explicit chart-type interpretation.
+Heikin-Ashi strategies can evaluate synthetic chart bars while the native broker
+uses separately supplied standard prices. See
+[STANDARD_OHLC_HOST_CONTRACT.md](STANDARD_OHLC_HOST_CONTRACT.md) for the
+observation input, supported modes and explicit unsupported combinations.
+Schema 4 added linear contract metadata discovery and distinguishes the default
 point value from the host's configured multiplier. See
 [LINEAR_CONTRACT_METADATA.md](LINEAR_CONTRACT_METADATA.md) for exact decimal
 quantity steps and independent minima. Schema 3 added currency-rate discovery.
@@ -77,18 +82,19 @@ external-input obligations merely because their text appears in a library.
 
 | Field | Meaning for the host |
 | --- | --- |
-| `chart.bars` | Supply standard OHLCV chart bars through the chosen execution API. |
+| `chart.bars` | Supply chart OHLCV bars and an explicit chart type through the chosen execution API. Omitted chart type means standard. |
 | `chart.priceGrid` | Supply positive integer minMove/priceScale for the intended instrument; no exchange lookup occurs. |
 | `chart.quantityPrecision` | Legacy decimal-power quantity profile, integer precision 0 through 9. |
 | `chart.quantityStep`, `chart.minContract` | Optional exact decimal increment and independent minimum, advertised by contract metadata schema 1. |
 | `chart.symbolMetadata` | Metadata names read by the executable HIR. Other context-dependent behavior, such as broker fills and chart time boundaries, can still need chart context without a direct metadata read. |
 | `chart.defaults` | Actual synthetic chart symbol/timeframe/grid/quantity defaults, fixed currency/timezone/point value, and explicit absence of symbol lookup. These are defaults, not inferred metadata for the supplied bars. |
-| `account` | Null for indicators. Strategies disclose linear accounting with host-supplied multiplier and currency conversion. `defaultPointValue` is the synthetic fallback; inverse contracts and nonstandard-chart broker profiles remain unsupported. |
+| `account` | Null for indicators. Strategies disclose linear accounting with host-supplied multiplier and currency conversion. `defaultPointValue` is the synthetic fallback; inverse contracts, nonstandard charts other than Heikin-Ashi, and the listed dual-price combinations remain unsupported. |
 | `currencyRates` | Optional effective daily currency input contract with account-conversion and request pair selectors. An unsupplied foreign pair is an input error. |
 | `execution.clock` | `explicitTimestampWhenEvaluated` means a reached `timenow` read needs an explicit host execution timestamp. `notUsed` means the inventory found no read. A skipped branch does not become a runtime requirement. |
 | `execution.realtimeUpdates` | The host supplies ordered forming replacements and confirmations; the core implements their state semantics. Rust/Python also accept an optional opening-update marker for attachment to an already open bar; omission retains first-observation inference. This is not a scheduler or market feed. |
 | `execution.calcOnEveryTick`, `calcOnOrderFills`, `processOrdersOnClose` | The compiled strategy switches. Indicator reports set these strategy-only flags to false. |
 | `execution.magnifier` | `historicalIntrabarsOrReportedStandardOhlcFallback` means enabled historical Magnifier accepts supplied intrabars and retains the established diagnostic/fallback behavior for absence or gaps. `notEnabled` does not require intrabars. |
+| `execution.standardOhlc` | `requiredPerObservationOnHeikinAshiNativeBrokerSchema1` requires separate standard prices when the host declares a Heikin-Ashi chart; standard charts need no second feed. `notEnabled` retains fills on chart prices. |
 | `execution.sessionWindows` | Window-scoped risk rules can consume host window/trading-day IDs or retain the existing UTC fallback. `notUsedByWindowRiskRules` means no such rule was found. |
 | `requests` | Potential provider-backed contexts, identified by compiled call-site IDs. A same-context request evaluates its expression without a provider. `request.security` admits lower/equal/higher parsed timeframes and merges actual request boundaries, including non-integral higher ratios and calendar months. `request.security_lower_tf` admits only lower/equal timeframes. Forming lower-timeframe results require explicitly received intrabars for the current chart period. |
 | `inputCallSiteIds` | Input calls available to override. Obtain titles, value types, defaults and constraints from existing analysis `inputs` or Rust `input_calls`. |

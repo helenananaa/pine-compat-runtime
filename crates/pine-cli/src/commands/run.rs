@@ -53,6 +53,7 @@ struct RunOptions {
     path: String,
     bars_path: String,
     magnifier_bars_path: Option<String>,
+    standard_ohlc_path: Option<String>,
     session_windows_path: Option<String>,
     execution_times_path: Option<String>,
     chart_context: ChartContext,
@@ -448,6 +449,7 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
         path: path.clone(),
         bars_path: String::new(),
         magnifier_bars_path: None,
+        standard_ohlc_path: None,
         session_windows_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
@@ -469,6 +471,18 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
     let mut index = 1;
     while index < args.len() {
         match args[index].as_str() {
+            "--chart-type" => {
+                index += 1;
+                let value = args.get(index).ok_or_else(usage)?;
+                options.chart_context = options
+                    .chart_context
+                    .clone()
+                    .with_chart_type(pine_runtime::ChartType::parse(value)?);
+            }
+            "--standard-ohlc" => {
+                index += 1;
+                options.standard_ohlc_path = Some(args.get(index).ok_or_else(usage)?.clone());
+            }
             "--bars" => {
                 index += 1;
                 let Some(value) = args.get(index) else {
@@ -819,6 +833,14 @@ fn request_environment_from_options(options: &RunOptions) -> Result<RequestEnvir
         options.chart_context.clone(),
         options.bar_calendars_path.as_deref(),
     )?;
+    let environment = if let Some(path) = &options.standard_ohlc_path {
+        let text =
+            fs::read_to_string(path).map_err(|error| format!("failed to read {path}: {error}"))?;
+        environment
+            .with_standard_ohlc_provider(Arc::new(pine_runtime::standard_ohlc_from_json(&text)?))
+    } else {
+        environment
+    };
     match &options.currency_rates_path {
         Some(path) => {
             let text = fs::read_to_string(path)

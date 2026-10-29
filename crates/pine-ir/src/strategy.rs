@@ -70,6 +70,7 @@ pub struct StrategySettings {
     pub calc_on_every_tick: bool,
     pub calc_on_every_history_tick: bool,
     pub use_bar_magnifier: bool,
+    pub fill_orders_on_standard_ohlc: bool,
 }
 
 impl Default for StrategySettings {
@@ -90,6 +91,7 @@ impl Default for StrategySettings {
             calc_on_every_tick: false,
             calc_on_every_history_tick: false,
             use_bar_magnifier: false,
+            fill_orders_on_standard_ohlc: false,
         }
     }
 }

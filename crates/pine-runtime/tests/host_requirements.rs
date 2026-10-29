@@ -8,7 +8,7 @@ fn modern_merge_options_and_calendar_relation_are_reported_without_execution() {
         "//@version=6\nindicator(\"merge inventory\")\ng=barmerge.gaps_on\na=g\nplot(request.security(\"OTHER\",\"M\",close,gaps=a,lookahead=barmerge.lookahead_on))\nplot(request.security(\"OTHER\",\"M\",close))\n",
     );
     let report = host_requirements(&hir);
-    assert_eq!(report.schema_version, 4);
+    assert_eq!(report.schema_version, 5);
     assert_eq!(report.requests[0].gaps, "gapsOn");
     assert_eq!(report.requests[0].lookahead, "lookaheadOn");
     assert_eq!(report.requests[0].timeframe_relation, "sameOrLowerOrHigher");
@@ -47,7 +47,7 @@ fn currency_inventory_exposes_pair_selectors_and_account_conversion_without_mark
         "//@version=6\nstrategy(\"rates\",currency=currency.EUR)\nplot(request.currency_rate(syminfo.currency,strategy.account_currency))\n",
     );
     let report = host_requirements(&hir);
-    assert_eq!(report.schema_version, 4);
+    assert_eq!(report.schema_version, 5);
     let account = report.account.unwrap();
     assert!(account.currency_conversion);
     assert!(

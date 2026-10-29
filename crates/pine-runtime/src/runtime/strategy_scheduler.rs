@@ -323,10 +323,17 @@ impl HistoricalFillStep {
 }
 
 impl HistoricalRuntime<'_> {
-    pub(crate) fn advance_broker_only_forming(&mut self, bar: Bar) -> Result<(), RuntimeError> {
+    pub(crate) fn advance_broker_only_forming(
+        &mut self,
+        bar: Bar,
+        execution_time: Option<i64>,
+    ) -> Result<(), RuntimeError> {
         debug_assert_eq!(self.program.script_mode, ScriptMode::Strategy);
         debug_assert!(!self.program.strategy_settings.calc_on_every_tick);
         debug_assert!(!self.program.strategy_settings.calc_on_order_fills);
+        let bar = self
+            .standard_bar_for_observation(bar, crate::BarUpdateKind::Forming, execution_time)?
+            .unwrap_or(bar);
         self.session_windows
             .validate_range(self.bars, self.bars + 1)
             .map_err(crate::SessionWindowInputError::runtime_error)?;

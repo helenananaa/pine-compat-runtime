@@ -248,6 +248,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstBool,
         optional: true,
     },
+    BuiltinParam {
+        name: "fill_orders_on_standard_ohlc",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[
@@ -696,7 +701,7 @@ const NA_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 
 const NZ_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
-        name: "x",
+        name: "source",
         accepts: Accepts::Any,
         optional: false,
     },
@@ -706,6 +711,25 @@ const NZ_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
 ];
+
+pub(crate) const LEGACY_NZ_SIGNATURE: BuiltinSignature = BuiltinSignature {
+    name: "nz",
+    phase: BuiltinPhase::Phase1Core,
+    params: &[
+        BuiltinParam {
+            name: "x",
+            accepts: Accepts::Any,
+            optional: false,
+        },
+        BuiltinParam {
+            name: "y",
+            accepts: Accepts::Any,
+            optional: true,
+        },
+    ],
+    returns: ReturnSpec::SameAsArg(0),
+    variadic: false,
+};
 
 const FIXNAN_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "source",

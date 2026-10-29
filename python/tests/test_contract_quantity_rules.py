@@ -22,7 +22,7 @@ plot(syminfo.mincontract)
 def test_contract_capability_and_requirements_describe_actual_host_metadata():
     assert pine_compat.CONTRACT_METADATA_SCHEMA_VERSION==1
     requirements=pine_compat.compile_script(source(2)).host_requirements()
-    assert requirements['schemaVersion']==4
+    assert requirements['schemaVersion']==5
     assert requirements['chart']['contractMetadataSchemaVersion']==1
     assert requirements['account']['profile']=='linearHostPointValueWithHostCurrencyRates'
     assert requirements['account']['defaultPointValue']==1

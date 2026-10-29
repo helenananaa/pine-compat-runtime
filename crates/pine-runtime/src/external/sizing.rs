@@ -24,6 +24,7 @@ impl HistoricalRuntime<'_> {
         &mut self,
         args: &[HirCallArg],
         is_long: bool,
+        market: bool,
     ) -> Result<f64, RuntimeError> {
         let explicit = match call_arg_expr(args, 2, "qty") {
             Some(expr) => {
@@ -55,14 +56,8 @@ impl HistoricalRuntime<'_> {
                 .current_bar
                 .ok_or_else(|| external_error("quantity sizing requires an active bar"))?;
             let equity = self.external_sizing_equity()?;
-            self.default_order_qty(
-                equity,
-                bar.close,
-                is_long,
-                call_arg_expr(args, 3, "limit").is_none()
-                    && call_arg_expr(args, 4, "stop").is_none(),
-            )?
-            .ok_or_else(|| external_error("default order quantity is unavailable"))?
+            self.default_order_qty(equity, bar.close, is_long, market)?
+                .ok_or_else(|| external_error("default order quantity is unavailable"))?
         };
         if !quantity.is_finite() || quantity < 0.0 {
             return Err(external_error("quantity must be positive and finite"));

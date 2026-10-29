@@ -620,7 +620,7 @@ alertcondition(true, "Title", "{{unknown}}")
 }
 
 #[test]
-fn rejects_alert_side_effects_inside_functions() {
+fn accepts_alert_side_effects_inside_functions() {
     let analysis = analyze(
         r#"f() =>
     alert("Fn")
@@ -630,13 +630,11 @@ plot(f())
     );
 
     assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "function_side_effect")
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

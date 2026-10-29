@@ -1,6 +1,43 @@
 use super::*;
 
 #[test]
+fn standard_ohlc_prices_are_used_in_all_cli_modes() {
+    let mut options = parse_options(&[
+        workspace_path("tests/fixtures/runtime/standard_ohlc/strategy.pine"),
+        "--bars".into(),
+        workspace_path("tests/fixtures/runtime/standard_ohlc/chart.csv"),
+        "--chart-type".into(),
+        "heikinashi".into(),
+        "--standard-ohlc".into(),
+        workspace_path("tests/fixtures/runtime/standard_ohlc/observations.json"),
+        "--execution-times".into(),
+        workspace_path("tests/fixtures/runtime/standard_ohlc/times.txt"),
+    ])
+    .unwrap();
+    for mode in [
+        ExecutionMode::Batch,
+        ExecutionMode::Incremental,
+        ExecutionMode::RealtimeHistory,
+        ExecutionMode::RealtimeForming,
+    ] {
+        let result: serde_json::Value =
+            serde_json::from_str(&run_json_with_options_in_mode(&options, mode).unwrap()).unwrap();
+        assert_eq!(
+            result["plots"][0]["values"],
+            serde_json::json!([1000, 1001, 1002, 1003, 1004])
+        );
+        assert_eq!(result["strategy"]["trades"][0]["entryPrice"], 101);
+        assert_eq!(result["strategy"]["trades"][0]["exitPrice"], 104);
+    }
+    options.standard_ohlc_path = None;
+    assert!(
+        run_json_with_options(&options)
+            .unwrap_err()
+            .contains("E_STANDARD_OHLC_INPUT")
+    );
+}
+
+#[test]
 fn bar_calendar_file_drives_all_cli_run_modes() {
     let base = std::env::temp_dir().join(format!("pine-cli-calendar-{}", std::process::id()));
     fs::create_dir_all(&base).unwrap();
@@ -83,6 +120,7 @@ fn candidate_macd_batch_incremental_and_realtime_history_match() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/macd.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -285,6 +323,7 @@ fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_rese
     let utc_options = RunOptions {
         path: script_path.clone(),
         bars_path: bars_path.clone(),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -301,6 +340,7 @@ fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_rese
     let overnight_options = RunOptions {
         path: script_path.clone(),
         bars_path: bars_path.clone(),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: Some(overnight_path),
         execution_times_path: None,
@@ -317,6 +357,7 @@ fn runs_strategy_session_windows_keep_filled_orders_across_utc_midnight_and_rese
     let switch_options = RunOptions {
         path: script_path,
         bars_path,
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: Some(switch_path),
         execution_times_path: None,
@@ -368,6 +409,7 @@ fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
     let baseline_options = RunOptions {
         path: script_path.clone(),
         bars_path: bars_path.clone(),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -384,6 +426,7 @@ fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
     let magnifier_options = RunOptions {
         path: script_path,
         bars_path,
+        standard_ohlc_path: None,
         magnifier_bars_path: Some(magnifier_path),
         session_windows_path: None,
         execution_times_path: None,
@@ -688,6 +731,7 @@ fn runs_timenow_with_explicit_execution_times_in_normal_and_profile_modes() {
     let options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: Some(execution_times.to_string_lossy().into_owned()),
@@ -778,6 +822,7 @@ fn cli_timenow_fails_closed_when_execution_times_are_missing_or_misaligned() {
     let mut options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -847,6 +892,7 @@ bgcolor(shade)
     let options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -888,6 +934,7 @@ bgcolor(shade)
     let profile_options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -953,6 +1000,7 @@ plot(color.t(shade))
     let options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1113,6 +1161,7 @@ fn runs_v4_legacy_input_overrides_through_cli_host() {
     let options = RunOptions {
         path,
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1144,6 +1193,7 @@ fn profiled_run_reports_max_bars_back_without_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1172,6 +1222,7 @@ fn profiled_run_reports_max_bars_back_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1200,6 +1251,7 @@ fn profiled_run_reports_udf_max_bars_back_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_udf_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1242,6 +1294,7 @@ fn assert_profile_series_max_bars_back_miss_with_libraries(
     let options = RunOptions {
         path: workspace_path(path),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1274,6 +1327,7 @@ fn profiled_run_reports_effective_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1305,6 +1359,7 @@ fn profiled_run_reports_expression_source_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_source_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1337,6 +1392,7 @@ fn profiled_run_reports_alias_expression_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_alias_expression_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1369,6 +1425,7 @@ fn profiled_run_reports_ternary_expression_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_ternary_expression_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1401,6 +1458,7 @@ fn profiled_run_reports_qualified_builtin_ternary_series_max_bars_back_diagnosti
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_qualified_builtin_ternary_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1433,6 +1491,7 @@ fn profiled_run_reports_pure_math_call_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_math_call_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1465,6 +1524,7 @@ fn profiled_run_reports_named_pure_math_call_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_named_pure_math_call_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1497,6 +1557,7 @@ fn profiled_run_reports_numeric_cast_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_numeric_cast_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1565,6 +1626,7 @@ fn profiled_run_reports_udf_length_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_udf_length_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1597,6 +1659,7 @@ fn profiled_run_reports_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1629,6 +1692,7 @@ fn profiled_run_reports_switch_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_switch_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1661,6 +1725,7 @@ fn profiled_run_reports_statement_switch_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_statement_switch_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1693,6 +1758,7 @@ fn profiled_run_reports_expression_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1725,6 +1791,7 @@ fn profiled_run_reports_tuple_switch_expression_block_series_max_bars_back_diagn
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_switch_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1757,6 +1824,7 @@ fn profiled_run_reports_if_expression_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_if_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1789,6 +1857,7 @@ fn profiled_run_reports_tuple_if_expression_block_series_max_bars_back_diagnosti
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_if_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1821,6 +1890,7 @@ fn profiled_run_reports_call_argument_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_call_argument_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1853,6 +1923,7 @@ fn profiled_run_reports_block_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1885,6 +1956,7 @@ fn profiled_run_reports_loop_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_loop_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1917,6 +1989,7 @@ fn profiled_run_reports_for_in_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1949,6 +2022,7 @@ fn profiled_run_reports_for_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -1981,6 +2055,7 @@ fn profiled_run_reports_for_in_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2013,6 +2088,7 @@ fn profiled_run_reports_while_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2045,6 +2121,7 @@ fn profiled_run_reports_while_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2153,6 +2230,7 @@ fn runs_request_bars_integration_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/request/request_security_host.pine"),
         bars_path: workspace_path("tests/fixtures/request/chart_1m.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2714,6 +2792,7 @@ fn runs_legacy_v4_security_provider_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
         bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2755,6 +2834,7 @@ fn legacy_v4_security_cli_missing_provider_error_is_source_spanned() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
         bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2781,6 +2861,7 @@ fn runs_imported_function_with_library_source_integration_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/import.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2820,6 +2901,7 @@ fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"),
         bars_path: bars_path.display().to_string(),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2852,6 +2934,7 @@ fn run_output_renders_strategy_order_alert_template() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2879,6 +2962,7 @@ fn run_output_rejects_unknown_strategy_order_alert_placeholder() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2906,6 +2990,7 @@ fn run_output_renders_strategy_running_alert() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2938,6 +3023,7 @@ fn run_output_rejects_unknown_strategy_running_alert_placeholder() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,
@@ -2970,6 +3056,7 @@ fn run_json_keeps_strategy_alert_template_output_out_of_default_json() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        standard_ohlc_path: None,
         magnifier_bars_path: None,
         session_windows_path: None,
         execution_times_path: None,

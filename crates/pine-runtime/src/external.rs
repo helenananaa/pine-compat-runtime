@@ -292,6 +292,13 @@ impl HistoricalRuntime<'_> {
         options: ExternalExecutionOptions,
     ) -> Result<(), RuntimeError> {
         let settings = self.program.strategy_settings;
+        if settings.fill_orders_on_standard_ohlc
+            && self.request_environment.chart().chart_type() == crate::ChartType::HeikinAshi
+        {
+            return Err(external_error(
+                "standard OHLC fills on Heikin-Ashi require a native dual-price broker; external dual-price execution is not supported",
+            ));
+        }
         if self.program.script_mode != ScriptMode::Strategy
             || (contexts.is_none()
                 && (settings.calc_on_order_fills != passes.is_some()
@@ -721,6 +728,21 @@ impl HistoricalRuntime<'_> {
             }
         };
         let opening = matches!(callee, "strategy.entry" | "strategy.order");
+        let (limit, stop) = if opening {
+            (
+                self.eval_optional_order_price(call_arg_expr(args, 3, "limit"))?,
+                self.eval_optional_order_price(call_arg_expr(args, 4, "stop"))?,
+            )
+        } else {
+            (None, None)
+        };
+        if [limit, stop]
+            .into_iter()
+            .flatten()
+            .any(|price| !price.is_finite() || price <= 0.0)
+        {
+            return Err(external_error("invalid price or quantity"));
+        }
         let (direction, qty, metadata) = if opening {
             let value = self.eval_expr(
                 call_arg_expr(args, 1, "direction")
@@ -732,7 +754,11 @@ impl HistoricalRuntime<'_> {
                 _ => return Err(external_error("invalid direction")),
             };
             let metadata = self.external_order_metadata(callee, args)?;
-            let qty = self.external_order_quantity(args, direction == "long")?;
+            let qty = self.external_order_quantity(
+                args,
+                direction == "long",
+                limit.is_none() && stop.is_none(),
+            )?;
             if qty == 0.0 {
                 return Ok(PineValue::Void);
             }
@@ -741,6 +767,8 @@ impl HistoricalRuntime<'_> {
             (None, None, self.external_order_metadata(callee, args)?)
         };
         let mut numbers = [None; 9];
+        numbers[0] = limit;
+        numbers[1] = stop;
         for (slot, name) in [
             "limit",
             "stop",
@@ -755,8 +783,8 @@ impl HistoricalRuntime<'_> {
         .iter()
         .enumerate()
         {
-            // Entry quantity has already been evaluated exactly once above.
-            if opening && *name == "qty" {
+            // Opening quantity and prices were evaluated exactly once above.
+            if opening && matches!(*name, "qty" | "limit" | "stop") {
                 continue;
             }
             let position = match (callee, *name) {

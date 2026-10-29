@@ -1,0 +1,7 @@
+//@version=6
+strategy("dual",fill_orders_on_standard_ohlc=true)
+if bar_index==0
+    strategy.entry("E",strategy.long,qty=1)
+if bar_index==3
+    strategy.close_all()
+plot(close)

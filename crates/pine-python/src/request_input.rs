@@ -22,9 +22,17 @@ pub(super) fn parse_request_environment(
     let mut streams = Vec::with_capacity(dict.len());
     let mut calendars = None;
     let mut currency_rates = None;
+    let mut standard_ohlc = None;
     let mut symbol_contexts = Vec::new();
     for (key, value) in dict {
         let key: String = key.extract()?;
+        if key == "$standardOhlc" {
+            let json = PyModule::import(value.py(), "json")?;
+            let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
+            standard_ohlc =
+                Some(pine_runtime::standard_ohlc_from_json(&raw).map_err(PyValueError::new_err)?);
+            continue;
+        }
         if key == "$symbolMetadata" {
             let json = PyModule::import(value.py(), "json")?;
             let raw: String = json.call_method1("dumps", (&value,))?.extract()?;
@@ -68,6 +76,10 @@ pub(super) fn parse_request_environment(
     let environment = RequestEnvironment::new(chart, std::sync::Arc::new(provider))
         .with_symbol_contexts(symbol_contexts)
         .map_err(PyValueError::new_err)?;
+    let environment = match standard_ohlc {
+        Some(provider) => environment.with_standard_ohlc_provider(std::sync::Arc::new(provider)),
+        None => environment,
+    };
     let environment = match calendars {
         Some(calendars) => environment.with_bar_calendars(std::sync::Arc::new(calendars)),
         None => environment,

@@ -33,14 +33,16 @@ impl Analyzer {
 
         for (index, arg) in args.iter().enumerate() {
             if arg.name.is_none()
-                && signature
-                    .params
-                    .get(index)
-                    .is_some_and(|param| param.name == "calc_on_every_history_tick")
+                && signature.params.get(index).is_some_and(|param| {
+                    matches!(
+                        param.name,
+                        "calc_on_every_history_tick" | "fill_orders_on_standard_ohlc"
+                    )
+                })
             {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
-                    "`strategy` argument `calc_on_every_history_tick` must be named",
+                    "this strategy execution option must be named",
                     arg.span,
                 ));
                 continue;
@@ -356,6 +358,13 @@ impl Analyzer {
                     }
                     if let Some(value) = self.known_const_bool_payload_value(&arg.value) {
                         self.strategy_settings.use_bar_magnifier = value;
+                    }
+                }
+                "fill_orders_on_standard_ohlc" => {
+                    if self.legacy.dialect().version() < 5 {
+                        self.reject_unavailable_legacy_builtin(name, 5, arg.span);
+                    } else if let Some(value) = self.known_const_bool_payload_value(&arg.value) {
+                        self.strategy_settings.fill_orders_on_standard_ohlc = value;
                     }
                 }
                 "format" => {

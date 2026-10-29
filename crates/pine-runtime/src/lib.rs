@@ -32,7 +32,12 @@ mod retention;
 mod runtime;
 mod series;
 mod session_windows;
+mod standard_ohlc;
 mod strategy;
+pub use standard_ohlc::{
+    ChartType, InMemoryStandardOhlcProvider, STANDARD_OHLC_SCHEMA_VERSION, StandardOhlcObservation,
+    StandardOhlcPair, StandardOhlcProvider, standard_ohlc_from_json,
+};
 mod value;
 
 pub use bar::{Bar, BarUpdate, BarUpdateKind, RealtimeUpdateContext};

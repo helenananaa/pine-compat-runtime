@@ -106,6 +106,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) metadata: Arc<super::metadata::RuntimeMetadata>,
     pub(crate) input_overrides: InputOverrides,
     pub(crate) magnifier_input: MagnifierInput,
+    pub(crate) current_standard_bar: Option<Bar>,
     pub(crate) magnifier_chart_bar_count: Option<usize>,
     pub(crate) session_windows: crate::SessionWindowInput,
     pub(crate) bars: usize,
@@ -441,6 +442,7 @@ impl<'a> HistoricalRuntime<'a> {
             metadata: Arc::clone(&metadata),
             input_overrides: InputOverrides::new(),
             magnifier_input: MagnifierInput::new(),
+            current_standard_bar: None,
             magnifier_chart_bar_count: None,
             session_windows: crate::SessionWindowInput::new(),
             bars: 0,
@@ -912,6 +914,7 @@ impl<'a> HistoricalRuntime<'a> {
         fresh_budget: bool,
     ) -> Result<(), RuntimeError> {
         self.ensure_execution_ready()?;
+        let standard_bar = self.standard_bar_for_observation(bar, update_kind, execution_time)?;
         let account_rate = self.account_currency_rate_for_bar(&bar, update_kind, execution_time)?;
         if self
             .external_execution
@@ -956,6 +959,7 @@ impl<'a> HistoricalRuntime<'a> {
         if fresh_budget {
             self.reset_execution_budget();
         }
+        self.current_standard_bar = standard_bar;
         let result = self.resource_budget.check().and_then(|()| {
             self.initialize_native_risk()?;
             // Native broker sizing/accounting uses 1 before an explicitly
@@ -999,6 +1003,7 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        let broker_bar = self.current_standard_bar.unwrap_or(bar);
         let history_ticks =
             self.prepare_bar_evaluation(bar, update_kind, is_new_bar, execution_time)?;
         if history_ticks {
@@ -1006,7 +1011,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             let passes_before_tick = self.strategy_scheduler.script_passes();
             if self.external_execution.is_none() {
-                self.run_pre_script_strategy_phases(bar_index, bar)?;
+                self.run_pre_script_strategy_phases(bar_index, broker_bar)?;
             }
             let skip_normal_strategy_pass = self.program.script_mode == ScriptMode::Strategy
                 && ((update_kind == BarUpdateKind::Forming
@@ -1019,11 +1024,13 @@ impl<'a> HistoricalRuntime<'a> {
             if skip_normal_strategy_pass
                 && self.strategy_scheduler.script_passes() == passes_before_tick
             {
-                self.strategy_broker.record_equity(bar_index, bar.close);
+                self.strategy_broker
+                    .record_equity(bar_index, broker_bar.close);
                 self.strategy_eval_checkpoint = None;
                 self.current_bar_update_kind = BarUpdateKind::Historical;
                 self.current_bar_is_new = true;
                 self.current_bar = None;
+                self.current_standard_bar = None;
                 self.current_execution_time = None;
                 return Ok(());
             }
@@ -1055,7 +1062,7 @@ impl<'a> HistoricalRuntime<'a> {
                         // Intrabar fill callbacks and realtime observations keep their
                         // own recalculation paths.
                         if update_kind != BarUpdateKind::Historical {
-                            self.recalculate_after_fill(filled, bar.close)?;
+                            self.recalculate_after_fill(filled, broker_bar.close)?;
                         }
                     }
                 }
@@ -1064,7 +1071,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
 
             if self.external_execution.is_none() {
-                self.run_post_script_strategy_phases(bar_index, bar)?;
+                self.run_post_script_strategy_phases(bar_index, broker_bar)?;
             }
         }
         self.commit_bar_evaluation(bar)
@@ -1257,6 +1264,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn strategy_mark_price(&self) -> Option<f64> {
         self.strategy_fill_mark
+            .or_else(|| self.current_standard_bar.map(|bar| bar.close))
             .or_else(|| self.current_bar.map(|bar| bar.close))
     }
 

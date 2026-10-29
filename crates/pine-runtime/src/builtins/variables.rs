@@ -265,12 +265,18 @@ impl<'a> HistoricalRuntime<'a> {
             return PineValue::Color(0x000000);
         }
         if name == "chart.is_standard" {
-            return PineValue::Bool(true);
+            return PineValue::Bool(
+                self.request_environment.chart().chart_type() == crate::ChartType::Standard,
+            );
+        }
+        if name == "chart.is_heikinashi" {
+            return PineValue::Bool(
+                self.request_environment.chart().chart_type() == crate::ChartType::HeikinAshi,
+            );
         }
         if matches!(
             name,
-            "chart.is_heikinashi"
-                | "chart.is_kagi"
+            "chart.is_kagi"
                 | "chart.is_linebreak"
                 | "chart.is_pnf"
                 | "chart.is_range"

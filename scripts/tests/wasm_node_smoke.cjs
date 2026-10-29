@@ -121,7 +121,7 @@ assert.equal(requirements.schemaVersion, 5);
   assert.equal(report.requests[0].timeframeRelation,'sameOrLowerOrHigher');
   mergeProgram.free();
 }
-assert.equal(requirements.chart.bars, 'hostSuppliedStandardOhlcv');
+assert.equal(requirements.chart.bars, 'hostSuppliedChartOhlcvWithExplicitChartType');
 const compiledRun = JSON.parse(program.runCsv(bars));
 assert.deepEqual(compiledRun.plots[0].values, [2, 4, 6]);
 const owned = compiledRun.plots[0].values.slice();

@@ -1,0 +1,1862 @@
+{
+  "before": {
+    "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-retest-20261029\\results.json",
+    "sha256": "5b32d45b76b20abf4b8def05c0b408766714b3051cbe010badabeff99cfc88cb",
+    "metadata": {
+      "started_at": "2026-10-29T11:31:06.482665+00:00",
+      "commit": "b646ced593a872e47586f0f506052f6d7c14cde9",
+      "baseline": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final45-20261018\\results.json",
+      "baseline_sha256": "9d10c0fe37819ec6a72054426ee565eca2798cedf203d8619a60ea0a90f7b7e3",
+      "baseline_metadata": {
+        "date": "2026-10-18",
+        "cwd": "E:\\projects\\pine-interpreter",
+        "commit": "736996aac32b1da6f92af12dde4548ff0cbd45f9",
+        "cli_version": "pine-compat 0.3.2",
+        "cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+        "evidence_scope": "offline_analysis_all_standalone_sources_and_512_bar_default_input_synthetic_smoke",
+        "input_rows": 7576,
+        "unique_standalone_sources": 7255,
+        "source_evidence": "same normalized saved source set, all 7255 hashes verified; no cached analysis or runtime receipts reused",
+        "bars_sha256": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+        "source_corpus_commit": "28ecae3c645e9269e2099d27cc9abbb1f52ee9ea",
+        "execution_head_commit": "736996aac32b1da6f92af12dde4548ff0cbd45f9",
+        "provenance_note": "Corrected inherited source-inventory commit label; all fresh execution rows, input hashes and CLI hash are unchanged. Original receipt retained alongside."
+      },
+      "cli_sha256": "cadf0e5184204b753902c53e8bd8f96109d54600d665c3c2793c2af5b2a7d7e4",
+      "cli_version": "pine-compat 0.3.3",
+      "bars_sha256": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+      "chart_bars": 512,
+      "chart_symbol": "V-BTC-SPOT",
+      "chart_timeframe": "1",
+      "workers": 4,
+      "analysis_timeout_seconds": 15,
+      "runtime_timeout_seconds": 8,
+      "python": "3.12.7",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "runner_sha256": "485dd3e8f62effe8b1ea03f981873bae50ad5b0998820afee40fa32560fa7044",
+      "cargo_lock_sha256": "3b55229fb85cafd2218cc4545d1d35b4a5278396f775e6a29fa6b9c8cbaf33ba",
+      "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "input_rows": 7576,
+      "unique_standalone_sources": 7255,
+      "cached_receipts_reused": false,
+      "scope": "all source analysis and default-input 512 synthetic bar smoke; no native equivalence claim",
+      "completed_at": "2026-10-29T11:34:08.274132+00:00"
+    },
+    "status_counts": {
+      "missing_request_input": 641,
+      "runtime_passed": 5365,
+      "analysis_rejected": 1102,
+      "runtime_rejected_other": 19,
+      "missing_execution_clock": 79,
+      "missing_currency_input": 49
+    },
+    "compile_accepted": 6153,
+    "completed_with_e_diagnostics": 311,
+    "completed_without_e_diagnostics": 5054,
+    "completed_diagnostic_source_counts": {
+      "E_STRATEGY_EXIT_PRICE": 173,
+      "E_STRATEGY_EXIT_QTY": 14,
+      "E_STRATEGY_PRICE": 35,
+      "E_STRATEGY_EXIT_TICKS": 61,
+      "E_STRATEGY_MARGIN": 45,
+      "E_UNSUPPORTED_ALERT_PLACEHOLDER": 1,
+      "E_STRATEGY_CLOSE_QTY": 1
+    }
+  },
+  "after": {
+    "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\results.json",
+    "sha256": "fbf86c1319aaa9024becb9d19ba1760774111ff0cc6fadb8630346ad1db86fa1",
+    "metadata": {
+      "started_at": "2026-10-29T12:21:17.365605+00:00",
+      "commit": "789b7fdfd2674467bc76b97d90633b7e3a61e341",
+      "baseline": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-retest-20261029\\results.json",
+      "baseline_sha256": "5b32d45b76b20abf4b8def05c0b408766714b3051cbe010badabeff99cfc88cb",
+      "baseline_metadata": {
+        "started_at": "2026-10-29T11:31:06.482665+00:00",
+        "commit": "b646ced593a872e47586f0f506052f6d7c14cde9",
+        "baseline": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final45-20261018\\results.json",
+        "baseline_sha256": "9d10c0fe37819ec6a72054426ee565eca2798cedf203d8619a60ea0a90f7b7e3",
+        "baseline_metadata": {
+          "date": "2026-10-18",
+          "cwd": "E:\\projects\\pine-interpreter",
+          "commit": "736996aac32b1da6f92af12dde4548ff0cbd45f9",
+          "cli_version": "pine-compat 0.3.2",
+          "cli_sha256": "44b7525adc97ed3778dce191c568b9c936e3440d7d77c80afa96635dd0abc614",
+          "evidence_scope": "offline_analysis_all_standalone_sources_and_512_bar_default_input_synthetic_smoke",
+          "input_rows": 7576,
+          "unique_standalone_sources": 7255,
+          "source_evidence": "same normalized saved source set, all 7255 hashes verified; no cached analysis or runtime receipts reused",
+          "bars_sha256": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+          "source_corpus_commit": "28ecae3c645e9269e2099d27cc9abbb1f52ee9ea",
+          "execution_head_commit": "736996aac32b1da6f92af12dde4548ff0cbd45f9",
+          "provenance_note": "Corrected inherited source-inventory commit label; all fresh execution rows, input hashes and CLI hash are unchanged. Original receipt retained alongside."
+        },
+        "cli_sha256": "cadf0e5184204b753902c53e8bd8f96109d54600d665c3c2793c2af5b2a7d7e4",
+        "cli_version": "pine-compat 0.3.3",
+        "bars_sha256": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+        "chart_bars": 512,
+        "chart_symbol": "V-BTC-SPOT",
+        "chart_timeframe": "1",
+        "workers": 4,
+        "analysis_timeout_seconds": 15,
+        "runtime_timeout_seconds": 8,
+        "python": "3.12.7",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "runner_sha256": "485dd3e8f62effe8b1ea03f981873bae50ad5b0998820afee40fa32560fa7044",
+        "cargo_lock_sha256": "3b55229fb85cafd2218cc4545d1d35b4a5278396f775e6a29fa6b9c8cbaf33ba",
+        "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "input_rows": 7576,
+        "unique_standalone_sources": 7255,
+        "cached_receipts_reused": false,
+        "scope": "all source analysis and default-input 512 synthetic bar smoke; no native equivalence claim",
+        "completed_at": "2026-10-29T11:34:08.274132+00:00"
+      },
+      "cli_sha256": "65d668ac920ccdcf6d424e4dbd5929e3df372a8650bdaa576ee3370f862615d1",
+      "cli_version": "pine-compat 0.3.3",
+      "bars_sha256": "d71c8d58d6ed80bc5a7492b8093bc4cc86d079516a2327d5229d9bc37b633fef",
+      "chart_bars": 512,
+      "chart_symbol": "V-BTC-SPOT",
+      "chart_timeframe": "1",
+      "workers": 4,
+      "analysis_timeout_seconds": 15,
+      "runtime_timeout_seconds": 8,
+      "python": "3.12.7",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "runner_sha256": "485dd3e8f62effe8b1ea03f981873bae50ad5b0998820afee40fa32560fa7044",
+      "cargo_lock_sha256": "3b55229fb85cafd2218cc4545d1d35b4a5278396f775e6a29fa6b9c8cbaf33ba",
+      "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "input_rows": 7576,
+      "unique_standalone_sources": 7255,
+      "cached_receipts_reused": false,
+      "scope": "all source analysis and default-input 512 synthetic bar smoke; no native equivalence claim",
+      "completed_at": "2026-10-29T12:25:18.435678+00:00"
+    },
+    "status_counts": {
+      "missing_request_input": 644,
+      "runtime_passed": 5395,
+      "analysis_rejected": 1069,
+      "runtime_rejected_other": 19,
+      "missing_execution_clock": 79,
+      "missing_currency_input": 49
+    },
+    "compile_accepted": 6186,
+    "completed_with_e_diagnostics": 290,
+    "completed_without_e_diagnostics": 5105,
+    "completed_diagnostic_source_counts": {
+      "E_STRATEGY_EXIT_PRICE": 174,
+      "E_STRATEGY_EXIT_QTY": 14,
+      "E_STRATEGY_EXIT_TICKS": 61,
+      "E_STRATEGY_MARGIN": 46,
+      "E_STRATEGY_PRICE": 3,
+      "E_UNSUPPORTED_ALERT_PLACEHOLDER": 1,
+      "E_STRATEGY_CLOSE_QTY": 1
+    }
+  },
+  "candidate_outcomes": {
+    "entry_order_explicit_na": {
+      "sources": 9,
+      "after": {
+        "runtime_passed": 5,
+        "missing_request_input": 2,
+        "analysis_rejected": 2
+      },
+      "rows": [
+        {
+          "sha256": "ce50096b5d59ea1598f30996bbb7649e5cc0fd949dac71d0d83ee839b47de559",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "6d3e7d100aef63fd8d4f4a3b4ea27041f4fccd1570bb9e4ada74f572f6904af5",
+          "status": "missing_request_input",
+          "errors": []
+        },
+        {
+          "sha256": "8e4b187fc74f52fbce1af1b78f22bf4095f4e523ff0c95daa7894fde837054c1",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "ef518fe6d6da10ad325a126608f18327b02efecd3cf4e70420d7ef75e4ae0a3f",
+          "status": "analysis_rejected",
+          "errors": [
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 1039,
+                "end": 1048,
+                "line": 28,
+                "column": 1
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "b0e359d78a55a2f625ef97de8d090541551629055b7cc4111b4532c3976f8001",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "ff3e648bf5bc111957eeda84a7dd48fee0db22a40250cc60796f95933ed80ec5",
+          "status": "analysis_rejected",
+          "errors": [
+            {
+              "code": "E_LEGACY_VERSION_FEATURE",
+              "severity": "error",
+              "message": "the source spelling `timeframe.period` requires Pine v4 or later and is not available in v3",
+              "span": {
+                "start": 1310,
+                "end": 1326,
+                "line": 26,
+                "column": 18
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series float and series na",
+              "span": {
+                "start": 1953,
+                "end": 1972,
+                "line": 38,
+                "column": 37
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series float and series na",
+              "span": {
+                "start": 2046,
+                "end": 2063,
+                "line": 40,
+                "column": 35
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `+` expects numeric or string operands, got const na and const na",
+              "span": {
+                "start": 2098,
+                "end": 2118,
+                "line": 41,
+                "column": 13
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `-` expects numeric operands, got series float and series na",
+              "span": {
+                "start": 2603,
+                "end": 2622,
+                "line": 52,
+                "column": 15
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `/` expects numeric operands, got series na and series float",
+              "span": {
+                "start": 2669,
+                "end": 2691,
+                "line": 54,
+                "column": 17
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 2707,
+                "end": 2740,
+                "line": 55,
+                "column": 15
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 2752,
+                "end": 2786,
+                "line": 55,
+                "column": 60
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`plot` argument `series` expects series/simple numeric, got series na",
+              "span": {
+                "start": 2867,
+                "end": 2875,
+                "line": 58,
+                "column": 11
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 3785,
+                "end": 3818,
+                "line": 74,
+                "column": 69
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series na and input float",
+              "span": {
+                "start": 3890,
+                "end": 3924,
+                "line": 75,
+                "column": 70
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `<` expects numeric operands, got series na and const int",
+              "span": {
+                "start": 3965,
+                "end": 3982,
+                "line": 76,
+                "column": 39
+              }
+            },
+            {
+              "code": "E_OPERATOR_TYPE",
+              "severity": "error",
+              "message": "operator `>` expects numeric operands, got series na and const int",
+              "span": {
+                "start": 4024,
+                "end": 4041,
+                "line": 77,
+                "column": 40
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`plotshape` argument `series` expects series/simple numeric or bool, got const na",
+              "span": {
+                "start": 4292,
+                "end": 4306,
+                "line": 85,
+                "column": 11
+              }
+            },
+            {
+              "code": "E_CALL_ARG_TYPE",
+              "severity": "error",
+              "message": "`plotshape` argument `series` expects series/simple numeric or bool, got const na",
+              "span": {
+                "start": 4488,
+                "end": 4503,
+                "line": 87,
+                "column": 11
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 1901,
+                "end": 1915,
+                "line": 37,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 1997,
+                "end": 2010,
+                "line": 39,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2086,
+                "end": 2123,
+                "line": 41,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2589,
+                "end": 2622,
+                "line": 52,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2653,
+                "end": 2691,
+                "line": 54,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 2693,
+                "end": 2799,
+                "line": 55,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3717,
+                "end": 3818,
+                "line": 74,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3821,
+                "end": 3924,
+                "line": 75,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3927,
+                "end": 3982,
+                "line": 76,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 3985,
+                "end": 4041,
+                "line": 77,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 4046,
+                "end": 4072,
+                "line": 79,
+                "column": 1
+              }
+            },
+            {
+              "code": "E_LEGACY_V3_NA_INFERENCE",
+              "severity": "error",
+              "message": "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+              "span": {
+                "start": 4074,
+                "end": 4100,
+                "line": 80,
+                "column": 1
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "0e806628d4fa59bc3497f7d2f1444f0c4e1dffa0296b0450beab93eca1939045",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "1bf3c279ace1c9d8cfd32854a8a9d3ad6c2130010746b3c5703aad90779df4b0",
+          "status": "missing_request_input",
+          "errors": []
+        },
+        {
+          "sha256": "0e100d692c40bb35009f527b377de0831922285765a04df97ecfb38fdfec2f2b",
+          "status": "runtime_passed",
+          "errors": []
+        }
+      ]
+    },
+    "nz_named_source": {
+      "sources": 8,
+      "after": {
+        "runtime_passed": 8
+      },
+      "rows": [
+        {
+          "sha256": "23634347ca96ae7ded1a6f62d081783aa782cfebcab442aeb253ad6d9fa41963",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "ffd5a4706db0bc128cbc91cbe2732dec4aee127291a42561cb8e0ece79973f8c",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "0bc888a2c3e013189330e694b068607ff5f50289e1781b040abd0fca5fdc0993",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "acdf19e258a0c407594cd826aa1f18aa2d0c209e1521c68541922d5b15cc1cd5",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "cbf121e3e59be475f503a60963dace6b52b5d75ae97d14790b43c179d5b8d4b2",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "460a12de491a2ffb5ff64bc089f000039052b71be2e2e628924d98b36a0c0e35",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "c7ecbde05f36d6dd7a6613fa52800e64466207ed4d9e2a57b57cffee8e1e08c2",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "6d2fb3a37507a213ed900bbafe4dc82ef15647cdbc3c33326afecdf0b78eb71c",
+          "status": "runtime_passed",
+          "errors": []
+        }
+      ]
+    },
+    "udf_side_effect:alert": {
+      "sources": 10,
+      "after": {
+        "runtime_passed": 8,
+        "analysis_rejected": 2
+      },
+      "rows": [
+        {
+          "sha256": "cce3dee740f3f2d12ebba96332c0067fd6814cd8d8a1ba5bdf32da6622412f4b",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "77682e5291e37e6daf0f9fd853ed540efd96c701b8681f7ed87acb72a5f8cc16",
+          "status": "analysis_rejected",
+          "errors": [
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `earnings`",
+              "span": {
+                "start": 34616,
+                "end": 34624,
+                "line": 607,
+                "column": 16
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `dividends`",
+              "span": {
+                "start": 34718,
+                "end": 34727,
+                "line": 608,
+                "column": 17
+              }
+            },
+            {
+              "code": "E_UNKNOWN_FUNCTION",
+              "severity": "error",
+              "message": "unknown function `splits`",
+              "span": {
+                "start": 34817,
+                "end": 34823,
+                "line": 609,
+                "column": 13
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "a325d94fb4de6cebccb91c92acd2952a6d792b884c9d0fdc746424c69748a9a9",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "91417db6b215a6a4a10eb36a3bc747bba1e0df2cbfd9e8c7157d1cea1fba59da",
+          "status": "analysis_rejected",
+          "errors": [
+            {
+              "code": "E_CALL_ARG_VALUE",
+              "severity": "error",
+              "message": "`strategy.close` argument `qty` must be finite and positive",
+              "span": {
+                "start": 3587,
+                "end": 3625,
+                "line": 53,
+                "column": 49
+              }
+            },
+            {
+              "code": "E_CALL_ARG_VALUE",
+              "severity": "error",
+              "message": "`strategy.close` argument `qty` must be finite and positive",
+              "span": {
+                "start": 3745,
+                "end": 3783,
+                "line": 55,
+                "column": 49
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "6a1db5f9f9fd6a17dfc4f9c361631ebda99fde5177d83f9a4b991b01978c7cd5",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "f42cebe1a22665b8e1456d77ba5fead84f3101f9d94f176c5a6ff7ead3f971d5",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "d18662f833fc3d5e4e9bbc7ace57691687e129fc0fd656f88dd9cd01cd6019c5",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "7c36fdea15d87a0a122683a02ff6435f0aca6ec76bc0248e498ff5ace4828134",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "b1c2cb36bce030e85d3dc63bdbaf4c13c3ecc2c4f724a6db0b60f4c888084801",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "2642604d454bc55ce39daac38f48b82ceb92e974689fe87c87bedccbe70b0685",
+          "status": "runtime_passed",
+          "errors": []
+        }
+      ]
+    },
+    "standard_ohlc_fill_contract": {
+      "sources": 11,
+      "after": {
+        "runtime_passed": 9,
+        "analysis_rejected": 1,
+        "missing_request_input": 1
+      },
+      "rows": [
+        {
+          "sha256": "0cd9e73fb8fe613e10f0fe0b9a8540244c47995ffbb879374ea8244a433290f7",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "d8ad962408b23c546b91558c3249bc81ca1dea1c084dedfc37aea4be15019132",
+          "status": "analysis_rejected",
+          "errors": [
+            {
+              "code": "E_PARSE_STMT",
+              "severity": "error",
+              "message": "expected statement after `,`",
+              "span": {
+                "start": 810,
+                "end": 811,
+                "line": 8,
+                "column": 91
+              }
+            }
+          ]
+        },
+        {
+          "sha256": "f65a29ae8b8c503e7ef3a3eaa34c6b4d85cf6bd2e38f2fb596e2953bb7ad5e37",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "0f4d90483ef06bc72a4c2e25b6d84a4e093f1a8b7e79b4288140a64f9a4b0ee1",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "707f571ec0c593900f6efa910ea46bdf363273843e73280d3b4f7f98e5851503",
+          "status": "missing_request_input",
+          "errors": []
+        },
+        {
+          "sha256": "9057366f1ce5c340df43ca1295f5a330efe4db2349e2da4508c80e6d26770177",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "924fa23982d895b864fc3193fb9c88db6552e1cf3fd42a075f8cdd85a2652847",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "98c5e3ea3025f12145f99b8af52d06b1b2fc824491e116963995558d69878ecd",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "34ab5799b034eddecaf9afd712ef33f51232e1bd6879999242b8eda9b657d925",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "d3fb2186aa6d71f0aba49b3f87b1e146fa64c3c88b36a739198319cac06d0a23",
+          "status": "runtime_passed",
+          "errors": []
+        },
+        {
+          "sha256": "2075d664aeac97420b6356c807de9b82507950e49522a9958cff80ed7f1f92ed",
+          "status": "runtime_passed",
+          "errors": []
+        }
+      ]
+    }
+  },
+  "counts_changed": [
+    {
+      "sha256": "b57ae4e83e6aa82cf7f68f7dff7c466f9fab5dad6f838102c0c1fbd79b8f3a43",
+      "path": "BTC Rapid fire strategy 1M Scalping.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\b57ae4e83e6aa82cf7f68f7dff7c466f9fab5dad6f838102c0c1fbd79b8f3a43.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 0,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 8,
+        "trades": 7,
+        "plots": 0,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "4c8938606920f181956011fe97f1acbc9641c22405834fdb3a1a90c66419cb20",
+      "path": "Channel Break [for free bot].pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\4c8938606920f181956011fe97f1acbc9641c22405834fdb3a1a90c66419cb20.pine",
+      "before": {
+        "orders": 28,
+        "trades": 14,
+        "plots": 4,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 45,
+        "trades": 30,
+        "plots": 4,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "a85980c46bb9f8ac887a86465f423aaa3cafc759e484838804e86ad505e02c87",
+      "path": "Combined Strategy Trading Bot (RSI ADX 20SMA).pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\a85980c46bb9f8ac887a86465f423aaa3cafc759e484838804e86ad505e02c87.pine",
+      "before": {
+        "orders": 70,
+        "trades": 70,
+        "plots": 0,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 71,
+        "trades": 71,
+        "plots": 0,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_MARGIN",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_MARGIN"
+      ]
+    },
+    {
+      "sha256": "5ae0fe803416f274c3d1681453680ea9c54c9750a59f0c7d554bedf497ae0b90",
+      "path": "Donchian Channel Strategy [for free bot].pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\5ae0fe803416f274c3d1681453680ea9c54c9750a59f0c7d554bedf497ae0b90.pine",
+      "before": {
+        "orders": 125,
+        "trades": 62,
+        "plots": 4,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 128,
+        "trades": 64,
+        "plots": 4,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "394f7961a86a9a4cb6bc38832819865bf2d9b1063166fdeb2651793791ff01dd",
+      "path": "Donchian Channel Strategy.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\394f7961a86a9a4cb6bc38832819865bf2d9b1063166fdeb2651793791ff01dd.pine",
+      "before": {
+        "orders": 125,
+        "trades": 62,
+        "plots": 4,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 128,
+        "trades": 64,
+        "plots": 4,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "e96e4f685b5be61ded8766dc81692861d56e38125cb91d4edc54608e8bfc0728",
+      "path": "HMA_ATR Strategy.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\e96e4f685b5be61ded8766dc81692861d56e38125cb91d4edc54608e8bfc0728.pine",
+      "before": {
+        "orders": 72,
+        "trades": 71,
+        "plots": 0,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 84,
+        "trades": 83,
+        "plots": 0,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "560c6287d1d3c8540c5628aee59754cf4aad8999f268b66e26e192e776718187",
+      "path": "Moving Average Band - Taylor V1.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\560c6287d1d3c8540c5628aee59754cf4aad8999f268b66e26e192e776718187.pine",
+      "before": {
+        "orders": 14,
+        "trades": 13,
+        "plots": 2,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 24,
+        "trades": 23,
+        "plots": 2,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "a9cbf41ef66c2e7b93c39a48e41944f2afebb62c5708c0cdef1f6da415158433",
+      "path": "Swing Points Breakouts.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\a9cbf41ef66c2e7b93c39a48e41944f2afebb62c5708c0cdef1f6da415158433.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 3,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 591,
+        "trades": 322,
+        "plots": 3,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "9b9b3a013e144dbde43d4d03bf4b1089a586364595fddbfe1f23e272b2e293af",
+      "path": "extracts/fmz/2def99ec37b6.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\9b9b3a013e144dbde43d4d03bf4b1089a586364595fddbfe1f23e272b2e293af.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 11,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 2,
+        "trades": 1,
+        "plots": 11,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "efab6372ca28464081dffdf897584f561ee2350aeeb4093098bbcec0ea163234",
+      "path": "extracts/fmz/3adc8d4d8ec6.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\efab6372ca28464081dffdf897584f561ee2350aeeb4093098bbcec0ea163234.pine",
+      "before": {
+        "orders": 23,
+        "trades": 22,
+        "plots": 3,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 24,
+        "trades": 23,
+        "plots": 3,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "2cdda40c854cb1b726cdf872cb71cbe02ed6374e4a89ea02cd1726c63a7894d7",
+      "path": "extracts/fmz/3bf34f1a3748.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\2cdda40c854cb1b726cdf872cb71cbe02ed6374e4a89ea02cd1726c63a7894d7.pine",
+      "before": {
+        "orders": 19,
+        "trades": 9,
+        "plots": 3,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 50,
+        "trades": 39,
+        "plots": 3,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "3fceb74bb523c4911a651444221c0351c85de7826ee45313357c130f1c2a0c98",
+      "path": "extracts/fmz/40b3f6aac823.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\3fceb74bb523c4911a651444221c0351c85de7826ee45313357c130f1c2a0c98.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 3,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 2,
+        "trades": 1,
+        "plots": 3,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "58663121c8508b95a38e39089e143ca4dad8a3a2403ba8b698d9a9d61d7221f5",
+      "path": "extracts/fmz/5197dfab2c50.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\58663121c8508b95a38e39089e143ca4dad8a3a2403ba8b698d9a9d61d7221f5.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 3,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 591,
+        "trades": 322,
+        "plots": 3,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "eb02ad6d9f67ee50bc3283e0b406a057bb6c89a0191d2c2b8542f098633fa82d",
+      "path": "extracts/fmz/51c0ad88dd4e.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\eb02ad6d9f67ee50bc3283e0b406a057bb6c89a0191d2c2b8542f098633fa82d.pine",
+      "before": {
+        "orders": 11,
+        "trades": 10,
+        "plots": 1,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 132,
+        "trades": 131,
+        "plots": 1,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "a0186ff4e5115aad816686b3e7d032cf86d9c14719ced81b08e6a85e089cd944",
+      "path": "extracts/fmz/527dbf6fa10e.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\a0186ff4e5115aad816686b3e7d032cf86d9c14719ced81b08e6a85e089cd944.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 3,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 5,
+        "trades": 5,
+        "plots": 3,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ]
+    },
+    {
+      "sha256": "f6abb49e0e42814a96e72591b8944b0bc5e69778d806e09416013ae77cf6e255",
+      "path": "extracts/fmz/62be6e3813b4.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\f6abb49e0e42814a96e72591b8944b0bc5e69778d806e09416013ae77cf6e255.pine",
+      "before": {
+        "orders": 941,
+        "trades": 470,
+        "plots": 21,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 963,
+        "trades": 481,
+        "plots": 21,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "f5b9e9a48973a0467f48188d18bb745462fdb08412047204f842a102e8cb2615",
+      "path": "extracts/fmz/74a971c70d71.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\f5b9e9a48973a0467f48188d18bb745462fdb08412047204f842a102e8cb2615.pine",
+      "before": {
+        "orders": 18,
+        "trades": 17,
+        "plots": 5,
+        "alerts": 12
+      },
+      "after": {
+        "orders": 19,
+        "trades": 18,
+        "plots": 5,
+        "alerts": 12
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "cb4f33b72d881c44517483fc414f7e4be661ab365c0332a8ad95dccbc0168c06",
+      "path": "extracts/fmz/8578dc95065c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\cb4f33b72d881c44517483fc414f7e4be661ab365c0332a8ad95dccbc0168c06.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 3,
+        "alerts": 41
+      },
+      "after": {
+        "orders": 13,
+        "trades": 12,
+        "plots": 3,
+        "alerts": 41
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "c7c89f8219698b6f2b2094d9d8638d2602869fc1b8bb41f68b2e63c82c145f37",
+      "path": "extracts/fmz/98f5f864c540.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\c7c89f8219698b6f2b2094d9d8638d2602869fc1b8bb41f68b2e63c82c145f37.pine",
+      "before": {
+        "orders": 81,
+        "trades": 81,
+        "plots": 3,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 130,
+        "trades": 130,
+        "plots": 3,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "b6f6f83f14fac0b6256187aafacfec293e89541dcd9fb82233923700f00f5407",
+      "path": "extracts/fmz/9c3fd28d91fe.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\b6f6f83f14fac0b6256187aafacfec293e89541dcd9fb82233923700f00f5407.pine",
+      "before": {
+        "orders": 28,
+        "trades": 14,
+        "plots": 4,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 45,
+        "trades": 30,
+        "plots": 4,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "7572c5df47c936f96ef0d5018e326437a43d9d7577b3e25ab2b40ac89653a218",
+      "path": "extracts/fmz/9f4846f4d14b.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\7572c5df47c936f96ef0d5018e326437a43d9d7577b3e25ab2b40ac89653a218.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 2,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 1,
+        "trades": 0,
+        "plots": 2,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "0e0bc3f67fe9b36a8be16d319cfa904f2279ff8496cc1f5c70132d11843d8b1c",
+      "path": "extracts/fmz/a48bdb07581a.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\0e0bc3f67fe9b36a8be16d319cfa904f2279ff8496cc1f5c70132d11843d8b1c.pine",
+      "before": {
+        "orders": 12,
+        "trades": 6,
+        "plots": 16,
+        "alerts": 1037
+      },
+      "after": {
+        "orders": 26,
+        "trades": 13,
+        "plots": 16,
+        "alerts": 1037
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "e0619d3b7965632d97f593f7cd7b9e1166a639ea648efc31c4c8f37cf28741f5",
+      "path": "extracts/fmz/aebc4f95063c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\e0619d3b7965632d97f593f7cd7b9e1166a639ea648efc31c4c8f37cf28741f5.pine",
+      "before": {
+        "orders": 22,
+        "trades": 21,
+        "plots": 2,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 35,
+        "trades": 34,
+        "plots": 2,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "11708222a872994966d69a4fbcd4b70c21ca0e7512b088925d9528b9d89c0dd0",
+      "path": "extracts/fmz/b19b82cb1d8c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\11708222a872994966d69a4fbcd4b70c21ca0e7512b088925d9528b9d89c0dd0.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 0,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 8,
+        "trades": 7,
+        "plots": 0,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "79e818c1e294dbe6a62b805921b84ff82394da6a021f24c187e7eb6dfd6a4f73",
+      "path": "extracts/fmz/bb66a6d8574c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\79e818c1e294dbe6a62b805921b84ff82394da6a021f24c187e7eb6dfd6a4f73.pine",
+      "before": {
+        "orders": 33,
+        "trades": 17,
+        "plots": 4,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 58,
+        "trades": 39,
+        "plots": 4,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "8831eaba817481aad498fbe9c3d8aedfbf1b7ecf6860b9344705eb97c60cab62",
+      "path": "extracts/fmz/c71c4f33d9f6.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\8831eaba817481aad498fbe9c3d8aedfbf1b7ecf6860b9344705eb97c60cab62.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 1,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 14,
+        "trades": 13,
+        "plots": 1,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "ea0bce6286e1367a3aa806698c01375b67e12737892094ff0bc68e305b9e2576",
+      "path": "extracts/fmz/c82d4893a335.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\ea0bce6286e1367a3aa806698c01375b67e12737892094ff0bc68e305b9e2576.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 2,
+        "alerts": 16
+      },
+      "after": {
+        "orders": 15,
+        "trades": 7,
+        "plots": 2,
+        "alerts": 16
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "5b6de6031ad1097f78cf19e313a90340162471e38942c8efcda346264fdde3f1",
+      "path": "extracts/fmz/d2bccc53ec44.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\5b6de6031ad1097f78cf19e313a90340162471e38942c8efcda346264fdde3f1.pine",
+      "before": {
+        "orders": 0,
+        "trades": 0,
+        "plots": 12,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 10,
+        "trades": 7,
+        "plots": 12,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "a671c9c384eeeab1c634b2332a76473096ceeb473d541c04dd443014080c7be2",
+      "path": "extracts/fmz/db867562919d.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\a671c9c384eeeab1c634b2332a76473096ceeb473d541c04dd443014080c7be2.pine",
+      "before": {
+        "orders": 26,
+        "trades": 25,
+        "plots": 1,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 40,
+        "trades": 39,
+        "plots": 1,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "f40a0a310aa83353811d68ca04045f4979b8a40ea4e18b6a3212802297ce75d5",
+      "path": "extracts/fmz/e5b5e8b4f169.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\f40a0a310aa83353811d68ca04045f4979b8a40ea4e18b6a3212802297ce75d5.pine",
+      "before": {
+        "orders": 125,
+        "trades": 62,
+        "plots": 4,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 128,
+        "trades": 64,
+        "plots": 4,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    },
+    {
+      "sha256": "9503ef4377517450c9b8e53bd1fdcd6d6068b59f087506c85e6c7e69afc21cc7",
+      "path": "extracts/fmz/f3b8089fd81f.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\9503ef4377517450c9b8e53bd1fdcd6d6068b59f087506c85e6c7e69afc21cc7.pine",
+      "before": {
+        "orders": 125,
+        "trades": 62,
+        "plots": 4,
+        "alerts": 0
+      },
+      "after": {
+        "orders": 128,
+        "trades": 64,
+        "plots": 4,
+        "alerts": 0
+      },
+      "before_diagnostics": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after_diagnostics": []
+    }
+  ],
+  "diagnostics_changed": [
+    {
+      "sha256": "06bafc6be3adb30033ddcd28d07548f312ffd8fdbca5e44e9d4dc9f33b215ec3",
+      "path": "2HL.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\06bafc6be3adb30033ddcd28d07548f312ffd8fdbca5e44e9d4dc9f33b215ec3.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "b57ae4e83e6aa82cf7f68f7dff7c466f9fab5dad6f838102c0c1fbd79b8f3a43",
+      "path": "BTC Rapid fire strategy 1M Scalping.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\b57ae4e83e6aa82cf7f68f7dff7c466f9fab5dad6f838102c0c1fbd79b8f3a43.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "4c8938606920f181956011fe97f1acbc9641c22405834fdb3a1a90c66419cb20",
+      "path": "Channel Break [for free bot].pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\4c8938606920f181956011fe97f1acbc9641c22405834fdb3a1a90c66419cb20.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "a85980c46bb9f8ac887a86465f423aaa3cafc759e484838804e86ad505e02c87",
+      "path": "Combined Strategy Trading Bot (RSI ADX 20SMA).pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\a85980c46bb9f8ac887a86465f423aaa3cafc759e484838804e86ad505e02c87.pine",
+      "before": [
+        "E_STRATEGY_MARGIN",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_MARGIN"
+      ]
+    },
+    {
+      "sha256": "5ae0fe803416f274c3d1681453680ea9c54c9750a59f0c7d554bedf497ae0b90",
+      "path": "Donchian Channel Strategy [for free bot].pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\5ae0fe803416f274c3d1681453680ea9c54c9750a59f0c7d554bedf497ae0b90.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "394f7961a86a9a4cb6bc38832819865bf2d9b1063166fdeb2651793791ff01dd",
+      "path": "Donchian Channel Strategy.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\394f7961a86a9a4cb6bc38832819865bf2d9b1063166fdeb2651793791ff01dd.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "e96e4f685b5be61ded8766dc81692861d56e38125cb91d4edc54608e8bfc0728",
+      "path": "HMA_ATR Strategy.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\e96e4f685b5be61ded8766dc81692861d56e38125cb91d4edc54608e8bfc0728.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "560c6287d1d3c8540c5628aee59754cf4aad8999f268b66e26e192e776718187",
+      "path": "Moving Average Band - Taylor V1.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\560c6287d1d3c8540c5628aee59754cf4aad8999f268b66e26e192e776718187.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "a9cbf41ef66c2e7b93c39a48e41944f2afebb62c5708c0cdef1f6da415158433",
+      "path": "Swing Points Breakouts.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\a9cbf41ef66c2e7b93c39a48e41944f2afebb62c5708c0cdef1f6da415158433.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "4b488c58445f5f7bfe304357d6016f4b5b851a3be291821bd59d2b54ab95cf7f",
+      "path": "extracts/fmz/211b7624f7fb.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\4b488c58445f5f7bfe304357d6016f4b5b851a3be291821bd59d2b54ab95cf7f.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "9b9b3a013e144dbde43d4d03bf4b1089a586364595fddbfe1f23e272b2e293af",
+      "path": "extracts/fmz/2def99ec37b6.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\9b9b3a013e144dbde43d4d03bf4b1089a586364595fddbfe1f23e272b2e293af.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "efab6372ca28464081dffdf897584f561ee2350aeeb4093098bbcec0ea163234",
+      "path": "extracts/fmz/3adc8d4d8ec6.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\efab6372ca28464081dffdf897584f561ee2350aeeb4093098bbcec0ea163234.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "2cdda40c854cb1b726cdf872cb71cbe02ed6374e4a89ea02cd1726c63a7894d7",
+      "path": "extracts/fmz/3bf34f1a3748.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\2cdda40c854cb1b726cdf872cb71cbe02ed6374e4a89ea02cd1726c63a7894d7.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "3fceb74bb523c4911a651444221c0351c85de7826ee45313357c130f1c2a0c98",
+      "path": "extracts/fmz/40b3f6aac823.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\3fceb74bb523c4911a651444221c0351c85de7826ee45313357c130f1c2a0c98.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "58663121c8508b95a38e39089e143ca4dad8a3a2403ba8b698d9a9d61d7221f5",
+      "path": "extracts/fmz/5197dfab2c50.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\58663121c8508b95a38e39089e143ca4dad8a3a2403ba8b698d9a9d61d7221f5.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "eb02ad6d9f67ee50bc3283e0b406a057bb6c89a0191d2c2b8542f098633fa82d",
+      "path": "extracts/fmz/51c0ad88dd4e.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\eb02ad6d9f67ee50bc3283e0b406a057bb6c89a0191d2c2b8542f098633fa82d.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "f6abb49e0e42814a96e72591b8944b0bc5e69778d806e09416013ae77cf6e255",
+      "path": "extracts/fmz/62be6e3813b4.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\f6abb49e0e42814a96e72591b8944b0bc5e69778d806e09416013ae77cf6e255.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "f5b9e9a48973a0467f48188d18bb745462fdb08412047204f842a102e8cb2615",
+      "path": "extracts/fmz/74a971c70d71.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\f5b9e9a48973a0467f48188d18bb745462fdb08412047204f842a102e8cb2615.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "cb4f33b72d881c44517483fc414f7e4be661ab365c0332a8ad95dccbc0168c06",
+      "path": "extracts/fmz/8578dc95065c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\cb4f33b72d881c44517483fc414f7e4be661ab365c0332a8ad95dccbc0168c06.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "c7c89f8219698b6f2b2094d9d8638d2602869fc1b8bb41f68b2e63c82c145f37",
+      "path": "extracts/fmz/98f5f864c540.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\c7c89f8219698b6f2b2094d9d8638d2602869fc1b8bb41f68b2e63c82c145f37.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "b6f6f83f14fac0b6256187aafacfec293e89541dcd9fb82233923700f00f5407",
+      "path": "extracts/fmz/9c3fd28d91fe.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\b6f6f83f14fac0b6256187aafacfec293e89541dcd9fb82233923700f00f5407.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "7572c5df47c936f96ef0d5018e326437a43d9d7577b3e25ab2b40ac89653a218",
+      "path": "extracts/fmz/9f4846f4d14b.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\7572c5df47c936f96ef0d5018e326437a43d9d7577b3e25ab2b40ac89653a218.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "0e0bc3f67fe9b36a8be16d319cfa904f2279ff8496cc1f5c70132d11843d8b1c",
+      "path": "extracts/fmz/a48bdb07581a.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\0e0bc3f67fe9b36a8be16d319cfa904f2279ff8496cc1f5c70132d11843d8b1c.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "e0619d3b7965632d97f593f7cd7b9e1166a639ea648efc31c4c8f37cf28741f5",
+      "path": "extracts/fmz/aebc4f95063c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\e0619d3b7965632d97f593f7cd7b9e1166a639ea648efc31c4c8f37cf28741f5.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "11708222a872994966d69a4fbcd4b70c21ca0e7512b088925d9528b9d89c0dd0",
+      "path": "extracts/fmz/b19b82cb1d8c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\11708222a872994966d69a4fbcd4b70c21ca0e7512b088925d9528b9d89c0dd0.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "79e818c1e294dbe6a62b805921b84ff82394da6a021f24c187e7eb6dfd6a4f73",
+      "path": "extracts/fmz/bb66a6d8574c.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\79e818c1e294dbe6a62b805921b84ff82394da6a021f24c187e7eb6dfd6a4f73.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "8831eaba817481aad498fbe9c3d8aedfbf1b7ecf6860b9344705eb97c60cab62",
+      "path": "extracts/fmz/c71c4f33d9f6.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\8831eaba817481aad498fbe9c3d8aedfbf1b7ecf6860b9344705eb97c60cab62.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "ea0bce6286e1367a3aa806698c01375b67e12737892094ff0bc68e305b9e2576",
+      "path": "extracts/fmz/c82d4893a335.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\ea0bce6286e1367a3aa806698c01375b67e12737892094ff0bc68e305b9e2576.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "5b6de6031ad1097f78cf19e313a90340162471e38942c8efcda346264fdde3f1",
+      "path": "extracts/fmz/d2bccc53ec44.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\5b6de6031ad1097f78cf19e313a90340162471e38942c8efcda346264fdde3f1.pine",
+      "before": [
+        "E_STRATEGY_EXIT_PRICE",
+        "E_STRATEGY_PRICE"
+      ],
+      "after": [
+        "E_STRATEGY_EXIT_PRICE"
+      ]
+    },
+    {
+      "sha256": "a671c9c384eeeab1c634b2332a76473096ceeb473d541c04dd443014080c7be2",
+      "path": "extracts/fmz/db867562919d.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\a671c9c384eeeab1c634b2332a76473096ceeb473d541c04dd443014080c7be2.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "f40a0a310aa83353811d68ca04045f4979b8a40ea4e18b6a3212802297ce75d5",
+      "path": "extracts/fmz/e5b5e8b4f169.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\f40a0a310aa83353811d68ca04045f4979b8a40ea4e18b6a3212802297ce75d5.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    },
+    {
+      "sha256": "9503ef4377517450c9b8e53bd1fdcd6d6068b59f087506c85e6c7e69afc21cc7",
+      "path": "extracts/fmz/f3b8089fd81f.pine",
+      "normalized_path": "E:\\projects\\pine-interpreter\\target\\strategy-gap-final-20261010\\sources\\9503ef4377517450c9b8e53bd1fdcd6d6068b59f087506c85e6c7e69afc21cc7.pine",
+      "before": [
+        "E_STRATEGY_PRICE"
+      ],
+      "after": []
+    }
+  ],
+  "newly_accepted": [
+    "cce3dee740f3f2d12ebba96332c0067fd6814cd8d8a1ba5bdf32da6622412f4b",
+    "a325d94fb4de6cebccb91c92acd2952a6d792b884c9d0fdc746424c69748a9a9",
+    "ce50096b5d59ea1598f30996bbb7649e5cc0fd949dac71d0d83ee839b47de559",
+    "6d3e7d100aef63fd8d4f4a3b4ea27041f4fccd1570bb9e4ada74f572f6904af5",
+    "8e4b187fc74f52fbce1af1b78f22bf4095f4e523ff0c95daa7894fde837054c1",
+    "23634347ca96ae7ded1a6f62d081783aa782cfebcab442aeb253ad6d9fa41963",
+    "ffd5a4706db0bc128cbc91cbe2732dec4aee127291a42561cb8e0ece79973f8c",
+    "6a1db5f9f9fd6a17dfc4f9c361631ebda99fde5177d83f9a4b991b01978c7cd5",
+    "0bc888a2c3e013189330e694b068607ff5f50289e1781b040abd0fca5fdc0993",
+    "acdf19e258a0c407594cd826aa1f18aa2d0c209e1521c68541922d5b15cc1cd5",
+    "cbf121e3e59be475f503a60963dace6b52b5d75ae97d14790b43c179d5b8d4b2",
+    "f42cebe1a22665b8e1456d77ba5fead84f3101f9d94f176c5a6ff7ead3f971d5",
+    "0cd9e73fb8fe613e10f0fe0b9a8540244c47995ffbb879374ea8244a433290f7",
+    "d18662f833fc3d5e4e9bbc7ace57691687e129fc0fd656f88dd9cd01cd6019c5",
+    "f65a29ae8b8c503e7ef3a3eaa34c6b4d85cf6bd2e38f2fb596e2953bb7ad5e37",
+    "0f4d90483ef06bc72a4c2e25b6d84a4e093f1a8b7e79b4288140a64f9a4b0ee1",
+    "b0e359d78a55a2f625ef97de8d090541551629055b7cc4111b4532c3976f8001",
+    "460a12de491a2ffb5ff64bc089f000039052b71be2e2e628924d98b36a0c0e35",
+    "0e806628d4fa59bc3497f7d2f1444f0c4e1dffa0296b0450beab93eca1939045",
+    "1bf3c279ace1c9d8cfd32854a8a9d3ad6c2130010746b3c5703aad90779df4b0",
+    "707f571ec0c593900f6efa910ea46bdf363273843e73280d3b4f7f98e5851503",
+    "7c36fdea15d87a0a122683a02ff6435f0aca6ec76bc0248e498ff5ace4828134",
+    "b1c2cb36bce030e85d3dc63bdbaf4c13c3ecc2c4f724a6db0b60f4c888084801",
+    "9057366f1ce5c340df43ca1295f5a330efe4db2349e2da4508c80e6d26770177",
+    "924fa23982d895b864fc3193fb9c88db6552e1cf3fd42a075f8cdd85a2652847",
+    "2642604d454bc55ce39daac38f48b82ceb92e974689fe87c87bedccbe70b0685",
+    "98c5e3ea3025f12145f99b8af52d06b1b2fc824491e116963995558d69878ecd",
+    "c7ecbde05f36d6dd7a6613fa52800e64466207ed4d9e2a57b57cffee8e1e08c2",
+    "34ab5799b034eddecaf9afd712ef33f51232e1bd6879999242b8eda9b657d925",
+    "6d2fb3a37507a213ed900bbafe4dc82ef15647cdbc3c33326afecdf0b78eb71c",
+    "0e100d692c40bb35009f527b377de0831922285765a04df97ecfb38fdfec2f2b",
+    "d3fb2186aa6d71f0aba49b3f87b1e146fa64c3c88b36a739198319cac06d0a23",
+    "2075d664aeac97420b6356c807de9b82507950e49522a9958cff80ed7f1f92ed"
+  ],
+  "newly_rejected": [],
+  "runtime_pass_lost": [],
+  "limitations": "Default-input synthetic-data smoke, not native equivalence. runtime_passed retains frozen exit/severity definition. Candidate groups overlap; count changes do not compare every output value.",
+  "validation": {
+    "rust_workspace_passed": 8037,
+    "python_passed": 2038,
+    "clippy": "passed",
+    "wasm_node": "passed",
+    "formatting": "passed",
+    "structure": "passed",
+    "host_parity": "passed",
+    "script_unittest_total": 184,
+    "script_unittest_skipped": 1,
+    "logs": {
+      "compat-workspace-final.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-workspace-final.log",
+        "sha256": "50f93492826257e9f54ab6d1b661f26b98b99f5d8b978d151f5800055e4fa278"
+      },
+      "compat-python-final.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-python-final.log",
+        "sha256": "7da80477b880770cc19c9bed648850990fd295aaa68c592164f950076e2f7996"
+      },
+      "compat-clippy.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-clippy.log",
+        "sha256": "eeab5eb0ef15db0b12d6a5dae2ba5596d55e641159d7e300aac432953ddf8d66"
+      },
+      "compat-wasm-node-final.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-wasm-node-final.log",
+        "sha256": "6da2a31d5fdf403fa0ed7dc59bb9a53d1614cc34fd47748dc11787eedf802db2"
+      },
+      "compat-script-tests.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-script-tests.log",
+        "sha256": "204269d2048d0b59556a3c9aa81ccaef7a06267f97921ffb23b3379ce1686dc2"
+      },
+      "compat-probes.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-probes.log",
+        "sha256": "36cd914ddd41ad9fc363a298e4d1fa8c22d4d32bc156496092e82f69f435064f"
+      },
+      "compat-release-final.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-release-final.log",
+        "sha256": "de6001482ab071df4c3c26cc65d5c118322b51b2b6458f083e42d8338491ab5d"
+      },
+      "compat-corpus-fixed.log": {
+        "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\validation\\compat-corpus-fixed.log",
+        "sha256": "b226ef3f3d3191fbd6ab159b9fdfbe211fcff35d3c5649864877493fbf48e35c"
+      }
+    }
+  },
+  "source_integrity": {
+    "original_paths_checked": 7576,
+    "normalized_sources_checked": 7255,
+    "changed_or_missing": [],
+    "status": "passed"
+  },
+  "normalized_sources_unchanged_after_run": true,
+  "probes": {
+    "cli_sha256": "65d668ac920ccdcf6d424e4dbd5929e3df372a8650bdaa576ee3370f862615d1",
+    "na_sources": 56,
+    "na_runs": 224,
+    "nz_original_sources": 8,
+    "nz_runs": 32,
+    "receipt_sha256": "d76c1585972b0dbfe44b8e69f999a55d1783d9af402376115e413b7fe1cccc6a",
+    "path": "E:\\projects\\pine-interpreter\\target\\strategy-corpus-fixed-20261029\\probe-results.json"
+  }
+}

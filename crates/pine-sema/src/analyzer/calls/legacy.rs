@@ -1,14 +1,55 @@
-use crate::prelude::*;
+use std::collections::HashSet;
 
-#[derive(Default)]
-struct LegacyInputTrace {
-    // Symbols on the current alias path; rejects cyclic aliases.
-    symbols: std::collections::HashSet<SymbolId>,
+use crate::prelude::*;
+use crate::source_graph::SourceContextId;
+
+/// A part of the program that a marker search still has to inspect, read in
+/// the source context that owns it.
+#[derive(Clone, Copy)]
+enum LegacyInputSearchNode<'a> {
+    Expr(&'a Expr),
+    Statement(&'a Stmt),
+    ReturnStatements(&'a [Stmt]),
+}
+
+struct LegacyInputSearch<'a> {
+    // An explicit stack keeps alias and call-result chains off the thread
+    // stack; a long straight-line script would otherwise overflow it.
+    pending: Vec<(SourceContextId, LegacyInputSearchNode<'a>)>,
     // Marker containment is a reachability query: an initializer or function
     // result already searched by this query cannot reveal a marker on another
     // path, so a shared dependency graph is searched once rather than per path.
-    expanded_symbols: std::collections::HashSet<SymbolId>,
-    expanded_functions: std::collections::HashSet<String>,
+    expanded_symbols: HashSet<SymbolId>,
+    expanded_functions: HashSet<&'a str>,
+}
+
+impl<'a> LegacyInputSearch<'a> {
+    fn push(&mut self, context: SourceContextId, node: LegacyInputSearchNode<'a>) {
+        self.pending.push((context, node));
+    }
+
+    fn push_expr(&mut self, context: SourceContextId, expr: &'a Expr) {
+        self.push(context, LegacyInputSearchNode::Expr(expr));
+    }
+
+    fn push_statements(&mut self, context: SourceContextId, statements: &'a [Stmt]) {
+        for statement in statements {
+            self.push(context, LegacyInputSearchNode::Statement(statement));
+        }
+    }
+
+    fn push_return_statements(&mut self, context: SourceContextId, statements: &'a [Stmt]) {
+        self.push(context, LegacyInputSearchNode::ReturnStatements(statements));
+    }
+
+    /// A nested declaration contributes every statement of its body, unlike a
+    /// called function, which contributes only its result.
+    fn push_function_body(&mut self, context: SourceContextId, body: &'a FunctionBody) {
+        match body {
+            FunctionBody::Expr(expr) => self.push_expr(context, expr),
+            FunctionBody::Block(statements) => self.push_statements(context, statements),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -145,7 +186,6 @@ impl Analyzer {
         let target_contains_marker = self.scope.resolve(name).is_some_and(|symbol| {
             self.symbol_init_exprs
                 .get(&symbol.id)
-                .cloned()
                 .is_some_and(|initializer| {
                     self.with_source_context_ref(initializer.source_context_id, |analyzer| {
                         analyzer.legacy_input_constant_in_expr(&initializer.expr)
@@ -206,45 +246,96 @@ impl Analyzer {
         ));
     }
 
-    fn legacy_input_constant_in_expr(&self, expr: &Expr) -> bool {
-        self.legacy_input_constant_in_expr_inner(expr, &mut LegacyInputTrace::default())
+    fn legacy_input_constant_in_expr<'a>(&'a self, expr: &'a Expr) -> bool {
+        // Only a recorded legacy string value can be a marker. Scripts that
+        // record none, which includes ordinary v5 and v6 scripts, skip the
+        // search instead of walking every initializer chain per declaration.
+        if !self.legacy.has_canonical_string_values() {
+            return false;
+        }
+        let mut search = LegacyInputSearch {
+            pending: Vec::new(),
+            expanded_symbols: HashSet::new(),
+            expanded_functions: HashSet::new(),
+        };
+        search.push_expr(self.current_source_context_id(), expr);
+        while let Some((context, node)) = search.pending.pop() {
+            let first_child = search.pending.len();
+            let is_marker = self.with_source_context_ref(context, |_| {
+                self.expand_legacy_input_search_node(context, node, &mut search)
+            });
+            if is_marker {
+                return true;
+            }
+            // Children were pushed in source order; visit them in that order.
+            search.pending[first_child..].reverse();
+        }
+        false
     }
 
-    fn legacy_input_constant_in_expr_inner(
-        &self,
-        expr: &Expr,
-        trace: &mut LegacyInputTrace,
+    /// Expands one node in the current source context and reports whether the
+    /// node itself is a marker. Nested parts are queued instead of searched.
+    fn expand_legacy_input_search_node<'a>(
+        &'a self,
+        context: SourceContextId,
+        node: LegacyInputSearchNode<'a>,
+        search: &mut LegacyInputSearch<'a>,
     ) -> bool {
-        if self.legacy_input_type_marker_inner(expr, trace).is_some() {
+        match node {
+            LegacyInputSearchNode::Expr(expr) => {
+                self.expand_legacy_input_search_expr(context, expr, search)
+            }
+            LegacyInputSearchNode::Statement(statement) => {
+                self.expand_legacy_input_search_statement(context, statement, search);
+                false
+            }
+            LegacyInputSearchNode::ReturnStatements(statements) => {
+                Self::expand_legacy_input_search_return(context, statements, search);
+                false
+            }
+        }
+    }
+
+    fn expand_legacy_input_search_expr<'a>(
+        &'a self,
+        context: SourceContextId,
+        expr: &'a Expr,
+        search: &mut LegacyInputSearch<'a>,
+    ) -> bool {
+        // An exact alias of a marker is reached through the identifier
+        // expansion below, so checking the node itself is enough here.
+        if self
+            .legacy
+            .canonical_string_value(context, expr.span)
+            .is_some()
+        {
             return true;
         }
         match &expr.kind {
             ExprKind::Unary { expr, .. }
             | ExprKind::Group(expr)
-            | ExprKind::Member { receiver: expr, .. } => {
-                self.legacy_input_constant_in_expr_inner(expr, trace)
-            }
+            | ExprKind::Member { receiver: expr, .. } => search.push_expr(context, expr),
             ExprKind::Binary { left, right, .. } => {
-                self.legacy_input_constant_in_expr_inner(left, trace)
-                    || self.legacy_input_constant_in_expr_inner(right, trace)
+                search.push_expr(context, left);
+                search.push_expr(context, right);
             }
             ExprKind::Ternary {
                 condition,
                 then_expr,
                 else_expr,
             } => {
-                self.legacy_input_constant_in_expr_inner(condition, trace)
-                    || self.legacy_input_constant_in_expr_inner(then_expr, trace)
-                    || self.legacy_input_constant_in_expr_inner(else_expr, trace)
+                search.push_expr(context, condition);
+                search.push_expr(context, then_expr);
+                search.push_expr(context, else_expr);
             }
             ExprKind::If {
                 condition,
                 then_branch,
                 else_branch,
             } => {
-                self.legacy_input_constant_in_expr_inner(condition, trace)
-                    || self.legacy_input_constant_in_statements(then_branch, trace)
-                    || self.legacy_input_constant_in_statements(else_branch, trace)
+                search.push_expr(context, condition);
+                search.push_statements(context, then_branch);
+                search.push_statements(context, else_branch);
             }
             ExprKind::For {
                 from,
@@ -253,46 +344,46 @@ impl Analyzer {
                 body,
                 ..
             } => {
-                self.legacy_input_constant_in_expr_inner(from, trace)
-                    || self.legacy_input_constant_in_expr_inner(to, trace)
-                    || step
-                        .as_deref()
-                        .is_some_and(|step| self.legacy_input_constant_in_expr_inner(step, trace))
-                    || self.legacy_input_constant_in_statements(body, trace)
+                search.push_expr(context, from);
+                search.push_expr(context, to);
+                if let Some(step) = step.as_deref() {
+                    search.push_expr(context, step);
+                }
+                search.push_statements(context, body);
             }
             ExprKind::ForIn { iterable, body, .. } => {
-                self.legacy_input_constant_in_expr_inner(iterable, trace)
-                    || self.legacy_input_constant_in_statements(body, trace)
+                search.push_expr(context, iterable);
+                search.push_statements(context, body);
             }
             ExprKind::While { condition, body } => {
-                self.legacy_input_constant_in_expr_inner(condition, trace)
-                    || self.legacy_input_constant_in_statements(body, trace)
+                search.push_expr(context, condition);
+                search.push_statements(context, body);
             }
             ExprKind::Switch { selector, arms } => {
-                selector.as_deref().is_some_and(|selector| {
-                    self.legacy_input_constant_in_expr_inner(selector, trace)
-                }) || arms.iter().any(|arm| {
-                    arm.condition.as_ref().is_some_and(|condition| {
-                        self.legacy_input_constant_in_expr_inner(condition, trace)
-                    }) || match &arm.result {
-                        SwitchArmResult::Expr(result) => {
-                            self.legacy_input_constant_in_expr_inner(result, trace)
-                        }
+                if let Some(selector) = selector.as_deref() {
+                    search.push_expr(context, selector);
+                }
+                for arm in arms {
+                    if let Some(condition) = &arm.condition {
+                        search.push_expr(context, condition);
+                    }
+                    match &arm.result {
+                        SwitchArmResult::Expr(result) => search.push_expr(context, result),
                         SwitchArmResult::Block(statements) => {
-                            self.legacy_input_constant_in_statements(statements, trace)
+                            search.push_statements(context, statements);
                         }
                     }
-                })
+                }
             }
-            ExprKind::Tuple(items) => items
-                .iter()
-                .any(|item| self.legacy_input_constant_in_expr_inner(item, trace)),
-            ExprKind::Call { callee, .. } => {
-                self.legacy_input_constant_in_call_result(callee, trace)
+            ExprKind::Tuple(items) => {
+                for item in items {
+                    search.push_expr(context, item);
+                }
             }
+            ExprKind::Call { callee, .. } => self.expand_legacy_input_call_result(callee, search),
             ExprKind::History { expr, offset } => {
-                self.legacy_input_constant_in_expr_inner(expr, trace)
-                    || self.legacy_input_constant_in_expr_inner(offset, trace)
+                search.push_expr(context, expr);
+                search.push_expr(context, offset);
             }
             ExprKind::Identifier(name) => {
                 let Some(symbol) = self
@@ -301,58 +392,48 @@ impl Analyzer {
                 else {
                     return false;
                 };
-                if !trace.expanded_symbols.insert(symbol.id) || !trace.symbols.insert(symbol.id) {
+                if !search.expanded_symbols.insert(symbol.id) {
                     return false;
                 }
                 #[cfg(test)]
                 INITIALIZER_SEARCHES.with(|searches| searches.set(searches.get() + 1));
-                let contains =
-                    self.symbol_init_exprs
-                        .get(&symbol.id)
-                        .cloned()
-                        .is_some_and(|initializer| {
-                            self.with_source_context_ref(
-                                initializer.source_context_id,
-                                |analyzer| {
-                                    analyzer.legacy_input_constant_in_expr_inner(
-                                        &initializer.expr,
-                                        trace,
-                                    )
-                                },
-                            )
-                        });
-                trace.symbols.remove(&symbol.id);
-                contains
+                if let Some(initializer) = self.symbol_init_exprs.get(&symbol.id) {
+                    search.push_expr(initializer.source_context_id, &initializer.expr);
+                }
             }
-            ExprKind::Literal(_) | ExprKind::QualifiedName(_) => false,
+            ExprKind::Literal(_) | ExprKind::QualifiedName(_) => {}
         }
+        false
     }
 
-    fn legacy_input_constant_in_call_result(
-        &self,
+    fn expand_legacy_input_call_result<'a>(
+        &'a self,
         callee: &Expr,
-        trace: &mut LegacyInputTrace,
-    ) -> bool {
+        search: &mut LegacyInputSearch<'a>,
+    ) {
         let Some(name) = expr_name(callee) else {
-            return false;
+            return;
         };
 
         // The focused legacy input call consumes its marker selector and
         // returns the configured value. No other call boundary is allowed to
         // erase marker provenance, including a UDF that returns one directly.
         if self.is_unshadowed_focused_legacy_input_call(&name, callee) {
-            return false;
+            return;
         }
 
-        let Some(function) = self.functions.get(&name).cloned() else {
-            return false;
+        let Some((name, function)) = self.functions.get_key_value(&name) else {
+            return;
         };
-        if !trace.expanded_functions.insert(name) {
-            return false;
+        if !search.expanded_functions.insert(name.as_str()) {
+            return;
         }
-        self.with_source_context_ref(function.source_context_id, |analyzer| {
-            analyzer.legacy_input_constant_in_function_return(&function.body, trace)
-        })
+        match &function.body {
+            FunctionBody::Expr(expr) => search.push_expr(function.source_context_id, expr),
+            FunctionBody::Block(statements) => {
+                search.push_return_statements(function.source_context_id, statements);
+            }
+        }
     }
 
     fn is_unshadowed_focused_legacy_input_call(&self, name: &str, callee: &Expr) -> bool {
@@ -378,40 +459,26 @@ impl Analyzer {
         !is_symbol_shadowed
     }
 
-    fn legacy_input_constant_in_function_return(
-        &self,
-        body: &FunctionBody,
-        trace: &mut LegacyInputTrace,
-    ) -> bool {
-        match body {
-            FunctionBody::Expr(expr) => self.legacy_input_constant_in_expr_inner(expr, trace),
-            FunctionBody::Block(statements) => {
-                self.legacy_input_constant_in_return_statements(statements, trace)
-            }
-        }
-    }
-
-    fn legacy_input_constant_in_return_statements(
-        &self,
-        statements: &[Stmt],
-        trace: &mut LegacyInputTrace,
-    ) -> bool {
+    /// Queues the parts of a function body that can produce its result.
+    fn expand_legacy_input_search_return<'a>(
+        context: SourceContextId,
+        statements: &'a [Stmt],
+        search: &mut LegacyInputSearch<'a>,
+    ) {
         let Some((last, prior)) = statements.split_last() else {
-            return false;
+            return;
         };
-        if self.legacy_input_constant_in_statements(prior, trace) {
-            return true;
-        }
+        search.push_statements(context, prior);
         match &last.kind {
-            StmtKind::Expr(expr) => self.legacy_input_constant_in_expr_inner(expr, trace),
+            StmtKind::Expr(expr) => search.push_expr(context, expr),
             StmtKind::If {
                 condition,
                 then_branch,
                 else_branch,
             } => {
-                self.legacy_input_constant_in_expr_inner(condition, trace)
-                    || self.legacy_input_constant_in_return_statements(then_branch, trace)
-                    || self.legacy_input_constant_in_return_statements(else_branch, trace)
+                search.push_expr(context, condition);
+                search.push_return_statements(context, then_branch);
+                search.push_return_statements(context, else_branch);
             }
             StmtKind::For {
                 from,
@@ -420,39 +487,39 @@ impl Analyzer {
                 body,
                 ..
             } => {
-                self.legacy_input_constant_in_expr_inner(from, trace)
-                    || self.legacy_input_constant_in_expr_inner(to, trace)
-                    || step
-                        .as_ref()
-                        .is_some_and(|step| self.legacy_input_constant_in_expr_inner(step, trace))
-                    || self.legacy_input_constant_in_return_statements(body, trace)
+                search.push_expr(context, from);
+                search.push_expr(context, to);
+                if let Some(step) = step {
+                    search.push_expr(context, step);
+                }
+                search.push_return_statements(context, body);
             }
             StmtKind::ForIn { iterable, body, .. } => {
-                self.legacy_input_constant_in_expr_inner(iterable, trace)
-                    || self.legacy_input_constant_in_return_statements(body, trace)
+                search.push_expr(context, iterable);
+                search.push_return_statements(context, body);
             }
             StmtKind::While { condition, body } => {
-                self.legacy_input_constant_in_expr_inner(condition, trace)
-                    || self.legacy_input_constant_in_return_statements(body, trace)
+                search.push_expr(context, condition);
+                search.push_return_statements(context, body);
             }
-            _ => false,
+            _ => {}
         }
     }
 
-    fn legacy_input_constant_in_statements(
-        &self,
-        statements: &[Stmt],
-        trace: &mut LegacyInputTrace,
-    ) -> bool {
-        statements.iter().any(|statement| match &statement.kind {
+    fn expand_legacy_input_search_statement<'a>(
+        &'a self,
+        context: SourceContextId,
+        statement: &'a Stmt,
+        search: &mut LegacyInputSearch<'a>,
+    ) {
+        match &statement.kind {
             StmtKind::Expr(expr)
             | StmtKind::Reassign { value: expr, .. }
-            | StmtKind::FieldReassign { value: expr, .. } => {
-                self.legacy_input_constant_in_expr_inner(expr, trace)
-            }
+            | StmtKind::FieldReassign { value: expr, .. } => search.push_expr(context, expr),
             StmtKind::Decl { value, .. } => {
-                self.legacy_input_type_marker(value).is_none()
-                    && self.legacy_input_constant_in_expr_inner(value, trace)
+                if self.legacy_input_type_marker(value).is_none() {
+                    search.push_expr(context, value);
+                }
             }
             StmtKind::ArrayFieldReassign {
                 array,
@@ -460,21 +527,19 @@ impl Analyzer {
                 value,
                 ..
             } => {
-                self.legacy_input_constant_in_expr_inner(array, trace)
-                    || self.legacy_input_constant_in_expr_inner(index, trace)
-                    || self.legacy_input_constant_in_expr_inner(value, trace)
+                search.push_expr(context, array);
+                search.push_expr(context, index);
+                search.push_expr(context, value);
             }
-            StmtKind::TupleDecl { value, .. } => {
-                self.legacy_input_constant_in_expr_inner(value, trace)
-            }
+            StmtKind::TupleDecl { value, .. } => search.push_expr(context, value),
             StmtKind::If {
                 condition,
                 then_branch,
                 else_branch,
             } => {
-                self.legacy_input_constant_in_expr_inner(condition, trace)
-                    || self.legacy_input_constant_in_statements(then_branch, trace)
-                    || self.legacy_input_constant_in_statements(else_branch, trace)
+                search.push_expr(context, condition);
+                search.push_statements(context, then_branch);
+                search.push_statements(context, else_branch);
             }
             StmtKind::For {
                 from,
@@ -483,87 +548,68 @@ impl Analyzer {
                 body,
                 ..
             } => {
-                self.legacy_input_constant_in_expr_inner(from, trace)
-                    || self.legacy_input_constant_in_expr_inner(to, trace)
-                    || step
-                        .as_ref()
-                        .is_some_and(|step| self.legacy_input_constant_in_expr_inner(step, trace))
-                    || self.legacy_input_constant_in_statements(body, trace)
+                search.push_expr(context, from);
+                search.push_expr(context, to);
+                if let Some(step) = step {
+                    search.push_expr(context, step);
+                }
+                search.push_statements(context, body);
             }
             StmtKind::ForIn { iterable, body, .. } => {
-                self.legacy_input_constant_in_expr_inner(iterable, trace)
-                    || self.legacy_input_constant_in_statements(body, trace)
+                search.push_expr(context, iterable);
+                search.push_statements(context, body);
             }
             StmtKind::While { condition, body } => {
-                self.legacy_input_constant_in_expr_inner(condition, trace)
-                    || self.legacy_input_constant_in_statements(body, trace)
+                search.push_expr(context, condition);
+                search.push_statements(context, body);
             }
-            StmtKind::Function { body, .. } => match body {
-                FunctionBody::Expr(expr) => self.legacy_input_constant_in_expr_inner(expr, trace),
-                FunctionBody::Block(statements) => {
-                    self.legacy_input_constant_in_statements(statements, trace)
-                }
-            },
+            StmtKind::Function { body, .. } => search.push_function_body(context, body),
             StmtKind::Export(export) => match &export.item {
-                pine_syntax::ExportItem::Function { body, .. } => match body {
-                    FunctionBody::Expr(expr) => {
-                        self.legacy_input_constant_in_expr_inner(expr, trace)
-                    }
-                    FunctionBody::Block(statements) => {
-                        self.legacy_input_constant_in_statements(statements, trace)
-                    }
-                },
-                pine_syntax::ExportItem::Const { value, .. } => {
-                    self.legacy_input_constant_in_expr_inner(value, trace)
+                pine_syntax::ExportItem::Function { body, .. } => {
+                    search.push_function_body(context, body);
                 }
+                pine_syntax::ExportItem::Const { value, .. } => search.push_expr(context, value),
                 pine_syntax::ExportItem::UserType { .. }
-                | pine_syntax::ExportItem::Unknown { .. } => false,
+                | pine_syntax::ExportItem::Unknown { .. } => {}
             },
-            StmtKind::Method(method) => match &method.body {
-                FunctionBody::Expr(expr) => self.legacy_input_constant_in_expr_inner(expr, trace),
-                FunctionBody::Block(statements) => {
-                    self.legacy_input_constant_in_statements(statements, trace)
-                }
-            },
+            StmtKind::Method(method) => search.push_function_body(context, &method.body),
             StmtKind::Import(_)
             | StmtKind::Library(_)
             | StmtKind::UserType(_)
             | StmtKind::Break
             | StmtKind::Continue
-            | StmtKind::Unsupported { .. } => false,
-        })
+            | StmtKind::Unsupported { .. } => {}
+        }
     }
 
-    fn legacy_input_type_marker(&self, expr: &Expr) -> Option<&'static str> {
-        self.legacy_input_type_marker_inner(expr, &mut LegacyInputTrace::default())
-    }
-
-    fn legacy_input_type_marker_inner(
-        &self,
-        expr: &Expr,
-        trace: &mut LegacyInputTrace,
-    ) -> Option<&'static str> {
-        if let Some(marker) = self
-            .legacy
-            .canonical_string_value(self.current_source_context_id(), expr.span)
-        {
-            return Some(marker);
-        }
-        let ExprKind::Identifier(name) = &expr.kind else {
-            return None;
-        };
-        let symbol = self
-            .bound_symbol(name, expr.span)
-            .or_else(|| self.scope.resolve(name))?;
-        let initializer = self.symbol_init_exprs.get(&symbol.id)?.clone();
-        if !trace.symbols.insert(symbol.id) {
+    /// Returns the marker that `expr` names through a chain of exact aliases.
+    fn legacy_input_type_marker<'a>(&'a self, expr: &'a Expr) -> Option<&'static str> {
+        if !self.legacy.has_canonical_string_values() {
             return None;
         }
-        let marker = self.with_source_context_ref(initializer.source_context_id, |analyzer| {
-            analyzer.legacy_input_type_marker_inner(&initializer.expr, trace)
-        });
-        trace.symbols.remove(&symbol.id);
-        marker
+        let mut context = self.current_source_context_id();
+        let mut expr = expr;
+        // Symbols on the alias path; rejects cyclic aliases.
+        let mut aliases = HashSet::new();
+        loop {
+            if let Some(marker) = self.legacy.canonical_string_value(context, expr.span) {
+                return Some(marker);
+            }
+            let ExprKind::Identifier(name) = &expr.kind else {
+                return None;
+            };
+            let symbol = self.with_source_context_ref(context, |analyzer| {
+                analyzer
+                    .bound_symbol(name, expr.span)
+                    .or_else(|| analyzer.scope.resolve(name))
+            })?;
+            let initializer = self.symbol_init_exprs.get(&symbol.id)?;
+            if !aliases.insert(symbol.id) {
+                return None;
+            }
+            context = initializer.source_context_id;
+            expr = &initializer.expr;
+        }
     }
 
     pub(super) fn analyze_focused_legacy_call(
@@ -986,10 +1032,42 @@ mod tests {
         source
     }
 
+    /// `x{i} = x{i-1}{link}` makes each declaration depend on every earlier one.
+    fn straight_line_chain(
+        header: &str,
+        root: &str,
+        link: &str,
+        depth: usize,
+        output: &str,
+    ) -> String {
+        let mut source = format!("{header}\nx0 = {root}\n");
+        for level in 1..=depth {
+            let previous = level - 1;
+            source.push_str(&format!("x{level} = x{previous}{link}\n"));
+        }
+        source.push_str(&output.replace("{last}", &format!("x{depth}")));
+        source
+    }
+
+    /// The legacy header records a marker, so every query runs the search.
+    const LEGACY_MARKER_HEADER: &str =
+        "//@version=4\nstudy(\"shared aliases\")\nkind = input.integer";
+
     fn analyze_counting_searches(source: &str) -> (crate::Analysis, usize) {
         INITIALIZER_SEARCHES.with(|searches| searches.set(0));
         let analysis = crate::analyze_source(&SourceFile::new("shared-aliases.pine", source));
         (analysis, INITIALIZER_SEARCHES.with(std::cell::Cell::get))
+    }
+
+    /// Analyzes on a thread with the 1 MiB stack of a Windows main thread, so
+    /// a search that recursed once per chain link would overflow it.
+    fn analyze_counting_searches_on_main_thread_stack(source: String) -> (crate::Analysis, usize) {
+        std::thread::Builder::new()
+            .stack_size(1 << 20)
+            .spawn(move || analyze_counting_searches(&source))
+            .expect("analysis thread starts")
+            .join()
+            .expect("analysis thread completes")
     }
 
     fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
@@ -1004,10 +1082,10 @@ mod tests {
     fn marker_search_expands_each_shared_initializer_once_per_query() {
         const DEPTH: usize = 16;
         let source = shared_alias_graph(
-            "//@version=6\nindicator(\"shared aliases\")",
-            "close",
+            LEGACY_MARKER_HEADER,
+            "tostring(close)",
             DEPTH,
-            "plot({last})\n",
+            "alert({last})\n",
         );
         let (analysis, searches) = analyze_counting_searches(&source);
         assert!(
@@ -1025,8 +1103,86 @@ mod tests {
     }
 
     #[test]
+    fn scripts_without_recorded_markers_skip_the_search() {
+        let source = shared_alias_graph(
+            "//@version=6\nindicator(\"shared aliases\")",
+            "close",
+            16,
+            "plot({last})\n",
+        );
+        let (analysis, searches) = analyze_counting_searches(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+        assert_eq!(searches, 0);
+    }
+
+    #[test]
+    fn long_modern_chain_analyzes_on_a_main_thread_stack() {
+        // Before the search left the thread stack, about 700 links overflowed
+        // a 1 MiB release-build stack and aborted the host process.
+        const DEPTH: usize = 3_000;
+        let source = straight_line_chain(
+            "//@version=6\nindicator(\"chain\")",
+            "close",
+            " + 1",
+            DEPTH,
+            "plot({last})\n",
+        );
+        let (analysis, searches) = analyze_counting_searches_on_main_thread_stack(source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+        assert_eq!(searches, 0);
+    }
+
+    #[test]
+    fn long_legacy_chain_search_stays_off_the_thread_stack() {
+        const DEPTH: usize = 1_000;
+        let source = straight_line_chain(
+            LEGACY_MARKER_HEADER,
+            "tostring(close)",
+            " + \"a\"",
+            DEPTH,
+            "alert({last})\n",
+        );
+        let (analysis, searches) = analyze_counting_searches_on_main_thread_stack(source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+        // Every declaration searched the whole chain above it.
+        assert!(
+            searches >= DEPTH * (DEPTH - 1) / 2,
+            "{searches} initializer searches for depth {DEPTH}"
+        );
+    }
+
+    #[test]
+    fn marker_behind_a_long_alias_chain_is_still_rejected() {
+        let source =
+            straight_line_chain(LEGACY_MARKER_HEADER, "kind", "", 1_000, "alert({last})\n");
+        let (analysis, _) = analyze_counting_searches_on_main_thread_stack(source);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_INPUT_CONSTANT_CONTEXT"],
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn marker_after_a_searched_shared_graph_is_still_rejected() {
-        let header = "//@version=4\nstudy(\"shared aliases\")\nkind = input.integer";
+        let header = LEGACY_MARKER_HEADER;
         let clean = shared_alias_graph(header, "tostring(close)", 12, "alert({last})\n");
         let (analysis, _) = analyze_counting_searches(&clean);
         assert!(

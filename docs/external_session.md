@@ -42,6 +42,18 @@ precedence within each pass. Rust callers use
 `append_external_bars_with_execution_times` for the same append behavior or
 `append_bars_with_execution_times` after binding batch account feedback.
 
+Builds exposing `EXTERNAL_COMPACT_APPEND_SCHEMA_VERSION == 1` accept
+`append(..., snapshot=False)`. The result then omits `output` and holds only
+the intents this append emitted; `intent_base` counts the intents emitted before
+it, and `bar_cursor`, `bar_open` and `stream_schema` follow the streaming
+`commit_bar(snapshot=False)` envelope. Concatenating the compact intents of
+successive appends equals the cumulative intents of a snapshot append. Execution
+is identical either way; only the returned view differs, so a host that reads
+chart output only occasionally avoids rebuilding the full history on every bar.
+`session.diagnostics()` returns the runtime diagnostics, equal to a snapshot's
+`output["diagnostics"]`, and `session.snapshot()` still returns the complete
+cumulative result at any point.
+
 `EXTERNAL_CLOSING_TICK_SCHEMA_VERSION == 1` exposes the keyword-only
 `closing_ticks=True` option at session construction and on batch evaluation.
 It permits the `process_orders_on_close` declaration and, with scheduled fill

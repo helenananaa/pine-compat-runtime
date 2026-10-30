@@ -6,7 +6,9 @@ use crate::{
 use pine_runtime::HistoricalRuntime;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyBool, PyDict, PyInt, PyModule};
+use pyo3::types::{PyAny, PyBool, PyDict, PyInt, PyList, PyModule};
+
+mod observation;
 
 pub(crate) fn register_schemas(module: &Bound<'_, PyModule>) -> PyResult<()> {
     for (name, version) in [
@@ -235,12 +237,11 @@ impl ExternalSession {
         intent_base: Option<usize>,
         include_output: bool,
     ) -> PyResult<Py<PyAny>> {
-        let json = PyModule::import(py, "json")?;
         let result = PyDict::new(py);
         if let Some(configuration) = self.runtime.external_risk_configuration() {
             result.set_item(
                 "risk_rules",
-                json.call_method1(
+                PyModule::import(py, "json")?.call_method1(
                     "loads",
                     (serde_json::to_string(configuration)
                         .map_err(|err| PyValueError::new_err(err.to_string()))?,),
@@ -268,14 +269,18 @@ impl ExternalSession {
                 pine_runtime::EXTERNAL_STREAM_SCHEMA_VERSION,
             )?;
         }
-        result.set_item(
-            "intents",
-            json.call_method1(
-                "loads",
-                (serde_json::to_string(&intents[base..])
-                    .map_err(|err| PyValueError::new_err(err.to_string()))?,),
-            )?,
-        )?;
+        if base == intents.len() {
+            result.set_item("intents", PyList::empty(py))?;
+        } else {
+            result.set_item(
+                "intents",
+                PyModule::import(py, "json")?.call_method1(
+                    "loads",
+                    (serde_json::to_string(&intents[base..])
+                        .map_err(|err| PyValueError::new_err(err.to_string()))?,),
+                )?,
+            )?;
+        }
         if include_output {
             let mut output = self.runtime.result_view();
             output.strategy = None;
@@ -471,11 +476,15 @@ impl ExternalSession {
 
     /// Control state is readable even after an interrupted observation.
     fn window_status(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        let raw = serde_json::to_string(&self.runtime.external_window_feedback_status())
-            .map_err(|error| PyValueError::new_err(error.to_string()))?;
-        Ok(PyModule::import(py, "json")?
-            .call_method1("loads", (raw,))?
-            .unbind())
+        let Some(status) = self.runtime.external_window_feedback_status() else {
+            return Ok(py.None());
+        };
+        let result = PyDict::new(py);
+        result.set_item("schema_version", status.schema_version)?;
+        result.set_item("requires_discovery", status.requires_discovery)?;
+        result.set_item("rebase_required", status.rebase_required)?;
+        result.set_item("input_skip", status.input_skip)?;
+        Ok(result.into_any().unbind())
     }
 
     #[pyo3(signature=(*, seal=false))]
@@ -520,11 +529,14 @@ impl ExternalSession {
         snapshot: bool,
     ) -> PyResult<Py<PyAny>> {
         self.ensure_usable()?;
-        let raw: String = PyModule::import(py, "json")?
-            .call_method1("dumps", (observation,))?
-            .extract()?;
-        let pass: pine_runtime::ExternalScheduledPass =
-            serde_json::from_str(&raw).map_err(|error| PyValueError::new_err(error.to_string()))?;
+        let pass = if let Some(pass) = observation::decode(observation) {
+            pass
+        } else {
+            let raw: String = PyModule::import(py, "json")?
+                .call_method1("dumps", (observation,))?
+                .extract()?;
+            serde_json::from_str(&raw).map_err(|error| PyValueError::new_err(error.to_string()))?
+        };
         let base = self
             .runtime
             .external_intents()

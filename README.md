@@ -40,6 +40,18 @@ application to a charting service.
 - **Trust claims you can test.** The compatibility matrix is backed by
   executable fixtures, cross-host parity checks, and a single release gate.
 
+## Used by
+
+- **[CandleScope](https://github.com/helenananaa/CandleScope)** — an
+  open-source, local-first trading workstation for charting, replay training,
+  paper trading and backtesting. Its Pine plugin runs indicators and
+  strategies on this runtime and draws their plots, drawings, alerts and
+  strategy results on its charts, on Windows, Linux and macOS. See
+  [candlescope.app](https://candlescope.app).
+
+Building something on Pine Compat Runtime? Open an issue or a pull request to
+add it here.
+
 ## Quick Start
 
 The downloads below are the stable `v0.3.2` release. See
